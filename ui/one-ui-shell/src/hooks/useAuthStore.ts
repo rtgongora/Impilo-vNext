@@ -44,6 +44,8 @@ export interface AuthUser {
   };
   /** True when the user has opted into professional mode for this session. */
   providerActivated: boolean;
+  /** How the user authenticated this session (drives post-login shell resolution). */
+  loginMethod?: "health_id" | "provider_id" | "email" | "biometric";
 }
 
 interface AuthState {

@@ -1,0 +1,5222 @@
+{
+  "version": "1.3.0",
+  "catalogueId": "provider-worker",
+  "displayName": "Provider Worker Types, Statuses, CPD, Cadres",
+  "entries": [
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-medical_doctor",
+      "code": "medical_doctor",
+      "displayName": "Medical Doctor",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner",
+        "openHie": "ProviderRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-specialist_doctor",
+      "code": "specialist_doctor",
+      "displayName": "Specialist Doctor",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner",
+        "openHie": "ProviderRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-dentist",
+      "code": "dentist",
+      "displayName": "Dentist",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner",
+        "openHie": "ProviderRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-nurse",
+      "code": "nurse",
+      "displayName": "Nurse",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner",
+        "openHie": "ProviderRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-midwife",
+      "code": "midwife",
+      "displayName": "Midwife",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner",
+        "openHie": "ProviderRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-nurse_aide",
+      "code": "nurse_aide",
+      "displayName": "Nurse Aide",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner",
+        "openHie": "ProviderRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-clinical_officer",
+      "code": "clinical_officer",
+      "displayName": "Clinical Officer",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner",
+        "openHie": "ProviderRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-pharmacist",
+      "code": "pharmacist",
+      "displayName": "Pharmacist",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner",
+        "openHie": "ProviderRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-pharmacy_technician",
+      "code": "pharmacy_technician",
+      "displayName": "Pharmacy Technician",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner",
+        "openHie": "ProviderRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-laboratory_scientist",
+      "code": "laboratory_scientist",
+      "displayName": "Laboratory Scientist",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner",
+        "openHie": "ProviderRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-laboratory_technician",
+      "code": "laboratory_technician",
+      "displayName": "Laboratory Technician",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner",
+        "openHie": "ProviderRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-radiographer",
+      "code": "radiographer",
+      "displayName": "Radiographer",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner",
+        "openHie": "ProviderRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-sonographer",
+      "code": "sonographer",
+      "displayName": "Sonographer",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner",
+        "openHie": "ProviderRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-physiotherapist",
+      "code": "physiotherapist",
+      "displayName": "Physiotherapist",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner",
+        "openHie": "ProviderRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-occupational_therapist",
+      "code": "occupational_therapist",
+      "displayName": "Occupational Therapist",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner",
+        "openHie": "ProviderRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-nutritionist",
+      "code": "nutritionist",
+      "displayName": "Nutritionist",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner",
+        "openHie": "ProviderRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-dietician",
+      "code": "dietician",
+      "displayName": "Dietician",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner",
+        "openHie": "ProviderRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-counsellor",
+      "code": "counsellor",
+      "displayName": "Counsellor",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner",
+        "openHie": "ProviderRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-psychologist",
+      "code": "psychologist",
+      "displayName": "Psychologist",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner",
+        "openHie": "ProviderRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-social_worker",
+      "code": "social_worker",
+      "displayName": "Social Worker",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner",
+        "openHie": "ProviderRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-environmental_health_officer",
+      "code": "environmental_health_officer",
+      "displayName": "Environmental Health Officer",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner",
+        "openHie": "ProviderRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-community_health_worker",
+      "code": "community_health_worker",
+      "displayName": "Community Health Worker",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner",
+        "openHie": "ProviderRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-emergency_medical_provider",
+      "code": "emergency_medical_provider",
+      "displayName": "Emergency Medical Provider",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner",
+        "openHie": "ProviderRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-records_clerk",
+      "code": "records_clerk",
+      "displayName": "Records Clerk",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-health_information_officer",
+      "code": "health_information_officer",
+      "displayName": "Health Information Officer",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-data_clerk",
+      "code": "data_clerk",
+      "displayName": "Data Clerk",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-billing_officer",
+      "code": "billing_officer",
+      "displayName": "Billing Officer",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-cashier",
+      "code": "cashier",
+      "displayName": "Cashier",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-facility_administrator",
+      "code": "facility_administrator",
+      "displayName": "Facility Administrator",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-hospital_manager",
+      "code": "hospital_manager",
+      "displayName": "Hospital Manager",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-department_administrator",
+      "code": "department_administrator",
+      "displayName": "Department Administrator",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-ict_support_officer",
+      "code": "ict_support_officer",
+      "displayName": "Ict Support Officer",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-helpdesk_agent",
+      "code": "helpdesk_agent",
+      "displayName": "Helpdesk Agent",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-supply_chain_officer",
+      "code": "supply_chain_officer",
+      "displayName": "Supply Chain Officer",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-procurement_officer",
+      "code": "procurement_officer",
+      "displayName": "Procurement Officer",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-logistics_officer",
+      "code": "logistics_officer",
+      "displayName": "Logistics Officer",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-programme_officer",
+      "code": "programme_officer",
+      "displayName": "Programme Officer",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-monitoring_and_evaluation_officer",
+      "code": "monitoring_and_evaluation_officer",
+      "displayName": "Monitoring And Evaluation Officer",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-trainer",
+      "code": "trainer",
+      "displayName": "Trainer",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-mentor",
+      "code": "mentor",
+      "displayName": "Mentor",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-supervisor",
+      "code": "supervisor",
+      "displayName": "Supervisor",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-inspector",
+      "code": "inspector",
+      "displayName": "Inspector",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pwt-auditor",
+      "code": "auditor",
+      "displayName": "Auditor",
+      "category": "provider_worker_type",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Practitioner"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pws-not_started",
+      "code": "not_started",
+      "displayName": "Not Started",
+      "category": "provider_worker_status",
+      "ownerService": "varapi",
+      "policyMapping": "impilo.provider_worker.block_work"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pws-draft",
+      "code": "draft",
+      "displayName": "Draft",
+      "category": "provider_worker_status",
+      "ownerService": "varapi",
+      "policyMapping": "impilo.provider_worker.block_work"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pws-submitted",
+      "code": "submitted",
+      "displayName": "Submitted",
+      "category": "provider_worker_status",
+      "ownerService": "varapi",
+      "policyMapping": "impilo.provider_worker.block_work"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pws-pending_verification",
+      "code": "pending_verification",
+      "displayName": "Pending Verification",
+      "category": "provider_worker_status",
+      "ownerService": "varapi",
+      "policyMapping": "impilo.provider_worker.status_resolution"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pws-verified",
+      "code": "verified",
+      "displayName": "Verified",
+      "category": "provider_worker_status",
+      "ownerService": "varapi",
+      "policyMapping": "impilo.professional.allow"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pws-active",
+      "code": "active",
+      "displayName": "Active",
+      "category": "provider_worker_status",
+      "ownerService": "varapi",
+      "policyMapping": "impilo.professional.allow"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pws-active_restricted",
+      "code": "active_restricted",
+      "displayName": "Active Restricted",
+      "category": "provider_worker_status",
+      "ownerService": "varapi",
+      "policyMapping": "impilo.work.limited"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pws-suspended",
+      "code": "suspended",
+      "displayName": "Suspended",
+      "category": "provider_worker_status",
+      "ownerService": "varapi",
+      "policyMapping": "impilo.provider_worker.block_work"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pws-expired",
+      "code": "expired",
+      "displayName": "Expired",
+      "category": "provider_worker_status",
+      "ownerService": "varapi",
+      "policyMapping": "impilo.provider_worker.block_work"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pws-revoked",
+      "code": "revoked",
+      "displayName": "Revoked",
+      "category": "provider_worker_status",
+      "ownerService": "varapi",
+      "policyMapping": "impilo.provider_worker.block_work"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pws-retired",
+      "code": "retired",
+      "displayName": "Retired",
+      "category": "provider_worker_status",
+      "ownerService": "varapi",
+      "policyMapping": "impilo.provider_worker.block_work"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pws-deceased",
+      "code": "deceased",
+      "displayName": "Deceased",
+      "category": "provider_worker_status",
+      "ownerService": "varapi",
+      "policyMapping": "impilo.provider_worker.block_work"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pws-duplicate_under_review",
+      "code": "duplicate_under_review",
+      "displayName": "Duplicate Under Review",
+      "category": "provider_worker_status",
+      "ownerService": "varapi",
+      "policyMapping": "impilo.provider_worker.block_work"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pws-merged",
+      "code": "merged",
+      "displayName": "Merged",
+      "category": "provider_worker_status",
+      "ownerService": "varapi",
+      "policyMapping": "impilo.provider_worker.block_work"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pws-requires_update",
+      "code": "requires_update",
+      "displayName": "Requires Update",
+      "category": "provider_worker_status",
+      "ownerService": "varapi",
+      "policyMapping": "impilo.provider_worker.status_resolution"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "pws-under_investigation",
+      "code": "under_investigation",
+      "displayName": "Under Investigation",
+      "category": "provider_worker_status",
+      "ownerService": "varapi",
+      "policyMapping": "impilo.provider_worker.block_work"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cpd-not_required",
+      "code": "not_required",
+      "displayName": "Not Required",
+      "category": "cpd_compliance_status",
+      "ownerService": "varapi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cpd-compliant",
+      "code": "compliant",
+      "displayName": "Compliant",
+      "category": "cpd_compliance_status",
+      "ownerService": "varapi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cpd-due_soon",
+      "code": "due_soon",
+      "displayName": "Due Soon",
+      "category": "cpd_compliance_status",
+      "ownerService": "varapi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cpd-overdue",
+      "code": "overdue",
+      "displayName": "Overdue",
+      "category": "cpd_compliance_status",
+      "ownerService": "varapi",
+      "policyMapping": "impilo.work.block_training"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cpd-incomplete",
+      "code": "incomplete",
+      "displayName": "Incomplete",
+      "category": "cpd_compliance_status",
+      "ownerService": "varapi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cpd-expired",
+      "code": "expired",
+      "displayName": "Expired",
+      "category": "cpd_compliance_status",
+      "ownerService": "varapi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cpd-exempted",
+      "code": "exempted",
+      "displayName": "Exempted",
+      "category": "cpd_compliance_status",
+      "ownerService": "varapi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cpd-pending_verification",
+      "code": "pending_verification",
+      "displayName": "Pending Verification",
+      "category": "cpd_compliance_status",
+      "ownerService": "varapi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cpd-failed_assessment",
+      "code": "failed_assessment",
+      "displayName": "Failed Assessment",
+      "category": "cpd_compliance_status",
+      "ownerService": "varapi",
+      "policyMapping": "impilo.work.block_training"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cpd-restricted_until_complete",
+      "code": "restricted_until_complete",
+      "displayName": "Restricted Until Complete",
+      "category": "cpd_compliance_status",
+      "ownerService": "varapi",
+      "policyMapping": "impilo.work.block_training"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "qc-professional_degree",
+      "code": "professional_degree",
+      "displayName": "Professional Degree",
+      "category": "qualification_certification_category",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Qualification"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "qc-diploma",
+      "code": "diploma",
+      "displayName": "Diploma",
+      "category": "qualification_certification_category",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Qualification"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "qc-certificate",
+      "code": "certificate",
+      "displayName": "Certificate",
+      "category": "qualification_certification_category",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Qualification"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "qc-postgraduate_degree",
+      "code": "postgraduate_degree",
+      "displayName": "Postgraduate Degree",
+      "category": "qualification_certification_category",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Qualification"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "qc-specialist_training",
+      "code": "specialist_training",
+      "displayName": "Specialist Training",
+      "category": "qualification_certification_category",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Qualification"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "qc-registration_certificate",
+      "code": "registration_certificate",
+      "displayName": "Registration Certificate",
+      "category": "qualification_certification_category",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Qualification"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "qc-practice_licence",
+      "code": "practice_licence",
+      "displayName": "Practice Licence",
+      "category": "qualification_certification_category",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Qualification"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "qc-temporary_practice_authorisation",
+      "code": "temporary_practice_authorisation",
+      "displayName": "Temporary Practice Authorisation",
+      "category": "qualification_certification_category",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Qualification"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "qc-internship_completion",
+      "code": "internship_completion",
+      "displayName": "Internship Completion",
+      "category": "qualification_certification_category",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Qualification"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "qc-board_certification",
+      "code": "board_certification",
+      "displayName": "Board Certification",
+      "category": "qualification_certification_category",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Qualification"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "qc-council_registration",
+      "code": "council_registration",
+      "displayName": "Council Registration",
+      "category": "qualification_certification_category",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Qualification"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "qc-mandatory_training_certificate",
+      "code": "mandatory_training_certificate",
+      "displayName": "Mandatory Training Certificate",
+      "category": "qualification_certification_category",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Qualification"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "qc-cpd_certificate",
+      "code": "cpd_certificate",
+      "displayName": "Cpd Certificate",
+      "category": "qualification_certification_category",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Qualification"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "qc-telemedicine_certification",
+      "code": "telemedicine_certification",
+      "displayName": "Telemedicine Certification",
+      "category": "qualification_certification_category",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Qualification"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "qc-digital_health_system_training",
+      "code": "digital_health_system_training",
+      "displayName": "Digital Health System Training",
+      "category": "qualification_certification_category",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Qualification"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "qc-infection_prevention_control_training",
+      "code": "infection_prevention_control_training",
+      "displayName": "Infection Prevention Control Training",
+      "category": "qualification_certification_category",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Qualification"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "qc-emergency_response_training",
+      "code": "emergency_response_training",
+      "displayName": "Emergency Response Training",
+      "category": "qualification_certification_category",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Qualification"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "qc-public_health_inspection_authorisation",
+      "code": "public_health_inspection_authorisation",
+      "displayName": "Public Health Inspection Authorisation",
+      "category": "qualification_certification_category",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Qualification"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "qc-dispensing_authorisation",
+      "code": "dispensing_authorisation",
+      "displayName": "Dispensing Authorisation",
+      "category": "qualification_certification_category",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Qualification"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "qc-laboratory_accreditation_training",
+      "code": "laboratory_accreditation_training",
+      "displayName": "Laboratory Accreditation Training",
+      "category": "qualification_certification_category",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Qualification"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "qc-radiology_safety_training",
+      "code": "radiology_safety_training",
+      "displayName": "Radiology Safety Training",
+      "category": "qualification_certification_category",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Qualification"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "qc-data_protection_training",
+      "code": "data_protection_training",
+      "displayName": "Data Protection Training",
+      "category": "qualification_certification_category",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Qualification"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "qc-information_security_training",
+      "code": "information_security_training",
+      "displayName": "Information Security Training",
+      "category": "qualification_certification_category",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Qualification"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "qc-marketplace_integration_certification",
+      "code": "marketplace_integration_certification",
+      "displayName": "Marketplace Integration Certification",
+      "category": "qualification_certification_category",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Qualification"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "qc-api_sandbox_certification",
+      "code": "api_sandbox_certification",
+      "displayName": "Api Sandbox Certification",
+      "category": "qualification_certification_category",
+      "ownerService": "varapi",
+      "standardMapping": {
+        "fhir": "Qualification"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-general_medical_practitioner",
+      "code": "general_medical_practitioner",
+      "displayName": "General Medical Practitioner",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical",
+          "virtual_care"
+        ],
+        "defaultRoleTemplates": [
+          "general_medical_officer",
+          "admitting_doctor",
+          "discharging_doctor"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-specialist_physician",
+      "code": "specialist_physician",
+      "displayName": "Specialist Physician",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical",
+          "virtual_care"
+        ],
+        "defaultRoleTemplates": [
+          "specialist_doctor",
+          "consultant_specialist",
+          "telemedicine_specialist_reviewer"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-specialist_surgeon",
+      "code": "specialist_surgeon",
+      "displayName": "Specialist Surgeon",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [
+          "specialist_doctor",
+          "theatre_consultant"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-obstetrician_gynaecologist",
+      "code": "obstetrician_gynaecologist",
+      "displayName": "Obstetrician and Gynaecologist",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [
+          "specialist_doctor",
+          "obgyn_specialist"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-paediatrician",
+      "code": "paediatrician",
+      "displayName": "Paediatrician",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [
+          "specialist_doctor",
+          "paediatrics_specialist"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-psychiatrist",
+      "code": "psychiatrist",
+      "displayName": "Psychiatrist",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical",
+          "virtual_care"
+        ],
+        "defaultRoleTemplates": [
+          "specialist_doctor",
+          "mental_health_specialist"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-anaesthetist",
+      "code": "anaesthetist",
+      "displayName": "Anaesthetist",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [
+          "anaesthesia_specialist"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-radiologist",
+      "code": "radiologist",
+      "displayName": "Radiologist",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "radiology_imaging"
+        ],
+        "defaultRoleTemplates": [
+          "imaging_reviewer",
+          "radiology_supervisor"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-pathologist",
+      "code": "pathologist",
+      "displayName": "Pathologist",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "laboratory_services"
+        ],
+        "defaultRoleTemplates": [
+          "laboratory_supervisor",
+          "reference_lab_consultant"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-public_health_physician",
+      "code": "public_health_physician",
+      "displayName": "Public Health Physician",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "public_health_inspection",
+          "programme_support"
+        ],
+        "defaultRoleTemplates": [
+          "public_health_regulator",
+          "national_public_health_director"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-dental_practitioner",
+      "code": "dental_practitioner",
+      "displayName": "Dental Practitioner",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [
+          "dental_officer"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-registered_general_nurse",
+      "code": "registered_general_nurse",
+      "displayName": "Registered General Nurse",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [
+          "ward_nurse",
+          "triage_nurse"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-primary_care_nurse",
+      "code": "primary_care_nurse",
+      "displayName": "Primary Care Nurse",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical",
+          "community_outreach"
+        ],
+        "defaultRoleTemplates": [
+          "outreach_nurse",
+          "community_primary_care_nurse"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-midwife",
+      "code": "midwife",
+      "displayName": "Midwife",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical",
+          "community_outreach"
+        ],
+        "defaultRoleTemplates": [
+          "midwife",
+          "maternity_nurse",
+          "community_midwife"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-theatre_nurse",
+      "code": "theatre_nurse",
+      "displayName": "Theatre Nurse",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [
+          "theatre_nurse",
+          "theatre_nurse_in_charge"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-psychiatric_nurse",
+      "code": "psychiatric_nurse",
+      "displayName": "Psychiatric Nurse",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [
+          "mental_health_nurse"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-nurse_manager",
+      "code": "nurse_manager",
+      "displayName": "Nurse Manager",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_administration"
+        ],
+        "defaultRoleTemplates": [
+          "nursing_manager",
+          "department_nurse_manager"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-nurse_aide",
+      "code": "nurse_aide",
+      "displayName": "Nurse Aide",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [
+          "ward_nurse_assistant"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-clinical_officer",
+      "code": "clinical_officer",
+      "displayName": "Clinical Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [
+          "clinical_officer"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-pharmacist",
+      "code": "pharmacist",
+      "displayName": "Pharmacist",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "pharmacy_services"
+        ],
+        "defaultRoleTemplates": [
+          "pharmacist",
+          "dispensing_pharmacist"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-chief_pharmacist",
+      "code": "chief_pharmacist",
+      "displayName": "Chief Pharmacist",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "pharmacy_services"
+        ],
+        "defaultRoleTemplates": [
+          "chief_pharmacist",
+          "provincial_pharmacy_officer"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-pharmacy_technician",
+      "code": "pharmacy_technician",
+      "displayName": "Pharmacy Technician",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "pharmacy_services"
+        ],
+        "defaultRoleTemplates": [
+          "pharmacy_technician",
+          "pharmacy_store_controller"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-dispensary_assistant",
+      "code": "dispensary_assistant",
+      "displayName": "Dispensary Assistant",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "pharmacy_services"
+        ],
+        "defaultRoleTemplates": [
+          "dispensary_assistant"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-laboratory_scientist",
+      "code": "laboratory_scientist",
+      "displayName": "Laboratory Scientist",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "laboratory_services"
+        ],
+        "defaultRoleTemplates": [
+          "laboratory_scientist",
+          "laboratory_supervisor"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-laboratory_technician",
+      "code": "laboratory_technician",
+      "displayName": "Laboratory Technician",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "laboratory_services"
+        ],
+        "defaultRoleTemplates": [
+          "specimen_collector",
+          "laboratory_technician"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-radiographer",
+      "code": "radiographer",
+      "displayName": "Radiographer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "radiology_imaging"
+        ],
+        "defaultRoleTemplates": [
+          "radiographer"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-sonographer",
+      "code": "sonographer",
+      "displayName": "Sonographer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "radiology_imaging"
+        ],
+        "defaultRoleTemplates": [
+          "sonographer"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-physiotherapist",
+      "code": "physiotherapist",
+      "displayName": "Physiotherapist",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [
+          "physiotherapist"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-occupational_therapist",
+      "code": "occupational_therapist",
+      "displayName": "Occupational Therapist",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [
+          "occupational_therapist"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-dietician",
+      "code": "dietician",
+      "displayName": "Dietician",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [
+          "dietician"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-nutritionist",
+      "code": "nutritionist",
+      "displayName": "Nutritionist",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical",
+          "community_outreach"
+        ],
+        "defaultRoleTemplates": [
+          "nutritionist",
+          "community_nutrition_officer"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-psychologist",
+      "code": "psychologist",
+      "displayName": "Psychologist",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical",
+          "virtual_care"
+        ],
+        "defaultRoleTemplates": [
+          "psychologist"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-counsellor",
+      "code": "counsellor",
+      "displayName": "Counsellor",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical",
+          "community_outreach"
+        ],
+        "defaultRoleTemplates": [
+          "counsellor",
+          "hiv_counsellor"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-social_worker",
+      "code": "social_worker",
+      "displayName": "Social Worker",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "community_outreach"
+        ],
+        "defaultRoleTemplates": [
+          "social_worker",
+          "community_social_worker"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-environmental_health_practitioner",
+      "code": "environmental_health_practitioner",
+      "displayName": "Environmental Health Practitioner",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "public_health_inspection",
+          "community_outreach"
+        ],
+        "defaultRoleTemplates": [
+          "environmental_health_officer",
+          "public_health_inspector"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-community_health_worker",
+      "code": "community_health_worker",
+      "displayName": "Community Health Worker",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "community_outreach"
+        ],
+        "defaultRoleTemplates": [
+          "community_health_worker",
+          "village_health_worker"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-emergency_medical_technician",
+      "code": "emergency_medical_technician",
+      "displayName": "Emergency Medical Technician",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "emergency_response"
+        ],
+        "defaultRoleTemplates": [
+          "emergency_response_provider"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-ambulance_technician",
+      "code": "ambulance_technician",
+      "displayName": "Ambulance Technician",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "emergency_response"
+        ],
+        "defaultRoleTemplates": [
+          "ambulance_technician"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-health_information_officer",
+      "code": "health_information_officer",
+      "displayName": "Health Information Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "health_information_records",
+          "above_facility_support"
+        ],
+        "defaultRoleTemplates": [
+          "health_information_officer",
+          "records_supervisor"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-data_capture_clerk",
+      "code": "data_capture_clerk",
+      "displayName": "Data Capture Clerk",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "health_information_records",
+          "community_outreach"
+        ],
+        "defaultRoleTemplates": [
+          "facility_data_clerk",
+          "community_data_clerk"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-records_clerk",
+      "code": "records_clerk",
+      "displayName": "Records Clerk",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "health_information_records"
+        ],
+        "defaultRoleTemplates": [
+          "records_clerk",
+          "ward_clerk"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-registry_officer",
+      "code": "registry_officer",
+      "displayName": "Registry Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "registry_governance"
+        ],
+        "defaultRoleTemplates": [
+          "provider_registry_steward",
+          "client_registry_resolution_officer"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-billing_officer",
+      "code": "billing_officer",
+      "displayName": "Billing Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "billing_finance"
+        ],
+        "defaultRoleTemplates": [
+          "billing_officer",
+          "claims_officer"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-cashier",
+      "code": "cashier",
+      "displayName": "Cashier",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "billing_finance"
+        ],
+        "defaultRoleTemplates": [
+          "cashier"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-facility_administrator",
+      "code": "facility_administrator",
+      "displayName": "Facility Administrator",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_administration",
+          "facility_operations"
+        ],
+        "defaultRoleTemplates": [
+          "facility_administrator",
+          "facility_staff_manager"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-hospital_manager",
+      "code": "hospital_manager",
+      "displayName": "Hospital Manager",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_administration"
+        ],
+        "defaultRoleTemplates": [
+          "hospital_manager"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-medical_superintendent",
+      "code": "medical_superintendent",
+      "displayName": "Medical Superintendent",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_administration"
+        ],
+        "defaultRoleTemplates": [
+          "medical_superintendent"
+        ],
+        "abbreviation": "MS",
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-matron",
+      "code": "matron",
+      "displayName": "Matron",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_administration"
+        ],
+        "defaultRoleTemplates": [
+          "matron"
+        ],
+        "abbreviation": "Matron",
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-department_administrator",
+      "code": "department_administrator",
+      "displayName": "Department Administrator",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_administration"
+        ],
+        "defaultRoleTemplates": [
+          "department_administrator"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-monitoring_and_evaluation_officer",
+      "code": "monitoring_and_evaluation_officer",
+      "displayName": "Monitoring and Evaluation Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "programme_support"
+        ],
+        "defaultRoleTemplates": [
+          "programme_m_and_e_officer",
+          "district_monitoring_and_evaluation_officer"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-helpdesk_agent",
+      "code": "helpdesk_agent",
+      "displayName": "Helpdesk Agent",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "system_administration"
+        ],
+        "defaultRoleTemplates": [
+          "national_helpdesk_agent",
+          "support_agent"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-department_head",
+      "code": "department_head",
+      "displayName": "Department Head",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "mixed",
+        "defaultEligibleContextTypes": [
+          "facility_clinical",
+          "facility_administration"
+        ],
+        "defaultRoleTemplates": [
+          "head_of_department_clinical"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-programme_manager",
+      "code": "programme_manager",
+      "displayName": "Programme Manager",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "programme_support",
+          "above_facility_support"
+        ],
+        "defaultRoleTemplates": [
+          "programme_manager",
+          "district_programme_coordinator",
+          "provincial_programme_coordinator"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-national_programme_officer",
+      "code": "national_programme_officer",
+      "displayName": "National Programme Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "programme_support"
+        ],
+        "defaultRoleTemplates": [
+          "national_programme_director",
+          "national_programme_administrator"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-ict_officer",
+      "code": "ict_officer",
+      "displayName": "ICT Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "system_administration",
+          "facility_operations"
+        ],
+        "defaultRoleTemplates": [
+          "facility_ict_support",
+          "district_digital_health_officer"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-system_support_officer",
+      "code": "system_support_officer",
+      "displayName": "System Support Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "system_administration"
+        ],
+        "defaultRoleTemplates": [
+          "national_platform_support",
+          "support_agent"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-supply_chain_officer",
+      "code": "supply_chain_officer",
+      "displayName": "Supply Chain Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "supply_chain_logistics"
+        ],
+        "defaultRoleTemplates": [
+          "medicines_store_manager",
+          "district_logistics_officer"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-procurement_officer",
+      "code": "procurement_officer",
+      "displayName": "Procurement Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "supply_chain_logistics"
+        ],
+        "defaultRoleTemplates": [
+          "procurement_officer"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-warehouse_officer",
+      "code": "warehouse_officer",
+      "displayName": "Warehouse Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "supply_chain_logistics"
+        ],
+        "defaultRoleTemplates": [
+          "warehouse_officer"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-logistics_officer",
+      "code": "logistics_officer",
+      "displayName": "Logistics Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "supply_chain_logistics"
+        ],
+        "defaultRoleTemplates": [
+          "logistics_officer"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-trainer",
+      "code": "trainer",
+      "displayName": "Trainer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "training_mentorship"
+        ],
+        "defaultRoleTemplates": [
+          "fundo_trainer",
+          "fundo_course_author"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-mentor",
+      "code": "mentor",
+      "displayName": "Mentor",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "training_mentorship"
+        ],
+        "defaultRoleTemplates": [
+          "mentor_supervisor",
+          "district_mentor"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-supervisor",
+      "code": "supervisor",
+      "displayName": "Supervisor",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "mixed",
+        "defaultEligibleContextTypes": [
+          "training_mentorship",
+          "community_outreach"
+        ],
+        "defaultRoleTemplates": [
+          "community_supervisor",
+          "emergency_response_coordinator"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-auditor",
+      "code": "auditor",
+      "displayName": "Auditor",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "audit_oversight"
+        ],
+        "defaultRoleTemplates": [
+          "facility_audit_viewer",
+          "regulatory_auditor"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-inspector",
+      "code": "inspector",
+      "displayName": "Inspector",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "public_health_inspection",
+          "regulatory_oversight"
+        ],
+        "defaultRoleTemplates": [
+          "public_health_inspector",
+          "compliance_inspector"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-district_medical_officer",
+      "code": "district_medical_officer",
+      "displayName": "District Medical Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "above_facility_management",
+          "above_facility_support"
+        ],
+        "defaultRoleTemplates": [
+          "district_medical_officer"
+        ],
+        "abbreviation": "DMO",
+        "aliases": [
+          "district_health_executive_chair"
+        ],
+        "primaryZimbabweRole": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-provincial_medical_director",
+      "code": "provincial_medical_director",
+      "displayName": "Provincial Medical Director",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "above_facility_management",
+          "above_facility_support"
+        ],
+        "defaultRoleTemplates": [
+          "provincial_medical_director"
+        ],
+        "abbreviation": "PMD",
+        "aliases": [
+          "provincial_health_executive_lead"
+        ],
+        "primaryZimbabweRole": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-district_nursing_officer",
+      "code": "district_nursing_officer",
+      "displayName": "District Nursing Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "above_facility_support",
+          "facility_administration"
+        ],
+        "defaultRoleTemplates": [
+          "district_nursing_officer"
+        ],
+        "abbreviation": "DNO",
+        "primaryZimbabweRole": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-provincial_nursing_officer",
+      "code": "provincial_nursing_officer",
+      "displayName": "Provincial Nursing Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "above_facility_support",
+          "facility_administration"
+        ],
+        "defaultRoleTemplates": [
+          "provincial_nursing_officer"
+        ],
+        "abbreviation": "PNO",
+        "primaryZimbabweRole": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-district_health_information_officer",
+      "code": "district_health_information_officer",
+      "displayName": "District Health Information Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "above_facility_support",
+          "health_information_records"
+        ],
+        "defaultRoleTemplates": [
+          "district_health_information_officer"
+        ],
+        "abbreviation": "DHIO",
+        "primaryZimbabweRole": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-provincial_health_information_officer",
+      "code": "provincial_health_information_officer",
+      "displayName": "Provincial Health Information Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "above_facility_support",
+          "health_information_records"
+        ],
+        "defaultRoleTemplates": [
+          "provincial_health_information_officer"
+        ],
+        "abbreviation": "PHIO",
+        "primaryZimbabweRole": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-provincial_epidemiology_disease_control_officer",
+      "code": "provincial_epidemiology_disease_control_officer",
+      "displayName": "Provincial Epidemiology and Disease Control Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "public_health_inspection",
+          "above_facility_support"
+        ],
+        "defaultRoleTemplates": [
+          "provincial_epidemiology_disease_control_officer"
+        ],
+        "abbreviation": "PEDCO",
+        "primaryZimbabweRole": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-sister_in_charge",
+      "code": "sister_in_charge",
+      "displayName": "Sister In Charge",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical",
+          "facility_administration"
+        ],
+        "defaultRoleTemplates": [
+          "sister_in_charge"
+        ],
+        "abbreviation": "SIC",
+        "primaryZimbabweRole": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-sister_in_charge_community",
+      "code": "sister_in_charge_community",
+      "displayName": "Sister In Charge (Community)",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "community_outreach",
+          "facility_administration"
+        ],
+        "defaultRoleTemplates": [
+          "sister_in_charge_community"
+        ],
+        "abbreviation": "SICC",
+        "primaryZimbabweRole": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-city_health_director",
+      "code": "city_health_director",
+      "displayName": "City Health Director",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "above_facility_management",
+          "public_health_inspection"
+        ],
+        "defaultRoleTemplates": [
+          "city_health_director"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-city_health_information_officer",
+      "code": "city_health_information_officer",
+      "displayName": "City Health Information Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "above_facility_support"
+        ],
+        "defaultRoleTemplates": [
+          "city_health_information_officer"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-city_environmental_health_officer",
+      "code": "city_environmental_health_officer",
+      "displayName": "City Environmental Health Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "public_health_inspection"
+        ],
+        "defaultRoleTemplates": [
+          "city_environmental_health_officer"
+        ],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "deprecated",
+      "auditSensitivity": "medium",
+      "id": "cadre-district_health_officer",
+      "code": "district_health_officer",
+      "displayName": "District Health Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "description": "Deprecated alias; use district_medical_officer",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [],
+        "defaultRoleTemplates": [],
+        "aliases": [
+          "dho",
+          "district_health_officer_legacy"
+        ],
+        "primaryZimbabweRole": false,
+        "mapsTo": "district_medical_officer"
+      }
+    },
+    {
+      "status": "deprecated",
+      "auditSensitivity": "medium",
+      "id": "cadre-provincial_health_officer",
+      "code": "provincial_health_officer",
+      "displayName": "Provincial Health Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "description": "Deprecated alias; use provincial_medical_director",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [],
+        "defaultRoleTemplates": [],
+        "aliases": [
+          "pho",
+          "provincial_health_officer_legacy"
+        ],
+        "primaryZimbabweRole": false,
+        "mapsTo": "provincial_medical_director"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-junior_resident_medical_officer",
+      "code": "junior_resident_medical_officer",
+      "displayName": "Junior Resident Medical Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-senior_resident_medical_officer",
+      "code": "senior_resident_medical_officer",
+      "displayName": "Senior Resident Medical Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-medical_officer",
+      "code": "medical_officer",
+      "displayName": "Medical Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-clinical_director",
+      "code": "clinical_director",
+      "displayName": "Clinical Director",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-consultant_physician",
+      "code": "consultant_physician",
+      "displayName": "Consultant Physician",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-general_surgeon",
+      "code": "general_surgeon",
+      "displayName": "General Surgeon",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-epidemiologist",
+      "code": "epidemiologist",
+      "displayName": "Epidemiologist",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-dental_therapist",
+      "code": "dental_therapist",
+      "displayName": "Dental Therapist",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-oral_health_technician",
+      "code": "oral_health_technician",
+      "displayName": "Oral Health Technician",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-state_certified_nurse",
+      "code": "state_certified_nurse",
+      "displayName": "State Certified Nurse",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-senior_nurse",
+      "code": "senior_nurse",
+      "displayName": "Senior Nurse",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-ward_sister",
+      "code": "ward_sister",
+      "displayName": "Ward Sister",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-ward_nurse",
+      "code": "ward_nurse",
+      "displayName": "Ward Nurse",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-theatre_nurse_in_charge",
+      "code": "theatre_nurse_in_charge",
+      "displayName": "Theatre Nurse In Charge",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-maternity_nurse",
+      "code": "maternity_nurse",
+      "displayName": "Maternity Nurse",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-community_nurse",
+      "code": "community_nurse",
+      "displayName": "Community Nurse",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "community_outreach"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-school_health_nurse",
+      "code": "school_health_nurse",
+      "displayName": "School Health Nurse",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-infection_prevention_control_nurse",
+      "code": "infection_prevention_control_nurse",
+      "displayName": "Infection Prevention Control Nurse",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-nursing_tutor",
+      "code": "nursing_tutor",
+      "displayName": "Nursing Tutor",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-nurse_mentor",
+      "code": "nurse_mentor",
+      "displayName": "Nurse Mentor",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-hospital_pharmacist",
+      "code": "hospital_pharmacist",
+      "displayName": "Hospital Pharmacist",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-district_pharmacist",
+      "code": "district_pharmacist",
+      "displayName": "District Pharmacist",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "above_facility_management",
+          "above_facility_support"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-provincial_pharmacist",
+      "code": "provincial_pharmacist",
+      "displayName": "Provincial Pharmacist",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "above_facility_management",
+          "above_facility_support"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-medicines_store_manager",
+      "code": "medicines_store_manager",
+      "displayName": "Medicines Store Manager",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "pharmacy_services"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-medicines_control_officer",
+      "code": "medicines_control_officer",
+      "displayName": "Medicines Control Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "pharmacy_services"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-supply_chain_pharmacist",
+      "code": "supply_chain_pharmacist",
+      "displayName": "Supply Chain Pharmacist",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-medicines_logistics_officer",
+      "code": "medicines_logistics_officer",
+      "displayName": "Medicines Logistics Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "pharmacy_services"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-medical_laboratory_scientist",
+      "code": "medical_laboratory_scientist",
+      "displayName": "Medical Laboratory Scientist",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "laboratory_services"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-laboratory_assistant",
+      "code": "laboratory_assistant",
+      "displayName": "Laboratory Assistant",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "laboratory_services"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-laboratory_supervisor",
+      "code": "laboratory_supervisor",
+      "displayName": "Laboratory Supervisor",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "laboratory_services"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-district_laboratory_focal_person",
+      "code": "district_laboratory_focal_person",
+      "displayName": "District Laboratory Focal Person",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "above_facility_management",
+          "above_facility_support"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-provincial_laboratory_focal_person",
+      "code": "provincial_laboratory_focal_person",
+      "displayName": "Provincial Laboratory Focal Person",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "above_facility_management",
+          "above_facility_support"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-specimen_collector",
+      "code": "specimen_collector",
+      "displayName": "Specimen Collector",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "laboratory_services"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-phlebotomist",
+      "code": "phlebotomist",
+      "displayName": "Phlebotomist",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "laboratory_services"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-microbiology_scientist",
+      "code": "microbiology_scientist",
+      "displayName": "Microbiology Scientist",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-haematology_scientist",
+      "code": "haematology_scientist",
+      "displayName": "Haematology Scientist",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-chemistry_scientist",
+      "code": "chemistry_scientist",
+      "displayName": "Chemistry Scientist",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-pathology_scientist",
+      "code": "pathology_scientist",
+      "displayName": "Pathology Scientist",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-senior_radiographer",
+      "code": "senior_radiographer",
+      "displayName": "Senior Radiographer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "radiology_imaging"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-radiology_supervisor",
+      "code": "radiology_supervisor",
+      "displayName": "Radiology Supervisor",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "radiology_imaging"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-imaging_reviewer",
+      "code": "imaging_reviewer",
+      "displayName": "Imaging Reviewer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "radiology_imaging"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-radiology_assistant",
+      "code": "radiology_assistant",
+      "displayName": "Radiology Assistant",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "radiology_imaging"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-radiation_safety_officer",
+      "code": "radiation_safety_officer",
+      "displayName": "Radiation Safety Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-speech_therapist",
+      "code": "speech_therapist",
+      "displayName": "Speech Therapist",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-rehabilitation_technician",
+      "code": "rehabilitation_technician",
+      "displayName": "Rehabilitation Technician",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-medical_social_worker",
+      "code": "medical_social_worker",
+      "displayName": "Medical Social Worker",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-mental_health_practitioner",
+      "code": "mental_health_practitioner",
+      "displayName": "Mental Health Practitioner",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-dental_assistant",
+      "code": "dental_assistant",
+      "displayName": "Dental Assistant",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-environmental_health_officer",
+      "code": "environmental_health_officer",
+      "displayName": "Environmental Health Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "public_health_inspection"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-environmental_health_technician",
+      "code": "environmental_health_technician",
+      "displayName": "Environmental Health Technician",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "public_health_inspection"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-public_health_inspector",
+      "code": "public_health_inspector",
+      "displayName": "Public Health Inspector",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "public_health_inspection"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-health_promotion_officer",
+      "code": "health_promotion_officer",
+      "displayName": "Health Promotion Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-health_promotion_assistant",
+      "code": "health_promotion_assistant",
+      "displayName": "Health Promotion Assistant",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-disease_control_officer",
+      "code": "disease_control_officer",
+      "displayName": "Disease Control Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-surveillance_officer",
+      "code": "surveillance_officer",
+      "displayName": "Surveillance Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "public_health_inspection"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-district_epidemiology_disease_control_officer",
+      "code": "district_epidemiology_disease_control_officer",
+      "displayName": "District Epidemiology Disease Control Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "above_facility_management",
+          "above_facility_support"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-port_health_officer",
+      "code": "port_health_officer",
+      "displayName": "Port Health Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-food_safety_inspector",
+      "code": "food_safety_inspector",
+      "displayName": "Food Safety Inspector",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-water_sanitation_hygiene_officer",
+      "code": "water_sanitation_hygiene_officer",
+      "displayName": "Water Sanitation Hygiene Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-vector_control_officer",
+      "code": "vector_control_officer",
+      "displayName": "Vector Control Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-malaria_control_officer",
+      "code": "malaria_control_officer",
+      "displayName": "Malaria Control Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-outbreak_response_officer",
+      "code": "outbreak_response_officer",
+      "displayName": "Outbreak Response Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-village_health_worker",
+      "code": "village_health_worker",
+      "displayName": "Village Health Worker",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "community_outreach"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-community_based_distributor",
+      "code": "community_based_distributor",
+      "displayName": "Community Based Distributor",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "community_outreach"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-peer_educator",
+      "code": "peer_educator",
+      "displayName": "Peer Educator",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-community_health_supervisor",
+      "code": "community_health_supervisor",
+      "displayName": "Community Health Supervisor",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "community_outreach"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-outreach_worker",
+      "code": "outreach_worker",
+      "displayName": "Outreach Worker",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "community_outreach"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-mobile_clinic_worker",
+      "code": "mobile_clinic_worker",
+      "displayName": "Mobile Clinic Worker",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "community_outreach"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-home_based_care_worker",
+      "code": "home_based_care_worker",
+      "displayName": "Home Based Care Worker",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-national_health_information_officer",
+      "code": "national_health_information_officer",
+      "displayName": "National Health Information Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "above_facility_management",
+          "above_facility_support"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-data_clerk",
+      "code": "data_clerk",
+      "displayName": "Data Clerk",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "health_information_records"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-records_supervisor",
+      "code": "records_supervisor",
+      "displayName": "Records Supervisor",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "health_information_records"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-data_quality_officer",
+      "code": "data_quality_officer",
+      "displayName": "Data Quality Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "health_information_records"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-digital_health_officer",
+      "code": "digital_health_officer",
+      "displayName": "Digital Health Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "system_administration"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-ehr_support_officer",
+      "code": "ehr_support_officer",
+      "displayName": "Ehr Support Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-telemedicine_support_officer",
+      "code": "telemedicine_support_officer",
+      "displayName": "Telemedicine Support Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-ict_support_officer",
+      "code": "ict_support_officer",
+      "displayName": "Ict Support Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "system_administration"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-systems_administrator",
+      "code": "systems_administrator",
+      "displayName": "Systems Administrator",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-helpdesk_supervisor",
+      "code": "helpdesk_supervisor",
+      "displayName": "Helpdesk Supervisor",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "system_administration"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-interoperability_officer",
+      "code": "interoperability_officer",
+      "displayName": "Interoperability Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-integration_engineer",
+      "code": "integration_engineer",
+      "displayName": "Integration Engineer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "system_administration"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-data_analyst",
+      "code": "data_analyst",
+      "displayName": "Data Analyst",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "health_information_records"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-data_manager",
+      "code": "data_manager",
+      "displayName": "Data Manager",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "health_information_records"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-health_informatics_officer",
+      "code": "health_informatics_officer",
+      "displayName": "Health Informatics Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-hospital_administrator",
+      "code": "hospital_administrator",
+      "displayName": "Hospital Administrator",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-finance_officer",
+      "code": "finance_officer",
+      "displayName": "Finance Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "billing_finance"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-claims_officer",
+      "code": "claims_officer",
+      "displayName": "Claims Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "billing_finance"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-exemptions_officer",
+      "code": "exemptions_officer",
+      "displayName": "Exemptions Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-stores_clerk",
+      "code": "stores_clerk",
+      "displayName": "Stores Clerk",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-transport_officer",
+      "code": "transport_officer",
+      "displayName": "Transport Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-ambulance_driver",
+      "code": "ambulance_driver",
+      "displayName": "Ambulance Driver",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-driver",
+      "code": "driver",
+      "displayName": "Driver",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-maintenance_officer",
+      "code": "maintenance_officer",
+      "displayName": "Maintenance Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-security_officer",
+      "code": "security_officer",
+      "displayName": "Security Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-cleaning_supervisor",
+      "code": "cleaning_supervisor",
+      "displayName": "Cleaning Supervisor",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-food_services_supervisor",
+      "code": "food_services_supervisor",
+      "displayName": "Food Services Supervisor",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-hospital_food_services_supervisor",
+      "code": "hospital_food_services_supervisor",
+      "displayName": "Hospital Food Services Supervisor",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-national_programme_manager",
+      "code": "national_programme_manager",
+      "displayName": "National Programme Manager",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "above_facility_management",
+          "above_facility_support"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-provincial_programme_manager",
+      "code": "provincial_programme_manager",
+      "displayName": "Provincial Programme Manager",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "above_facility_management",
+          "above_facility_support"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-district_programme_manager",
+      "code": "district_programme_manager",
+      "displayName": "District Programme Manager",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "above_facility_management",
+          "above_facility_support"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-programme_officer",
+      "code": "programme_officer",
+      "displayName": "Programme Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "programme_support"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-programme_m_and_e_officer",
+      "code": "programme_m_and_e_officer",
+      "displayName": "Programme M And E Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "programme_support"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-district_programme_focal_person",
+      "code": "district_programme_focal_person",
+      "displayName": "District Programme Focal Person",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "above_facility_management",
+          "above_facility_support"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-provincial_programme_focal_person",
+      "code": "provincial_programme_focal_person",
+      "displayName": "Provincial Programme Focal Person",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "above_facility_management",
+          "above_facility_support"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-clinical_mentor",
+      "code": "clinical_mentor",
+      "displayName": "Clinical Mentor",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-pharmacy_mentor",
+      "code": "pharmacy_mentor",
+      "displayName": "Pharmacy Mentor",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "pharmacy_services"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-laboratory_mentor",
+      "code": "laboratory_mentor",
+      "displayName": "Laboratory Mentor",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "laboratory_services"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-training_coordinator",
+      "code": "training_coordinator",
+      "displayName": "Training Coordinator",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-cpd_coordinator",
+      "code": "cpd_coordinator",
+      "displayName": "Cpd Coordinator",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-quality_improvement_officer",
+      "code": "quality_improvement_officer",
+      "displayName": "Quality Improvement Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-audit_officer",
+      "code": "audit_officer",
+      "displayName": "Audit Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-compliance_officer",
+      "code": "compliance_officer",
+      "displayName": "Compliance Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-emergency_care_provider",
+      "code": "emergency_care_provider",
+      "displayName": "Emergency Care Provider",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-emergency_response_coordinator",
+      "code": "emergency_response_coordinator",
+      "displayName": "Emergency Response Coordinator",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-disaster_response_officer",
+      "code": "disaster_response_officer",
+      "displayName": "Disaster Response Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-rapid_response_team_member",
+      "code": "rapid_response_team_member",
+      "displayName": "Rapid Response Team Member",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-marketplace_vendor_user",
+      "code": "marketplace_vendor_user",
+      "displayName": "Marketplace Vendor User",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "registry_governance",
+          "regulatory_oversight",
+          "marketplace_operations"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-marketplace_organisation_admin",
+      "code": "marketplace_organisation_admin",
+      "displayName": "Marketplace Organisation Admin",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "registry_governance",
+          "regulatory_oversight",
+          "marketplace_operations"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-supplier_representative",
+      "code": "supplier_representative",
+      "displayName": "Supplier Representative",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-manufacturer_representative",
+      "code": "manufacturer_representative",
+      "displayName": "Manufacturer Representative",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-distributor_representative",
+      "code": "distributor_representative",
+      "displayName": "Distributor Representative",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-insurer_representative",
+      "code": "insurer_representative",
+      "displayName": "Insurer Representative",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-payment_provider_representative",
+      "code": "payment_provider_representative",
+      "displayName": "Payment Provider Representative",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-logistics_partner_user",
+      "code": "logistics_partner_user",
+      "displayName": "Logistics Partner User",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-device_vendor_user",
+      "code": "device_vendor_user",
+      "displayName": "Device Vendor User",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-iot_vendor_user",
+      "code": "iot_vendor_user",
+      "displayName": "Iot Vendor User",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-software_integration_partner_user",
+      "code": "software_integration_partner_user",
+      "displayName": "Software Integration Partner User",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "system_administration"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-api_developer",
+      "code": "api_developer",
+      "displayName": "Api Developer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-sandbox_tester",
+      "code": "sandbox_tester",
+      "displayName": "Sandbox Tester",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-marketplace_compliance_officer",
+      "code": "marketplace_compliance_officer",
+      "displayName": "Marketplace Compliance Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "registry_governance",
+          "regulatory_oversight",
+          "marketplace_operations"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-regulatory_liaison_officer",
+      "code": "regulatory_liaison_officer",
+      "displayName": "Regulatory Liaison Officer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "registry_governance",
+          "regulatory_oversight",
+          "marketplace_operations"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-provider_registry_steward",
+      "code": "provider_registry_steward",
+      "displayName": "Provider Registry Steward",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "registry_governance",
+          "regulatory_oversight",
+          "marketplace_operations"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-client_registry_steward",
+      "code": "client_registry_steward",
+      "displayName": "Client Registry Steward",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "registry_governance",
+          "regulatory_oversight",
+          "marketplace_operations"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-facility_registry_steward",
+      "code": "facility_registry_steward",
+      "displayName": "Facility Registry Steward",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "registry_governance",
+          "regulatory_oversight",
+          "marketplace_operations"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-terminology_registry_steward",
+      "code": "terminology_registry_steward",
+      "displayName": "Terminology Registry Steward",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "registry_governance",
+          "regulatory_oversight",
+          "marketplace_operations"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-product_service_registry_steward",
+      "code": "product_service_registry_steward",
+      "displayName": "Product Service Registry Steward",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "registry_governance",
+          "regulatory_oversight",
+          "marketplace_operations"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-public_health_place_registry_steward",
+      "code": "public_health_place_registry_steward",
+      "displayName": "Public Health Place Registry Steward",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "registry_governance",
+          "regulatory_oversight",
+          "marketplace_operations"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-geography_jurisdiction_steward",
+      "code": "geography_jurisdiction_steward",
+      "displayName": "Geography Jurisdiction Steward",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "system_administration"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-professional_council_regulator",
+      "code": "professional_council_regulator",
+      "displayName": "Professional Council Regulator",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "registry_governance",
+          "regulatory_oversight",
+          "marketplace_operations"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-facility_licensing_regulator",
+      "code": "facility_licensing_regulator",
+      "displayName": "Facility Licensing Regulator",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "registry_governance",
+          "regulatory_oversight",
+          "marketplace_operations"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-medicines_product_regulator",
+      "code": "medicines_product_regulator",
+      "displayName": "Medicines Product Regulator",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "registry_governance",
+          "regulatory_oversight",
+          "marketplace_operations"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-laboratory_accreditation_regulator",
+      "code": "laboratory_accreditation_regulator",
+      "displayName": "Laboratory Accreditation Regulator",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "registry_governance",
+          "regulatory_oversight",
+          "marketplace_operations"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-training_cpd_accreditor",
+      "code": "training_cpd_accreditor",
+      "displayName": "Training Cpd Accreditor",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "facility_clinical"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-public_health_regulator",
+      "code": "public_health_regulator",
+      "displayName": "Public Health Regulator",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "registry_governance",
+          "regulatory_oversight",
+          "marketplace_operations"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-marketplace_certification_reviewer",
+      "code": "marketplace_certification_reviewer",
+      "displayName": "Marketplace Certification Reviewer",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "clinical",
+        "defaultEligibleContextTypes": [
+          "registry_governance",
+          "regulatory_oversight",
+          "marketplace_operations"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cadre-regulatory_auditor",
+      "code": "regulatory_auditor",
+      "displayName": "Regulatory Auditor",
+      "category": "profession_cadre",
+      "ownerService": "varapi",
+      "metadata": {
+        "clinicalOrNonClinical": "non_clinical",
+        "defaultEligibleContextTypes": [
+          "registry_governance",
+          "regulatory_oversight",
+          "marketplace_operations"
+        ],
+        "defaultRoleTemplates": [],
+        "primaryZimbabweRole": false
+      }
+    }
+  ]
+}

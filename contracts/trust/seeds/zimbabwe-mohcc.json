@@ -1,0 +1,1555 @@
+{
+  "version": "1.3.0",
+  "catalogueId": "zimbabwe-mohcc",
+  "displayName": "Zimbabwe MoHCC Administrative Levels and Organisational Structures",
+  "entries": [
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "organogram-source-mohcc-hsc-2025",
+      "code": "mohcc_organogram_hsc_2025_03_05",
+      "displayName": "MoHCC Organogram",
+      "description": "Approved by Health Service Commission on 2025-03-05",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "national",
+        "parentStructure": null,
+        "primaryZimbabweStructure": true,
+        "organogramGrounding": true,
+        "approvedBy": "Health Service Commission",
+        "approvedDate": "2025-03-05",
+        "organogramVersion": "2025-03-05"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zal-national",
+      "code": "national",
+      "displayName": "National",
+      "description": "National MoHCC policy, standards, governance, and national programmes.",
+      "category": "health_administrative_level",
+      "ownerService": "tshepo",
+      "policyMapping": "national",
+      "metadata": {
+        "parentLevel": null,
+        "allowedRoleTemplates": [
+          "national_medical_director",
+          "national_nursing_director",
+          "national_health_information_director",
+          "national_programme_director",
+          "national_platform_administrator",
+          "professional_council_regulator"
+        ],
+        "allowedAssignmentTypes": [
+          "facility_assignment",
+          "department_assignment",
+          "unit_assignment",
+          "workspace_assignment",
+          "programme_assignment",
+          "above_site_assignment"
+        ],
+        "defaultDashboards": [
+          "above_site_dashboard",
+          "programme_dashboard",
+          "system_admin_console"
+        ],
+        "policyScope": "national",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zal-province",
+      "code": "province",
+      "displayName": "Province",
+      "description": "Provincial health executive oversight and support structures.",
+      "category": "health_administrative_level",
+      "ownerService": "tshepo",
+      "policyMapping": "province",
+      "metadata": {
+        "parentLevel": "national",
+        "allowedRoleTemplates": [
+          "provincial_medical_director",
+          "provincial_nursing_officer",
+          "provincial_health_information_officer",
+          "provincial_epidemiology_disease_control_officer",
+          "provincial_support_officer"
+        ],
+        "allowedAssignmentTypes": [
+          "facility_assignment",
+          "department_assignment",
+          "unit_assignment",
+          "workspace_assignment",
+          "programme_assignment",
+          "above_site_assignment"
+        ],
+        "defaultDashboards": [
+          "above_site_dashboard",
+          "programme_dashboard"
+        ],
+        "policyScope": "province",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zal-district",
+      "code": "district",
+      "displayName": "District",
+      "description": "District health executive management and district programme coordination.",
+      "category": "health_administrative_level",
+      "ownerService": "tshepo",
+      "policyMapping": "district",
+      "metadata": {
+        "parentLevel": "province",
+        "allowedRoleTemplates": [
+          "district_medical_officer",
+          "district_nursing_officer",
+          "district_health_information_officer",
+          "district_support_officer",
+          "district_programme_coordinator"
+        ],
+        "allowedAssignmentTypes": [
+          "facility_assignment",
+          "department_assignment",
+          "unit_assignment",
+          "workspace_assignment",
+          "programme_assignment",
+          "above_site_assignment"
+        ],
+        "defaultDashboards": [
+          "above_site_dashboard",
+          "programme_dashboard"
+        ],
+        "policyScope": "district",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zal-city_local_authority",
+      "code": "city_local_authority",
+      "displayName": "City / Local Authority",
+      "description": "Urban local authority and city health department structures.",
+      "category": "health_administrative_level",
+      "ownerService": "tshepo",
+      "policyMapping": "district",
+      "metadata": {
+        "parentLevel": "district",
+        "allowedRoleTemplates": [
+          "city_health_director",
+          "city_health_information_officer",
+          "city_environmental_health_officer"
+        ],
+        "allowedAssignmentTypes": [
+          "facility_assignment",
+          "department_assignment",
+          "unit_assignment",
+          "workspace_assignment",
+          "programme_assignment",
+          "above_site_assignment"
+        ],
+        "defaultDashboards": [
+          "public_health_inspection",
+          "above_site_dashboard"
+        ],
+        "policyScope": "district",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zal-facility",
+      "code": "facility",
+      "displayName": "Facility",
+      "description": "Hospital, clinic, health centre, and facility operations scope.",
+      "category": "health_administrative_level",
+      "ownerService": "tshepo",
+      "policyMapping": "facility",
+      "metadata": {
+        "parentLevel": "district",
+        "allowedRoleTemplates": [
+          "medical_superintendent",
+          "matron",
+          "sister_in_charge",
+          "general_medical_officer",
+          "pharmacist",
+          "laboratory_scientist",
+          "facility_administrator"
+        ],
+        "allowedAssignmentTypes": [
+          "facility_assignment",
+          "department_assignment",
+          "unit_assignment",
+          "workspace_assignment"
+        ],
+        "defaultDashboards": [
+          "facility_dashboard",
+          "facility_admin",
+          "facility_reports"
+        ],
+        "policyScope": "facility",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zal-department",
+      "code": "department",
+      "displayName": "Department",
+      "description": "Facility department-level service delivery and administration.",
+      "category": "health_administrative_level",
+      "ownerService": "tshepo",
+      "policyMapping": "facility",
+      "metadata": {
+        "parentLevel": "facility",
+        "allowedRoleTemplates": [
+          "head_of_department_clinical",
+          "department_administrator",
+          "department_nurse_manager"
+        ],
+        "allowedAssignmentTypes": [
+          "facility_assignment",
+          "department_assignment",
+          "unit_assignment",
+          "workspace_assignment"
+        ],
+        "defaultDashboards": [
+          "facility_department_dashboard",
+          "facility_staff_management"
+        ],
+        "policyScope": "facility",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zal-unit",
+      "code": "unit",
+      "displayName": "Unit",
+      "description": "Service unit (ward, theatre, lab bench, pharmacy station, records section).",
+      "category": "health_administrative_level",
+      "ownerService": "tshepo",
+      "policyMapping": "facility",
+      "metadata": {
+        "parentLevel": "department",
+        "allowedRoleTemplates": [
+          "unit_clinical_lead",
+          "unit_nursing_lead",
+          "unit_records_lead"
+        ],
+        "allowedAssignmentTypes": [
+          "facility_assignment",
+          "department_assignment",
+          "unit_assignment",
+          "workspace_assignment"
+        ],
+        "defaultDashboards": [
+          "work",
+          "facility_staff_management"
+        ],
+        "policyScope": "facility",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zal-ward",
+      "code": "ward",
+      "displayName": "Ward",
+      "description": "Inpatient or specialty ward-level clinical and nursing operations.",
+      "category": "health_administrative_level",
+      "ownerService": "tshepo",
+      "policyMapping": "facility",
+      "metadata": {
+        "parentLevel": "unit",
+        "allowedRoleTemplates": [
+          "ward_nurse",
+          "nurse_in_charge",
+          "ward_clerk"
+        ],
+        "allowedAssignmentTypes": [
+          "facility_assignment",
+          "department_assignment",
+          "unit_assignment",
+          "workspace_assignment"
+        ],
+        "defaultDashboards": [
+          "inpatient",
+          "work"
+        ],
+        "policyScope": "facility",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zal-community",
+      "code": "community",
+      "displayName": "Community",
+      "description": "Community outreach structures linked to a district and catchment.",
+      "category": "health_administrative_level",
+      "ownerService": "tshepo",
+      "policyMapping": "community",
+      "metadata": {
+        "parentLevel": "district",
+        "allowedRoleTemplates": [
+          "sister_in_charge_community",
+          "community_health_worker",
+          "community_surveillance_officer",
+          "community_data_clerk"
+        ],
+        "allowedAssignmentTypes": [
+          "community_outreach_assignment",
+          "mobile_clinic_assignment",
+          "public_health_place_assignment",
+          "workspace_assignment"
+        ],
+        "defaultDashboards": [
+          "community_outreach",
+          "programme_support"
+        ],
+        "policyScope": "community",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zal-village",
+      "code": "village",
+      "displayName": "Village",
+      "description": "Village-level community health and engagement structures.",
+      "category": "health_administrative_level",
+      "ownerService": "tshepo",
+      "policyMapping": "community",
+      "metadata": {
+        "parentLevel": "community",
+        "allowedRoleTemplates": [
+          "village_health_worker",
+          "village_health_committee_chair"
+        ],
+        "allowedAssignmentTypes": [
+          "community_outreach_assignment",
+          "mobile_clinic_assignment",
+          "public_health_place_assignment",
+          "workspace_assignment"
+        ],
+        "defaultDashboards": [
+          "community_outreach"
+        ],
+        "policyScope": "community",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zal-catchment_area",
+      "code": "catchment_area",
+      "displayName": "Catchment Area",
+      "description": "Facility catchment geography and population coverage area.",
+      "category": "health_administrative_level",
+      "ownerService": "tshepo",
+      "policyMapping": "community",
+      "metadata": {
+        "parentLevel": "district",
+        "allowedRoleTemplates": [
+          "catchment_surveillance_officer",
+          "catchment_outreach_coordinator"
+        ],
+        "allowedAssignmentTypes": [
+          "community_outreach_assignment",
+          "mobile_clinic_assignment",
+          "public_health_place_assignment",
+          "workspace_assignment"
+        ],
+        "defaultDashboards": [
+          "community_outreach",
+          "programme_dashboard"
+        ],
+        "policyScope": "community",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zal-virtual",
+      "code": "virtual",
+      "displayName": "Virtual",
+      "description": "Virtual and telemedicine workspace scope.",
+      "category": "health_administrative_level",
+      "ownerService": "tshepo",
+      "policyMapping": "facility",
+      "metadata": {
+        "parentLevel": "national",
+        "allowedRoleTemplates": [
+          "telemedicine_provider",
+          "telemedicine_specialist_reviewer",
+          "virtual_triage_nurse"
+        ],
+        "allowedAssignmentTypes": [
+          "telemedicine_pool_assignment",
+          "workspace_assignment"
+        ],
+        "defaultDashboards": [
+          "telemedicine_pool",
+          "telemedicine_triage",
+          "telemedicine_specialist_review"
+        ],
+        "policyScope": "facility",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zal-programme",
+      "code": "programme",
+      "displayName": "Programme",
+      "description": "Programme implementation units across national to community levels.",
+      "category": "health_administrative_level",
+      "ownerService": "tshepo",
+      "policyMapping": "national",
+      "metadata": {
+        "parentLevel": "national",
+        "allowedRoleTemplates": [
+          "national_programme_director",
+          "provincial_programme_coordinator",
+          "district_programme_coordinator"
+        ],
+        "allowedAssignmentTypes": [
+          "programme_assignment",
+          "workspace_assignment"
+        ],
+        "defaultDashboards": [
+          "programme_dashboard",
+          "programme_support"
+        ],
+        "policyScope": "national",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zal-marketplace",
+      "code": "marketplace",
+      "displayName": "Marketplace",
+      "description": "Marketplace provider, vendor, and compliance access scope.",
+      "category": "health_administrative_level",
+      "ownerService": "tshepo",
+      "policyMapping": "marketplace",
+      "metadata": {
+        "parentLevel": "national",
+        "allowedRoleTemplates": [
+          "marketplace_organisation_admin",
+          "marketplace_product_manager",
+          "marketplace_compliance_officer"
+        ],
+        "allowedAssignmentTypes": [
+          "marketplace_organisation_assignment",
+          "marketplace_product_assignment",
+          "workspace_assignment"
+        ],
+        "defaultDashboards": [
+          "marketplace_vendor_portal",
+          "marketplace_product_catalogue",
+          "marketplace_compliance_monitoring"
+        ],
+        "policyScope": "marketplace",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zal-registry",
+      "code": "registry",
+      "displayName": "Registry",
+      "description": "Registry governance and stewardship responsibilities.",
+      "category": "health_administrative_level",
+      "ownerService": "tshepo",
+      "policyMapping": "registry",
+      "metadata": {
+        "parentLevel": "national",
+        "allowedRoleTemplates": [
+          "provider_registry_owner",
+          "client_registry_owner",
+          "facility_registry_owner"
+        ],
+        "allowedAssignmentTypes": [
+          "registry_governance_assignment",
+          "workspace_assignment"
+        ],
+        "defaultDashboards": [
+          "provider_registry_admin",
+          "client_registry_admin",
+          "facility_registry_admin"
+        ],
+        "policyScope": "registry",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zal-regulator",
+      "code": "regulator",
+      "displayName": "Regulator",
+      "description": "Professional, facility, and product regulatory oversight functions.",
+      "category": "health_administrative_level",
+      "ownerService": "tshepo",
+      "policyMapping": "national",
+      "metadata": {
+        "parentLevel": "national",
+        "allowedRoleTemplates": [
+          "professional_council_regulator",
+          "facility_licensing_regulator",
+          "medicines_products_regulator"
+        ],
+        "allowedAssignmentTypes": [
+          "regulatory_assignment",
+          "workspace_assignment"
+        ],
+        "defaultDashboards": [
+          "professional_council_review",
+          "facility_licensing_review",
+          "medicines_product_review"
+        ],
+        "policyScope": "national",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zal-partner_organisation",
+      "code": "partner_organisation",
+      "displayName": "Partner Organisation",
+      "description": "Development, implementing partner, and contracted programme entities.",
+      "category": "health_administrative_level",
+      "ownerService": "tshepo",
+      "policyMapping": "national",
+      "metadata": {
+        "parentLevel": "national",
+        "allowedRoleTemplates": [
+          "partner_programme_manager",
+          "partner_data_officer",
+          "partner_outreach_coordinator"
+        ],
+        "allowedAssignmentTypes": [
+          "integration_partner_assignment",
+          "programme_assignment",
+          "workspace_assignment"
+        ],
+        "defaultDashboards": [
+          "programme_support",
+          "integration_console"
+        ],
+        "policyScope": "national",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-mohcc_national_headquarters",
+      "code": "mohcc_national_headquarters",
+      "displayName": "MoHCC National Headquarters",
+      "description": "National headquarters for Zimbabwe MoHCC governance and policy.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "national",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-office_of_the_permanent_secretary",
+      "code": "office_of_the_permanent_secretary",
+      "displayName": "Office of the Permanent Secretary",
+      "description": "Executive administration and strategic oversight.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "national",
+        "parentStructure": "mohcc_national_headquarters",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-directorate_clinical_services",
+      "code": "directorate_clinical_services",
+      "displayName": "Directorate of Clinical Services",
+      "description": "National clinical governance and standards.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "national",
+        "parentStructure": "mohcc_national_headquarters",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-directorate_nursing_services",
+      "code": "directorate_nursing_services",
+      "displayName": "Directorate of Nursing Services",
+      "description": "National nursing policy and supervision.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "national",
+        "parentStructure": "mohcc_national_headquarters",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-directorate_public_health",
+      "code": "directorate_public_health",
+      "displayName": "Directorate of Public Health",
+      "description": "Disease prevention, surveillance, and public health operations.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "national",
+        "parentStructure": "mohcc_national_headquarters",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-directorate_health_information",
+      "code": "directorate_health_information",
+      "displayName": "Directorate of Health Information",
+      "description": "National health information and records governance.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "national",
+        "parentStructure": "mohcc_national_headquarters",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-directorate_pharmaceutical_services",
+      "code": "directorate_pharmaceutical_services",
+      "displayName": "Directorate of Pharmaceutical Services",
+      "description": "Medication, dispensing, and pharmacy systems leadership.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "national",
+        "parentStructure": "mohcc_national_headquarters",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-directorate_laboratory_services",
+      "code": "directorate_laboratory_services",
+      "displayName": "Directorate of Laboratory Services",
+      "description": "National laboratory services and quality standards.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "national",
+        "parentStructure": "mohcc_national_headquarters",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-directorate_finance_and_administration",
+      "code": "directorate_finance_and_administration",
+      "displayName": "Directorate of Finance and Administration",
+      "description": "Finance, HR, procurement, and administrative control.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "national",
+        "parentStructure": "mohcc_national_headquarters",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-directorate_digital_health",
+      "code": "directorate_digital_health",
+      "displayName": "Directorate of Digital Health",
+      "description": "National digital health and platform operations.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "national",
+        "parentStructure": "mohcc_national_headquarters",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-directorate_emergency_preparedness",
+      "code": "directorate_emergency_preparedness",
+      "displayName": "Directorate of Emergency Preparedness",
+      "description": "Preparedness, incident command, and emergency response.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "national",
+        "parentStructure": "mohcc_national_headquarters",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-provincial_health_executive",
+      "code": "provincial_health_executive",
+      "displayName": "Provincial Health Executive",
+      "description": "Provincial executive management for health operations.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "province",
+        "parentStructure": "mohcc_national_headquarters",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-provincial_medical_office",
+      "code": "provincial_medical_office",
+      "displayName": "Provincial Medical Office",
+      "description": "Provincial medical leadership and supervision.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "province",
+        "parentStructure": "provincial_health_executive",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-provincial_nursing_office",
+      "code": "provincial_nursing_office",
+      "displayName": "Provincial Nursing Office",
+      "description": "Provincial nursing oversight and workforce supervision.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "province",
+        "parentStructure": "provincial_health_executive",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-provincial_health_information_unit",
+      "code": "provincial_health_information_unit",
+      "displayName": "Provincial Health Information Unit",
+      "description": "Provincial reporting, records, and data quality supervision.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "province",
+        "parentStructure": "provincial_health_executive",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-provincial_public_health_unit",
+      "code": "provincial_public_health_unit",
+      "displayName": "Provincial Public Health Unit",
+      "description": "Provincial epidemiology, surveillance, and disease control.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "province",
+        "parentStructure": "provincial_health_executive",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-provincial_pharmacy_unit",
+      "code": "provincial_pharmacy_unit",
+      "displayName": "Provincial Pharmacy Unit",
+      "description": "Provincial pharmaceutical distribution and supervision.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "province",
+        "parentStructure": "provincial_health_executive",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-provincial_laboratory_unit",
+      "code": "provincial_laboratory_unit",
+      "displayName": "Provincial Laboratory Unit",
+      "description": "Provincial laboratory quality and referral network supervision.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "province",
+        "parentStructure": "provincial_health_executive",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-district_health_executive",
+      "code": "district_health_executive",
+      "displayName": "District Health Executive",
+      "description": "District-level health executive management.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "district",
+        "parentStructure": "provincial_health_executive",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-district_medical_office",
+      "code": "district_medical_office",
+      "displayName": "District Medical Office",
+      "description": "District medical leadership and district service integration.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "district",
+        "parentStructure": "district_health_executive",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-district_nursing_office",
+      "code": "district_nursing_office",
+      "displayName": "District Nursing Office",
+      "description": "District nursing supervision and quality control.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "district",
+        "parentStructure": "district_health_executive",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-district_health_information_unit",
+      "code": "district_health_information_unit",
+      "displayName": "District Health Information Unit",
+      "description": "District records and routine reporting operations.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "district",
+        "parentStructure": "district_health_executive",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-district_public_health_unit",
+      "code": "district_public_health_unit",
+      "displayName": "District Public Health Unit",
+      "description": "District surveillance, outbreak response, and prevention operations.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "district",
+        "parentStructure": "district_health_executive",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-district_programme_support_unit",
+      "code": "district_programme_support_unit",
+      "displayName": "District Programme Support Unit",
+      "description": "District programme implementation support and M&E.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "district",
+        "parentStructure": "district_health_executive",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-city_health_department",
+      "code": "city_health_department",
+      "displayName": "City Health Department",
+      "description": "Urban local authority health operations.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "city_local_authority",
+        "parentStructure": "district_health_executive",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-rural_district_health_office",
+      "code": "rural_district_health_office",
+      "displayName": "Rural District Health Office",
+      "description": "Local authority support for rural health operations.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "city_local_authority",
+        "parentStructure": "district_health_executive",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-central_hospital_management",
+      "code": "central_hospital_management",
+      "displayName": "Central Hospital Management",
+      "description": "Tertiary and quaternary hospital leadership structures.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "facility",
+        "parentStructure": "district_health_executive",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-provincial_hospital_management",
+      "code": "provincial_hospital_management",
+      "displayName": "Provincial Hospital Management",
+      "description": "Provincial referral hospital leadership structures.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "facility",
+        "parentStructure": "district_health_executive",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-district_hospital_management",
+      "code": "district_hospital_management",
+      "displayName": "District Hospital Management",
+      "description": "District hospital leadership and integrated services.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "facility",
+        "parentStructure": "district_health_executive",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-mission_hospital_management",
+      "code": "mission_hospital_management",
+      "displayName": "Mission Hospital Management",
+      "description": "Mission and church-run hospital governance linked to MoHCC standards.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "facility",
+        "parentStructure": "district_health_executive",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-urban_polyclinic_management",
+      "code": "urban_polyclinic_management",
+      "displayName": "Urban Polyclinic Management",
+      "description": "Urban clinic management and community-linked services.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "facility",
+        "parentStructure": "city_health_department",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-rural_health_centre_management",
+      "code": "rural_health_centre_management",
+      "displayName": "Rural Health Centre Management",
+      "description": "Primary care facility operations in rural settings.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "facility",
+        "parentStructure": "district_health_executive",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-clinic_management",
+      "code": "clinic_management",
+      "displayName": "Clinic Management",
+      "description": "Primary care clinic operational management.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "facility",
+        "parentStructure": "district_health_executive",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-facility_clinical_department",
+      "code": "facility_clinical_department",
+      "displayName": "Facility Clinical Department",
+      "description": "Clinical departments (medicine, surgery, paediatrics, obstetrics).",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "department",
+        "parentStructure": "district_hospital_management",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-facility_nursing_department",
+      "code": "facility_nursing_department",
+      "displayName": "Facility Nursing Department",
+      "description": "Nursing operations and ward management.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "department",
+        "parentStructure": "district_hospital_management",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-facility_pharmacy_department",
+      "code": "facility_pharmacy_department",
+      "displayName": "Facility Pharmacy Department",
+      "description": "Pharmacy, dispensing, and stock management.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "department",
+        "parentStructure": "district_hospital_management",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-facility_laboratory_department",
+      "code": "facility_laboratory_department",
+      "displayName": "Facility Laboratory Department",
+      "description": "Diagnostic and laboratory services.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "department",
+        "parentStructure": "district_hospital_management",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-facility_records_department",
+      "code": "facility_records_department",
+      "displayName": "Facility Records Department",
+      "description": "Health information and records management.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "department",
+        "parentStructure": "district_hospital_management",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-facility_finance_department",
+      "code": "facility_finance_department",
+      "displayName": "Facility Finance Department",
+      "description": "Billing, claims, and finance operations.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "department",
+        "parentStructure": "district_hospital_management",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-inpatient_ward_unit",
+      "code": "inpatient_ward_unit",
+      "displayName": "Inpatient Ward Unit",
+      "description": "General inpatient nursing and ward operations.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "ward",
+        "parentStructure": "facility_nursing_department",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-maternity_ward_unit",
+      "code": "maternity_ward_unit",
+      "displayName": "Maternity Ward Unit",
+      "description": "Maternity and newborn ward operations.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "ward",
+        "parentStructure": "facility_nursing_department",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-theatre_unit",
+      "code": "theatre_unit",
+      "displayName": "Theatre Unit",
+      "description": "Surgical theatre operations.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "unit",
+        "parentStructure": "facility_clinical_department",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-emergency_unit",
+      "code": "emergency_unit",
+      "displayName": "Emergency Unit",
+      "description": "Emergency and triage operations.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "unit",
+        "parentStructure": "facility_clinical_department",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-community_health_post",
+      "code": "community_health_post",
+      "displayName": "Community Health Post",
+      "description": "Community-level health outreach structure.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "community",
+        "parentStructure": "district_health_executive",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-village_health_worker_network",
+      "code": "village_health_worker_network",
+      "displayName": "Village Health Worker Network",
+      "description": "Village health worker and community committee network.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "village",
+        "parentStructure": "community_health_post",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-catchment_health_team",
+      "code": "catchment_health_team",
+      "displayName": "Catchment Health Team",
+      "description": "Catchment-focused outreach and surveillance teams.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "catchment_area",
+        "parentStructure": "district_health_executive",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-community_outreach_team",
+      "code": "community_outreach_team",
+      "displayName": "Community Outreach Team",
+      "description": "Outreach team for household and community services.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "community",
+        "parentStructure": "community_health_post",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-virtual_telemedicine_hub",
+      "code": "virtual_telemedicine_hub",
+      "displayName": "Virtual Telemedicine Hub",
+      "description": "Virtual consultation and telemedicine coordination node.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "virtual",
+        "parentStructure": "directorate_digital_health",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-programme_coordination_unit",
+      "code": "programme_coordination_unit",
+      "displayName": "Programme Coordination Unit",
+      "description": "Cross-cutting programme governance and implementation support.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "programme",
+        "parentStructure": "mohcc_national_headquarters",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-marketplace_operations_unit",
+      "code": "marketplace_operations_unit",
+      "displayName": "Marketplace Operations Unit",
+      "description": "Marketplace provider onboarding and operational governance.",
+      "category": "organisational_structure",
+      "ownerService": "msika",
+      "metadata": {
+        "level": "marketplace",
+        "parentStructure": "directorate_digital_health",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-registry_governance_unit",
+      "code": "registry_governance_unit",
+      "displayName": "Registry Governance Unit",
+      "description": "Provider, client, facility, and terminology registry governance.",
+      "category": "organisational_structure",
+      "ownerService": "tshepo",
+      "metadata": {
+        "level": "registry",
+        "parentStructure": "directorate_digital_health",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-regulatory_inspectorate_unit",
+      "code": "regulatory_inspectorate_unit",
+      "displayName": "Regulatory Inspectorate Unit",
+      "description": "Regulatory inspection, certification, and compliance operations.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "regulator",
+        "parentStructure": "directorate_public_health",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-partner_coordination_unit",
+      "code": "partner_coordination_unit",
+      "displayName": "Partner Coordination Unit",
+      "description": "Coordination for implementing and development partners.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "partner_organisation",
+        "parentStructure": "programme_coordination_unit",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-ministry_of_health_and_child_care",
+      "code": "ministry_of_health_and_child_care",
+      "displayName": "Ministry of Health and Child Care",
+      "description": "MoHCC apex organogram structure.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "national",
+        "parentStructure": "mohcc_national_headquarters",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-directorate_curative_services",
+      "code": "directorate_curative_services",
+      "displayName": "Directorate of Curative Services",
+      "description": "Curative clinical services, nursing, pharmacy, medical/dental, rehabilitation, EMS.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "national",
+        "parentStructure": "mohcc_national_headquarters",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-directorate_health_systems_policy_compliance_coordination",
+      "code": "directorate_health_systems_policy_compliance_coordination",
+      "displayName": "Directorate of Health Systems, Policy, Compliance and Coordination",
+      "description": "Policy, M&E, programme planning, quality assurance, risk and compliance.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "national",
+        "parentStructure": "mohcc_national_headquarters",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-directorate_support_services",
+      "code": "directorate_support_services",
+      "displayName": "Directorate of Support Services",
+      "description": "HR, training, administration, logistics, finance.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "national",
+        "parentStructure": "mohcc_national_headquarters",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-directorate_ict_digital_health_information",
+      "code": "directorate_ict_digital_health_information",
+      "displayName": "ICT, Digital Health and Information",
+      "description": "Digital health, HIS, surveillance analytics, Impilo platform.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "national",
+        "parentStructure": "mohcc_national_headquarters",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-directorate_internal_audit",
+      "code": "directorate_internal_audit",
+      "displayName": "Internal Audit",
+      "description": "Internal audit, risk and compliance assurance.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "national",
+        "parentStructure": "mohcc_national_headquarters",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-departments_reporting_to_permanent_secretary",
+      "code": "departments_reporting_to_permanent_secretary",
+      "displayName": "Departments Reporting to Permanent Secretary",
+      "description": "Direct PS reporting units.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "national",
+        "parentStructure": "office_of_the_permanent_secretary",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-provincial_medical_directorate",
+      "code": "provincial_medical_directorate",
+      "displayName": "Provincial Medical Directorate",
+      "description": "Provincial Medical Office organogram structure.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "province",
+        "parentStructure": "provincial_health_executive",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-central_hospital_executive",
+      "code": "central_hospital_executive",
+      "displayName": "Central Hospital Executive",
+      "description": "Central hospital leadership and service lines.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "facility",
+        "parentStructure": "district_health_executive",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-provincial_hospital_management",
+      "code": "provincial_hospital_management",
+      "displayName": "Provincial Hospital Management",
+      "description": "Provincial hospital operations.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "facility",
+        "parentStructure": "provincial_medical_office",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-general_hospital_management",
+      "code": "general_hospital_management",
+      "displayName": "General Hospital Management",
+      "description": "General/district hospital operations.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "facility",
+        "parentStructure": "district_medical_office",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-rural_health_centre_clinic",
+      "code": "rural_health_centre_clinic",
+      "displayName": "Rural Health Centre / Clinic",
+      "description": "Primary care clinic and RHC organogram.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "facility",
+        "parentStructure": "district_medical_office",
+        "primaryZimbabweStructure": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "zos-health_centre_committee",
+      "code": "health_centre_committee",
+      "displayName": "Health Centre Committee",
+      "description": "Community facility governance.",
+      "category": "organisational_structure",
+      "ownerService": "tuso",
+      "metadata": {
+        "level": "community",
+        "parentStructure": "rural_health_centre_clinic",
+        "primaryZimbabweStructure": true
+      }
+    }
+  ]
+}

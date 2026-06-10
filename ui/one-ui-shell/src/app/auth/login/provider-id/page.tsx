@@ -63,6 +63,7 @@ export default function ProviderIdLoginPage() {
                 | "SYSTEM",
               assuranceLevel: "VERIFIED",
               providerActivated: false,
+              loginMethod: "provider_id",
             },
             token,
           );

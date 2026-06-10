@@ -50,6 +50,8 @@ import { apiClient } from "@/lib/api-client";
 import { countUnacknowledgedAbnormalLabResults } from "@/lib/lab-results-attention";
 import { getAppointmentStatus, getAppointmentTime, getAppointmentType, getAppointmentProvider } from "@/lib/queue-workflows";
 import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
+import { useIdentityContext } from "@/hooks/useIdentityContext";
+import { WORKER_ACCESS_LABELS } from "@/lib/identity-context";
 
 // ── Module category types ────────────────────────────────────────
 interface ModuleItem {
@@ -316,7 +318,7 @@ function getModuleCategories(roles: {
       color: "bg-slate-600",
       modules: [
         { label: "Production Command Centre", description: "Discover services, demo paths, and live integration health", href: "/production-command-centre", icon: LayoutGrid, color: "bg-impilo-100 text-impilo-600" },
-        { label: "User Management", description: "Users, roles & policies", href: "/admin/users", icon: Users, color: "bg-red-100 text-red-600" },
+        { label: WORKER_ACCESS_LABELS.workerAccess, description: "Providers, staff & local access", href: "/admin/users", icon: Users, color: "bg-red-100 text-red-600" },
         { label: "Audit Trail", description: "System audit logs", href: "/admin/audit", icon: ClipboardList, color: "bg-amber-100 text-amber-600" },
         { label: "System Settings", description: "Configuration & security", href: "/admin", icon: Settings, color: "bg-gray-100 text-gray-600" },
       ],
@@ -740,6 +742,7 @@ type HomeTab = "work" | "professional" | "personal";
 
 export default function HomePage() {
   const user = useAuthStore((s) => s.user);
+  const identity = useIdentityContext();
   const shift = useShiftStore((s) => s.shift);
   const roleGroup = useRoleGroup();
   const { isClinical, isAdmin, isFinance, isDispenser } = roleGroup;
@@ -757,20 +760,17 @@ export default function HomePage() {
   const hasProfessionalRoles = isClinical || isAdmin || isFinance || isDispenser;
   const [activeTab, setActiveTab] = useState<HomeTab>("personal");
 
-  // Correct the active tab whenever the user's roles are known.
-  // Citizens always land on "personal"; professionals respect the stored tab.
+  // Citizens always land on personal; activated providers default to work.
   useEffect(() => {
     if (!user) return;
-    if (!hasProfessionalRoles) {
-      // Citizen — force personal, clear any stale stored tab
+    if (identity.isCitizenOnly) {
       setActiveTab("personal");
       sessionStorage.removeItem("exp:home-tab");
       return;
     }
-    // Professional — honour stored tab, default to "work"
     const stored = sessionStorage.getItem("exp:home-tab") as HomeTab | null;
-    setActiveTab(stored ?? "work");
-  }, [user, hasProfessionalRoles]);
+    setActiveTab(stored ?? (identity.hasWorkAccess ? "work" : "professional"));
+  }, [user, identity.isCitizenOnly, identity.hasWorkAccess]);
 
   function switchTab(tab: HomeTab) {
     setActiveTab(tab);
@@ -968,7 +968,7 @@ export default function HomePage() {
   });
 
   // ── Citizen 3-column layout (Facebook-style) ────────────────────
-  if (!hasProfessionalRoles) {
+  if (identity.isCitizenOnly) {
     return (
       <AppLayout>
         <PageShell title="Home">
@@ -1053,17 +1053,21 @@ export default function HomePage() {
 
           {/* Tab Switcher (Lovable 3-tab: Work / Professional / Personal) */}
           <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
+            {identity.hasWorkAccess && (
             <button onClick={() => switchTab("work")}
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === "work" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
               <Briefcase className="w-4 h-4" /> Work
             </button>
+            )}
+            {!identity.isCitizenOnly && identity.hasProfessionalAccess && (
             <button onClick={() => switchTab("professional")}
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === "professional" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
               <Stethoscope className="w-4 h-4" /> My Professional
             </button>
+            )}
             <button onClick={() => switchTab("personal")}
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === "personal" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
-              <Heart className="w-4 h-4" /> My Life
+              <Heart className="w-4 h-4" /> {identity.hasWorkAccess ? "My Life" : "My Life / My Health"}
             </button>
           </div>
 

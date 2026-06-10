@@ -6,7 +6,7 @@ import {
 } from "@/lib/resolve-post-login-destination";
 
 describe("resolvePostLoginDestination", () => {
-  it("routes activated provider to provider-workspace when facility is set", () => {
+  it("routes provider with active assignment to work context", () => {
     const result = resolvePostLoginDestination({
       user: {
         actorType: "PROVIDER",
@@ -14,15 +14,25 @@ describe("resolvePostLoginDestination", () => {
         providerActivated: true,
         providerId: "PRV-001",
       },
+      linkedIds: { providerStatus: "ACTIVE", licenceValid: true },
+      workAssignments: [
+        {
+          assignmentId: "A1",
+          subjectId: "PRV-001",
+          subjectType: "provider_worker",
+          contextType: "facility_clinical",
+          assignmentType: "facility_assignment",
+          assignmentStatus: "active",
+          facilityId: "F1",
+        },
+      ],
       hasFacility: true,
     });
-    expect(result).toEqual({
-      href: "/provider-workspace",
-      operationalMode: "facility_work",
-    });
+    expect(result.href).toBe("/provider-workspace");
+    expect(result.operationalMode).toBe("facility_work");
   });
 
-  it("applies facility guard for provider-workspace when facility is missing", () => {
+  it("routes verified provider without assignment to professional", () => {
     const result = resolvePostLoginDestination({
       user: {
         actorType: "PROVIDER",
@@ -30,10 +40,11 @@ describe("resolvePostLoginDestination", () => {
         providerActivated: true,
         providerId: "PRV-001",
       },
-      hasFacility: false,
+      linkedIds: { providerStatus: "ACTIVE", licenceValid: true },
+      workAssignments: [],
     });
-    expect(result.href).toBe("/facility?returnTo=%2Fprovider-workspace");
-    expect(result.operationalMode).toBe("facility_work");
+    expect(result.href).toBe("/professional");
+    expect(result.operationalMode).toBe("my_professional");
   });
 
   it("routes citizen to home with my_life mode", () => {
@@ -67,6 +78,17 @@ describe("resolvePostLoginDestination", () => {
         providerActivated: true,
         providerId: "PRV-001",
       },
+      linkedIds: { providerStatus: "ACTIVE" },
+      workAssignments: [
+        {
+          assignmentId: "A1",
+          subjectId: "PRV-001",
+          subjectType: "provider_worker",
+          contextType: "facility_clinical",
+          assignmentType: "facility_assignment",
+          assignmentStatus: "active",
+        },
+      ],
       hasFacility: false,
       returnTo: "/clinical",
     });

@@ -1,0 +1,40 @@
+{
+  "version": "1.3.0",
+  "displayName": "Impilo Trust Plane Seed Catalogues (Zimbabwe MoHCC Organogram Baseline)",
+  "generator": "contracts/trust/scripts/generate-seed-catalogues.mjs",
+  "zimbabweData": "contracts/trust/scripts/zimbabwe-catalogue-data.mjs",
+  "organogramSource": {
+    "title": "MoHCC Organogram",
+    "approvedBy": "Health Service Commission",
+    "approvedDate": "2025-03-05",
+    "version": "2025-03-05"
+  },
+  "bundles": [
+    { "file": "seeds/identity.json", "catalogueId": "identity", "categories": ["identity_type", "login_method", "citizen_account_state", "identity_assurance_level"] },
+    { "file": "seeds/provider-worker.json", "catalogueId": "provider-worker", "categories": ["provider_worker_type", "provider_worker_status", "cpd_compliance_status", "qualification_certification_category", "profession_cadre"] },
+    { "file": "seeds/zimbabwe-mohcc.json", "catalogueId": "zimbabwe-mohcc", "categories": ["health_administrative_level", "organisational_structure"] },
+    { "file": "seeds/work-context.json", "catalogueId": "work-context", "categories": ["approved_work_context_type", "workplace_place_type", "workspace_type", "registry_owner_workspace", "regulator_workspace", "assignment_type", "assignment_status", "role_template_category"] },
+    { "file": "seeds/permissions.json", "catalogueId": "permissions", "categories": ["permission_domain", "permission"] },
+    { "file": "seeds/governance-marketplace.json", "catalogueId": "governance-marketplace", "categories": ["registry_governance_role", "regulator_role", "workplace_manager_role", "system_admin_role", "marketplace_participant_type", "marketplace_access_pipeline_state", "marketplace_role"] },
+    { "file": "seeds/role-templates.json", "catalogueId": "role-templates", "categories": ["role_template"] },
+    { "file": "seeds/resolution-tabs-opa.json", "catalogueId": "resolution-tabs-opa", "categories": ["friendly_resolution_state", "session_tab", "opa_policy_package", "nompilo_action_domain", "audit_event_type"] }
+  ],
+  "zimbabweNativePrimaryRoles": [
+    "district_medical_officer",
+    "provincial_medical_director",
+    "district_nursing_officer",
+    "provincial_nursing_officer",
+    "district_health_information_officer",
+    "provincial_health_information_officer",
+    "provincial_epidemiology_disease_control_officer",
+    "sister_in_charge",
+    "sister_in_charge_community",
+    "medical_superintendent",
+    "matron"
+  ],
+  "deprecatedAliases": {
+    "district_health_officer": "district_medical_officer",
+    "provincial_health_officer": "provincial_medical_director"
+  },
+  "consumers": ["experience-bff", "one-ui-shell", "mobile-auth", "tshepo", "opa", "tests"]
+}

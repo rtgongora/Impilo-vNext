@@ -1,0 +1,426 @@
+{
+  "version": "1.3.0",
+  "catalogueId": "identity",
+  "displayName": "Identity Types, Login Methods, Citizen States, IAL",
+  "entries": [
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "idt-citizen",
+      "code": "citizen",
+      "displayName": "Citizen",
+      "category": "identity_type",
+      "ownerService": "tshepo",
+      "standardMapping": {
+        "openHie": "ClientRegistry",
+        "fhir": "Patient"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "idt-provider-worker",
+      "code": "provider_worker",
+      "displayName": "Provider Worker",
+      "category": "identity_type",
+      "ownerService": "tshepo",
+      "standardMapping": {
+        "fhir": "Practitioner"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "idt-dual-citizen-provider",
+      "code": "dual_citizen_provider",
+      "displayName": "Dual Citizen Provider",
+      "category": "identity_type",
+      "ownerService": "tshepo",
+      "standardMapping": {
+        "fhir": "Practitioner"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "idt-marketplace-actor",
+      "code": "marketplace_actor",
+      "displayName": "Marketplace Actor",
+      "category": "identity_type",
+      "ownerService": "msika",
+      "standardMapping": {}
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "idt-regulator",
+      "code": "regulator",
+      "displayName": "Regulator",
+      "category": "identity_type",
+      "ownerService": "tshepo",
+      "standardMapping": {}
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "idt-registry-owner",
+      "code": "registry_owner",
+      "displayName": "Registry Owner",
+      "category": "identity_type",
+      "ownerService": "tshepo",
+      "standardMapping": {}
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "idt-workplace-manager",
+      "code": "workplace_manager",
+      "displayName": "Workplace Manager",
+      "category": "identity_type",
+      "ownerService": "tshepo",
+      "standardMapping": {}
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "idt-system-admin",
+      "code": "system_admin",
+      "displayName": "System Admin",
+      "category": "identity_type",
+      "ownerService": "tshepo",
+      "standardMapping": {}
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "idt-support-user",
+      "code": "support_user",
+      "displayName": "Support User",
+      "category": "identity_type",
+      "ownerService": "tshepo",
+      "standardMapping": {}
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "idt-service-account",
+      "code": "service_account",
+      "displayName": "Service Account",
+      "category": "identity_type",
+      "ownerService": "tshepo",
+      "standardMapping": {}
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "idt-device-account",
+      "code": "device_account",
+      "displayName": "Device Account",
+      "category": "identity_type",
+      "ownerService": "tshepo",
+      "standardMapping": {}
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "lm-health-id",
+      "code": "health_id",
+      "displayName": "Health Id",
+      "category": "login_method",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.personal"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "lm-provider-id",
+      "code": "provider_id",
+      "displayName": "Provider Id",
+      "category": "login_method",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.professional"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "lm-email",
+      "code": "email",
+      "displayName": "Email",
+      "category": "login_method",
+      "ownerService": "keycloak"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "lm-phone",
+      "code": "phone",
+      "displayName": "Phone",
+      "category": "login_method",
+      "ownerService": "keycloak"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "lm-sso",
+      "code": "sso",
+      "displayName": "Sso",
+      "category": "login_method",
+      "ownerService": "keycloak"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "lm-assisted-login",
+      "code": "assisted_login",
+      "displayName": "Assisted Login",
+      "category": "login_method",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "lm-device-bound-login",
+      "code": "device_bound_login",
+      "displayName": "Device Bound Login",
+      "category": "login_method",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "lm-service-account-token",
+      "code": "service_account_token",
+      "displayName": "Service Account Token",
+      "category": "login_method",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cas-provisional",
+      "code": "provisional",
+      "displayName": "Provisional",
+      "category": "citizen_account_state",
+      "ownerService": "vito",
+      "standardMapping": {
+        "fhir": "Patient"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cas-self-registered",
+      "code": "self_registered",
+      "displayName": "Self Registered",
+      "category": "citizen_account_state",
+      "ownerService": "vito",
+      "standardMapping": {
+        "fhir": "Patient"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cas-assisted-registered",
+      "code": "assisted_registered",
+      "displayName": "Assisted Registered",
+      "category": "citizen_account_state",
+      "ownerService": "vito",
+      "standardMapping": {
+        "fhir": "Patient"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cas-verified",
+      "code": "verified",
+      "displayName": "Verified",
+      "category": "citizen_account_state",
+      "ownerService": "vito",
+      "standardMapping": {
+        "fhir": "Patient"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cas-strongly-verified",
+      "code": "strongly_verified",
+      "displayName": "Strongly Verified",
+      "category": "citizen_account_state",
+      "ownerService": "vito",
+      "standardMapping": {
+        "fhir": "Patient"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cas-biometrically-verified",
+      "code": "biometrically_verified",
+      "displayName": "Biometrically Verified",
+      "category": "citizen_account_state",
+      "ownerService": "vito",
+      "standardMapping": {
+        "fhir": "Patient"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cas-guardian-managed",
+      "code": "guardian_managed",
+      "displayName": "Guardian Managed",
+      "category": "citizen_account_state",
+      "ownerService": "vito",
+      "standardMapping": {
+        "fhir": "Patient"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cas-dependant-linked",
+      "code": "dependant_linked",
+      "displayName": "Dependant Linked",
+      "category": "citizen_account_state",
+      "ownerService": "vito",
+      "standardMapping": {
+        "fhir": "Patient"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cas-restricted",
+      "code": "restricted",
+      "displayName": "Restricted",
+      "category": "citizen_account_state",
+      "ownerService": "vito",
+      "standardMapping": {
+        "fhir": "Patient"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cas-locked",
+      "code": "locked",
+      "displayName": "Locked",
+      "category": "citizen_account_state",
+      "ownerService": "vito",
+      "standardMapping": {
+        "fhir": "Patient"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cas-suspended",
+      "code": "suspended",
+      "displayName": "Suspended",
+      "category": "citizen_account_state",
+      "ownerService": "vito",
+      "standardMapping": {
+        "fhir": "Patient"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cas-deceased",
+      "code": "deceased",
+      "displayName": "Deceased",
+      "category": "citizen_account_state",
+      "ownerService": "vito",
+      "standardMapping": {
+        "fhir": "Patient"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cas-duplicate-under-review",
+      "code": "duplicate_under_review",
+      "displayName": "Duplicate Under Review",
+      "category": "citizen_account_state",
+      "ownerService": "vito",
+      "standardMapping": {
+        "fhir": "Patient"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "cas-merged",
+      "code": "merged",
+      "displayName": "Merged",
+      "category": "citizen_account_state",
+      "ownerService": "vito",
+      "standardMapping": {
+        "fhir": "Patient"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ial0-unknown",
+      "code": "ial0_unknown",
+      "displayName": "Ial0 Unknown",
+      "category": "identity_assurance_level",
+      "ownerService": "tshepo",
+      "standardMapping": {
+        "nist": "ial0_unknown"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ial1-self-asserted",
+      "code": "ial1_self_asserted",
+      "displayName": "Ial1 Self Asserted",
+      "category": "identity_assurance_level",
+      "ownerService": "tshepo",
+      "standardMapping": {
+        "nist": "ial1_self_asserted"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ial2-verified-basic",
+      "code": "ial2_verified_basic",
+      "displayName": "Ial2 Verified Basic",
+      "category": "identity_assurance_level",
+      "ownerService": "tshepo",
+      "standardMapping": {
+        "nist": "ial2_verified_basic"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ial3-strongly-verified",
+      "code": "ial3_strongly_verified",
+      "displayName": "Ial3 Strongly Verified",
+      "category": "identity_assurance_level",
+      "ownerService": "tshepo",
+      "standardMapping": {
+        "nist": "ial3_strongly_verified"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ial4-biometric-or-official-verified",
+      "code": "ial4_biometric_or_official_verified",
+      "displayName": "Ial4 Biometric Or Official Verified",
+      "category": "identity_assurance_level",
+      "ownerService": "tshepo",
+      "standardMapping": {
+        "nist": "ial4_biometric_or_official_verified"
+      }
+    }
+  ]
+}

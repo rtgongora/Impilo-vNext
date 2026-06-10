@@ -1,0 +1,1138 @@
+{
+  "version": "1.3.0",
+  "catalogueId": "resolution-tabs-opa",
+  "displayName": "Resolution States, Tabs, OPA, Nompilo, Audit",
+  "entries": [
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-no_provider_id",
+      "code": "no_provider_id",
+      "displayName": "No Provider ID linked",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "No Provider ID linked",
+        "userFacingMessage": "Link or register a Provider/Worker ID to access professional tools.",
+        "explanation": "Link or register a Provider/Worker ID to access professional tools.",
+        "allowedActions": [
+          "Register Provider ID",
+          "Contact Support"
+        ],
+        "auditCode": "TRUST.NO_PROVIDER_ID"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-provider_pending_verification",
+      "code": "provider_pending_verification",
+      "displayName": "Provider verification pending",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Provider verification pending",
+        "userFacingMessage": "Your Provider/Worker ID is awaiting verification.",
+        "explanation": "Your Provider/Worker ID is awaiting verification.",
+        "allowedActions": [
+          "View Status",
+          "Contact Registry"
+        ],
+        "auditCode": "TRUST.PROVIDER_PENDING"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-provider_suspended",
+      "code": "provider_suspended",
+      "displayName": "Provider ID suspended",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Provider ID suspended",
+        "userFacingMessage": "Work access is restricted until your provider status is restored.",
+        "explanation": "Work access is restricted until your provider status is restored.",
+        "allowedActions": [
+          "View Status",
+          "Contact Support"
+        ],
+        "auditCode": "TRUST.PROVIDER_SUSPENDED"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-provider_expired",
+      "code": "provider_expired",
+      "displayName": "Provider credentials expired",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Provider credentials expired",
+        "userFacingMessage": "Renew your licence or registration to restore work access.",
+        "explanation": "Renew your licence or registration to restore work access.",
+        "allowedActions": [
+          "View Credentials",
+          "Open Fundo"
+        ],
+        "auditCode": "TRUST.PROVIDER_EXPIRED"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-provider_requires_update",
+      "code": "provider_requires_update",
+      "displayName": "Provider profile requires update",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Provider profile requires update",
+        "userFacingMessage": "Update your professional profile to continue.",
+        "explanation": "Update your professional profile to continue.",
+        "allowedActions": [
+          "Update Profile"
+        ],
+        "auditCode": "TRUST.PROVIDER_REQUIRES_UPDATE"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-no_active_work_assignment",
+      "code": "no_active_work_assignment",
+      "displayName": "No active work assignment",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "No active work assignment",
+        "userFacingMessage": "You are verified as a provider/worker, but no active work assignment was found.",
+        "explanation": "You are verified as a provider/worker, but no active work assignment was found.",
+        "allowedActions": [
+          "View Professional Profile",
+          "Request Work Assignment"
+        ],
+        "auditCode": "TRUST.NO_ACTIVE_ASSIGNMENT"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-missing_required_training",
+      "code": "missing_required_training",
+      "displayName": "Required training missing",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Required training missing",
+        "userFacingMessage": "This role requires additional training before access can be activated.",
+        "explanation": "This role requires additional training before access can be activated.",
+        "allowedActions": [
+          "Open Fundo Learning"
+        ],
+        "auditCode": "TRUST.MISSING_TRAINING"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-licence_expired",
+      "code": "licence_expired",
+      "displayName": "Licence expired",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Licence expired",
+        "userFacingMessage": "Your professional licence has expired.",
+        "explanation": "Your professional licence has expired.",
+        "allowedActions": [
+          "View Licence",
+          "Contact Council"
+        ],
+        "auditCode": "TRUST.LICENCE_EXPIRED"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-context_not_allowed",
+      "code": "context_not_allowed",
+      "displayName": "Work context not allowed",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Work context not allowed",
+        "userFacingMessage": "You are not eligible for this work context.",
+        "explanation": "You are not eligible for this work context.",
+        "allowedActions": [
+          "Switch Context",
+          "Contact Manager"
+        ],
+        "auditCode": "TRUST.CONTEXT_NOT_ALLOWED"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-role_not_allowed_for_cadre",
+      "code": "role_not_allowed_for_cadre",
+      "displayName": "Role not allowed for cadre",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Role not allowed for cadre",
+        "userFacingMessage": "Your profession/cadre is not eligible for this role.",
+        "explanation": "Your profession/cadre is not eligible for this role.",
+        "allowedActions": [
+          "View Professional Profile"
+        ],
+        "auditCode": "TRUST.ROLE_NOT_ALLOWED"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-facility_assignment_required",
+      "code": "facility_assignment_required",
+      "displayName": "Facility assignment required",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Facility assignment required",
+        "userFacingMessage": "Select or request a facility assignment to continue.",
+        "explanation": "Select or request a facility assignment to continue.",
+        "allowedActions": [
+          "Request Assignment"
+        ],
+        "auditCode": "TRUST.FACILITY_REQUIRED"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-marketplace_pending_verification",
+      "code": "marketplace_pending_verification",
+      "displayName": "Marketplace verification pending",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Marketplace verification pending",
+        "userFacingMessage": "Your organisation is awaiting verification.",
+        "explanation": "Your organisation is awaiting verification.",
+        "allowedActions": [
+          "View Status"
+        ],
+        "auditCode": "TRUST.MARKETPLACE_PENDING"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-marketplace_sandbox_only",
+      "code": "marketplace_sandbox_only",
+      "displayName": "Sandbox access only",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Sandbox access only",
+        "userFacingMessage": "Production access requires certification and approval.",
+        "explanation": "Production access requires certification and approval.",
+        "allowedActions": [
+          "Open Sandbox Portal"
+        ],
+        "auditCode": "TRUST.MARKETPLACE_SANDBOX"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-marketplace_contract_required",
+      "code": "marketplace_contract_required",
+      "displayName": "Contract required",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Contract required",
+        "userFacingMessage": "An active contract is required for production operations.",
+        "explanation": "An active contract is required for production operations.",
+        "allowedActions": [
+          "View Contracts"
+        ],
+        "auditCode": "TRUST.MARKETPLACE_CONTRACT"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-registry_scope_required",
+      "code": "registry_scope_required",
+      "displayName": "Registry scope required",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Registry scope required",
+        "userFacingMessage": "You need an assigned registry governance role.",
+        "explanation": "You need an assigned registry governance role.",
+        "allowedActions": [
+          "Request Access"
+        ],
+        "auditCode": "TRUST.REGISTRY_SCOPE"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-regulator_scope_required",
+      "code": "regulator_scope_required",
+      "displayName": "Regulator scope required",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Regulator scope required",
+        "userFacingMessage": "You need an assigned regulatory role for this workspace.",
+        "explanation": "You need an assigned regulatory role for this workspace.",
+        "allowedActions": [
+          "Request Access"
+        ],
+        "auditCode": "TRUST.REGULATOR_SCOPE"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-citizen_only_access",
+      "code": "citizen_only_access",
+      "displayName": "Personal health account",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Personal health account",
+        "userFacingMessage": "Your account is configured for personal health access only.",
+        "explanation": "Your account is configured for personal health access only.",
+        "allowedActions": [
+          "View My Health"
+        ],
+        "auditCode": "TRUST.CITIZEN_ONLY"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-access_request_pending",
+      "code": "access_request_pending",
+      "displayName": "Access request pending",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Access request pending",
+        "userFacingMessage": "Your access request is awaiting approval.",
+        "explanation": "Your access request is awaiting approval.",
+        "allowedActions": [
+          "View Request Status"
+        ],
+        "auditCode": "TRUST.ACCESS_PENDING"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-policy_denied",
+      "code": "policy_denied",
+      "displayName": "Access denied by policy",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Access denied by policy",
+        "userFacingMessage": "This action is not permitted in your current context.",
+        "explanation": "This action is not permitted in your current context.",
+        "allowedActions": [
+          "Contact Support"
+        ],
+        "auditCode": "TRUST.POLICY_DENIED"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-device_context_requires_user_login",
+      "code": "device_context_requires_user_login",
+      "displayName": "Personal login required",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Personal login required",
+        "userFacingMessage": "This device is linked to a facility, but you must still sign in as yourself.",
+        "explanation": "This device is linked to a facility, but you must still sign in as yourself.",
+        "allowedActions": [
+          "Sign In"
+        ],
+        "auditCode": "TRUST.DEVICE_LOGIN_REQUIRED"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "tab-personal",
+      "code": "personal",
+      "displayName": "Personal",
+      "category": "session_tab",
+      "ownerService": "experience-bff",
+      "metadata": {
+        "route": "/my-health",
+        "requiredSource": "health_id",
+        "meaning": "Person as citizen/client/patient"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "tab-professional",
+      "code": "professional",
+      "displayName": "Professional",
+      "category": "session_tab",
+      "ownerService": "experience-bff",
+      "metadata": {
+        "route": "/my-professional",
+        "requiredSource": "verified_provider_worker_id",
+        "meaning": "Verified provider/worker"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "tab-work",
+      "code": "work",
+      "displayName": "Work",
+      "category": "session_tab",
+      "ownerService": "experience-bff",
+      "metadata": {
+        "route": "/work",
+        "requiredSource": "active_work_assignment",
+        "meaning": "Active service delivery or governance work"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "opa-impilo-tabs",
+      "code": "impilo.tabs",
+      "displayName": "Tabs",
+      "category": "opa_policy_package",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.tabs"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "opa-impilo-personal",
+      "code": "impilo.personal",
+      "displayName": "Personal",
+      "category": "opa_policy_package",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.personal"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "opa-impilo-professional",
+      "code": "impilo.professional",
+      "displayName": "Professional",
+      "category": "opa_policy_package",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.professional"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "opa-impilo-work",
+      "code": "impilo.work",
+      "displayName": "Work",
+      "category": "opa_policy_package",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "opa-impilo-provider_worker",
+      "code": "impilo.provider_worker",
+      "displayName": "Provider Worker",
+      "category": "opa_policy_package",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.provider_worker"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "opa-impilo-work_assignment",
+      "code": "impilo.work_assignment",
+      "displayName": "Work Assignment",
+      "category": "opa_policy_package",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work_assignment"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "opa-impilo-role_assignment",
+      "code": "impilo.role_assignment",
+      "displayName": "Role Assignment",
+      "category": "opa_policy_package",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.role_assignment"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "opa-impilo-facility",
+      "code": "impilo.facility",
+      "displayName": "Facility",
+      "category": "opa_policy_package",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.facility"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "opa-impilo-telemedicine",
+      "code": "impilo.telemedicine",
+      "displayName": "Telemedicine",
+      "category": "opa_policy_package",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.telemedicine"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "opa-impilo-community_outreach",
+      "code": "impilo.community_outreach",
+      "displayName": "Community Outreach",
+      "category": "opa_policy_package",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.community_outreach"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "opa-impilo-programme",
+      "code": "impilo.programme",
+      "displayName": "Programme",
+      "category": "opa_policy_package",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.programme"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "opa-impilo-above_site",
+      "code": "impilo.above_site",
+      "displayName": "Above Site",
+      "category": "opa_policy_package",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.above_site"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "opa-impilo-public_health",
+      "code": "impilo.public_health",
+      "displayName": "Public Health",
+      "category": "opa_policy_package",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.public_health"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "opa-impilo-registry",
+      "code": "impilo.registry",
+      "displayName": "Registry",
+      "category": "opa_policy_package",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.registry"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "opa-impilo-regulator",
+      "code": "impilo.regulator",
+      "displayName": "Regulator",
+      "category": "opa_policy_package",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "opa-impilo-marketplace",
+      "code": "impilo.marketplace",
+      "displayName": "Marketplace",
+      "category": "opa_policy_package",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.marketplace"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "opa-impilo-client_registration",
+      "code": "impilo.client_registration",
+      "displayName": "Client Registration",
+      "category": "opa_policy_package",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.client_registration"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "opa-impilo-provider_registration",
+      "code": "impilo.provider_registration",
+      "displayName": "Provider Registration",
+      "category": "opa_policy_package",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.provider_registration"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "opa-impilo-nompilo",
+      "code": "impilo.nompilo",
+      "displayName": "Nompilo",
+      "category": "opa_policy_package",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.nompilo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "opa-impilo-consent",
+      "code": "impilo.consent",
+      "displayName": "Consent",
+      "category": "opa_policy_package",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.consent"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "opa-impilo-audit",
+      "code": "impilo.audit",
+      "displayName": "Audit",
+      "category": "opa_policy_package",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "opa-impilo-system_admin",
+      "code": "impilo.system_admin",
+      "displayName": "System Admin",
+      "category": "opa_policy_package",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.system_admin"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "opa-impilo-break_glass",
+      "code": "impilo.break_glass",
+      "displayName": "Break Glass",
+      "category": "opa_policy_package",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.break_glass"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "nompilo-personal_health_support",
+      "code": "personal_health_support",
+      "displayName": "Personal Health Support",
+      "category": "nompilo_action_domain",
+      "ownerService": "guidance",
+      "policyMapping": "impilo.nompilo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "nompilo-professional_profile_support",
+      "code": "professional_profile_support",
+      "displayName": "Professional Profile Support",
+      "category": "nompilo_action_domain",
+      "ownerService": "guidance",
+      "policyMapping": "impilo.nompilo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "nompilo-work_navigation",
+      "code": "work_navigation",
+      "displayName": "Work Navigation",
+      "category": "nompilo_action_domain",
+      "ownerService": "guidance",
+      "policyMapping": "impilo.nompilo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "nompilo-facility_operations",
+      "code": "facility_operations",
+      "displayName": "Facility Operations",
+      "category": "nompilo_action_domain",
+      "ownerService": "guidance",
+      "policyMapping": "impilo.nompilo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "nompilo-clinical_support",
+      "code": "clinical_support",
+      "displayName": "Clinical Support",
+      "category": "nompilo_action_domain",
+      "ownerService": "guidance",
+      "policyMapping": "impilo.nompilo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "nompilo-client_registration_support",
+      "code": "client_registration_support",
+      "displayName": "Client Registration Support",
+      "category": "nompilo_action_domain",
+      "ownerService": "guidance",
+      "policyMapping": "impilo.nompilo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "nompilo-provider_staff_management_support",
+      "code": "provider_staff_management_support",
+      "displayName": "Provider Staff Management Support",
+      "category": "nompilo_action_domain",
+      "ownerService": "guidance",
+      "policyMapping": "impilo.nompilo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "nompilo-telemedicine_support",
+      "code": "telemedicine_support",
+      "displayName": "Telemedicine Support",
+      "category": "nompilo_action_domain",
+      "ownerService": "guidance",
+      "policyMapping": "impilo.nompilo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "nompilo-programme_support",
+      "code": "programme_support",
+      "displayName": "Programme Support",
+      "category": "nompilo_action_domain",
+      "ownerService": "guidance",
+      "policyMapping": "impilo.nompilo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "nompilo-registry_support",
+      "code": "registry_support",
+      "displayName": "Registry Support",
+      "category": "nompilo_action_domain",
+      "ownerService": "guidance",
+      "policyMapping": "impilo.nompilo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "nompilo-regulator_support",
+      "code": "regulator_support",
+      "displayName": "Regulator Support",
+      "category": "nompilo_action_domain",
+      "ownerService": "guidance",
+      "policyMapping": "impilo.nompilo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "nompilo-marketplace_support",
+      "code": "marketplace_support",
+      "displayName": "Marketplace Support",
+      "category": "nompilo_action_domain",
+      "ownerService": "guidance",
+      "policyMapping": "impilo.nompilo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "nompilo-system_support",
+      "code": "system_support",
+      "displayName": "System Support",
+      "category": "nompilo_action_domain",
+      "ownerService": "guidance",
+      "policyMapping": "impilo.nompilo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "nompilo-audit_support",
+      "code": "audit_support",
+      "displayName": "Audit Support",
+      "category": "nompilo_action_domain",
+      "ownerService": "guidance",
+      "policyMapping": "impilo.nompilo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "nompilo-policy_support",
+      "code": "policy_support",
+      "displayName": "Policy Support",
+      "category": "nompilo_action_domain",
+      "ownerService": "guidance",
+      "policyMapping": "impilo.nompilo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "audit-identity-login-succeeded",
+      "code": "identity.login.succeeded",
+      "displayName": "Identity Login Succeeded",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "audit-identity-login-failed",
+      "code": "identity.login.failed",
+      "displayName": "Identity Login Failed",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "audit-identity-context-resolved",
+      "code": "identity.context.resolved",
+      "displayName": "Identity Context Resolved",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "audit-identity-context-chooser-presented",
+      "code": "identity.context.chooser.presented",
+      "displayName": "Identity Context Chooser Presented",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "audit-identity-context-selected",
+      "code": "identity.context.selected",
+      "displayName": "Identity Context Selected",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "audit-identity-context-switched",
+      "code": "identity.context.switched",
+      "displayName": "Identity Context Switched",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "audit-session-contract-issued",
+      "code": "session.contract.issued",
+      "displayName": "Session Contract Issued",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "audit-provider-status-viewed",
+      "code": "provider.status.viewed",
+      "displayName": "Provider Status Viewed",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "audit-provider-status-changed",
+      "code": "provider.status.changed",
+      "displayName": "Provider Status Changed",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "audit-provider-verified",
+      "code": "provider.verified",
+      "displayName": "Provider Verified",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "audit-provider-suspended",
+      "code": "provider.suspended",
+      "displayName": "Provider Suspended",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "audit-provider-reactivated",
+      "code": "provider.reactivated",
+      "displayName": "Provider Reactivated",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "audit-work-assignment-created",
+      "code": "work.assignment.created",
+      "displayName": "Work Assignment Created",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "audit-work-assignment-approved",
+      "code": "work.assignment.approved",
+      "displayName": "Work Assignment Approved",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "audit-work-assignment-assumed",
+      "code": "work.assignment.assumed",
+      "displayName": "Work Assignment Assumed",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "audit-work-assignment-ended",
+      "code": "work.assignment.ended",
+      "displayName": "Work Assignment Ended",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "audit-role-assignment-created",
+      "code": "role.assignment.created",
+      "displayName": "Role Assignment Created",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "audit-role-assignment-changed",
+      "code": "role.assignment.changed",
+      "displayName": "Role Assignment Changed",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "audit-role-assignment-revoked",
+      "code": "role.assignment.revoked",
+      "displayName": "Role Assignment Revoked",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "audit-access-policy-allowed",
+      "code": "access.policy.allowed",
+      "displayName": "Access Policy Allowed",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "audit-access-policy-denied",
+      "code": "access.policy.denied",
+      "displayName": "Access Policy Denied",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "audit-registry-record-created",
+      "code": "registry.record.created",
+      "displayName": "Registry Record Created",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "audit-registry-record-updated",
+      "code": "registry.record.updated",
+      "displayName": "Registry Record Updated",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "audit-registry-record-approved",
+      "code": "registry.record.approved",
+      "displayName": "Registry Record Approved",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "audit-registry-record-suspended",
+      "code": "registry.record.suspended",
+      "displayName": "Registry Record Suspended",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "audit-regulator-review-performed",
+      "code": "regulator.review.performed",
+      "displayName": "Regulator Review Performed",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "audit-marketplace-organisation-submitted",
+      "code": "marketplace.organisation.submitted",
+      "displayName": "Marketplace Organisation Submitted",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "audit-marketplace-organisation-verified",
+      "code": "marketplace.organisation.verified",
+      "displayName": "Marketplace Organisation Verified",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "audit-marketplace-product-submitted",
+      "code": "marketplace.product.submitted",
+      "displayName": "Marketplace Product Submitted",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "audit-marketplace-product-approved",
+      "code": "marketplace.product.approved",
+      "displayName": "Marketplace Product Approved",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "audit-marketplace-api-sandbox_granted",
+      "code": "marketplace.api.sandbox_granted",
+      "displayName": "Marketplace Api Sandbox Granted",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "audit-marketplace-api-production_granted",
+      "code": "marketplace.api.production_granted",
+      "displayName": "Marketplace Api Production Granted",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "audit-nompilo-action-suggested",
+      "code": "nompilo.action.suggested",
+      "displayName": "Nompilo Action Suggested",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "audit-nompilo-action-executed",
+      "code": "nompilo.action.executed",
+      "displayName": "Nompilo Action Executed",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "audit-break_glass-requested",
+      "code": "break_glass.requested",
+      "displayName": "Break Glass Requested",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "audit-break_glass-authorized",
+      "code": "break_glass.authorized",
+      "displayName": "Break Glass Authorized",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "audit-break_glass-used",
+      "code": "break_glass.used",
+      "displayName": "Break Glass Used",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "audit-break_glass-reviewed",
+      "code": "break_glass.reviewed",
+      "displayName": "Break Glass Reviewed",
+      "category": "audit_event_type",
+      "ownerService": "tshepo-audit"
+    }
+  ]
+}

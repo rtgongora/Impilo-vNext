@@ -52,6 +52,7 @@ import { ImpiloBrandLogo } from "@/components/brand/ImpiloBrandLogo";
 import { ProviderActivationBanner } from "@/components/ProviderActivationBanner";
 import { WorkspaceSwitcher } from "@/components/WorkspaceSwitcher";
 import { useAuthStore, type AuthUser } from "@/hooks/useAuthStore";
+import { resolveIdentityContext } from "@/lib/identity-context";
 import { useShellStore } from "@/hooks/useShellStore";
 import { WORK_MODE_LABELS } from "@/hooks/useWorkModeStore";
 import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
@@ -91,21 +92,10 @@ const OPERATOR_SWITCH_ROLES = expandRoleGroup(["FACILITY_ADMIN", "SYSTEM_ADMIN",
 
 /**
  * Returns true when the user should see citizen-only experience.
- *
- * Health OS Identity Doctrine: everyone starts in citizen mode.
- * Professional zones (Work, My Professional) only appear when
- * the user has explicitly activated their Provider ID.
+ * Delegates to identity-context orchestration (no role back-compat).
  */
 function isCitizenOnly(user: AuthUser | null): boolean {
-  if (!user) return true;
-  // If provider is activated, show professional shell
-  if (user.providerActivated) return false;
-  // If user has clinical/admin roles, show professional shell (backward compat
-  // for sessions where providerActivated hasn't been set yet)
-  const professionalRoles = [...CLINICAL_ROLES, ...FINANCE_ROLES, ...ADMIN_ROLES, "PHARMACIST"];
-  if (user.roles?.some((r: string) => professionalRoles.includes(r))) return false;
-  // Otherwise, citizen-only experience
-  return true;
+  return resolveIdentityContext({ user }).isCitizenOnly;
 }
 
 const ZONES: SidebarZone[] = [

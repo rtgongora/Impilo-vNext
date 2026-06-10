@@ -1,0 +1,1177 @@
+{
+  "version": "1.3.0",
+  "catalogueId": "governance-marketplace",
+  "displayName": "Registry, Regulator, Workplace Manager, Marketplace",
+  "entries": [
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "rgr-provider_registry_owner",
+      "code": "provider_registry_owner",
+      "displayName": "Provider Registry Owner",
+      "category": "registry_governance_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.registry"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "rgr-provider_registry_steward",
+      "code": "provider_registry_steward",
+      "displayName": "Provider Registry Steward",
+      "category": "registry_governance_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.registry"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "rgr-provider_registry_approver",
+      "code": "provider_registry_approver",
+      "displayName": "Provider Registry Approver",
+      "category": "registry_governance_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.registry"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "rgr-provider_registry_data_quality_officer",
+      "code": "provider_registry_data_quality_officer",
+      "displayName": "Provider Registry Data Quality Officer",
+      "category": "registry_governance_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.registry"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "rgr-client_registry_owner",
+      "code": "client_registry_owner",
+      "displayName": "Client Registry Owner",
+      "category": "registry_governance_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.registry"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "rgr-client_registry_steward",
+      "code": "client_registry_steward",
+      "displayName": "Client Registry Steward",
+      "category": "registry_governance_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.registry"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "rgr-client_registry_resolution_officer",
+      "code": "client_registry_resolution_officer",
+      "displayName": "Client Registry Resolution Officer",
+      "category": "registry_governance_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.registry"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "rgr-facility_registry_owner",
+      "code": "facility_registry_owner",
+      "displayName": "Facility Registry Owner",
+      "category": "registry_governance_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.registry"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "rgr-facility_registry_steward",
+      "code": "facility_registry_steward",
+      "displayName": "Facility Registry Steward",
+      "category": "registry_governance_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.registry"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "rgr-facility_registry_approver",
+      "code": "facility_registry_approver",
+      "displayName": "Facility Registry Approver",
+      "category": "registry_governance_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.registry"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "rgr-terminology_registry_owner",
+      "code": "terminology_registry_owner",
+      "displayName": "Terminology Registry Owner",
+      "category": "registry_governance_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.registry"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "rgr-terminology_registry_steward",
+      "code": "terminology_registry_steward",
+      "displayName": "Terminology Registry Steward",
+      "category": "registry_governance_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.registry"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "rgr-product_service_registry_owner",
+      "code": "product_service_registry_owner",
+      "displayName": "Product Service Registry Owner",
+      "category": "registry_governance_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.registry"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "rgr-product_service_registry_steward",
+      "code": "product_service_registry_steward",
+      "displayName": "Product Service Registry Steward",
+      "category": "registry_governance_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.registry"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "rgr-public_health_place_registry_steward",
+      "code": "public_health_place_registry_steward",
+      "displayName": "Public Health Place Registry Steward",
+      "category": "registry_governance_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.registry"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "rgr-geography_jurisdiction_steward",
+      "code": "geography_jurisdiction_steward",
+      "displayName": "Geography Jurisdiction Steward",
+      "category": "registry_governance_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.registry"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "reg-professional_council_regulator",
+      "code": "professional_council_regulator",
+      "displayName": "Professional Council Regulator",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "reg-facility_licensing_regulator",
+      "code": "facility_licensing_regulator",
+      "displayName": "Facility Licensing Regulator",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "reg-medicines_products_regulator",
+      "code": "medicines_products_regulator",
+      "displayName": "Medicines Products Regulator",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "reg-laboratory_accreditation_regulator",
+      "code": "laboratory_accreditation_regulator",
+      "displayName": "Laboratory Accreditation Regulator",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "reg-training_cpd_accreditor",
+      "code": "training_cpd_accreditor",
+      "displayName": "Training Cpd Accreditor",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "reg-public_health_regulator",
+      "code": "public_health_regulator",
+      "displayName": "Public Health Regulator",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "reg-marketplace_certification_reviewer",
+      "code": "marketplace_certification_reviewer",
+      "displayName": "Marketplace Certification Reviewer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "reg-compliance_inspector",
+      "code": "compliance_inspector",
+      "displayName": "Compliance Inspector",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "reg-regulatory_auditor",
+      "code": "regulatory_auditor",
+      "displayName": "Regulatory Auditor",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wm-facility_administrator",
+      "code": "facility_administrator",
+      "displayName": "Facility Administrator",
+      "category": "workplace_manager_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.facility"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wm-facility_staff_manager",
+      "code": "facility_staff_manager",
+      "displayName": "Facility Staff Manager",
+      "category": "workplace_manager_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.facility"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wm-medical_superintendent",
+      "code": "medical_superintendent",
+      "displayName": "Medical Superintendent",
+      "category": "workplace_manager_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.facility"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wm-hospital_manager",
+      "code": "hospital_manager",
+      "displayName": "Hospital Manager",
+      "category": "workplace_manager_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.facility"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wm-matron",
+      "code": "matron",
+      "displayName": "Matron",
+      "category": "workplace_manager_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.facility"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wm-head_of_department_clinical",
+      "code": "head_of_department_clinical",
+      "displayName": "Head Of Department Clinical",
+      "category": "workplace_manager_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.facility"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wm-chief_pharmacist",
+      "code": "chief_pharmacist",
+      "displayName": "Chief Pharmacist",
+      "category": "workplace_manager_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.facility"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wm-records_supervisor",
+      "code": "records_supervisor",
+      "displayName": "Records Supervisor",
+      "category": "workplace_manager_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.facility"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wm-laboratory_supervisor",
+      "code": "laboratory_supervisor",
+      "displayName": "Laboratory Supervisor",
+      "category": "workplace_manager_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.facility"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wm-radiology_supervisor",
+      "code": "radiology_supervisor",
+      "displayName": "Radiology Supervisor",
+      "category": "workplace_manager_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.facility"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wm-billing_supervisor",
+      "code": "billing_supervisor",
+      "displayName": "Billing Supervisor",
+      "category": "workplace_manager_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.facility"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wm-facility_telemedicine_coordinator",
+      "code": "facility_telemedicine_coordinator",
+      "displayName": "Facility Telemedicine Coordinator",
+      "category": "workplace_manager_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.facility"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wm-outreach_team_lead",
+      "code": "outreach_team_lead",
+      "displayName": "Outreach Team Lead",
+      "category": "workplace_manager_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.facility"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wm-programme_manager",
+      "code": "programme_manager",
+      "displayName": "Programme Manager",
+      "category": "workplace_manager_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.facility"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wm-district_medical_officer",
+      "code": "district_medical_officer",
+      "displayName": "District Medical Officer",
+      "category": "workplace_manager_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.facility"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wm-district_nursing_officer",
+      "code": "district_nursing_officer",
+      "displayName": "District Nursing Officer",
+      "category": "workplace_manager_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.facility"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wm-provincial_medical_director",
+      "code": "provincial_medical_director",
+      "displayName": "Provincial Medical Director",
+      "category": "workplace_manager_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.facility"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wm-sister_in_charge",
+      "code": "sister_in_charge",
+      "displayName": "Sister In Charge",
+      "category": "workplace_manager_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.facility"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wm-sister_in_charge_community",
+      "code": "sister_in_charge_community",
+      "displayName": "Sister In Charge Community",
+      "category": "workplace_manager_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.facility"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wm-marketplace_organisation_admin",
+      "code": "marketplace_organisation_admin",
+      "displayName": "Marketplace Organisation Admin",
+      "category": "workplace_manager_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.facility"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "adm-national_platform_administrator",
+      "code": "national_platform_administrator",
+      "displayName": "National Platform Administrator",
+      "category": "system_admin_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.system_admin",
+      "metadata": {
+        "scopeLevel": "national",
+        "deniedAdminDomains": [
+          "break_glass"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "adm-provincial_platform_administrator",
+      "code": "provincial_platform_administrator",
+      "displayName": "Provincial Platform Administrator",
+      "category": "system_admin_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.system_admin",
+      "metadata": {
+        "scopeLevel": "provincial",
+        "deniedAdminDomains": [
+          "break_glass"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "adm-district_platform_administrator",
+      "code": "district_platform_administrator",
+      "displayName": "District Platform Administrator",
+      "category": "system_admin_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.system_admin",
+      "metadata": {
+        "scopeLevel": "district",
+        "deniedAdminDomains": [
+          "break_glass"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "adm-facility_system_administrator",
+      "code": "facility_system_administrator",
+      "displayName": "Facility System Administrator",
+      "category": "system_admin_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.system_admin",
+      "metadata": {
+        "scopeLevel": "facility",
+        "deniedAdminDomains": [
+          "break_glass"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "adm-programme_system_administrator",
+      "code": "programme_system_administrator",
+      "displayName": "Programme System Administrator",
+      "category": "system_admin_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.system_admin",
+      "metadata": {
+        "scopeLevel": "programme",
+        "deniedAdminDomains": [
+          "break_glass"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "adm-registry_system_administrator",
+      "code": "registry_system_administrator",
+      "displayName": "Registry System Administrator",
+      "category": "system_admin_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.system_admin",
+      "metadata": {
+        "scopeLevel": "registry",
+        "deniedAdminDomains": [
+          "break_glass"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "adm-marketplace_system_administrator",
+      "code": "marketplace_system_administrator",
+      "displayName": "Marketplace System Administrator",
+      "category": "system_admin_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.system_admin",
+      "metadata": {
+        "scopeLevel": "marketplace",
+        "deniedAdminDomains": [
+          "break_glass"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "adm-integration_administrator",
+      "code": "integration_administrator",
+      "displayName": "Integration Administrator",
+      "category": "system_admin_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.system_admin",
+      "metadata": {
+        "scopeLevel": "integration",
+        "deniedAdminDomains": [
+          "break_glass"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "adm-keycloak_administrator",
+      "code": "keycloak_administrator",
+      "displayName": "Keycloak Administrator",
+      "category": "system_admin_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.system_admin",
+      "metadata": {
+        "scopeLevel": "keycloak",
+        "deniedAdminDomains": [
+          "break_glass"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "adm-tshepo_administrator",
+      "code": "tshepo_administrator",
+      "displayName": "Tshepo Administrator",
+      "category": "system_admin_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.system_admin",
+      "metadata": {
+        "scopeLevel": "tshepo",
+        "deniedAdminDomains": [
+          "break_glass"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "adm-opa_policy_administrator",
+      "code": "opa_policy_administrator",
+      "displayName": "Opa Policy Administrator",
+      "category": "system_admin_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.system_admin",
+      "metadata": {
+        "scopeLevel": "opa",
+        "deniedAdminDomains": [
+          "break_glass"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "adm-audit_administrator",
+      "code": "audit_administrator",
+      "displayName": "Audit Administrator",
+      "category": "system_admin_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.system_admin",
+      "metadata": {
+        "scopeLevel": "audit",
+        "deniedAdminDomains": [
+          "break_glass"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "adm-security_administrator",
+      "code": "security_administrator",
+      "displayName": "Security Administrator",
+      "category": "system_admin_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.system_admin",
+      "metadata": {
+        "scopeLevel": "security",
+        "deniedAdminDomains": [
+          "break_glass"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "adm-helpdesk_supervisor",
+      "code": "helpdesk_supervisor",
+      "displayName": "Helpdesk Supervisor",
+      "category": "system_admin_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.system_admin",
+      "metadata": {
+        "scopeLevel": "helpdesk",
+        "deniedAdminDomains": [
+          "break_glass"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "adm-support_agent",
+      "code": "support_agent",
+      "displayName": "Support Agent",
+      "category": "system_admin_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.system_admin",
+      "metadata": {
+        "scopeLevel": "support",
+        "deniedAdminDomains": [
+          "break_glass"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mpt-vendor",
+      "code": "vendor",
+      "displayName": "Vendor",
+      "category": "marketplace_participant_type",
+      "ownerService": "msika"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mpt-supplier",
+      "code": "supplier",
+      "displayName": "Supplier",
+      "category": "marketplace_participant_type",
+      "ownerService": "msika"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mpt-manufacturer",
+      "code": "manufacturer",
+      "displayName": "Manufacturer",
+      "category": "marketplace_participant_type",
+      "ownerService": "msika"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mpt-distributor",
+      "code": "distributor",
+      "displayName": "Distributor",
+      "category": "marketplace_participant_type",
+      "ownerService": "msika"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mpt-private_pharmacy",
+      "code": "private_pharmacy",
+      "displayName": "Private Pharmacy",
+      "category": "marketplace_participant_type",
+      "ownerService": "msika"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mpt-private_laboratory",
+      "code": "private_laboratory",
+      "displayName": "Private Laboratory",
+      "category": "marketplace_participant_type",
+      "ownerService": "msika"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mpt-insurer",
+      "code": "insurer",
+      "displayName": "Insurer",
+      "category": "marketplace_participant_type",
+      "ownerService": "msika"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mpt-payment_provider",
+      "code": "payment_provider",
+      "displayName": "Payment Provider",
+      "category": "marketplace_participant_type",
+      "ownerService": "msika"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mpt-logistics_provider",
+      "code": "logistics_provider",
+      "displayName": "Logistics Provider",
+      "category": "marketplace_participant_type",
+      "ownerService": "msika"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mpt-device_manufacturer",
+      "code": "device_manufacturer",
+      "displayName": "Device Manufacturer",
+      "category": "marketplace_participant_type",
+      "ownerService": "msika"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mpt-iot_device_vendor",
+      "code": "iot_device_vendor",
+      "displayName": "Iot Device Vendor",
+      "category": "marketplace_participant_type",
+      "ownerService": "msika"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mpt-training_content_provider",
+      "code": "training_content_provider",
+      "displayName": "Training Content Provider",
+      "category": "marketplace_participant_type",
+      "ownerService": "msika"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mpt-telemedicine_partner",
+      "code": "telemedicine_partner",
+      "displayName": "Telemedicine Partner",
+      "category": "marketplace_participant_type",
+      "ownerService": "msika"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mpt-ai_model_provider",
+      "code": "ai_model_provider",
+      "displayName": "Ai Model Provider",
+      "category": "marketplace_participant_type",
+      "ownerService": "msika"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mpt-software_integration_partner",
+      "code": "software_integration_partner",
+      "displayName": "Software Integration Partner",
+      "category": "marketplace_participant_type",
+      "ownerService": "msika"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mpt-maintenance_contractor",
+      "code": "maintenance_contractor",
+      "displayName": "Maintenance Contractor",
+      "category": "marketplace_participant_type",
+      "ownerService": "msika"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mpt-accredited_service_provider",
+      "code": "accredited_service_provider",
+      "displayName": "Accredited Service Provider",
+      "category": "marketplace_participant_type",
+      "ownerService": "msika"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mpt-ngo_partner",
+      "code": "ngo_partner",
+      "displayName": "Ngo Partner",
+      "category": "marketplace_participant_type",
+      "ownerService": "msika"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mpt-donor_partner",
+      "code": "donor_partner",
+      "displayName": "Donor Partner",
+      "category": "marketplace_participant_type",
+      "ownerService": "msika"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mpt-research_partner",
+      "code": "research_partner",
+      "displayName": "Research Partner",
+      "category": "marketplace_participant_type",
+      "ownerService": "msika"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mps-organisation_draft",
+      "code": "organisation_draft",
+      "displayName": "Organisation Draft",
+      "category": "marketplace_access_pipeline_state",
+      "ownerService": "msika",
+      "policyMapping": "impilo.marketplace.block"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mps-submitted",
+      "code": "submitted",
+      "displayName": "Submitted",
+      "category": "marketplace_access_pipeline_state",
+      "ownerService": "msika",
+      "policyMapping": "impilo.marketplace.block_production"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mps-pending_verification",
+      "code": "pending_verification",
+      "displayName": "Pending Verification",
+      "category": "marketplace_access_pipeline_state",
+      "ownerService": "msika",
+      "policyMapping": "impilo.marketplace.block_production"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mps-verified_organisation",
+      "code": "verified_organisation",
+      "displayName": "Verified Organisation",
+      "category": "marketplace_access_pipeline_state",
+      "ownerService": "msika",
+      "policyMapping": "impilo.marketplace.block_production"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mps-pending_regulatory_review",
+      "code": "pending_regulatory_review",
+      "displayName": "Pending Regulatory Review",
+      "category": "marketplace_access_pipeline_state",
+      "ownerService": "msika",
+      "policyMapping": "impilo.marketplace.block_production"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mps-regulatory_approved",
+      "code": "regulatory_approved",
+      "displayName": "Regulatory Approved",
+      "category": "marketplace_access_pipeline_state",
+      "ownerService": "msika",
+      "policyMapping": "impilo.marketplace.block_production"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mps-contract_pending",
+      "code": "contract_pending",
+      "displayName": "Contract Pending",
+      "category": "marketplace_access_pipeline_state",
+      "ownerService": "msika",
+      "policyMapping": "impilo.marketplace.block_production"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mps-contract_active",
+      "code": "contract_active",
+      "displayName": "Contract Active",
+      "category": "marketplace_access_pipeline_state",
+      "ownerService": "msika",
+      "policyMapping": "impilo.marketplace.production"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mps-sandbox_access_requested",
+      "code": "sandbox_access_requested",
+      "displayName": "Sandbox Access Requested",
+      "category": "marketplace_access_pipeline_state",
+      "ownerService": "msika",
+      "policyMapping": "impilo.marketplace.block_production"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mps-sandbox_access_granted",
+      "code": "sandbox_access_granted",
+      "displayName": "Sandbox Access Granted",
+      "category": "marketplace_access_pipeline_state",
+      "ownerService": "msika",
+      "policyMapping": "impilo.marketplace.sandbox_only"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mps-certification_testing",
+      "code": "certification_testing",
+      "displayName": "Certification Testing",
+      "category": "marketplace_access_pipeline_state",
+      "ownerService": "msika",
+      "policyMapping": "impilo.marketplace.sandbox_only"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mps-certification_passed",
+      "code": "certification_passed",
+      "displayName": "Certification Passed",
+      "category": "marketplace_access_pipeline_state",
+      "ownerService": "msika",
+      "policyMapping": "impilo.marketplace.block_production"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mps-production_access_pending",
+      "code": "production_access_pending",
+      "displayName": "Production Access Pending",
+      "category": "marketplace_access_pipeline_state",
+      "ownerService": "msika",
+      "policyMapping": "impilo.marketplace.block_production"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mps-production_access_granted",
+      "code": "production_access_granted",
+      "displayName": "Production Access Granted",
+      "category": "marketplace_access_pipeline_state",
+      "ownerService": "msika",
+      "policyMapping": "impilo.marketplace.production"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mps-active",
+      "code": "active",
+      "displayName": "Active",
+      "category": "marketplace_access_pipeline_state",
+      "ownerService": "msika",
+      "policyMapping": "impilo.marketplace.production"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mps-active_restricted",
+      "code": "active_restricted",
+      "displayName": "Active Restricted",
+      "category": "marketplace_access_pipeline_state",
+      "ownerService": "msika",
+      "policyMapping": "impilo.marketplace.block_production"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mps-suspended",
+      "code": "suspended",
+      "displayName": "Suspended",
+      "category": "marketplace_access_pipeline_state",
+      "ownerService": "msika",
+      "policyMapping": "impilo.marketplace.block"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mps-revoked",
+      "code": "revoked",
+      "displayName": "Revoked",
+      "category": "marketplace_access_pipeline_state",
+      "ownerService": "msika",
+      "policyMapping": "impilo.marketplace.block"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mps-expired",
+      "code": "expired",
+      "displayName": "Expired",
+      "category": "marketplace_access_pipeline_state",
+      "ownerService": "msika",
+      "policyMapping": "impilo.marketplace.block_production"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mps-offboarded",
+      "code": "offboarded",
+      "displayName": "Offboarded",
+      "category": "marketplace_access_pipeline_state",
+      "ownerService": "msika",
+      "policyMapping": "impilo.marketplace.block"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mrole-marketplace_organisation_admin",
+      "code": "marketplace_organisation_admin",
+      "displayName": "Marketplace Organisation Admin",
+      "category": "marketplace_role",
+      "ownerService": "msika",
+      "policyMapping": "impilo.marketplace"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mrole-marketplace_vendor_user",
+      "code": "marketplace_vendor_user",
+      "displayName": "Marketplace Vendor User",
+      "category": "marketplace_role",
+      "ownerService": "msika",
+      "policyMapping": "impilo.marketplace"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mrole-marketplace_product_manager",
+      "code": "marketplace_product_manager",
+      "displayName": "Marketplace Product Manager",
+      "category": "marketplace_role",
+      "ownerService": "msika",
+      "policyMapping": "impilo.marketplace"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mrole-marketplace_contract_manager",
+      "code": "marketplace_contract_manager",
+      "displayName": "Marketplace Contract Manager",
+      "category": "marketplace_role",
+      "ownerService": "msika",
+      "policyMapping": "impilo.marketplace"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mrole-marketplace_api_developer",
+      "code": "marketplace_api_developer",
+      "displayName": "Marketplace Api Developer",
+      "category": "marketplace_role",
+      "ownerService": "msika",
+      "policyMapping": "impilo.marketplace"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mrole-marketplace_sandbox_tester",
+      "code": "marketplace_sandbox_tester",
+      "displayName": "Marketplace Sandbox Tester",
+      "category": "marketplace_role",
+      "ownerService": "msika",
+      "policyMapping": "impilo.marketplace"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mrole-marketplace_compliance_officer",
+      "code": "marketplace_compliance_officer",
+      "displayName": "Marketplace Compliance Officer",
+      "category": "marketplace_role",
+      "ownerService": "msika",
+      "policyMapping": "impilo.marketplace"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mrole-marketplace_support_user",
+      "code": "marketplace_support_user",
+      "displayName": "Marketplace Support User",
+      "category": "marketplace_role",
+      "ownerService": "msika",
+      "policyMapping": "impilo.marketplace"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mrole-marketplace_finance_user",
+      "code": "marketplace_finance_user",
+      "displayName": "Marketplace Finance User",
+      "category": "marketplace_role",
+      "ownerService": "msika",
+      "policyMapping": "impilo.marketplace"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "mrole-marketplace_regulatory_liaison",
+      "code": "marketplace_regulatory_liaison",
+      "displayName": "Marketplace Regulatory Liaison",
+      "category": "marketplace_role",
+      "ownerService": "msika",
+      "policyMapping": "impilo.marketplace"
+    }
+  ]
+}

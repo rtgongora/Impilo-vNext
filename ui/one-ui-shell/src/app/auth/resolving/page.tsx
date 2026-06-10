@@ -3,16 +3,6 @@
 /**
  * Preparing Your Experience — Post-login identity resolution screen.
  * Route: /auth/resolving
- *
- * A lightweight loading screen shown after login while the system
- * queries linked IDs (Provider ID, Staff ID, Caregiver ID).
- *
- * Behaviour:
- * 1. Calls useLinkedIds() to discover linked professional identities
- * 2. Waits for the response (max 5 seconds)
- * 3. Updates the auth store with discovered linked IDs
- * 4. If professional IDs found, shows a brief notification before navigating
- * 5. Navigates via resolvePostLoginDestination (honors returnTo)
  */
 
 import { useEffect, useState, useRef, useCallback } from "react";
@@ -20,6 +10,8 @@ import { useSearchParams } from "next/navigation";
 import { CheckCircle2, Loader2, Stethoscope } from "lucide-react";
 import { ImpiloBrandLogo } from "@/components/brand/ImpiloBrandLogo";
 import { NompiloHint } from "@/components/intelligent/NompiloHint";
+import { useAffiliations } from "@/hooks/queries/useAffiliations";
+import { useWorkAssignments } from "@/hooks/queries/useWorkAssignments";
 import { useLinkedIds } from "@/hooks/queries/useLinkedIds";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
@@ -27,7 +19,7 @@ import { useOperationalContextStore } from "@/hooks/useOperationalContextStore";
 import { resolvePostLoginDestination } from "@/lib/resolve-post-login-destination";
 
 const RESOLUTION_TIMEOUT_MS = 5000;
-const PROFESSIONAL_NOTICE_DELAY_MS = 1500;
+const PROFESSIONAL_NOTICE_DELAY_MS = 1200;
 
 interface ResolverStep {
   label: string;
@@ -37,14 +29,17 @@ interface ResolverStep {
 export default function ResolvingPage() {
   const searchParams = useSearchParams();
   const returnTo = searchParams.get("returnTo");
-  const { user } = useAuthStore();
+  const { user, activateProvider } = useAuthStore();
   const { data, isLoading, isSuccess, isError } = useLinkedIds();
+  const { data: affiliations = [], isSuccess: affSuccess } = useAffiliations();
+  const { data: workAssignments = [], isSuccess: assignSuccess } = useWorkAssignments();
   const [hasNavigated, setHasNavigated] = useState(false);
   const [showProfessionalNotice, setShowProfessionalNotice] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const linkedAttrs = data?.data?.attributes;
   const hasProfessionalId = !!(linkedAttrs?.providerId || linkedAttrs?.staffId);
+  const loginMethod = user?.loginMethod;
 
   const navigate = useCallback(() => {
     if (hasNavigated) return;
@@ -52,30 +47,50 @@ export default function ResolvingPage() {
 
     const destination = resolvePostLoginDestination({
       user,
-      linkedProviderId: linkedAttrs?.providerId,
+      linkedIds: linkedAttrs,
+      affiliations,
+      workAssignments,
+      loginMethod,
       hasFacility: useFacilityStore.getState().hasFacility,
       returnTo,
     });
+
+    if (destination.autoActivateProvider && destination.linkedProviderId) {
+      activateProvider(destination.linkedProviderId);
+    }
 
     if (destination.operationalMode) {
       useOperationalContextStore.getState().setOperationalMode(destination.operationalMode);
     }
 
     window.location.assign(destination.href);
-  }, [hasNavigated, linkedAttrs?.providerId, returnTo, user]);
+  }, [
+    hasNavigated,
+    linkedAttrs,
+    affiliations,
+    workAssignments,
+    loginMethod,
+    returnTo,
+    user,
+    activateProvider,
+  ]);
+
+  const identityResolved = isSuccess || isError;
+  const affiliationsResolved = affSuccess || isError;
+  const assignmentsResolved = assignSuccess || isError || workAssignments.length >= 0;
 
   const steps: ResolverStep[] = [
     {
       label: "Checking your identity",
-      status: isSuccess || isError ? "done" : isLoading ? "active" : "pending",
+      status: identityResolved ? "done" : isLoading ? "active" : "pending",
     },
     {
       label: "Resolving linked profiles",
-      status: isSuccess ? "done" : isLoading ? "active" : "pending",
+      status: identityResolved && affiliationsResolved && assignmentsResolved ? "done" : isLoading ? "active" : "pending",
     },
     {
       label: "Loading your preferences",
-      status: isSuccess ? "done" : "pending",
+      status: identityResolved && affiliationsResolved ? "done" : "pending",
     },
   ];
 
@@ -90,9 +105,9 @@ export default function ResolvingPage() {
   }, [navigate]);
 
   useEffect(() => {
-    if (!isSuccess || hasNavigated) return;
+    if (!identityResolved || !affiliationsResolved || !assignmentsResolved || hasNavigated) return;
 
-    if (hasProfessionalId) {
+    if (hasProfessionalId && loginMethod !== "provider_id") {
       setShowProfessionalNotice(true);
       const timer = setTimeout(() => {
         navigate();
@@ -101,7 +116,7 @@ export default function ResolvingPage() {
     }
 
     navigate();
-  }, [isSuccess, hasProfessionalId, hasNavigated, navigate]);
+  }, [identityResolved, affiliationsResolved, assignmentsResolved, hasProfessionalId, loginMethod, hasNavigated, navigate]);
 
   useEffect(() => {
     if (!isError || hasNavigated) return;
@@ -163,9 +178,9 @@ export default function ResolvingPage() {
                 </p>
                 <p className="mt-1 text-xs text-impilo-600 leading-relaxed">
                   {linkedAttrs?.providerId
-                    ? `Provider ID: ${linkedAttrs.providerId}`
+                    ? `Provider ID linked: ${linkedAttrs.providerId}`
                     : "Staff profile linked"}
-                  . You can activate professional mode from the sidebar.
+                  . Activate when you are ready to work.
                 </p>
               </div>
             </div>
@@ -180,7 +195,7 @@ export default function ResolvingPage() {
       </div>
 
       <NompiloHint
-        message="I'm checking if you have any linked professional identities, staff roles, or facility affiliations. This only takes a moment."
+        message="I'm checking your identity, linked Provider ID, facility assignments, and what you're allowed to do before opening your workspace."
       />
     </div>
   );

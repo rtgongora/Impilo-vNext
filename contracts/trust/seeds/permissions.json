@@ -1,0 +1,1947 @@
+{
+  "version": "1.3.0",
+  "catalogueId": "permissions",
+  "displayName": "Permission Domains and Standard Permissions",
+  "entries": [
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-personal",
+      "code": "personal",
+      "displayName": "Personal",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-professional",
+      "code": "professional",
+      "displayName": "Professional",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-work",
+      "code": "work",
+      "displayName": "Work",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-facility",
+      "code": "facility",
+      "displayName": "Facility",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-facility-staff",
+      "code": "facility.staff",
+      "displayName": "Facility Staff",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-facility-admin",
+      "code": "facility.admin",
+      "displayName": "Facility Admin",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-facility-clinical",
+      "code": "facility.clinical",
+      "displayName": "Facility Clinical",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-facility-records",
+      "code": "facility.records",
+      "displayName": "Facility Records",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-facility-billing",
+      "code": "facility.billing",
+      "displayName": "Facility Billing",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-facility-pharmacy",
+      "code": "facility.pharmacy",
+      "displayName": "Facility Pharmacy",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-facility-lab",
+      "code": "facility.lab",
+      "displayName": "Facility Lab",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-facility-radiology",
+      "code": "facility.radiology",
+      "displayName": "Facility Radiology",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-facility-reports",
+      "code": "facility.reports",
+      "displayName": "Facility Reports",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-clinical",
+      "code": "clinical",
+      "displayName": "Clinical",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-pharmacy",
+      "code": "pharmacy",
+      "displayName": "Pharmacy",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-lab",
+      "code": "lab",
+      "displayName": "Lab",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-radiology",
+      "code": "radiology",
+      "displayName": "Radiology",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-billing",
+      "code": "billing",
+      "displayName": "Billing",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-telemedicine",
+      "code": "telemedicine",
+      "displayName": "Telemedicine",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-outreach",
+      "code": "outreach",
+      "displayName": "Outreach",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-programme",
+      "code": "programme",
+      "displayName": "Programme",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-above_site",
+      "code": "above_site",
+      "displayName": "Above Site",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-public_health",
+      "code": "public_health",
+      "displayName": "Public Health",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-registry",
+      "code": "registry",
+      "displayName": "Registry",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-registry-provider",
+      "code": "registry.provider",
+      "displayName": "Registry Provider",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-registry-client",
+      "code": "registry.client",
+      "displayName": "Registry Client",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-registry-facility",
+      "code": "registry.facility",
+      "displayName": "Registry Facility",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-registry-terminology",
+      "code": "registry.terminology",
+      "displayName": "Registry Terminology",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-registry-product_service",
+      "code": "registry.product_service",
+      "displayName": "Registry Product Service",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-registry-public_health_place",
+      "code": "registry.public_health_place",
+      "displayName": "Registry Public Health Place",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-registry-geography",
+      "code": "registry.geography",
+      "displayName": "Registry Geography",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-marketplace",
+      "code": "marketplace",
+      "displayName": "Marketplace",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-marketplace-organisation",
+      "code": "marketplace.organisation",
+      "displayName": "Marketplace Organisation",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-marketplace-product",
+      "code": "marketplace.product",
+      "displayName": "Marketplace Product",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-marketplace-contract",
+      "code": "marketplace.contract",
+      "displayName": "Marketplace Contract",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-marketplace-api",
+      "code": "marketplace.api",
+      "displayName": "Marketplace Api",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-marketplace-sandbox",
+      "code": "marketplace.sandbox",
+      "displayName": "Marketplace Sandbox",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-marketplace-compliance",
+      "code": "marketplace.compliance",
+      "displayName": "Marketplace Compliance",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-regulator",
+      "code": "regulator",
+      "displayName": "Regulator",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-policy",
+      "code": "policy",
+      "displayName": "Policy",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-audit",
+      "code": "audit",
+      "displayName": "Audit",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-nompilo",
+      "code": "nompilo",
+      "displayName": "Nompilo",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-integration",
+      "code": "integration",
+      "displayName": "Integration",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-system",
+      "code": "system",
+      "displayName": "System",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-security",
+      "code": "security",
+      "displayName": "Security",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-trust",
+      "code": "trust",
+      "displayName": "Trust",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-consent",
+      "code": "consent",
+      "displayName": "Consent",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-break_glass",
+      "code": "break_glass",
+      "displayName": "Break Glass",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-personal-profile-view",
+      "code": "personal.profile.view",
+      "displayName": "Personal Profile View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.personal",
+      "metadata": {
+        "domain": "personal.profile"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-personal-profile-update",
+      "code": "personal.profile.update",
+      "displayName": "Personal Profile Update",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.personal",
+      "metadata": {
+        "domain": "personal.profile"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-personal-records-view",
+      "code": "personal.records.view",
+      "displayName": "Personal Records View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.personal",
+      "metadata": {
+        "domain": "personal.records"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-personal-appointments-manage",
+      "code": "personal.appointments.manage",
+      "displayName": "Personal Appointments Manage",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.personal",
+      "metadata": {
+        "domain": "personal.appointments"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-personal-telemedicine-request",
+      "code": "personal.telemedicine.request",
+      "displayName": "Personal Telemedicine Request",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.personal",
+      "metadata": {
+        "domain": "personal.telemedicine"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-personal-prescriptions-view",
+      "code": "personal.prescriptions.view",
+      "displayName": "Personal Prescriptions View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.personal",
+      "metadata": {
+        "domain": "personal.prescriptions"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-personal-payments-manage",
+      "code": "personal.payments.manage",
+      "displayName": "Personal Payments Manage",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.personal",
+      "metadata": {
+        "domain": "personal.payments"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-personal-consent-manage",
+      "code": "personal.consent.manage",
+      "displayName": "Personal Consent Manage",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.personal",
+      "metadata": {
+        "domain": "personal.consent"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-personal-dependants-manage",
+      "code": "personal.dependants.manage",
+      "displayName": "Personal Dependants Manage",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.personal",
+      "metadata": {
+        "domain": "personal.dependants"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-professional-profile-view",
+      "code": "professional.profile.view",
+      "displayName": "Professional Profile View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.professional",
+      "metadata": {
+        "domain": "professional.profile"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-professional-profile-update_request",
+      "code": "professional.profile.update_request",
+      "displayName": "Professional Profile Update Request",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.professional",
+      "metadata": {
+        "domain": "professional.profile"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-professional-credentials-view",
+      "code": "professional.credentials.view",
+      "displayName": "Professional Credentials View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.professional",
+      "metadata": {
+        "domain": "professional.credentials"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-professional-licence-view",
+      "code": "professional.licence.view",
+      "displayName": "Professional Licence View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.professional",
+      "metadata": {
+        "domain": "professional.licence"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-professional-cpd-view",
+      "code": "professional.cpd.view",
+      "displayName": "Professional Cpd View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.professional",
+      "metadata": {
+        "domain": "professional.cpd"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-professional-status-view",
+      "code": "professional.status.view",
+      "displayName": "Professional Status View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.professional",
+      "metadata": {
+        "domain": "professional.status"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-professional-assignment-request",
+      "code": "professional.assignment.request",
+      "displayName": "Professional Assignment Request",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.professional",
+      "metadata": {
+        "domain": "professional.assignment"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-professional-fundo-access",
+      "code": "professional.fundo.access",
+      "displayName": "Professional Fundo Access",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.professional",
+      "metadata": {
+        "domain": "professional.fundo"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-work-context-enter",
+      "code": "work.context.enter",
+      "displayName": "Work Context Enter",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "work.context"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-work-context-switch",
+      "code": "work.context.switch",
+      "displayName": "Work Context Switch",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "work.context"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-work-tasks-view",
+      "code": "work.tasks.view",
+      "displayName": "Work Tasks View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "work.tasks"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-work-queue-view",
+      "code": "work.queue.view",
+      "displayName": "Work Queue View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "work.queue"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-work-assignment-view",
+      "code": "work.assignment.view",
+      "displayName": "Work Assignment View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "work.assignment"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-facility-dashboard-view",
+      "code": "facility.dashboard.view",
+      "displayName": "Facility Dashboard View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "facility.dashboard"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-facility-client-search",
+      "code": "facility.client.search",
+      "displayName": "Facility Client Search",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "facility.client"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-facility-client-register_assisted",
+      "code": "facility.client.register_assisted",
+      "displayName": "Facility Client Register Assisted",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "facility.client"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-facility-queue-manage",
+      "code": "facility.queue.manage",
+      "displayName": "Facility Queue Manage",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "facility.queue"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-facility-department-view",
+      "code": "facility.department.view",
+      "displayName": "Facility Department View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "facility.department"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-facility-department-manage",
+      "code": "facility.department.manage",
+      "displayName": "Facility Department Manage",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "facility.department"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-facility-staff-view",
+      "code": "facility.staff.view",
+      "displayName": "Facility Staff View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "facility.staff"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-facility-staff-assign",
+      "code": "facility.staff.assign",
+      "displayName": "Facility Staff Assign",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "facility.staff"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-facility-staff-suspend_local_access",
+      "code": "facility.staff.suspend_local_access",
+      "displayName": "Facility Staff Suspend Local Access",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "facility.staff"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-facility-staff-end_assignment",
+      "code": "facility.staff.end_assignment",
+      "displayName": "Facility Staff End Assignment",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "facility.staff"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-facility-reports-view",
+      "code": "facility.reports.view",
+      "displayName": "Facility Reports View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "facility.reports"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-facility-audit-view",
+      "code": "facility.audit.view",
+      "displayName": "Facility Audit View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "facility.audit"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-facility-config-manage",
+      "code": "facility.config.manage",
+      "displayName": "Facility Config Manage",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "facility.config"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-clinical-encounter-create",
+      "code": "clinical.encounter.create",
+      "displayName": "Clinical Encounter Create",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "clinical.encounter"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-clinical-encounter-update",
+      "code": "clinical.encounter.update",
+      "displayName": "Clinical Encounter Update",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "clinical.encounter"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-clinical-notes-write",
+      "code": "clinical.notes.write",
+      "displayName": "Clinical Notes Write",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "clinical.notes"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-clinical-orders-create",
+      "code": "clinical.orders.create",
+      "displayName": "Clinical Orders Create",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "clinical.orders"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-clinical-prescriptions-create",
+      "code": "clinical.prescriptions.create",
+      "displayName": "Clinical Prescriptions Create",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "clinical.prescriptions"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-clinical-referrals-create",
+      "code": "clinical.referrals.create",
+      "displayName": "Clinical Referrals Create",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "clinical.referrals"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-clinical-admissions-manage",
+      "code": "clinical.admissions.manage",
+      "displayName": "Clinical Admissions Manage",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "clinical.admissions"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-clinical-discharge-manage",
+      "code": "clinical.discharge.manage",
+      "displayName": "Clinical Discharge Manage",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "clinical.discharge"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-clinical-results-review",
+      "code": "clinical.results.review",
+      "displayName": "Clinical Results Review",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "clinical.results"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-pharmacy-prescriptions-view",
+      "code": "pharmacy.prescriptions.view",
+      "displayName": "Pharmacy Prescriptions View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "pharmacy.prescriptions"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-pharmacy-dispense",
+      "code": "pharmacy.dispense",
+      "displayName": "Pharmacy Dispense",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "pharmacy"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-pharmacy-stock-view",
+      "code": "pharmacy.stock.view",
+      "displayName": "Pharmacy Stock View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "pharmacy.stock"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-pharmacy-stock-adjust",
+      "code": "pharmacy.stock.adjust",
+      "displayName": "Pharmacy Stock Adjust",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "pharmacy.stock"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-pharmacy-stock-adjust-approve",
+      "code": "pharmacy.stock.adjust.approve",
+      "displayName": "Pharmacy Stock Adjust Approve",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "pharmacy.stock"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-pharmacy-orders-create",
+      "code": "pharmacy.orders.create",
+      "displayName": "Pharmacy Orders Create",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "pharmacy.orders"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-pharmacy-orders-approve",
+      "code": "pharmacy.orders.approve",
+      "displayName": "Pharmacy Orders Approve",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "pharmacy.orders"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-pharmacy-staff-manage",
+      "code": "pharmacy.staff.manage",
+      "displayName": "Pharmacy Staff Manage",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "pharmacy.staff"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-lab-orders-view",
+      "code": "lab.orders.view",
+      "displayName": "Lab Orders View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "lab.orders"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-lab-specimen-collect",
+      "code": "lab.specimen.collect",
+      "displayName": "Lab Specimen Collect",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "lab.specimen"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-lab-results-enter",
+      "code": "lab.results.enter",
+      "displayName": "Lab Results Enter",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "lab.results"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-lab-results-validate",
+      "code": "lab.results.validate",
+      "displayName": "Lab Results Validate",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "lab.results"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-lab-results-release",
+      "code": "lab.results.release",
+      "displayName": "Lab Results Release",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "lab.results"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-telemedicine-pool-join",
+      "code": "telemedicine.pool.join",
+      "displayName": "Telemedicine Pool Join",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "telemedicine.pool"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-telemedicine-consult-accept",
+      "code": "telemedicine.consult.accept",
+      "displayName": "Telemedicine Consult Accept",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "telemedicine.consult"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-telemedicine-triage-perform",
+      "code": "telemedicine.triage.perform",
+      "displayName": "Telemedicine Triage Perform",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "telemedicine.triage"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-telemedicine-encounter-document",
+      "code": "telemedicine.encounter.document",
+      "displayName": "Telemedicine Encounter Document",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "telemedicine.encounter"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-telemedicine-specialist-review",
+      "code": "telemedicine.specialist.review",
+      "displayName": "Telemedicine Specialist Review",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "telemedicine.specialist"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-telemedicine-supervise",
+      "code": "telemedicine.supervise",
+      "displayName": "Telemedicine Supervise",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "telemedicine"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-telemedicine-settings-manage",
+      "code": "telemedicine.settings.manage",
+      "displayName": "Telemedicine Settings Manage",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "telemedicine.settings"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "perm-registry-provider-view",
+      "code": "registry.provider.view",
+      "displayName": "Registry Provider View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.registry",
+      "metadata": {
+        "domain": "registry.provider"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "perm-registry-provider-create_draft",
+      "code": "registry.provider.create_draft",
+      "displayName": "Registry Provider Create Draft",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.registry",
+      "metadata": {
+        "domain": "registry.provider"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "perm-registry-provider-verify",
+      "code": "registry.provider.verify",
+      "displayName": "Registry Provider Verify",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.registry",
+      "metadata": {
+        "domain": "registry.provider"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "perm-registry-provider-approve",
+      "code": "registry.provider.approve",
+      "displayName": "Registry Provider Approve",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.registry",
+      "metadata": {
+        "domain": "registry.provider"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "perm-registry-provider-suspend",
+      "code": "registry.provider.suspend",
+      "displayName": "Registry Provider Suspend",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.registry",
+      "metadata": {
+        "domain": "registry.provider"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "perm-registry-provider-revoke",
+      "code": "registry.provider.revoke",
+      "displayName": "Registry Provider Revoke",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.registry",
+      "metadata": {
+        "domain": "registry.provider"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "perm-registry-provider-link_health_id",
+      "code": "registry.provider.link_health_id",
+      "displayName": "Registry Provider Link Health Id",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.registry",
+      "metadata": {
+        "domain": "registry.provider"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-registry-facility-view",
+      "code": "registry.facility.view",
+      "displayName": "Registry Facility View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.registry",
+      "metadata": {
+        "domain": "registry.facility"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-registry-facility-create",
+      "code": "registry.facility.create",
+      "displayName": "Registry Facility Create",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.registry",
+      "metadata": {
+        "domain": "registry.facility"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-registry-facility-approve",
+      "code": "registry.facility.approve",
+      "displayName": "Registry Facility Approve",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.registry",
+      "metadata": {
+        "domain": "registry.facility"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-registry-facility-update",
+      "code": "registry.facility.update",
+      "displayName": "Registry Facility Update",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.registry",
+      "metadata": {
+        "domain": "registry.facility"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-registry-client-resolve_duplicate",
+      "code": "registry.client.resolve_duplicate",
+      "displayName": "Registry Client Resolve Duplicate",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.registry",
+      "metadata": {
+        "domain": "registry.client"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-registry-terminology-manage",
+      "code": "registry.terminology.manage",
+      "displayName": "Registry Terminology Manage",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.registry",
+      "metadata": {
+        "domain": "registry.terminology"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-registry-product_service-manage",
+      "code": "registry.product_service.manage",
+      "displayName": "Registry Product Service Manage",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.registry",
+      "metadata": {
+        "domain": "registry.product_service"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-registry-public_health_place-manage",
+      "code": "registry.public_health_place.manage",
+      "displayName": "Registry Public Health Place Manage",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.registry",
+      "metadata": {
+        "domain": "registry.public_health_place"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-registry-geography-manage",
+      "code": "registry.geography.manage",
+      "displayName": "Registry Geography Manage",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.registry",
+      "metadata": {
+        "domain": "registry.geography"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-marketplace-organisation-register",
+      "code": "marketplace.organisation.register",
+      "displayName": "Marketplace Organisation Register",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.marketplace",
+      "metadata": {
+        "domain": "marketplace.organisation"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-marketplace-organisation-verify",
+      "code": "marketplace.organisation.verify",
+      "displayName": "Marketplace Organisation Verify",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.marketplace",
+      "metadata": {
+        "domain": "marketplace.organisation"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-marketplace-product-submit",
+      "code": "marketplace.product.submit",
+      "displayName": "Marketplace Product Submit",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.marketplace",
+      "metadata": {
+        "domain": "marketplace.product"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-marketplace-product-review",
+      "code": "marketplace.product.review",
+      "displayName": "Marketplace Product Review",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.marketplace",
+      "metadata": {
+        "domain": "marketplace.product"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-marketplace-product-approve",
+      "code": "marketplace.product.approve",
+      "displayName": "Marketplace Product Approve",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.marketplace",
+      "metadata": {
+        "domain": "marketplace.product"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-marketplace-contract-manage",
+      "code": "marketplace.contract.manage",
+      "displayName": "Marketplace Contract Manage",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.marketplace",
+      "metadata": {
+        "domain": "marketplace.contract"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-marketplace-api-request_sandbox",
+      "code": "marketplace.api.request_sandbox",
+      "displayName": "Marketplace Api Request Sandbox",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.marketplace",
+      "metadata": {
+        "domain": "marketplace.api"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-marketplace-api-approve_production",
+      "code": "marketplace.api.approve_production",
+      "displayName": "Marketplace Api Approve Production",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.marketplace",
+      "metadata": {
+        "domain": "marketplace.api"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-marketplace-compliance-view",
+      "code": "marketplace.compliance.view",
+      "displayName": "Marketplace Compliance View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.marketplace",
+      "metadata": {
+        "domain": "marketplace.compliance"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-marketplace-compliance-audit",
+      "code": "marketplace.compliance.audit",
+      "displayName": "Marketplace Compliance Audit",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.marketplace",
+      "metadata": {
+        "domain": "marketplace.compliance"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-marketplace-suspend",
+      "code": "marketplace.suspend",
+      "displayName": "Marketplace Suspend",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.marketplace",
+      "metadata": {
+        "domain": "marketplace"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-marketplace-revoke",
+      "code": "marketplace.revoke",
+      "displayName": "Marketplace Revoke",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.marketplace",
+      "metadata": {
+        "domain": "marketplace"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-regulator-review",
+      "code": "regulator.review",
+      "displayName": "Regulator Review",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "domain": "regulator"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-regulator-approve",
+      "code": "regulator.approve",
+      "displayName": "Regulator Approve",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "domain": "regulator"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-regulator-reject",
+      "code": "regulator.reject",
+      "displayName": "Regulator Reject",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "domain": "regulator"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-regulator-suspend",
+      "code": "regulator.suspend",
+      "displayName": "Regulator Suspend",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "domain": "regulator"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-regulator-revoke",
+      "code": "regulator.revoke",
+      "displayName": "Regulator Revoke",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "domain": "regulator"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-regulator-renew",
+      "code": "regulator.renew",
+      "displayName": "Regulator Renew",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "domain": "regulator"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-regulator-inspect",
+      "code": "regulator.inspect",
+      "displayName": "Regulator Inspect",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "domain": "regulator"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-regulator-certify",
+      "code": "regulator.certify",
+      "displayName": "Regulator Certify",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "domain": "regulator"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-regulator-audit",
+      "code": "regulator.audit",
+      "displayName": "Regulator Audit",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "domain": "regulator"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-system-users-view",
+      "code": "system.users.view",
+      "displayName": "System Users View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.system_admin",
+      "metadata": {
+        "domain": "system.users"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-system-roles-manage",
+      "code": "system.roles.manage",
+      "displayName": "System Roles Manage",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.system_admin",
+      "metadata": {
+        "domain": "system.roles"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-system-config-manage",
+      "code": "system.config.manage",
+      "displayName": "System Config Manage",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.system_admin",
+      "metadata": {
+        "domain": "system.config"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-security-sessions-view",
+      "code": "security.sessions.view",
+      "displayName": "Security Sessions View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.system_admin",
+      "metadata": {
+        "domain": "security.sessions"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-security-mfa-manage",
+      "code": "security.mfa.manage",
+      "displayName": "Security Mfa Manage",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.system_admin",
+      "metadata": {
+        "domain": "security.mfa"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-trust-context-inspect",
+      "code": "trust.context.inspect",
+      "displayName": "Trust Context Inspect",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.system_admin",
+      "metadata": {
+        "domain": "trust.context"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-trust-role_templates-manage",
+      "code": "trust.role_templates.manage",
+      "displayName": "Trust Role Templates Manage",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.system_admin",
+      "metadata": {
+        "domain": "trust.role_templates"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-policy-bundle-view",
+      "code": "policy.bundle.view",
+      "displayName": "Policy Bundle View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.system_admin",
+      "metadata": {
+        "domain": "policy.bundle"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-policy-bundle-publish",
+      "code": "policy.bundle.publish",
+      "displayName": "Policy Bundle Publish",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.system_admin",
+      "metadata": {
+        "domain": "policy.bundle"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-audit-logs-view",
+      "code": "audit.logs.view",
+      "displayName": "Audit Logs View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "audit.logs"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-integration-api_keys-manage",
+      "code": "integration.api_keys.manage",
+      "displayName": "Integration Api Keys Manage",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "integration.api_keys"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-nompilo-knowledge-manage",
+      "code": "nompilo.knowledge.manage",
+      "displayName": "Nompilo Knowledge Manage",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "nompilo.knowledge"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-nompilo-actions-approve",
+      "code": "nompilo.actions.approve",
+      "displayName": "Nompilo Actions Approve",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.work",
+      "metadata": {
+        "domain": "nompilo.actions"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "perm-break_glass-authorize",
+      "code": "break_glass.authorize",
+      "displayName": "Break Glass Authorize",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.break_glass",
+      "metadata": {
+        "domain": "break_glass"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "perm-break_glass-audit",
+      "code": "break_glass.audit",
+      "displayName": "Break Glass Audit",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.break_glass",
+      "metadata": {
+        "domain": "break_glass"
+      }
+    }
+  ]
+}

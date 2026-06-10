@@ -1,17 +1,27 @@
 /**
  * Post-login destination resolver — single source of truth for auth success paths.
  *
- * Used by /auth/resolving and all login success handlers. Honors safe returnTo,
- * facility guards for facility-bound routes, and operational mode hints.
+ * Delegates identity-context orchestration to identity-context.ts.
  */
 
 import type { AuthUser } from "@/hooks/useAuthStore";
+import type { LinkedIdsAttributes } from "@/hooks/queries/useLinkedIds";
+import type { FacilityAffiliation, LoginMethod } from "@/lib/identity-context";
+import { resolveIdentityContext } from "@/lib/identity-context";
+import type { WorkAssignment } from "@/lib/trust";
 import type { OperationalMode } from "@/lib/operational-context";
 import { matchRouteDefinition } from "@/lib/routes";
 
 export interface ResolvePostLoginDestinationInput {
-  user: Pick<AuthUser, "actorType" | "roles" | "providerActivated" | "providerId"> | null;
+  user: Pick<
+    AuthUser,
+    "id" | "actorType" | "roles" | "providerActivated" | "providerId" | "linkedIds"
+  > | null;
+  linkedIds?: LinkedIdsAttributes | null;
   linkedProviderId?: string | null;
+  affiliations?: FacilityAffiliation[];
+  workAssignments?: WorkAssignment[];
+  loginMethod?: LoginMethod;
   hasFacility?: boolean;
   returnTo?: string | null;
 }
@@ -19,6 +29,8 @@ export interface ResolvePostLoginDestinationInput {
 export interface PostLoginDestinationResult {
   href: string;
   operationalMode?: OperationalMode;
+  autoActivateProvider?: boolean;
+  linkedProviderId?: string | null;
 }
 
 const AUTH_EXEMPT_PREFIXES = ["/auth", "/consent"];
@@ -46,53 +58,87 @@ function withReturnTo(base: string, returnTo: string): string {
   return `${base}${separator}returnTo=${encodeURIComponent(returnTo)}`;
 }
 
-function isCitizenPrincipal(
-  user: ResolvePostLoginDestinationInput["user"],
-): boolean {
-  if (!user) return true;
-  if (user.actorType === "CITIZEN") return true;
-  const roles = user.roles ?? [];
-  return roles.length > 0 && roles.every((role) => role === "CITIZEN");
-}
-
-function isProviderActivated(
-  user: ResolvePostLoginDestinationInput["user"],
-): boolean {
-  return !!(user?.providerActivated && user.providerId);
-}
-
 export function resolvePostLoginDestination(
   input: ResolvePostLoginDestinationInput,
 ): PostLoginDestinationResult {
-  const { user, linkedProviderId, hasFacility = false, returnTo } = input;
+  const { user, returnTo, hasFacility = false } = input;
+  const linkedProviderId =
+    input.linkedProviderId ??
+    input.linkedIds?.providerId ??
+    user?.linkedIds?.providerId ??
+    null;
+
+  const context = resolveIdentityContext({
+    user: user as AuthUser | null,
+    linkedIds: input.linkedIds ?? {
+      providerId: linkedProviderId ?? undefined,
+      providerStatus: input.linkedIds?.providerStatus,
+      licenceValid: input.linkedIds?.licenceValid,
+    },
+    affiliations: input.affiliations,
+    workAssignments: input.workAssignments,
+    loginMethod: input.loginMethod,
+    hasFacility,
+  });
 
   if (isSafeReturnTo(returnTo)) {
+    if (context.isCitizenOnly && routeRequiresFacility(returnTo)) {
+      return { href: "/home", operationalMode: "my_life" };
+    }
     if (routeRequiresFacility(returnTo) && !hasFacility) {
-      return { href: withReturnTo("/facility", returnTo) };
+      return { href: withReturnTo("/facility", returnTo), operationalMode: "facility_work" };
     }
-    return { href: returnTo };
+    return { href: returnTo, operationalMode: context.defaultOperationalMode };
   }
 
-  if (isProviderActivated(user)) {
-    const target = "/provider-workspace";
-    if (!hasFacility) {
-      return { href: withReturnTo("/facility", target), operationalMode: "facility_work" };
-    }
-    return { href: target, operationalMode: "facility_work" };
+  if (context.needsProviderStatusResolution) {
+    return { href: "/provider/status" };
   }
 
-  const pendingProviderId = linkedProviderId ?? user?.providerId;
-  if (pendingProviderId && !user?.providerActivated) {
+  if (context.needsContextChooser) {
     return {
-      href: `/provider/activate?returnTo=${encodeURIComponent("/provider-workspace")}`,
+      href: "/auth/context-chooser",
+      operationalMode: "facility_work",
     };
   }
 
-  if (isCitizenPrincipal(user)) {
-    return { href: "/home", operationalMode: "my_life" };
+  if (context.hasProfessionalAccess && !context.hasWorkAccess) {
+    return {
+      href: "/professional",
+      operationalMode: "my_professional",
+      linkedProviderId,
+    };
   }
 
-  return { href: "/home", operationalMode: "my_life" };
+  if (context.hasWorkAccess) {
+    const target = context.defaultLandingPath === "/home" ? "/provider-workspace" : context.defaultLandingPath;
+    if (!hasFacility && (target === "/provider-workspace" || target.startsWith("/clinical"))) {
+      return {
+        href: withReturnTo("/facility", "/provider-workspace"),
+        operationalMode: "facility_work",
+        autoActivateProvider: context.isProviderActivated && !user?.providerActivated,
+        linkedProviderId,
+      };
+    }
+    return {
+      href: target,
+      operationalMode: context.defaultOperationalMode,
+      autoActivateProvider: context.isProviderActivated && !user?.providerActivated,
+      linkedProviderId,
+    };
+  }
+
+  if (linkedProviderId && !context.isProviderActivated && !context.needsProviderStatusResolution) {
+    return {
+      href: `/provider/activate?returnTo=${encodeURIComponent("/provider-workspace")}`,
+      linkedProviderId,
+    };
+  }
+
+  return {
+    href: context.defaultLandingPath,
+    operationalMode: context.defaultOperationalMode,
+  };
 }
 
 /** Path to the identity-resolution screen, preserving an optional returnTo. */

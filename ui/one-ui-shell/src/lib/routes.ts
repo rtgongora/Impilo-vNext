@@ -53,6 +53,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/auth/register/assurance", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Identity Assurance", navLabel: "Assurance" },
   { path: "/auth/register/status", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Registration Status", navLabel: "Registration Status" },
   { path: "/auth/resolving", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Resolving Session", navLabel: "Resolving" },
+  { path: "/auth/context-chooser", zone: "auth", layout: "auth", sidebar: "main", guard: "auth", pageTitle: "Choose Work Context", navLabel: "Context Chooser" },
 
   // â”€â”€ Zone: Legal / Consent â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/privacy", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Privacy Policy", navLabel: "Privacy Policy" },
@@ -228,7 +229,7 @@ export const ROUTES: RouteDefinition[] = [
 
   // â”€â”€ Zone: Admin / TSHEPO Governance â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/admin", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Administration", navLabel: "Admin", navZone: "professional" },
-  { path: "/admin/users", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "User Management", navLabel: "Users", navZone: "professional" },
+  { path: "/admin/users", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Worker & Provider Access", navLabel: "Worker Access", navZone: "professional" },
   { path: "/admin/users/[id]", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "User Details", navLabel: "User", navZone: "professional" },
   { path: "/admin/roles", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Role Management", navLabel: "Roles", navZone: "professional" },
   { path: "/admin/policies", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Policy Management", navLabel: "Policies", navZone: "professional" },
@@ -396,6 +397,7 @@ export const ROUTES: RouteDefinition[] = [
 
   // â”€â”€ Zone: Provider Activation (Health OS Â§6) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/provider/activate", zone: "auth", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Activate Provider Role", navLabel: "Provider Activation" },
+  { path: "/provider/status", zone: "auth", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Provider Status", navLabel: "Provider Status" },
 
   // â”€â”€ Zone: Wellness (Health OS Â§2 â€” prevention, self-care, fitness) â”€
   { path: "/wellness", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Wellness Hub", navLabel: "Wellness", navZone: "life" },

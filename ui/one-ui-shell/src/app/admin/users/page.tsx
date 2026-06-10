@@ -1,8 +1,8 @@
 "use client";
 
 /**
- * User Management — Admin users list with create user form.
- * Route: /admin/users | pageTitle: "User Management"
+ * Worker & Provider Access — facility/platform worker accounts (not citizens/clients).
+ * Route: /admin/users
  */
 
 import { useState } from "react";
@@ -85,7 +85,7 @@ export default function AdminUsersPage() {
 
   return (
     <AppLayout>
-      <PageShell title="User Management" subtitle="Create and manage platform user accounts">
+      <PageShell title="Worker & Provider Access" subtitle="Manage platform workers, providers, and local access — not citizen/client accounts">
 
         <div className="flex items-center justify-between mb-5">
           <div className="relative max-w-md flex-1">

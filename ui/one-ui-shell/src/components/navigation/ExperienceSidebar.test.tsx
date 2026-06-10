@@ -36,6 +36,9 @@ describe("ExperienceSidebar", () => {
         email: "dr.moyo@example.com",
         roles: ["CLINICIAN", "SYSTEM_ADMIN"],
         actorType: "PROVIDER",
+        assuranceLevel: "VERIFIED",
+        providerActivated: true,
+        providerId: "PRV-TEST-001",
       },
       hasRole: (role: string) => ["CLINICIAN", "SYSTEM_ADMIN"].includes(role),
     });
@@ -151,5 +154,26 @@ describe("ExperienceSidebar", () => {
     expect(screen.getByText("Enterprise resource plane")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Enterprise dashboard" })).toHaveAttribute("href", "/enterprise");
     expect(screen.getByRole("link", { name: "Procurement" })).toHaveAttribute("href", "/erp/procurement");
+  });
+
+  it("hides Work and My Professional zones for citizen-only users", () => {
+    mockUseAuthStore.mockReturnValue({
+      user: {
+        id: "citizen-1",
+        displayName: "Citizen",
+        email: "citizen@example.com",
+        roles: ["CITIZEN"],
+        actorType: "CITIZEN",
+        assuranceLevel: "VERIFIED",
+        providerActivated: false,
+      },
+      hasRole: (role: string) => role === "CITIZEN",
+    });
+
+    render(<ExperienceSidebar />);
+
+    expect(screen.queryByRole("link", { name: "Clinical Hub" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Professional Profile" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Home" })).toBeInTheDocument();
   });
 });

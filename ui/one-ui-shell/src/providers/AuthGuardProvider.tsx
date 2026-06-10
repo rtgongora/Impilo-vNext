@@ -14,7 +14,9 @@ import { useConsentStore } from "@/hooks/useConsentStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
+import { useIdentityContext } from "@/hooks/useIdentityContext";
 import { matchesRequiredRole, ROLE_GROUPS } from "@/lib/auth/role-groups";
+import { isRouteBlockedForCitizen } from "@/lib/identity-context";
 import { matchRouteDefinition } from "@/lib/routes";
 import { isSchedulingClusterPath } from "@/lib/scheduling-paths";
 
@@ -44,6 +46,7 @@ export function AuthGuardProvider({ children }: { children: ReactNode }) {
   const { hasShift } = useShiftStore();
 
   const user = useAuthStore((s) => s.user);
+  const identity = useIdentityContext();
 
   useEffect(() => {
     // Consent gate: redirect authenticated users who haven't consented,
@@ -74,6 +77,11 @@ export function AuthGuardProvider({ children }: { children: ReactNode }) {
 
     const routeInfo = matchRouteDefinition(pathname);
     if (!routeInfo) return;
+
+    if (identity.isCitizenOnly && isRouteBlockedForCitizen(pathname, identity)) {
+      router.replace("/home");
+      return;
+    }
 
     const { guard, requiredRole } = routeInfo;
 
@@ -120,7 +128,7 @@ export function AuthGuardProvider({ children }: { children: ReactNode }) {
         if (requiredRole && !matchesRequiredRole(hasRole, requiredRole)) { router.replace("/home"); return; }
         break;
     }
-  }, [pathname, isAuthenticated, hasConsented, hasFacility, hasWorkspace, hasShift, hasRole, hasActiveProvider, user, router]);
+  }, [pathname, isAuthenticated, hasConsented, hasFacility, hasWorkspace, hasShift, hasRole, hasActiveProvider, user, identity, router]);
 
   return <>{children}</>;
 }

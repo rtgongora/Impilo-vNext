@@ -89,6 +89,11 @@ function getV12Headers(): Record<string, string> {
     headers["X-Actor-Type"] = authUser.actorType;
   }
 
+  const loginMethod = authUser?.loginMethod;
+  if (loginMethod) {
+    headers["X-Login-Method"] = loginMethod;
+  }
+
   // Provider ID — activated regulated professional role (sign in as person, practice as provider)
   const providerId = getContextString("exp:provider_id");
   if (providerId) {
