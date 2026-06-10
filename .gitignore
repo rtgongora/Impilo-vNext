@@ -24,6 +24,7 @@ hs_err_pid*
 **/out/
 **/.turbo/
 *.tsbuildinfo
+ui/one-ui-shell/test-results/
 
 # ===== Environment / Secrets =====
 .env
@@ -58,10 +59,14 @@ vendor/m2/repository/*
 tools/maven/nexus/data/
 
 # ===== Local Maven artifacts =====
+.m2/
 .m2repo/
 services/.m2/
 services/.m2repo/
 services/.mvn/
+
+# Stray local web workspace copy (canonical UI is ui/one-ui-shell)
+apps/web/
 
 # Expo local state (machine-specific, should not be committed)
 .expo/
