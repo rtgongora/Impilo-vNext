@@ -36,7 +36,7 @@ public class BootstrapStateEntity {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    protected BootstrapStateEntity() {}
+    public BootstrapStateEntity() {}
 
     public void init(UUID tenantId) {
         this.id = UUID.randomUUID();

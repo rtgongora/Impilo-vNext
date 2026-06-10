@@ -28,7 +28,7 @@ public class ImportBatchEntity {
     @Column(name = "created_at", nullable = false) private Instant createdAt;
     @Column(name = "updated_at", nullable = false) private Instant updatedAt;
 
-    protected ImportBatchEntity() {}
+    public ImportBatchEntity() {}
 
     public void init(UUID tenantId, UUID organisationId, String importType, String uploadedBy, String fileName, String fileHash, int rowCount) {
         this.id = UUID.randomUUID();

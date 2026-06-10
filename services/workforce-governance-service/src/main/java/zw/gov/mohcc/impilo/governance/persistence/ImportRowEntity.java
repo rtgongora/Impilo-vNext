@@ -21,7 +21,7 @@ public class ImportRowEntity {
     @Column(name = "created_at", nullable = false) private Instant createdAt;
     @Column(name = "updated_at", nullable = false) private Instant updatedAt;
 
-    protected ImportRowEntity() {}
+    public ImportRowEntity() {}
 
     public void init(UUID batchId, int rowNumber, String rawJson) {
         this.id = UUID.randomUUID();

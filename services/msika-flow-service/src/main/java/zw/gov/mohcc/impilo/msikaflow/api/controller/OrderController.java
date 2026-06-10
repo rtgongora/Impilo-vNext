@@ -58,12 +58,13 @@ public class OrderController {
         List<OrderView> items = orders.getContent().stream()
                 .map(order -> OrderView.from(order, stateMachine.getOrderLines(order.getOrderId())))
                 .toList();
-        return ResponseEntity.ok(ApiResponse.ok(new Object() {
-            public final List<OrderView> items = items;
-            public final int page = orders.getNumber();
-            public final int size = orders.getSize();
-            public final long total_elements = orders.getTotalElements();
-        }, correlationId));
+        return ResponseEntity.ok(ApiResponse.ok(
+                new PagedOrderView(
+                        items,
+                        orders.getNumber(),
+                        orders.getSize(),
+                        orders.getTotalElements()),
+                correlationId));
     }
 
     @PostMapping

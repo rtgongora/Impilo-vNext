@@ -35,7 +35,7 @@ public class DeviceRegistryController {
     public ResponseEntity<Map<String, Object>> register(@RequestBody Map<String, Object> body) {
         RequestContext ctx = RequestContextHolder.require();
         UUID tenantId = UUID.fromString(ctx.tenantId());
-        Map<String, Object> device = service.register(tenantId, ctx.actorId(), body);
+        Map<String, Object> device = service.register(tenantId, actorId(ctx), body);
         return ResponseEntity.status(HttpStatus.CREATED).body(single(device, ctx));
     }
 
@@ -46,7 +46,7 @@ public class DeviceRegistryController {
         RequestContext ctx = RequestContextHolder.require();
         UUID tenantId = UUID.fromString(ctx.tenantId());
         String reason = body != null && body.get("reason") != null ? String.valueOf(body.get("reason")) : "USER_REVOKED";
-        Map<String, Object> device = service.revoke(tenantId, deviceId, ctx.actorId(), reason);
+        Map<String, Object> device = service.revoke(tenantId, deviceId, actorId(ctx), reason);
         return ResponseEntity.ok(single(device, ctx));
     }
 
@@ -56,6 +56,10 @@ public class DeviceRegistryController {
         UUID tenantId = UUID.fromString(ctx.tenantId());
         Map<String, Object> trust = service.trustAssessment(tenantId, deviceId);
         return ResponseEntity.ok(single(trust, ctx));
+    }
+
+    private static String actorId(RequestContext ctx) {
+        return ctx.principal() != null ? ctx.principal().getName() : "system";
     }
 
     private static Map<String, Object> envelope(List<Map<String, Object>> data, RequestContext ctx) {

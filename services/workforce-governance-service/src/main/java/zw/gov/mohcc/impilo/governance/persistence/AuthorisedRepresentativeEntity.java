@@ -37,7 +37,7 @@ public class AuthorisedRepresentativeEntity {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    protected AuthorisedRepresentativeEntity() {}
+    public AuthorisedRepresentativeEntity() {}
 
     public void init(UUID tenantId, UUID organisationId, String userId, String representativeType, String roleTemplateId, String status) {
         this.id = UUID.randomUUID();
@@ -63,7 +63,6 @@ public class AuthorisedRepresentativeEntity {
     public void setRoleTemplateId(String roleTemplateId) { this.roleTemplateId = roleTemplateId; touch(); }
     public void setApprovedByUserId(String approvedByUserId) { this.approvedByUserId = approvedByUserId; touch(); }
     public void setAuditMetadata(String auditMetadata) { this.auditMetadata = auditMetadata; touch(); }
-    public String getAuditMetadata() { return auditMetadata; }
     public void acceptDataResponsibility() { this.dataResponsibilityAcceptedAt = Instant.now(); touch(); }
 
     private void touch() { this.updatedAt = Instant.now(); }

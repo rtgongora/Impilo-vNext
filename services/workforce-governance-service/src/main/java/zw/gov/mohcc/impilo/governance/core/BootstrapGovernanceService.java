@@ -61,14 +61,15 @@ public class BootstrapGovernanceService {
         account.setStatus("ACTIVE");
         account.setKeycloakUserId(str(request.get("keycloakUserId")).isBlank() ? account.getNominatedEmail() : str(request.get("keycloakUserId")));
         account.setActivatedAt(Instant.now());
-        account = bootstrapAccountRepository.save(account);
-        BootstrapStateEntity state = bootstrapStateRepository.findByTenantId(account.getTenantId()).orElseGet(() -> init(account.getTenantId()));
+        final BootstrapAccountEntity saved = bootstrapAccountRepository.save(account);
+        final UUID tenantId = saved.getTenantId();
+        BootstrapStateEntity state = bootstrapStateRepository.findByTenantId(tenantId).orElseGet(() -> init(tenantId));
         state.setBootstrapOpen(false);
         state.setBootstrapClosedAt(Instant.now());
-        state.setActiveNationalAdminUserId(account.getKeycloakUserId());
-        state.setBootstrapAccountId(account.getId());
+        state.setActiveNationalAdminUserId(saved.getKeycloakUserId());
+        state.setBootstrapAccountId(saved.getId());
         bootstrapStateRepository.save(state);
-        return account;
+        return saved;
     }
 
     @Transactional

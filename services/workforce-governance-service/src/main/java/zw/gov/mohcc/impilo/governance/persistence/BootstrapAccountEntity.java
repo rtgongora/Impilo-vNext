@@ -36,7 +36,7 @@ public class BootstrapAccountEntity {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    protected BootstrapAccountEntity() {}
+    public BootstrapAccountEntity() {}
 
     public void init(UUID tenantId, String method, String email, String fullName, UUID orgId) {
         this.id = UUID.randomUUID();
@@ -53,6 +53,7 @@ public class BootstrapAccountEntity {
 
     public void overrideId(UUID id) { this.id = id; }
     public UUID getId() { return id; }
+    public UUID getTenantId() { return tenantId; }
     public String getNominatedEmail() { return nominatedEmail; }
     public void setStatus(String status) { this.status = status; touch(); }
     public void setKeycloakUserId(String keycloakUserId) { this.keycloakUserId = keycloakUserId; touch(); }

@@ -43,7 +43,7 @@ public class OrganisationMembershipEntity {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    protected OrganisationMembershipEntity() {}
+    public OrganisationMembershipEntity() {}
 
     public void init(UUID tenantId, UUID organisationId, String subjectId, String subjectType, String roleTemplate, String status) {
         this.id = UUID.randomUUID();

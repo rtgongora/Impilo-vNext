@@ -16,7 +16,7 @@ public class ImportExceptionEntity {
     @Column(name = "resolution_status", nullable = false) private String resolutionStatus = "open";
     @Column(name = "created_at", nullable = false) private Instant createdAt;
 
-    protected ImportExceptionEntity() {}
+    public ImportExceptionEntity() {}
 
     public void init(UUID batchId, UUID rowId, String type, String severity, String message) {
         this.id = UUID.randomUUID();

@@ -76,7 +76,7 @@ public class AccessRequestEntity {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    protected AccessRequestEntity() {}
+    public AccessRequestEntity() {}
 
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }

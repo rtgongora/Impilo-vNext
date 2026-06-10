@@ -88,8 +88,6 @@ public class PacsOutboxPublisher extends CompanionOutboxPublisher {
             case ImagingPipelineKafkaContracts.WRITEBACK_SUCCEEDED -> ImagingPipelineKafkaContracts.WRITEBACK_SUCCEEDED;
             case ImagingPipelineKafkaContracts.WRITEBACK_FAILED -> ImagingPipelineKafkaContracts.WRITEBACK_FAILED;
             case ImagingPipelineKafkaContracts.VIEWER_ACCESS_DENIED -> ImagingPipelineKafkaContracts.VIEWER_ACCESS_DENIED;
-            case "pacs.study.available" -> ImagingPipelineKafkaContracts.STUDY_RECEIVED;
-            case "pacs.study.correlated" -> ImagingPipelineKafkaContracts.STUDY_CORRELATED;
             default -> null;
         };
     }

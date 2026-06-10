@@ -89,7 +89,7 @@ public class HscEmploymentEntity {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    protected HscEmploymentEntity() {}
+    public HscEmploymentEntity() {}
 
     public UUID getId() { return id; }
     public UUID getTenantId() { return tenantId; }

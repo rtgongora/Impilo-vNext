@@ -12,6 +12,7 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
 
 import java.time.LocalDate;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -157,22 +158,23 @@ public class GovernanceInternalController {
 
     @PostMapping("/access-requests")
     public ResponseEntity<ApiResponse<AccessRequestEntity>> createAccessRequest(@Valid @RequestBody GovernanceDtos.CreateAccessRequestBody req) {
-        AccessRequestEntity entity = accessRequestService.create(tenant(), Map.of(
-                "requestType", req.requestType(),
-                "status", req.status() != null ? req.status() : "PENDING",
-                "requesterId", req.requesterId(),
-                "requesterName", req.requesterName() != null ? req.requesterName() : req.requesterId(),
-                "organisationId", req.organisationId() != null ? req.organisationId().toString() : "",
-                "targetSubjectId", req.targetSubjectId() != null ? req.targetSubjectId() : "",
-                "requestedRole", req.requestedRole() != null ? req.requestedRole() : "",
-                "requestedScope", req.requestedScope() != null ? req.requestedScope() : "",
-                "requestedEnvironment", req.requestedEnvironment() != null ? req.requestedEnvironment() : "",
-                "requestedDataScope", req.requestedDataScope() != null ? req.requestedDataScope() : "",
-                "riskLevel", req.riskLevel() != null ? req.riskLevel() : "",
-                "policyPrecheckResult", req.policyPrecheckResult() != null ? req.policyPrecheckResult() : "",
-                "approvalsRequired", req.approvalsRequired() != null ? req.approvalsRequired() : List.of(),
-                "payload", req.payload() != null ? req.payload() : Map.of(),
-                "fallbackRequestId", req.fallbackRequestId() != null ? req.fallbackRequestId() : ""));
+        Map<String, Object> accessRequestFields = new LinkedHashMap<>();
+        accessRequestFields.put("requestType", req.requestType());
+        accessRequestFields.put("status", req.status() != null ? req.status() : "PENDING");
+        accessRequestFields.put("requesterId", req.requesterId());
+        accessRequestFields.put("requesterName", req.requesterName() != null ? req.requesterName() : req.requesterId());
+        accessRequestFields.put("organisationId", req.organisationId() != null ? req.organisationId().toString() : "");
+        accessRequestFields.put("targetSubjectId", req.targetSubjectId() != null ? req.targetSubjectId() : "");
+        accessRequestFields.put("requestedRole", req.requestedRole() != null ? req.requestedRole() : "");
+        accessRequestFields.put("requestedScope", req.requestedScope() != null ? req.requestedScope() : "");
+        accessRequestFields.put("requestedEnvironment", req.requestedEnvironment() != null ? req.requestedEnvironment() : "");
+        accessRequestFields.put("requestedDataScope", req.requestedDataScope() != null ? req.requestedDataScope() : "");
+        accessRequestFields.put("riskLevel", req.riskLevel() != null ? req.riskLevel() : "");
+        accessRequestFields.put("policyPrecheckResult", req.policyPrecheckResult() != null ? req.policyPrecheckResult() : "");
+        accessRequestFields.put("approvalsRequired", req.approvalsRequired() != null ? req.approvalsRequired() : List.of());
+        accessRequestFields.put("payload", req.payload() != null ? req.payload() : Map.of());
+        accessRequestFields.put("fallbackRequestId", req.fallbackRequestId() != null ? req.fallbackRequestId() : "");
+        AccessRequestEntity entity = accessRequestService.create(tenant(), accessRequestFields);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(entity, corr()));
     }
 
@@ -224,25 +226,26 @@ public class GovernanceInternalController {
 
     @PostMapping("/hsc/employment-records")
     public ResponseEntity<ApiResponse<HscEmploymentEntity>> upsertHscEmployment(@Valid @RequestBody GovernanceDtos.UpsertHscEmploymentRequest req) {
-        HscEmploymentEntity entity = hscEmploymentService.upsert(tenant(), Map.of(
-                "employmentRecordId", req.employmentRecordId() != null ? req.employmentRecordId() : "",
-                "providerWorkerId", req.providerWorkerId() != null ? req.providerWorkerId() : "",
-                "linkedHealthId", req.linkedHealthId() != null ? req.linkedHealthId() : "",
-                "employerOrganisationId", req.employerOrganisationId() != null ? req.employerOrganisationId().toString() : "",
-                "employmentStatus", req.employmentStatus() != null ? req.employmentStatus() : "ACTIVE",
-                "postId", req.postId() != null ? req.postId() : "",
-                "postTitle", req.postTitle() != null ? req.postTitle() : "",
-                "grade", req.grade() != null ? req.grade() : "",
-                "cadre", req.cadre() != null ? req.cadre() : "",
-                "establishmentUnit", req.establishmentUnit() != null ? req.establishmentUnit() : "",
-                "currentPostingProvince", req.currentPostingProvince() != null ? req.currentPostingProvince() : "",
-                "currentPostingDistrict", req.currentPostingDistrict() != null ? req.currentPostingDistrict() : "",
-                "currentPostingFacility", req.currentPostingFacility() != null ? req.currentPostingFacility() : "",
-                "currentPostingDepartment", req.currentPostingDepartment() != null ? req.currentPostingDepartment() : "",
-                "transferStatus", req.transferStatus() != null ? req.transferStatus() : "",
-                "promotionStatus", req.promotionStatus() != null ? req.promotionStatus() : "",
-                "disciplinaryEmploymentStatus", req.disciplinaryEmploymentStatus() != null ? req.disciplinaryEmploymentStatus() : "",
-                "verificationStatus", req.verificationStatus() != null ? req.verificationStatus() : "PENDING"));
+        Map<String, Object> employmentFields = new LinkedHashMap<>();
+        employmentFields.put("employmentRecordId", req.employmentRecordId() != null ? req.employmentRecordId() : "");
+        employmentFields.put("providerWorkerId", req.providerWorkerId() != null ? req.providerWorkerId() : "");
+        employmentFields.put("linkedHealthId", req.linkedHealthId() != null ? req.linkedHealthId() : "");
+        employmentFields.put("employerOrganisationId", req.employerOrganisationId() != null ? req.employerOrganisationId().toString() : "");
+        employmentFields.put("employmentStatus", req.employmentStatus() != null ? req.employmentStatus() : "ACTIVE");
+        employmentFields.put("postId", req.postId() != null ? req.postId() : "");
+        employmentFields.put("postTitle", req.postTitle() != null ? req.postTitle() : "");
+        employmentFields.put("grade", req.grade() != null ? req.grade() : "");
+        employmentFields.put("cadre", req.cadre() != null ? req.cadre() : "");
+        employmentFields.put("establishmentUnit", req.establishmentUnit() != null ? req.establishmentUnit() : "");
+        employmentFields.put("currentPostingProvince", req.currentPostingProvince() != null ? req.currentPostingProvince() : "");
+        employmentFields.put("currentPostingDistrict", req.currentPostingDistrict() != null ? req.currentPostingDistrict() : "");
+        employmentFields.put("currentPostingFacility", req.currentPostingFacility() != null ? req.currentPostingFacility() : "");
+        employmentFields.put("currentPostingDepartment", req.currentPostingDepartment() != null ? req.currentPostingDepartment() : "");
+        employmentFields.put("transferStatus", req.transferStatus() != null ? req.transferStatus() : "");
+        employmentFields.put("promotionStatus", req.promotionStatus() != null ? req.promotionStatus() : "");
+        employmentFields.put("disciplinaryEmploymentStatus", req.disciplinaryEmploymentStatus() != null ? req.disciplinaryEmploymentStatus() : "");
+        employmentFields.put("verificationStatus", req.verificationStatus() != null ? req.verificationStatus() : "PENDING");
+        HscEmploymentEntity entity = hscEmploymentService.upsert(tenant(), employmentFields);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(entity, corr()));
     }
 

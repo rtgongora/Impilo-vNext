@@ -48,12 +48,13 @@ public class BookingController {
         List<OrderView> items = bookings.getContent().stream()
                 .map(order -> OrderView.from(order, stateMachine.getOrderLines(order.getOrderId())))
                 .toList();
-        return ResponseEntity.ok(ApiResponse.ok(new Object() {
-            public final List<OrderView> items = items;
-            public final int page = bookings.getNumber();
-            public final int size = bookings.getSize();
-            public final long total_elements = bookings.getTotalElements();
-        }, correlationId));
+        return ResponseEntity.ok(ApiResponse.ok(
+                new PagedOrderView(
+                        items,
+                        bookings.getNumber(),
+                        bookings.getSize(),
+                        bookings.getTotalElements()),
+                correlationId));
     }
 
     @PostMapping("/create")
