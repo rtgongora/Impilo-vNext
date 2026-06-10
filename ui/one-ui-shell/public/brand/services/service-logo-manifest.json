@@ -1,0 +1,104 @@
+[
+  {
+    "service": "Butano",
+    "slug": "butano",
+    "assetFile": "butano-logo.png",
+    "recommendedPublicPath": "/brand/services/butano-logo.png"
+  },
+  {
+    "service": "Fundo",
+    "slug": "fundo",
+    "assetFile": "fundo-logo.png",
+    "recommendedPublicPath": "/brand/services/fundo-logo.png"
+  },
+  {
+    "service": "Indawo",
+    "slug": "indawo",
+    "assetFile": "indawo-logo.png",
+    "recommendedPublicPath": "/brand/services/indawo-logo.png"
+  },
+  {
+    "service": "Madi",
+    "slug": "madi",
+    "assetFile": "madi-logo.png",
+    "recommendedPublicPath": "/brand/services/madi-logo.png"
+  },
+  {
+    "service": "Msika",
+    "slug": "msika",
+    "assetFile": "msika-logo.png",
+    "recommendedPublicPath": "/brand/services/msika-logo.png"
+  },
+  {
+    "service": "MusheX",
+    "slug": "mushex",
+    "assetFile": "mushex-logo.png",
+    "recommendedPublicPath": "/brand/services/mushex-logo.png"
+  },
+  {
+    "service": "Mvumo",
+    "slug": "mvumo",
+    "assetFile": "mvumo-logo.png",
+    "recommendedPublicPath": "/brand/services/mvumo-logo.png"
+  },
+  {
+    "service": "Ndila",
+    "slug": "ndila",
+    "assetFile": "ndila-logo.png",
+    "recommendedPublicPath": "/brand/services/ndila-logo.png"
+  },
+  {
+    "service": "Nhume",
+    "slug": "nhume",
+    "assetFile": "nhume-logo.png",
+    "recommendedPublicPath": "/brand/services/nhume-logo.png"
+  },
+  {
+    "service": "Nompilo",
+    "slug": "nompilo",
+    "assetFile": "nompilo-logo.png",
+    "recommendedPublicPath": "/brand/services/nompilo-logo.png"
+  },
+  {
+    "service": "Simba",
+    "slug": "simba",
+    "assetFile": "simba-logo.png",
+    "recommendedPublicPath": "/brand/services/simba-logo.png"
+  },
+  {
+    "service": "Tshepo",
+    "slug": "tshepo",
+    "assetFile": "tshepo-logo.png",
+    "recommendedPublicPath": "/brand/services/tshepo-logo.png"
+  },
+  {
+    "service": "Tuso",
+    "slug": "tuso",
+    "assetFile": "tuso-logo.png",
+    "recommendedPublicPath": "/brand/services/tuso-logo.png"
+  },
+  {
+    "service": "Ubomi",
+    "slug": "ubomi",
+    "assetFile": "ubomi-logo.png",
+    "recommendedPublicPath": "/brand/services/ubomi-logo.png"
+  },
+  {
+    "service": "Varapi",
+    "slug": "varapi",
+    "assetFile": "varapi-logo.png",
+    "recommendedPublicPath": "/brand/services/varapi-logo.png"
+  },
+  {
+    "service": "Vito",
+    "slug": "vito",
+    "assetFile": "vito-logo.png",
+    "recommendedPublicPath": "/brand/services/vito-logo.png"
+  },
+  {
+    "service": "Zibo",
+    "slug": "zibo",
+    "assetFile": "zibo-logo.png",
+    "recommendedPublicPath": "/brand/services/zibo-logo.png"
+  }
+]

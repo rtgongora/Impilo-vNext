@@ -51,7 +51,7 @@ export default function UbomiShellPage() {
 
   return (
     <AppLayout>
-      <PageShell title="UBOMI civil registry" subtitle="Birth and death notification (CRVS) via Experience BFF">
+      <PageShell title="UBOMI civil registry" subtitle="Birth and death notification (CRVS) via Experience BFF" serviceSlug="ubomi">
         <div className="space-y-6">
           <CrvsUbomiOrchestrationRail />
           <div className="flex flex-wrap items-center gap-2">

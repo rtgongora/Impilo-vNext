@@ -11,6 +11,7 @@ export default function NdilaWorkspacePage() {
     <PlaneWorkspaceShell
       title="Ndila geospatial intelligence"
       subtitle="Facility mapping, routes, catchment areas, and location-based service discovery"
+      serviceSlug="ndila"
       plane="Data & Intelligence Plane"
       maturity="partial"
       maturityDetail="Full map workspace with governed tiles, nearby search, and route preview"

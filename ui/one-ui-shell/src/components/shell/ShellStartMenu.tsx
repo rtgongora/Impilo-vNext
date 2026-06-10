@@ -7,7 +7,7 @@ import { useAuthStore } from "@/hooks/useAuthStore";
 import { useShellStore } from "@/hooks/useShellStore";
 import { listVisibleShellApps } from "@/lib/shell/app-registry";
 import type { AppDefinition, ShellAppCategory } from "@/lib/shell/types";
-import { ShellIcon } from "./ShellIcon";
+import { ShellAppIcon } from "@/components/branding/ShellAppIcon";
 import { useHealthOsLauncher, type LauncherApp } from "@/hooks/queries/useHealthOsLauncher";
 
 const CATEGORY_LABEL: Record<ShellAppCategory, string> = {
@@ -146,13 +146,12 @@ export function ShellStartMenu() {
                           setStartOpen(false);
                         }}
                       >
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-slate-100 dark:bg-slate-800">
-                          {app.iconRef ? (
-                            <ShellIcon name={app.iconRef} className="h-5 w-5 text-slate-700 dark:text-slate-200" />
-                          ) : (
-                            <ShoppingBag className="h-5 w-5 text-slate-500" />
-                          )}
-                        </span>
+                        <ShellAppIcon
+                          icon={app.iconRef ?? "ShoppingBag"}
+                          itemCode={app.itemCode}
+                          name={app.name}
+                          size="card"
+                        />
                         <span className="min-w-0">
                           <span className="block truncate text-sm font-medium text-slate-800 dark:text-slate-100">
                             {app.name}
@@ -192,9 +191,7 @@ export function ShellStartMenu() {
                         className="flex min-w-0 flex-1 items-center gap-2 px-2 py-2 text-left"
                         onClick={() => launchApp(app, (href) => router.push(href))}
                       >
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-slate-100 dark:bg-slate-800">
-                          <ShellIcon name={app.icon} className="h-5 w-5 text-slate-700 dark:text-slate-200" />
-                        </span>
+                        <ShellAppIcon icon={app.icon} serviceSlug={app.serviceSlug} name={app.name} size="card" />
                         <span className="min-w-0">
                           <span className="block truncate text-sm font-medium text-slate-800 dark:text-slate-100">
                             {app.name}

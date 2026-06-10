@@ -47,6 +47,7 @@ export default function TerminologyBrowserPage() {
       <PageShell
         title="Terminology Browser"
         subtitle="Resolve ZIBO terminology artifacts by canonical URL and optional version"
+        serviceSlug="zibo"
       >
         <RegistryPlaneContextBar />
         <div className="mb-4">

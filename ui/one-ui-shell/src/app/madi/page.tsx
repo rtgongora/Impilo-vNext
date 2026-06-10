@@ -41,7 +41,7 @@ export default function MadiHubPage() {
       <PageShell
         title="Madi"
         subtitle="Blood donation, transfusion safety and haemovigilance"
-        icon={<Droplet className="h-6 w-6" />}
+        serviceSlug="madi"
       >
         <div className="space-y-8">
           <section>

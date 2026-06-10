@@ -13,7 +13,7 @@ import type { ShellFusionHint } from "@/lib/intelligence/types";
 import { normalizeFusionHints } from "@/lib/shell/normalize-fusion-hints";
 import { listVisibleShellApps, visibleShellCommands } from "@/lib/shell/app-registry";
 import type { ShellCommand } from "@/lib/shell/types";
-import { ShellIcon } from "./ShellIcon";
+import { ShellAppIcon } from "@/components/branding/ShellAppIcon";
 import { resolveIndexHitHref, type IndexSearchHitRef } from "@/lib/shell/search-hit-routing";
 
 interface PlatformHit extends IndexSearchHitRef {
@@ -285,7 +285,7 @@ export function ShellSearchPalette() {
                       }}
                       className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-900"
                     >
-                      <ShellIcon name={app.icon} className="h-4 w-4 text-slate-600" />
+                      <ShellAppIcon icon={app.icon} serviceSlug={app.serviceSlug} name={app.name} size="compact" />
                       <span>
                         <span className="font-medium text-slate-800 dark:text-slate-100">{app.name}</span>
                         <span className="block text-xs text-slate-500">{app.description}</span>

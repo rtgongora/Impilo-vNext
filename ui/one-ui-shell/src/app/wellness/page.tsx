@@ -80,7 +80,7 @@ function TodaySnapshot() {
 export default function WellnessPage() {
   return (
     <AppLayout>
-      <PageShell title="Wellness Hub" subtitle="Move. Eat. Sleep. Rest. Recover. Live." icon={<Sparkles className="h-6 w-6" />}>
+      <PageShell title="Wellness Hub" subtitle="Move. Eat. Sleep. Rest. Recover. Live." serviceSlug="simba">
         <Link
           href="/wellness/dashboard"
           className="mb-6 block rounded-xl border-2 border-teal-200 bg-gradient-to-r from-teal-50 to-cyan-50 p-5 shadow-sm hover:border-teal-400 hover:shadow-md transition-all group"

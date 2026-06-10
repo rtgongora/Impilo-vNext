@@ -66,7 +66,7 @@ export default function MvumoRegistryPage() {
       <PageShell
         title="Mvumo"
         subtitle="Adaptive digital consent — templates, requests, and remote-session orchestration"
-        icon={<Shield className="h-6 w-6 text-impilo-600" />}
+        serviceSlug="mvumo"
       >
         <div className="prose prose-sm max-w-none text-gray-700 space-y-4">
           <p>

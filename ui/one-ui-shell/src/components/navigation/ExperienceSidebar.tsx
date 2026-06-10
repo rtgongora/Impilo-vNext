@@ -11,6 +11,7 @@ import {
   Ambulance,
   Bell,
   BookMarked,
+  BookOpen,
   Boxes,
   BriefcaseBusiness,
   Building2,
@@ -43,8 +44,10 @@ import {
   ShieldCheck,
   Sparkles,
   Stethoscope,
+  Target,
   User,
   Users,
+  Users2,
   Wallet,
   X,
 } from "lucide-react";
@@ -56,6 +59,7 @@ import { resolveIdentityContext } from "@/lib/identity-context";
 import { hasAdministrationGovernanceEntry } from "@/lib/administration-governance";
 import { useSessionExperienceContract } from "@/hooks/useSessionExperienceContract";
 import { useShellStore } from "@/hooks/useShellStore";
+import { ServiceLogo } from "@/components/branding/ServiceLogo";
 import { WORK_MODE_LABELS } from "@/hooks/useWorkModeStore";
 import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
 import { expandRoleGroup } from "@/lib/auth/privileged-roles";
@@ -77,6 +81,7 @@ interface SidebarSpotlight {
   title: string;
   description: string;
   tone: string;
+  serviceSlug?: string;
   actions: Array<{
     href: string;
     label: string;
@@ -307,11 +312,39 @@ function getSidebarSpotlight(pathname: string): SidebarSpotlight {
     };
   }
 
+  if (pathname.startsWith("/learning")) {
+    return {
+      title: "Impilo Fundo",
+      description: "Native learning management, certification, CPD, and role-aware training.",
+      tone: "border-[color:var(--primary)]/25 bg-[color:var(--surface-soft)] text-[color:var(--text-primary)]",
+      serviceSlug: "fundo",
+      actions: [
+        { href: "/learning/catalog", label: "Catalogue", icon: BookOpen },
+        { href: "/learning/my-learning", label: "My learning", icon: GraduationCap },
+        { href: "/learning/studio", label: "Fundo Studio", icon: Sparkles },
+      ],
+    };
+  }
+
+  if (pathname.startsWith("/wellness")) {
+    return {
+      title: "Simba Wellness",
+      description: "Preventive care, fitness, diet, sleep, and community wellness programmes.",
+      tone: "border-[color:var(--primary)]/25 bg-[color:var(--surface-soft)] text-[color:var(--text-primary)]",
+      serviceSlug: "simba",
+      actions: [
+        { href: "/wellness/goals", label: "Health goals", icon: Target },
+        { href: "/wellness/clubs", label: "Communities", icon: Users2 },
+      ],
+    };
+  }
+
   if (pathname.startsWith("/operations/vito")) {
     return {
       title: "VITO — Identity Operations",
       description: "Client registry workflows: registration, issuance, smart cards, deduplication, biometrics, and recovery.",
       tone: "border-[color:var(--nompilo)]/25 bg-[color:var(--nompilo-soft)] text-[color:var(--text-primary)]",
+      serviceSlug: "vito",
       actions: [
         { href: "/operations/vito/registration", label: "Registration", icon: Users },
         { href: "/operations/vito/issuance", label: "Issuance", icon: IdCard },
@@ -570,6 +603,11 @@ export function ExperienceSidebar() {
               <p className="text-[11px] uppercase tracking-[0.24em] text-slate-400">
                 Context Spotlight
               </p>
+              {spotlight.serviceSlug ? (
+                <div className="mt-2">
+                  <ServiceLogo slug={spotlight.serviceSlug} size="compact" />
+                </div>
+              ) : null}
               <p className="mt-2 text-sm font-semibold text-[color:var(--text-primary)]">{spotlight.title}</p>
               <p className="mt-1 text-xs leading-5 text-[color:var(--text-secondary)]">{spotlight.description}</p>
               <div className="mt-4 grid gap-2 sm:grid-cols-2">

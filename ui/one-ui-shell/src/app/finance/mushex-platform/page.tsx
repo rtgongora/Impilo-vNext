@@ -228,6 +228,7 @@ export default function FinanceMushexPlatformPage() {
       <PageShell
         title="MusheX Platform Administration"
         subtitle="Platform view for custodial wallets, remittance transfers, card profiles, reversals, and gateway readiness — with one controlled wallet credit action."
+        serviceSlug="mushex"
       >
         <div className="mb-4">
           <Link

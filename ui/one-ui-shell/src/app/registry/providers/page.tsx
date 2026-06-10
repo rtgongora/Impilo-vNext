@@ -35,6 +35,7 @@ export default function ProvidersPage() {
       <PageShell
         title="Provider Registry"
         subtitle="Registered healthcare providers"
+        serviceSlug="varapi"
       >
         <RegistryPlaneContextBar />
         <ProviderRegistryOnboardingOrchestrationRail />

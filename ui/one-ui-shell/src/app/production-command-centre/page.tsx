@@ -8,7 +8,9 @@ import { PageShell } from "@/components/PageShell";
 import { FeatureMaturityBadge } from "@/components/FeatureMaturityBadge";
 import { TrustContextBanner } from "@/components/experience/TrustContextBanner";
 import { NompiloContextPanel } from "@/components/intelligent/NompiloContextPanel";
+import { ServiceLogo } from "@/components/branding/ServiceLogo";
 import { RelatedServicesPanel } from "@/components/workspace/RelatedServicesPanel";
+import { COMMAND_CENTRE_TILE_SLUGS } from "@/config/serviceBranding";
 
 const COMMAND_CENTRE_RELATED_LINKS = [
   { label: "Data & intelligence", href: "/data-intelligence", description: "Quality, pipelines, integration, audit" },
@@ -93,12 +95,18 @@ export default function ProductionCommandCentrePage() {
                     {section.tiles.map((tile) => {
                       const serviceHint = serviceHintForTile(tile.id, tile.integrationKeywords);
                       const registryMaturity = serviceHint ? uiMaturityForService(serviceHint) : undefined;
+                      const serviceSlug = COMMAND_CENTRE_TILE_SLUGS[tile.id];
                       return (
                       <Link
                         key={tile.id}
                         href={tile.href}
                         className="impilo-surface-card group flex flex-col p-4 transition hover:border-impilo-200 hover:shadow-impilo-card"
                       >
+                        {serviceSlug ? (
+                          <div className="mb-3">
+                            <ServiceLogo slug={serviceSlug} size="card" />
+                          </div>
+                        ) : null}
                         <div className="mb-2 flex flex-wrap items-center gap-2">
                           <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
                             {tile.plane}

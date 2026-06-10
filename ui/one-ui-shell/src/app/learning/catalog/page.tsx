@@ -49,7 +49,7 @@ export default function LearningCataloguePage() {
       <PageShell
         title="Impilo Fundo Catalogue"
         subtitle="Browse native Impilo Fundo learning resources, pathways and CPD-eligible courses."
-        icon={<GraduationCap className="h-6 w-6" />}
+        serviceSlug="fundo"
       >
         <div className="mb-4">
           <Link

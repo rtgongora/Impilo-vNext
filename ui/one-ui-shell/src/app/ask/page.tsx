@@ -172,7 +172,7 @@ export default function AskPage() {
 
   return (
     <AppLayout>
-      <PageShell title="Ask" subtitle="General guidance or governed Ask EDLIZ (national clinical knowledge)" icon={<MessageSquare className="h-6 w-6" />}>
+      <PageShell title="Ask" subtitle="General guidance or governed Ask EDLIZ (national clinical knowledge)" serviceSlug="nompilo">
         <div className="flex flex-col h-[calc(100vh-220px)] max-w-2xl mx-auto">
           <p className="mb-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-xs text-violet-900" data-testid="nompilo-ask-route-context">
             Nompilo context: <code className="font-mono">{nompiloContext.routePath}</code> · {nompiloContext.surface} journey

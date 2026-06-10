@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { GraduationCap } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { summarizeFundoMyLearning, useFundoMyLearning } from "@/hooks/queries/useFundoLms";
@@ -24,7 +23,7 @@ export default function LearningHubPage() {
       <PageShell
         title="Impilo Fundo"
         subtitle="Native learning management, certification, in-service training, pre-service training and CPD support."
-        icon={<GraduationCap className="h-6 w-6" />}
+        serviceSlug="fundo"
       >
         <FundoLearningOrchestrationRail />
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

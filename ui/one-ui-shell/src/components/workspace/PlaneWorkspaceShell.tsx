@@ -18,6 +18,7 @@ export function PlaneWorkspaceShell(props: {
   title: string;
   subtitle?: string;
   plane: string;
+  serviceSlug?: string;
   maturity?: "live" | "partial" | "not_wired" | "blocked";
   maturityDetail?: string;
   tabs?: PlaneTab[];
@@ -31,7 +32,7 @@ export function PlaneWorkspaceShell(props: {
 }) {
   return (
     <AppLayout>
-      <PageShell title={props.title} subtitle={props.subtitle}>
+      <PageShell title={props.title} subtitle={props.subtitle} serviceSlug={props.serviceSlug}>
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <span className="impilo-chip bg-[var(--primary-soft)] text-impilo-700">{props.plane}</span>
           {props.maturity ? (

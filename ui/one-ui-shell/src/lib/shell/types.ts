@@ -38,6 +38,8 @@ export interface AppDefinition {
   plane?: string;
   /** Disabled reason when activeFlag is false or maturity is blocked/not_wired */
   disabledReason?: string;
+  /** Sovereign service slug for branded logo rendering (see config/serviceBranding.ts) */
+  serviceSlug?: string;
   metadata?: Record<string, unknown>;
 }
 

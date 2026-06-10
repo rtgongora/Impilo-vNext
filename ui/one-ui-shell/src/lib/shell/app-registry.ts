@@ -43,6 +43,7 @@ export const SHELL_APPS: AppDefinition[] = [
     activeFlag: true,
     systemAppFlag: false,
     weight: 3,
+    serviceSlug: "fundo",
   },
   {
     id: "app-clinical",
@@ -160,6 +161,7 @@ export const SHELL_APPS: AppDefinition[] = [
     requiredRole: "ADMIN",
     systemAppFlag: false,
     weight: 20,
+    serviceSlug: "vito",
   },
   {
     id: "app-public-health",
@@ -199,6 +201,7 @@ export const SHELL_APPS: AppDefinition[] = [
     requiredRole: "COMMERCE",
     systemAppFlag: false,
     weight: 30,
+    serviceSlug: "msika",
   },
   {
     id: "app-citizen",
@@ -259,6 +262,7 @@ export const SHELL_APPS: AppDefinition[] = [
     activeFlag: true,
     systemAppFlag: false,
     weight: 8,
+    serviceSlug: "nompilo",
   },
   {
     id: "app-guidance",
@@ -309,6 +313,7 @@ export const SHELL_APPS: AppDefinition[] = [
     plane: "Enterprise",
     systemAppFlag: false,
     weight: 22,
+    serviceSlug: "nhume",
   },
   {
     id: "app-madi",
@@ -323,6 +328,7 @@ export const SHELL_APPS: AppDefinition[] = [
     plane: "Clinical",
     systemAppFlag: false,
     weight: 22,
+    serviceSlug: "madi",
   },
   {
     id: "app-madi-donor",
@@ -337,6 +343,7 @@ export const SHELL_APPS: AppDefinition[] = [
     plane: "Experience",
     systemAppFlag: false,
     weight: 18,
+    serviceSlug: "madi",
   },
   {
     id: "app-ndila",
@@ -351,6 +358,7 @@ export const SHELL_APPS: AppDefinition[] = [
     plane: "Data",
     systemAppFlag: false,
     weight: 23,
+    serviceSlug: "ndila",
   },
   {
     id: "app-dispatch",

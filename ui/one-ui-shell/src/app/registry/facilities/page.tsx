@@ -67,6 +67,7 @@ export default function FacilityRegistryPage() {
       <PageShell
         title="Facility Regulatory Operations"
         subtitle="HPA-governed facility registration, inspections, compliance, renewal, and certificate oversight"
+        serviceSlug="tuso"
       >
         <RegistryPlaneContextBar />
         <FacilityDataQualityBanner />

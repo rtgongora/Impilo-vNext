@@ -30,7 +30,7 @@ export default function MarketplacePage() {
 
   return (
     <AppLayout>
-      <PageShell title="Marketplace" subtitle="Procure services, track orders, and keep facility supply decisions inside the same operational experience layer.">
+      <PageShell title="Marketplace" subtitle="Procure services, track orders, and keep facility supply decisions inside the same operational experience layer." serviceSlug="msika">
         <div className="space-y-6">
           <MarketplaceOrderOrchestrationRail />
           <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">

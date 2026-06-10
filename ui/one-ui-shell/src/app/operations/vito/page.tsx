@@ -286,7 +286,7 @@ export default function VitoOpsPage() {
       <PageShell
         title="Identity Operations"
         subtitle="Stewardship queues for duplicate review, verification, identifier issuance, and registry exceptions"
-        icon={<Users className="h-6 w-6" />}
+        serviceSlug="vito"
       >
         <div className="space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-white p-4">

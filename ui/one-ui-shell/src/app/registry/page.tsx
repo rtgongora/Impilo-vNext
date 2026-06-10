@@ -9,6 +9,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { UserCheck, Building2, BookOpen, Package, Route, ShieldCheck, HeartHandshake, MapPin, Search } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
+import { ServiceLogo } from "@/components/branding/ServiceLogo";
 import { PageShell } from "@/components/PageShell";
 import {
   useCreateProviderIdentity,
@@ -41,6 +42,7 @@ const REGISTRY_SECTIONS = [
     href: "/registry/providers",
     icon: UserCheck,
     color: "bg-impilo-100 text-impilo-500",
+    serviceSlug: "varapi",
   },
   {
     title: "Facilities",
@@ -48,6 +50,7 @@ const REGISTRY_SECTIONS = [
     href: "/registry/facilities",
     icon: Building2,
     color: "bg-green-100 text-green-600",
+    serviceSlug: "tuso",
   },
   {
     title: "Terminology",
@@ -55,6 +58,7 @@ const REGISTRY_SECTIONS = [
     href: "/registry/terminology",
     icon: BookOpen,
     color: "bg-purple-100 text-purple-600",
+    serviceSlug: "zibo",
   },
   {
     title: "ZIBO Studio",
@@ -77,6 +81,7 @@ const REGISTRY_SECTIONS = [
     href: "/registry/trust",
     icon: ShieldCheck,
     color: "bg-indigo-100 text-indigo-700",
+    serviceSlug: "tshepo",
   },
   {
     title: "Mvumo Consent",
@@ -84,6 +89,7 @@ const REGISTRY_SECTIONS = [
     href: "/registry/mvumo",
     icon: HeartHandshake,
     color: "bg-pink-100 text-pink-700",
+    serviceSlug: "mvumo",
   },
   {
     title: "Locality Review",
@@ -123,11 +129,15 @@ export default function RegistryHubPage() {
                 className="bg-white rounded-lg border border-gray-200 p-6 hover:border-impilo-200 hover:shadow-md transition-all group"
               >
                 <div className="flex items-start gap-4">
+                  {"serviceSlug" in section && section.serviceSlug ? (
+                    <ServiceLogo slug={section.serviceSlug} size="card" />
+                  ) : (
                   <div
                     className={`w-12 h-12 rounded-lg ${section.color} flex items-center justify-center shrink-0`}
                   >
                     <Icon className="w-6 h-6" />
                   </div>
+                  )}
                   <div>
                     <h3 className="font-medium text-gray-900 group-hover:text-impilo-500 transition-colors">
                       {section.title}

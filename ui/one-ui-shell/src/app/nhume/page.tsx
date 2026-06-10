@@ -43,7 +43,7 @@ export default function NhumeHubPage() {
       <PageShell
         title="Nhume"
         subtitle="Dispatch, Delivery, Fleet Tracking & Last-Mile Logistics"
-        icon={<Truck className="h-6 w-6" />}
+        serviceSlug="nhume"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {SECTIONS.map(({ href, label, description, Icon }) => (
