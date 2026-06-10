@@ -1,6 +1,28 @@
 # Impilo Live — Live Events, Webinars & Broadcast
 
-> Sovereign live events domain for Impilo vNext. Owns event truth; delegates media to `rtc-gateway-service`.
+> **Impilo Live is the governed live engagement layer of the Impilo Health OS**, enabling clinical sessions, professional meetings, CPD webinars, public health broadcasts, hybrid events and emergency briefings through one secure, role-aware, consent-aware and analytics-enabled service.
+
+> Sovereign live events domain for Impilo vNext. Owns live interaction capability; delegates media to `rtc-gateway-service`. Telemedicine owns clinical care; Fundo owns learning; Public Health owns campaigns.
+
+## Canonical modes & owning services (doctrine)
+
+| Mode | Typical owner | Impilo Live provides |
+|------|---------------|----------------------|
+| `CLINICAL_SESSION` | Telemedicine/PCT | Governed room, consent, audit — **not** clinical documentation |
+| `PROFESSIONAL_MEETING` | Enterprise / MoHCC | Meetings, attendance, chat, recording |
+| `WEBINAR_CPD` | Fundo | Webinar room, Q&A, polls, replay signals |
+| `PUBLIC_BROADCAST` | Public Health | Moderated public stream, verified speakers |
+| `HYBRID_EVENT` | Enterprise | Combined in-person + online participation |
+| `EMERGENCY_BRIEFING` | Public Health | Rapid moderated official communications |
+
+## Integration bridges (owning services call Impilo Live)
+
+| Owning service | Entry point | live-service endpoint |
+|----------------|-------------|------------------------|
+| PCT Telemedicine | `LiveSessionIntegration` on VIDEO session create | `POST /internal/v1/live/clinical-sessions` |
+| Fundo (learning) | `createScheduledSession` for VIRTUAL/LIVE | `POST /internal/v1/live/fundo-webinars` |
+| Campaigns (Public Health) | `POST /campaigns/{id}/live-broadcast` | `POST /internal/v1/live/public-broadcasts` |
+| Experience BFF | `LiveController` proxy | All `/internal/v1/live/**` |
 
 ## Overview
 
@@ -35,7 +57,7 @@ Schema `live` with tables: `live_events`, `live_event_role_assignments`, `live_e
 
 - **Fundo**: `linkedFundoCourseId`; CPD completion via `/learning/v11/sessions/live-completion`
 - **Madi**: `linkedMadiDriveId`; drive resolution at `/live/events/{id}/madi-drive`
-- **Notifications**: registration/schedule reminders via `/internal/v1/notify`
+- **Notifications**: registration/schedule reminders via `/internal/v1/notify` (templates: `LIVE_EVENT_SCHEDULED`, `LIVE_EVENT_STARTING`, `LIVE_REPLAY_PUBLISHED` — see `IMPILO_LIVE.md` § Notifications)
 - **Nompilo**: event explain, agenda, replay summary, follow-up recommendations
 
 ## Permissions
@@ -44,9 +66,21 @@ All requests via Envoy → TSHEPO ext_authz. Trust headers required. Event visib
 
 ## Web routes
 
-- Work: `/live`, `/live/manage`, `/live/create`, `/live/event/[eventId]/room`
+- Work: `/live`, `/live/manage`, `/live/admin`, `/live/create`, `/live/event/[eventId]/room`
 - Professional: `/live/cpd`, `/live/certificates`
 - Citizen: `/live/discover`, `/live/saved`, `/live/my-events`, `/live/replays`
+
+## Notifications
+
+Live events enqueue notification-service templates (via live-service outbox → notification integration):
+
+| Template key | Trigger | Audience |
+|--------------|---------|----------|
+| `LIVE_EVENT_SCHEDULED` | Event scheduled / registration confirmed | Registrants, host |
+| `LIVE_EVENT_STARTING` | T-minus reminder before start | Registrants |
+| `LIVE_REPLAY_PUBLISHED` | Replay published after ENDED | Registrants, CPD learners |
+
+Clinical sessions inherit telemedicine consent boundaries — no public broadcast notifications for `CLINICAL_SESSION` mode.
 
 ## Testing
 

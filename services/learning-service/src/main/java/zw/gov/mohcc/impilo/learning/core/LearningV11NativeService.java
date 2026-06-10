@@ -15,6 +15,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.learning.core.ai.LearningAiProvider;
+import zw.gov.mohcc.impilo.learning.integration.LiveSessionIntegration;
 import zw.gov.mohcc.impilo.learning.persistence.entity.LearningOutboxEntity;
 import zw.gov.mohcc.impilo.learning.persistence.repository.LearningOutboxRepository;
 
@@ -24,15 +25,18 @@ public class LearningV11NativeService {
     private final JdbcTemplate jdbcTemplate;
     private final LearningAiProvider aiProvider;
     private final LearningOutboxRepository outboxRepository;
+    private final LiveSessionIntegration liveSessionIntegration;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public LearningV11NativeService(
             JdbcTemplate jdbcTemplate,
             LearningAiProvider aiProvider,
-            LearningOutboxRepository outboxRepository) {
+            LearningOutboxRepository outboxRepository,
+            LiveSessionIntegration liveSessionIntegration) {
         this.jdbcTemplate = jdbcTemplate;
         this.aiProvider = aiProvider;
         this.outboxRepository = outboxRepository;
+        this.liveSessionIntegration = liveSessionIntegration;
     }
 
     @Transactional(readOnly = true)
@@ -1274,6 +1278,51 @@ public class LearningV11NativeService {
     @Transactional
     public Map<String, Object> createScheduledSession(UUID tenantId, String actorId, Map<String, Object> body) {
         UUID id = UUID.randomUUID();
+        UUID courseId = UUID.fromString(stringVal(body, "courseId", ""));
+        String sessionType = stringVal(body, "sessionType", "VIRTUAL");
+        Map<String, Object> metadata = new LinkedHashMap<>();
+        Object rawMetadata = body.get("metadata");
+        if (rawMetadata instanceof Map<?, ?> rawMap) {
+            rawMap.forEach((k, v) -> metadata.put(String.valueOf(k), v));
+        }
+
+        String liveEventId = null;
+        String impiloLiveJoinPath = null;
+        if (shouldScheduleImpiloLive(sessionType, body)) {
+            List<String> trainerIds = new ArrayList<>();
+            String facilitator = nullableString(body.get("facilitator"));
+            if (facilitator != null && !facilitator.isBlank()) {
+                trainerIds.add(facilitator);
+            }
+            Object trainers = body.get("trainerIds");
+            if (trainers instanceof List<?> list) {
+                for (Object t : list) {
+                    if (t != null) {
+                        trainerIds.add(t.toString());
+                    }
+                }
+            }
+            Map<String, Object> livePayload = liveSessionIntegration.buildFundoWebinarPayload(
+                    courseId,
+                    stringVal(body, "title", "Scheduled session"),
+                    nullableString(body.get("description")),
+                    body.get("startsAt"),
+                    body.get("endsAt"),
+                    trainerIds,
+                    boolVal(body.get("cpdEnabled"), false),
+                    body.get("cpdPoints"),
+                    intVal(body.get("attendanceThresholdMinutes"), 30),
+                    boolVal(body.get("replayAllowed"), true));
+            var liveEvent = liveSessionIntegration.scheduleFundoWebinar(livePayload);
+            if (liveEvent.isPresent()) {
+                liveEventId = String.valueOf(liveEvent.get().get("id"));
+                impiloLiveJoinPath = "/live/event/" + liveEventId;
+                metadata.put("impiloLiveEventId", liveEventId);
+                metadata.put("impiloLiveJoinPath", impiloLiveJoinPath);
+                metadata.put("impiloLiveMode", "WEBINAR_CPD");
+            }
+        }
+
         jdbcTemplate.update(
                 """
                 insert into lrn_scheduled_learning_session (
@@ -1283,17 +1332,35 @@ public class LearningV11NativeService {
                 """,
                 id,
                 tenantId,
-                UUID.fromString(stringVal(body, "courseId", "")),
+                courseId,
                 nullableUuid(body.get("cohortId")),
                 stringVal(body, "title", "Scheduled session"),
-                stringVal(body, "sessionType", "VIRTUAL"),
+                sessionType,
                 parseOffsetRequired(body.get("startsAt")),
                 parseOffsetNullable(body.get("endsAt")),
                 nullableString(body.get("facilitator")),
                 nullableString(body.get("locationRef")),
-                writeJson(body.getOrDefault("metadata", Map.of())),
+                writeJson(metadata.isEmpty() ? body.getOrDefault("metadata", Map.of()) : metadata),
                 actorId);
-        return Map.of("session", Map.of("id", id.toString()));
+
+        Map<String, Object> session = new LinkedHashMap<>();
+        session.put("id", id.toString());
+        if (liveEventId != null) {
+            session.put("impiloLiveEventId", liveEventId);
+            session.put("impiloLiveJoinPath", impiloLiveJoinPath);
+        }
+        return Map.of("session", session);
+    }
+
+    private boolean shouldScheduleImpiloLive(String sessionType, Map<String, Object> body) {
+        if (!liveSessionIntegration.isEnabled()) {
+            return false;
+        }
+        if (Boolean.FALSE.equals(body.get("useImpiloLive")) || Boolean.FALSE.equals(body.get("use_impilo_live"))) {
+            return false;
+        }
+        String normalized = sessionType == null ? "" : sessionType.trim().toUpperCase();
+        return normalized.contains("VIRTUAL") || normalized.contains("LIVE") || normalized.contains("WEBINAR");
     }
 
     @Transactional(readOnly = true)

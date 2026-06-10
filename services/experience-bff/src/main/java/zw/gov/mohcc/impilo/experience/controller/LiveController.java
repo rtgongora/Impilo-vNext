@@ -494,6 +494,32 @@ public class LiveController {
         return proxy(() -> client.discoverByRole(userId, role), requestId, correlationId, false);
     }
 
+    // ── Typed scheduling (owning-service bridges) ────────────────────
+
+    @PostMapping("/clinical-sessions")
+    public ResponseEntity<Map<String, Object>> scheduleClinicalSession(
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.scheduleClinicalSession(body), requestId, correlationId, true);
+    }
+
+    @PostMapping("/fundo-webinars")
+    public ResponseEntity<Map<String, Object>> scheduleFundoWebinar(
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.scheduleFundoWebinar(body), requestId, correlationId, true);
+    }
+
+    @PostMapping("/public-broadcasts")
+    public ResponseEntity<Map<String, Object>> schedulePublicBroadcast(
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.schedulePublicBroadcast(body), requestId, correlationId, true);
+    }
+
     @FunctionalInterface
     private interface LiveCall {
         JsonNode call() throws Exception;

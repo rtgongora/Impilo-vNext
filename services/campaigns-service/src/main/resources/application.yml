@@ -42,6 +42,10 @@ campaigns:
     poll-interval-ms: 2000
   v11:
     emit-mode: LEGACY_ONLY
+  integration:
+    live:
+      enabled: ${CAMPAIGNS_LIVE_INTEGRATION_ENABLED:true}
+      base-url: ${CAMPAIGNS_LIVE_BASE_URL:http://localhost:8380}
 
 management:
   endpoints:

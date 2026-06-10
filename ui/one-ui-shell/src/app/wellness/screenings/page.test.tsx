@@ -48,6 +48,10 @@ vi.mock("@/hooks/queries/useGuidance", () => ({
   }),
 }));
 
+vi.mock("@/hooks/queries/useSimba", () => ({
+  useScreeningProgrammes: () => ({ data: { data: [] }, isLoading: false, isError: false }),
+}));
+
 describe("WellnessScreeningsPage", () => {
   it("renders screening reminders from guidance BFF without fabricated fixtures", () => {
     render(<WellnessScreeningsPage />);

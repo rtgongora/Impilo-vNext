@@ -24,12 +24,13 @@ class CampaignServiceTest {
 
     @Mock private CampaignRepository campaignRepository;
     @Mock private EventOutboxRepository outboxRepository;
+    @Mock private zw.gov.mohcc.impilo.campaigns.integration.LiveSessionIntegration liveSessionIntegration;
 
     private CampaignService campaignService;
 
     @BeforeEach
     void setUp() {
-        campaignService = new CampaignService(campaignRepository, outboxRepository);
+        campaignService = new CampaignService(campaignRepository, outboxRepository, liveSessionIntegration);
     }
 
     @Nested

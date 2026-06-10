@@ -21,6 +21,7 @@ import {
 import { AppLayout } from "@/components/AppLayout";
 import { LiveKitConsultRoom } from "@/components/telemedicine/LiveKitConsultRoom";
 import { TelemedicineRtcHealthPanel } from "@/components/telemedicine/TelemedicineRtcHealthPanel";
+import { TelemedicineLiveSessionEmbed } from "@/components/live/TelemedicineLiveSessionEmbed";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useTelemedicineMediaToken } from "@/hooks/queries/useTelemedicine";
@@ -207,6 +208,9 @@ export default function TeleconsultSessionPage() {
   const mediaRoomUrl = fetchedRoomUrl || String(attributes.room_url ?? attributes.roomUrl ?? "");
   const mediaToken = fetchedToken || String(attributes.token ?? attributes.accessToken ?? attributes.session_token ?? "");
   const hasGovernedMedia = mediaRoomUrl.length > 0 && mediaToken.length > 0;
+  const liveEventId = String(session?.liveEventId ?? attributes.liveEventId ?? "");
+  const impiloLiveJoinPath = String(session?.impiloLiveJoinPath ?? attributes.impiloLiveJoinPath ?? "");
+  const consentGranted = Boolean(session?.consentToken ?? attributes.consentReference ?? attributes.consentReference);
 
   async function ensureGovernedMedia() {
     if (hasGovernedMedia || mediaTokenM.isPending) return true;
@@ -362,6 +366,14 @@ export default function TeleconsultSessionPage() {
         <div className="w-80 border-r bg-white flex flex-col shrink-0">
           <div className="p-2 border-b">
             <TelemedicineRtcHealthPanel />
+          </div>
+          <div className="p-2 border-b">
+            <TelemedicineLiveSessionEmbed
+              sessionId={sessionId}
+              liveEventId={liveEventId || null}
+              impiloLiveJoinPath={impiloLiveJoinPath || null}
+              consentGranted={consentGranted}
+            />
           </div>
           {/* Call controls */}
           <div className="p-3 border-b flex items-center justify-center gap-2">

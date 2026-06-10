@@ -1,10 +1,13 @@
 package zw.gov.mohcc.impilo.campaigns.core;
 
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import zw.gov.mohcc.impilo.campaigns.integration.LiveSessionIntegration;
 import zw.gov.mohcc.impilo.campaigns.persistence.entity.CampaignEntity;
 import zw.gov.mohcc.impilo.campaigns.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.campaigns.persistence.repository.CampaignRepository;
@@ -15,11 +18,14 @@ public class CampaignService {
 
     private final CampaignRepository campaignRepository;
     private final EventOutboxRepository outboxRepository;
+    private final LiveSessionIntegration liveSessionIntegration;
 
     public CampaignService(CampaignRepository campaignRepository,
-                           EventOutboxRepository outboxRepository) {
+                           EventOutboxRepository outboxRepository,
+                           LiveSessionIntegration liveSessionIntegration) {
         this.campaignRepository = campaignRepository;
         this.outboxRepository = outboxRepository;
+        this.liveSessionIntegration = liveSessionIntegration;
     }
 
     @Transactional
@@ -42,6 +48,68 @@ public class CampaignService {
                 buildCampaignPayload(campaign), tenantId.toString(), correlationId);
 
         return campaign;
+    }
+
+    /**
+     * Schedule a governed Impilo Live public broadcast for this campaign.
+     * Public Health owns the campaign; Impilo Live owns broadcast infrastructure.
+     */
+    @Transactional
+    public Map<String, Object> scheduleLiveBroadcast(Long id, UUID tenantId, String actorId,
+                                                     UUID correlationId, Map<String, Object> request) {
+        CampaignEntity campaign = findById(id, tenantId);
+        Map<String, Object> livePayload = liveSessionIntegration.buildPublicBroadcastPayload(
+                campaign.getId().toString(),
+                stringOrDefault(request, "title", campaign.getName()),
+                stringOrDefault(request, "description", campaign.getDescription()),
+                request.get("startTime"),
+                request.get("endTime"),
+                stringList(request.get("officialSpeakerIds")),
+                stringList(request.get("moderatorIds")),
+                stringOrDefault(request, "audienceScope", "PUBLIC"),
+                boolOrDefault(request.get("emergencyBriefing"), false),
+                boolOrDefault(request.get("replayAllowed"), true));
+
+        return liveSessionIntegration.schedulePublicBroadcast(livePayload)
+                .map(liveEvent -> {
+                    String liveEventId = String.valueOf(liveEvent.get("id"));
+                    campaign.setLiveEventId(UUID.fromString(liveEventId));
+                    campaign.setChannel("LIVE_BROADCAST");
+                    CampaignEntity saved = campaignRepository.save(campaign);
+                    publishEvent("CAMPAIGN", saved.getId().toString(), "CAMPAIGN_LIVE_BROADCAST_SCHEDULED",
+                            buildCampaignPayload(saved), tenantId.toString(), correlationId);
+                    return Map.<String, Object>of(
+                            "campaignId", saved.getId(),
+                            "liveEventId", liveEventId,
+                            "impiloLiveJoinPath", "/live/event/" + liveEventId,
+                            "impiloLiveJoinPathPublic", "/live/discover",
+                            "status", liveEvent.get("status"));
+                })
+                .orElseThrow(() -> new IllegalStateException(
+                        "Impilo Live broadcast scheduling unavailable for campaign " + id));
+    }
+
+    private static String stringOrDefault(Map<String, Object> map, String key, String fallback) {
+        Object v = map.get(key);
+        return v == null || v.toString().isBlank() ? fallback : v.toString();
+    }
+
+    private static boolean boolOrDefault(Object value, boolean fallback) {
+        if (value == null) {
+            return fallback;
+        }
+        if (value instanceof Boolean b) {
+            return b;
+        }
+        return Boolean.parseBoolean(value.toString());
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<String> stringList(Object value) {
+        if (value instanceof List<?> list) {
+            return list.stream().map(String::valueOf).toList();
+        }
+        return List.of();
     }
 
     @Transactional(readOnly = true)

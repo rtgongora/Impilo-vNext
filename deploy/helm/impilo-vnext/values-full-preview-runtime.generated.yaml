@@ -203,9 +203,13 @@ fullBootServices:
     enabled: true
     port: 8102
     database: mushex
+    env:
+      MUSHEX_SANDBOX_ENABLED: 'true'
+      MUSHEX_SANDBOX_BYPASS_CREDENTIAL_CHECK: 'true'
+      MUSHEX_SANDBOX_APPLY_SIMULATION_OUTCOME: 'true'
   mvumo-service:
     enabled: true
-    port: 8195
+    port: 8197
     database: mvumo
   national-data-repository-service:
     enabled: true
@@ -287,7 +291,7 @@ fullBootServices:
     database: reporting
   rtc-gateway-service:
     enabled: true
-    port: 8195
+    port: 8196
     database: rtc_gateway
   rules-service:
     enabled: true

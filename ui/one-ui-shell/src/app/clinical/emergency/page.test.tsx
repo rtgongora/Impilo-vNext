@@ -47,6 +47,16 @@ vi.mock("@/hooks/useAuthStore", () => ({
   }),
 }));
 
+vi.mock("@/hooks/useFacilityStore", () => ({
+  useFacilityStore: (selector: (state: { facility: { id: string; name: string } | null }) => unknown) =>
+    selector({ facility: { id: "facility-1", name: "Test Hospital" } }),
+}));
+
+vi.mock("@/hooks/queries/useEdVisit", () => ({
+  useEdVisits: () => ({ data: [], refetch: vi.fn(), isLoading: false, isError: false }),
+  useOpenEdVisit: () => ({ mutate: vi.fn(), mutateAsync: vi.fn(), isPending: false }),
+}));
+
 function stubMutation() {
   return { mutate: vi.fn(), isPending: false, isError: false, isSuccess: false };
 }
@@ -66,7 +76,7 @@ describe("EmergencyDepartmentPage", () => {
     render(<EmergencyDepartmentPage />);
 
     expect(screen.getByRole("heading", { level: 1, name: "ED / Casualty" })).toBeInTheDocument();
-    expect(screen.getByText(/Bounded clinical shell \(Wave 2\)/)).toBeInTheDocument();
+    expect(screen.getByText(/ED trackboard, full patient journey, critical event activations/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Triage queue" })).toHaveAttribute("href", "/queue/triage");
     expect(screen.getByRole("link", { name: "Patient queue" })).toHaveAttribute("href", "/queue");
     expect(screen.getByRole("link", { name: "Patient search" })).toHaveAttribute("href", "/queue/search");

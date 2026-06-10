@@ -214,8 +214,14 @@ export default function ReportDetailPage() {
                   return <p className="text-sm text-gray-500">No parameters were stored for this job.</p>;
                 }
                 if (pv.kind === "object") {
+                  const rows = Object.entries(pv.value).map(([key, value]) => ({
+                    key: key
+                      .replace(/_/g, " ")
+                      .replace(/\b\w/g, (char) => char.toUpperCase()),
+                    value: value == null ? "—" : String(value),
+                  }));
                   return (
-                    <JsonApiDataTable data={pv.value} columns={REPORT_JOB_COLUMNS} emptyTitle="No parameters" />
+                    <JsonApiDataTable data={rows} columns={REPORT_JOB_COLUMNS} emptyTitle="No parameters" />
                   );
                 }
                 if (pv.kind === "jsonNonObject") {

@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.campaigns.api;
 
+import java.util.Map;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
@@ -103,6 +104,17 @@ public class CampaignController {
                 id, ctx.tenantId(), ctx.actorId(), ctx.correlationId());
 
         return ResponseEntity.ok(
+                ApiResponse.ok(result, ctx.correlationId().toString()));
+    }
+
+    @PostMapping("/{id}/live-broadcast")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> scheduleLiveBroadcast(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> request) {
+        TrustContext ctx = TrustContextHolder.require();
+        Map<String, Object> result = campaignService.scheduleLiveBroadcast(
+                id, ctx.tenantId(), ctx.actorId(), ctx.correlationId(), request);
+        return ResponseEntity.status(201).body(
                 ApiResponse.ok(result, ctx.correlationId().toString()));
     }
 

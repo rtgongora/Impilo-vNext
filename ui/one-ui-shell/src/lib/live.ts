@@ -24,11 +24,32 @@ export type LiveEventStatus =
 
 export type LiveContextType = "PROFESSIONAL" | "CITIZEN" | "PUBLIC" | string;
 
+export type LiveMode =
+  | "CLINICAL_SESSION"
+  | "PROFESSIONAL_MEETING"
+  | "WEBINAR_CPD"
+  | "PUBLIC_BROADCAST"
+  | "HYBRID_EVENT"
+  | "EMERGENCY_BRIEFING"
+  | string;
+
+export type OwningService =
+  | "TELEMEDICINE"
+  | "FUNDO"
+  | "PUBLIC_HEALTH"
+  | "CITIZEN_ENGAGEMENT"
+  | "ENTERPRISE"
+  | "STANDALONE_IMPILO_LIVE"
+  | string;
+
 export interface LiveEvent {
   id: string;
   tenantId?: string;
   title: string;
   description?: string | null;
+  mode?: LiveMode | null;
+  owningService?: OwningService | null;
+  owningEntityId?: string | null;
   eventType: string;
   contextType: LiveContextType;
   status: LiveEventStatus;
@@ -175,6 +196,9 @@ export interface LiveAnalyticsDashboard {
 export interface CreateLiveEventPayload {
   title: string;
   description?: string;
+  mode?: LiveMode;
+  owningService?: OwningService;
+  owningEntityId?: string;
   eventType: string;
   contextType?: LiveContextType;
   audienceType?: string;
@@ -210,6 +234,7 @@ export interface LiveJoinRoomPayload {
   participantId: string;
   participantType: string;
   role?: string;
+  consentGranted?: boolean;
 }
 
 export interface LiveRoomTokenPayload {
@@ -258,7 +283,10 @@ export type LiveComposerOp =
   | "suggest_agenda"
   | "suggest_objectives"
   | "moderation_hint"
-  | "cpd_summary";
+  | "cpd_summary"
+  | "discover_upcoming"
+  | "discover_replays"
+  | "route_to_session";
 
 export interface LiveComposerAssistPayload {
   op: LiveComposerOp;
@@ -532,6 +560,22 @@ export const liveApi = {
       ),
     ),
 
+  // Typed scheduling (owning-service bridges)
+  scheduleClinicalSession: async (body: Record<string, unknown>) =>
+    unwrapLiveData<Record<string, unknown>>(
+      await apiClient.post(`${BASE}/clinical-sessions`, body),
+    ),
+
+  scheduleFundoWebinar: async (body: Record<string, unknown>) =>
+    unwrapLiveData<Record<string, unknown>>(
+      await apiClient.post(`${BASE}/fundo-webinars`, body),
+    ),
+
+  schedulePublicBroadcast: async (body: Record<string, unknown>) =>
+    unwrapLiveData<Record<string, unknown>>(
+      await apiClient.post(`${BASE}/public-broadcasts`, body),
+    ),
+
   // Nompilo composer assist
   composerAssist: async (body: LiveComposerAssistPayload): Promise<LiveComposerAssistResult> => {
     try {
@@ -562,6 +606,24 @@ export const liveApi = {
       }
       if (body.op === "moderation_hint") {
         return { result: { flagged: false, guidance: "Review chat for clinical misinformation." }, fallbackUsed: true };
+      }
+      if (body.op === "discover_upcoming") {
+        return {
+          result: { paths: ["/live", "/live/my-events", "/live/cpd"], hint: "Upcoming sessions by role and registration." },
+          fallbackUsed: true,
+        };
+      }
+      if (body.op === "discover_replays") {
+        return {
+          result: { paths: ["/live/replays", "/live/discover"], hint: "Governed replay library and public health talks." },
+          fallbackUsed: true,
+        };
+      }
+      if (body.op === "route_to_session") {
+        return {
+          result: { pathPrefix: "/live/event/", hint: "Join from event detail when consent and role allow." },
+          fallbackUsed: true,
+        };
       }
       return { result: body.context ?? "", fallbackUsed: true };
     }

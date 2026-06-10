@@ -17,6 +17,8 @@ export default function LiveCreatePage() {
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [mode, setMode] = useState<string>("PROFESSIONAL_MEETING");
+  const [owningService, setOwningService] = useState<string>("STANDALONE_IMPILO_LIVE");
   const [eventType, setEventType] = useState("WEBINAR");
   const [contextType, setContextType] = useState<"PROFESSIONAL" | "CITIZEN" | "PUBLIC">("PROFESSIONAL");
   const [startTime, setStartTime] = useState("");
@@ -30,6 +32,8 @@ export default function LiveCreatePage() {
     const event = await create.mutateAsync({
       title,
       description,
+      mode,
+      owningService,
       eventType,
       contextType,
       organiserType: "PROVIDER",
@@ -73,6 +77,47 @@ export default function LiveCreatePage() {
                 onChange={(e) => setDescription(e.target.value)}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm min-h-[80px]"
               />
+            </div>
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Impilo Live mode</label>
+                <select
+                  value={mode}
+                  onChange={(e) => setMode(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                >
+                  {[
+                    "PROFESSIONAL_MEETING",
+                    "WEBINAR_CPD",
+                    "PUBLIC_BROADCAST",
+                    "HYBRID_EVENT",
+                    "EMERGENCY_BRIEFING",
+                  ].map((m) => (
+                    <option key={m} value={m}>
+                      {m.replace(/_/g, " ")}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Owning service</label>
+                <select
+                  value={owningService}
+                  onChange={(e) => setOwningService(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                >
+                  {[
+                    "STANDALONE_IMPILO_LIVE",
+                    "FUNDO",
+                    "PUBLIC_HEALTH",
+                    "ENTERPRISE",
+                  ].map((o) => (
+                    <option key={o} value={o}>
+                      {o.replace(/_/g, " ")}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
             <div className="grid sm:grid-cols-2 gap-3">
               <div>

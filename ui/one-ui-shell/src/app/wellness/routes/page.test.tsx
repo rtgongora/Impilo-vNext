@@ -52,7 +52,7 @@ describe("Wellness routes page", () => {
     expect(await screen.findByRole("heading", { name: "Routes & Places" })).toBeInTheDocument();
     expect(await screen.findByText("City Park Run")).toBeInTheDocument();
     expect(screen.queryByText(/coming soon/i)).not.toBeInTheDocument();
-    expect(screen.getByText(/not yet exposed by the wellness API/i)).toBeInTheDocument();
+    expect(screen.getByText(/only live service fields/i)).toBeInTheDocument();
   });
 
   it("logs a planned visit through the wellness activity BFF", async () => {

@@ -90,6 +90,10 @@ vi.mock("@/components/learning/LearningSubjectPicker", () => ({
   useLearningSubject: () => ({ subjectType: "PROVIDER", subjectId: "SUBJECT-1" }),
 }));
 
+vi.mock("@/components/live/FundoLiveWebinarEmbed", () => ({
+  FundoLiveWebinarEmbed: () => <div data-testid="fundo-live-embed">Live webinar</div>,
+}));
+
 function setState(state: Partial<typeof structureState>) {
   Object.assign(structureState, state);
 }

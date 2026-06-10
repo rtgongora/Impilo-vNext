@@ -59,6 +59,9 @@ learning:
   integration:
     varapi-internal-key: ${VARAPI_TO_LEARNING_INTERNAL_KEY:}
     orchestration-internal-key: ${LEARNING_ORCHESTRATION_INTERNAL_KEY:}
+    live:
+      enabled: ${LEARNING_LIVE_INTEGRATION_ENABLED:true}
+      base-url: ${LEARNING_LIVE_BASE_URL:http://localhost:8380}
   outbox:
     publisher:
       # Phase 2: transactional outbox → Kafka publisher (mirrors pct-service).

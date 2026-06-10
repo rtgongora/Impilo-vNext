@@ -1,5 +1,5 @@
 metadata:
-  generated_at: '2026-06-08T16:31:03.391Z'
+  generated_at: '2026-06-09T13:17:55.815Z'
   source: docs/registry/services-registry.yaml
   doctrine: docs/environment/RUNTIME_IMAGE_STRATEGY_DOCTRINE.md
   total_entries: 146
@@ -4390,7 +4390,7 @@ classifications:
     doctrine_compliance_required: false
     source_path: services/rtc-gateway-service
     build_tool: maven
-    default_http_port: null
+    default_http_port: 8196
     priority: P2
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
@@ -4874,7 +4874,7 @@ classifications:
     doctrine_compliance_required: false
     source_path: services/simba-service
     build_tool: maven
-    default_http_port: null
+    default_http_port: 8125
     priority: P2
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
@@ -5711,12 +5711,12 @@ classifications:
     helm_required: false
     health_check_required: false
     contract_check_required: true
-    frontend_surface_expected: true
+    frontend_surface_expected: false
     mobile_surface_expected: false
     doctrine_compliance_required: false
     source_path: services/wellness-service
     build_tool: maven
-    default_http_port: null
+    default_http_port: 8161
     priority: P2
     blocker: null
     reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template

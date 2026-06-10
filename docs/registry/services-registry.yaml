@@ -2262,7 +2262,6 @@ services:
     sovereign: false
     sovereign_group: null
     primary_protocol: rest
-    default_http_port: null
     product_names:
       - Simba
     owner_team: enterprise-wellness

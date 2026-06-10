@@ -78,6 +78,21 @@ class CareEmergencyInpatientControllerTest {
     private static final class StubInpatientClient extends InpatientServiceClient {
         StubInpatientClient() { super(new RestTemplate(), endpoints(), mapper); }
 
+        @Override public JsonNode listCarePlans(String patientId) {
+            ArrayNode arr = mapper.createArrayNode();
+            arr.add(mapper.createObjectNode().put("id", "cp-1").put("status", "ACTIVE"));
+            return arr;
+        }
+
+        @Override public JsonNode listEmergencyActivations() {
+            ArrayNode arr = mapper.createArrayNode();
+            arr.add(mapper.createObjectNode()
+                    .put("id", "ea-1")
+                    .put("protocol_type", "CODE_BLUE")
+                    .put("status", "ACTIVE"));
+            return arr;
+        }
+
         @Override public JsonNode createAdmission(Map<String, Object> request) {
             return mapper.createObjectNode().put("id", "adm-1");
         }

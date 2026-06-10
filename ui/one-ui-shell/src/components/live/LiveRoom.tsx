@@ -48,6 +48,8 @@ export function LiveRoom({ eventId }: LiveRoomProps) {
   const router = useRouter();
   const { participantId, participantType, role } = useLiveParticipant();
   const { data: event, isLoading: eventLoading } = useLiveEvent(eventId);
+  const isBroadcast =
+    event?.mode === "PUBLIC_BROADCAST" || event?.mode === "EMERGENCY_BRIEFING";
   const joinRoom = useLiveJoinRoom();
   const leaveAttendance = useLiveAttendanceLeave();
   const trackMinutes = useLiveTrackMinutes();
@@ -140,6 +142,9 @@ export function LiveRoom({ eventId }: LiveRoomProps) {
         <div className="flex items-center justify-between gap-2 px-3 py-2 bg-gray-900 text-gray-200 text-sm">
           <div>
             <p className="font-medium text-white">{event?.title ?? "Live session"}</p>
+            {isBroadcast ? (
+              <p className="text-xs text-amber-300 mt-0.5">Public broadcast · moderated viewer mode</p>
+            ) : null}
             <p className="text-xs text-gray-400">{event?.status ?? "…"}</p>
           </div>
           <div className="flex items-center gap-2">

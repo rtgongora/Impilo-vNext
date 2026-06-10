@@ -12,6 +12,7 @@ Nompilo tool sources include:
 - INDAWO_PUBLIC_HEALTH_SITES
 - ZIBO_TERMINOLOGY
 - FUNDO_LEARNING
+- IMPILO_LIVE (events, discovery, replays, session routing)
 - BUTANO_CLINICAL_SUMMARY
 - COSTA_COSTING
 - MUSHEX_PAYMENTS_CLAIMS

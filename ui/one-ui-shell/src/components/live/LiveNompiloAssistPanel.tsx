@@ -17,6 +17,9 @@ const OPS: Array<{ value: LiveComposerOp; label: string }> = [
   { value: "suggest_objectives", label: "Suggest objectives" },
   { value: "moderation_hint", label: "Moderation hint" },
   { value: "cpd_summary", label: "CPD summary" },
+  { value: "discover_upcoming", label: "What live sessions do I have?" },
+  { value: "discover_replays", label: "Find replays" },
+  { value: "route_to_session", label: "Help me join a session" },
 ];
 
 export function LiveNompiloAssistPanel({

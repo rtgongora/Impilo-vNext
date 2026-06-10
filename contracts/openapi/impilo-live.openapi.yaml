@@ -593,6 +593,33 @@ paths:
         '200':
           description: Success
 
+  /internal/v1/live/clinical-sessions:
+    post:
+      operationId: scheduleClinicalLiveSession
+      tags: [Live-Scheduling]
+      summary: Telemedicine/PCT — schedule governed clinical live session
+      responses:
+        '201':
+          description: Scheduled clinical session metadata
+
+  /internal/v1/live/fundo-webinars:
+    post:
+      operationId: scheduleFundoWebinar
+      tags: [Live-Scheduling]
+      summary: Fundo — schedule course-linked CPD webinar
+      responses:
+        '201':
+          description: Scheduled webinar metadata
+
+  /internal/v1/live/public-broadcasts:
+    post:
+      operationId: schedulePublicBroadcast
+      tags: [Live-Scheduling]
+      summary: Public Health — schedule moderated public broadcast
+      responses:
+        '201':
+          description: Scheduled broadcast metadata
+
 components:
   securitySchemes:
     bearerAuth:
@@ -615,6 +642,13 @@ components:
           type: string
           format: uuid
         title:
+          type: string
+        mode:
+          type: string
+          enum: [CLINICAL_SESSION, PROFESSIONAL_MEETING, WEBINAR_CPD, PUBLIC_BROADCAST, HYBRID_EVENT, EMERGENCY_BRIEFING]
+        owningService:
+          type: string
+        owningEntityId:
           type: string
         eventType:
           type: string

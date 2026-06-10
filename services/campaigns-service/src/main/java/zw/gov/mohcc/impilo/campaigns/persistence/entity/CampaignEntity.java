@@ -67,6 +67,9 @@ public class CampaignEntity {
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
 
+    @Column(name = "live_event_id")
+    private UUID liveEventId;
+
     @PrePersist
     protected void onCreate() {
         createdAt = OffsetDateTime.now();
@@ -106,4 +109,6 @@ public class CampaignEntity {
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(OffsetDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public UUID getLiveEventId() { return liveEventId; }
+    public void setLiveEventId(UUID liveEventId) { this.liveEventId = liveEventId; }
 }

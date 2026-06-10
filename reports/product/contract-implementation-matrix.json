@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-09T05:47:03.885Z",
+  "generatedAt": "2026-06-09T13:17:51.953Z",
   "counts": {
-    "totalOpenApiOperations": 4452,
+    "totalOpenApiOperations": 4455,
     "totalAsyncChannels": 84,
-    "implemented": 4536,
+    "implemented": 4539,
     "partial": 0,
     "missing": 0,
     "unownedContract": 0,
@@ -27050,6 +27050,45 @@
       ],
       "implStatus": "implemented",
       "serviceHandler": "services/live-service/src/main/java/zw/gov/mohcc/impilo/live/api/controller/LiveV11ProbeController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "impilo-live.openapi.yaml",
+      "operationId": "scheduleClinicalLiveSession",
+      "method": "POST",
+      "path": "/internal/v1/live/clinical-sessions",
+      "summary": "Telemedicine/PCT — schedule governed clinical live session",
+      "modules": [
+        "live-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/live-service/src/main/java/zw/gov/mohcc/impilo/live/api/controller/LiveSchedulingController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "impilo-live.openapi.yaml",
+      "operationId": "scheduleFundoWebinar",
+      "method": "POST",
+      "path": "/internal/v1/live/fundo-webinars",
+      "summary": "Fundo — schedule course-linked CPD webinar",
+      "modules": [
+        "live-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/live-service/src/main/java/zw/gov/mohcc/impilo/live/api/controller/LiveSchedulingController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "impilo-live.openapi.yaml",
+      "operationId": "schedulePublicBroadcast",
+      "method": "POST",
+      "path": "/internal/v1/live/public-broadcasts",
+      "summary": "Public Health — schedule moderated public broadcast",
+      "modules": [
+        "live-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/live-service/src/main/java/zw/gov/mohcc/impilo/live/api/controller/LiveSchedulingController.java",
       "stubPattern": null
     },
     {

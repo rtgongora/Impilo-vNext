@@ -635,6 +635,7 @@ export const ROUTES: RouteDefinition[] = [
   // ── Zone: Impilo Live (services/live-service at /internal/v1/live) ──
   { path: "/live", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Impilo Live", navLabel: "Impilo Live", navZone: "work" },
   { path: "/live/manage", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Live Event Management", navLabel: "Manage Events", navZone: "work" },
+  { path: "/live/admin", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Impilo Live Administration", navLabel: "Live Admin", navZone: "work" },
   { path: "/live/create", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Create Live Event", navLabel: "Create Event", navZone: "work" },
   { path: "/live/discover", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Discover Live Events", navLabel: "Live Health Talks", navZone: "life" },
   { path: "/live/saved", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Saved Live Events", navLabel: "Saved Events", navZone: "life" },
@@ -682,13 +683,8 @@ export const ROUTES: RouteDefinition[] = [
 // ubomi, communities/pages, extended auth) so guards and breadcrumbs apply.
 // Madi (Jun 2026): 26 routes under /madi for blood donation, transfusion &
 // haemovigilance (services/madi-service). New canonical total is 452.
-// Impilo Live (Jun 2026): 13 routes under /live for live events, discovery,
-// room, replay, CPD and analytics (services/live-service). New total is 467.
-// Wave 2 identity + coverage child routes (Jun 2026): /registry/clients/new,
-// /registry/clients/[id], /coverage/enroll, /coverage/member, /coverage/contracts,
-// /wellness/dashboard, /imaging/worklist, /imaging/facility, /enterprise/oversight,
-// /finance/service-access, /wellness/commodities, /public-health/oversight.
-export const EXPECTED_ROUTE_COUNT = 480;
+// Impilo Live (Jun 2026): 14 routes under /live incl. /live/admin (services/live-service).
+export const EXPECTED_ROUTE_COUNT = 481;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

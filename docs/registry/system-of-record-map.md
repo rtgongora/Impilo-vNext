@@ -42,6 +42,7 @@
 | `jobs-service` | integration | Jobs canonical records |
 | `landela-adapter-service` | integration | Landela Adapter canonical records |
 | `learning-service` | experience | Learning canonical records |
+| `live-service` | experience | live events and webinars, live event registrations, live event attendance, live event interactions, live event certificates, live event analytics snapshots |
 | `llm-orchestration-service` | integration | Llm Orchestration canonical records |
 | `madi-service` | clinical | blood donor registry, donation drives, blood units, crossmatch, transfusion episodes, haemovigilance |
 | `msika-flow-service` | enterprise | Msika Flow canonical records |

@@ -93,3 +93,7 @@ pct:
       governance:
         require-consent-reference-for-media: ${PCT_TELEMED_REQUIRE_CONSENT_REFERENCE_FOR_MEDIA:true}
         allow-emergency-without-consent: ${PCT_TELEMED_ALLOW_EMERGENCY_WITHOUT_CONSENT:true}
+  integration:
+    live:
+      enabled: ${PCT_LIVE_INTEGRATION_ENABLED:true}
+      base-url: ${PCT_LIVE_BASE_URL:http://localhost:8380}

@@ -3,7 +3,10 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import ProceduresPage from "./page";
 
-vi.mock("next/navigation", () => ({ useParams: () => ({ patientId: "patient-1" }) }));
+vi.mock("next/navigation", () => ({
+  useParams: () => ({ patientId: "patient-1" }),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+}));
 vi.mock("@/components/EHRLayout", () => ({ EHRLayout: ({ children }: { children: ReactNode }) => <div>{children}</div> }));
 vi.mock("@/components/PageShell", () => ({ PageShell: ({ children, title }: { children: ReactNode; title: string }) => <div><h1>{title}</h1>{children}</div> }));
 vi.mock("@/hooks/useFacilityStore", () => ({ useFacilityStore: (selector: (state: { facility: { id: string; name: string } }) => unknown) => selector({ facility: { id: "facility-1", name: "Harare Central Hospital" } }) }));
@@ -21,6 +24,10 @@ vi.mock("@/hooks/queries/useStructuredHistory", () => ({
     isError: false,
     refetch: vi.fn(),
   }),
+}));
+
+vi.mock("@/hooks/queries/useProcedureEpisode", () => ({
+  useCreateProcedureEpisode: () => ({ mutate: vi.fn(), mutateAsync: vi.fn(), isPending: false }),
 }));
 
 describe("ProceduresPage", () => {

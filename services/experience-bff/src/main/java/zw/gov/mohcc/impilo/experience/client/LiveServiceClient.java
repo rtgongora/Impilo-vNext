@@ -283,6 +283,20 @@ public class LiveServiceClient {
         return get(url, "discoverByRole");
     }
 
+    // ── Typed scheduling (doctrine §7 — owning services) ───────────
+
+    public JsonNode scheduleClinicalSession(Map<String, Object> body) {
+        return post(baseUrl + API + "/clinical-sessions", body, "scheduleClinicalSession");
+    }
+
+    public JsonNode scheduleFundoWebinar(Map<String, Object> body) {
+        return post(baseUrl + API + "/fundo-webinars", body, "scheduleFundoWebinar");
+    }
+
+    public JsonNode schedulePublicBroadcast(Map<String, Object> body) {
+        return post(baseUrl + API + "/public-broadcasts", body, "schedulePublicBroadcast");
+    }
+
     private JsonNode get(String url, String operation) {
         log.debug("LIVE {}: GET {}", operation, url);
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);

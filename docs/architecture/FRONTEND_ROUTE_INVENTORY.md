@@ -1,6 +1,6 @@
 # Frontend route inventory
 
-> Generated from `ui/one-ui-shell/src/lib/routes.ts` (467 routes)
+> Generated from `ui/one-ui-shell/src/lib/routes.ts` (481 routes)
 
 - `/`
 - `/access`
@@ -79,6 +79,9 @@
 - `/consent`
 - `/core-transaction`
 - `/coverage`
+- `/coverage/contracts`
+- `/coverage/enroll`
+- `/coverage/member`
 - `/dags`
 - `/dags/policy`
 - `/data-intelligence`
@@ -133,6 +136,7 @@
 - `/enterprise`
 - `/enterprise/charge-sheet`
 - `/enterprise/fleet`
+- `/enterprise/oversight`
 - `/enterprise/warehousing`
 - `/erp`
 - `/erp/assets`
@@ -165,6 +169,7 @@
 - `/finance/refunds`
 - `/finance/remittances`
 - `/finance/reports`
+- `/finance/service-access`
 - `/finance/settlements`
 - `/finance/tariffs`
 - `/finance/workspace`
@@ -189,17 +194,12 @@
 - `/home/referrals`
 - `/home/results`
 - `/id-services`
+- `/imaging/facility`
+- `/imaging/worklist`
 - `/intelligence`
 - `/inventory`
 - `/inventory/counts`
 - `/inventory/movements`
 - `/inventory/requisitions`
 - `/inventory/stock-management`
-- `/kiosk`
-- `/lab`
-- `/lab/catalog`
-- `/lab/reconciliation`
-- `/lab/results`
-- `/lab/worklist`
-- `/learning`
-- … and 267 more
+- … and 281 more

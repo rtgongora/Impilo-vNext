@@ -11,6 +11,7 @@ import zw.gov.mohcc.impilo.pct.core.telemedicine.SessionProvisioningResult;
 import zw.gov.mohcc.impilo.pct.core.telemedicine.TelemedicineProviderProperties;
 import zw.gov.mohcc.impilo.pct.core.telemedicine.TelemedicineSessionProvider;
 import zw.gov.mohcc.impilo.pct.core.telemedicine.TelemedicineSessionProviderRouter;
+import zw.gov.mohcc.impilo.pct.integration.LiveSessionIntegration;
 import zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.ReferralEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.TelehealthSessionEntity;
@@ -42,6 +43,7 @@ public class TelemedicineOrchestrationService {
     private final TelemetryService telemetryService;
     private final TelemedicineSessionProviderRouter sessionProviderRouter;
     private final TelemedicineProviderProperties providerProperties;
+    private final LiveSessionIntegration liveSessionIntegration;
     private final ObjectMapper objectMapper;
 
     public TelemedicineOrchestrationService(
@@ -51,6 +53,7 @@ public class TelemedicineOrchestrationService {
             TelemetryService telemetryService,
             TelemedicineSessionProviderRouter sessionProviderRouter,
             TelemedicineProviderProperties providerProperties,
+            LiveSessionIntegration liveSessionIntegration,
             ObjectMapper objectMapper) {
         this.referralRepository = referralRepository;
         this.telehealthSessionRepository = telehealthSessionRepository;
@@ -58,6 +61,7 @@ public class TelemedicineOrchestrationService {
         this.telemetryService = telemetryService;
         this.sessionProviderRouter = sessionProviderRouter;
         this.providerProperties = providerProperties;
+        this.liveSessionIntegration = liveSessionIntegration;
         this.objectMapper = objectMapper;
     }
 
@@ -284,20 +288,49 @@ public class TelemedicineOrchestrationService {
         provisioningAttributes.put("sessionId", entity.getSessionId().toString());
         provisioningAttributes.put("purposeOfUse", normalizedPurpose);
         provisioningAttributes.put("consentReference", consentReference);
-        SessionProvisioningResult provisioning = sessionProviderRouter.provision(
-                requestedProvider,
-                new TelemedicineSessionProvider.SessionProvisioningRequest(
-                        ctx.tenantId(),
-                        entity.getPatientCpid(),
-                        entity.getProviderId(),
-                        entity.getFacilityId(),
-                        entity.getSessionType(),
-                        referralId,
-                        entity.getEncounterId(),
-                        provisioningAttributes));
-        entity.setRoomUrl(defaulted(optional(request, "roomUrl", "room_url"), provisioning.roomUrl()));
-        entity.setChannel(defaulted(optional(request, "channel"), provisioning.channel()));
-        entity.setAccessToken(defaulted(optional(request, "accessToken", "access_token"), provisioning.accessToken()));
+
+        if (shouldUseImpiloLive(request, entity)) {
+            String clinicalContext = entity.getEncounterId() != null && !entity.getEncounterId().isBlank()
+                    ? entity.getEncounterId()
+                    : entity.getSessionId().toString();
+            Map<String, Object> livePayload = liveSessionIntegration.buildClinicalPayload(
+                    clinicalContext,
+                    entity.getPatientCpid(),
+                    entity.getProviderId(),
+                    entity.getFacilityId(),
+                    optional(request, "title"),
+                    optional(request, "description", "notes"),
+                    entity.getScheduledAt(),
+                    optional(request, "endTime", "end_time"),
+                    consentReference,
+                    optional(request, "recordingPolicy", "recording_policy"),
+                    Boolean.TRUE.equals(request != null ? request.get("emergencyFlag") : null));
+            liveSessionIntegration.scheduleClinicalSession(livePayload).ifPresent(liveEvent -> {
+                String liveEventId = asString(liveEvent.get("id"));
+                if (liveEventId != null && !liveEventId.isBlank()) {
+                    entity.setLiveEventId(parseUuid(liveEventId, "liveEventId"));
+                    entity.setRoomUrl("/live/event/" + liveEventId + "/room");
+                    entity.setChannel("IMPILO_LIVE");
+                }
+            });
+        }
+
+        if (entity.getChannel() == null || entity.getChannel().isBlank()) {
+            SessionProvisioningResult provisioning = sessionProviderRouter.provision(
+                    requestedProvider,
+                    new TelemedicineSessionProvider.SessionProvisioningRequest(
+                            ctx.tenantId(),
+                            entity.getPatientCpid(),
+                            entity.getProviderId(),
+                            entity.getFacilityId(),
+                            entity.getSessionType(),
+                            referralId,
+                            entity.getEncounterId(),
+                            provisioningAttributes));
+            entity.setRoomUrl(defaulted(optional(request, "roomUrl", "room_url"), provisioning.roomUrl()));
+            entity.setChannel(defaulted(optional(request, "channel"), provisioning.channel()));
+            entity.setAccessToken(defaulted(optional(request, "accessToken", "access_token"), provisioning.accessToken()));
+        }
         entity.setNotes(optional(request, "notes"));
 
         TelehealthSessionEntity saved = telehealthSessionRepository.save(entity);
@@ -449,9 +482,38 @@ public class TelemedicineOrchestrationService {
         body.put("endedAt", toIso(entity.getEndedAt()));
         body.put("durationSeconds", entity.getDurationSeconds());
         body.put("notes", entity.getNotes());
+        body.put("liveEventId", entity.getLiveEventId() == null ? null : entity.getLiveEventId().toString());
+        body.put("impiloLiveJoinPath", entity.getLiveEventId() == null
+                ? null
+                : "/live/event/" + entity.getLiveEventId() + "/room");
         body.put("createdAt", toIso(entity.getCreatedAt()));
         body.put("updatedAt", toIso(entity.getUpdatedAt()));
         return body;
+    }
+
+    /** Route VIDEO telehealth sessions through Impilo Live unless an alternate provider is explicit. */
+    private boolean shouldUseImpiloLive(Map<String, Object> request, TelehealthSessionEntity entity) {
+        if (!liveSessionIntegration.isEnabled()) {
+            return false;
+        }
+        String sessionType = entity.getSessionType();
+        if (sessionType == null || (!sessionType.contains("VIDEO") && !"AUDIO".equals(sessionType))) {
+            return false;
+        }
+        String provider = optional(request, "sessionProvider", "session_provider", "providerType", "provider_type");
+        if (provider != null && !provider.isBlank()) {
+            return "impilo-live".equalsIgnoreCase(provider) || "IMPILO_LIVE".equalsIgnoreCase(provider);
+        }
+        if (request != null) {
+            Object flag = request.get("useImpiloLive");
+            if (flag == null) {
+                flag = request.get("use_impilo_live");
+            }
+            if (Boolean.TRUE.equals(flag)) {
+                return true;
+            }
+        }
+        return true;
     }
 
     private void appendMessage(ReferralEntity entity, Map<String, Object> payload) {

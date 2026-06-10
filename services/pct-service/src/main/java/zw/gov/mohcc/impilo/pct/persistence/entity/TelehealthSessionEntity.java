@@ -66,6 +66,9 @@ public class TelehealthSessionEntity {
     @Column(name = "notes")
     private String notes;
 
+    @Column(name = "live_event_id")
+    private UUID liveEventId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -121,6 +124,8 @@ public class TelehealthSessionEntity {
     public void setDurationSeconds(Long durationSeconds) { this.durationSeconds = durationSeconds; }
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
+    public UUID getLiveEventId() { return liveEventId; }
+    public void setLiveEventId(UUID liveEventId) { this.liveEventId = liveEventId; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
 }
