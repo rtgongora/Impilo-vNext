@@ -45,6 +45,14 @@ management:
       show-details: when-authorized
 
 impilo:
+  bootstrap:
+    enabled: ${IMPILO_BOOTSTRAP_ENABLED:true}
+    token-hash: ${IMPILO_BOOTSTRAP_TOKEN_HASH:}
+    token-expires-at: ${IMPILO_BOOTSTRAP_TOKEN_EXPIRES_AT:}
+    allowed-methods: ${IMPILO_BOOTSTRAP_ALLOWED_METHODS:one_time_token,signed_authorisation}
+    require-mfa: ${IMPILO_BOOTSTRAP_REQUIRE_MFA:true}
+    environment: ${IMPILO_BOOTSTRAP_ENVIRONMENT:development}
+    bootstrap-role-ttl-hours: 24
   registry-intake:
     redis-ttl-days: ${REGISTRY_INTAKE_REDIS_TTL_DAYS:30}
     events-topic: ${REGISTRY_INTAKE_EVENTS_TOPIC:impilo.registry.intake}

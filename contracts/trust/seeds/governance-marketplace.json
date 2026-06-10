@@ -1,5 +1,5 @@
 {
-  "version": "1.3.0",
+  "version": "1.6.0",
   "catalogueId": "governance-marketplace",
   "displayName": "Registry, Regulator, Workplace Manager, Marketplace",
   "entries": [
@@ -164,14 +164,18 @@
       "policyMapping": "impilo.registry"
     },
     {
-      "status": "active",
+      "status": "deprecated",
       "auditSensitivity": "medium",
       "id": "reg-professional_council_regulator",
       "code": "professional_council_regulator",
       "displayName": "Professional Council Regulator",
       "category": "regulator_role",
       "ownerService": "tshepo",
-      "policyMapping": "impilo.regulator"
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "mapsTo": "mdpc_reviewer",
+        "deprecationReason": "Use real Zimbabwe council role templates (MDPC, NC, PC, etc.)"
+      }
     },
     {
       "status": "active",
@@ -1172,6 +1176,1738 @@
       "category": "marketplace_role",
       "ownerService": "msika",
       "policyMapping": "impilo.marketplace"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "crr-hpa-administrator",
+      "code": "hpa_administrator",
+      "displayName": "Hpa Administrator",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "health_professions_authority",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "no_system_superuser",
+          "varapi_scoped_oversight"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "crr-hpa-regulatory-reviewer",
+      "code": "hpa_regulatory_reviewer",
+      "displayName": "Hpa Regulatory Reviewer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "health_professions_authority",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "no_system_superuser",
+          "varapi_scoped_oversight"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "crr-hpa-appeals-officer",
+      "code": "hpa_appeals_officer",
+      "displayName": "Hpa Appeals Officer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "health_professions_authority",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "no_system_superuser",
+          "varapi_scoped_oversight"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "crr-hpa-registry-steward",
+      "code": "hpa_registry_steward",
+      "displayName": "Hpa Registry Steward",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "health_professions_authority",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "no_system_superuser",
+          "varapi_scoped_oversight"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "crr-hpa-compliance-officer",
+      "code": "hpa_compliance_officer",
+      "displayName": "Hpa Compliance Officer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "health_professions_authority",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "no_system_superuser",
+          "varapi_scoped_oversight"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "crr-hpa-auditor",
+      "code": "hpa_auditor",
+      "displayName": "Hpa Auditor",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "health_professions_authority",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "no_system_superuser",
+          "varapi_scoped_oversight"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-mlcsc-registrar",
+      "code": "mlcsc_registrar",
+      "displayName": "Mlcsc Registrar",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "medical_laboratories_clinical_scientists_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_laboratory_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-mlcsc-administrator",
+      "code": "mlcsc_administrator",
+      "displayName": "Mlcsc Administrator",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "medical_laboratories_clinical_scientists_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_laboratory_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-mlcsc-reviewer",
+      "code": "mlcsc_reviewer",
+      "displayName": "Mlcsc Reviewer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "medical_laboratories_clinical_scientists_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_laboratory_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-mlcsc-approver",
+      "code": "mlcsc_approver",
+      "displayName": "Mlcsc Approver",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "medical_laboratories_clinical_scientists_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_laboratory_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-mlcsc-licensing-officer",
+      "code": "mlcsc_licensing_officer",
+      "displayName": "Mlcsc Licensing Officer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "medical_laboratories_clinical_scientists_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_laboratory_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-mlcsc-registry-steward",
+      "code": "mlcsc_registry_steward",
+      "displayName": "Mlcsc Registry Steward",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "medical_laboratories_clinical_scientists_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_laboratory_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-mlcsc-disciplinary-officer",
+      "code": "mlcsc_disciplinary_officer",
+      "displayName": "Mlcsc Disciplinary Officer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "medical_laboratories_clinical_scientists_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_laboratory_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-mlcsc-auditor",
+      "code": "mlcsc_auditor",
+      "displayName": "Mlcsc Auditor",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "medical_laboratories_clinical_scientists_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_laboratory_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-mdpc-registrar",
+      "code": "mdpc_registrar",
+      "displayName": "Mdpc Registrar",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "medical_dental_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_medical_dental_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-mdpc-administrator",
+      "code": "mdpc_administrator",
+      "displayName": "Mdpc Administrator",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "medical_dental_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_medical_dental_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-mdpc-reviewer",
+      "code": "mdpc_reviewer",
+      "displayName": "Mdpc Reviewer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "medical_dental_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_medical_dental_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-mdpc-approver",
+      "code": "mdpc_approver",
+      "displayName": "Mdpc Approver",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "medical_dental_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_medical_dental_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-mdpc-licensing-officer",
+      "code": "mdpc_licensing_officer",
+      "displayName": "Mdpc Licensing Officer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "medical_dental_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_medical_dental_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-mdpc-accreditation-officer",
+      "code": "mdpc_accreditation_officer",
+      "displayName": "Mdpc Accreditation Officer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "medical_dental_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_medical_dental_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-mdpc-cpd-reviewer",
+      "code": "mdpc_cpd_reviewer",
+      "displayName": "Mdpc Cpd Reviewer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "medical_dental_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_medical_dental_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-mdpc-disciplinary-officer",
+      "code": "mdpc_disciplinary_officer",
+      "displayName": "Mdpc Disciplinary Officer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "medical_dental_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_medical_dental_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-mdpc-registry-steward",
+      "code": "mdpc_registry_steward",
+      "displayName": "Mdpc Registry Steward",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "medical_dental_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_medical_dental_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-mdpc-auditor",
+      "code": "mdpc_auditor",
+      "displayName": "Mdpc Auditor",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "medical_dental_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_medical_dental_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-ahpc-registrar",
+      "code": "ahpc_registrar",
+      "displayName": "Ahpc Registrar",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "allied_health_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_allied_health_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-ahpc-administrator",
+      "code": "ahpc_administrator",
+      "displayName": "Ahpc Administrator",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "allied_health_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_allied_health_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-ahpc-reviewer",
+      "code": "ahpc_reviewer",
+      "displayName": "Ahpc Reviewer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "allied_health_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_allied_health_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-ahpc-approver",
+      "code": "ahpc_approver",
+      "displayName": "Ahpc Approver",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "allied_health_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_allied_health_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-ahpc-licensing-officer",
+      "code": "ahpc_licensing_officer",
+      "displayName": "Ahpc Licensing Officer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "allied_health_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_allied_health_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-ahpc-training-accreditation-officer",
+      "code": "ahpc_training_accreditation_officer",
+      "displayName": "Ahpc Training Accreditation Officer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "allied_health_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_allied_health_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-ahpc-cpd-reviewer",
+      "code": "ahpc_cpd_reviewer",
+      "displayName": "Ahpc Cpd Reviewer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "allied_health_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_allied_health_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-ahpc-disciplinary-officer",
+      "code": "ahpc_disciplinary_officer",
+      "displayName": "Ahpc Disciplinary Officer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "allied_health_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_allied_health_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-ahpc-registry-steward",
+      "code": "ahpc_registry_steward",
+      "displayName": "Ahpc Registry Steward",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "allied_health_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_allied_health_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-ahpc-auditor",
+      "code": "ahpc_auditor",
+      "displayName": "Ahpc Auditor",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "allied_health_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_allied_health_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-pc-registrar",
+      "code": "pc_registrar",
+      "displayName": "Pc Registrar",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "pharmacists_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_pharmacy_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-pc-administrator",
+      "code": "pc_administrator",
+      "displayName": "Pc Administrator",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "pharmacists_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_pharmacy_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-pc-reviewer",
+      "code": "pc_reviewer",
+      "displayName": "Pc Reviewer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "pharmacists_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_pharmacy_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-pc-approver",
+      "code": "pc_approver",
+      "displayName": "Pc Approver",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "pharmacists_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_pharmacy_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-pc-licensing-officer",
+      "code": "pc_licensing_officer",
+      "displayName": "Pc Licensing Officer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "pharmacists_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_pharmacy_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-pc-training-reviewer",
+      "code": "pc_training_reviewer",
+      "displayName": "Pc Training Reviewer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "pharmacists_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_pharmacy_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-pc-cpd-reviewer",
+      "code": "pc_cpd_reviewer",
+      "displayName": "Pc Cpd Reviewer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "pharmacists_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_pharmacy_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-pc-registry-steward",
+      "code": "pc_registry_steward",
+      "displayName": "Pc Registry Steward",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "pharmacists_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_pharmacy_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-pc-disciplinary-officer",
+      "code": "pc_disciplinary_officer",
+      "displayName": "Pc Disciplinary Officer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "pharmacists_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_pharmacy_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-pc-auditor",
+      "code": "pc_auditor",
+      "displayName": "Pc Auditor",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "pharmacists_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_pharmacy_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-nc-registrar",
+      "code": "nc_registrar",
+      "displayName": "Nc Registrar",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "nurses_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_nursing_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-nc-administrator",
+      "code": "nc_administrator",
+      "displayName": "Nc Administrator",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "nurses_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_nursing_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-nc-reviewer",
+      "code": "nc_reviewer",
+      "displayName": "Nc Reviewer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "nurses_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_nursing_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-nc-approver",
+      "code": "nc_approver",
+      "displayName": "Nc Approver",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "nurses_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_nursing_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-nc-licensing-officer",
+      "code": "nc_licensing_officer",
+      "displayName": "Nc Licensing Officer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "nurses_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_nursing_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-nc-training-accreditation-officer",
+      "code": "nc_training_accreditation_officer",
+      "displayName": "Nc Training Accreditation Officer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "nurses_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_nursing_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-nc-cpd-reviewer",
+      "code": "nc_cpd_reviewer",
+      "displayName": "Nc Cpd Reviewer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "nurses_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_nursing_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-nc-disciplinary-officer",
+      "code": "nc_disciplinary_officer",
+      "displayName": "Nc Disciplinary Officer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "nurses_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_nursing_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-nc-registry-steward",
+      "code": "nc_registry_steward",
+      "displayName": "Nc Registry Steward",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "nurses_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_nursing_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-nc-auditor",
+      "code": "nc_auditor",
+      "displayName": "Nc Auditor",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "nurses_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_nursing_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-ehpc-registrar",
+      "code": "ehpc_registrar",
+      "displayName": "Ehpc Registrar",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "environmental_health_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_environmental_health_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-ehpc-administrator",
+      "code": "ehpc_administrator",
+      "displayName": "Ehpc Administrator",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "environmental_health_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_environmental_health_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-ehpc-reviewer",
+      "code": "ehpc_reviewer",
+      "displayName": "Ehpc Reviewer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "environmental_health_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_environmental_health_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-ehpc-approver",
+      "code": "ehpc_approver",
+      "displayName": "Ehpc Approver",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "environmental_health_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_environmental_health_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-ehpc-licensing-officer",
+      "code": "ehpc_licensing_officer",
+      "displayName": "Ehpc Licensing Officer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "environmental_health_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_environmental_health_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-ehpc-registry-steward",
+      "code": "ehpc_registry_steward",
+      "displayName": "Ehpc Registry Steward",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "environmental_health_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_environmental_health_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-ehpc-disciplinary-officer",
+      "code": "ehpc_disciplinary_officer",
+      "displayName": "Ehpc Disciplinary Officer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "environmental_health_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_environmental_health_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-ehpc-auditor",
+      "code": "ehpc_auditor",
+      "displayName": "Ehpc Auditor",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "environmental_health_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_environmental_health_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-mrpc-registrar",
+      "code": "mrpc_registrar",
+      "displayName": "Mrpc Registrar",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "medical_rehabilitation_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "no_facility_assignment",
+          "varapi_rehabilitation_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-mrpc-administrator",
+      "code": "mrpc_administrator",
+      "displayName": "Mrpc Administrator",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "medical_rehabilitation_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "no_facility_assignment",
+          "varapi_rehabilitation_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-mrpc-reviewer",
+      "code": "mrpc_reviewer",
+      "displayName": "Mrpc Reviewer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "medical_rehabilitation_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "no_facility_assignment",
+          "varapi_rehabilitation_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-mrpc-approver",
+      "code": "mrpc_approver",
+      "displayName": "Mrpc Approver",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "medical_rehabilitation_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "no_facility_assignment",
+          "varapi_rehabilitation_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-mrpc-licensing-officer",
+      "code": "mrpc_licensing_officer",
+      "displayName": "Mrpc Licensing Officer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "medical_rehabilitation_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "no_facility_assignment",
+          "varapi_rehabilitation_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-mrpc-cpd-reviewer",
+      "code": "mrpc_cpd_reviewer",
+      "displayName": "Mrpc Cpd Reviewer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "medical_rehabilitation_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "no_facility_assignment",
+          "varapi_rehabilitation_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-mrpc-registry-steward",
+      "code": "mrpc_registry_steward",
+      "displayName": "Mrpc Registry Steward",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "medical_rehabilitation_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "no_facility_assignment",
+          "varapi_rehabilitation_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-mrpc-disciplinary-officer",
+      "code": "mrpc_disciplinary_officer",
+      "displayName": "Mrpc Disciplinary Officer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "medical_rehabilitation_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "no_facility_assignment",
+          "varapi_rehabilitation_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-mrpc-auditor",
+      "code": "mrpc_auditor",
+      "displayName": "Mrpc Auditor",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "medical_rehabilitation_practitioners_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "no_facility_assignment",
+          "varapi_rehabilitation_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-ntc-registrar",
+      "code": "ntc_registrar",
+      "displayName": "Ntc Registrar",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "natural_therapists_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_mainstream_clinical_permissions",
+          "no_facility_staff_management",
+          "varapi_natural_therapy_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-ntc-administrator",
+      "code": "ntc_administrator",
+      "displayName": "Ntc Administrator",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "natural_therapists_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_mainstream_clinical_permissions",
+          "no_facility_staff_management",
+          "varapi_natural_therapy_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-ntc-reviewer",
+      "code": "ntc_reviewer",
+      "displayName": "Ntc Reviewer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "natural_therapists_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_mainstream_clinical_permissions",
+          "no_facility_staff_management",
+          "varapi_natural_therapy_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-ntc-approver",
+      "code": "ntc_approver",
+      "displayName": "Ntc Approver",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "natural_therapists_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_mainstream_clinical_permissions",
+          "no_facility_staff_management",
+          "varapi_natural_therapy_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-ntc-licensing-officer",
+      "code": "ntc_licensing_officer",
+      "displayName": "Ntc Licensing Officer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "natural_therapists_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_mainstream_clinical_permissions",
+          "no_facility_staff_management",
+          "varapi_natural_therapy_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-ntc-registry-steward",
+      "code": "ntc_registry_steward",
+      "displayName": "Ntc Registry Steward",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "natural_therapists_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_mainstream_clinical_permissions",
+          "no_facility_staff_management",
+          "varapi_natural_therapy_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-ntc-disciplinary-officer",
+      "code": "ntc_disciplinary_officer",
+      "displayName": "Ntc Disciplinary Officer",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "natural_therapists_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_mainstream_clinical_permissions",
+          "no_facility_staff_management",
+          "varapi_natural_therapy_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "crr-ntc-auditor",
+      "code": "ntc_auditor",
+      "displayName": "Ntc Auditor",
+      "category": "regulator_role",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "regulatoryOrganisation": "natural_therapists_council",
+        "isRealZimbabweInstitutionRole": true,
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_mainstream_clinical_permissions",
+          "no_facility_staff_management",
+          "varapi_natural_therapy_cadres_only"
+        ]
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "hscgr-hsc-administrator",
+      "code": "hsc_administrator",
+      "displayName": "Hsc Administrator",
+      "category": "hsc_workforce_governance_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "hscOrganisation": "health_service_commission",
+        "isRealZimbabweInstitutionRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "hscgr-hsc-workforce-governance-officer",
+      "code": "hsc_workforce_governance_officer",
+      "displayName": "Hsc Workforce Governance Officer",
+      "category": "hsc_workforce_governance_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "hscOrganisation": "health_service_commission",
+        "isRealZimbabweInstitutionRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "hscgr-hsc-establishment-control-officer",
+      "code": "hsc_establishment_control_officer",
+      "displayName": "Hsc Establishment Control Officer",
+      "category": "hsc_workforce_governance_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "hscOrganisation": "health_service_commission",
+        "isRealZimbabweInstitutionRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "hscgr-hsc-appointments-officer",
+      "code": "hsc_appointments_officer",
+      "displayName": "Hsc Appointments Officer",
+      "category": "hsc_workforce_governance_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "hscOrganisation": "health_service_commission",
+        "isRealZimbabweInstitutionRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "hscgr-hsc-transfers-officer",
+      "code": "hsc_transfers_officer",
+      "displayName": "Hsc Transfers Officer",
+      "category": "hsc_workforce_governance_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "hscOrganisation": "health_service_commission",
+        "isRealZimbabweInstitutionRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "hscgr-hsc-promotions-officer",
+      "code": "hsc_promotions_officer",
+      "displayName": "Hsc Promotions Officer",
+      "category": "hsc_workforce_governance_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "hscOrganisation": "health_service_commission",
+        "isRealZimbabweInstitutionRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "hscgr-hsc-discipline-officer",
+      "code": "hsc_discipline_officer",
+      "displayName": "Hsc Discipline Officer",
+      "category": "hsc_workforce_governance_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "hscOrganisation": "health_service_commission",
+        "isRealZimbabweInstitutionRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "hscgr-hsc-public-sector-staffing-reviewer",
+      "code": "hsc_public_sector_staffing_reviewer",
+      "displayName": "Hsc Public Sector Staffing Reviewer",
+      "category": "hsc_workforce_governance_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "hscOrganisation": "health_service_commission",
+        "isRealZimbabweInstitutionRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "hscgr-hsc-posting-authority-officer",
+      "code": "hsc_posting_authority_officer",
+      "displayName": "Hsc Posting Authority Officer",
+      "category": "hsc_workforce_governance_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "hscOrganisation": "health_service_commission",
+        "isRealZimbabweInstitutionRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "hscgr-hsc-workforce-registry-steward",
+      "code": "hsc_workforce_registry_steward",
+      "displayName": "Hsc Workforce Registry Steward",
+      "category": "hsc_workforce_governance_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "hscOrganisation": "health_service_commission",
+        "isRealZimbabweInstitutionRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "hscgr-hsc-workforce-data-quality-officer",
+      "code": "hsc_workforce_data_quality_officer",
+      "displayName": "Hsc Workforce Data Quality Officer",
+      "category": "hsc_workforce_governance_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "hscOrganisation": "health_service_commission",
+        "isRealZimbabweInstitutionRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "hscgr-hsc-auditor",
+      "code": "hsc_auditor",
+      "displayName": "Hsc Auditor",
+      "category": "hsc_workforce_governance_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "hscOrganisation": "health_service_commission",
+        "isRealZimbabweInstitutionRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "hscgr-hsc-read-only-reviewer",
+      "code": "hsc_read_only_reviewer",
+      "displayName": "Hsc Read Only Reviewer",
+      "category": "hsc_workforce_governance_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "hscOrganisation": "health_service_commission",
+        "isRealZimbabweInstitutionRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
     }
   ]
 }

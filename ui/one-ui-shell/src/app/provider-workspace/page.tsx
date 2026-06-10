@@ -18,6 +18,8 @@ import {
 } from "@/hooks/queries/useCoreTransactionExperience";
 import { useClinicalWorklist } from "@/hooks/queries/useClinicalWorklist";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { useSessionExperienceContract } from "@/hooks/useSessionExperienceContract";
+import { hasAdministrationGovernanceEntry } from "@/lib/administration-governance";
 import type { CoreTransactionView } from "@/features/core-transaction/types";
 import {
   DISPATCH_STATUS_OPTIONS,
@@ -65,6 +67,8 @@ export default function ProviderWorkspacePage() {
   const workflowType = normalizeFilter(searchParams.get("pWfType"), WORKFLOW_TYPE_OPTIONS);
   const dispatchStatus = normalizeFilter(searchParams.get("pDpStatus"), DISPATCH_STATUS_OPTIONS);
   const facility = useFacilityStore((s) => s.facility);
+  const { contract } = useSessionExperienceContract();
+  const showAdminGovernance = contract && hasAdministrationGovernanceEntry(contract);
   const worklistQ = useClinicalWorklist({ facilityId: facility?.id, size: 24 });
 
   const setFilter = (updates: Record<string, string | null>) => {
@@ -125,6 +129,20 @@ export default function ProviderWorkspacePage() {
         subtitle="Provider-facing orchestration with journey alignment and Nompilo provider assist"
       >
         <div className="space-y-4">
+          {showAdminGovernance ? (
+            <div className="rounded-xl border border-indigo-200 bg-indigo-50/80 px-4 py-3 text-sm text-indigo-950">
+              <p className="font-medium">Administration & Governance</p>
+              <p className="mt-1 text-indigo-900">
+                Organisation-scoped onboarding, user management and access review — filtered by your Session Experience Contract.
+              </p>
+              <Link
+                href="/work/administration-governance"
+                className="mt-2 inline-flex text-sm font-semibold text-indigo-700 hover:text-indigo-900"
+              >
+                Open Administration & Governance →
+              </Link>
+            </div>
+          ) : null}
           <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>

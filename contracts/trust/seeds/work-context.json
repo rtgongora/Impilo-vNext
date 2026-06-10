@@ -1,5 +1,5 @@
 {
-  "version": "1.3.0",
+  "version": "1.6.0",
   "catalogueId": "work-context",
   "displayName": "Work Context, Workplace, Workspace, Assignments",
   "entries": [
@@ -321,6 +321,30 @@
       "id": "wct-audit_oversight",
       "code": "audit_oversight",
       "displayName": "Audit Oversight",
+      "category": "approved_work_context_type",
+      "ownerService": "workforce-governance",
+      "standardMapping": {
+        "fhir": "PractitionerRole"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wct-local_authority_health",
+      "code": "local_authority_health",
+      "displayName": "Local Authority Health",
+      "category": "approved_work_context_type",
+      "ownerService": "workforce-governance",
+      "standardMapping": {
+        "fhir": "PractitionerRole"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wct-public_sector_workforce_governance",
+      "code": "public_sector_workforce_governance",
+      "displayName": "Public Sector Workforce Governance",
       "category": "approved_work_context_type",
       "ownerService": "workforce-governance",
       "standardMapping": {
@@ -733,6 +757,305 @@
     {
       "status": "active",
       "auditSensitivity": "medium",
+      "id": "wpt-city_health_department",
+      "code": "city_health_department",
+      "displayName": "City Health Department",
+      "category": "workplace_place_type",
+      "ownerService": "tuso",
+      "standardMapping": {
+        "fhir": "Location",
+        "openHie": "FacilityRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wpt-municipal_health_department",
+      "code": "municipal_health_department",
+      "displayName": "Municipal Health Department",
+      "category": "workplace_place_type",
+      "ownerService": "tuso",
+      "standardMapping": {
+        "fhir": "Location",
+        "openHie": "FacilityRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wpt-local_authority_health_department",
+      "code": "local_authority_health_department",
+      "displayName": "Local Authority Health Department",
+      "category": "workplace_place_type",
+      "ownerService": "tuso",
+      "standardMapping": {
+        "fhir": "Location",
+        "openHie": "FacilityRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wpt-urban_local_authority",
+      "code": "urban_local_authority",
+      "displayName": "Urban Local Authority",
+      "category": "workplace_place_type",
+      "ownerService": "tuso",
+      "standardMapping": {
+        "fhir": "Location",
+        "openHie": "FacilityRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wpt-rural_district_council_health_unit",
+      "code": "rural_district_council_health_unit",
+      "displayName": "Rural District Council Health Unit",
+      "category": "workplace_place_type",
+      "ownerService": "tuso",
+      "standardMapping": {
+        "fhir": "Location",
+        "openHie": "FacilityRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wpt-municipal_clinic",
+      "code": "municipal_clinic",
+      "displayName": "Municipal Clinic",
+      "category": "workplace_place_type",
+      "ownerService": "tuso",
+      "standardMapping": {
+        "fhir": "Location",
+        "openHie": "FacilityRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wpt-municipal_polyclinic",
+      "code": "municipal_polyclinic",
+      "displayName": "Municipal Polyclinic",
+      "category": "workplace_place_type",
+      "ownerService": "tuso",
+      "standardMapping": {
+        "fhir": "Location",
+        "openHie": "FacilityRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wpt-municipal_hospital",
+      "code": "municipal_hospital",
+      "displayName": "Municipal Hospital",
+      "category": "workplace_place_type",
+      "ownerService": "tuso",
+      "standardMapping": {
+        "fhir": "Location",
+        "openHie": "FacilityRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wpt-city_infectious_diseases_hospital",
+      "code": "city_infectious_diseases_hospital",
+      "displayName": "City Infectious Diseases Hospital",
+      "category": "workplace_place_type",
+      "ownerService": "tuso",
+      "standardMapping": {
+        "fhir": "Location",
+        "openHie": "FacilityRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wpt-municipal_environmental_health_unit",
+      "code": "municipal_environmental_health_unit",
+      "displayName": "Municipal Environmental Health Unit",
+      "category": "workplace_place_type",
+      "ownerService": "tuso",
+      "standardMapping": {
+        "fhir": "Location",
+        "openHie": "FacilityRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wpt-municipal_ambulance_service",
+      "code": "municipal_ambulance_service",
+      "displayName": "Municipal Ambulance Service",
+      "category": "workplace_place_type",
+      "ownerService": "tuso",
+      "standardMapping": {
+        "fhir": "Location",
+        "openHie": "FacilityRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wpt-municipal_public_health_office",
+      "code": "municipal_public_health_office",
+      "displayName": "Municipal Public Health Office",
+      "category": "workplace_place_type",
+      "ownerService": "indawo",
+      "standardMapping": {
+        "fhir": "Location",
+        "openHie": "FacilityRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wpt-municipal_health_promotion_unit",
+      "code": "municipal_health_promotion_unit",
+      "displayName": "Municipal Health Promotion Unit",
+      "category": "workplace_place_type",
+      "ownerService": "tuso",
+      "standardMapping": {
+        "fhir": "Location",
+        "openHie": "FacilityRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wpt-national_blood_transfusion_service",
+      "code": "national_blood_transfusion_service",
+      "displayName": "National Blood Transfusion Service",
+      "category": "workplace_place_type",
+      "ownerService": "tuso",
+      "standardMapping": {
+        "fhir": "Location",
+        "openHie": "FacilityRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wpt-central_blood_bank",
+      "code": "central_blood_bank",
+      "displayName": "Central Blood Bank",
+      "category": "workplace_place_type",
+      "ownerService": "tuso",
+      "standardMapping": {
+        "fhir": "Location",
+        "openHie": "FacilityRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wpt-regional_blood_bank",
+      "code": "regional_blood_bank",
+      "displayName": "Regional Blood Bank",
+      "category": "workplace_place_type",
+      "ownerService": "tuso",
+      "standardMapping": {
+        "fhir": "Location",
+        "openHie": "FacilityRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wpt-hospital_blood_bank",
+      "code": "hospital_blood_bank",
+      "displayName": "Hospital Blood Bank",
+      "category": "workplace_place_type",
+      "ownerService": "tuso",
+      "standardMapping": {
+        "fhir": "Location",
+        "openHie": "FacilityRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wpt-facility_blood_bank",
+      "code": "facility_blood_bank",
+      "displayName": "Facility Blood Bank",
+      "category": "workplace_place_type",
+      "ownerService": "tuso",
+      "standardMapping": {
+        "fhir": "Location",
+        "openHie": "FacilityRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wpt-blood_collection_site",
+      "code": "blood_collection_site",
+      "displayName": "Blood Collection Site",
+      "category": "workplace_place_type",
+      "ownerService": "tuso",
+      "standardMapping": {
+        "fhir": "Location",
+        "openHie": "FacilityRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wpt-blood_donation_drive_site",
+      "code": "blood_donation_drive_site",
+      "displayName": "Blood Donation Drive Site",
+      "category": "workplace_place_type",
+      "ownerService": "tuso",
+      "standardMapping": {
+        "fhir": "Location",
+        "openHie": "FacilityRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wpt-blood_processing_centre",
+      "code": "blood_processing_centre",
+      "displayName": "Blood Processing Centre",
+      "category": "workplace_place_type",
+      "ownerService": "tuso",
+      "standardMapping": {
+        "fhir": "Location",
+        "openHie": "FacilityRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wpt-blood_distribution_hub",
+      "code": "blood_distribution_hub",
+      "displayName": "Blood Distribution Hub",
+      "category": "workplace_place_type",
+      "ownerService": "tuso",
+      "standardMapping": {
+        "fhir": "Location",
+        "openHie": "FacilityRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wpt-haemovigilance_unit",
+      "code": "haemovigilance_unit",
+      "displayName": "Haemovigilance Unit",
+      "category": "workplace_place_type",
+      "ownerService": "tuso",
+      "standardMapping": {
+        "fhir": "Location",
+        "openHie": "FacilityRegistry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
       "id": "wpt-vendor_office",
       "code": "vendor_office",
       "displayName": "Vendor Office",
@@ -920,7 +1243,7 @@
       "code": "blood_bank",
       "displayName": "Blood Bank",
       "category": "workspace_type",
-      "ownerService": "workforce-governance"
+      "ownerService": "blood-bank-service"
     },
     {
       "status": "active",
@@ -1346,7 +1669,8 @@
       "ownerService": "workforce-governance",
       "metadata": {
         "scopeLevel": "district",
-        "organogramWorkspace": true
+        "organogramWorkspace": true,
+        "managementWorkspace": false
       }
     },
     {
@@ -1359,7 +1683,8 @@
       "ownerService": "workforce-governance",
       "metadata": {
         "scopeLevel": "province",
-        "organogramWorkspace": true
+        "organogramWorkspace": true,
+        "managementWorkspace": false
       }
     },
     {
@@ -1372,7 +1697,8 @@
       "ownerService": "workforce-governance",
       "metadata": {
         "scopeLevel": "district",
-        "organogramWorkspace": true
+        "organogramWorkspace": true,
+        "managementWorkspace": false
       }
     },
     {
@@ -1385,7 +1711,8 @@
       "ownerService": "workforce-governance",
       "metadata": {
         "scopeLevel": "province",
-        "organogramWorkspace": true
+        "organogramWorkspace": true,
+        "managementWorkspace": false
       }
     },
     {
@@ -1398,7 +1725,8 @@
       "ownerService": "workforce-governance",
       "metadata": {
         "scopeLevel": "district",
-        "organogramWorkspace": true
+        "organogramWorkspace": true,
+        "managementWorkspace": false
       }
     },
     {
@@ -1411,7 +1739,8 @@
       "ownerService": "workforce-governance",
       "metadata": {
         "scopeLevel": "province",
-        "organogramWorkspace": true
+        "organogramWorkspace": true,
+        "managementWorkspace": false
       }
     },
     {
@@ -1424,7 +1753,8 @@
       "ownerService": "workforce-governance",
       "metadata": {
         "scopeLevel": "facility",
-        "organogramWorkspace": true
+        "organogramWorkspace": true,
+        "managementWorkspace": false
       }
     },
     {
@@ -1437,7 +1767,8 @@
       "ownerService": "workforce-governance",
       "metadata": {
         "scopeLevel": "facility",
-        "organogramWorkspace": true
+        "organogramWorkspace": true,
+        "managementWorkspace": false
       }
     },
     {
@@ -1450,7 +1781,8 @@
       "ownerService": "workforce-governance",
       "metadata": {
         "scopeLevel": "unit",
-        "organogramWorkspace": true
+        "organogramWorkspace": true,
+        "managementWorkspace": false
       }
     },
     {
@@ -1463,7 +1795,8 @@
       "ownerService": "workforce-governance",
       "metadata": {
         "scopeLevel": "national",
-        "organogramWorkspace": true
+        "organogramWorkspace": true,
+        "managementWorkspace": false
       }
     },
     {
@@ -1476,7 +1809,8 @@
       "ownerService": "workforce-governance",
       "metadata": {
         "scopeLevel": "national",
-        "organogramWorkspace": true
+        "organogramWorkspace": true,
+        "managementWorkspace": false
       }
     },
     {
@@ -1489,7 +1823,8 @@
       "ownerService": "workforce-governance",
       "metadata": {
         "scopeLevel": "national",
-        "organogramWorkspace": true
+        "organogramWorkspace": true,
+        "managementWorkspace": false
       }
     },
     {
@@ -1502,7 +1837,8 @@
       "ownerService": "workforce-governance",
       "metadata": {
         "scopeLevel": "national",
-        "organogramWorkspace": true
+        "organogramWorkspace": true,
+        "managementWorkspace": false
       }
     },
     {
@@ -1515,7 +1851,8 @@
       "ownerService": "workforce-governance",
       "metadata": {
         "scopeLevel": "national",
-        "organogramWorkspace": true
+        "organogramWorkspace": true,
+        "managementWorkspace": false
       }
     },
     {
@@ -1528,7 +1865,8 @@
       "ownerService": "workforce-governance",
       "metadata": {
         "scopeLevel": "national",
-        "organogramWorkspace": true
+        "organogramWorkspace": true,
+        "managementWorkspace": false
       }
     },
     {
@@ -1541,7 +1879,8 @@
       "ownerService": "workforce-governance",
       "metadata": {
         "scopeLevel": "facility",
-        "organogramWorkspace": true
+        "organogramWorkspace": true,
+        "managementWorkspace": false
       }
     },
     {
@@ -1554,7 +1893,8 @@
       "ownerService": "workforce-governance",
       "metadata": {
         "scopeLevel": "facility",
-        "organogramWorkspace": true
+        "organogramWorkspace": true,
+        "managementWorkspace": false
       }
     },
     {
@@ -1567,7 +1907,8 @@
       "ownerService": "workforce-governance",
       "metadata": {
         "scopeLevel": "facility",
-        "organogramWorkspace": true
+        "organogramWorkspace": true,
+        "managementWorkspace": false
       }
     },
     {
@@ -1580,7 +1921,8 @@
       "ownerService": "workforce-governance",
       "metadata": {
         "scopeLevel": "province",
-        "organogramWorkspace": true
+        "organogramWorkspace": true,
+        "managementWorkspace": false
       }
     },
     {
@@ -1593,7 +1935,8 @@
       "ownerService": "workforce-governance",
       "metadata": {
         "scopeLevel": "province",
-        "organogramWorkspace": true
+        "organogramWorkspace": true,
+        "managementWorkspace": false
       }
     },
     {
@@ -1606,7 +1949,8 @@
       "ownerService": "workforce-governance",
       "metadata": {
         "scopeLevel": "facility",
-        "organogramWorkspace": true
+        "organogramWorkspace": true,
+        "managementWorkspace": false
       }
     },
     {
@@ -1619,7 +1963,8 @@
       "ownerService": "workforce-governance",
       "metadata": {
         "scopeLevel": "community",
-        "organogramWorkspace": true
+        "organogramWorkspace": true,
+        "managementWorkspace": false
       }
     },
     {
@@ -1632,7 +1977,8 @@
       "ownerService": "workforce-governance",
       "metadata": {
         "scopeLevel": "unit",
-        "organogramWorkspace": true
+        "organogramWorkspace": true,
+        "managementWorkspace": false
       }
     },
     {
@@ -1645,7 +1991,8 @@
       "ownerService": "workforce-governance",
       "metadata": {
         "scopeLevel": "unit",
-        "organogramWorkspace": true
+        "organogramWorkspace": true,
+        "managementWorkspace": false
       }
     },
     {
@@ -1658,7 +2005,8 @@
       "ownerService": "workforce-governance",
       "metadata": {
         "scopeLevel": "facility",
-        "organogramWorkspace": true
+        "organogramWorkspace": true,
+        "managementWorkspace": false
       }
     },
     {
@@ -1671,7 +2019,8 @@
       "ownerService": "workforce-governance",
       "metadata": {
         "scopeLevel": "district",
-        "organogramWorkspace": true
+        "organogramWorkspace": true,
+        "managementWorkspace": false
       }
     },
     {
@@ -1684,7 +2033,8 @@
       "ownerService": "workforce-governance",
       "metadata": {
         "scopeLevel": "facility",
-        "organogramWorkspace": true
+        "organogramWorkspace": true,
+        "managementWorkspace": false
       }
     },
     {
@@ -1697,7 +2047,8 @@
       "ownerService": "workforce-governance",
       "metadata": {
         "scopeLevel": "national",
-        "organogramWorkspace": true
+        "organogramWorkspace": true,
+        "managementWorkspace": false
       }
     },
     {
@@ -1710,7 +2061,3095 @@
       "ownerService": "workforce-governance",
       "metadata": {
         "scopeLevel": "national",
-        "organogramWorkspace": true
+        "organogramWorkspace": true,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-hpa_workspace",
+      "code": "hpa_workspace",
+      "displayName": "HPA Workspace",
+      "category": "regulator_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-hpa_council_coordination_workspace",
+      "code": "hpa_council_coordination_workspace",
+      "displayName": "HPA Council Coordination",
+      "category": "regulator_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-hpa_appeals_disputes_workspace",
+      "code": "hpa_appeals_disputes_workspace",
+      "displayName": "HPA Appeals and Disputes",
+      "category": "regulator_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-regulatory_audit_workspace",
+      "code": "regulatory_audit_workspace",
+      "displayName": "Regulatory Audit Workspace",
+      "category": "regulator_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-mlcsc_workspace",
+      "code": "mlcsc_workspace",
+      "displayName": "MLCSC Workspace",
+      "category": "regulator_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-laboratory_practitioner_registration_review",
+      "code": "laboratory_practitioner_registration_review",
+      "displayName": "Laboratory Practitioner Registration Review",
+      "category": "regulator_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-mdpc_workspace",
+      "code": "mdpc_workspace",
+      "displayName": "MDPC Workspace",
+      "category": "regulator_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-medical_dental_registration_review",
+      "code": "medical_dental_registration_review",
+      "displayName": "Medical and Dental Registration Review",
+      "category": "regulator_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-provider_specialist_register_review",
+      "code": "provider_specialist_register_review",
+      "displayName": "Provider Specialist Register Review",
+      "category": "regulator_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-provider_suspension_review",
+      "code": "provider_suspension_review",
+      "displayName": "Provider Suspension Review",
+      "category": "regulator_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-ahpc_workspace",
+      "code": "ahpc_workspace",
+      "displayName": "AHPC Workspace",
+      "category": "regulator_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-allied_health_registration_review",
+      "code": "allied_health_registration_review",
+      "displayName": "Allied Health Registration Review",
+      "category": "regulator_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-allied_health_practitioner_register",
+      "code": "allied_health_practitioner_register",
+      "displayName": "Allied Health Practitioner Register",
+      "category": "regulator_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-disciplinary_review_workspace",
+      "code": "disciplinary_review_workspace",
+      "displayName": "Disciplinary Review Workspace",
+      "category": "regulator_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-pc_workspace",
+      "code": "pc_workspace",
+      "displayName": "Pharmacists Council Workspace",
+      "category": "regulator_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-pharmacist_registration_review",
+      "code": "pharmacist_registration_review",
+      "displayName": "Pharmacist Registration Review",
+      "category": "regulator_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-nc_workspace",
+      "code": "nc_workspace",
+      "displayName": "Nurses Council Workspace",
+      "category": "regulator_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-nursing_registration_review",
+      "code": "nursing_registration_review",
+      "displayName": "Nursing Registration Review",
+      "category": "regulator_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-nursing_training_review",
+      "code": "nursing_training_review",
+      "displayName": "Nursing Training Review",
+      "category": "regulator_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-ehpc_workspace",
+      "code": "ehpc_workspace",
+      "displayName": "EHPC Workspace",
+      "category": "regulator_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-environmental_health_registration_review",
+      "code": "environmental_health_registration_review",
+      "displayName": "Environmental Health Registration Review",
+      "category": "regulator_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-public_health_practitioner_register",
+      "code": "public_health_practitioner_register",
+      "displayName": "Public Health Practitioner Register",
+      "category": "regulator_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-mrpc_workspace",
+      "code": "mrpc_workspace",
+      "displayName": "MRPC Workspace",
+      "category": "regulator_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-rehabilitation_practitioner_registration_review",
+      "code": "rehabilitation_practitioner_registration_review",
+      "displayName": "Rehabilitation Practitioner Registration Review",
+      "category": "regulator_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-ntc_workspace",
+      "code": "ntc_workspace",
+      "displayName": "Natural Therapists Council Workspace",
+      "category": "regulator_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-natural_therapist_registration_review",
+      "code": "natural_therapist_registration_review",
+      "displayName": "Natural Therapist Registration Review",
+      "category": "regulator_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-provider_licence_review",
+      "code": "provider_licence_review",
+      "displayName": "Provider Licence Review",
+      "category": "regulator_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-provider_cpd_compliance_review",
+      "code": "provider_cpd_compliance_review",
+      "displayName": "Provider CPD Compliance Review",
+      "category": "regulator_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-provider_restriction_management",
+      "code": "provider_restriction_management",
+      "displayName": "Provider Restriction Management",
+      "category": "regulator_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-regulator_organisation_management",
+      "code": "regulator_organisation_management",
+      "displayName": "Regulator Organisation Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-regulator_user_management",
+      "code": "regulator_user_management",
+      "displayName": "Regulator User Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-regulator_scope_assignment",
+      "code": "regulator_scope_assignment",
+      "displayName": "Regulator Scope Assignment",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-regulator_case_assignment",
+      "code": "regulator_case_assignment",
+      "displayName": "Regulator Case Assignment",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-regulator_review_queue",
+      "code": "regulator_review_queue",
+      "displayName": "Regulator Review Queue",
+      "category": "regulator_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-council_user_management",
+      "code": "council_user_management",
+      "displayName": "Council User Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-council_scope_assignment",
+      "code": "council_scope_assignment",
+      "displayName": "Council Scope Assignment",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-city_health_department_dashboard",
+      "code": "city_health_department_dashboard",
+      "displayName": "City Health Department Dashboard",
+      "category": "workspace_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "local_authority",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-municipal_facility_management",
+      "code": "municipal_facility_management",
+      "displayName": "Municipal Facility Management",
+      "category": "workspace_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "local_authority",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-municipal_clinic_operations",
+      "code": "municipal_clinic_operations",
+      "displayName": "Municipal Clinic Operations",
+      "category": "workspace_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "facility",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-municipal_public_health_operations",
+      "code": "municipal_public_health_operations",
+      "displayName": "Municipal Public Health Operations",
+      "category": "workspace_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "local_authority",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-municipal_environmental_health_inspections",
+      "code": "municipal_environmental_health_inspections",
+      "displayName": "Municipal Environmental Health Inspections",
+      "category": "workspace_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "local_authority",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-municipal_food_safety_inspections",
+      "code": "municipal_food_safety_inspections",
+      "displayName": "Municipal Food Safety Inspections",
+      "category": "workspace_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "local_authority",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-municipal_wash_surveillance",
+      "code": "municipal_wash_surveillance",
+      "displayName": "Municipal WASH Surveillance",
+      "category": "workspace_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "local_authority",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-municipal_disease_surveillance",
+      "code": "municipal_disease_surveillance",
+      "displayName": "Municipal Disease Surveillance",
+      "category": "workspace_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "local_authority",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-municipal_outreach_management",
+      "code": "municipal_outreach_management",
+      "displayName": "Municipal Outreach Management",
+      "category": "workspace_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "catchment",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-municipal_health_information_reporting",
+      "code": "municipal_health_information_reporting",
+      "displayName": "Municipal Health Information Reporting",
+      "category": "workspace_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "local_authority",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-municipal_staff_assignment",
+      "code": "municipal_staff_assignment",
+      "displayName": "Municipal Staff Assignment",
+      "category": "workspace_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "local_authority",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-municipal_impilo_support",
+      "code": "municipal_impilo_support",
+      "displayName": "Municipal Impilo Support",
+      "category": "workspace_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "local_authority",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-madi_blood_service_dashboard",
+      "code": "madi_blood_service_dashboard",
+      "displayName": "Madi Blood Service Dashboard",
+      "category": "workspace_type",
+      "ownerService": "blood-bank-service",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-blood_donor_registry",
+      "code": "blood_donor_registry",
+      "displayName": "Blood Donor Registry",
+      "category": "workspace_type",
+      "ownerService": "tshepo",
+      "metadata": {
+        "scopeLevel": "blood_service",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-blood_donation_drive_management",
+      "code": "blood_donation_drive_management",
+      "displayName": "Blood Donation Drive Management",
+      "category": "workspace_type",
+      "ownerService": "blood-bank-service",
+      "metadata": {
+        "scopeLevel": "blood_service",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-blood_collection_workspace",
+      "code": "blood_collection_workspace",
+      "displayName": "Blood Collection Workspace",
+      "category": "workspace_type",
+      "ownerService": "blood-bank-service",
+      "metadata": {
+        "scopeLevel": "blood_service",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-blood_processing_workspace",
+      "code": "blood_processing_workspace",
+      "displayName": "Blood Processing Workspace",
+      "category": "workspace_type",
+      "ownerService": "blood-bank-service",
+      "metadata": {
+        "scopeLevel": "blood_service",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-blood_testing_workspace",
+      "code": "blood_testing_workspace",
+      "displayName": "Blood Testing Workspace",
+      "category": "workspace_type",
+      "ownerService": "blood-bank-service",
+      "metadata": {
+        "scopeLevel": "blood_service",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-blood_component_inventory",
+      "code": "blood_component_inventory",
+      "displayName": "Blood Component Inventory",
+      "category": "workspace_type",
+      "ownerService": "blood-bank-service",
+      "metadata": {
+        "scopeLevel": "blood_service",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-blood_bank_inventory",
+      "code": "blood_bank_inventory",
+      "displayName": "Blood Bank Inventory",
+      "category": "workspace_type",
+      "ownerService": "blood-bank-service",
+      "metadata": {
+        "scopeLevel": "facility",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-blood_order_management",
+      "code": "blood_order_management",
+      "displayName": "Blood Order Management",
+      "category": "workspace_type",
+      "ownerService": "blood-bank-service",
+      "metadata": {
+        "scopeLevel": "blood_service",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-blood_issue_and_distribution",
+      "code": "blood_issue_and_distribution",
+      "displayName": "Blood Issue and Distribution",
+      "category": "workspace_type",
+      "ownerService": "blood-bank-service",
+      "metadata": {
+        "scopeLevel": "blood_service",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-transfusion_request_workspace",
+      "code": "transfusion_request_workspace",
+      "displayName": "Transfusion Request Workspace",
+      "category": "workspace_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "facility",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-transfusion_administration_workspace",
+      "code": "transfusion_administration_workspace",
+      "displayName": "Transfusion Administration Workspace",
+      "category": "workspace_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "unit",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-haemovigilance_workspace",
+      "code": "haemovigilance_workspace",
+      "displayName": "Haemovigilance Workspace",
+      "category": "workspace_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "blood_service",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-blood_cold_chain_monitoring",
+      "code": "blood_cold_chain_monitoring",
+      "displayName": "Blood Cold Chain Monitoring",
+      "category": "workspace_type",
+      "ownerService": "blood-bank-service",
+      "metadata": {
+        "scopeLevel": "blood_service",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-blood_quality_audit",
+      "code": "blood_quality_audit",
+      "displayName": "Blood Quality Audit",
+      "category": "workspace_type",
+      "ownerService": "blood-bank-service",
+      "metadata": {
+        "scopeLevel": "blood_service",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-blood_donor_feedback",
+      "code": "blood_donor_feedback",
+      "displayName": "Blood Donor Feedback",
+      "category": "workspace_type",
+      "ownerService": "blood-bank-service",
+      "metadata": {
+        "scopeLevel": "blood_service",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-blood_service_reporting",
+      "code": "blood_service_reporting",
+      "displayName": "Blood Service Reporting",
+      "category": "workspace_type",
+      "ownerService": "blood-bank-service",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-citizen_self_registration",
+      "code": "citizen_self_registration",
+      "displayName": "Citizen Self Registration",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "citizen",
+        "scopedManagementLabel": "Citizen Registration",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-provider_assisted_client_registration",
+      "code": "provider_assisted_client_registration",
+      "displayName": "Provider-Assisted Client Registration",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "facility",
+        "scopedManagementLabel": "Assisted Client Registration",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-client_identity_resolution",
+      "code": "client_identity_resolution",
+      "displayName": "Client Identity Resolution",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "registry",
+        "scopedManagementLabel": "Client Identity Resolution",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-client_account_support",
+      "code": "client_account_support",
+      "displayName": "Client Account Support",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "support",
+        "scopedManagementLabel": "Client Account Support",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-dependant_guardian_management",
+      "code": "dependant_guardian_management",
+      "displayName": "Dependant and Guardian Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "citizen",
+        "scopedManagementLabel": "Dependant Management",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-consent_support",
+      "code": "consent_support",
+      "displayName": "Consent Support",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "citizen",
+        "scopedManagementLabel": "Consent Support",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-duplicate_resolution",
+      "code": "duplicate_resolution",
+      "displayName": "Duplicate Resolution",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "registry",
+        "scopedManagementLabel": "Duplicate Resolution",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-client_record_merge_review",
+      "code": "client_record_merge_review",
+      "displayName": "Client Record Merge Review",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "registry",
+        "scopedManagementLabel": "Client Merge Review",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-provider_worker_registry_admin",
+      "code": "provider_worker_registry_admin",
+      "displayName": "Provider/Worker Registry Admin",
+      "category": "management_workspace",
+      "ownerService": "tshepo",
+      "metadata": {
+        "scopeLevel": "registry",
+        "scopedManagementLabel": "Provider Registry Admin",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-provider_worker_verification",
+      "code": "provider_worker_verification",
+      "displayName": "Provider/Worker Verification",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "registry",
+        "scopedManagementLabel": "Provider Verification",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-provider_worker_credentials_review",
+      "code": "provider_worker_credentials_review",
+      "displayName": "Provider/Worker Credentials Review",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "registry",
+        "scopedManagementLabel": "Credentials Review",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-provider_worker_licence_review",
+      "code": "provider_worker_licence_review",
+      "displayName": "Provider/Worker Licence Review",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "regulator",
+        "scopedManagementLabel": "Licence Review",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-provider_worker_cpd_compliance_review",
+      "code": "provider_worker_cpd_compliance_review",
+      "displayName": "Provider/Worker CPD Compliance Review",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "regulator",
+        "scopedManagementLabel": "CPD Compliance Review",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-provider_worker_restriction_management",
+      "code": "provider_worker_restriction_management",
+      "displayName": "Provider/Worker Restriction Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "regulator",
+        "scopedManagementLabel": "Restriction Management",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-provider_worker_status_resolution",
+      "code": "provider_worker_status_resolution",
+      "displayName": "Provider/Worker Status Resolution",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "registry",
+        "scopedManagementLabel": "Status Resolution",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-provider_worker_health_id_linkage",
+      "code": "provider_worker_health_id_linkage",
+      "displayName": "Provider/Worker Health ID Linkage",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "registry",
+        "scopedManagementLabel": "Health ID Linkage",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-facility_work_assignment",
+      "code": "facility_work_assignment",
+      "displayName": "Facility Work Assignment",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "facility",
+        "scopedManagementLabel": "Workforce Assignment",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-facility_assumption_of_duty",
+      "code": "facility_assumption_of_duty",
+      "displayName": "Facility Assumption of Duty",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "facility",
+        "scopedManagementLabel": "Assumption of Duty",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-facility_role_assignment",
+      "code": "facility_role_assignment",
+      "displayName": "Facility Role Assignment",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "facility",
+        "scopedManagementLabel": "Role Assignment",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-department_unit_assignment",
+      "code": "department_unit_assignment",
+      "displayName": "Department/Unit Assignment",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "facility",
+        "scopedManagementLabel": "Department Assignment",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-local_access_suspension",
+      "code": "local_access_suspension",
+      "displayName": "Local Access Suspension",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "facility",
+        "scopedManagementLabel": "Local Access Suspension",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-staff_transfer_assignment",
+      "code": "staff_transfer_assignment",
+      "displayName": "Staff Transfer Assignment",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "facility",
+        "scopedManagementLabel": "Staff Transfer",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-programme_staff_management",
+      "code": "programme_staff_management",
+      "displayName": "Programme Staff Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "programme",
+        "scopedManagementLabel": "Programme Staff",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-programme_role_assignment",
+      "code": "programme_role_assignment",
+      "displayName": "Programme Role Assignment",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "programme",
+        "scopedManagementLabel": "Programme Roles",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-programme_scope_assignment",
+      "code": "programme_scope_assignment",
+      "displayName": "Programme Scope Assignment",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "programme",
+        "scopedManagementLabel": "Programme Scope",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-programme_mentor_assignment",
+      "code": "programme_mentor_assignment",
+      "displayName": "Programme Mentor Assignment",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "programme",
+        "scopedManagementLabel": "Programme Mentors",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-programme_m_and_e_assignment",
+      "code": "programme_m_and_e_assignment",
+      "displayName": "Programme M&E Assignment",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "programme",
+        "scopedManagementLabel": "Programme M&E",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-above_site_workforce_management",
+      "code": "above_site_workforce_management",
+      "displayName": "Above-Site Workforce Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "above_site",
+        "scopedManagementLabel": "Above-Site Workforce",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-district_support_assignment",
+      "code": "district_support_assignment",
+      "displayName": "District Support Assignment",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "district",
+        "scopedManagementLabel": "District Support",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-provincial_support_assignment",
+      "code": "provincial_support_assignment",
+      "displayName": "Provincial Support Assignment",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "province",
+        "scopedManagementLabel": "Provincial Support",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-national_support_assignment",
+      "code": "national_support_assignment",
+      "displayName": "National Support Assignment",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "scopedManagementLabel": "National Support",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-helpdesk_assignment",
+      "code": "helpdesk_assignment",
+      "displayName": "Helpdesk Assignment",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "support",
+        "scopedManagementLabel": "Helpdesk Assignment",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-digital_health_support_assignment",
+      "code": "digital_health_support_assignment",
+      "displayName": "Digital Health Support Assignment",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "support",
+        "scopedManagementLabel": "Digital Health Support",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-registry_owner_management",
+      "code": "registry_owner_management",
+      "displayName": "Registry Owner Management",
+      "category": "management_workspace",
+      "ownerService": "tshepo",
+      "metadata": {
+        "scopeLevel": "registry",
+        "scopedManagementLabel": "Registry Owner Management",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-registry_steward_assignment",
+      "code": "registry_steward_assignment",
+      "displayName": "Registry Steward Assignment",
+      "category": "management_workspace",
+      "ownerService": "tshepo",
+      "metadata": {
+        "scopeLevel": "registry",
+        "scopedManagementLabel": "Registry Steward Assignment",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-registry_approver_assignment",
+      "code": "registry_approver_assignment",
+      "displayName": "Registry Approver Assignment",
+      "category": "management_workspace",
+      "ownerService": "tshepo",
+      "metadata": {
+        "scopeLevel": "registry",
+        "scopedManagementLabel": "Registry Approver Assignment",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-registry_data_quality_assignment",
+      "code": "registry_data_quality_assignment",
+      "displayName": "Registry Data Quality Assignment",
+      "category": "management_workspace",
+      "ownerService": "tshepo",
+      "metadata": {
+        "scopeLevel": "registry",
+        "scopedManagementLabel": "Registry Data Quality",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-registry_auditor_assignment",
+      "code": "registry_auditor_assignment",
+      "displayName": "Registry Auditor Assignment",
+      "category": "management_workspace",
+      "ownerService": "tshepo",
+      "metadata": {
+        "scopeLevel": "registry",
+        "scopedManagementLabel": "Registry Auditor Assignment",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-marketplace_organisation_registration",
+      "code": "marketplace_organisation_registration",
+      "displayName": "Marketplace Organisation Registration",
+      "category": "management_workspace",
+      "ownerService": "msika",
+      "metadata": {
+        "scopeLevel": "marketplace",
+        "scopedManagementLabel": "Marketplace Organisation Registration",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-marketplace_organisation_user_management",
+      "code": "marketplace_organisation_user_management",
+      "displayName": "Marketplace Organisation Users",
+      "category": "management_workspace",
+      "ownerService": "msika",
+      "metadata": {
+        "scopeLevel": "marketplace",
+        "scopedManagementLabel": "Marketplace Organisation Users",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-marketplace_authorised_representative_management",
+      "code": "marketplace_authorised_representative_management",
+      "displayName": "Marketplace Authorised Representatives",
+      "category": "management_workspace",
+      "ownerService": "msika",
+      "metadata": {
+        "scopeLevel": "marketplace",
+        "scopedManagementLabel": "Marketplace Representatives",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-marketplace_role_assignment",
+      "code": "marketplace_role_assignment",
+      "displayName": "Marketplace Role Assignment",
+      "category": "management_workspace",
+      "ownerService": "msika",
+      "metadata": {
+        "scopeLevel": "marketplace",
+        "scopedManagementLabel": "Marketplace Roles",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-marketplace_product_team_assignment",
+      "code": "marketplace_product_team_assignment",
+      "displayName": "Marketplace Product Team Assignment",
+      "category": "management_workspace",
+      "ownerService": "msika",
+      "metadata": {
+        "scopeLevel": "marketplace",
+        "scopedManagementLabel": "Product Team Assignment",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-marketplace_api_developer_assignment",
+      "code": "marketplace_api_developer_assignment",
+      "displayName": "Marketplace API Developer Assignment",
+      "category": "management_workspace",
+      "ownerService": "msika",
+      "metadata": {
+        "scopeLevel": "marketplace",
+        "scopedManagementLabel": "API Developer Assignment",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-marketplace_contract_user_assignment",
+      "code": "marketplace_contract_user_assignment",
+      "displayName": "Marketplace Contract User Assignment",
+      "category": "management_workspace",
+      "ownerService": "msika",
+      "metadata": {
+        "scopeLevel": "marketplace",
+        "scopedManagementLabel": "Contract User Assignment",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-marketplace_compliance_user_assignment",
+      "code": "marketplace_compliance_user_assignment",
+      "displayName": "Marketplace Compliance User Assignment",
+      "category": "management_workspace",
+      "ownerService": "msika",
+      "metadata": {
+        "scopeLevel": "marketplace",
+        "scopedManagementLabel": "Compliance User Assignment",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-blood_service_organisation_management",
+      "code": "blood_service_organisation_management",
+      "displayName": "Blood Service Organisation Management",
+      "category": "management_workspace",
+      "ownerService": "blood-bank-service",
+      "metadata": {
+        "scopeLevel": "blood_service",
+        "scopedManagementLabel": "Blood Service Organisations",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-blood_service_user_management",
+      "code": "blood_service_user_management",
+      "displayName": "Blood Service User Management",
+      "category": "management_workspace",
+      "ownerService": "blood-bank-service",
+      "metadata": {
+        "scopeLevel": "blood_service",
+        "scopedManagementLabel": "Blood Service Users",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-blood_bank_staff_assignment",
+      "code": "blood_bank_staff_assignment",
+      "displayName": "Blood Bank Staff Assignment",
+      "category": "management_workspace",
+      "ownerService": "blood-bank-service",
+      "metadata": {
+        "scopeLevel": "blood_service",
+        "scopedManagementLabel": "Blood Bank Staff",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-blood_donation_team_assignment",
+      "code": "blood_donation_team_assignment",
+      "displayName": "Blood Donation Team Assignment",
+      "category": "management_workspace",
+      "ownerService": "blood-bank-service",
+      "metadata": {
+        "scopeLevel": "blood_service",
+        "scopedManagementLabel": "Donation Team Assignment",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-blood_processing_team_assignment",
+      "code": "blood_processing_team_assignment",
+      "displayName": "Blood Processing Team Assignment",
+      "category": "management_workspace",
+      "ownerService": "blood-bank-service",
+      "metadata": {
+        "scopeLevel": "blood_service",
+        "scopedManagementLabel": "Processing Team Assignment",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-haemovigilance_role_assignment",
+      "code": "haemovigilance_role_assignment",
+      "displayName": "Haemovigilance Role Assignment",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "blood_service",
+        "scopedManagementLabel": "Haemovigilance Roles",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-facility_transfusion_focal_person_assignment",
+      "code": "facility_transfusion_focal_person_assignment",
+      "displayName": "Facility Transfusion Focal Person Assignment",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "facility",
+        "scopedManagementLabel": "Transfusion Focal Assignment",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-scoped_admin_assignment",
+      "code": "scoped_admin_assignment",
+      "displayName": "Scoped Admin Assignment",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "system",
+        "scopedManagementLabel": "Scoped Administration",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-keycloak_admin_mapping",
+      "code": "keycloak_admin_mapping",
+      "displayName": "Keycloak Admin Mapping",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "system",
+        "scopedManagementLabel": "Keycloak Admin Mapping",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-tshepo_admin_mapping",
+      "code": "tshepo_admin_mapping",
+      "displayName": "Tshepo Admin Mapping",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "system",
+        "scopedManagementLabel": "Tshepo Admin Mapping",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-opa_policy_admin_mapping",
+      "code": "opa_policy_admin_mapping",
+      "displayName": "OPA Policy Admin Mapping",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "system",
+        "scopedManagementLabel": "OPA Policy Admin",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-audit_admin_mapping",
+      "code": "audit_admin_mapping",
+      "displayName": "Audit Admin Mapping",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "system",
+        "scopedManagementLabel": "Audit Admin Mapping",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-integration_admin_mapping",
+      "code": "integration_admin_mapping",
+      "displayName": "Integration Admin Mapping",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "system",
+        "scopedManagementLabel": "Integration Admin",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-support_agent_management",
+      "code": "support_agent_management",
+      "displayName": "Support Agent Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "support",
+        "scopedManagementLabel": "Support Agent Management",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-break_glass_authorizer_management",
+      "code": "break_glass_authorizer_management",
+      "displayName": "Break-Glass Authorizer Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "system",
+        "scopedManagementLabel": "Break-Glass Authorizers",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-national_identity_governance",
+      "code": "national_identity_governance",
+      "displayName": "National Identity Governance",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "scopedManagementLabel": "National Identity Governance",
+        "managementSection": "sovereign",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-national_organisation_registry",
+      "code": "national_organisation_registry",
+      "displayName": "National Organisation Registry",
+      "category": "management_workspace",
+      "ownerService": "tshepo",
+      "metadata": {
+        "scopeLevel": "national",
+        "scopedManagementLabel": "Organisation Registry",
+        "managementSection": "sovereign",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-national_trust_console",
+      "code": "national_trust_console",
+      "displayName": "National Trust Console",
+      "category": "management_workspace",
+      "ownerService": "tshepo",
+      "metadata": {
+        "scopeLevel": "national",
+        "scopedManagementLabel": "National Trust Console",
+        "managementSection": "sovereign",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-national_role_template_management",
+      "code": "national_role_template_management",
+      "displayName": "National Role Template Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "scopedManagementLabel": "Role Template Management",
+        "managementSection": "sovereign",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-national_policy_management",
+      "code": "national_policy_management",
+      "displayName": "National Policy Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "scopedManagementLabel": "National Policy Management",
+        "managementSection": "sovereign",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-national_registry_governance",
+      "code": "national_registry_governance",
+      "displayName": "National Registry Governance",
+      "category": "management_workspace",
+      "ownerService": "tshepo",
+      "metadata": {
+        "scopeLevel": "national",
+        "scopedManagementLabel": "Registry Governance",
+        "managementSection": "sovereign",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-national_platform_user_administration",
+      "code": "national_platform_user_administration",
+      "displayName": "National Platform User Administration",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "scopedManagementLabel": "Platform User Administration",
+        "managementSection": "sovereign",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-national_system_operator_management",
+      "code": "national_system_operator_management",
+      "displayName": "National System Operator Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "scopedManagementLabel": "System Operator Management",
+        "managementSection": "sovereign",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-national_api_access_governance",
+      "code": "national_api_access_governance",
+      "displayName": "National API Access Governance",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "scopedManagementLabel": "API Access Governance",
+        "managementSection": "sovereign",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-national_audit_and_compliance",
+      "code": "national_audit_and_compliance",
+      "displayName": "National Audit and Compliance",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "scopedManagementLabel": "National Audit and Compliance",
+        "managementSection": "sovereign",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-mohcc_head_office_user_management",
+      "code": "mohcc_head_office_user_management",
+      "displayName": "MoHCC Head Office User Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "national",
+        "scopedManagementLabel": "MoHCC Head Office Users",
+        "managementSection": "mohcc",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-provincial_office_user_management",
+      "code": "provincial_office_user_management",
+      "displayName": "Provincial Office User Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "province",
+        "scopedManagementLabel": "Provincial Office Users",
+        "managementSection": "mohcc",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-district_office_user_management",
+      "code": "district_office_user_management",
+      "displayName": "District Office User Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "district",
+        "scopedManagementLabel": "District Office Users",
+        "managementSection": "mohcc",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-public_facility_staff_management",
+      "code": "public_facility_staff_management",
+      "displayName": "Public Facility Staff Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "facility",
+        "scopedManagementLabel": "Public Facility Staff",
+        "managementSection": "mohcc",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-municipal_organisation_management",
+      "code": "municipal_organisation_management",
+      "displayName": "Municipal Organisation Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "local_authority",
+        "scopedManagementLabel": "Municipal Organisation Management",
+        "managementSection": "municipal",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-municipal_user_management",
+      "code": "municipal_user_management",
+      "displayName": "Municipal User Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "local_authority",
+        "scopedManagementLabel": "Municipal Users",
+        "managementSection": "municipal",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-municipal_facility_staff_management",
+      "code": "municipal_facility_staff_management",
+      "displayName": "Municipal Facility Staff Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "local_authority",
+        "scopedManagementLabel": "Municipal Facility Staff",
+        "managementSection": "municipal",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-municipal_public_health_team_management",
+      "code": "municipal_public_health_team_management",
+      "displayName": "Municipal Public Health Team Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "local_authority",
+        "scopedManagementLabel": "Municipal Public Health Teams",
+        "managementSection": "municipal",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-municipal_environmental_health_team_management",
+      "code": "municipal_environmental_health_team_management",
+      "displayName": "Municipal Environmental Health Team Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "local_authority",
+        "scopedManagementLabel": "Municipal EHO Teams",
+        "managementSection": "municipal",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-municipal_impilo_support_user_management",
+      "code": "municipal_impilo_support_user_management",
+      "displayName": "Municipal Impilo Support User Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "local_authority",
+        "scopedManagementLabel": "Municipal Impilo Support Users",
+        "managementSection": "municipal",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-private_facility_organisation_management",
+      "code": "private_facility_organisation_management",
+      "displayName": "Private Facility Organisation Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "organisation",
+        "scopedManagementLabel": "Private Facility Organisation",
+        "managementSection": "private",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-private_facility_user_management",
+      "code": "private_facility_user_management",
+      "displayName": "Private Facility User Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "facility",
+        "scopedManagementLabel": "Private Facility Users",
+        "managementSection": "private",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-private_clinician_assignment",
+      "code": "private_clinician_assignment",
+      "displayName": "Private Clinician Assignment",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "facility",
+        "scopedManagementLabel": "Private Clinician Assignment",
+        "managementSection": "private",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-private_non_clinical_staff_assignment",
+      "code": "private_non_clinical_staff_assignment",
+      "displayName": "Private Non-Clinical Staff Assignment",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "facility",
+        "scopedManagementLabel": "Private Non-Clinical Staff",
+        "managementSection": "private",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-private_facility_service_activation",
+      "code": "private_facility_service_activation",
+      "displayName": "Private Facility Service Activation",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "facility",
+        "scopedManagementLabel": "Private Service Activation",
+        "managementSection": "private",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-private_facility_api_access",
+      "code": "private_facility_api_access",
+      "displayName": "Private Facility API Access",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "organisation",
+        "scopedManagementLabel": "Private Facility API Access",
+        "managementSection": "private",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-private_facility_compliance_review",
+      "code": "private_facility_compliance_review",
+      "displayName": "Private Facility Compliance Review",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "organisation",
+        "scopedManagementLabel": "Private Compliance Review",
+        "managementSection": "private",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-mission_facility_organisation_management",
+      "code": "mission_facility_organisation_management",
+      "displayName": "Mission Facility Organisation Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "organisation",
+        "scopedManagementLabel": "Mission Organisation Management",
+        "managementSection": "mission",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-mission_facility_user_management",
+      "code": "mission_facility_user_management",
+      "displayName": "Mission Facility User Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "facility",
+        "scopedManagementLabel": "Mission Facility Users",
+        "managementSection": "mission",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-mission_facility_staff_assignment",
+      "code": "mission_facility_staff_assignment",
+      "displayName": "Mission Facility Staff Assignment",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "facility",
+        "scopedManagementLabel": "Mission Staff Assignment",
+        "managementSection": "mission",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-mission_facility_service_activation",
+      "code": "mission_facility_service_activation",
+      "displayName": "Mission Facility Service Activation",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "facility",
+        "scopedManagementLabel": "Mission Service Activation",
+        "managementSection": "mission",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-mission_facility_reporting_access",
+      "code": "mission_facility_reporting_access",
+      "displayName": "Mission Facility Reporting Access",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "facility",
+        "scopedManagementLabel": "Mission Reporting Access",
+        "managementSection": "mission",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-professional_registration_review",
+      "code": "professional_registration_review",
+      "displayName": "Professional Registration Review",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "regulator",
+        "scopedManagementLabel": "Professional Registration Review",
+        "managementSection": "regulator",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-licence_status_management",
+      "code": "licence_status_management",
+      "displayName": "Licence Status Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "regulator",
+        "scopedManagementLabel": "Licence Status Management",
+        "managementSection": "regulator",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-disciplinary_status_management",
+      "code": "disciplinary_status_management",
+      "displayName": "Disciplinary Status Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "regulator",
+        "scopedManagementLabel": "Disciplinary Status Management",
+        "managementSection": "regulator",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-regulatory_audit",
+      "code": "regulatory_audit",
+      "displayName": "Regulatory Audit",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "regulator",
+        "scopedManagementLabel": "Regulatory Audit",
+        "managementSection": "regulator",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-marketplace_organisation_verification",
+      "code": "marketplace_organisation_verification",
+      "displayName": "Marketplace Organisation Verification",
+      "category": "management_workspace",
+      "ownerService": "msika",
+      "metadata": {
+        "scopeLevel": "marketplace",
+        "scopedManagementLabel": "Marketplace Verification",
+        "managementSection": "marketplace",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-marketplace_sandbox_access_management",
+      "code": "marketplace_sandbox_access_management",
+      "displayName": "Marketplace Sandbox Access Management",
+      "category": "management_workspace",
+      "ownerService": "msika",
+      "metadata": {
+        "scopeLevel": "marketplace",
+        "scopedManagementLabel": "Sandbox Access Management",
+        "managementSection": "marketplace",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-marketplace_production_access_management",
+      "code": "marketplace_production_access_management",
+      "displayName": "Marketplace Production Access Management",
+      "category": "management_workspace",
+      "ownerService": "msika",
+      "metadata": {
+        "scopeLevel": "marketplace",
+        "scopedManagementLabel": "Production Access Management",
+        "managementSection": "marketplace",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-marketplace_offboarding",
+      "code": "marketplace_offboarding",
+      "displayName": "Marketplace Offboarding",
+      "category": "management_workspace",
+      "ownerService": "msika",
+      "metadata": {
+        "scopeLevel": "marketplace",
+        "scopedManagementLabel": "Marketplace Offboarding",
+        "managementSection": "marketplace",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-payer_organisation_management",
+      "code": "payer_organisation_management",
+      "displayName": "Payer Organisation Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "payer",
+        "scopedManagementLabel": "Payer Organisation Management",
+        "managementSection": "payer",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-payer_user_management",
+      "code": "payer_user_management",
+      "displayName": "Payer User Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "payer",
+        "scopedManagementLabel": "Payer Users",
+        "managementSection": "payer",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-claims_user_assignment",
+      "code": "claims_user_assignment",
+      "displayName": "Claims User Assignment",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "payer",
+        "scopedManagementLabel": "Claims User Assignment",
+        "managementSection": "payer",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-eligibility_verification_user_assignment",
+      "code": "eligibility_verification_user_assignment",
+      "displayName": "Eligibility Verification User Assignment",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "payer",
+        "scopedManagementLabel": "Eligibility Verification Users",
+        "managementSection": "payer",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-payment_reconciliation_user_assignment",
+      "code": "payment_reconciliation_user_assignment",
+      "displayName": "Payment Reconciliation User Assignment",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "payer",
+        "scopedManagementLabel": "Payment Reconciliation Users",
+        "managementSection": "payer",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-payer_api_access_management",
+      "code": "payer_api_access_management",
+      "displayName": "Payer API Access Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "payer",
+        "scopedManagementLabel": "Payer API Access",
+        "managementSection": "payer",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-payer_compliance_review",
+      "code": "payer_compliance_review",
+      "displayName": "Payer Compliance Review",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "payer",
+        "scopedManagementLabel": "Payer Compliance Review",
+        "managementSection": "payer",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-training_institution_management",
+      "code": "training_institution_management",
+      "displayName": "Training Institution Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "training",
+        "scopedManagementLabel": "Training Institution Management",
+        "managementSection": "training",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-training_provider_user_management",
+      "code": "training_provider_user_management",
+      "displayName": "Training Provider User Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "training",
+        "scopedManagementLabel": "Training Provider Users",
+        "managementSection": "training",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-course_author_assignment",
+      "code": "course_author_assignment",
+      "displayName": "Course Author Assignment",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "training",
+        "scopedManagementLabel": "Course Author Assignment",
+        "managementSection": "training",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-cpd_assessor_assignment",
+      "code": "cpd_assessor_assignment",
+      "displayName": "CPD Assessor Assignment",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "training",
+        "scopedManagementLabel": "CPD Assessor Assignment",
+        "managementSection": "training",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-training_accreditation_user_assignment",
+      "code": "training_accreditation_user_assignment",
+      "displayName": "Training Accreditation User Assignment",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "training",
+        "scopedManagementLabel": "Training Accreditation Users",
+        "managementSection": "training",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-fundo_partner_user_management",
+      "code": "fundo_partner_user_management",
+      "displayName": "Fundo Partner User Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "training",
+        "scopedManagementLabel": "Fundo Partner Users",
+        "managementSection": "training",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-research_partner_organisation_management",
+      "code": "research_partner_organisation_management",
+      "displayName": "Research Partner Organisation Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "research",
+        "scopedManagementLabel": "Research Partner Management",
+        "managementSection": "external",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-external_partner_organisation_management",
+      "code": "external_partner_organisation_management",
+      "displayName": "External Partner Organisation Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "external",
+        "scopedManagementLabel": "External Partner Management",
+        "managementSection": "external",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-external_partner_user_management",
+      "code": "external_partner_user_management",
+      "displayName": "External Partner User Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "external",
+        "scopedManagementLabel": "External Partner Users",
+        "managementSection": "external",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-research_project_user_assignment",
+      "code": "research_project_user_assignment",
+      "displayName": "Research Project User Assignment",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "research",
+        "scopedManagementLabel": "Research Project Users",
+        "managementSection": "external",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-data_access_request_review",
+      "code": "data_access_request_review",
+      "displayName": "Data Access Request Review",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "research",
+        "scopedManagementLabel": "Data Access Request Review",
+        "managementSection": "external",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-deidentified_dataset_access",
+      "code": "deidentified_dataset_access",
+      "displayName": "De-identified Dataset Access",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "research",
+        "scopedManagementLabel": "De-identified Dataset Access",
+        "managementSection": "external",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-research_audit_workspace",
+      "code": "research_audit_workspace",
+      "displayName": "Research Audit Workspace",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "research",
+        "scopedManagementLabel": "Research Audit",
+        "managementSection": "external",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-time_limited_access_management",
+      "code": "time_limited_access_management",
+      "displayName": "Time-Limited Access Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "external",
+        "scopedManagementLabel": "Time-Limited Access",
+        "managementSection": "external",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-cross_border_access_review",
+      "code": "cross_border_access_review",
+      "displayName": "Cross-Border Access Review",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "scopeLevel": "external",
+        "scopedManagementLabel": "Cross-Border Access Review",
+        "managementSection": "external",
+        "organogramWorkspace": false,
+        "managementWorkspace": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-hsc_workspace",
+      "code": "hsc_workspace",
+      "displayName": "HSC Workspace",
+      "category": "workspace_type",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "scopeLevel": "hsc_national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-hsc_public_sector_workforce_dashboard",
+      "code": "hsc_public_sector_workforce_dashboard",
+      "displayName": "HSC Public Sector Workforce Dashboard",
+      "category": "workspace_type",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "scopeLevel": "hsc_national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-hsc_establishment_control",
+      "code": "hsc_establishment_control",
+      "displayName": "HSC Establishment Control",
+      "category": "workspace_type",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "scopeLevel": "hsc_national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-hsc_approved_posts_management",
+      "code": "hsc_approved_posts_management",
+      "displayName": "HSC Approved Posts Management",
+      "category": "workspace_type",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "scopeLevel": "hsc_national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-hsc_public_sector_worker_review",
+      "code": "hsc_public_sector_worker_review",
+      "displayName": "HSC Public Sector Worker Review",
+      "category": "workspace_type",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "scopeLevel": "hsc_national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-hsc_appointments_review",
+      "code": "hsc_appointments_review",
+      "displayName": "HSC Appointments Review",
+      "category": "workspace_type",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "scopeLevel": "hsc_national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-hsc_transfers_review",
+      "code": "hsc_transfers_review",
+      "displayName": "HSC Transfers Review",
+      "category": "workspace_type",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "scopeLevel": "hsc_national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-hsc_promotions_review",
+      "code": "hsc_promotions_review",
+      "displayName": "HSC Promotions Review",
+      "category": "workspace_type",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "scopeLevel": "hsc_national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-hsc_discipline_employment_status_review",
+      "code": "hsc_discipline_employment_status_review",
+      "displayName": "HSC Discipline Employment Status Review",
+      "category": "workspace_type",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "scopeLevel": "hsc_national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-hsc_posting_authorisation",
+      "code": "hsc_posting_authorisation",
+      "displayName": "HSC Posting Authorisation",
+      "category": "workspace_type",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "scopeLevel": "hsc_national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-hsc_workforce_registry_stewardship",
+      "code": "hsc_workforce_registry_stewardship",
+      "displayName": "HSC Workforce Registry Stewardship",
+      "category": "workspace_type",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "scopeLevel": "hsc_national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-hsc_audit_workspace",
+      "code": "hsc_audit_workspace",
+      "displayName": "HSC Audit Workspace",
+      "category": "workspace_type",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "scopeLevel": "hsc_national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-hsc_user_management",
+      "code": "hsc_user_management",
+      "displayName": "HSC User Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "scopeLevel": "hsc_national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-hsc_scope_assignment",
+      "code": "hsc_scope_assignment",
+      "displayName": "HSC Scope Assignment",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "scopeLevel": "hsc_national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-hsc_workforce_officer_assignment",
+      "code": "hsc_workforce_officer_assignment",
+      "displayName": "HSC Workforce Officer Assignment",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "scopeLevel": "hsc_national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-hsc_establishment_officer_assignment",
+      "code": "hsc_establishment_officer_assignment",
+      "displayName": "HSC Establishment Officer Assignment",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "scopeLevel": "hsc_national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-hsc_public_sector_post_management",
+      "code": "hsc_public_sector_post_management",
+      "displayName": "HSC Public Sector Post Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "scopeLevel": "hsc_national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-hsc_public_sector_worker_status_management",
+      "code": "hsc_public_sector_worker_status_management",
+      "displayName": "HSC Public Sector Worker Status Management",
+      "category": "management_workspace",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "scopeLevel": "hsc_national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
       }
     },
     {
@@ -2425,6 +5864,51 @@
       "id": "rtc-executive_leadership",
       "code": "executive_leadership",
       "displayName": "Executive Leadership",
+      "category": "role_template_category",
+      "ownerService": "workforce-governance"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "rtc-municipal_health",
+      "code": "municipal_health",
+      "displayName": "Municipal Health",
+      "category": "role_template_category",
+      "ownerService": "workforce-governance"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "rtc-madi_blood_service",
+      "code": "madi_blood_service",
+      "displayName": "Madi Blood Service",
+      "category": "role_template_category",
+      "ownerService": "workforce-governance"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "rtc-madi_clinical_transfusion",
+      "code": "madi_clinical_transfusion",
+      "displayName": "Madi Clinical Transfusion",
+      "category": "role_template_category",
+      "ownerService": "workforce-governance"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "rtc-madi_haemovigilance",
+      "code": "madi_haemovigilance",
+      "displayName": "Madi Haemovigilance",
+      "category": "role_template_category",
+      "ownerService": "workforce-governance"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "rtc-hsc_workforce_governance",
+      "code": "hsc_workforce_governance",
+      "displayName": "Hsc Workforce Governance",
       "category": "role_template_category",
       "ownerService": "workforce-governance"
     }

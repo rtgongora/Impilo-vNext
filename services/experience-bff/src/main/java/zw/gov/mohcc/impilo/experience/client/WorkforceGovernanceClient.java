@@ -100,6 +100,40 @@ public class WorkforceGovernanceClient {
         }
     }
 
+    public JsonNode getJson(String relativePath) {
+        try {
+            String url = trimSlash(baseUrl) + relativePath;
+            ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+            if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+                log.warn("Governance GET {} failed: {}", relativePath, response.getStatusCode());
+                return null;
+            }
+            return response.getBody().path("data");
+        } catch (Exception e) {
+            log.warn("Governance GET {} error: {}", relativePath, e.getMessage());
+            return null;
+        }
+    }
+
+    public JsonNode patchJson(String relativePath, Object body) {
+        try {
+            String url = trimSlash(baseUrl) + relativePath;
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            String json = body instanceof String s ? s : objectMapper.writeValueAsString(body);
+            HttpEntity<String> entity = new HttpEntity<>(json, headers);
+            ResponseEntity<JsonNode> response = restTemplate.exchange(url, org.springframework.http.HttpMethod.PATCH, entity, JsonNode.class);
+            if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+                log.warn("Governance PATCH {} failed: {}", relativePath, response.getStatusCode());
+                return null;
+            }
+            return response.getBody().path("data");
+        } catch (Exception e) {
+            log.warn("Governance PATCH {} error: {}", relativePath, e.getMessage());
+            return null;
+        }
+    }
+
     private static String trimSlash(String base) {
         if (base == null) {
             return "";

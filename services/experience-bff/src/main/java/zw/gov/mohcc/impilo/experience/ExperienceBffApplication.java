@@ -21,7 +21,8 @@ import zw.gov.mohcc.impilo.experience.config.RegistryDownstreamProperties;
     BffCitizenLongtailProperties.class,
     BffFacilitiesProperties.class,
     BffProviderHubsProperties.class,
-    BffWalletProperties.class
+    BffWalletProperties.class,
+    zw.gov.mohcc.impilo.experience.bootstrap.BootstrapProperties.class
 })
 public class ExperienceBffApplication {
 

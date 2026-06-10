@@ -1,5 +1,5 @@
 {
-  "version": "1.3.0",
+  "version": "1.6.0",
   "catalogueId": "resolution-tabs-opa",
   "displayName": "Resolution States, Tabs, OPA, Nompilo, Audit",
   "entries": [
@@ -373,6 +373,408 @@
     {
       "status": "active",
       "auditSensitivity": "medium",
+      "id": "frs-organisation_not_verified",
+      "code": "organisation_not_verified",
+      "displayName": "Organisation not verified",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Organisation not verified",
+        "userFacingMessage": "Your organisation must be verified before work access can be granted.",
+        "explanation": "Your organisation must be verified before work access can be granted.",
+        "allowedActions": [
+          "View Organisation Status",
+          "Contact Support"
+        ],
+        "auditCode": "TRUST.ORG_NOT_VERIFIED"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-organisation_contract_required",
+      "code": "organisation_contract_required",
+      "displayName": "Organisation contract required",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Organisation contract required",
+        "userFacingMessage": "An active contract is required before this organisation can operate in Impilo.",
+        "explanation": "An active contract is required before this organisation can operate in Impilo.",
+        "allowedActions": [
+          "View Contracts",
+          "Contact Support"
+        ],
+        "auditCode": "TRUST.ORG_CONTRACT_REQUIRED"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-organisation_data_sharing_required",
+      "code": "organisation_data_sharing_required",
+      "displayName": "Data sharing agreement required",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Data sharing agreement required",
+        "userFacingMessage": "A data sharing agreement must be active for this access.",
+        "explanation": "A data sharing agreement must be active for this access.",
+        "allowedActions": [
+          "View Agreements"
+        ],
+        "auditCode": "TRUST.ORG_DATA_SHARING_REQUIRED"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-organisation_suspended",
+      "code": "organisation_suspended",
+      "displayName": "Organisation suspended",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Organisation suspended",
+        "userFacingMessage": "Organisation-linked work access is disabled until suspension is lifted.",
+        "explanation": "Organisation-linked work access is disabled until suspension is lifted.",
+        "allowedActions": [
+          "Contact Support"
+        ],
+        "auditCode": "TRUST.ORG_SUSPENDED"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-organisation_offboarded",
+      "code": "organisation_offboarded",
+      "displayName": "Organisation offboarded",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Organisation offboarded",
+        "userFacingMessage": "This organisation has been offboarded from Impilo.",
+        "explanation": "This organisation has been offboarded from Impilo.",
+        "allowedActions": [
+          "Contact Support"
+        ],
+        "auditCode": "TRUST.ORG_OFFBOARDED"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-organisation_scope_required",
+      "code": "organisation_scope_required",
+      "displayName": "Organisation scope required",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Organisation scope required",
+        "userFacingMessage": "You need an assigned organisation scope to continue.",
+        "explanation": "You need an assigned organisation scope to continue.",
+        "allowedActions": [
+          "Request Assignment"
+        ],
+        "auditCode": "TRUST.ORG_SCOPE_REQUIRED"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-production_access_not_approved",
+      "code": "production_access_not_approved",
+      "displayName": "Production access not approved",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Production access not approved",
+        "userFacingMessage": "Production API or data access requires explicit approval.",
+        "explanation": "Production API or data access requires explicit approval.",
+        "allowedActions": [
+          "Request Production Access"
+        ],
+        "auditCode": "TRUST.PRODUCTION_NOT_APPROVED"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-sandbox_only_access",
+      "code": "sandbox_only_access",
+      "displayName": "Sandbox access only",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Sandbox access only",
+        "userFacingMessage": "Your organisation is limited to sandbox environments.",
+        "explanation": "Your organisation is limited to sandbox environments.",
+        "allowedActions": [
+          "Open Sandbox Portal"
+        ],
+        "auditCode": "TRUST.SANDBOX_ONLY"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-data_scope_not_approved",
+      "code": "data_scope_not_approved",
+      "displayName": "Data scope not approved",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Data scope not approved",
+        "userFacingMessage": "This data scope is not approved for your organisation.",
+        "explanation": "This data scope is not approved for your organisation.",
+        "allowedActions": [
+          "View Approved Scopes"
+        ],
+        "auditCode": "TRUST.DATA_SCOPE_DENIED"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-cross_border_access_not_approved",
+      "code": "cross_border_access_not_approved",
+      "displayName": "Cross-border access not approved",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Cross-border access not approved",
+        "userFacingMessage": "Cross-border data access requires explicit approval.",
+        "explanation": "Cross-border data access requires explicit approval.",
+        "allowedActions": [
+          "Request Cross-Border Review"
+        ],
+        "auditCode": "TRUST.CROSS_BORDER_DENIED"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-research_project_approval_required",
+      "code": "research_project_approval_required",
+      "displayName": "Research project approval required",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Research project approval required",
+        "userFacingMessage": "An approved research project assignment is required.",
+        "explanation": "An approved research project assignment is required.",
+        "allowedActions": [
+          "View Research Projects"
+        ],
+        "auditCode": "TRUST.RESEARCH_APPROVAL_REQUIRED"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-external_partner_access_expired",
+      "code": "external_partner_access_expired",
+      "displayName": "External partner access expired",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "External partner access expired",
+        "userFacingMessage": "Time-limited external partner access has expired.",
+        "explanation": "Time-limited external partner access has expired.",
+        "allowedActions": [
+          "Renew Access"
+        ],
+        "auditCode": "TRUST.EXTERNAL_ACCESS_EXPIRED"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-organisation_user_not_assigned",
+      "code": "organisation_user_not_assigned",
+      "displayName": "Organisation assignment required",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Organisation assignment required",
+        "userFacingMessage": "You must be assigned to an organisation before work access is available.",
+        "explanation": "You must be assigned to an organisation before work access is available.",
+        "allowedActions": [
+          "Request Organisation Assignment"
+        ],
+        "auditCode": "TRUST.ORG_USER_NOT_ASSIGNED"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-organisation_admin_scope_exceeded",
+      "code": "organisation_admin_scope_exceeded",
+      "displayName": "Admin scope exceeded",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Admin scope exceeded",
+        "userFacingMessage": "You cannot perform this management action outside your organisation scope.",
+        "explanation": "You cannot perform this management action outside your organisation scope.",
+        "allowedActions": [
+          "Contact Support"
+        ],
+        "auditCode": "TRUST.ORG_ADMIN_SCOPE_EXCEEDED"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-hsc_employment_not_found",
+      "code": "hsc_employment_not_found",
+      "displayName": "HSC employment not found",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "HSC employment not found",
+        "userFacingMessage": "No public-sector employment record was found for this provider.",
+        "explanation": "No public-sector employment record was found for this provider.",
+        "allowedActions": [
+          "View Professional Profile",
+          "Contact HSC"
+        ],
+        "auditCode": "TRUST.HSC_EMPLOYMENT_NOT_FOUND"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-hsc_appointment_pending",
+      "code": "hsc_appointment_pending",
+      "displayName": "HSC appointment pending",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "HSC appointment pending",
+        "userFacingMessage": "Your public-sector appointment is pending HSC confirmation.",
+        "explanation": "Your public-sector appointment is pending HSC confirmation.",
+        "allowedActions": [
+          "View Appointment Status"
+        ],
+        "auditCode": "TRUST.HSC_APPOINTMENT_PENDING"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-hsc_transfer_pending_assumption",
+      "code": "hsc_transfer_pending_assumption",
+      "displayName": "Transfer pending assumption",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Transfer pending assumption",
+        "userFacingMessage": "Your transfer is approved but assumption of duty is not yet recorded.",
+        "explanation": "Your transfer is approved but assumption of duty is not yet recorded.",
+        "allowedActions": [
+          "Record Assumption of Duty",
+          "View Transfer Status"
+        ],
+        "auditCode": "TRUST.HSC_TRANSFER_PENDING"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-hsc_employment_suspended",
+      "code": "hsc_employment_suspended",
+      "displayName": "HSC employment suspended",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "HSC employment suspended",
+        "userFacingMessage": "Public-sector employment is suspended by HSC.",
+        "explanation": "Public-sector employment is suspended by HSC.",
+        "allowedActions": [
+          "View Employment Status",
+          "Contact HSC"
+        ],
+        "auditCode": "TRUST.HSC_EMPLOYMENT_SUSPENDED"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-hsc_employment_dismissed",
+      "code": "hsc_employment_dismissed",
+      "displayName": "HSC employment dismissed",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "HSC employment dismissed",
+        "userFacingMessage": "Public-sector employment has been dismissed.",
+        "explanation": "Public-sector employment has been dismissed.",
+        "allowedActions": [
+          "View Employment Status"
+        ],
+        "auditCode": "TRUST.HSC_EMPLOYMENT_DISMISSED"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-hsc_posting_required",
+      "code": "hsc_posting_required",
+      "displayName": "HSC posting required",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "HSC posting required",
+        "userFacingMessage": "A valid HSC posting is required before public-sector Work can begin.",
+        "explanation": "A valid HSC posting is required before public-sector Work can begin.",
+        "allowedActions": [
+          "View Posting Status",
+          "Contact HSC"
+        ],
+        "auditCode": "TRUST.HSC_POSTING_REQUIRED"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-hsc_scope_required",
+      "code": "hsc_scope_required",
+      "displayName": "HSC scope required",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "HSC scope required",
+        "userFacingMessage": "Your HSC officer scope must be assigned before workforce tools appear.",
+        "explanation": "Your HSC officer scope must be assigned before workforce tools appear.",
+        "allowedActions": [
+          "Request Scope Assignment"
+        ],
+        "auditCode": "TRUST.HSC_SCOPE_REQUIRED"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-hsc_authority_required",
+      "code": "hsc_authority_required",
+      "displayName": "HSC authority required",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "HSC authority required",
+        "userFacingMessage": "This action requires Health Service Commission workforce authority.",
+        "explanation": "This action requires Health Service Commission workforce authority.",
+        "allowedActions": [
+          "Contact HSC Administrator"
+        ],
+        "auditCode": "TRUST.HSC_AUTHORITY_REQUIRED"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
       "id": "tab-personal",
       "code": "personal",
       "displayName": "Personal",
@@ -641,6 +1043,36 @@
       "category": "opa_policy_package",
       "ownerService": "tshepo",
       "policyMapping": "impilo.break_glass"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "opa-impilo-madi",
+      "code": "impilo.madi",
+      "displayName": "Madi",
+      "category": "opa_policy_package",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.madi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "opa-impilo-organisation",
+      "code": "impilo.organisation",
+      "displayName": "Organisation",
+      "category": "opa_policy_package",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.organisation"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "opa-impilo-hsc",
+      "code": "impilo.hsc",
+      "displayName": "Hsc",
+      "category": "opa_policy_package",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.hsc"
     },
     {
       "status": "active",

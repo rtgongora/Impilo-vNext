@@ -16,9 +16,15 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const APP_DIR = path.resolve(__dirname, "../src/app");
 const ROUTES_TS = path.resolve(__dirname, "../src/lib/routes.ts");
+const ADMIN_ROUTES_TS = path.resolve(__dirname, "../src/lib/administration-governance/route-registry.ts");
+
+function extractPaths(source) {
+  return [...source.matchAll(/path:\s*"([^"]+)"/g)].map((m) => m[1]);
+}
 
 const routesSource = fs.readFileSync(ROUTES_TS, "utf8");
-const EXPECTED_ROUTES = [...routesSource.matchAll(/path:\s*"([^"]+)"/g)].map((m) => m[1]);
+const adminRoutesSource = fs.existsSync(ADMIN_ROUTES_TS) ? fs.readFileSync(ADMIN_ROUTES_TS, "utf8") : "";
+const EXPECTED_ROUTES = [...extractPaths(routesSource), ...extractPaths(adminRoutesSource)];
 
 const countMatch = routesSource.match(/export const EXPECTED_ROUTE_COUNT = (\d+)/);
 const expectedCount = countMatch ? Number(countMatch[1]) : null;

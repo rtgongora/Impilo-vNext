@@ -42,6 +42,12 @@ public class SessionExperienceService {
         boolean hasProfessional = isProfessionalEligible(resolvedProviderId, providerStatus);
         List<Map<String, Object>> activeAssignments = filterActiveAssignments(assignments);
         boolean hasWork = isWorkEligible(hasProfessional, providerStatus, professionalTruth, activeAssignments);
+        Map<String, Object> organisationContext = resolveOrganisationContext(activeAssignments);
+        String orgFriendlyBlock = organisationWorkBlocker(organisationContext, identityTypeFor(actorId, resolvedProviderId));
+        if (orgFriendlyBlock != null) {
+            hasWork = false;
+        }
+        Map<String, List<String>> managementWorkspaces = resolveManagementWorkspaces(organisationContext);
 
         String identityType = resolveIdentityType(actorId, resolvedProviderId);
         boolean personalVisible = actorId != null && !actorId.isBlank();
@@ -59,7 +65,8 @@ public class SessionExperienceService {
         );
 
         String friendlyState = null;
-        if (hasProfessional && !hasWork) friendlyState = "no_active_work_assignment";
+        if (orgFriendlyBlock != null) friendlyState = orgFriendlyBlock;
+        else if (hasProfessional && !hasWork) friendlyState = "no_active_work_assignment";
         else if ("suspended".equalsIgnoreCase(providerStatus)) friendlyState = "provider_suspended";
 
         Map<String, Object> contract = new LinkedHashMap<>();
@@ -79,10 +86,15 @@ public class SessionExperienceService {
         contract.put("blockedActions", buildBlockedActions(workVisible, professionalVisible));
         contract.put("roleTemplates", activeAssignments.stream().map(a -> stringVal(a.get("roleTemplateId"))).filter(Objects::nonNull).toList());
         contract.put("policyMetadata", Map.of(
-                "contractVersion", "1.0.0",
-                "opaPackages", List.of("impilo.tabs", "impilo.work", "impilo.professional", "impilo.registry", "impilo.marketplace"),
+                "contractVersion", "1.1.0",
+                "opaPackages", List.of("impilo.tabs", "impilo.work", "impilo.professional", "impilo.registry", "impilo.marketplace", "impilo.organisation"),
                 "enforcement", "bff_and_opa"
         ));
+        if (!organisationContext.isEmpty()) {
+            contract.put("organisation", organisationContext);
+        }
+        contract.put("visibleManagementWorkspaces", managementWorkspaces.getOrDefault("visible", List.of()));
+        contract.put("blockedManagementWorkspaces", managementWorkspaces.getOrDefault("blocked", List.of()));
         contract.put("nompiloContext", Map.of(
                 "activeTab", defaultTab,
                 "suggestedPrompts", nompiloPrompts(defaultTab),
@@ -164,10 +176,116 @@ public class SessionExperienceService {
     }
 
     private static String resolveIdentityType(String healthId, String providerId) {
+        return identityTypeFor(healthId, providerId);
+    }
+
+    private static String identityTypeFor(String healthId, String providerId) {
         if (providerId != null && !providerId.isBlank() && healthId != null) return "dual_citizen_provider";
         if (providerId != null && !providerId.isBlank()) return "provider_worker";
         return "citizen";
     }
+
+    private static Map<String, Object> resolveOrganisationContext(List<Map<String, Object>> assignments) {
+        for (Map<String, Object> assignment : assignments) {
+            String organisationId = stringVal(assignment.get("organisationId"));
+            if (organisationId == null || organisationId.isBlank()) continue;
+            Map<String, Object> org = new LinkedHashMap<>();
+            org.put("organisationId", organisationId);
+            putIfPresent(org, "organisationType", assignment.get("organisationType"));
+            putIfPresent(org, "organisationName", assignment.get("organisationName"));
+            putIfPresent(org, "organisationTrustTier", assignment.get("organisationTrustTier"));
+            putIfPresent(org, "organisationLifecycleStatus", assignment.get("organisationLifecycleStatus"));
+            putIfPresent(org, "organisationAccessEnvironment", assignment.get("organisationAccessEnvironment"));
+            putIfPresent(org, "organisationCountry", assignment.get("organisationCountry"));
+            putIfPresent(org, "userOrganisationRole", assignment.get("userOrganisationRole"));
+            org.put("activeOrganisationAssignment", true);
+            if (assignment.get("organisationDataScopes") instanceof List<?> scopes) {
+                org.put("organisationDataScopes", scopes);
+            }
+            if (assignment.get("organisationApiScopes") instanceof List<?> scopes) {
+                org.put("organisationApiScopes", scopes);
+            }
+            if (assignment.get("crossBorderAccessFlag") instanceof Boolean flag) {
+                org.put("crossBorderAccessFlag", flag);
+            }
+            return org;
+        }
+        return Map.of();
+    }
+
+    private static void putIfPresent(Map<String, Object> target, String key, Object value) {
+        String normalized = stringVal(value);
+        if (normalized != null && !normalized.isBlank()) target.put(key, normalized);
+    }
+
+    private static String organisationWorkBlocker(Map<String, Object> organisation, String identityType) {
+        if (organisation.isEmpty()) return null;
+        String lifecycle = normalizeStatus(stringVal(organisation.get("organisationLifecycleStatus")));
+        if ("suspended".equals(lifecycle)) return "organisation_suspended";
+        if ("offboarded".equals(lifecycle) || "blacklisted".equals(lifecycle) || "revoked".equals(lifecycle)) {
+            return "organisation_offboarded";
+        }
+        if ("expired".equals(lifecycle)) return "external_partner_access_expired";
+        if (!"citizen".equals(identityType) && Boolean.FALSE.equals(organisation.get("activeOrganisationAssignment"))) {
+            return "organisation_user_not_assigned";
+        }
+        if ("sandbox".equals(normalizeStatus(stringVal(organisation.get("organisationAccessEnvironment"))))) {
+            return null;
+        }
+        return null;
+    }
+
+    private static Map<String, List<String>> resolveManagementWorkspaces(Map<String, Object> organisation) {
+        String organisationType = stringVal(organisation.get("organisationType"));
+        if (organisationType == null || organisationType.isBlank()) {
+            return Map.of("visible", List.of(), "blocked", List.of());
+        }
+        List<String> defaults = MANAGEMENT_WORKSPACE_DEFAULTS.getOrDefault(organisationType, List.of());
+        Set<String> blocked = new LinkedHashSet<>();
+        if (!SOVEREIGN_ORGANISATION_TYPES.contains(organisationType)) {
+            blocked.addAll(SOVEREIGN_ONLY_WORKSPACES);
+        }
+        if (!MUNICIPAL_ORGANISATION_TYPES.contains(organisationType)) {
+            blocked.addAll(MUNICIPAL_ONLY_WORKSPACES);
+        }
+        if (!PRIVATE_ORGANISATION_TYPES.contains(organisationType)) {
+            blocked.addAll(PRIVATE_ONLY_WORKSPACES);
+        }
+        String lifecycle = normalizeStatus(stringVal(organisation.get("organisationLifecycleStatus")));
+        if ("suspended".equals(lifecycle) || "offboarded".equals(lifecycle) || "blacklisted".equals(lifecycle)) {
+            return Map.of("visible", List.of(), "blocked", defaults);
+        }
+        List<String> visible = defaults.stream().filter(w -> !blocked.contains(w)).toList();
+        return Map.of("visible", visible, "blocked", new ArrayList<>(blocked));
+    }
+
+    private static final Set<String> SOVEREIGN_ORGANISATION_TYPES = Set.of("sovereign_public_owner", "ministry_department");
+    private static final Set<String> MUNICIPAL_ORGANISATION_TYPES = Set.of(
+            "city_health_department", "municipal_health_department", "local_authority_health_department");
+    private static final Set<String> PRIVATE_ORGANISATION_TYPES = Set.of("private_hospital", "private_clinic");
+
+    private static final List<String> SOVEREIGN_ONLY_WORKSPACES = List.of(
+            "national_identity_governance", "national_organisation_registry", "national_system_operator_management",
+            "mohcc_head_office_user_management", "national_platform_user_administration");
+    private static final List<String> MUNICIPAL_ONLY_WORKSPACES = List.of(
+            "municipal_user_management", "municipal_facility_staff_management", "municipal_public_health_team_management");
+    private static final List<String> PRIVATE_ONLY_WORKSPACES = List.of(
+            "private_facility_user_management", "private_clinician_assignment");
+
+    private static final Map<String, List<String>> MANAGEMENT_WORKSPACE_DEFAULTS = Map.ofEntries(
+            Map.entry("sovereign_public_owner", List.of("national_organisation_registry", "national_trust_console", "national_platform_user_administration")),
+            Map.entry("ministry_department", List.of("mohcc_head_office_user_management", "national_policy_management")),
+            Map.entry("provincial_medical_office", List.of("provincial_office_user_management", "public_facility_staff_management")),
+            Map.entry("district_medical_office", List.of("district_office_user_management", "public_facility_staff_management")),
+            Map.entry("public_facility", List.of("public_facility_staff_management", "facility_work_assignment")),
+            Map.entry("city_health_department", List.of("municipal_organisation_management", "municipal_user_management", "municipal_facility_staff_management")),
+            Map.entry("private_hospital", List.of("private_facility_user_management", "private_clinician_assignment", "private_non_clinical_staff_assignment")),
+            Map.entry("private_clinic", List.of("private_facility_user_management", "private_clinician_assignment")),
+            Map.entry("health_professions_authority", List.of("regulator_organisation_management", "council_user_management", "regulatory_audit")),
+            Map.entry("software_vendor", List.of("marketplace_api_developer_assignment", "marketplace_sandbox_access_management")),
+            Map.entry("insurer", List.of("payer_organisation_management", "payer_user_management", "claims_user_assignment")),
+            Map.entry("foreign_research_partner", List.of("external_partner_user_management", "research_project_user_assignment", "deidentified_dataset_access"))
+    );
 
     private static Map<String, Object> tabDef(boolean visible, String label, String route, boolean isDefault, String requiredSource, String reason) {
         Map<String, Object> t = new LinkedHashMap<>();

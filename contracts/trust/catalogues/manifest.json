@@ -1,8 +1,11 @@
 {
-  "version": "1.3.0",
-  "displayName": "Impilo Trust Plane Seed Catalogues (Zimbabwe MoHCC Organogram Baseline)",
+  "version": "1.6.0",
+  "displayName": "Impilo Trust Plane Seed Catalogues (HSC Workforce Governance)",
   "generator": "contracts/trust/scripts/generate-seed-catalogues.mjs",
   "zimbabweData": "contracts/trust/scripts/zimbabwe-catalogue-data.mjs",
+  "domainExpansionData": "contracts/trust/scripts/regulator-municipality-madi-data.mjs",
+  "multiOrganisationData": "contracts/trust/scripts/multi-organisation-governance-data.mjs",
+  "hscWorkforceData": "contracts/trust/scripts/hsc-workforce-governance-data.mjs",
   "organogramSource": {
     "title": "MoHCC Organogram",
     "approvedBy": "Health Service Commission",
@@ -13,9 +16,12 @@
     { "file": "seeds/identity.json", "catalogueId": "identity", "categories": ["identity_type", "login_method", "citizen_account_state", "identity_assurance_level"] },
     { "file": "seeds/provider-worker.json", "catalogueId": "provider-worker", "categories": ["provider_worker_type", "provider_worker_status", "cpd_compliance_status", "qualification_certification_category", "profession_cadre"] },
     { "file": "seeds/zimbabwe-mohcc.json", "catalogueId": "zimbabwe-mohcc", "categories": ["health_administrative_level", "organisational_structure"] },
-    { "file": "seeds/work-context.json", "catalogueId": "work-context", "categories": ["approved_work_context_type", "workplace_place_type", "workspace_type", "registry_owner_workspace", "regulator_workspace", "assignment_type", "assignment_status", "role_template_category"] },
+    { "file": "seeds/regulatory-institutions.json", "catalogueId": "regulatory-institutions", "categories": ["regulatory_organisation", "regulator_organisation_type"] },
+    { "file": "seeds/organisation-governance.json", "catalogueId": "organisation-governance", "categories": ["organisation_type", "organisation_trust_tier", "organisation_lifecycle_state", "organisation_access_environment", "organisation_linked_user_type", "organisation_registry_schema", "organisation_registry_record"] },
+    { "file": "seeds/hsc-workforce-governance.json", "catalogueId": "hsc-workforce-governance", "categories": ["hsc_organisation", "public_sector_employment_status", "hsc_workforce_governance_role"] },
+    { "file": "seeds/work-context.json", "catalogueId": "work-context", "categories": ["approved_work_context_type", "workplace_place_type", "workspace_type", "registry_owner_workspace", "regulator_workspace", "management_workspace", "assignment_type", "assignment_status", "role_template_category"] },
     { "file": "seeds/permissions.json", "catalogueId": "permissions", "categories": ["permission_domain", "permission"] },
-    { "file": "seeds/governance-marketplace.json", "catalogueId": "governance-marketplace", "categories": ["registry_governance_role", "regulator_role", "workplace_manager_role", "system_admin_role", "marketplace_participant_type", "marketplace_access_pipeline_state", "marketplace_role"] },
+    { "file": "seeds/governance-marketplace.json", "catalogueId": "governance-marketplace", "categories": ["registry_governance_role", "regulator_role", "workplace_manager_role", "system_admin_role", "marketplace_participant_type", "marketplace_access_pipeline_state", "marketplace_role", "hsc_workforce_governance_role"] },
     { "file": "seeds/role-templates.json", "catalogueId": "role-templates", "categories": ["role_template"] },
     { "file": "seeds/resolution-tabs-opa.json", "catalogueId": "resolution-tabs-opa", "categories": ["friendly_resolution_state", "session_tab", "opa_policy_package", "nompilo_action_domain", "audit_event_type"] }
   ],
@@ -32,9 +38,31 @@
     "medical_superintendent",
     "matron"
   ],
+  "realZimbabweRegulatoryOrganisations": [
+    "health_professions_authority",
+    "medical_laboratories_clinical_scientists_council",
+    "medical_dental_practitioners_council",
+    "allied_health_practitioners_council",
+    "pharmacists_council",
+    "nurses_council",
+    "environmental_health_practitioners_council",
+    "medical_rehabilitation_practitioners_council",
+    "natural_therapists_council"
+  ],
+  "realZimbabweWorkforceGovernanceAuthorities": [
+    "health_service_commission"
+  ],
+  "exemplarOrganisations": [
+    "mohcc_zimbabwe",
+    "harare_city_health",
+    "avenues_private_hospital",
+    "health_service_commission",
+    "foreign_research_partner_demo"
+  ],
   "deprecatedAliases": {
     "district_health_officer": "district_medical_officer",
-    "provincial_health_officer": "provincial_medical_director"
+    "provincial_health_officer": "provincial_medical_director",
+    "professional_council_regulator": "mdpc_reviewer"
   },
   "consumers": ["experience-bff", "one-ui-shell", "mobile-auth", "tshepo", "opa", "tests"]
 }

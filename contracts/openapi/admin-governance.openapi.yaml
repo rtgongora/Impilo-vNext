@@ -1,0 +1,75 @@
+openapi: 3.0.3
+info:
+  title: Impilo Administration & Governance BFF
+  version: 1.0.0
+  description: OPA-prechecked administration and governance workflows exposed by experience-bff.
+servers:
+  - url: /internal/v1/admin-governance
+paths:
+  /precheck:
+    post:
+      summary: OPA-aligned policy precheck for a management action
+  /access-requests:
+    get:
+      summary: List access requests visible to the current actor
+  /access-requests/{requestId}:
+    get:
+      summary: Get a single access request
+  /access-requests/{requestId}/{decision}:
+    post:
+      summary: Approve, reject, escalate, revoke or request more information
+  /onboarding/{flowId}:
+    post:
+      summary: Submit a guided onboarding flow
+  /facility/{facilityId}/staff-assignments:
+    post:
+      summary: Create or queue a facility staff assignment
+  /actions/{action}:
+    post:
+      summary: Submit a domain-specific governed action
+  /audit:
+    get:
+      summary: List audit events for the current actor scope
+  /organisations:
+    get:
+      summary: List organisations from workforce-governance
+    post:
+      summary: Register an organisation (OPA precheck + workforce-governance SoR)
+  /organisations/{orgId}:
+    get:
+      summary: Get organisation detail and summary
+  /organisations/{orgId}/verify:
+    post:
+      summary: Verify organisation lifecycle status
+  /organisations/{orgId}/suspend:
+    post:
+      summary: Suspend organisation
+  /organisations/{orgId}/offboard:
+    post:
+      summary: Offboard organisation
+  /organisations/{orgId}/users:
+    get:
+      summary: List organisation users/memberships
+    post:
+      summary: Add organisation user
+  /organisations/{orgId}/users/{userId}/suspend:
+    post:
+      summary: Suspend organisation user
+  /organisations/{orgId}/users/{userId}/offboard:
+    post:
+      summary: Offboard organisation user
+  /provider-workers/search:
+    get:
+      summary: Search provider/worker registry via VARAPI
+  /provider-workers/{providerWorkerId}/eligibility:
+    get:
+      summary: Provider/worker eligibility envelope (VARAPI + council + HSC + assignments)
+  /hsc/employment-records/search:
+    get:
+      summary: Search HSC employment/posting records
+  /hsc/employment-records/{employmentRecordId}:
+    get:
+      summary: Get HSC employment record
+  /regulators/professional-status:
+    get:
+      summary: Council/HPA professional status lookup

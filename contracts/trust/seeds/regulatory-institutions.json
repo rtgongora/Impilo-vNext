@@ -1,0 +1,580 @@
+{
+  "version": "1.6.0",
+  "catalogueId": "regulatory-institutions",
+  "displayName": "Zimbabwe Health Professions Regulatory Bodies",
+  "entries": [
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "rot-professional-council",
+      "code": "professional_council",
+      "displayName": "Professional Council",
+      "category": "regulator_organisation_type",
+      "ownerService": "tshepo",
+      "metadata": {
+        "genericTypeOnly": true,
+        "notRealInstitution": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "rot-health-professions-authority",
+      "code": "health_professions_authority",
+      "displayName": "Health Professions Authority",
+      "category": "regulator_organisation_type",
+      "ownerService": "tshepo",
+      "metadata": {
+        "genericTypeOnly": false,
+        "notRealInstitution": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "rot-statutory-health-council",
+      "code": "statutory_health_council",
+      "displayName": "Statutory Health Council",
+      "category": "regulator_organisation_type",
+      "ownerService": "tshepo",
+      "metadata": {
+        "genericTypeOnly": false,
+        "notRealInstitution": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "rio-health_professions_authority",
+      "code": "health_professions_authority",
+      "displayName": "Health Professions Authority",
+      "description": "HPA — real Zimbabwe health professions regulatory body",
+      "category": "regulatory_organisation",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "organisationType": "health_professions_authority",
+        "officialName": "Health Professions Authority",
+        "abbreviation": "HPA",
+        "aliases": [
+          "HPA Zimbabwe",
+          "Health Professions Authority Zimbabwe"
+        ],
+        "regulatoryDomain": [
+          "health_professions_oversight",
+          "councils_coordination",
+          "regulatory_appeals",
+          "health_professions_governance"
+        ],
+        "registryOrWorkflowImpacted": [
+          "varapi_provider_registry",
+          "professional_truth",
+          "regulatory_appeals"
+        ],
+        "allowedWorkspaces": [
+          "hpa_workspace",
+          "hpa_council_coordination_workspace",
+          "hpa_appeals_disputes_workspace",
+          "regulatory_audit_workspace"
+        ],
+        "defaultRoles": [
+          "hpa_administrator",
+          "hpa_regulatory_reviewer",
+          "hpa_appeals_officer",
+          "hpa_registry_steward",
+          "hpa_compliance_officer",
+          "hpa_auditor"
+        ],
+        "scopeType": "national_regulatory",
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "no_system_superuser",
+          "varapi_scoped_oversight"
+        ],
+        "isRealZimbabweInstitution": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "rio-medical_laboratories_clinical_scientists_council",
+      "code": "medical_laboratories_clinical_scientists_council",
+      "displayName": "Medical Laboratories and Clinical Scientists Council",
+      "description": "MLCSC — real Zimbabwe health professions regulatory body",
+      "category": "regulatory_organisation",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "organisationType": "statutory_health_council",
+        "officialName": "Medical Laboratories and Clinical Scientists Council",
+        "abbreviation": "MLCSC",
+        "aliases": [
+          "Medical Laboratory and Clinical Scientists Council",
+          "Medical Laboratories & Clinical Scientists Council"
+        ],
+        "regulatoryDomain": [
+          "medical_laboratories",
+          "clinical_scientists",
+          "laboratory_practitioner_registration",
+          "laboratory_professional_practice"
+        ],
+        "registryOrWorkflowImpacted": [
+          "varapi_provider_registry",
+          "laboratory_practitioner_licence"
+        ],
+        "allowedWorkspaces": [
+          "mlcsc_workspace",
+          "laboratory_practitioner_registration_review",
+          "provider_licence_review",
+          "provider_cpd_compliance_review",
+          "provider_restriction_management"
+        ],
+        "defaultRoles": [
+          "mlcsc_registrar",
+          "mlcsc_administrator",
+          "mlcsc_reviewer",
+          "mlcsc_approver",
+          "mlcsc_licensing_officer",
+          "mlcsc_registry_steward",
+          "mlcsc_disciplinary_officer",
+          "mlcsc_auditor"
+        ],
+        "scopeType": "assigned_regulator",
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_laboratory_cadres_only"
+        ],
+        "isRealZimbabweInstitution": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "rio-medical_dental_practitioners_council",
+      "code": "medical_dental_practitioners_council",
+      "displayName": "Medical and Dental Practitioners Council",
+      "description": "MDPC — real Zimbabwe health professions regulatory body",
+      "category": "regulatory_organisation",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "organisationType": "statutory_health_council",
+        "officialName": "Medical and Dental Practitioners Council",
+        "abbreviation": "MDPC",
+        "aliases": [
+          "Medical and Dental Practitioners Council of Zimbabwe",
+          "Medical and Dental Council",
+          "MDPCZ"
+        ],
+        "regulatoryDomain": [
+          "medical_practitioners",
+          "dental_practitioners",
+          "specialist_registration",
+          "medical_dental_practice_licensing",
+          "accreditation",
+          "cpd_compliance_where_applicable"
+        ],
+        "registryOrWorkflowImpacted": [
+          "varapi_provider_registry",
+          "medical_dental_licence",
+          "specialist_register"
+        ],
+        "allowedWorkspaces": [
+          "mdpc_workspace",
+          "medical_dental_registration_review",
+          "provider_licence_review",
+          "provider_specialist_register_review",
+          "provider_cpd_compliance_review",
+          "provider_suspension_review",
+          "provider_restriction_management"
+        ],
+        "defaultRoles": [
+          "mdpc_registrar",
+          "mdpc_administrator",
+          "mdpc_reviewer",
+          "mdpc_approver",
+          "mdpc_licensing_officer",
+          "mdpc_accreditation_officer",
+          "mdpc_cpd_reviewer",
+          "mdpc_disciplinary_officer",
+          "mdpc_registry_steward",
+          "mdpc_auditor"
+        ],
+        "scopeType": "assigned_regulator",
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_medical_dental_cadres_only"
+        ],
+        "isRealZimbabweInstitution": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "rio-allied_health_practitioners_council",
+      "code": "allied_health_practitioners_council",
+      "displayName": "Allied Health Practitioners Council",
+      "description": "AHPC — real Zimbabwe health professions regulatory body",
+      "category": "regulatory_organisation",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "organisationType": "statutory_health_council",
+        "officialName": "Allied Health Practitioners Council",
+        "abbreviation": "AHPC",
+        "aliases": [
+          "Allied Health Practitioners Council of Zimbabwe",
+          "AHPCZ"
+        ],
+        "regulatoryDomain": [
+          "allied_health_professions",
+          "allied_health_registration",
+          "allied_health_training",
+          "allied_health_professional_conduct",
+          "allied_health_cpd_compliance_where_applicable"
+        ],
+        "registryOrWorkflowImpacted": [
+          "varapi_provider_registry",
+          "allied_health_licence"
+        ],
+        "allowedWorkspaces": [
+          "ahpc_workspace",
+          "allied_health_registration_review",
+          "allied_health_practitioner_register",
+          "provider_cpd_compliance_review",
+          "provider_restriction_management",
+          "disciplinary_review_workspace"
+        ],
+        "defaultRoles": [
+          "ahpc_registrar",
+          "ahpc_administrator",
+          "ahpc_reviewer",
+          "ahpc_approver",
+          "ahpc_licensing_officer",
+          "ahpc_training_accreditation_officer",
+          "ahpc_cpd_reviewer",
+          "ahpc_disciplinary_officer",
+          "ahpc_registry_steward",
+          "ahpc_auditor"
+        ],
+        "scopeType": "assigned_regulator",
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_allied_health_cadres_only"
+        ],
+        "isRealZimbabweInstitution": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "rio-pharmacists_council",
+      "code": "pharmacists_council",
+      "displayName": "Pharmacists Council",
+      "description": "PC — real Zimbabwe health professions regulatory body",
+      "category": "regulatory_organisation",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "organisationType": "statutory_health_council",
+        "officialName": "Pharmacists Council",
+        "abbreviation": "PC",
+        "aliases": [
+          "Pharmacists Council of Zimbabwe",
+          "PCZ"
+        ],
+        "regulatoryDomain": [
+          "pharmacists",
+          "pharmacy_practice_registration",
+          "pharmacy_training",
+          "pharmacy_professional_conduct",
+          "pharmacy_cpd_compliance_where_applicable"
+        ],
+        "registryOrWorkflowImpacted": [
+          "varapi_provider_registry",
+          "pharmacy_licence"
+        ],
+        "allowedWorkspaces": [
+          "pc_workspace",
+          "pharmacist_registration_review",
+          "provider_licence_review",
+          "provider_cpd_compliance_review",
+          "provider_restriction_management",
+          "disciplinary_review_workspace"
+        ],
+        "defaultRoles": [
+          "pc_registrar",
+          "pc_administrator",
+          "pc_reviewer",
+          "pc_approver",
+          "pc_licensing_officer",
+          "pc_training_reviewer",
+          "pc_cpd_reviewer",
+          "pc_registry_steward",
+          "pc_disciplinary_officer",
+          "pc_auditor"
+        ],
+        "scopeType": "assigned_regulator",
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_pharmacy_cadres_only"
+        ],
+        "isRealZimbabweInstitution": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "rio-nurses_council",
+      "code": "nurses_council",
+      "displayName": "Nurses Council",
+      "description": "NC — real Zimbabwe health professions regulatory body",
+      "category": "regulatory_organisation",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "organisationType": "statutory_health_council",
+        "officialName": "Nurses Council",
+        "abbreviation": "NC",
+        "aliases": [
+          "Nurses Council of Zimbabwe",
+          "NCZ"
+        ],
+        "regulatoryDomain": [
+          "nursing_training",
+          "nursing_practice",
+          "nursing_registration",
+          "nursing_professional_conduct",
+          "nursing_cpd_compliance_where_applicable"
+        ],
+        "registryOrWorkflowImpacted": [
+          "varapi_provider_registry",
+          "nursing_licence"
+        ],
+        "allowedWorkspaces": [
+          "nc_workspace",
+          "nursing_registration_review",
+          "nursing_training_review",
+          "provider_licence_review",
+          "provider_cpd_compliance_review",
+          "provider_suspension_review",
+          "provider_restriction_management"
+        ],
+        "defaultRoles": [
+          "nc_registrar",
+          "nc_administrator",
+          "nc_reviewer",
+          "nc_approver",
+          "nc_licensing_officer",
+          "nc_training_accreditation_officer",
+          "nc_cpd_reviewer",
+          "nc_disciplinary_officer",
+          "nc_registry_steward",
+          "nc_auditor"
+        ],
+        "scopeType": "assigned_regulator",
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_nursing_cadres_only"
+        ],
+        "isRealZimbabweInstitution": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "rio-environmental_health_practitioners_council",
+      "code": "environmental_health_practitioners_council",
+      "displayName": "Environmental Health Practitioners Council",
+      "description": "EHPC — real Zimbabwe health professions regulatory body",
+      "category": "regulatory_organisation",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "organisationType": "statutory_health_council",
+        "officialName": "Environmental Health Practitioners Council",
+        "abbreviation": "EHPC",
+        "aliases": [
+          "Environmental Health Practitioners Council of Zimbabwe",
+          "EHPCZ"
+        ],
+        "regulatoryDomain": [
+          "environmental_health_practitioners",
+          "public_health_inspection_professional_registration",
+          "environmental_health_practice"
+        ],
+        "registryOrWorkflowImpacted": [
+          "varapi_provider_registry",
+          "environmental_health_licence"
+        ],
+        "allowedWorkspaces": [
+          "ehpc_workspace",
+          "environmental_health_registration_review",
+          "provider_licence_review",
+          "provider_restriction_management",
+          "public_health_practitioner_register"
+        ],
+        "defaultRoles": [
+          "ehpc_registrar",
+          "ehpc_administrator",
+          "ehpc_reviewer",
+          "ehpc_approver",
+          "ehpc_licensing_officer",
+          "ehpc_registry_steward",
+          "ehpc_disciplinary_officer",
+          "ehpc_auditor"
+        ],
+        "scopeType": "assigned_regulator",
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "varapi_environmental_health_cadres_only"
+        ],
+        "isRealZimbabweInstitution": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "rio-medical_rehabilitation_practitioners_council",
+      "code": "medical_rehabilitation_practitioners_council",
+      "displayName": "Medical Rehabilitation Practitioners Council",
+      "description": "MRPC — real Zimbabwe health professions regulatory body",
+      "category": "regulatory_organisation",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "organisationType": "statutory_health_council",
+        "officialName": "Medical Rehabilitation Practitioners Council",
+        "abbreviation": "MRPC",
+        "aliases": [
+          "Medical Rehabilitation Practitioners Council of Zimbabwe",
+          "Rehabilitation Practitioners Council"
+        ],
+        "regulatoryDomain": [
+          "rehabilitation_practitioners",
+          "physiotherapy",
+          "occupational_therapy",
+          "speech_therapy",
+          "rehabilitation_technicians",
+          "rehabilitation_professional_practice"
+        ],
+        "registryOrWorkflowImpacted": [
+          "varapi_provider_registry",
+          "rehabilitation_licence"
+        ],
+        "allowedWorkspaces": [
+          "mrpc_workspace",
+          "rehabilitation_practitioner_registration_review",
+          "provider_licence_review",
+          "provider_cpd_compliance_review",
+          "provider_restriction_management"
+        ],
+        "defaultRoles": [
+          "mrpc_registrar",
+          "mrpc_administrator",
+          "mrpc_reviewer",
+          "mrpc_approver",
+          "mrpc_licensing_officer",
+          "mrpc_cpd_reviewer",
+          "mrpc_registry_steward",
+          "mrpc_disciplinary_officer",
+          "mrpc_auditor"
+        ],
+        "scopeType": "assigned_regulator",
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_facility_staff_management",
+          "no_facility_assignment",
+          "varapi_rehabilitation_cadres_only"
+        ],
+        "isRealZimbabweInstitution": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "rio-natural_therapists_council",
+      "code": "natural_therapists_council",
+      "displayName": "Natural Therapists Council",
+      "description": "NTC — real Zimbabwe health professions regulatory body",
+      "category": "regulatory_organisation",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.regulator",
+      "metadata": {
+        "organisationType": "statutory_health_council",
+        "officialName": "Natural Therapists Council",
+        "abbreviation": "NTC",
+        "aliases": [
+          "Natural Therapists Council of Zimbabwe"
+        ],
+        "regulatoryDomain": [
+          "natural_therapists",
+          "complementary_medicine_practitioners_where_applicable",
+          "natural_therapy_practice"
+        ],
+        "registryOrWorkflowImpacted": [
+          "varapi_provider_registry",
+          "natural_therapy_licence"
+        ],
+        "allowedWorkspaces": [
+          "ntc_workspace",
+          "natural_therapist_registration_review",
+          "provider_licence_review",
+          "provider_restriction_management",
+          "disciplinary_review_workspace"
+        ],
+        "defaultRoles": [
+          "ntc_registrar",
+          "ntc_administrator",
+          "ntc_reviewer",
+          "ntc_approver",
+          "ntc_licensing_officer",
+          "ntc_registry_steward",
+          "ntc_disciplinary_officer",
+          "ntc_auditor"
+        ],
+        "scopeType": "assigned_regulator",
+        "dataAccessLimits": [
+          "no_clinical_records",
+          "no_mainstream_clinical_permissions",
+          "no_facility_staff_management",
+          "varapi_natural_therapy_cadres_only"
+        ],
+        "isRealZimbabweInstitution": true
+      }
+    },
+    {
+      "status": "deprecated",
+      "auditSensitivity": "medium",
+      "id": "rio-deprecated-radiographers_council",
+      "code": "radiographers_council",
+      "displayName": "Radiographers Council",
+      "category": "regulatory_organisation",
+      "ownerService": "tshepo",
+      "metadata": {
+        "deprecationReason": "Not a real Zimbabwe institution; use Medical Rehabilitation Practitioners Council (MRPC) or statutory council seeds",
+        "isRealZimbabweInstitution": false
+      }
+    },
+    {
+      "status": "deprecated",
+      "auditSensitivity": "medium",
+      "id": "rio-deprecated-rehabilitation_practitioners_council",
+      "code": "rehabilitation_practitioners_council",
+      "displayName": "Rehabilitation Practitioners Council",
+      "category": "regulatory_organisation",
+      "ownerService": "tshepo",
+      "metadata": {
+        "deprecationReason": "Not a real Zimbabwe institution; use Medical Rehabilitation Practitioners Council (MRPC) or statutory council seeds",
+        "isRealZimbabweInstitution": false
+      }
+    }
+  ]
+}

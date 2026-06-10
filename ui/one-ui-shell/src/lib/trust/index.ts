@@ -20,6 +20,11 @@ export {
   mapGovernanceAssignmentNode,
   providerStatusAllowsProfessional,
   providerStatusBlocksWork,
+  resolveManagementWorkspacesForOrganisation,
+  organisationBlocksWork,
+  publicSectorEmploymentBlocksWork,
+  resolveHscManagementWorkspaces,
+  isHscOrganisationType,
   SESSION_EXPERIENCE_CONTRACT_VERSION,
   ACTIVE_WORK_ASSIGNMENT_STATUSES,
 } from "../../../../../contracts/trust";
@@ -35,4 +40,5 @@ export type {
   SessionTabDefinition,
   SessionIdentityType,
   SessionLoginMethod,
+  OrganisationGovernanceInput,
 } from "../../../../../contracts/trust";

@@ -53,6 +53,8 @@ import { ProviderActivationBanner } from "@/components/ProviderActivationBanner"
 import { WorkspaceSwitcher } from "@/components/WorkspaceSwitcher";
 import { useAuthStore, type AuthUser } from "@/hooks/useAuthStore";
 import { resolveIdentityContext } from "@/lib/identity-context";
+import { hasAdministrationGovernanceEntry } from "@/lib/administration-governance";
+import { useSessionExperienceContract } from "@/hooks/useSessionExperienceContract";
 import { useShellStore } from "@/hooks/useShellStore";
 import { WORK_MODE_LABELS } from "@/hooks/useWorkModeStore";
 import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
@@ -359,6 +361,7 @@ function getSidebarSpotlight(pathname: string): SidebarSpotlight {
 export function ExperienceSidebar() {
   const pathname = usePathname();
   const { user, hasRole } = useAuthStore();
+  const { contract } = useSessionExperienceContract();
   const { currentRoute, facility, workspace, stage, shiftActive, workMode } = useExperienceEntry();
   const navDrawerOpen = useShellStore((s) => s.navDrawerOpen);
   const setNavDrawerOpen = useShellStore((s) => s.setNavDrawerOpen);
@@ -392,13 +395,22 @@ export function ExperienceSidebar() {
       return 0;
     });
 
-  const visibleZones = orderedZones.map((zone) => ({
-    ...zone,
-    items: zone.items.filter((item) => {
+  const visibleZones = orderedZones.map((zone) => {
+    let items = zone.items.filter((item) => {
       if (!item.requiredRoles) return true;
       return item.requiredRoles.some((role) => hasRole(role));
-    }),
-  })).filter((zone) => zone.items.length > 0);
+    });
+    if (zone.id === "work" && contract && hasAdministrationGovernanceEntry(contract)) {
+      items = [
+        { href: "/work/administration-governance", label: "Administration & Governance", icon: ShieldCheck },
+        ...items,
+      ];
+    }
+    return {
+      ...zone,
+      items,
+    };
+  }).filter((zone) => zone.items.length > 0);
   const spotlight = getSidebarSpotlight(pathname);
   const activeZoneId = currentRoute?.navZone;
 

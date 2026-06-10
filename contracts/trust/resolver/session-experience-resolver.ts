@@ -15,11 +15,28 @@ import {
   type ProviderProfessionalTruth,
 } from "../types/provider-professional-truth";
 import {
+  organisationBlocksWork,
+  resolveManagementWorkspacesForOrganisation,
+  type OrganisationGovernanceInput,
+} from "./organisation-governance";
+import {
+  isHscOrganisationType,
+  resolveHscManagementWorkspaces,
+  hscOfficerBlocksClinicalAccess,
+} from "./hsc-workforce-governance";
+import {
+  buildPublicSectorEmploymentSessionContext,
+  publicSectorEmploymentBlocksWork,
+  requiresPublicSectorEmployment,
+  type PublicSectorEmploymentTruth,
+} from "../types/public-sector-employment-truth";
+import {
   SESSION_EXPERIENCE_CONTRACT_VERSION,
   type SessionExperienceContract,
   type SessionIdentity,
   type SessionIdentityType,
   type SessionLoginMethod,
+  type SessionOrganisationContext,
   type SessionTabDefinition,
 } from "../types/session-experience-contract";
 import {
@@ -43,6 +60,8 @@ export interface SessionExperienceInput {
   selectedContext?: string | null;
   facilityModeActive?: boolean;
   hasSelectedFacility?: boolean;
+  organisation?: OrganisationGovernanceInput;
+  publicSectorEmployment?: Partial<PublicSectorEmploymentTruth> | null;
 }
 
 const OPA_PACKAGES = [
@@ -54,6 +73,8 @@ const OPA_PACKAGES = [
   "impilo.registry",
   "impilo.marketplace",
   "impilo.nompilo",
+  "impilo.organisation",
+  "impilo.hsc",
 ];
 
 function tab(
@@ -98,6 +119,32 @@ function professionalEligible(input: SessionExperienceInput): boolean {
 }
 
 function workEligible(input: SessionExperienceInput, assignments: WorkAssignment[]): boolean {
+  const orgBlock = organisationBlocksWork({
+    ...input.organisation,
+    identityType: resolveIdentityType(input),
+    activeOrganisationAssignment: input.organisation?.activeOrganisationAssignment ?? !!input.organisationId,
+  });
+  if (orgBlock) return false;
+
+  const primaryAssignment = assignments[0];
+  const employerType =
+    input.publicSectorEmployment?.employerOrganisationType ??
+    input.organisation?.organisationType ??
+    (primaryAssignment as { employerOrganisationType?: string })?.employerOrganisationType;
+  const isPublicSectorAssignment =
+    requiresPublicSectorEmployment(employerType) ||
+    requiresPublicSectorEmployment(input.publicSectorEmployment?.employerOrganisationType) ||
+    primaryAssignment?.contextType === "public_sector_workforce_governance";
+  const isHscWorkforceGovernanceAssignment = assignments.some(
+    (a) => a.contextType === "public_sector_workforce_governance",
+  );
+  const hscBlock = publicSectorEmploymentBlocksWork(input.publicSectorEmployment, {
+    employerOrganisationType: employerType,
+    isPublicSectorAssignment,
+    isHscWorkforceGovernanceAssignment,
+  });
+  if (hscBlock) return false;
+
   const status = input.professionalTruth?.providerWorkerStatus;
   if (status && providerStatusBlocksWork(status) && status !== "active_restricted") return false;
   const cpd = input.professionalTruth?.cpdComplianceSummary?.status;
@@ -108,6 +155,9 @@ function workEligible(input: SessionExperienceInput, assignments: WorkAssignment
   if (identityType === "citizen") return false;
   if (identityType === "marketplace_actor") {
     return assignments.some((a) => a.contextType === "marketplace_operations");
+  }
+  if (assignments.some((a) => a.contextType === "public_sector_workforce_governance")) {
+    return isHscOrganisationType(input.organisation?.organisationType) && assignments.length > 0;
   }
   return true;
 }
@@ -158,13 +208,31 @@ export function resolveSessionExperienceContract(input: SessionExperienceInput):
   const professionalVisible = hasProfessional && !isMarketplace;
   const workVisible = hasWork || (isMarketplace && assignments.length > 0);
 
-  let friendlyResolutionState: string | undefined;
-  if (!hasWork && hasProfessional) friendlyResolutionState = "no_active_work_assignment";
-  else if (input.professionalTruth?.providerWorkerStatus === "suspended") friendlyResolutionState = "provider_suspended";
-  else if (input.professionalTruth?.cpdComplianceSummary?.status === "overdue") friendlyResolutionState = "missing_required_training";
-  else if (input.marketplacePipelineState === "sandbox_access_granted" && !assignments.some((a) => a.contextType === "marketplace_operations")) {
+  let friendlyResolutionState: string | undefined = organisationBlocksWork({
+    ...input.organisation,
+    identityType,
+    activeOrganisationAssignment: input.organisation?.activeOrganisationAssignment ?? !!input.organisationId,
+  });
+  if (!friendlyResolutionState && assignments.length > 0) {
+    const primaryAssignment = assignments[0];
+    friendlyResolutionState = publicSectorEmploymentBlocksWork(input.publicSectorEmployment, {
+      employerOrganisationType:
+        input.publicSectorEmployment?.employerOrganisationType ??
+        (primaryAssignment as { employerOrganisationType?: string })?.employerOrganisationType,
+      isPublicSectorAssignment:
+        requiresPublicSectorEmployment(
+          input.publicSectorEmployment?.employerOrganisationType ??
+            (primaryAssignment as { employerOrganisationType?: string })?.employerOrganisationType,
+        ) || primaryAssignment.contextType === "public_sector_workforce_governance",
+      isHscWorkforceGovernanceAssignment: primaryAssignment.contextType === "public_sector_workforce_governance",
+    });
+  }
+  if (!friendlyResolutionState && !hasWork && hasProfessional) friendlyResolutionState = "no_active_work_assignment";
+  else if (!friendlyResolutionState && input.professionalTruth?.providerWorkerStatus === "suspended") friendlyResolutionState = "provider_suspended";
+  else if (!friendlyResolutionState && input.professionalTruth?.cpdComplianceSummary?.status === "overdue") friendlyResolutionState = "missing_required_training";
+  else if (!friendlyResolutionState && input.marketplacePipelineState === "sandbox_access_granted" && !assignments.some((a) => a.contextType === "marketplace_operations")) {
     friendlyResolutionState = "marketplace_sandbox_only";
-  } else if (identityType === "citizen" && !hasProfessional) friendlyResolutionState = "citizen_only_access";
+  } else if (!friendlyResolutionState && identityType === "citizen" && !hasProfessional) friendlyResolutionState = "citizen_only_access";
 
   const defaultTab: "personal" | "professional" | "work" = workVisible
     ? loginMethod === "health_id"
@@ -216,6 +284,51 @@ export function resolveSessionExperienceContract(input: SessionExperienceInput):
   if (!tabs.professional.visible) {
     blockedActions.push("professional.profile.view", "registry.provider.verify");
   }
+  if (input.organisation?.organisationAccessEnvironment === "sandbox") {
+    blockedActions.push("integration.api_keys.manage");
+  }
+  if (input.organisation?.organisationType === "foreign_research_partner") {
+    blockedActions.push("clinical.encounter.create", "facility.staff.assign", "personal.records.view");
+  }
+  if (hscOfficerBlocksClinicalAccess(input.organisation?.organisationType)) {
+    blockedActions.push(
+      "clinical.encounter.create",
+      "clinical.notes.write",
+      "clinical.prescriptions.create",
+      "registry.provider.verify",
+      "facility.staff.assign",
+    );
+  }
+
+  const mgmtBase = resolveManagementWorkspacesForOrganisation({
+    ...input.organisation,
+    organisationId: input.organisation?.organisationId ?? input.organisationId ?? undefined,
+  });
+  const mgmtHsc = resolveHscManagementWorkspaces({
+    ...input.organisation,
+    organisationId: input.organisation?.organisationId ?? input.organisationId ?? undefined,
+  });
+  const mgmt = isHscOrganisationType(input.organisation?.organisationType)
+    ? mgmtHsc
+    : mgmtBase;
+  const publicSectorEmployment = buildPublicSectorEmploymentSessionContext(input.publicSectorEmployment);
+  const organisation: SessionOrganisationContext | undefined = input.organisation?.organisationId || input.organisationId
+    ? {
+        organisationId: input.organisation?.organisationId ?? input.organisationId ?? undefined,
+        organisationType: input.organisation?.organisationType ?? undefined,
+        organisationName: input.organisation?.organisationName ?? undefined,
+        organisationTrustTier: input.organisation?.organisationTrustTier ?? undefined,
+        organisationLifecycleStatus: input.organisation?.organisationLifecycleStatus ?? undefined,
+        organisationAccessEnvironment: input.organisation?.organisationAccessEnvironment ?? undefined,
+        organisationDataScopes: input.organisation?.organisationDataScopes,
+        organisationApiScopes: input.organisation?.organisationApiScopes,
+        organisationCountry: input.organisation?.organisationCountry ?? undefined,
+        crossBorderAccessFlag: input.organisation?.crossBorderAccessFlag,
+        userOrganisationRole: input.organisation?.userOrganisationRole ?? undefined,
+        activeOrganisationAssignment:
+          input.organisation?.activeOrganisationAssignment ?? !!(input.organisationId || input.organisation?.organisationId),
+      }
+    : undefined;
 
   let defaultRoute = tabs.personal.route;
   if (defaultTab === "work") {
@@ -272,6 +385,10 @@ export function resolveSessionExperienceContract(input: SessionExperienceInput):
     facilityModeAvailable,
     facilityModeActive: !!input.facilityModeActive,
     defaultRoute,
+    organisation,
+    visibleManagementWorkspaces: mgmt.visible,
+    blockedManagementWorkspaces: mgmt.blocked,
+    publicSectorEmployment,
   };
 }
 

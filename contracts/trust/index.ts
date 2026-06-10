@@ -5,3 +5,6 @@ export * from "./types/work-assignment";
 export * from "./types/provider-professional-truth";
 export * from "./types/session-experience-contract";
 export * from "./resolver/session-experience-resolver";
+export * from "./types/public-sector-employment-truth";
+export * from "./resolver/organisation-governance";
+export * from "./resolver/hsc-workforce-governance";

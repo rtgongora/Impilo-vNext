@@ -1,0 +1,420 @@
+{
+  "version": "1.6.0",
+  "catalogueId": "hsc-workforce-governance",
+  "displayName": "Health Service Commission Workforce Governance",
+  "entries": [
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "hsc-org-record",
+      "code": "health_service_commission",
+      "displayName": "Health Service Commission",
+      "description": "HSC — public-sector workforce governance authority",
+      "category": "hsc_organisation",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "organisationId": "org-hsc-zw",
+        "code": "health_service_commission",
+        "officialName": "Health Service Commission",
+        "legalName": "Health Service Commission",
+        "tradingName": "Health Service Commission",
+        "abbreviation": "HSC",
+        "aliases": [
+          "Health Service Commission Zimbabwe",
+          "HSC Zimbabwe"
+        ],
+        "organisationType": "health_service_commission",
+        "organisationClass": "public_sector_workforce_governance_authority",
+        "governanceDomain": [
+          "public_sector_health_workforce",
+          "establishment_control",
+          "approved_posts",
+          "appointments",
+          "transfers",
+          "promotions",
+          "employment_status",
+          "disciplinary_employment_status",
+          "public_sector_staffing_structures",
+          "public_sector_workforce_authorisation"
+        ],
+        "country": "ZW",
+        "trustTier": "tier_7_high_trust_public_workforce_authority",
+        "lifecycleStatus": "active",
+        "verificationStatus": "verified",
+        "publicPrivateClassification": "public_workforce_governance",
+        "isRealZimbabweInstitution": true,
+        "auditSensitivity": "critical",
+        "approvedEnvironments": [
+          "production_full"
+        ],
+        "approvedDataScopes": [
+          "public_sector_employment",
+          "establishment_control",
+          "workforce_posting",
+          "workforce_audit"
+        ],
+        "approvedWorkspaces": [
+          "hsc_workspace",
+          "hsc_public_sector_workforce_dashboard",
+          "hsc_user_management",
+          "hsc_establishment_control"
+        ],
+        "sourceRegistry": "workforce-governance",
+        "parentOrganisationId": null,
+        "policyMapping": "impilo.hsc",
+        "notMoHcc": true,
+        "notProfessionalCouncil": true,
+        "notGenericRegulator": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "psem-not-employed-public-sector",
+      "code": "not_employed_public_sector",
+      "displayName": "Not Employed Public Sector",
+      "category": "public_sector_employment_status",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc.block"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "psem-pending-appointment",
+      "code": "pending_appointment",
+      "displayName": "Pending Appointment",
+      "category": "public_sector_employment_status",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "psem-appointed",
+      "code": "appointed",
+      "displayName": "Appointed",
+      "category": "public_sector_employment_status",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "psem-active",
+      "code": "active",
+      "displayName": "Active",
+      "category": "public_sector_employment_status",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "psem-on-leave",
+      "code": "on_leave",
+      "displayName": "On Leave",
+      "category": "public_sector_employment_status",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "psem-transferred-pending-assumption",
+      "code": "transferred_pending_assumption",
+      "displayName": "Transferred Pending Assumption",
+      "category": "public_sector_employment_status",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "psem-seconded",
+      "code": "seconded",
+      "displayName": "Seconded",
+      "category": "public_sector_employment_status",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "psem-suspended-from-employment",
+      "code": "suspended_from_employment",
+      "displayName": "Suspended From Employment",
+      "category": "public_sector_employment_status",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc.block"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "psem-dismissed",
+      "code": "dismissed",
+      "displayName": "Dismissed",
+      "category": "public_sector_employment_status",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc.block"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "psem-retired",
+      "code": "retired",
+      "displayName": "Retired",
+      "category": "public_sector_employment_status",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "psem-resigned",
+      "code": "resigned",
+      "displayName": "Resigned",
+      "category": "public_sector_employment_status",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "psem-deceased",
+      "code": "deceased",
+      "displayName": "Deceased",
+      "category": "public_sector_employment_status",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "psem-contract-expired",
+      "code": "contract_expired",
+      "displayName": "Contract Expired",
+      "category": "public_sector_employment_status",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "psem-under-disciplinary-review",
+      "code": "under_disciplinary_review",
+      "displayName": "Under Disciplinary Review",
+      "category": "public_sector_employment_status",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc.block"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "hsc-role-hsc-administrator",
+      "code": "hsc_administrator",
+      "displayName": "Hsc Administrator",
+      "category": "hsc_workforce_governance_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "hscOrganisation": "health_service_commission",
+        "isRealZimbabweInstitutionRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "hsc-role-hsc-workforce-governance-officer",
+      "code": "hsc_workforce_governance_officer",
+      "displayName": "Hsc Workforce Governance Officer",
+      "category": "hsc_workforce_governance_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "hscOrganisation": "health_service_commission",
+        "isRealZimbabweInstitutionRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "hsc-role-hsc-establishment-control-officer",
+      "code": "hsc_establishment_control_officer",
+      "displayName": "Hsc Establishment Control Officer",
+      "category": "hsc_workforce_governance_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "hscOrganisation": "health_service_commission",
+        "isRealZimbabweInstitutionRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "hsc-role-hsc-appointments-officer",
+      "code": "hsc_appointments_officer",
+      "displayName": "Hsc Appointments Officer",
+      "category": "hsc_workforce_governance_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "hscOrganisation": "health_service_commission",
+        "isRealZimbabweInstitutionRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "hsc-role-hsc-transfers-officer",
+      "code": "hsc_transfers_officer",
+      "displayName": "Hsc Transfers Officer",
+      "category": "hsc_workforce_governance_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "hscOrganisation": "health_service_commission",
+        "isRealZimbabweInstitutionRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "hsc-role-hsc-promotions-officer",
+      "code": "hsc_promotions_officer",
+      "displayName": "Hsc Promotions Officer",
+      "category": "hsc_workforce_governance_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "hscOrganisation": "health_service_commission",
+        "isRealZimbabweInstitutionRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "hsc-role-hsc-discipline-officer",
+      "code": "hsc_discipline_officer",
+      "displayName": "Hsc Discipline Officer",
+      "category": "hsc_workforce_governance_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "hscOrganisation": "health_service_commission",
+        "isRealZimbabweInstitutionRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "hsc-role-hsc-public-sector-staffing-reviewer",
+      "code": "hsc_public_sector_staffing_reviewer",
+      "displayName": "Hsc Public Sector Staffing Reviewer",
+      "category": "hsc_workforce_governance_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "hscOrganisation": "health_service_commission",
+        "isRealZimbabweInstitutionRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "hsc-role-hsc-posting-authority-officer",
+      "code": "hsc_posting_authority_officer",
+      "displayName": "Hsc Posting Authority Officer",
+      "category": "hsc_workforce_governance_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "hscOrganisation": "health_service_commission",
+        "isRealZimbabweInstitutionRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "hsc-role-hsc-workforce-registry-steward",
+      "code": "hsc_workforce_registry_steward",
+      "displayName": "Hsc Workforce Registry Steward",
+      "category": "hsc_workforce_governance_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "hscOrganisation": "health_service_commission",
+        "isRealZimbabweInstitutionRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "hsc-role-hsc-workforce-data-quality-officer",
+      "code": "hsc_workforce_data_quality_officer",
+      "displayName": "Hsc Workforce Data Quality Officer",
+      "category": "hsc_workforce_governance_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "hscOrganisation": "health_service_commission",
+        "isRealZimbabweInstitutionRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "hsc-role-hsc-auditor",
+      "code": "hsc_auditor",
+      "displayName": "Hsc Auditor",
+      "category": "hsc_workforce_governance_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "hscOrganisation": "health_service_commission",
+        "isRealZimbabweInstitutionRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "hsc-role-hsc-read-only-reviewer",
+      "code": "hsc_read_only_reviewer",
+      "displayName": "Hsc Read Only Reviewer",
+      "category": "hsc_workforce_governance_role",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "hscOrganisation": "health_service_commission",
+        "isRealZimbabweInstitutionRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    }
+  ]
+}

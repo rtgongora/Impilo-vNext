@@ -13,6 +13,7 @@ import zw.gov.mohcc.impilo.shared.response.ApiResponse;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -29,6 +30,12 @@ public class GovernanceInternalController {
     private final ScopeEvaluationService scopeEvaluationService;
     private final GovernanceSummaryService governanceSummaryService;
     private final MultiSiteGroupAdminService multiSiteGroupAdminService;
+    private final AccessRequestService accessRequestService;
+    private final HscEmploymentService hscEmploymentService;
+    private final OrganisationMembershipService organisationMembershipService;
+    private final BootstrapGovernanceService bootstrapGovernanceService;
+    private final AuthorisedRepresentativeService authorisedRepresentativeService;
+    private final ImportBatchService importBatchService;
 
     public GovernanceInternalController(OrganisationService organisationService,
                                         OrganisationUnitService organisationUnitService,
@@ -39,7 +46,13 @@ public class GovernanceInternalController {
                                         OnboardingWorkflowService onboardingWorkflowService,
                                         ScopeEvaluationService scopeEvaluationService,
                                         GovernanceSummaryService governanceSummaryService,
-                                        MultiSiteGroupAdminService multiSiteGroupAdminService) {
+                                        MultiSiteGroupAdminService multiSiteGroupAdminService,
+                                        AccessRequestService accessRequestService,
+                                        HscEmploymentService hscEmploymentService,
+                                        OrganisationMembershipService organisationMembershipService,
+                                        BootstrapGovernanceService bootstrapGovernanceService,
+                                        AuthorisedRepresentativeService authorisedRepresentativeService,
+                                        ImportBatchService importBatchService) {
         this.organisationService = organisationService;
         this.organisationUnitService = organisationUnitService;
         this.jurisdictionAdminService = jurisdictionAdminService;
@@ -50,6 +63,12 @@ public class GovernanceInternalController {
         this.scopeEvaluationService = scopeEvaluationService;
         this.governanceSummaryService = governanceSummaryService;
         this.multiSiteGroupAdminService = multiSiteGroupAdminService;
+        this.accessRequestService = accessRequestService;
+        this.hscEmploymentService = hscEmploymentService;
+        this.organisationMembershipService = organisationMembershipService;
+        this.bootstrapGovernanceService = bootstrapGovernanceService;
+        this.authorisedRepresentativeService = authorisedRepresentativeService;
+        this.importBatchService = importBatchService;
     }
 
     private String corr() {
@@ -88,6 +107,143 @@ public class GovernanceInternalController {
                                                                        @Valid @RequestBody GovernanceDtos.OrganisationStatusRequest req) {
         GovernanceEnums.OrganisationStatus st = GovernanceEnums.OrganisationStatus.valueOf(req.status());
         return ResponseEntity.ok(ApiResponse.ok(organisationService.updateStatus(id, st), corr()));
+    }
+
+    @PatchMapping("/organisations/{id}")
+    public ResponseEntity<ApiResponse<OrganisationEntity>> patchOrganisation(@PathVariable UUID id,
+                                                                              @RequestBody GovernanceDtos.PatchOrganisationRequest req) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                organisationService.patchOrganisation(id, req.name(), req.legalName(), req.metadataJson()), corr()));
+    }
+
+    @GetMapping("/organisations/{id}/users")
+    public ResponseEntity<ApiResponse<List<OrganisationMembershipEntity>>> listOrgUsers(@PathVariable UUID id) {
+        return ResponseEntity.ok(ApiResponse.ok(organisationMembershipService.list(tenant(), id), corr()));
+    }
+
+    @PostMapping("/organisations/{id}/users")
+    public ResponseEntity<ApiResponse<OrganisationMembershipEntity>> addOrgUser(@PathVariable UUID id,
+                                                                                 @Valid @RequestBody GovernanceDtos.OrganisationMemberRequest req) {
+        OrganisationMembershipEntity member = organisationMembershipService.addMember(tenant(), id, Map.of(
+                "userId", req.userId(),
+                "subjectType", req.subjectType() != null ? req.subjectType() : "USER",
+                "roleTemplate", req.roleTemplate() != null ? req.roleTemplate() : "",
+                "status", req.status() != null ? req.status() : "ACTIVE",
+                "metadata", req.metadata() != null ? req.metadata() : ""));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(member, corr()));
+    }
+
+    @PatchMapping("/organisations/{id}/users/{userId}")
+    public ResponseEntity<ApiResponse<OrganisationMembershipEntity>> patchOrgUser(@PathVariable UUID id,
+                                                                                   @PathVariable String userId,
+                                                                                   @RequestBody GovernanceDtos.OrganisationMemberRequest req) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                organisationMembershipService.updateMember(tenant(), id, userId, Map.of(
+                        "subjectType", req.subjectType() != null ? req.subjectType() : "USER",
+                        "roleTemplate", req.roleTemplate() != null ? req.roleTemplate() : "",
+                        "status", req.status() != null ? req.status() : "ACTIVE",
+                        "metadata", req.metadata() != null ? req.metadata() : "")), corr()));
+    }
+
+    @PostMapping("/organisations/{id}/users/{userId}/suspend")
+    public ResponseEntity<ApiResponse<OrganisationMembershipEntity>> suspendOrgUser(@PathVariable UUID id, @PathVariable String userId) {
+        return ResponseEntity.ok(ApiResponse.ok(organisationMembershipService.suspendMember(tenant(), id, userId), corr()));
+    }
+
+    @PostMapping("/organisations/{id}/users/{userId}/offboard")
+    public ResponseEntity<ApiResponse<OrganisationMembershipEntity>> offboardOrgUser(@PathVariable UUID id, @PathVariable String userId) {
+        return ResponseEntity.ok(ApiResponse.ok(organisationMembershipService.offboardMember(tenant(), id, userId), corr()));
+    }
+
+    @PostMapping("/access-requests")
+    public ResponseEntity<ApiResponse<AccessRequestEntity>> createAccessRequest(@Valid @RequestBody GovernanceDtos.CreateAccessRequestBody req) {
+        AccessRequestEntity entity = accessRequestService.create(tenant(), Map.of(
+                "requestType", req.requestType(),
+                "status", req.status() != null ? req.status() : "PENDING",
+                "requesterId", req.requesterId(),
+                "requesterName", req.requesterName() != null ? req.requesterName() : req.requesterId(),
+                "organisationId", req.organisationId() != null ? req.organisationId().toString() : "",
+                "targetSubjectId", req.targetSubjectId() != null ? req.targetSubjectId() : "",
+                "requestedRole", req.requestedRole() != null ? req.requestedRole() : "",
+                "requestedScope", req.requestedScope() != null ? req.requestedScope() : "",
+                "requestedEnvironment", req.requestedEnvironment() != null ? req.requestedEnvironment() : "",
+                "requestedDataScope", req.requestedDataScope() != null ? req.requestedDataScope() : "",
+                "riskLevel", req.riskLevel() != null ? req.riskLevel() : "",
+                "policyPrecheckResult", req.policyPrecheckResult() != null ? req.policyPrecheckResult() : "",
+                "approvalsRequired", req.approvalsRequired() != null ? req.approvalsRequired() : List.of(),
+                "payload", req.payload() != null ? req.payload() : Map.of(),
+                "fallbackRequestId", req.fallbackRequestId() != null ? req.fallbackRequestId() : ""));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(entity, corr()));
+    }
+
+    @GetMapping("/access-requests")
+    public ResponseEntity<ApiResponse<List<AccessRequestEntity>>> listAccessRequests() {
+        return ResponseEntity.ok(ApiResponse.ok(accessRequestService.list(tenant()), corr()));
+    }
+
+    @PostMapping("/access-requests/{requestId}/approve")
+    public ResponseEntity<ApiResponse<AccessRequestEntity>> approveAccessRequest(@PathVariable UUID requestId,
+                                                                                  @RequestBody(required = false) GovernanceDtos.AccessRequestDecisionBody body) {
+        return transitionAccessRequest(requestId, "APPROVED", body);
+    }
+
+    @PostMapping("/access-requests/{requestId}/reject")
+    public ResponseEntity<ApiResponse<AccessRequestEntity>> rejectAccessRequest(@PathVariable UUID requestId,
+                                                                                @RequestBody(required = false) GovernanceDtos.AccessRequestDecisionBody body) {
+        return transitionAccessRequest(requestId, "REJECTED", body);
+    }
+
+    @PostMapping("/access-requests/{requestId}/revoke")
+    public ResponseEntity<ApiResponse<AccessRequestEntity>> revokeAccessRequest(@PathVariable UUID requestId,
+                                                                               @RequestBody(required = false) GovernanceDtos.AccessRequestDecisionBody body) {
+        return transitionAccessRequest(requestId, "REVOKED", body);
+    }
+
+    @PostMapping("/access-requests/{requestId}/escalate")
+    public ResponseEntity<ApiResponse<AccessRequestEntity>> escalateAccessRequest(@PathVariable UUID requestId,
+                                                                                   @RequestBody(required = false) GovernanceDtos.AccessRequestDecisionBody body) {
+        return transitionAccessRequest(requestId, "ESCALATED", body);
+    }
+
+    @GetMapping("/hsc/employment-records/search")
+    public ResponseEntity<ApiResponse<List<HscEmploymentEntity>>> searchHscEmployment(
+            @RequestParam(required = false) String providerWorkerId,
+            @RequestParam(required = false) String healthId,
+            @RequestParam(required = false) String facilityId,
+            @RequestParam(required = false) String province,
+            @RequestParam(required = false) String district,
+            @RequestParam(required = false) String status) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                hscEmploymentService.search(tenant(), providerWorkerId, healthId, facilityId, province, district, status), corr()));
+    }
+
+    @GetMapping("/hsc/employment-records/{employmentRecordId}")
+    public ResponseEntity<ApiResponse<HscEmploymentEntity>> getHscEmployment(@PathVariable UUID employmentRecordId) {
+        return ResponseEntity.ok(ApiResponse.ok(hscEmploymentService.get(employmentRecordId), corr()));
+    }
+
+    @PostMapping("/hsc/employment-records")
+    public ResponseEntity<ApiResponse<HscEmploymentEntity>> upsertHscEmployment(@Valid @RequestBody GovernanceDtos.UpsertHscEmploymentRequest req) {
+        HscEmploymentEntity entity = hscEmploymentService.upsert(tenant(), Map.of(
+                "employmentRecordId", req.employmentRecordId() != null ? req.employmentRecordId() : "",
+                "providerWorkerId", req.providerWorkerId() != null ? req.providerWorkerId() : "",
+                "linkedHealthId", req.linkedHealthId() != null ? req.linkedHealthId() : "",
+                "employerOrganisationId", req.employerOrganisationId() != null ? req.employerOrganisationId().toString() : "",
+                "employmentStatus", req.employmentStatus() != null ? req.employmentStatus() : "ACTIVE",
+                "postId", req.postId() != null ? req.postId() : "",
+                "postTitle", req.postTitle() != null ? req.postTitle() : "",
+                "grade", req.grade() != null ? req.grade() : "",
+                "cadre", req.cadre() != null ? req.cadre() : "",
+                "establishmentUnit", req.establishmentUnit() != null ? req.establishmentUnit() : "",
+                "currentPostingProvince", req.currentPostingProvince() != null ? req.currentPostingProvince() : "",
+                "currentPostingDistrict", req.currentPostingDistrict() != null ? req.currentPostingDistrict() : "",
+                "currentPostingFacility", req.currentPostingFacility() != null ? req.currentPostingFacility() : "",
+                "currentPostingDepartment", req.currentPostingDepartment() != null ? req.currentPostingDepartment() : "",
+                "transferStatus", req.transferStatus() != null ? req.transferStatus() : "",
+                "promotionStatus", req.promotionStatus() != null ? req.promotionStatus() : "",
+                "disciplinaryEmploymentStatus", req.disciplinaryEmploymentStatus() != null ? req.disciplinaryEmploymentStatus() : "",
+                "verificationStatus", req.verificationStatus() != null ? req.verificationStatus() : "PENDING"));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(entity, corr()));
     }
 
     @PostMapping("/org-units")
@@ -289,10 +445,121 @@ public class GovernanceInternalController {
                 governanceSummaryService.facilityGovernanceSummary(tenant(), facilityId), corr()));
     }
 
+    @GetMapping("/bootstrap/state")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> bootstrapState() {
+        return ResponseEntity.ok(ApiResponse.ok(bootstrapGovernanceService.state(tenant()), corr()));
+    }
+
+    @PostMapping("/bootstrap/accounts")
+    public ResponseEntity<ApiResponse<BootstrapAccountEntity>> createBootstrapAccount(@RequestBody Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(bootstrapGovernanceService.createAccount(tenant(), body), corr()));
+    }
+
+    @PostMapping("/bootstrap/accounts/{accountId}/activate")
+    public ResponseEntity<ApiResponse<BootstrapAccountEntity>> activateBootstrapAccount(@PathVariable UUID accountId, @RequestBody Map<String, Object> body) {
+        return ResponseEntity.ok(ApiResponse.ok(bootstrapGovernanceService.activate(accountId, body), corr()));
+    }
+
+    @PostMapping("/bootstrap/close")
+    public ResponseEntity<ApiResponse<BootstrapStateEntity>> closeBootstrap(@RequestBody Map<String, Object> body) {
+        return ResponseEntity.ok(ApiResponse.ok(bootstrapGovernanceService.close(tenant()), corr()));
+    }
+
+    @PostMapping("/bootstrap/recovery/open")
+    public ResponseEntity<ApiResponse<BootstrapStateEntity>> openBootstrapRecovery(@RequestBody Map<String, Object> body) {
+        return ResponseEntity.ok(ApiResponse.ok(bootstrapGovernanceService.openRecovery(tenant(), String.valueOf(body.get("ceremonyReference"))), corr()));
+    }
+
+    @PostMapping("/bootstrap/recovery/close")
+    public ResponseEntity<ApiResponse<BootstrapStateEntity>> closeBootstrapRecovery() {
+        return ResponseEntity.ok(ApiResponse.ok(bootstrapGovernanceService.closeRecovery(tenant()), corr()));
+    }
+
+    @GetMapping("/organisations/{id}/authorised-representatives")
+    public ResponseEntity<ApiResponse<List<AuthorisedRepresentativeEntity>>> listAuthorisedRepresentatives(@PathVariable UUID id) {
+        return ResponseEntity.ok(ApiResponse.ok(authorisedRepresentativeService.list(tenant(), id), corr()));
+    }
+
+    @PostMapping("/organisations/{id}/authorised-representatives")
+    public ResponseEntity<ApiResponse<AuthorisedRepresentativeEntity>> inviteAuthorisedRepresentative(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(authorisedRepresentativeService.invite(tenant(), id, body), corr()));
+    }
+
+    @PatchMapping("/organisations/{orgId}/authorised-representatives/{repId}")
+    public ResponseEntity<ApiResponse<AuthorisedRepresentativeEntity>> patchAuthorisedRepresentative(@PathVariable UUID repId, @RequestBody Map<String, Object> body) {
+        return ResponseEntity.ok(ApiResponse.ok(authorisedRepresentativeService.update(repId, body), corr()));
+    }
+
+    @PostMapping("/organisations/{orgId}/authorised-representatives/{repId}/suspend")
+    public ResponseEntity<ApiResponse<AuthorisedRepresentativeEntity>> suspendAuthorisedRepresentative(@PathVariable UUID repId) {
+        return ResponseEntity.ok(ApiResponse.ok(authorisedRepresentativeService.update(repId, Map.of("status", "SUSPENDED")), corr()));
+    }
+
+    @PostMapping("/organisations/{orgId}/authorised-representatives/{repId}/revoke")
+    public ResponseEntity<ApiResponse<AuthorisedRepresentativeEntity>> revokeAuthorisedRepresentative(@PathVariable UUID repId) {
+        return ResponseEntity.ok(ApiResponse.ok(authorisedRepresentativeService.update(repId, Map.of("status", "REVOKED")), corr()));
+    }
+
+    @PostMapping("/imports")
+    public ResponseEntity<ApiResponse<ImportBatchEntity>> uploadImport(@RequestBody Map<String, Object> body) {
+        ImportBatchEntity batch = importBatchService.upload(
+                tenant(),
+                UUID.fromString(String.valueOf(body.get("organisationId"))),
+                String.valueOf(body.get("uploadedByUserId")),
+                String.valueOf(body.get("importType")),
+                String.valueOf(body.get("sourceFileName")),
+                String.valueOf(body.get("csvContent")));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(batch, corr()));
+    }
+
+    @GetMapping("/imports")
+    public ResponseEntity<ApiResponse<List<ImportBatchEntity>>> listImports(@RequestParam UUID organisationId) {
+        return ResponseEntity.ok(ApiResponse.ok(importBatchService.list(tenant(), organisationId), corr()));
+    }
+
+    @GetMapping("/imports/{importBatchId}")
+    public ResponseEntity<ApiResponse<ImportBatchEntity>> getImport(@PathVariable UUID importBatchId) {
+        return ResponseEntity.ok(ApiResponse.ok(importBatchService.get(importBatchId), corr()));
+    }
+
+    @GetMapping("/imports/{importBatchId}/rows")
+    public ResponseEntity<ApiResponse<List<ImportRowEntity>>> importRows(@PathVariable UUID importBatchId) {
+        return ResponseEntity.ok(ApiResponse.ok(importBatchService.rows(importBatchId), corr()));
+    }
+
+    @GetMapping("/imports/{importBatchId}/exceptions")
+    public ResponseEntity<ApiResponse<List<ImportExceptionEntity>>> importExceptions(@PathVariable UUID importBatchId) {
+        return ResponseEntity.ok(ApiResponse.ok(importBatchService.exceptions(importBatchId), corr()));
+    }
+
+    @PostMapping("/imports/{importBatchId}/approve")
+    public ResponseEntity<ApiResponse<ImportBatchEntity>> approveImport(@PathVariable UUID importBatchId, @RequestBody Map<String, Object> body) {
+        return ResponseEntity.ok(ApiResponse.ok(importBatchService.approve(importBatchId, String.valueOf(body.get("actorId"))), corr()));
+    }
+
+    @PostMapping("/imports/{importBatchId}/send-invitations")
+    public ResponseEntity<ApiResponse<ImportBatchEntity>> sendImportInvitations(@PathVariable UUID importBatchId) {
+        return ResponseEntity.ok(ApiResponse.ok(importBatchService.sendInvitations(importBatchId), corr()));
+    }
+
+    @GetMapping("/imports/templates/{importType}")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> importTemplate(@PathVariable String importType) {
+        return ResponseEntity.ok(ApiResponse.ok(importBatchService.template(importType), corr()));
+    }
+
     private static LocalDate parseDate(String s) {
         if (s == null || s.isBlank()) {
             return null;
         }
         return LocalDate.parse(s);
+    }
+
+    private ResponseEntity<ApiResponse<AccessRequestEntity>> transitionAccessRequest(
+            UUID requestId, String status, GovernanceDtos.AccessRequestDecisionBody body) {
+        TrustContext ctx = TrustContextHolder.get();
+        String actorId = body != null && body.actorId() != null ? body.actorId()
+                : ctx != null && ctx.actorId() != null ? ctx.actorId() : "system";
+        String notes = body != null ? body.notes() : null;
+        return ResponseEntity.ok(ApiResponse.ok(accessRequestService.transition(requestId, status, notes, actorId), corr()));
     }
 }

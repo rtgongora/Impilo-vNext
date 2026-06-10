@@ -12,11 +12,18 @@ import {
   buildOrganogramRoleSpecs,
   applyOrganogramContextMapping,
 } from "./mohcc-organogram-roles.mjs";
+import {
+  buildExtendedRoleTemplateSpecs,
+  buildExtendedRoleProfiles,
+  DOMAIN_PERMISSION_BASELINES,
+  DEPRECATED_GENERIC_REGULATOR_ROLES,
+} from "./regulator-municipality-madi-data.mjs";
+import { HSC_ROLE_TEMPLATE_SPECS } from "./hsc-workforce-governance-data.mjs";
 
 export { ORGANOGRAM_SOURCE, ORGANOGRAM_WORKSPACES };
 
-export const CATALOGUE_DATA_VERSION = "1.3.0";
-export const VERSION_BUMP_NOTE = "Zimbabwe MoHCC organogram-aware seed data (HSC approved 2025-03-05).";
+export const CATALOGUE_DATA_VERSION = "1.6.0";
+export const VERSION_BUMP_NOTE = "Health Service Commission public-sector workforce governance authority (HSC).";
 
 function titleCase(value) {
   return value
@@ -689,6 +696,7 @@ export const ROLE_PERMISSION_BASELINES = Object.freeze({
     "facility.reports.view",
   ],
   ...ORGANOGRAM_PERMISSION_BASELINES,
+  ...DOMAIN_PERMISSION_BASELINES,
 });
 
 const PERMS = Object.freeze({
@@ -1098,9 +1106,17 @@ const GENERATED_ZW_ROLE_TEMPLATE_SPECS = [
   ),
 ];
 
+const coreRoleCodes = new Set(CORE_ZW_ROLE_TEMPLATE_SPECS.map((s) => s[0]));
+const organogramRoleSpecs = buildOrganogramRoleSpecs(spec, coreRoleCodes);
+const extendedRoleSpecs = buildExtendedRoleTemplateSpecs(coreRoleCodes);
+
 export const ZW_ROLE_TEMPLATE_SPECS = ensureUniqueRoleCodes([
   ...CORE_ZW_ROLE_TEMPLATE_SPECS.map((s) => applyOrganogramContextMapping(s[0], s)),
-  ...buildOrganogramRoleSpecs(spec, new Set(CORE_ZW_ROLE_TEMPLATE_SPECS.map((s) => s[0]))),
+  ...organogramRoleSpecs,
+  ...extendedRoleSpecs,
+  ...HSC_ROLE_TEMPLATE_SPECS.map(([code, roleCategory, contexts, workspaces, cadres, baseline, scopeLevel]) =>
+    spec(code, roleCategory, contexts, workspaces, cadres, baseline, scopeLevel),
+  ),
 ]);
 
 const ROLE_PROFILE_OVERRIDES = {
@@ -1173,6 +1189,7 @@ const ROLE_PROFILE_OVERRIDES = {
     policyScopeLevel: "facility",
   },
   ...ORGANOGRAM_ROLE_PROFILES,
+  ...buildExtendedRoleProfiles(ZW_ROLE_TEMPLATE_SPECS),
 };
 
 export const ZW_ROLE_PROFILES = Object.freeze(
@@ -1187,7 +1204,7 @@ export const ZW_ROLE_PROFILES = Object.freeze(
   ),
 );
 
-export const DEPRECATED_ROLE_TEMPLATES = [];
+export const DEPRECATED_ROLE_TEMPLATES = [...DEPRECATED_GENERIC_REGULATOR_ROLES];
 
 export default {
   CATALOGUE_DATA_VERSION,

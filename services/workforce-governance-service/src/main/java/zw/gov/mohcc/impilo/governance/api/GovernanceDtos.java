@@ -138,4 +138,55 @@ public final class GovernanceDtos {
             @NotNull List<Long> facilityIds,
             boolean createDefaultUnit
     ) {}
+
+    public record PatchOrganisationRequest(String name, String legalName, String metadataJson) {}
+
+    public record CreateAccessRequestBody(
+            @NotBlank String requestType,
+            String status,
+            @NotBlank String requesterId,
+            String requesterName,
+            UUID organisationId,
+            String targetSubjectId,
+            String requestedRole,
+            String requestedScope,
+            String requestedEnvironment,
+            String requestedDataScope,
+            String riskLevel,
+            String policyPrecheckResult,
+            Object approvalsRequired,
+            Object payload,
+            String fallbackRequestId
+    ) {}
+
+    public record AccessRequestDecisionBody(String notes, String actorId) {}
+
+    public record OrganisationMemberRequest(
+            @NotBlank String userId,
+            String subjectType,
+            String roleTemplate,
+            String status,
+            String metadata
+    ) {}
+
+    public record UpsertHscEmploymentRequest(
+            String employmentRecordId,
+            String providerWorkerId,
+            String linkedHealthId,
+            UUID employerOrganisationId,
+            String employmentStatus,
+            String postId,
+            String postTitle,
+            String grade,
+            String cadre,
+            String establishmentUnit,
+            String currentPostingProvince,
+            String currentPostingDistrict,
+            String currentPostingFacility,
+            String currentPostingDepartment,
+            String transferStatus,
+            String promotionStatus,
+            String disciplinaryEmploymentStatus,
+            String verificationStatus
+    ) {}
 }

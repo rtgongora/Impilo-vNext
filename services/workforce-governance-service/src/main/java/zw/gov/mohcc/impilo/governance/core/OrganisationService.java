@@ -78,4 +78,18 @@ public class OrganisationService {
     public List<OrganisationEntity> list(UUID tenantId) {
         return organisationRepository.findByTenantIdOrderByNameAsc(tenantId);
     }
+
+    @Transactional
+    public OrganisationEntity patchOrganisation(UUID organisationId, String name, String legalName, String metadataJson) {
+        TrustContext ctx = TrustContextHolder.require();
+        OrganisationEntity org = get(organisationId);
+        if (name != null && !name.isBlank()) org.setName(name);
+        if (legalName != null) org.setLegalName(legalName);
+        if (metadataJson != null) org.setMetadata(metadataJson);
+        org = organisationRepository.save(org);
+        governanceEventService.enqueue("ORGANISATION", org.getId().toString(), "impilo.governance.organisation.patched",
+                Map.of("organisationId", org.getId().toString()), org.getTenantId(),
+                ctx.correlationId() != null ? ctx.correlationId().toString() : null);
+        return org;
+    }
 }

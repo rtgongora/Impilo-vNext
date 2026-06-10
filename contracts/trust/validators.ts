@@ -11,16 +11,24 @@ import governanceMarketplaceSeed from "./seeds/governance-marketplace.json";
 import roleTemplatesSeed from "./seeds/role-templates.json";
 import resolutionTabsOpaSeed from "./seeds/resolution-tabs-opa.json";
 import zimbabweMohccSeed from "./seeds/zimbabwe-mohcc.json";
+import regulatoryInstitutionsSeed from "./seeds/regulatory-institutions.json";
+import organisationGovernanceSeed from "./seeds/organisation-governance.json";
+import hscWorkforceGovernanceSeed from "./seeds/hsc-workforce-governance.json";
+import bootstrapOnboardingSeed from "./seeds/bootstrap-onboarding.json";
 import type { TrustCatalogueBundle } from "./catalogue-schema";
 
 const ALL_BUNDLES: TrustCatalogueBundle[] = [
   identitySeed as TrustCatalogueBundle,
   providerWorkerSeed as TrustCatalogueBundle,
   zimbabweMohccSeed as TrustCatalogueBundle,
+  regulatoryInstitutionsSeed as TrustCatalogueBundle,
+  organisationGovernanceSeed as TrustCatalogueBundle,
+  hscWorkforceGovernanceSeed as TrustCatalogueBundle,
   workContextSeed as TrustCatalogueBundle,
   permissionsSeed as TrustCatalogueBundle,
   governanceMarketplaceSeed as TrustCatalogueBundle,
   roleTemplatesSeed as TrustCatalogueBundle,
+  bootstrapOnboardingSeed as TrustCatalogueBundle,
   resolutionTabsOpaSeed as TrustCatalogueBundle,
 ];
 
@@ -51,7 +59,7 @@ export function catalogueCodesByCategory(category: string): Set<string> {
 export function validateAllCataloguesLoad(): string[] {
   const errors: string[] = [];
   try {
-    if (ALL_BUNDLES.length < 8) errors.push(`expected >= 8 bundles, got ${ALL_BUNDLES.length}`);
+    if (ALL_BUNDLES.length < 11) errors.push(`expected >= 11 bundles, got ${ALL_BUNDLES.length}`);
     for (const b of ALL_BUNDLES) {
       if (!b.version) errors.push(`bundle ${b.catalogueId} missing version`);
       if (!b.entries?.length) errors.push(`bundle ${b.catalogueId} has no entries`);
@@ -82,6 +90,7 @@ export function validateRoleTemplates(): string[] {
     ...catalogueCodesByCategory("workspace_type"),
     ...catalogueCodesByCategory("registry_owner_workspace"),
     ...catalogueCodesByCategory("regulator_workspace"),
+    ...catalogueCodesByCategory("management_workspace"),
   ]);
   const permissions = catalogueCodesByCategory("permission");
   const opaPackages = catalogueCodesByCategory("opa_policy_package");
@@ -254,6 +263,138 @@ export function validateMohccOrganogramRoles(): string[] {
   return errors;
 }
 
+export function validateRegulatorMunicipalityMadi(): string[] {
+  const errors: string[] = [];
+  const realCouncils = [
+    "health_professions_authority",
+    "medical_laboratories_clinical_scientists_council",
+    "medical_dental_practitioners_council",
+    "allied_health_practitioners_council",
+    "pharmacists_council",
+    "nurses_council",
+    "environmental_health_practitioners_council",
+    "medical_rehabilitation_practitioners_council",
+    "natural_therapists_council",
+  ];
+  for (const code of realCouncils) {
+    const org = findEntry(code, "regulatory_organisation");
+    if (!org) errors.push(`missing real regulatory organisation ${code}`);
+    if (org && !(org.metadata as { isRealZimbabweInstitution?: boolean })?.isRealZimbabweInstitution) {
+      errors.push(`${code} must be marked isRealZimbabweInstitution`);
+    }
+  }
+  const fakeCouncil = findAnyEntry("rehabilitation_practitioners_council", "regulatory_organisation");
+  if (fakeCouncil && fakeCouncil.status !== "deprecated") {
+    errors.push("rehabilitation_practitioners_council fake institution must be deprecated");
+  }
+  const genericRegulatorRole = findAnyEntry("professional_council_regulator", "regulator_role");
+  if (!genericRegulatorRole || genericRegulatorRole.status !== "deprecated") {
+    errors.push("professional_council_regulator must be deprecated");
+  }
+  for (const code of ["mdpc_reviewer", "municipal_medical_officer", "haemovigilance_officer", "blood_collection_officer"]) {
+    if (!findEntry(code, "role_template")) errors.push(`missing role template ${code}`);
+  }
+  const mdpc = findEntry("mdpc_reviewer", "role_template");
+  const mdpcPerms = (mdpc?.metadata as { defaultPermissions?: string[] })?.defaultPermissions ?? [];
+  if (mdpcPerms.some((p) => p.startsWith("clinical."))) errors.push("mdpc_reviewer must not have clinical permissions");
+  if (!mdpcPerms.includes("regulator.review")) errors.push("mdpc_reviewer must include regulator.review");
+  const municipal = findEntry("municipal_medical_officer", "role_template");
+  if ((municipal?.metadata as { policyScopeLevel?: string })?.policyScopeLevel !== "local_authority") {
+    errors.push("municipal_medical_officer must be local_authority scoped");
+  }
+  const municipalPerms = (municipal?.metadata as { defaultPermissions?: string[] })?.defaultPermissions ?? [];
+  if (municipalPerms.includes("registry.provider.approve")) {
+    errors.push("municipal_medical_officer must not approve provider registry entries");
+  }
+  const madi = findEntry("blood_collection_officer", "role_template");
+  const madiPerms = (madi?.metadata as { defaultPermissions?: string[] })?.defaultPermissions ?? [];
+  if (madiPerms.some((p) => p.startsWith("clinical."))) errors.push("blood_collection_officer must not have clinical permissions");
+  if (!madiPerms.some((p) => p.startsWith("madi."))) errors.push("blood_collection_officer must have madi permissions");
+  if (!findEntry("council_user_management", "management_workspace")) {
+    errors.push("missing council_user_management scoped workspace");
+  }
+  if (!findEntry("blood_service_user_management", "management_workspace")) {
+    errors.push("missing blood_service_user_management scoped workspace");
+  }
+  return errors;
+}
+
+export function validateMultiOrganisationGovernance(): string[] {
+  const errors: string[] = [];
+  for (const code of ["sovereign_public_owner", "private_hospital", "foreign_research_partner", "software_vendor"]) {
+    if (!findEntry(code, "organisation_type")) errors.push(`missing organisation_type ${code}`);
+  }
+  for (const code of ["tier_6_sovereign_public_operator", "tier_7_high_trust_regulator", "tier_0_unverified"]) {
+    if (!findEntry(code, "organisation_trust_tier")) errors.push(`missing trust tier ${code}`);
+  }
+  for (const code of ["organisation_suspended", "sandbox_only_access", "organisation_user_not_assigned"]) {
+    if (!findEntry(code, "friendly_resolution_state")) errors.push(`missing friendly state ${code}`);
+  }
+  if (!findEntry("organisation_administrator", "organisation_linked_user_type")) {
+    errors.push("missing organisation_administrator user type");
+  }
+  if (!findEntry("mohcc_zimbabwe", "organisation_registry_record")) {
+    errors.push("missing MoHCC exemplar organisation registry record");
+  }
+  if (!findEntry("private_facility_user_management", "management_workspace")) {
+    errors.push("missing private_facility_user_management workspace");
+  }
+  const mohcc = findEntry("mohcc_zimbabwe", "organisation_registry_record");
+  if (mohcc && !(mohcc.metadata as { trustTier?: string })?.trustTier?.includes("sovereign")) {
+    errors.push("MoHCC must be sovereign trust tier");
+  }
+  return errors;
+}
+
+export function validateHscWorkforceGovernance(): string[] {
+  const errors: string[] = [];
+  if (!findEntry("health_service_commission", "organisation_type")) {
+    errors.push("missing organisation_type health_service_commission");
+  }
+  if (!findEntry("health_service_commission", "organisation_registry_record")) {
+    errors.push("missing HSC organisation registry record");
+  }
+  if (!findEntry("tier_7_high_trust_public_workforce_authority", "organisation_trust_tier")) {
+    errors.push("missing HSC trust tier");
+  }
+  if (!findEntry("health_service_commission", "hsc_organisation")) {
+    errors.push("missing hsc_organisation catalogue entry");
+  }
+  for (const code of ["hsc_administrator", "hsc_workforce_governance_officer", "hsc_read_only_reviewer"]) {
+    if (!findRoleTemplateMeta(code)) errors.push(`missing HSC role template ${code}`);
+  }
+  for (const code of ["hsc_workspace", "hsc_establishment_control", "hsc_user_management"]) {
+    if (!findEntry(code, "workspace_type") && !findEntry(code, "management_workspace")) {
+      errors.push(`missing HSC workspace ${code}`);
+    }
+  }
+  for (const code of ["active", "suspended_from_employment", "transferred_pending_assumption"]) {
+    if (!findEntry(code, "public_sector_employment_status")) errors.push(`missing employment status ${code}`);
+  }
+  for (const code of ["hsc_employment_not_found", "hsc_employment_suspended", "hsc_posting_required"]) {
+    if (!findEntry(code, "friendly_resolution_state")) errors.push(`missing HSC friendly state ${code}`);
+  }
+  const hscOrg = findEntry("health_service_commission", "organisation_registry_record");
+  const hscMeta = hscOrg?.metadata as { organisationType?: string; isRealZimbabweInstitution?: boolean };
+  if (hscMeta?.organisationType !== "health_service_commission") {
+    errors.push("HSC registry record must be health_service_commission type");
+  }
+  const hscAdmin = findRoleTemplateMeta("hsc_administrator");
+  const adminPerms = hscAdmin?.defaultPermissions ?? [];
+  if (adminPerms.some((p) => p.startsWith("clinical."))) {
+    errors.push("hsc_administrator must not have clinical permissions by default");
+  }
+  if (adminPerms.includes("system.roles.manage")) {
+    errors.push("hsc_administrator must not have system superuser permissions");
+  }
+  const mdpc = findRoleTemplateMeta("mdpc_reviewer");
+  const hscOfficer = findRoleTemplateMeta("hsc_appointments_officer");
+  if (mdpc && hscOfficer && JSON.stringify(mdpc.defaultPermissions) === JSON.stringify(hscOfficer.defaultPermissions)) {
+    errors.push("HSC roles must not mirror council regulator permissions");
+  }
+  return errors;
+}
+
 function findRoleTemplateMeta(code: string): { defaultPermissions?: string[] } | undefined {
   const entry = findEntry(code, "role_template");
   return entry?.metadata as { defaultPermissions?: string[] } | undefined;
@@ -276,7 +417,7 @@ export const REQUIRED_CATALOGUE_CODES: Record<string, string[]> = {
   qualification_certification_category: ["practice_licence", "cpd_certificate"],
   provider_worker_status: ["verified", "active", "suspended", "active_restricted"],
   cpd_compliance_status: ["compliant", "overdue", "restricted_until_complete"],
-  approved_work_context_type: ["facility_clinical", "marketplace_operations", "registry_governance"],
+  approved_work_context_type: ["facility_clinical", "marketplace_operations", "registry_governance", "public_sector_workforce_governance"],
   workplace_place_type: ["clinic", "district_hospital", "marketplace_organisation"],
   workspace_type: ["pharmacy", "facility_staff_management", "marketplace_vendor_portal"],
   assignment_type: ["facility_assignment", "marketplace_organisation_assignment"],
@@ -285,14 +426,26 @@ export const REQUIRED_CATALOGUE_CODES: Record<string, string[]> = {
   role_template: [
     "chief_pharmacist", "facility_administrator", "telemedicine_provider",
     "marketplace_organisation_admin", "district_medical_officer", "provincial_medical_director",
-    "district_nursing_officer", "sister_in_charge_community",
+    "district_nursing_officer", "sister_in_charge_community", "hsc_administrator", "hsc_workforce_governance_officer",
+    "national_bootstrap_administrator", "organisation_authorised_representative", "organisation_data_uploader",
   ],
   health_administrative_level: ["national", "province", "district", "facility", "community"],
   organisational_structure: ["mohcc_national_headquarters", "provincial_medical_office", "district_medical_office"],
-  permission_domain: ["personal", "work", "registry", "marketplace"],
-  permission: ["work.context.enter", "registry.provider.verify", "break_glass.authorize"],
+  permission_domain: ["personal", "work", "registry", "marketplace", "madi.donor"],
+  permission: ["work.context.enter", "registry.provider.verify", "break_glass.authorize", "madi.donor.view"],
   registry_governance_role: ["provider_registry_steward", "client_registry_steward"],
-  regulator_role: ["professional_council_regulator", "marketplace_certification_reviewer"],
+  regulatory_organisation: ["health_professions_authority", "medical_dental_practitioners_council", "nurses_council"],
+  organisation_type: ["sovereign_public_owner", "private_hospital", "city_health_department", "health_service_commission"],
+  organisation_trust_tier: ["tier_6_sovereign_public_operator", "tier_7_high_trust_regulator", "tier_7_high_trust_public_workforce_authority"],
+  organisation_lifecycle_state: ["active", "suspended", "sandbox_only"],
+  organisation_access_environment: ["sandbox", "production_limited", "deidentified_only"],
+  organisation_linked_user_type: ["organisation_administrator", "organisation_owner"],
+  organisation_registry_record: ["mohcc_zimbabwe", "avenues_private_hospital", "health_service_commission"],
+  public_sector_employment_status: ["active", "suspended_from_employment", "transferred_pending_assumption"],
+  hsc_organisation: ["health_service_commission"],
+  hsc_workforce_governance_role: ["hsc_administrator", "hsc_workforce_governance_officer"],
+  management_workspace: ["private_facility_user_management", "municipal_user_management", "council_user_management"],
+  regulator_role: ["mdpc_reviewer", "marketplace_certification_reviewer"],
   workplace_manager_role: ["facility_administrator"],
   system_admin_role: ["national_platform_administrator"],
   marketplace_participant_type: ["vendor", "software_integration_partner"],
@@ -303,9 +456,11 @@ export const REQUIRED_CATALOGUE_CODES: Record<string, string[]> = {
   friendly_resolution_state: [
     "no_active_work_assignment", "provider_suspended", "citizen_only_access",
     "marketplace_sandbox_only", "device_context_requires_user_login",
+    "organisation_suspended", "organisation_user_not_assigned", "sandbox_only_access",
+    "hsc_employment_not_found", "hsc_employment_suspended", "hsc_posting_required",
   ],
   session_tab: ["personal", "professional", "work"],
-  opa_policy_package: ["impilo.tabs", "impilo.work", "impilo.registry", "impilo.marketplace", "impilo.break_glass"],
+  opa_policy_package: ["impilo.tabs", "impilo.work", "impilo.registry", "impilo.marketplace", "impilo.break_glass", "impilo.madi", "impilo.organisation", "impilo.hsc"],
 };
 
 export function runAllCatalogueValidators(): { ok: boolean; errors: string[] } {
@@ -318,6 +473,9 @@ export function runAllCatalogueValidators(): { ok: boolean; errors: string[] } {
     ...validateRolePermissionBaselines(),
     ...validateZimbabweNativeRoles(),
     ...validateMohccOrganogramRoles(),
+    ...validateRegulatorMunicipalityMadi(),
+    ...validateMultiOrganisationGovernance(),
+    ...validateHscWorkforceGovernance(),
   ];
   return { ok: errors.length === 0, errors };
 }

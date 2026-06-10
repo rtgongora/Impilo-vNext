@@ -23,3 +23,9 @@ export type { SecureStorageAdapter } from "./secureStorage";
 
 // React hooks
 export { useAuth, useSession, useAccessToken } from "./hooks";
+
+// Identity & administration navigation (Session Experience Contract parity)
+export { resolveMobileIdentityContext } from "./identityContext";
+export type { LoginMethod, MobileWorkAssignment } from "./identityContext";
+export { MOBILE_ADMIN_NAV_ITEMS, resolveMobileAdministrationNav } from "./administrationGovernanceNav";
+export type { MobileAdminNavItem } from "./administrationGovernanceNav";

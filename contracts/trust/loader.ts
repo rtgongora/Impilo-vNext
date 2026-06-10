@@ -11,21 +11,29 @@ import governanceMarketplaceSeed from "./seeds/governance-marketplace.json";
 import roleTemplatesSeed from "./seeds/role-templates.json";
 import resolutionTabsOpaSeed from "./seeds/resolution-tabs-opa.json";
 import zimbabweMohccSeed from "./seeds/zimbabwe-mohcc.json";
+import regulatoryInstitutionsSeed from "./seeds/regulatory-institutions.json";
+import organisationGovernanceSeed from "./seeds/organisation-governance.json";
+import hscWorkforceGovernanceSeed from "./seeds/hsc-workforce-governance.json";
+import bootstrapOnboardingSeed from "./seeds/bootstrap-onboarding.json";
 import {
   REQUIRED_CATALOGUE_CODES,
   validateRequiredCatalogueCodes as validateRequiredCodes,
 } from "./validators";
 
-export const TRUST_CATALOGUE_VERSION = "1.3.0";
+export const TRUST_CATALOGUE_VERSION = "1.6.0";
 
 const ALL_BUNDLES: TrustCatalogueBundle[] = [
   identitySeed as TrustCatalogueBundle,
   providerWorkerSeed as TrustCatalogueBundle,
   zimbabweMohccSeed as TrustCatalogueBundle,
+  regulatoryInstitutionsSeed as TrustCatalogueBundle,
+  organisationGovernanceSeed as TrustCatalogueBundle,
+  hscWorkforceGovernanceSeed as TrustCatalogueBundle,
   workContextSeed as TrustCatalogueBundle,
   permissionsSeed as TrustCatalogueBundle,
   governanceMarketplaceSeed as TrustCatalogueBundle,
   roleTemplatesSeed as TrustCatalogueBundle,
+  bootstrapOnboardingSeed as TrustCatalogueBundle,
   resolutionTabsOpaSeed as TrustCatalogueBundle,
 ];
 

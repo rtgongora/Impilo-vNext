@@ -3,6 +3,7 @@
  */
 
 import type { WorkAssignment } from "./work-assignment";
+import type { PublicSectorEmploymentSessionContext } from "./public-sector-employment-truth";
 
 export type SessionLoginMethod =
   | "health_id"
@@ -77,6 +78,26 @@ export interface SessionExperienceContract {
   facilityModeAvailable: boolean;
   facilityModeActive: boolean;
   defaultRoute: string;
+  organisation?: SessionOrganisationContext;
+  visibleManagementWorkspaces: string[];
+  blockedManagementWorkspaces: string[];
+  publicSectorEmployment?: PublicSectorEmploymentSessionContext;
 }
 
-export const SESSION_EXPERIENCE_CONTRACT_VERSION = "1.0.0";
+/** Organisation context bound to non-citizen Work and management workspaces */
+export interface SessionOrganisationContext {
+  organisationId?: string;
+  organisationType?: string;
+  organisationName?: string;
+  organisationTrustTier?: string;
+  organisationLifecycleStatus?: string;
+  organisationAccessEnvironment?: string;
+  organisationDataScopes?: string[];
+  organisationApiScopes?: string[];
+  organisationCountry?: string;
+  crossBorderAccessFlag?: boolean;
+  userOrganisationRole?: string;
+  activeOrganisationAssignment?: boolean;
+}
+
+export const SESSION_EXPERIENCE_CONTRACT_VERSION = "1.2.0";

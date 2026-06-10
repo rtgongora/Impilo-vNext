@@ -1,5 +1,5 @@
 {
-  "version": "1.3.0",
+  "version": "1.6.0",
   "catalogueId": "permissions",
   "displayName": "Permission Domains and Standard Permissions",
   "entries": [
@@ -432,6 +432,231 @@
       "id": "dom-break_glass",
       "code": "break_glass",
       "displayName": "Break Glass",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-madi-donor",
+      "code": "madi.donor",
+      "displayName": "Madi Donor",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-madi-collection",
+      "code": "madi.collection",
+      "displayName": "Madi Collection",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-madi-processing",
+      "code": "madi.processing",
+      "displayName": "Madi Processing",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-madi-testing",
+      "code": "madi.testing",
+      "displayName": "Madi Testing",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-madi-inventory",
+      "code": "madi.inventory",
+      "displayName": "Madi Inventory",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-madi-orders",
+      "code": "madi.orders",
+      "displayName": "Madi Orders",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-madi-issue",
+      "code": "madi.issue",
+      "displayName": "Madi Issue",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-madi-transfusion",
+      "code": "madi.transfusion",
+      "displayName": "Madi Transfusion",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-madi-haemovigilance",
+      "code": "madi.haemovigilance",
+      "displayName": "Madi Haemovigilance",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-madi-quality",
+      "code": "madi.quality",
+      "displayName": "Madi Quality",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-madi-reporting",
+      "code": "madi.reporting",
+      "displayName": "Madi Reporting",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-hsc",
+      "code": "hsc",
+      "displayName": "Hsc",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-hsc-workforce",
+      "code": "hsc.workforce",
+      "displayName": "Hsc Workforce",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-hsc-establishment",
+      "code": "hsc.establishment",
+      "displayName": "Hsc Establishment",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-hsc-posts",
+      "code": "hsc.posts",
+      "displayName": "Hsc Posts",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-hsc-appointments",
+      "code": "hsc.appointments",
+      "displayName": "Hsc Appointments",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-hsc-transfers",
+      "code": "hsc.transfers",
+      "displayName": "Hsc Transfers",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-hsc-promotions",
+      "code": "hsc.promotions",
+      "displayName": "Hsc Promotions",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-hsc-discipline",
+      "code": "hsc.discipline",
+      "displayName": "Hsc Discipline",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-hsc-posting",
+      "code": "hsc.posting",
+      "displayName": "Hsc Posting",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-hsc-employment",
+      "code": "hsc.employment",
+      "displayName": "Hsc Employment",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-hsc-registry",
+      "code": "hsc.registry",
+      "displayName": "Hsc Registry",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-hsc-audit",
+      "code": "hsc.audit",
+      "displayName": "Hsc Audit",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-hsc-scope",
+      "code": "hsc.scope",
+      "displayName": "Hsc Scope",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-hsc-users",
+      "code": "hsc.users",
+      "displayName": "Hsc Users",
       "category": "permission_domain",
       "ownerService": "tshepo"
     },
@@ -1941,6 +2166,487 @@
       "policyMapping": "impilo.break_glass",
       "metadata": {
         "domain": "break_glass"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-madi-donor-view",
+      "code": "madi.donor.view",
+      "displayName": "Madi Donor View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.madi",
+      "metadata": {
+        "domain": "madi.donor"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-madi-donor-register",
+      "code": "madi.donor.register",
+      "displayName": "Madi Donor Register",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.madi",
+      "metadata": {
+        "domain": "madi.donor"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-madi-donor-update",
+      "code": "madi.donor.update",
+      "displayName": "Madi Donor Update",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.madi",
+      "metadata": {
+        "domain": "madi.donor"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-madi-collection-perform",
+      "code": "madi.collection.perform",
+      "displayName": "Madi Collection Perform",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.madi",
+      "metadata": {
+        "domain": "madi.collection"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-madi-processing-perform",
+      "code": "madi.processing.perform",
+      "displayName": "Madi Processing Perform",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.madi",
+      "metadata": {
+        "domain": "madi.processing"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-madi-testing-perform",
+      "code": "madi.testing.perform",
+      "displayName": "Madi Testing Perform",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.madi",
+      "metadata": {
+        "domain": "madi.testing"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-madi-inventory-view",
+      "code": "madi.inventory.view",
+      "displayName": "Madi Inventory View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.madi",
+      "metadata": {
+        "domain": "madi.inventory"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-madi-inventory-manage",
+      "code": "madi.inventory.manage",
+      "displayName": "Madi Inventory Manage",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.madi",
+      "metadata": {
+        "domain": "madi.inventory"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-madi-orders-create",
+      "code": "madi.orders.create",
+      "displayName": "Madi Orders Create",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.madi",
+      "metadata": {
+        "domain": "madi.orders"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-madi-orders-approve",
+      "code": "madi.orders.approve",
+      "displayName": "Madi Orders Approve",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.madi",
+      "metadata": {
+        "domain": "madi.orders"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-madi-issue-authorize",
+      "code": "madi.issue.authorize",
+      "displayName": "Madi Issue Authorize",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.madi",
+      "metadata": {
+        "domain": "madi.issue"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-madi-issue-perform",
+      "code": "madi.issue.perform",
+      "displayName": "Madi Issue Perform",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.madi",
+      "metadata": {
+        "domain": "madi.issue"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-madi-transfusion-request",
+      "code": "madi.transfusion.request",
+      "displayName": "Madi Transfusion Request",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.madi",
+      "metadata": {
+        "domain": "madi.transfusion"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-madi-transfusion-administer",
+      "code": "madi.transfusion.administer",
+      "displayName": "Madi Transfusion Administer",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.madi",
+      "metadata": {
+        "domain": "madi.transfusion"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-madi-haemovigilance-review",
+      "code": "madi.haemovigilance.review",
+      "displayName": "Madi Haemovigilance Review",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.madi",
+      "metadata": {
+        "domain": "madi.haemovigilance"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-madi-quality-audit",
+      "code": "madi.quality.audit",
+      "displayName": "Madi Quality Audit",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.madi",
+      "metadata": {
+        "domain": "madi.quality"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-madi-reporting-view",
+      "code": "madi.reporting.view",
+      "displayName": "Madi Reporting View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.madi",
+      "metadata": {
+        "domain": "madi.reporting"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-hsc-workforce-view",
+      "code": "hsc.workforce.view",
+      "displayName": "Hsc Workforce View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "domain": "hsc.workforce"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-hsc-workforce-manage",
+      "code": "hsc.workforce.manage",
+      "displayName": "Hsc Workforce Manage",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "domain": "hsc.workforce"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-hsc-establishment-view",
+      "code": "hsc.establishment.view",
+      "displayName": "Hsc Establishment View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "domain": "hsc.establishment"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-hsc-establishment-manage",
+      "code": "hsc.establishment.manage",
+      "displayName": "Hsc Establishment Manage",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "domain": "hsc.establishment"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-hsc-posts-view",
+      "code": "hsc.posts.view",
+      "displayName": "Hsc Posts View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "domain": "hsc.posts"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-hsc-posts-manage",
+      "code": "hsc.posts.manage",
+      "displayName": "Hsc Posts Manage",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "domain": "hsc.posts"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-hsc-appointments-review",
+      "code": "hsc.appointments.review",
+      "displayName": "Hsc Appointments Review",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "domain": "hsc.appointments"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-hsc-appointments-approve",
+      "code": "hsc.appointments.approve",
+      "displayName": "Hsc Appointments Approve",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "domain": "hsc.appointments"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-hsc-transfers-review",
+      "code": "hsc.transfers.review",
+      "displayName": "Hsc Transfers Review",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "domain": "hsc.transfers"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-hsc-transfers-approve",
+      "code": "hsc.transfers.approve",
+      "displayName": "Hsc Transfers Approve",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "domain": "hsc.transfers"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-hsc-promotions-review",
+      "code": "hsc.promotions.review",
+      "displayName": "Hsc Promotions Review",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "domain": "hsc.promotions"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-hsc-promotions-approve",
+      "code": "hsc.promotions.approve",
+      "displayName": "Hsc Promotions Approve",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "domain": "hsc.promotions"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-hsc-discipline-review",
+      "code": "hsc.discipline.review",
+      "displayName": "Hsc Discipline Review",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "domain": "hsc.discipline"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-hsc-posting-authorize",
+      "code": "hsc.posting.authorize",
+      "displayName": "Hsc Posting Authorize",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "domain": "hsc.posting"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-hsc-employment-suspend",
+      "code": "hsc.employment.suspend",
+      "displayName": "Hsc Employment Suspend",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "domain": "hsc.employment"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-hsc-employment-reinstate",
+      "code": "hsc.employment.reinstate",
+      "displayName": "Hsc Employment Reinstate",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "domain": "hsc.employment"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-hsc-registry-steward",
+      "code": "hsc.registry.steward",
+      "displayName": "Hsc Registry Steward",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "domain": "hsc.registry"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-hsc-audit-view",
+      "code": "hsc.audit.view",
+      "displayName": "Hsc Audit View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "domain": "hsc.audit"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-hsc-scope-assign",
+      "code": "hsc.scope.assign",
+      "displayName": "Hsc Scope Assign",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "domain": "hsc.scope"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-hsc-users-manage",
+      "code": "hsc.users.manage",
+      "displayName": "Hsc Users Manage",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.hsc",
+      "metadata": {
+        "domain": "hsc.users"
       }
     }
   ]

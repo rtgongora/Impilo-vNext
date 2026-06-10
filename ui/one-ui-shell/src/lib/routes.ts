@@ -10,6 +10,8 @@
  * support, developer, and others derived from ROUTES.
  */
 
+import { ADMINISTRATION_GOVERNANCE_ROUTES } from "./administration-governance/route-registry";
+
 export type LayoutVariant = "app" | "ehr" | "auth" | "minimal";
 export type SidebarContext =
   | "main"
@@ -40,6 +42,7 @@ export interface RouteDefinition {
 
 export const ROUTES: RouteDefinition[] = [
   // â”€â”€ Zone: Auth (4 pathways) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  { path: "/bootstrap", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Platform Bootstrap", navLabel: "Bootstrap" },
   { path: "/auth/login", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Sign In", navLabel: "Sign In" },
   { path: "/auth/login/email", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Sign In with Email", navLabel: "Email Login" },
   { path: "/auth/login/provider-id", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Sign In with Provider ID", navLabel: "Provider ID Login" },
@@ -649,6 +652,9 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/live/event/[eventId]/room", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Live Room", navLabel: "Live Room", navZone: "work" },
   { path: "/live/event/[eventId]/replay", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Event Replay", navLabel: "Replay", navZone: "life" },
   { path: "/live/event/[eventId]/analytics", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Live Analytics", navLabel: "Analytics", navZone: "work" },
+
+  // Trust & Access Administration (Jun 2026): 90 routes under /work/** driven by Session Experience Contract.
+  ...ADMINISTRATION_GOVERNANCE_ROUTES,
 ];
 
 // Total route count assertion.
@@ -686,7 +692,8 @@ export const ROUTES: RouteDefinition[] = [
 // Madi (Jun 2026): 26 routes under /madi for blood donation, transfusion &
 // haemovigilance (services/madi-service). New canonical total is 452.
 // Impilo Live (Jun 2026): 14 routes under /live incl. /live/admin (services/live-service).
-export const EXPECTED_ROUTE_COUNT = 481;
+// Trust & Access Administration (Jun 2026): 90 contract-governed routes under /work/** (administration-governance scaffold).
+export const EXPECTED_ROUTE_COUNT = 575;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

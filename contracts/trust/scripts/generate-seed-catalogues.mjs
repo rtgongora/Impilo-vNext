@@ -18,6 +18,46 @@ import {
   ORGANOGRAM_SOURCE,
   ORGANOGRAM_WORKSPACES,
 } from "./zimbabwe-catalogue-data.mjs";
+import {
+  ZIMBABWE_REGULATORY_ORGANISATIONS,
+  REGULATOR_ORGANISATION_TYPES,
+  DEPRECATED_FAKE_REGULATOR_CODES,
+  DEPRECATED_GENERIC_REGULATOR_ROLES,
+  DEPRECATED_GENERIC_REGULATOR_ROLE_MAPS,
+  MUNICIPAL_ORGANISATION_TYPES,
+  MUNICIPAL_WORKSPACES,
+  MADI_ORGANISATION_TYPES,
+  MADI_WORKSPACES,
+  MADI_PERMISSION_DOMAINS,
+  MADI_PERMISSIONS,
+  REGULATOR_WORKSPACES,
+  MANAGEMENT_WORKSPACES,
+  MUNICIPAL_ROLES,
+  MADI_ROLES,
+} from "./regulator-municipality-madi-data.mjs";
+import {
+  ORGANISATION_TYPES,
+  ORGANISATION_TRUST_TIERS,
+  ORGANISATION_LIFECYCLE_STATES,
+  ORGANISATION_ACCESS_ENVIRONMENTS,
+  ORGANISATION_LINKED_USER_TYPES,
+  ORGANISATION_REGISTRY_FIELDS,
+  MULTI_ORG_MANAGEMENT_WORKSPACES,
+  EXEMPLAR_ORGANISATIONS,
+  ORGANISATION_FRIENDLY_RESOLUTION_STATES,
+} from "./multi-organisation-governance-data.mjs";
+import {
+  HSC_ORGANISATION,
+  HSC_WORKSPACES,
+  HSC_MANAGEMENT_WORKSPACES,
+  HSC_PERMISSIONS,
+  HSC_PERMISSION_BASELINE,
+  HSC_DENIED_ACTIONS,
+  HSC_ROLE_DEFINITIONS,
+  HSC_WORKFORCE_GOVERNANCE_ROLES,
+  PUBLIC_SECTOR_EMPLOYMENT_STATUSES,
+  HSC_FRIENDLY_RESOLUTION_STATES,
+} from "./hsc-workforce-governance-data.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SEEDS_DIR = join(__dirname, "..", "seeds");
@@ -257,6 +297,193 @@ const zimbabweMohccEntries = [
 
 writeSeed("zimbabwe-mohcc", bundle("zimbabwe-mohcc", "Zimbabwe MoHCC Administrative Levels and Organisational Structures", zimbabweMohccEntries));
 
+const regulatoryInstitutionEntries = [
+  ...REGULATOR_ORGANISATION_TYPES.map((code) =>
+    entry({
+      id: `rot-${code.replace(/_/g, "-")}`,
+      code,
+      displayName: titleCase(code),
+      category: "regulator_organisation_type",
+      ownerService: "tshepo",
+      metadata: { genericTypeOnly: code === "professional_council", notRealInstitution: code === "professional_council" },
+    }),
+  ),
+  ...ZIMBABWE_REGULATORY_ORGANISATIONS.map((org) =>
+    entry({
+      id: `rio-${org.code}`,
+      code: org.code,
+      displayName: org.officialName,
+      description: `${org.abbreviation} — real Zimbabwe health professions regulatory body`,
+      category: "regulatory_organisation",
+      ownerService: "tshepo",
+      auditSensitivity: org.auditSensitivity,
+      policyMapping: org.policyMapping,
+      metadata: {
+        organisationType: org.organisationType,
+        officialName: org.officialName,
+        abbreviation: org.abbreviation,
+        aliases: org.aliases,
+        regulatoryDomain: org.regulatoryDomain,
+        registryOrWorkflowImpacted: org.registryOrWorkflowImpacted,
+        allowedWorkspaces: org.defaultWorkspaces,
+        defaultRoles: org.defaultRoles,
+        scopeType: org.scopeType,
+        dataAccessLimits: org.dataAccessLimits,
+        isRealZimbabweInstitution: true,
+      },
+    }),
+  ),
+  ...DEPRECATED_FAKE_REGULATOR_CODES.map((code) =>
+    entry({
+      id: `rio-deprecated-${code}`,
+      code,
+      displayName: titleCase(code),
+      category: "regulatory_organisation",
+      status: "deprecated",
+      ownerService: "tshepo",
+      metadata: { deprecationReason: "Not a real Zimbabwe institution; use Medical Rehabilitation Practitioners Council (MRPC) or statutory council seeds", isRealZimbabweInstitution: false },
+    }),
+  ),
+];
+
+writeSeed("regulatory-institutions", bundle("regulatory-institutions", "Zimbabwe Health Professions Regulatory Bodies", regulatoryInstitutionEntries));
+
+const organisationGovernanceEntries = [
+  ...ORGANISATION_TYPES.map((code) =>
+    entry({
+      id: `ot-${code.replace(/_/g, "-")}`,
+      code,
+      displayName: titleCase(code),
+      category: "organisation_type",
+      ownerService: code.includes("marketplace") || code.includes("vendor") || code.includes("supplier") ? "msika" : "tuso",
+      metadata: { multiOrganisationGovernance: true },
+    }),
+  ),
+  ...ORGANISATION_TRUST_TIERS.map((tier) =>
+    entry({
+      id: `ott-${tier.code.replace(/_/g, "-")}`,
+      code: tier.code,
+      displayName: tier.displayName,
+      category: "organisation_trust_tier",
+      ownerService: "tshepo",
+      auditSensitivity: tier.level >= 7 ? "critical" : tier.level >= 4 ? "high" : "medium",
+      metadata: { tierLevel: tier.level },
+    }),
+  ),
+  ...ORGANISATION_LIFECYCLE_STATES.map((code) => {
+    let policyMapping = "impilo.organisation.active";
+    if (["suspended", "revoked", "blacklisted", "offboarded"].includes(code)) policyMapping = "impilo.organisation.block";
+    if (code === "sandbox_only") policyMapping = "impilo.organisation.sandbox_only";
+    if (["production_access_pending", "contract_pending", "data_sharing_pending"].includes(code)) policyMapping = "impilo.organisation.pending";
+    return entry({
+      id: `ols-${code.replace(/_/g, "-")}`,
+      code,
+      displayName: titleCase(code),
+      category: "organisation_lifecycle_state",
+      ownerService: "tuso",
+      policyMapping,
+    });
+  }),
+  ...ORGANISATION_ACCESS_ENVIRONMENTS.map((code) =>
+    entry({
+      id: `oae-${code.replace(/_/g, "-")}`,
+      code,
+      displayName: titleCase(code),
+      category: "organisation_access_environment",
+      ownerService: "tshepo",
+      policyMapping: code === "sandbox" ? "impilo.organisation.sandbox_only" : code.includes("production") ? "impilo.organisation.production" : "impilo.organisation.environment",
+    }),
+  ),
+  ...ORGANISATION_LINKED_USER_TYPES.map((code) =>
+    entry({
+      id: `olut-${code.replace(/_/g, "-")}`,
+      code,
+      displayName: titleCase(code),
+      category: "organisation_linked_user_type",
+      ownerService: "workforce-governance",
+      metadata: { requiresOrganisationAssignment: code !== "organisation_owner" },
+    }),
+  ),
+  entry({
+    id: "org-registry-schema-v1",
+    code: "organisation_registry_schema_v1",
+    displayName: "Organisation Registry Schema v1",
+    category: "organisation_registry_schema",
+    ownerService: "tuso",
+    metadata: { fields: ORGANISATION_REGISTRY_FIELDS, version: "1.0.0" },
+  }),
+  ...EXEMPLAR_ORGANISATIONS.map((org) =>
+    entry({
+      id: `org-${org.code}`,
+      code: org.code,
+      displayName: org.legalName,
+      description: org.tradingName ?? org.legalName,
+      category: "organisation_registry_record",
+      ownerService: org.sourceRegistry ?? "tuso",
+      auditSensitivity: org.auditSensitivity ?? "high",
+      policyMapping: "impilo.organisation",
+      metadata: {
+        ...org,
+        registrySchema: "organisation_registry_schema_v1",
+        multiOrganisationGovernance: true,
+      },
+    }),
+  ),
+];
+
+writeSeed("organisation-governance", bundle("organisation-governance", "Multi-Organisation Registry, Trust Tiers and External Actor Governance", organisationGovernanceEntries));
+
+const hscWorkforceEntries = [
+  entry({
+    id: "hsc-org-record",
+    code: HSC_ORGANISATION.code,
+    displayName: HSC_ORGANISATION.officialName,
+    description: `${HSC_ORGANISATION.abbreviation} — public-sector workforce governance authority`,
+    category: "hsc_organisation",
+    ownerService: "workforce-governance",
+    auditSensitivity: "critical",
+    policyMapping: "impilo.hsc",
+    metadata: {
+      ...HSC_ORGANISATION,
+      isRealZimbabweInstitution: true,
+      notMoHcc: true,
+      notProfessionalCouncil: true,
+      notGenericRegulator: true,
+    },
+  }),
+  ...PUBLIC_SECTOR_EMPLOYMENT_STATUSES.map((code) =>
+    entry({
+      id: `psem-${code.replace(/_/g, "-")}`,
+      code,
+      displayName: titleCase(code),
+      category: "public_sector_employment_status",
+      ownerService: "workforce-governance",
+      policyMapping: ["suspended_from_employment", "dismissed", "not_employed_public_sector", "under_disciplinary_review"].includes(code)
+        ? "impilo.hsc.block"
+        : "impilo.hsc",
+    }),
+  ),
+  ...HSC_WORKFORCE_GOVERNANCE_ROLES.map((code) =>
+    entry({
+      id: `hsc-role-${code.replace(/_/g, "-")}`,
+      code,
+      displayName: titleCase(code),
+      category: "hsc_workforce_governance_role",
+      ownerService: "workforce-governance",
+      policyMapping: "impilo.hsc",
+      auditSensitivity: code.includes("administrator") ? "critical" : "high",
+      metadata: {
+        hscOrganisation: HSC_ORGANISATION.code,
+        isRealZimbabweInstitutionRole: true,
+        notClinicalByDefault: true,
+        notSystemSuperuser: true,
+      },
+    }),
+  ),
+];
+
+writeSeed("hsc-workforce-governance", bundle("hsc-workforce-governance", "Health Service Commission Workforce Governance", hscWorkforceEntries));
+
 // ── Work context ──────────────────────────────────────────────────────────────
 const workContextTypes = [
   "facility_clinical", "facility_administration", "facility_operations", "virtual_care",
@@ -265,7 +492,8 @@ const workContextTypes = [
   "training_mentorship", "emergency_response", "laboratory_services", "pharmacy_services",
   "radiology_imaging", "billing_finance", "health_information_records", "supply_chain_logistics",
   "registry_governance", "regulatory_oversight", "system_administration", "marketplace_operations",
-  "integration_partner_operations", "audit_oversight",
+  "integration_partner_operations", "audit_oversight", "local_authority_health",
+  "public_sector_workforce_governance",
 ];
 const workplaceTypes = [
   "central_hospital", "provincial_hospital", "district_hospital", "general_hospital",
@@ -275,6 +503,8 @@ const workplaceTypes = [
   "national_office", "training_institution", "call_centre", "telemedicine_hub",
   "virtual_service_point", "mobile_clinic", "outreach_site", "community_post",
   "public_health_place", "inspection_site", "port_of_entry", "marketplace_organisation",
+  ...MUNICIPAL_ORGANISATION_TYPES,
+  ...MADI_ORGANISATION_TYPES,
   "vendor_office", "integration_partner_environment", "sandbox_environment",
 ];
 const workspaceTypes = [
@@ -297,6 +527,13 @@ const workspaceTypes = [
   "marketplace_contract_management", "marketplace_sandbox_certification",
   "marketplace_api_management", "marketplace_compliance_monitoring",
   ...ORGANOGRAM_WORKSPACES.map((w) => w.code),
+  ...REGULATOR_WORKSPACES.map((w) => w.code),
+  ...MUNICIPAL_WORKSPACES.map((w) => w.code),
+  ...MADI_WORKSPACES.map((w) => w.code),
+  ...MANAGEMENT_WORKSPACES.map((w) => w.code),
+  ...MULTI_ORG_MANAGEMENT_WORKSPACES.map((w) => w.code),
+  ...HSC_WORKSPACES.map((w) => w.code),
+  ...HSC_MANAGEMENT_WORKSPACES.map((w) => w.code),
   "varapi_provider_worker_registry_governance", "vito_client_registry_governance",
   "tuso_facility_registry_governance", "zibo_terminology_registry_governance",
   "msika_product_service_registry_governance", "indawo_public_health_places_governance",
@@ -326,6 +563,8 @@ const roleTemplateCategories = [
   "regulatory_oversight", "marketplace_operations", "system_administration", "security_trust",
   "audit_compliance", "integration_support", "nompilo_operations", "emergency_response",
   "governance", "curative_services", "support_services", "digital_health", "executive_leadership",
+  "municipal_health", "madi_blood_service", "madi_clinical_transfusion", "madi_haemovigilance",
+  "hsc_workforce_governance",
 ];
 
 const workContextEntries = [
@@ -353,13 +592,33 @@ const workContextEntries = [
     let category = "workspace_type";
     if (code.endsWith("_governance") || code.endsWith("_review")) category = code.includes("registry") || code.includes("governance") ? "registry_owner_workspace" : "regulator_workspace";
     const organogramWs = ORGANOGRAM_WORKSPACES.find((w) => w.code === code);
+    const regulatorWs = REGULATOR_WORKSPACES.find((w) => w.code === code);
+    const municipalWs = MUNICIPAL_WORKSPACES.find((w) => w.code === code);
+    const madiWs = MADI_WORKSPACES.find((w) => w.code === code);
+    const mgmtWs = MANAGEMENT_WORKSPACES.find((w) => w.code === code);
+    const multiMgmtWs = MULTI_ORG_MANAGEMENT_WORKSPACES.find((w) => w.code === code);
+    const hscWs = HSC_WORKSPACES.find((w) => w.code === code);
+    const hscMgmtWs = HSC_MANAGEMENT_WORKSPACES.find((w) => w.code === code);
+    const scoped = regulatorWs ?? municipalWs ?? madiWs ?? hscMgmtWs ?? hscWs ?? multiMgmtWs ?? mgmtWs ?? organogramWs;
+    if (regulatorWs?.category) category = regulatorWs.category;
+    if (mgmtWs || multiMgmtWs || hscMgmtWs) category = "management_workspace";
+    if (hscWs && !hscMgmtWs) category = "workspace_type";
     return entry({
       id: `wst-${code}`,
       code,
-      displayName: organogramWs?.displayName ?? titleCase(code),
+      displayName: scoped?.displayName ?? titleCase(code),
       category,
-      ownerService: code.includes("marketplace") ? "msika" : code.includes("registry") || code.includes("trust") ? "tshepo" : "workforce-governance",
-      metadata: organogramWs ? { scopeLevel: organogramWs.level, organogramWorkspace: true } : undefined,
+      ownerService: code.includes("marketplace") ? "msika" : code.includes("registry") || code.includes("trust") ? "tshepo" : code.includes("madi") || code.includes("blood") ? "blood-bank-service" : code.startsWith("hsc_") ? "workforce-governance" : "workforce-governance",
+      policyMapping: code.startsWith("hsc_") ? "impilo.hsc" : undefined,
+      metadata: scoped
+        ? {
+            scopeLevel: scoped.level ?? scoped.scope,
+            scopedManagementLabel: multiMgmtWs?.label ?? mgmtWs?.label,
+            managementSection: multiMgmtWs?.section,
+            organogramWorkspace: !!organogramWs,
+            managementWorkspace: !!(mgmtWs || multiMgmtWs),
+          }
+        : undefined,
     });
   }),
   ...assignmentTypes.map((code) =>
@@ -396,6 +655,10 @@ const permissionDomains = [
   "marketplace.contract", "marketplace.api", "marketplace.sandbox", "marketplace.compliance",
   "regulator", "policy", "audit", "nompilo", "integration", "system", "security", "trust",
   "consent", "break_glass",
+  ...MADI_PERMISSION_DOMAINS,
+  "hsc", "hsc.workforce", "hsc.establishment", "hsc.posts", "hsc.appointments", "hsc.transfers",
+  "hsc.promotions", "hsc.discipline", "hsc.posting", "hsc.employment", "hsc.registry", "hsc.audit",
+  "hsc.scope", "hsc.users",
 ];
 const permissions = [
   "personal.profile.view", "personal.profile.update", "personal.records.view",
@@ -434,6 +697,8 @@ const permissions = [
   "security.mfa.manage", "trust.context.inspect", "trust.role_templates.manage",
   "policy.bundle.view", "policy.bundle.publish", "audit.logs.view", "integration.api_keys.manage",
   "nompilo.knowledge.manage", "nompilo.actions.approve", "break_glass.authorize", "break_glass.audit",
+  ...MADI_PERMISSIONS,
+  ...HSC_PERMISSIONS,
 ];
 
 function permDomain(code) {
@@ -456,6 +721,8 @@ const permissionEntries = [
       : code.startsWith("professional.") ? "impilo.professional"
       : code.startsWith("work.") ? "impilo.work"
       : code.startsWith("break_glass.") ? "impilo.break_glass"
+      : code.startsWith("madi.") ? "impilo.madi"
+      : code.startsWith("hsc.") ? "impilo.hsc"
       : code.startsWith("system.") || code.startsWith("security.") || code.startsWith("trust.") || code.startsWith("policy.") ? "impilo.system_admin"
       : "impilo.work";
     return entry({
@@ -526,9 +793,21 @@ const governanceEntries = [
   ...registryGovernanceRoles.map((code) =>
     entry({ id: `rgr-${code}`, code, displayName: titleCase(code), category: "registry_governance_role", ownerService: "tshepo", auditSensitivity: "high", policyMapping: "impilo.registry" }),
   ),
-  ...regulatorRoles.map((code) =>
-    entry({ id: `reg-${code}`, code, displayName: titleCase(code), category: "regulator_role", ownerService: "tshepo", policyMapping: "impilo.regulator" }),
-  ),
+  ...regulatorRoles.map((code) => {
+    const deprecated = DEPRECATED_GENERIC_REGULATOR_ROLES.includes(code);
+    return entry({
+      id: `reg-${code}`,
+      code,
+      displayName: titleCase(code),
+      category: "regulator_role",
+      status: deprecated ? "deprecated" : "active",
+      ownerService: "tshepo",
+      policyMapping: "impilo.regulator",
+      metadata: deprecated
+        ? { mapsTo: DEPRECATED_GENERIC_REGULATOR_ROLE_MAPS[code], deprecationReason: "Use real Zimbabwe council role templates (MDPC, NC, PC, etc.)" }
+        : undefined,
+    });
+  }),
   ...workplaceManagerRoles.map((code) =>
     entry({ id: `wm-${code}`, code, displayName: titleCase(code), category: "workplace_manager_role", ownerService: "workforce-governance", policyMapping: "impilo.facility" }),
   ),
@@ -558,6 +837,41 @@ const governanceEntries = [
   ...marketplaceRoles.map((code) =>
     entry({ id: `mrole-${code}`, code, displayName: titleCase(code), category: "marketplace_role", ownerService: "msika", policyMapping: "impilo.marketplace" }),
   ),
+  ...ZIMBABWE_REGULATORY_ORGANISATIONS.flatMap((org) =>
+    org.defaultRoles.map((code) =>
+      entry({
+        id: `crr-${code.replace(/_/g, "-")}`,
+        code,
+        displayName: titleCase(code),
+        category: "regulator_role",
+        ownerService: "tshepo",
+        policyMapping: org.policyMapping,
+        auditSensitivity: org.auditSensitivity,
+        metadata: {
+          regulatoryOrganisation: org.code,
+          isRealZimbabweInstitutionRole: true,
+          dataAccessLimits: org.dataAccessLimits,
+        },
+      }),
+    ),
+  ),
+  ...HSC_WORKFORCE_GOVERNANCE_ROLES.map((code) =>
+    entry({
+      id: `hscgr-${code.replace(/_/g, "-")}`,
+      code,
+      displayName: titleCase(code),
+      category: "hsc_workforce_governance_role",
+      ownerService: "workforce-governance",
+      policyMapping: "impilo.hsc",
+      auditSensitivity: code.includes("administrator") ? "critical" : "high",
+      metadata: {
+        hscOrganisation: HSC_ORGANISATION.code,
+        isRealZimbabweInstitutionRole: true,
+        notClinicalByDefault: true,
+        notSystemSuperuser: true,
+      },
+    }),
+  ),
 ];
 
 writeSeed("governance-marketplace", bundle("governance-marketplace", "Registry, Regulator, Workplace Manager, Marketplace", governanceEntries));
@@ -582,18 +896,69 @@ function roleOpaPackage(category) {
     curative_services: "impilo.work",
     support_services: "impilo.work",
     digital_health: "impilo.system_admin",
+    municipal_health: "impilo.public_health",
+    madi_blood_service: "impilo.madi",
+    madi_clinical_transfusion: "impilo.madi",
+    madi_haemovigilance: "impilo.madi",
+    hsc_workforce_governance: "impilo.hsc",
   };
   return map[category] ?? "impilo.work";
 }
 
 function resolvePermissions(permsOrBaseline) {
   if (typeof permsOrBaseline === "string") {
-    return ROLE_PERMISSION_BASELINES[permsOrBaseline] ?? ["work.context.enter"];
+    return ROLE_PERMISSION_BASELINES[permsOrBaseline] ?? HSC_PERMISSION_BASELINE[permsOrBaseline] ?? ["work.context.enter"];
   }
   return permsOrBaseline ?? ["work.context.enter"];
 }
 
 function restrictedPermissionsForRole(code) {
+  const regulatorRestricted = [
+    "clinical.encounter.create",
+    "clinical.notes.write",
+    "clinical.prescriptions.create",
+    "clinical.orders.create",
+    "facility.staff.assign",
+    "facility.staff.end_assignment",
+    "system.roles.manage",
+    "break_glass.authorize",
+  ];
+  const municipalRestricted = [
+    ...regulatorRestricted,
+    "registry.provider.approve",
+    "policy.bundle.publish",
+  ];
+  const madiNonClinicalRestricted = [
+    "clinical.encounter.create",
+    "clinical.notes.write",
+    "clinical.prescriptions.create",
+    "personal.records.view",
+  ];
+  if (code.startsWith("hsc_")) {
+    return HSC_DENIED_ACTIONS;
+  }
+  if (
+    code.startsWith("hpa_") ||
+    code.startsWith("mdpc_") ||
+    code.startsWith("mlcsc_") ||
+    code.startsWith("ahpc_") ||
+    code.startsWith("pc_") ||
+    code.startsWith("nc_") ||
+    code.startsWith("ehpc_") ||
+    code.startsWith("mrpc_") ||
+    code.startsWith("ntc_") ||
+    code.endsWith("_registrar") ||
+    code.endsWith("_licensing_officer") ||
+    code.endsWith("_disciplinary_officer")
+  ) {
+    return code.startsWith("ntc_") ? [...regulatorRestricted, "clinical.admissions.manage"] : regulatorRestricted;
+  }
+  if (MUNICIPAL_ROLES.includes(code)) {
+    return municipalRestricted;
+  }
+  if (MADI_ROLES.includes(code) && !["blood_ordering_clinician", "ward_transfusion_nurse", "facility_transfusion_focal_person"].includes(code)) {
+    return madiNonClinicalRestricted;
+  }
   const executiveCodes = new Set([
     "minister_of_health", "deputy_minister_of_health", "permanent_secretary", "staffing_officer",
     "chief_director_curative_services", "chief_director_public_health",
@@ -642,6 +1007,7 @@ function restrictedPermissionsForRole(code) {
 const roleTemplateEntries = ZW_ROLE_TEMPLATE_SPECS.map(
   ([code, roleCategory, contexts, workspaces, cadres, permsOrBaseline, scopeLevel]) => {
     const zw = ZW_ROLE_PROFILES[code] ?? {};
+    const hscDef = HSC_ROLE_DEFINITIONS[code];
     const perms = resolvePermissions(permsOrBaseline);
     const displayName = zw.displayName ?? titleCase(code);
     const isDeprecated = DEPRECATED_ROLE_TEMPLATES.includes(code);
@@ -655,18 +1021,20 @@ const roleTemplateEntries = ZW_ROLE_TEMPLATE_SPECS.map(
         ? "varapi"
         : roleCategory.includes("marketplace")
           ? "msika"
+          : roleCategory === "hsc_workforce_governance"
+            ? "workforce-governance"
           : "workforce-governance",
       policyMapping: roleOpaPackage(roleCategory),
-      auditSensitivity: code.includes("break_glass")
+      auditSensitivity: code.includes("break_glass") || code.startsWith("hsc_administrator")
         ? "critical"
-        : roleCategory.includes("registry")
+        : roleCategory.includes("registry") || code.startsWith("hsc_")
           ? "high"
           : "medium",
       metadata: {
         roleTemplateId: code,
         roleCategory,
         displayName,
-        abbreviation: zw.abbreviation,
+        abbreviation: zw.abbreviation ?? (code.startsWith("hsc_") ? "HSC" : undefined),
         aliases: zw.aliases,
         primaryZimbabweRole: zw.primaryZimbabweRole ?? false,
         policyScopeLevel: scopeLevel ?? zw.policyScopeLevel,
@@ -675,6 +1043,11 @@ const roleTemplateEntries = ZW_ROLE_TEMPLATE_SPECS.map(
         requiredCadres: cadres,
         defaultPermissions: perms,
         restrictedPermissions: restrictedPermissionsForRole(code),
+        deniedActions: code.startsWith("hsc_") ? HSC_DENIED_ACTIONS : undefined,
+        approvalRequirements: hscDef?.[3] ?? [],
+        hscOrganisation: code.startsWith("hsc_") ? HSC_ORGANISATION.code : undefined,
+        notClinicalByDefault: code.startsWith("hsc_") ? true : undefined,
+        notSystemSuperuser: code.startsWith("hsc_") ? true : undefined,
         opaPolicyMapping: roleOpaPackage(roleCategory),
         canAssignRoles: [
           "facility_administrator",
@@ -733,6 +1106,8 @@ const friendlyStates = [
   ["access_request_pending", "Access request pending", "Your access request is awaiting approval.", ["View Request Status"], "TRUST.ACCESS_PENDING"],
   ["policy_denied", "Access denied by policy", "This action is not permitted in your current context.", ["Contact Support"], "TRUST.POLICY_DENIED"],
   ["device_context_requires_user_login", "Personal login required", "This device is linked to a facility, but you must still sign in as yourself.", ["Sign In"], "TRUST.DEVICE_LOGIN_REQUIRED"],
+  ...ORGANISATION_FRIENDLY_RESOLUTION_STATES,
+  ...HSC_FRIENDLY_RESOLUTION_STATES.map((s) => [s.code, s.displayName, s.description, s.allowedActions, s.policyKey]),
 ];
 
 const opaPackages = [
@@ -741,7 +1116,7 @@ const opaPackages = [
   "impilo.community_outreach", "impilo.programme", "impilo.above_site", "impilo.public_health",
   "impilo.registry", "impilo.regulator", "impilo.marketplace", "impilo.client_registration",
   "impilo.provider_registration", "impilo.nompilo", "impilo.consent", "impilo.audit",
-  "impilo.system_admin", "impilo.break_glass",
+  "impilo.system_admin", "impilo.break_glass", "impilo.madi", "impilo.organisation", "impilo.hsc",
 ];
 
 const nompiloDomains = [

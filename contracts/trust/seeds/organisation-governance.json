@@ -1,0 +1,2105 @@
+{
+  "version": "1.6.0",
+  "catalogueId": "organisation-governance",
+  "displayName": "Multi-Organisation Registry, Trust Tiers and External Actor Governance",
+  "entries": [
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-sovereign-public-owner",
+      "code": "sovereign_public_owner",
+      "displayName": "Sovereign Public Owner",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-ministry-department",
+      "code": "ministry_department",
+      "displayName": "Ministry Department",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-national-directorate",
+      "code": "national_directorate",
+      "displayName": "National Directorate",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-provincial-medical-office",
+      "code": "provincial_medical_office",
+      "displayName": "Provincial Medical Office",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-district-medical-office",
+      "code": "district_medical_office",
+      "displayName": "District Medical Office",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-public-facility",
+      "code": "public_facility",
+      "displayName": "Public Facility",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-central-hospital",
+      "code": "central_hospital",
+      "displayName": "Central Hospital",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-provincial-hospital",
+      "code": "provincial_hospital",
+      "displayName": "Provincial Hospital",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-district-hospital",
+      "code": "district_hospital",
+      "displayName": "District Hospital",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-general-hospital",
+      "code": "general_hospital",
+      "displayName": "General Hospital",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-rural-health-centre",
+      "code": "rural_health_centre",
+      "displayName": "Rural Health Centre",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-public-clinic",
+      "code": "public_clinic",
+      "displayName": "Public Clinic",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-public-health-office",
+      "code": "public_health_office",
+      "displayName": "Public Health Office",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-national-data-centre",
+      "code": "national_data_centre",
+      "displayName": "National Data Centre",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-national-helpdesk",
+      "code": "national_helpdesk",
+      "displayName": "National Helpdesk",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-city-health-department",
+      "code": "city_health_department",
+      "displayName": "City Health Department",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-municipal-health-department",
+      "code": "municipal_health_department",
+      "displayName": "Municipal Health Department",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-local-authority-health-department",
+      "code": "local_authority_health_department",
+      "displayName": "Local Authority Health Department",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-urban-local-authority",
+      "code": "urban_local_authority",
+      "displayName": "Urban Local Authority",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-rural-district-council-health-unit",
+      "code": "rural_district_council_health_unit",
+      "displayName": "Rural District Council Health Unit",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-municipal-clinic",
+      "code": "municipal_clinic",
+      "displayName": "Municipal Clinic",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-municipal-polyclinic",
+      "code": "municipal_polyclinic",
+      "displayName": "Municipal Polyclinic",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-municipal-hospital",
+      "code": "municipal_hospital",
+      "displayName": "Municipal Hospital",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-city-infectious-diseases-hospital",
+      "code": "city_infectious_diseases_hospital",
+      "displayName": "City Infectious Diseases Hospital",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-municipal-environmental-health-unit",
+      "code": "municipal_environmental_health_unit",
+      "displayName": "Municipal Environmental Health Unit",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-municipal-public-health-office",
+      "code": "municipal_public_health_office",
+      "displayName": "Municipal Public Health Office",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-municipal-ambulance-service",
+      "code": "municipal_ambulance_service",
+      "displayName": "Municipal Ambulance Service",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-private-hospital",
+      "code": "private_hospital",
+      "displayName": "Private Hospital",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-private-clinic",
+      "code": "private_clinic",
+      "displayName": "Private Clinic",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-private-laboratory",
+      "code": "private_laboratory",
+      "displayName": "Private Laboratory",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-private-pharmacy",
+      "code": "private_pharmacy",
+      "displayName": "Private Pharmacy",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-private-imaging-centre",
+      "code": "private_imaging_centre",
+      "displayName": "Private Imaging Centre",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-private-rehabilitation-centre",
+      "code": "private_rehabilitation_centre",
+      "displayName": "Private Rehabilitation Centre",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-private-ambulance-service",
+      "code": "private_ambulance_service",
+      "displayName": "Private Ambulance Service",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-mission-facility",
+      "code": "mission_facility",
+      "displayName": "Mission Facility",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-faith-based-health-provider",
+      "code": "faith_based_health_provider",
+      "displayName": "Faith Based Health Provider",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-not-for-profit-health-provider",
+      "code": "not_for_profit_health_provider",
+      "displayName": "Not For Profit Health Provider",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-health-professions-authority",
+      "code": "health_professions_authority",
+      "displayName": "Health Professions Authority",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-professional-council",
+      "code": "professional_council",
+      "displayName": "Professional Council",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-medicines-regulator",
+      "code": "medicines_regulator",
+      "displayName": "Medicines Regulator",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-research-ethics-authority",
+      "code": "research_ethics_authority",
+      "displayName": "Research Ethics Authority",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-facility-licensing-authority",
+      "code": "facility_licensing_authority",
+      "displayName": "Facility Licensing Authority",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-public-health-regulatory-authority",
+      "code": "public_health_regulatory_authority",
+      "displayName": "Public Health Regulatory Authority",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-statutory-health-council",
+      "code": "statutory_health_council",
+      "displayName": "Statutory Health Council",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-health-service-commission",
+      "code": "health_service_commission",
+      "displayName": "Health Service Commission",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-national-blood-transfusion-service",
+      "code": "national_blood_transfusion_service",
+      "displayName": "National Blood Transfusion Service",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-central-blood-bank",
+      "code": "central_blood_bank",
+      "displayName": "Central Blood Bank",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-regional-blood-bank",
+      "code": "regional_blood_bank",
+      "displayName": "Regional Blood Bank",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-hospital-blood-bank",
+      "code": "hospital_blood_bank",
+      "displayName": "Hospital Blood Bank",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-facility-blood-bank",
+      "code": "facility_blood_bank",
+      "displayName": "Facility Blood Bank",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-blood-collection-site",
+      "code": "blood_collection_site",
+      "displayName": "Blood Collection Site",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-blood-processing-centre",
+      "code": "blood_processing_centre",
+      "displayName": "Blood Processing Centre",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-haemovigilance-unit",
+      "code": "haemovigilance_unit",
+      "displayName": "Haemovigilance Unit",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-insurer",
+      "code": "insurer",
+      "displayName": "Insurer",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-medical-aid-society",
+      "code": "medical_aid_society",
+      "displayName": "Medical Aid Society",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-payment-provider",
+      "code": "payment_provider",
+      "displayName": "Payment Provider",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-claims-processor",
+      "code": "claims_processor",
+      "displayName": "Claims Processor",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-supplier",
+      "code": "supplier",
+      "displayName": "Supplier",
+      "category": "organisation_type",
+      "ownerService": "msika",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-manufacturer",
+      "code": "manufacturer",
+      "displayName": "Manufacturer",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-distributor",
+      "code": "distributor",
+      "displayName": "Distributor",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-logistics-provider",
+      "code": "logistics_provider",
+      "displayName": "Logistics Provider",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-device-vendor",
+      "code": "device_vendor",
+      "displayName": "Device Vendor",
+      "category": "organisation_type",
+      "ownerService": "msika",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-iot-device-vendor",
+      "code": "iot_device_vendor",
+      "displayName": "Iot Device Vendor",
+      "category": "organisation_type",
+      "ownerService": "msika",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-software-vendor",
+      "code": "software_vendor",
+      "displayName": "Software Vendor",
+      "category": "organisation_type",
+      "ownerService": "msika",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-api-integration-partner",
+      "code": "api_integration_partner",
+      "displayName": "Api Integration Partner",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-cloud-hosting-partner",
+      "code": "cloud_hosting_partner",
+      "displayName": "Cloud Hosting Partner",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-maintenance-contractor",
+      "code": "maintenance_contractor",
+      "displayName": "Maintenance Contractor",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-accredited-service-provider",
+      "code": "accredited_service_provider",
+      "displayName": "Accredited Service Provider",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-marketplace-organisation",
+      "code": "marketplace_organisation",
+      "displayName": "Marketplace Organisation",
+      "category": "organisation_type",
+      "ownerService": "msika",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-training-institution",
+      "code": "training_institution",
+      "displayName": "Training Institution",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-university",
+      "code": "university",
+      "displayName": "University",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-research-institution",
+      "code": "research_institution",
+      "displayName": "Research Institution",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-ngo-implementing-partner",
+      "code": "ngo_implementing_partner",
+      "displayName": "Ngo Implementing Partner",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-development-partner",
+      "code": "development_partner",
+      "displayName": "Development Partner",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-donor-partner",
+      "code": "donor_partner",
+      "displayName": "Donor Partner",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-un-agency",
+      "code": "un_agency",
+      "displayName": "Un Agency",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-external-technical-partner",
+      "code": "external_technical_partner",
+      "displayName": "External Technical Partner",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-non-zimbabwean-partner",
+      "code": "non_zimbabwean_partner",
+      "displayName": "Non Zimbabwean Partner",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ot-foreign-research-partner",
+      "code": "foreign_research_partner",
+      "displayName": "Foreign Research Partner",
+      "category": "organisation_type",
+      "ownerService": "tuso",
+      "metadata": {
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ott-tier-0-unverified",
+      "code": "tier_0_unverified",
+      "displayName": "Tier 0 — Unverified",
+      "category": "organisation_trust_tier",
+      "ownerService": "tshepo",
+      "metadata": {
+        "tierLevel": 0
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ott-tier-1-registered",
+      "code": "tier_1_registered",
+      "displayName": "Tier 1 — Registered",
+      "category": "organisation_trust_tier",
+      "ownerService": "tshepo",
+      "metadata": {
+        "tierLevel": 1
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ott-tier-2-verified",
+      "code": "tier_2_verified",
+      "displayName": "Tier 2 — Verified",
+      "category": "organisation_trust_tier",
+      "ownerService": "tshepo",
+      "metadata": {
+        "tierLevel": 2
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ott-tier-3-contract-active",
+      "code": "tier_3_contract_active",
+      "displayName": "Tier 3 — Contract Active",
+      "category": "organisation_trust_tier",
+      "ownerService": "tshepo",
+      "metadata": {
+        "tierLevel": 3
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "ott-tier-4-regulated-service-provider",
+      "code": "tier_4_regulated_service_provider",
+      "displayName": "Tier 4 — Regulated Service Provider",
+      "category": "organisation_trust_tier",
+      "ownerService": "tshepo",
+      "metadata": {
+        "tierLevel": 4
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "ott-tier-5-integrated-service-provider",
+      "code": "tier_5_integrated_service_provider",
+      "displayName": "Tier 5 — Integrated Service Provider",
+      "category": "organisation_trust_tier",
+      "ownerService": "tshepo",
+      "metadata": {
+        "tierLevel": 5
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "ott-tier-6-sovereign-public-operator",
+      "code": "tier_6_sovereign_public_operator",
+      "displayName": "Tier 6 — Sovereign Public Operator",
+      "category": "organisation_trust_tier",
+      "ownerService": "tshepo",
+      "metadata": {
+        "tierLevel": 6
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "ott-tier-7-high-trust-regulator",
+      "code": "tier_7_high_trust_regulator",
+      "displayName": "Tier 7 — High Trust Regulator",
+      "category": "organisation_trust_tier",
+      "ownerService": "tshepo",
+      "metadata": {
+        "tierLevel": 7
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "ott-tier-7-high-trust-public-workforce-authority",
+      "code": "tier_7_high_trust_public_workforce_authority",
+      "displayName": "Tier 7 — High Trust Public Workforce Authority (HSC)",
+      "category": "organisation_trust_tier",
+      "ownerService": "tshepo",
+      "metadata": {
+        "tierLevel": 7
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "ott-tier-8-system-operator",
+      "code": "tier_8_system_operator",
+      "displayName": "Tier 8 — System Operator",
+      "category": "organisation_trust_tier",
+      "ownerService": "tshepo",
+      "metadata": {
+        "tierLevel": 8
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ols-draft",
+      "code": "draft",
+      "displayName": "Draft",
+      "category": "organisation_lifecycle_state",
+      "ownerService": "tuso",
+      "policyMapping": "impilo.organisation.active"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ols-submitted",
+      "code": "submitted",
+      "displayName": "Submitted",
+      "category": "organisation_lifecycle_state",
+      "ownerService": "tuso",
+      "policyMapping": "impilo.organisation.active"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ols-pending-verification",
+      "code": "pending_verification",
+      "displayName": "Pending Verification",
+      "category": "organisation_lifecycle_state",
+      "ownerService": "tuso",
+      "policyMapping": "impilo.organisation.active"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ols-verified",
+      "code": "verified",
+      "displayName": "Verified",
+      "category": "organisation_lifecycle_state",
+      "ownerService": "tuso",
+      "policyMapping": "impilo.organisation.active"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ols-pending-regulatory-review",
+      "code": "pending_regulatory_review",
+      "displayName": "Pending Regulatory Review",
+      "category": "organisation_lifecycle_state",
+      "ownerService": "tuso",
+      "policyMapping": "impilo.organisation.active"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ols-regulatory-approved",
+      "code": "regulatory_approved",
+      "displayName": "Regulatory Approved",
+      "category": "organisation_lifecycle_state",
+      "ownerService": "tuso",
+      "policyMapping": "impilo.organisation.active"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ols-contract-pending",
+      "code": "contract_pending",
+      "displayName": "Contract Pending",
+      "category": "organisation_lifecycle_state",
+      "ownerService": "tuso",
+      "policyMapping": "impilo.organisation.pending"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ols-contract-active",
+      "code": "contract_active",
+      "displayName": "Contract Active",
+      "category": "organisation_lifecycle_state",
+      "ownerService": "tuso",
+      "policyMapping": "impilo.organisation.active"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ols-mou-pending",
+      "code": "mou_pending",
+      "displayName": "Mou Pending",
+      "category": "organisation_lifecycle_state",
+      "ownerService": "tuso",
+      "policyMapping": "impilo.organisation.active"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ols-mou-active",
+      "code": "mou_active",
+      "displayName": "Mou Active",
+      "category": "organisation_lifecycle_state",
+      "ownerService": "tuso",
+      "policyMapping": "impilo.organisation.active"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ols-data-sharing-pending",
+      "code": "data_sharing_pending",
+      "displayName": "Data Sharing Pending",
+      "category": "organisation_lifecycle_state",
+      "ownerService": "tuso",
+      "policyMapping": "impilo.organisation.pending"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ols-data-sharing-active",
+      "code": "data_sharing_active",
+      "displayName": "Data Sharing Active",
+      "category": "organisation_lifecycle_state",
+      "ownerService": "tuso",
+      "policyMapping": "impilo.organisation.active"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ols-sandbox-only",
+      "code": "sandbox_only",
+      "displayName": "Sandbox Only",
+      "category": "organisation_lifecycle_state",
+      "ownerService": "tuso",
+      "policyMapping": "impilo.organisation.sandbox_only"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ols-production-access-pending",
+      "code": "production_access_pending",
+      "displayName": "Production Access Pending",
+      "category": "organisation_lifecycle_state",
+      "ownerService": "tuso",
+      "policyMapping": "impilo.organisation.pending"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ols-production-active",
+      "code": "production_active",
+      "displayName": "Production Active",
+      "category": "organisation_lifecycle_state",
+      "ownerService": "tuso",
+      "policyMapping": "impilo.organisation.active"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ols-active",
+      "code": "active",
+      "displayName": "Active",
+      "category": "organisation_lifecycle_state",
+      "ownerService": "tuso",
+      "policyMapping": "impilo.organisation.active"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ols-active-restricted",
+      "code": "active_restricted",
+      "displayName": "Active Restricted",
+      "category": "organisation_lifecycle_state",
+      "ownerService": "tuso",
+      "policyMapping": "impilo.organisation.active"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ols-suspended",
+      "code": "suspended",
+      "displayName": "Suspended",
+      "category": "organisation_lifecycle_state",
+      "ownerService": "tuso",
+      "policyMapping": "impilo.organisation.block"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ols-expired",
+      "code": "expired",
+      "displayName": "Expired",
+      "category": "organisation_lifecycle_state",
+      "ownerService": "tuso",
+      "policyMapping": "impilo.organisation.active"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ols-revoked",
+      "code": "revoked",
+      "displayName": "Revoked",
+      "category": "organisation_lifecycle_state",
+      "ownerService": "tuso",
+      "policyMapping": "impilo.organisation.block"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ols-offboarding",
+      "code": "offboarding",
+      "displayName": "Offboarding",
+      "category": "organisation_lifecycle_state",
+      "ownerService": "tuso",
+      "policyMapping": "impilo.organisation.active"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ols-offboarded",
+      "code": "offboarded",
+      "displayName": "Offboarded",
+      "category": "organisation_lifecycle_state",
+      "ownerService": "tuso",
+      "policyMapping": "impilo.organisation.block"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "ols-blacklisted",
+      "code": "blacklisted",
+      "displayName": "Blacklisted",
+      "category": "organisation_lifecycle_state",
+      "ownerService": "tuso",
+      "policyMapping": "impilo.organisation.block"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "oae-none",
+      "code": "none",
+      "displayName": "None",
+      "category": "organisation_access_environment",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.organisation.environment"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "oae-demo",
+      "code": "demo",
+      "displayName": "Demo",
+      "category": "organisation_access_environment",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.organisation.environment"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "oae-training",
+      "code": "training",
+      "displayName": "Training",
+      "category": "organisation_access_environment",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.organisation.environment"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "oae-sandbox",
+      "code": "sandbox",
+      "displayName": "Sandbox",
+      "category": "organisation_access_environment",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.organisation.sandbox_only"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "oae-staging",
+      "code": "staging",
+      "displayName": "Staging",
+      "category": "organisation_access_environment",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.organisation.environment"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "oae-production-limited",
+      "code": "production_limited",
+      "displayName": "Production Limited",
+      "category": "organisation_access_environment",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.organisation.production"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "oae-production-full",
+      "code": "production_full",
+      "displayName": "Production Full",
+      "category": "organisation_access_environment",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.organisation.production"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "oae-read-only",
+      "code": "read_only",
+      "displayName": "Read Only",
+      "category": "organisation_access_environment",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.organisation.environment"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "oae-aggregate-only",
+      "code": "aggregate_only",
+      "displayName": "Aggregate Only",
+      "category": "organisation_access_environment",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.organisation.environment"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "oae-deidentified-only",
+      "code": "deidentified_only",
+      "displayName": "Deidentified Only",
+      "category": "organisation_access_environment",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.organisation.environment"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "oae-identified-data-approved",
+      "code": "identified_data_approved",
+      "displayName": "Identified Data Approved",
+      "category": "organisation_access_environment",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.organisation.environment"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "olut-organisation-owner",
+      "code": "organisation_owner",
+      "displayName": "Organisation Owner",
+      "category": "organisation_linked_user_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "requiresOrganisationAssignment": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "olut-organisation-administrator",
+      "code": "organisation_administrator",
+      "displayName": "Organisation Administrator",
+      "category": "organisation_linked_user_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "requiresOrganisationAssignment": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "olut-authorised-representative",
+      "code": "authorised_representative",
+      "displayName": "Authorised Representative",
+      "category": "organisation_linked_user_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "requiresOrganisationAssignment": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "olut-compliance-officer",
+      "code": "compliance_officer",
+      "displayName": "Compliance Officer",
+      "category": "organisation_linked_user_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "requiresOrganisationAssignment": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "olut-data-protection-contact",
+      "code": "data_protection_contact",
+      "displayName": "Data Protection Contact",
+      "category": "organisation_linked_user_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "requiresOrganisationAssignment": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "olut-technical-contact",
+      "code": "technical_contact",
+      "displayName": "Technical Contact",
+      "category": "organisation_linked_user_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "requiresOrganisationAssignment": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "olut-billing-contact",
+      "code": "billing_contact",
+      "displayName": "Billing Contact",
+      "category": "organisation_linked_user_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "requiresOrganisationAssignment": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "olut-contract-contact",
+      "code": "contract_contact",
+      "displayName": "Contract Contact",
+      "category": "organisation_linked_user_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "requiresOrganisationAssignment": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "olut-api-developer",
+      "code": "api_developer",
+      "displayName": "Api Developer",
+      "category": "organisation_linked_user_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "requiresOrganisationAssignment": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "olut-sandbox-tester",
+      "code": "sandbox_tester",
+      "displayName": "Sandbox Tester",
+      "category": "organisation_linked_user_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "requiresOrganisationAssignment": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "olut-production-operator",
+      "code": "production_operator",
+      "displayName": "Production Operator",
+      "category": "organisation_linked_user_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "requiresOrganisationAssignment": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "olut-support-user",
+      "code": "support_user",
+      "displayName": "Support User",
+      "category": "organisation_linked_user_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "requiresOrganisationAssignment": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "olut-auditor",
+      "code": "auditor",
+      "displayName": "Auditor",
+      "category": "organisation_linked_user_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "requiresOrganisationAssignment": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "olut-regulatory-reviewer",
+      "code": "regulatory_reviewer",
+      "displayName": "Regulatory Reviewer",
+      "category": "organisation_linked_user_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "requiresOrganisationAssignment": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "olut-registry-steward",
+      "code": "registry_steward",
+      "displayName": "Registry Steward",
+      "category": "organisation_linked_user_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "requiresOrganisationAssignment": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "olut-facility-staff-manager",
+      "code": "facility_staff_manager",
+      "displayName": "Facility Staff Manager",
+      "category": "organisation_linked_user_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "requiresOrganisationAssignment": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "olut-clinical-staff",
+      "code": "clinical_staff",
+      "displayName": "Clinical Staff",
+      "category": "organisation_linked_user_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "requiresOrganisationAssignment": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "olut-non-clinical-staff",
+      "code": "non_clinical_staff",
+      "displayName": "Non Clinical Staff",
+      "category": "organisation_linked_user_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "requiresOrganisationAssignment": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "olut-partner-programme-user",
+      "code": "partner_programme_user",
+      "displayName": "Partner Programme User",
+      "category": "organisation_linked_user_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "requiresOrganisationAssignment": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "olut-research-user",
+      "code": "research_user",
+      "displayName": "Research User",
+      "category": "organisation_linked_user_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "requiresOrganisationAssignment": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "olut-read-only-observer",
+      "code": "read_only_observer",
+      "displayName": "Read Only Observer",
+      "category": "organisation_linked_user_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "requiresOrganisationAssignment": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "olut-external-partner-admin",
+      "code": "external_partner_admin",
+      "displayName": "External Partner Admin",
+      "category": "organisation_linked_user_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "requiresOrganisationAssignment": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "olut-external-partner-user",
+      "code": "external_partner_user",
+      "displayName": "External Partner User",
+      "category": "organisation_linked_user_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "requiresOrganisationAssignment": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "olut-external-technical-integrator",
+      "code": "external_technical_integrator",
+      "displayName": "External Technical Integrator",
+      "category": "organisation_linked_user_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "requiresOrganisationAssignment": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "olut-external-researcher",
+      "code": "external_researcher",
+      "displayName": "External Researcher",
+      "category": "organisation_linked_user_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "requiresOrganisationAssignment": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "olut-external-support-user",
+      "code": "external_support_user",
+      "displayName": "External Support User",
+      "category": "organisation_linked_user_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "requiresOrganisationAssignment": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "olut-external-auditor",
+      "code": "external_auditor",
+      "displayName": "External Auditor",
+      "category": "organisation_linked_user_type",
+      "ownerService": "workforce-governance",
+      "metadata": {
+        "requiresOrganisationAssignment": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "org-registry-schema-v1",
+      "code": "organisation_registry_schema_v1",
+      "displayName": "Organisation Registry Schema v1",
+      "category": "organisation_registry_schema",
+      "ownerService": "tuso",
+      "metadata": {
+        "fields": [
+          "organisationId",
+          "organisationType",
+          "legalName",
+          "tradingName",
+          "country",
+          "registrationNumber",
+          "taxNumber",
+          "regulatorRegistrationNumber",
+          "licenceStatus",
+          "parentOrganisationId",
+          "ownershipType",
+          "publicPrivateClassification",
+          "operatingJurisdictions",
+          "operatingFacilities",
+          "operatingServices",
+          "approvedWorkspaces",
+          "approvedApiScopes",
+          "approvedDataScopes",
+          "approvedEnvironments",
+          "contractStatus",
+          "mouStatus",
+          "dataSharingAgreementStatus",
+          "regulatoryApprovalStatus",
+          "riskRating",
+          "trustTier",
+          "verificationStatus",
+          "lifecycleStatus",
+          "effectiveDate",
+          "expiryDate",
+          "auditSensitivity",
+          "sourceRegistry",
+          "provenanceMetadata"
+        ],
+        "version": "1.0.0"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "org-mohcc_zimbabwe",
+      "code": "mohcc_zimbabwe",
+      "displayName": "Ministry of Health and Child Care",
+      "description": "MoHCC Zimbabwe",
+      "category": "organisation_registry_record",
+      "ownerService": "tuso",
+      "policyMapping": "impilo.organisation",
+      "metadata": {
+        "organisationId": "org-mohcc-zw",
+        "code": "mohcc_zimbabwe",
+        "legalName": "Ministry of Health and Child Care",
+        "tradingName": "MoHCC Zimbabwe",
+        "organisationType": "sovereign_public_owner",
+        "country": "ZW",
+        "trustTier": "tier_6_sovereign_public_operator",
+        "lifecycleStatus": "active",
+        "verificationStatus": "verified",
+        "publicPrivateClassification": "public",
+        "approvedEnvironments": [
+          "production_full"
+        ],
+        "approvedDataScopes": [
+          "national_health_operations",
+          "aggregate_reporting",
+          "registry_governance"
+        ],
+        "approvedWorkspaces": [
+          "mohcc_head_office_user_management",
+          "national_organisation_registry",
+          "national_trust_console"
+        ],
+        "auditSensitivity": "critical",
+        "sourceRegistry": "tuso",
+        "registrySchema": "organisation_registry_schema_v1",
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "org-harare_city_health",
+      "code": "harare_city_health",
+      "displayName": "City of Harare Health Department",
+      "description": "City of Harare Health Department",
+      "category": "organisation_registry_record",
+      "ownerService": "tuso",
+      "policyMapping": "impilo.organisation",
+      "metadata": {
+        "organisationId": "org-harare-city-health",
+        "code": "harare_city_health",
+        "legalName": "City of Harare Health Department",
+        "organisationType": "city_health_department",
+        "country": "ZW",
+        "trustTier": "tier_4_regulated_service_provider",
+        "lifecycleStatus": "active",
+        "publicPrivateClassification": "public_local_authority",
+        "approvedEnvironments": [
+          "production_limited"
+        ],
+        "approvedDataScopes": [
+          "local_authority_health",
+          "municipal_reporting"
+        ],
+        "approvedWorkspaces": [
+          "municipal_user_management",
+          "municipal_facility_staff_management"
+        ],
+        "auditSensitivity": "high",
+        "sourceRegistry": "tuso",
+        "registrySchema": "organisation_registry_schema_v1",
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "org-avenues_private_hospital",
+      "code": "avenues_private_hospital",
+      "displayName": "Avenues Clinic (Private Hospital)",
+      "description": "Avenues Clinic (Private Hospital)",
+      "category": "organisation_registry_record",
+      "ownerService": "tuso",
+      "policyMapping": "impilo.organisation",
+      "metadata": {
+        "organisationId": "org-private-hospital-demo",
+        "code": "avenues_private_hospital",
+        "legalName": "Avenues Clinic (Private Hospital)",
+        "organisationType": "private_hospital",
+        "country": "ZW",
+        "trustTier": "tier_4_regulated_service_provider",
+        "lifecycleStatus": "active",
+        "publicPrivateClassification": "private",
+        "approvedEnvironments": [
+          "production_limited"
+        ],
+        "approvedDataScopes": [
+          "facility_clinical",
+          "facility_billing"
+        ],
+        "approvedWorkspaces": [
+          "private_facility_user_management",
+          "private_clinician_assignment"
+        ],
+        "auditSensitivity": "high",
+        "sourceRegistry": "tuso",
+        "registrySchema": "organisation_registry_schema_v1",
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "org-mdpc_zimbabwe",
+      "code": "mdpc_zimbabwe",
+      "displayName": "Medical and Dental Practitioners Council of Zimbabwe",
+      "description": "Medical and Dental Practitioners Council of Zimbabwe",
+      "category": "organisation_registry_record",
+      "ownerService": "varapi",
+      "policyMapping": "impilo.organisation",
+      "metadata": {
+        "organisationId": "org-mdpc-zw",
+        "code": "mdpc_zimbabwe",
+        "legalName": "Medical and Dental Practitioners Council of Zimbabwe",
+        "organisationType": "statutory_health_council",
+        "country": "ZW",
+        "trustTier": "tier_7_high_trust_regulator",
+        "lifecycleStatus": "active",
+        "approvedEnvironments": [
+          "production_limited"
+        ],
+        "approvedDataScopes": [
+          "provider_registry_review",
+          "licence_status"
+        ],
+        "approvedWorkspaces": [
+          "council_user_management",
+          "professional_registration_review",
+          "licence_status_management"
+        ],
+        "auditSensitivity": "critical",
+        "sourceRegistry": "varapi",
+        "registrySchema": "organisation_registry_schema_v1",
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "org-health_service_commission",
+      "code": "health_service_commission",
+      "displayName": "Health Service Commission",
+      "description": "Health Service Commission",
+      "category": "organisation_registry_record",
+      "ownerService": "workforce-governance",
+      "policyMapping": "impilo.organisation",
+      "metadata": {
+        "organisationId": "org-hsc-zw",
+        "code": "health_service_commission",
+        "legalName": "Health Service Commission",
+        "tradingName": "Health Service Commission",
+        "officialName": "Health Service Commission",
+        "abbreviation": "HSC",
+        "aliases": [
+          "Health Service Commission Zimbabwe",
+          "HSC Zimbabwe"
+        ],
+        "organisationType": "health_service_commission",
+        "organisationClass": "public_sector_workforce_governance_authority",
+        "governanceDomain": [
+          "public_sector_health_workforce",
+          "establishment_control",
+          "approved_posts",
+          "appointments",
+          "transfers",
+          "promotions",
+          "employment_status",
+          "disciplinary_employment_status",
+          "public_sector_staffing_structures",
+          "public_sector_workforce_authorisation"
+        ],
+        "country": "ZW",
+        "trustTier": "tier_7_high_trust_public_workforce_authority",
+        "lifecycleStatus": "active",
+        "verificationStatus": "verified",
+        "publicPrivateClassification": "public_workforce_governance",
+        "isRealZimbabweInstitution": true,
+        "approvedEnvironments": [
+          "production_full"
+        ],
+        "approvedDataScopes": [
+          "public_sector_employment",
+          "establishment_control",
+          "workforce_posting",
+          "workforce_audit"
+        ],
+        "approvedWorkspaces": [
+          "hsc_workspace",
+          "hsc_public_sector_workforce_dashboard",
+          "hsc_user_management",
+          "hsc_establishment_control"
+        ],
+        "auditSensitivity": "critical",
+        "sourceRegistry": "workforce-governance",
+        "registrySchema": "organisation_registry_schema_v1",
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "org-nbts_zimbabwe",
+      "code": "nbts_zimbabwe",
+      "displayName": "National Blood Transfusion Service of Zimbabwe",
+      "description": "Madi / NBTS",
+      "category": "organisation_registry_record",
+      "ownerService": "tuso",
+      "policyMapping": "impilo.organisation",
+      "metadata": {
+        "organisationId": "org-nbts-zw",
+        "code": "nbts_zimbabwe",
+        "legalName": "National Blood Transfusion Service of Zimbabwe",
+        "tradingName": "Madi / NBTS",
+        "organisationType": "national_blood_transfusion_service",
+        "country": "ZW",
+        "trustTier": "tier_6_sovereign_public_operator",
+        "lifecycleStatus": "active",
+        "approvedEnvironments": [
+          "production_full"
+        ],
+        "approvedDataScopes": [
+          "blood_donor",
+          "blood_inventory",
+          "transfusion_safety"
+        ],
+        "approvedWorkspaces": [
+          "blood_service_user_management",
+          "madi_blood_service_dashboard"
+        ],
+        "auditSensitivity": "critical",
+        "sourceRegistry": "tuso",
+        "registrySchema": "organisation_registry_schema_v1",
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "org-impilo_integration_vendor",
+      "code": "impilo_integration_vendor",
+      "displayName": "Impilo Integration Partner (Sandbox)",
+      "description": "Impilo Integration Partner (Sandbox)",
+      "category": "organisation_registry_record",
+      "ownerService": "msika",
+      "policyMapping": "impilo.organisation",
+      "metadata": {
+        "organisationId": "org-vendor-sandbox",
+        "code": "impilo_integration_vendor",
+        "legalName": "Impilo Integration Partner (Sandbox)",
+        "organisationType": "software_vendor",
+        "country": "ZW",
+        "trustTier": "tier_3_contract_active",
+        "lifecycleStatus": "sandbox_only",
+        "approvedEnvironments": [
+          "sandbox"
+        ],
+        "approvedApiScopes": [
+          "marketplace.api.sandbox"
+        ],
+        "approvedDataScopes": [
+          "sandbox_test_data"
+        ],
+        "approvedWorkspaces": [
+          "marketplace_api_developer_assignment",
+          "marketplace_sandbox_access_management"
+        ],
+        "auditSensitivity": "medium",
+        "sourceRegistry": "msika",
+        "registrySchema": "organisation_registry_schema_v1",
+        "multiOrganisationGovernance": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "org-foreign_research_partner_demo",
+      "code": "foreign_research_partner_demo",
+      "displayName": "Foreign Research Consortium (Demo)",
+      "description": "Foreign Research Consortium (Demo)",
+      "category": "organisation_registry_record",
+      "ownerService": "tuso",
+      "policyMapping": "impilo.organisation",
+      "metadata": {
+        "organisationId": "org-foreign-research",
+        "code": "foreign_research_partner_demo",
+        "legalName": "Foreign Research Consortium (Demo)",
+        "organisationType": "foreign_research_partner",
+        "country": "US",
+        "trustTier": "tier_2_verified",
+        "lifecycleStatus": "data_sharing_active",
+        "approvedEnvironments": [
+          "deidentified_only"
+        ],
+        "approvedDataScopes": [
+          "deidentified_research_aggregate"
+        ],
+        "approvedWorkspaces": [
+          "external_partner_user_management",
+          "deidentified_dataset_access",
+          "research_audit_workspace"
+        ],
+        "crossBorderAccess": true,
+        "auditSensitivity": "critical",
+        "sourceRegistry": "tuso",
+        "registrySchema": "organisation_registry_schema_v1",
+        "multiOrganisationGovernance": true
+      }
+    }
+  ]
+}

@@ -130,6 +130,13 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                     // ── Public endpoints ──────────────────────────────────
                     .requestMatchers("/internal/v1/auth/**").permitAll()
+                    // Zero-to-one bootstrap: no national admin exists yet — policy enforced in BootstrapService/OPA
+                    .requestMatchers(HttpMethod.GET, "/internal/v1/bootstrap/status").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/bootstrap/validate-token").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/bootstrap/first-admin").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/bootstrap/activate").permitAll()
+                    .requestMatchers("/internal/v1/bootstrap/recovery/**").hasAnyRole(PLATFORM_OVERRIDES)
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/bootstrap/close").hasAnyRole(PLATFORM_OVERRIDES)
                     .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info", "/actuator/prometheus").permitAll()
                     .requestMatchers("/health/version").permitAll()
                     .requestMatchers(HttpMethod.GET, "/internal/v1/profile/visibility").authenticated()
