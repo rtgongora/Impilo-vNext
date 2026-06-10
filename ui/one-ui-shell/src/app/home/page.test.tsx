@@ -180,17 +180,36 @@ vi.mock("@/providers/ExperienceEntryProvider", () => ({
   }),
 }));
 
-vi.mock("@/hooks/useOperationalContextStore", () => ({
-  useOperationalContextStore: (
-    selector: (state: {
-      operationalMode: string;
-      setOperationalMode: typeof setOperationalModeMock;
-    }) => unknown,
-  ) =>
-    selector({
-      setOperationalMode: setOperationalModeMock,
-      operationalMode: "facility_work",
-    }),
+vi.mock("@/hooks/useOperationalContextStore", () => {
+  const state = {
+    setOperationalMode: setOperationalModeMock,
+    operationalMode: "facility_work" as const,
+    facilityWorkSubcontext: null,
+    setFacilityWorkSubcontext: vi.fn(),
+    registryAdminSubtype: null,
+    setRegistryAdminSubtype: vi.fn(),
+  };
+  const useOperationalContextStore = Object.assign(
+    (selector: (s: typeof state) => unknown) => selector(state),
+    { getState: () => state },
+  );
+  return { useOperationalContextStore };
+});
+
+vi.mock("@/hooks/useIdentityContext", () => ({
+  useIdentityContext: () => ({
+    isCitizenOnly: false,
+    hasWorkAccess: true,
+    hasProfessionalAccess: true,
+    isProviderActivated: true,
+    defaultLandingPath: "/home",
+    defaultOperationalMode: "facility_work",
+    shellMode: "facility_mode",
+    visibleNavZones: ["work", "professional", "life"],
+    needsContextChooser: false,
+    needsProviderStatusResolution: false,
+    isLoading: false,
+  }),
 }));
 
 vi.mock("@tanstack/react-query", () => ({
