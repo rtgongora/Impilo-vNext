@@ -1,17 +1,270 @@
 {
-  "generatedAt": "2026-06-09T13:17:51.953Z",
+  "generatedAt": "2026-06-10T11:41:36.774Z",
   "counts": {
-    "totalOpenApiOperations": 4455,
+    "totalOpenApiOperations": 4478,
     "totalAsyncChannels": 84,
     "implemented": 4539,
     "partial": 0,
     "missing": 0,
-    "unownedContract": 0,
+    "unownedContract": 23,
     "orphanHandlers": 3,
     "violations": 3,
     "contractParseErrors": 0
   },
   "openApiOperations": [
+    {
+      "contract": "admin-governance.openapi.yaml",
+      "operationId": "POST /precheck",
+      "method": "POST",
+      "path": "/precheck",
+      "summary": "OPA-aligned policy precheck for a management action",
+      "modules": [],
+      "implStatus": "unowned-contract",
+      "serviceHandler": null,
+      "stubPattern": null
+    },
+    {
+      "contract": "admin-governance.openapi.yaml",
+      "operationId": "GET /access-requests",
+      "method": "GET",
+      "path": "/access-requests",
+      "summary": "List access requests visible to the current actor",
+      "modules": [],
+      "implStatus": "unowned-contract",
+      "serviceHandler": null,
+      "stubPattern": null
+    },
+    {
+      "contract": "admin-governance.openapi.yaml",
+      "operationId": "GET /access-requests/{requestId}",
+      "method": "GET",
+      "path": "/access-requests/{requestId}",
+      "summary": "Get a single access request",
+      "modules": [],
+      "implStatus": "unowned-contract",
+      "serviceHandler": null,
+      "stubPattern": null
+    },
+    {
+      "contract": "admin-governance.openapi.yaml",
+      "operationId": "POST /access-requests/{requestId}/{decision}",
+      "method": "POST",
+      "path": "/access-requests/{requestId}/{decision}",
+      "summary": "Approve, reject, escalate, revoke or request more information",
+      "modules": [],
+      "implStatus": "unowned-contract",
+      "serviceHandler": null,
+      "stubPattern": null
+    },
+    {
+      "contract": "admin-governance.openapi.yaml",
+      "operationId": "POST /onboarding/{flowId}",
+      "method": "POST",
+      "path": "/onboarding/{flowId}",
+      "summary": "Submit a guided onboarding flow",
+      "modules": [],
+      "implStatus": "unowned-contract",
+      "serviceHandler": null,
+      "stubPattern": null
+    },
+    {
+      "contract": "admin-governance.openapi.yaml",
+      "operationId": "POST /facility/{facilityId}/staff-assignments",
+      "method": "POST",
+      "path": "/facility/{facilityId}/staff-assignments",
+      "summary": "Create or queue a facility staff assignment",
+      "modules": [],
+      "implStatus": "unowned-contract",
+      "serviceHandler": null,
+      "stubPattern": null
+    },
+    {
+      "contract": "admin-governance.openapi.yaml",
+      "operationId": "POST /actions/{action}",
+      "method": "POST",
+      "path": "/actions/{action}",
+      "summary": "Submit a domain-specific governed action",
+      "modules": [],
+      "implStatus": "unowned-contract",
+      "serviceHandler": null,
+      "stubPattern": null
+    },
+    {
+      "contract": "admin-governance.openapi.yaml",
+      "operationId": "GET /audit",
+      "method": "GET",
+      "path": "/audit",
+      "summary": "List audit events for the current actor scope",
+      "modules": [],
+      "implStatus": "unowned-contract",
+      "serviceHandler": null,
+      "stubPattern": null
+    },
+    {
+      "contract": "admin-governance.openapi.yaml",
+      "operationId": "GET /organisations",
+      "method": "GET",
+      "path": "/organisations",
+      "summary": "List organisations from workforce-governance",
+      "modules": [],
+      "implStatus": "unowned-contract",
+      "serviceHandler": null,
+      "stubPattern": null
+    },
+    {
+      "contract": "admin-governance.openapi.yaml",
+      "operationId": "POST /organisations",
+      "method": "POST",
+      "path": "/organisations",
+      "summary": "Register an organisation (OPA precheck + workforce-governance SoR)",
+      "modules": [],
+      "implStatus": "unowned-contract",
+      "serviceHandler": null,
+      "stubPattern": null
+    },
+    {
+      "contract": "admin-governance.openapi.yaml",
+      "operationId": "GET /organisations/{orgId}",
+      "method": "GET",
+      "path": "/organisations/{orgId}",
+      "summary": "Get organisation detail and summary",
+      "modules": [],
+      "implStatus": "unowned-contract",
+      "serviceHandler": null,
+      "stubPattern": null
+    },
+    {
+      "contract": "admin-governance.openapi.yaml",
+      "operationId": "POST /organisations/{orgId}/verify",
+      "method": "POST",
+      "path": "/organisations/{orgId}/verify",
+      "summary": "Verify organisation lifecycle status",
+      "modules": [],
+      "implStatus": "unowned-contract",
+      "serviceHandler": null,
+      "stubPattern": null
+    },
+    {
+      "contract": "admin-governance.openapi.yaml",
+      "operationId": "POST /organisations/{orgId}/suspend",
+      "method": "POST",
+      "path": "/organisations/{orgId}/suspend",
+      "summary": "Suspend organisation",
+      "modules": [],
+      "implStatus": "unowned-contract",
+      "serviceHandler": null,
+      "stubPattern": null
+    },
+    {
+      "contract": "admin-governance.openapi.yaml",
+      "operationId": "POST /organisations/{orgId}/offboard",
+      "method": "POST",
+      "path": "/organisations/{orgId}/offboard",
+      "summary": "Offboard organisation",
+      "modules": [],
+      "implStatus": "unowned-contract",
+      "serviceHandler": null,
+      "stubPattern": null
+    },
+    {
+      "contract": "admin-governance.openapi.yaml",
+      "operationId": "GET /organisations/{orgId}/users",
+      "method": "GET",
+      "path": "/organisations/{orgId}/users",
+      "summary": "List organisation users/memberships",
+      "modules": [],
+      "implStatus": "unowned-contract",
+      "serviceHandler": null,
+      "stubPattern": null
+    },
+    {
+      "contract": "admin-governance.openapi.yaml",
+      "operationId": "POST /organisations/{orgId}/users",
+      "method": "POST",
+      "path": "/organisations/{orgId}/users",
+      "summary": "Add organisation user",
+      "modules": [],
+      "implStatus": "unowned-contract",
+      "serviceHandler": null,
+      "stubPattern": null
+    },
+    {
+      "contract": "admin-governance.openapi.yaml",
+      "operationId": "POST /organisations/{orgId}/users/{userId}/suspend",
+      "method": "POST",
+      "path": "/organisations/{orgId}/users/{userId}/suspend",
+      "summary": "Suspend organisation user",
+      "modules": [],
+      "implStatus": "unowned-contract",
+      "serviceHandler": null,
+      "stubPattern": null
+    },
+    {
+      "contract": "admin-governance.openapi.yaml",
+      "operationId": "POST /organisations/{orgId}/users/{userId}/offboard",
+      "method": "POST",
+      "path": "/organisations/{orgId}/users/{userId}/offboard",
+      "summary": "Offboard organisation user",
+      "modules": [],
+      "implStatus": "unowned-contract",
+      "serviceHandler": null,
+      "stubPattern": null
+    },
+    {
+      "contract": "admin-governance.openapi.yaml",
+      "operationId": "GET /provider-workers/search",
+      "method": "GET",
+      "path": "/provider-workers/search",
+      "summary": "Search provider/worker registry via VARAPI",
+      "modules": [],
+      "implStatus": "unowned-contract",
+      "serviceHandler": null,
+      "stubPattern": null
+    },
+    {
+      "contract": "admin-governance.openapi.yaml",
+      "operationId": "GET /provider-workers/{providerWorkerId}/eligibility",
+      "method": "GET",
+      "path": "/provider-workers/{providerWorkerId}/eligibility",
+      "summary": "Provider/worker eligibility envelope (VARAPI + council + HSC + assignments)",
+      "modules": [],
+      "implStatus": "unowned-contract",
+      "serviceHandler": null,
+      "stubPattern": null
+    },
+    {
+      "contract": "admin-governance.openapi.yaml",
+      "operationId": "GET /hsc/employment-records/search",
+      "method": "GET",
+      "path": "/hsc/employment-records/search",
+      "summary": "Search HSC employment/posting records",
+      "modules": [],
+      "implStatus": "unowned-contract",
+      "serviceHandler": null,
+      "stubPattern": null
+    },
+    {
+      "contract": "admin-governance.openapi.yaml",
+      "operationId": "GET /hsc/employment-records/{employmentRecordId}",
+      "method": "GET",
+      "path": "/hsc/employment-records/{employmentRecordId}",
+      "summary": "Get HSC employment record",
+      "modules": [],
+      "implStatus": "unowned-contract",
+      "serviceHandler": null,
+      "stubPattern": null
+    },
+    {
+      "contract": "admin-governance.openapi.yaml",
+      "operationId": "GET /regulators/professional-status",
+      "method": "GET",
+      "path": "/regulators/professional-status",
+      "summary": "Council/HPA professional status lookup",
+      "modules": [],
+      "implStatus": "unowned-contract",
+      "serviceHandler": null,
+      "stubPattern": null
+    },
     {
       "contract": "ai-model-registry.openapi.yaml",
       "operationId": "aiRegistryInternalHealth",
@@ -2443,7 +2696,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CoreTransactionController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminGovernanceController.java",
       "stubPattern": null
     },
     {
@@ -6444,7 +6697,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CoreTransactionController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminGovernanceController.java",
       "stubPattern": null
     },
     {
@@ -8173,7 +8426,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/EncounterController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/BootstrapController.java",
       "stubPattern": null
     },
     {
@@ -9174,7 +9427,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AiGovernanceController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminGovernanceController.java",
       "stubPattern": null
     },
     {
@@ -9681,7 +9934,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AiModelRegistryController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminGovernanceController.java",
       "stubPattern": null
     },
     {
@@ -9889,7 +10142,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CareEmergencyInpatientController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/BootstrapController.java",
       "stubPattern": null
     },
     {
@@ -11839,7 +12092,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CoreTransactionController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminGovernanceController.java",
       "stubPattern": null
     },
     {
@@ -11982,7 +12235,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CoverageController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminGovernanceController.java",
       "stubPattern": null
     },
     {
@@ -12281,7 +12534,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/DeviceRegistryController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminGovernanceController.java",
       "stubPattern": null
     },
     {
@@ -12671,7 +12924,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/EncounterController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/BootstrapController.java",
       "stubPattern": null
     },
     {
@@ -13230,7 +13483,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ExtensionController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/BootstrapController.java",
       "stubPattern": null
     },
     {
@@ -14296,7 +14549,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/HealthOsMarketplaceController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/BootstrapController.java",
       "stubPattern": null
     },
     {
@@ -16636,7 +16889,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/LiveController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/BootstrapController.java",
       "stubPattern": null
     },
     {
@@ -17260,7 +17513,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/EncounterController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/BootstrapController.java",
       "stubPattern": null
     },
     {
@@ -17650,7 +17903,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/EncounterController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/BootstrapController.java",
       "stubPattern": null
     },
     {
@@ -18014,7 +18267,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/MobileProviderController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/BootstrapController.java",
       "stubPattern": null
     },
     {
@@ -19808,7 +20061,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AiGovernanceController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminGovernanceController.java",
       "stubPattern": null
     },
     {
@@ -20120,7 +20373,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/EncounterController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/BootstrapController.java",
       "stubPattern": null
     },
     {
@@ -22395,7 +22648,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AiModelRegistryController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminGovernanceController.java",
       "stubPattern": null
     },
     {
@@ -22642,7 +22895,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/MadiController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminGovernanceController.java",
       "stubPattern": null
     },
     {
@@ -22772,7 +23025,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/IdentityServicesController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminGovernanceController.java",
       "stubPattern": null
     },
     {
@@ -22837,7 +23090,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ExtensionController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/BootstrapController.java",
       "stubPattern": null
     },
     {
@@ -22863,7 +23116,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/DeviceRegistryController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminGovernanceController.java",
       "stubPattern": null
     },
     {
@@ -23058,7 +23311,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AiModelRegistryController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminGovernanceController.java",
       "stubPattern": null
     },
     {
@@ -23123,7 +23376,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ClientRegistryController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminGovernanceController.java",
       "stubPattern": null
     },
     {
@@ -23669,7 +23922,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/WorkforceGovernanceController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminGovernanceController.java",
       "stubPattern": null
     },
     {
@@ -23760,7 +24013,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ExtensionController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/BootstrapController.java",
       "stubPattern": null
     },
     {

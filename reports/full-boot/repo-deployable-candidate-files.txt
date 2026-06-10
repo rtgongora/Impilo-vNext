@@ -1,3 +1,4 @@
+contracts/openapi/admin-governance.openapi.yaml
 contracts/openapi/ai-model-registry.openapi.yaml
 contracts/openapi/analytics-pipeline.openapi.yaml
 contracts/openapi/asset-registry.openapi.yaml
