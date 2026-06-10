@@ -48,7 +48,31 @@ public class AuthorisedRepresentativeService {
         if (request.containsKey("dataResponsibilityAccepted")) {
             entity.acceptDataResponsibility();
         }
+        if (request.containsKey("invitationId") || request.containsKey("keycloakUserId") || request.containsKey("invitationAuditStatus")) {
+            Map<String, Object> meta = readMeta(entity.getAuditMetadata());
+            if (request.containsKey("invitationId")) meta.put("invitationId", str(request.get("invitationId")));
+            if (request.containsKey("keycloakUserId")) meta.put("keycloakUserId", str(request.get("keycloakUserId")));
+            if (request.containsKey("invitationAuditStatus")) meta.put("invitationAuditStatus", str(request.get("invitationAuditStatus")));
+            entity.setAuditMetadata(writeMeta(meta));
+        }
         return repository.save(entity);
+    }
+
+    private Map<String, Object> readMeta(String json) {
+        if (json == null || json.isBlank()) return new LinkedHashMap<>();
+        try {
+            return objectMapper.readValue(json, Map.class);
+        } catch (Exception e) {
+            return new LinkedHashMap<>();
+        }
+    }
+
+    private String writeMeta(Map<String, Object> meta) {
+        try {
+            return objectMapper.writeValueAsString(meta);
+        } catch (Exception e) {
+            return "{}";
+        }
     }
 
     private static String str(Object value) { return value == null ? "" : value.toString(); }

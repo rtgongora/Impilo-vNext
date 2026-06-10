@@ -35,6 +35,9 @@ public class ImportRowEntity {
     }
 
     public UUID getId() { return id; }
+    public UUID getImportBatchId() { return importBatchId; }
+    public String getNormalizedPayloadJson() { return normalizedPayloadJson; }
+    public String getInvitationId() { return invitationId; }
     public String getOutcome() { return outcome; }
     public void setOutcome(String outcome) { this.outcome = outcome; touch(); }
     public void setValidationStatus(String validationStatus) { this.validationStatus = validationStatus; touch(); }

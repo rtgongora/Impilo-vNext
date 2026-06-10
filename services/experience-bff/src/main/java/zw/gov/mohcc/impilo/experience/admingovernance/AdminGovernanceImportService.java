@@ -14,17 +14,20 @@ public class AdminGovernanceImportService {
     private final WorkforceGovernanceClient workforceGovernanceClient;
     private final AdminGovernancePolicyService policyService;
     private final AdminGovernanceAuditHelper auditHelper;
+    private final GovernanceInvitationService governanceInvitationService;
     private final SessionExperienceService sessionExperienceService;
     private final ObjectMapper objectMapper;
 
     public AdminGovernanceImportService(WorkforceGovernanceClient workforceGovernanceClient,
                                         AdminGovernancePolicyService policyService,
                                         AdminGovernanceAuditHelper auditHelper,
+                                        GovernanceInvitationService governanceInvitationService,
                                         SessionExperienceService sessionExperienceService,
                                         ObjectMapper objectMapper) {
         this.workforceGovernanceClient = workforceGovernanceClient;
         this.policyService = policyService;
         this.auditHelper = auditHelper;
+        this.governanceInvitationService = governanceInvitationService;
         this.sessionExperienceService = sessionExperienceService;
         this.objectMapper = objectMapper;
     }
@@ -76,12 +79,93 @@ public class AdminGovernanceImportService {
     }
 
     public AdminGovernanceDtos.ActionResponse sendInvitations(String actorId, String importBatchId) {
-        JsonNode batch = workforceGovernanceClient.postJson("/v1/internal/governance/imports/" + importBatchId + "/send-invitations", Map.of());
-        if (batch == null) return AdminGovernanceResponses.pendingBackend("Invitations could not be sent.", null);
-        var audit = auditHelper.emit("import.invitations_sent", actorId, importBatchId, Map.of());
-        return AdminGovernanceResponses.of("completed", importBatchId, null, null, "Invitations sent",
-                "Invitations queued — activation requires identity confirmation and OPA precheck.",
-                List.of("View import history"), null, null, audit, "live", Map.of("batch", batch));
+        JsonNode batchMeta = workforceGovernanceClient.getJson("/v1/internal/governance/imports/" + importBatchId);
+        if (batchMeta == null) {
+            return AdminGovernanceResponses.pendingBackend("Import batch unavailable.", null);
+        }
+        String organisationId = batchMeta.path("organisationId").asText("");
+        String importType = batchMeta.path("importType").asText("organisation_users");
+
+        JsonNode rowsNode = workforceGovernanceClient.getJson("/v1/internal/governance/imports/" + importBatchId + "/rows");
+        if (rowsNode == null || !rowsNode.isArray()) {
+            return AdminGovernanceResponses.pendingBackend("Import rows unavailable.", null);
+        }
+
+        List<Map<String, Object>> deliveries = new ArrayList<>();
+        List<String> blockedMessages = new ArrayList<>();
+        for (JsonNode row : rowsNode) {
+            String outcome = row.path("outcome").asText("");
+            if (!"ready_to_invite".equals(outcome) && !"requires_approval".equals(outcome)) {
+                continue;
+            }
+            Map<String, String> payload = parseRowPayload(row.path("normalizedPayloadJson").asText(null));
+            String email = payload.getOrDefault("email", payload.getOrDefault("official_email", ""));
+            String displayName = payload.getOrDefault("full_name", email);
+            GovernanceInvitationService.InvitationDeliveryResult delivery = governanceInvitationService.deliverImportRowInvitation(
+                    organisationId,
+                    importBatchId,
+                    email,
+                    displayName,
+                    importType);
+            if (!delivery.activated()) {
+                blockedMessages.add(email.isBlank() ? row.path("id").asText() + ": " + delivery.friendlyMessage() : email + ": " + delivery.friendlyMessage());
+                continue;
+            }
+            deliveries.add(Map.of(
+                    "rowId", row.path("id").asText(),
+                    "invitationId", delivery.invitationId(),
+                    "keycloakUserId", delivery.keycloakUserId() != null ? delivery.keycloakUserId() : ""
+            ));
+        }
+
+        if (deliveries.isEmpty()) {
+            var audit = auditHelper.emit("import.invitations_blocked", actorId, importBatchId, Map.of("blocked", blockedMessages));
+            return AdminGovernanceResponses.of(
+                    "denied",
+                    importBatchId,
+                    null,
+                    null,
+                    "No invitations delivered",
+                    blockedMessages.isEmpty()
+                            ? "No rows were ready for invitation."
+                            : blockedMessages.get(0),
+                    List.of("Review import exceptions", "Retry invitations"),
+                    blockedMessages.isEmpty() ? "No eligible rows" : blockedMessages.get(0),
+                    null,
+                    audit,
+                    "failed_non_blocking",
+                    Map.of("blocked", blockedMessages));
+        }
+
+        JsonNode batch = workforceGovernanceClient.postJson(
+                "/v1/internal/governance/imports/" + importBatchId + "/record-invitations",
+                Map.of("deliveries", deliveries));
+        if (batch == null) {
+            return AdminGovernanceResponses.pendingBackend(
+                    "Invitations were created in Keycloak but workforce governance could not record them.",
+                    null);
+        }
+
+        var audit = auditHelper.emit("import.invitations_sent", actorId, importBatchId, Map.of(
+                "deliveredCount", deliveries.size(),
+                "blockedCount", blockedMessages.size()));
+        String message = deliveries.size() + " invitation(s) sent. Activation requires identity confirmation and OPA precheck.";
+        if (!blockedMessages.isEmpty()) {
+            message += " " + blockedMessages.size() + " row(s) could not be invited.";
+        }
+        return AdminGovernanceResponses.of(
+                "completed",
+                importBatchId,
+                null,
+                null,
+                "Invitations sent",
+                message,
+                List.of("View import history"),
+                null,
+                null,
+                audit,
+                audit.auditStatus(),
+                Map.of("batch", batch, "deliveredCount", deliveries.size(), "blocked", blockedMessages));
     }
 
     public AdminGovernanceDtos.LookupEnvelope template(String importType) {
@@ -105,6 +189,16 @@ public class AdminGovernanceImportService {
         batch.put("reconciliationRequired", true);
         var audit = auditHelper.emit("import.batch_uploaded", actorId, batchId, Map.of("fallback", true));
         return live(Map.of("batch", batch, "sourceOfRecordStatus", "fallback_queue", "reconciliationRequired", true, "auditStatus", audit.auditStatus()));
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, String> parseRowPayload(String json) {
+        if (json == null || json.isBlank()) return Map.of();
+        try {
+            return objectMapper.readValue(json, Map.class);
+        } catch (Exception e) {
+            return Map.of();
+        }
     }
 
     private static AdminGovernanceDtos.LookupEnvelope unavailable(String message) {

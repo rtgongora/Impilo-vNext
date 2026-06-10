@@ -103,21 +103,42 @@ public class ImportBatchService {
         return batchRepository.save(batch);
     }
 
+    /**
+     * Legacy endpoint — does not fabricate invitation ids. Use {@link #recordInvitations} after
+     * Keycloak delivery succeeds in experience-bff.
+     */
     @Transactional
     public ImportBatchEntity sendInvitations(UUID batchId) {
         ImportBatchEntity batch = get(batchId);
-        batch.setStatus("invitations_sent");
-        List<ImportRowEntity> rows = rows(batchId);
-        int ready = 0;
-        for (ImportRowEntity row : rows) {
-            if ("ready_to_invite".equals(row.getOutcome()) || "requires_approval".equals(row.getOutcome())) {
-                row.setOutcome("invitation_sent");
-                row.setInvitationId(UUID.randomUUID().toString());
-                rowRepository.save(row);
-                ready++;
+        batch.setStatus("invitations_pending");
+        return batchRepository.save(batch);
+    }
+
+    @Transactional
+    public ImportBatchEntity recordInvitations(UUID batchId, List<Map<String, Object>> deliveries) {
+        ImportBatchEntity batch = get(batchId);
+        int sent = 0;
+        for (Map<String, Object> delivery : deliveries) {
+            UUID rowId = UUID.fromString(String.valueOf(delivery.get("rowId")));
+            ImportRowEntity row = rowRepository.findById(rowId)
+                    .orElseThrow(() -> new IllegalArgumentException("Import row not found: " + rowId));
+            if (!batchId.equals(row.getImportBatchId())) {
+                throw new IllegalArgumentException("Import row does not belong to batch");
             }
+            if (!"ready_to_invite".equals(row.getOutcome()) && !"requires_approval".equals(row.getOutcome())) {
+                continue;
+            }
+            row.setOutcome("invitation_sent");
+            row.setInvitationId(String.valueOf(delivery.get("invitationId")));
+            rowRepository.save(row);
+            sent++;
         }
-        batch.setReadyToInviteCount(ready);
+        if (sent > 0) {
+            batch.setStatus("invitations_sent");
+            batch.setReadyToInviteCount(sent);
+        } else {
+            batch.setStatus("invitations_pending");
+        }
         return batchRepository.save(batch);
     }
 

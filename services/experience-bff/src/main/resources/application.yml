@@ -53,6 +53,8 @@ impilo:
     require-mfa: ${IMPILO_BOOTSTRAP_REQUIRE_MFA:true}
     environment: ${IMPILO_BOOTSTRAP_ENVIRONMENT:development}
     bootstrap-role-ttl-hours: 24
+  governance:
+    invitation-expiry-hours: ${IMPILO_GOVERNANCE_INVITATION_EXPIRY_HOURS:168}
   registry-intake:
     redis-ttl-days: ${REGISTRY_INTAKE_REDIS_TTL_DAYS:30}
     events-topic: ${REGISTRY_INTAKE_EVENTS_TOPIC:impilo.registry.intake}

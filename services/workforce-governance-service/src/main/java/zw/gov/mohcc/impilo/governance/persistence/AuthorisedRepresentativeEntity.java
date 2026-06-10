@@ -61,6 +61,8 @@ public class AuthorisedRepresentativeEntity {
     public void setStatus(String status) { this.status = status; touch(); }
     public void setRoleTemplateId(String roleTemplateId) { this.roleTemplateId = roleTemplateId; touch(); }
     public void setApprovedByUserId(String approvedByUserId) { this.approvedByUserId = approvedByUserId; touch(); }
+    public void setAuditMetadata(String auditMetadata) { this.auditMetadata = auditMetadata; touch(); }
+    public String getAuditMetadata() { return auditMetadata; }
     public void acceptDataResponsibility() { this.dataResponsibilityAcceptedAt = Instant.now(); touch(); }
 
     private void touch() { this.updatedAt = Instant.now(); }

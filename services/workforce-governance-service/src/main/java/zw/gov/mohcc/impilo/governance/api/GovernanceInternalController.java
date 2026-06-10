@@ -542,6 +542,15 @@ public class GovernanceInternalController {
         return ResponseEntity.ok(ApiResponse.ok(importBatchService.sendInvitations(importBatchId), corr()));
     }
 
+    @PostMapping("/imports/{importBatchId}/record-invitations")
+    public ResponseEntity<ApiResponse<ImportBatchEntity>> recordImportInvitations(
+            @PathVariable UUID importBatchId,
+            @RequestBody Map<String, Object> body) {
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> deliveries = (List<Map<String, Object>>) body.getOrDefault("deliveries", List.of());
+        return ResponseEntity.ok(ApiResponse.ok(importBatchService.recordInvitations(importBatchId, deliveries), corr()));
+    }
+
     @GetMapping("/imports/templates/{importType}")
     public ResponseEntity<ApiResponse<Map<String, Object>>> importTemplate(@PathVariable String importType) {
         return ResponseEntity.ok(ApiResponse.ok(importBatchService.template(importType), corr()));

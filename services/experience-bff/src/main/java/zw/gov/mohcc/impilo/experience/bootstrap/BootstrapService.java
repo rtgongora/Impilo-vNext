@@ -2,6 +2,7 @@ package zw.gov.mohcc.impilo.experience.bootstrap;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.stereotype.Service;
+import zw.gov.mohcc.impilo.experience.admingovernance.GovernanceInvitationService;
 import zw.gov.mohcc.impilo.experience.client.WorkforceGovernanceClient;
 
 import java.time.OffsetDateTime;
@@ -17,6 +18,7 @@ public class BootstrapService {
     private final BootstrapTokenService tokenService;
     private final BootstrapPolicyService policyService;
     private final BootstrapAuditService auditService;
+    private final GovernanceInvitationService governanceInvitationService;
     private final WorkforceGovernanceClient workforceGovernanceClient;
 
     public BootstrapService(BootstrapProperties properties,
@@ -24,12 +26,14 @@ public class BootstrapService {
                             BootstrapTokenService tokenService,
                             BootstrapPolicyService policyService,
                             BootstrapAuditService auditService,
+                            GovernanceInvitationService governanceInvitationService,
                             WorkforceGovernanceClient workforceGovernanceClient) {
         this.properties = properties;
         this.stateRepository = stateRepository;
         this.tokenService = tokenService;
         this.policyService = policyService;
         this.auditService = auditService;
+        this.governanceInvitationService = governanceInvitationService;
         this.workforceGovernanceClient = workforceGovernanceClient;
     }
 
@@ -131,7 +135,11 @@ public class BootstrapService {
                 roleExpiry,
                 state.createdAt(),
                 OffsetDateTime.now().toString(),
-                Map.of("organisationId", organisationId, "nominatedEmail", email)
+                Map.of(
+                        "organisationId", organisationId,
+                        "nominatedEmail", email,
+                        "nominatedFullName", str(request.nominatedPerson().get("fullName"))
+                )
         );
         stateRepository.save(tid, updated);
         var audit = auditService.emit("bootstrap.first_admin_created", email, bootstrapAccountId, accountBody);
@@ -163,14 +171,40 @@ public class BootstrapService {
             return deniedResponse(new BootstrapDtos.BootstrapPolicyDecision(false, UUID.randomUUID().toString(), List.of(), List.of("MFA required.")), audit, "MFA setup is required before activation.");
         }
 
-        Map<String, Object> body = Map.of(
-                "bootstrapAccountId", request.bootstrapAccountId(),
-                "password", request.password() != null ? request.password() : "",
-                "mfaConfigured", request.mfaConfigured() != null && request.mfaConfigured(),
-                "status", "ACTIVE"
-        );
-        JsonNode activated = workforceGovernanceClient.postJson("/v1/internal/governance/bootstrap/accounts/" + request.bootstrapAccountId() + "/activate", body);
-        String userId = activated != null ? activated.path("keycloakUserId").asText(emailFromState(state)) : emailFromState(state);
+        String email = emailFromState(state);
+        String fullName = str(state.metadata() != null ? state.metadata().get("nominatedFullName") : null);
+        if (email.isBlank()) {
+            var audit = auditService.emit("bootstrap.denied", null, tid, Map.of("reason", "missing_email"));
+            return deniedResponse(new BootstrapDtos.BootstrapPolicyDecision(false, UUID.randomUUID().toString(), List.of(), List.of("Nominated email missing.")), audit, "Bootstrap account email is missing.");
+        }
+
+        GovernanceInvitationService.InvitationDeliveryResult delivery = governanceInvitationService.deliverBootstrapActivation(
+                email,
+                fullName.isBlank() ? email : fullName,
+                request.password(),
+                properties.isRequireMfa());
+        if (!delivery.activated()) {
+            var audit = auditService.emit("bootstrap.denied", null, tid, Map.of(
+                    "reason", delivery.status(),
+                    "auditStatus", delivery.auditStatus()));
+            return deniedResponse(
+                    new BootstrapDtos.BootstrapPolicyDecision(false, UUID.randomUUID().toString(), List.of(), List.of(delivery.friendlyMessage())),
+                    audit,
+                    delivery.friendlyMessage());
+        }
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("bootstrapAccountId", request.bootstrapAccountId());
+        body.put("password", request.password() != null ? request.password() : "");
+        body.put("mfaConfigured", request.mfaConfigured() != null && request.mfaConfigured());
+        body.put("status", "ACTIVE");
+        body.put("keycloakUserId", delivery.keycloakUserId());
+        body.put("invitationId", delivery.invitationId());
+        JsonNode activated = workforceGovernanceClient.postJson(
+                "/v1/internal/governance/bootstrap/accounts/" + request.bootstrapAccountId() + "/activate", body);
+        String userId = activated != null && activated.has("keycloakUserId")
+                ? activated.path("keycloakUserId").asText(delivery.keycloakUserId())
+                : delivery.keycloakUserId();
 
         BootstrapDtos.BootstrapStateRecord closed = new BootstrapDtos.BootstrapStateRecord(
                 state.id(),
@@ -203,7 +237,7 @@ public class BootstrapService {
         return new BootstrapDtos.BootstrapFirstAdminResponse(
                 "completed",
                 request.bootstrapAccountId(),
-                str(closed.metadata().get("organisationId")),
+                str(state.metadata() != null ? state.metadata().get("organisationId") : null),
                 request.bootstrapAccountId(),
                 "Bootstrap complete",
                 "Bootstrap Mode is now closed. Use Administration & Governance for routine operations.",
