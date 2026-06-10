@@ -19,6 +19,7 @@ import {
   ClipboardList,
   Code2,
   CreditCard,
+  Database,
   Droplet,
   FileBarChart2,
   FileText,
@@ -32,6 +33,7 @@ import {
   Layers,
   LifeBuoy,
   Lightbulb,
+  MapPin,
   MessageSquare,
   Monitor,
   Package,
@@ -308,6 +310,46 @@ function getSidebarSpotlight(pathname: string): SidebarSpotlight {
         { href: "/citizen/health-id/qr", label: "Health ID QR", icon: IdCard },
         { href: "/citizen/id-recovery", label: "ID recovery", icon: IdCard },
         { href: "/share/claim", label: "Claim docs", icon: ClipboardList },
+      ],
+    };
+  }
+
+  if (pathname.startsWith("/operations/butano")) {
+    return {
+      title: "Butano — Shared Health Record",
+      description: "FHIR stats, reconciliation, subscription triggers, and SHR operational configuration.",
+      tone: "border-[color:var(--primary)]/25 bg-[color:var(--surface-soft)] text-[color:var(--text-primary)]",
+      serviceSlug: "butano",
+      actions: [
+        { href: "/operations/butano", label: "SHR operations", icon: Database },
+        { href: "/queue/search", label: "Patient charts", icon: Search },
+      ],
+    };
+  }
+
+  if (pathname.startsWith("/public-health/site-registry")) {
+    return {
+      title: "Indawo — Site Registry",
+      description: "Public health premises, site lifecycle, inspections, and licensing.",
+      tone: "border-[color:var(--primary)]/25 bg-[color:var(--surface-soft)] text-[color:var(--text-primary)]",
+      serviceSlug: "indawo",
+      actions: [
+        { href: "/public-health/site-registry", label: "Site registry", icon: MapPin },
+        { href: "/public-health?tab=sites", label: "Field sites", icon: Building2 },
+      ],
+    };
+  }
+
+  if (pathname.startsWith("/registry/trust") || pathname.startsWith("/work/system-admin/tshepo")) {
+    return {
+      title: "Tshepo — Trust Layer",
+      description: "Policy, consent, federation posture, and trust governance surfaces.",
+      tone: "border-[color:var(--nompilo)]/25 bg-[color:var(--nompilo-soft)] text-[color:var(--text-primary)]",
+      serviceSlug: "tshepo",
+      actions: [
+        { href: "/registry/trust", label: "Trust hub", icon: Shield },
+        { href: "/admin/consent", label: "Consent governance", icon: ShieldCheck },
+        { href: "/registry/mvumo", label: "Mvumo consent", icon: HeartHandshake },
       ],
     };
   }

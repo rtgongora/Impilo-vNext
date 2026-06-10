@@ -17,6 +17,9 @@ const COMMAND_CENTRE_RELATED_LINKS = [
   { label: "Core transactions", href: "/core-transaction", description: "Transaction state and audit feed" },
   { label: "Clinical hub", href: "/clinical", description: "Clinical and inpatient modules" },
   { label: "Rx transaction journey", href: "/pharmacy/transaction-journey", description: "Golden-path Rx demonstration" },
+  { label: "Butano SHR ops", href: "/operations/butano", description: "Shared health record operations", serviceSlug: "butano" },
+  { label: "Indawo sites", href: "/public-health/site-registry", description: "Public health premises registry", serviceSlug: "indawo" },
+  { label: "Tshepo trust", href: "/registry/trust", description: "Trust and federation governance", serviceSlug: "tshepo" },
 ];
 import {
   filterCommandCentreSections,

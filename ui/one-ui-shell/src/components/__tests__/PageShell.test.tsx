@@ -57,6 +57,11 @@ describe("PageShell", () => {
     expect(heading.className).toContain("text-gray-900");
   });
 
+  it("renders service logo when serviceSlug is provided", () => {
+    render(<PageShell title="Fundo Studio" serviceSlug="fundo" />);
+    expect(screen.getByRole("img", { name: "Fundo logo" })).toBeInTheDocument();
+  });
+
   it("applies mb-6 to the title container", () => {
     const { container } = render(<PageShell title="Test" />);
     const titleContainer = container.firstElementChild?.firstElementChild;

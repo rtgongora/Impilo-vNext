@@ -16,6 +16,8 @@ import {
   useUpdateSiteLocation,
 } from "@/hooks/queries/useSiteRegistry";
 import { NdilaLocationPicker } from "@/components/ndila/NdilaLocationPicker";
+import { AppLayout } from "@/components/AppLayout";
+import { PageShell } from "@/components/PageShell";
 
 export default function SiteRegistryProfilePage({ params }: { params: { siteId: string } }) {
   const siteId = decodeURIComponent(params.siteId);
@@ -48,6 +50,12 @@ export default function SiteRegistryProfilePage({ params }: { params: { siteId: 
   const [docNotes, setDocNotes] = useState("");
 
   return (
+    <AppLayout>
+      <PageShell
+        title={profile?.site.name || "Indawo site profile"}
+        subtitle="Premises lifecycle, inspections, licensing, and compliance actions."
+        serviceSlug="indawo"
+      >
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -55,7 +63,6 @@ export default function SiteRegistryProfilePage({ params }: { params: { siteId: 
             <ArrowLeft className="h-4 w-4" />
             Site registry
           </Link>
-          <h1 className="mt-2 text-xl font-semibold text-gray-900">{profile?.site.name || "Site profile"}</h1>
           <div className="mt-1 text-sm text-gray-600">
             <span className="font-mono text-xs">{siteId}</span>
             {profile?.site.siteCode ? <span className="ml-2 text-xs text-gray-500">· Code: {profile.site.siteCode}</span> : null}
@@ -377,6 +384,8 @@ export default function SiteRegistryProfilePage({ params }: { params: { siteId: 
         </>
       )}
     </div>
+      </PageShell>
+    </AppLayout>
   );
 }
 

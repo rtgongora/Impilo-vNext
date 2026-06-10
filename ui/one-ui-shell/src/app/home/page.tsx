@@ -22,6 +22,8 @@ import {
   Wifi, Wrench, Layers, QrCode, FlaskConical, FileCheck, Clipboard, Play, LayoutGrid, BedDouble,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { ModuleCardIcon } from "@/components/branding/ModuleCardIcon";
+import { ServiceLogo } from "@/components/branding/ServiceLogo";
 import { AppLayout } from "@/components/AppLayout";
 import {
   HomeAttentionFromData,
@@ -60,6 +62,7 @@ interface ModuleItem {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   color: string;
+  serviceSlug?: string;
   requiresClinical?: boolean;
   requiresAdmin?: boolean;
   requiresFinance?: boolean;
@@ -80,6 +83,7 @@ interface WorkerLaunchAction {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   color: string;
+  serviceSlug?: string;
   requiresWorkContext?: boolean;
 }
 
@@ -228,10 +232,10 @@ function getModuleCategories(roles: {
     icon: Database,
     color: "bg-indigo-500",
     modules: [
-      { label: "Providers", description: "Provider registry", href: "/registry/providers", icon: Stethoscope, color: "bg-teal-100 text-teal-600" },
-      { label: "Facilities", description: "Facility registry", href: "/registry/facilities", icon: Building2, color: "bg-purple-100 text-purple-600" },
-      { label: "Products", description: "Product catalogue", href: "/registry/products", icon: Package, color: "bg-orange-100 text-orange-600" },
-      { label: "Terminology", description: "ICD, SNOMED, LOINC", href: "/registry/terminology", icon: BookOpen, color: "bg-impilo-100 text-impilo-500" },
+      { label: "Providers", description: "Provider registry", href: "/registry/providers", icon: Stethoscope, color: "bg-teal-100 text-teal-600", serviceSlug: "varapi" },
+      { label: "Facilities", description: "Facility registry", href: "/registry/facilities", icon: Building2, color: "bg-purple-100 text-purple-600", serviceSlug: "tuso" },
+      { label: "Products", description: "Product catalogue", href: "/registry/products", icon: Package, color: "bg-orange-100 text-orange-600", serviceSlug: "msika" },
+      { label: "Terminology", description: "ICD, SNOMED, LOINC", href: "/registry/terminology", icon: BookOpen, color: "bg-impilo-100 text-impilo-500", serviceSlug: "zibo" },
     ],
   });
 
@@ -262,7 +266,7 @@ function getModuleCategories(roles: {
         { label: "Surveillance", description: "Disease surveillance & eIDSR", href: "/public-health?tab=surveillance", icon: Shield, color: "bg-red-100 text-red-600" },
         { label: "Outbreaks", description: "Outbreak management", href: "/public-health?tab=outbreaks", icon: Shield, color: "bg-red-100 text-red-600" },
         { label: "Campaigns", description: "Immunization & outreach", href: "/public-health?tab=campaigns", icon: Shield, color: "bg-green-100 text-green-600" },
-        { label: "INDAWO Sites", description: "Premises registry", href: "/public-health?tab=sites", icon: Shield, color: "bg-emerald-100 text-emerald-600" },
+        { label: "INDAWO Sites", description: "Premises registry", href: "/public-health?tab=sites", icon: Shield, color: "bg-emerald-100 text-emerald-600", serviceSlug: "indawo" },
       ],
     });
   }
@@ -290,7 +294,7 @@ function getModuleCategories(roles: {
     color: "bg-orange-500",
     modules: [
       { label: "Inventory", description: "Stock management", href: "/inventory", icon: Package, color: "bg-orange-100 text-orange-600" },
-      { label: "Marketplace", description: "Health products & vendors", href: "/marketplace", icon: ShoppingCart, color: "bg-purple-100 text-purple-600" },
+      { label: "Marketplace", description: "Health products & vendors", href: "/marketplace", icon: ShoppingCart, color: "bg-purple-100 text-purple-600", serviceSlug: "msika" },
       { label: "Reports", description: "Analytics & dashboards", href: "/reports", icon: BarChart3, color: "bg-indigo-100 text-indigo-600" },
     ],
   });
@@ -417,6 +421,7 @@ function getWorkerLaunchActions(args: {
         href: "/learning",
         icon: GraduationCap,
         color: "bg-cyan-100 text-cyan-700",
+        serviceSlug: "fundo",
       },
       {
         label: "Composed Worklist",
@@ -513,6 +518,7 @@ function getWorkerLaunchActions(args: {
         href: "/learning",
         icon: GraduationCap,
         color: "bg-cyan-100 text-cyan-700",
+        serviceSlug: "fundo",
       },
       {
         label: "Claims Review",
@@ -560,6 +566,7 @@ function getWorkerLaunchActions(args: {
         href: "/learning",
         icon: GraduationCap,
         color: "bg-cyan-100 text-cyan-700",
+        serviceSlug: "fundo",
       },
       {
         label: "Production Command Centre",
@@ -1264,15 +1271,18 @@ export default function HomePage() {
                 ) : (
                   <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                     {launchActions.map((action) => {
-                      const ActionIcon = action.icon;
                       return (
                         <Link
                           key={action.href}
                           href={action.href}
                           className="group rounded-xl border border-gray-200 bg-gray-50 p-4 transition-colors hover:border-impilo-200 hover:bg-white hover:shadow-sm"
                         >
-                          <div className={`mb-3 inline-flex h-11 w-11 items-center justify-center rounded-xl ${action.color}`}>
-                            <ActionIcon className="h-5 w-5" />
+                          <div className="mb-3">
+                            <ModuleCardIcon
+                              serviceSlug={action.serviceSlug}
+                              icon={action.icon}
+                              color={action.color}
+                            />
                           </div>
                           <div className="flex items-start justify-between gap-3">
                             <div>
@@ -1428,13 +1438,15 @@ export default function HomePage() {
                     {isExpanded && (
                       <div className="mt-2 bg-white rounded-lg border border-gray-200 p-3 space-y-1">
                         {cat.modules.map((mod) => {
-                          const ModIcon = mod.icon;
                           return (
                             <Link key={mod.href + mod.label} href={mod.href}
                               className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors group">
-                              <div className={`w-7 h-7 rounded ${mod.color} flex items-center justify-center shrink-0`}>
-                                <ModIcon className="w-3.5 h-3.5" />
-                              </div>
+                              <ModuleCardIcon
+                                serviceSlug={mod.serviceSlug}
+                                icon={mod.icon}
+                                color={mod.color}
+                                size="sm"
+                              />
                               <div className="min-w-0">
                                 <p className="text-sm text-gray-900 group-hover:text-impilo-500">{mod.label}</p>
                                 <p className="text-xs text-gray-500 truncate">{mod.description}</p>
@@ -1555,7 +1567,10 @@ export default function HomePage() {
                 {/* Fundo learning KPI snapshot */}
                 <div className="rounded-xl border border-cyan-200 bg-cyan-50 p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-cyan-900">Fundo Snapshot</span>
+                    <span className="inline-flex items-center gap-2 text-sm font-medium text-cyan-900">
+                      <ServiceLogo slug="fundo" size="compact" />
+                      Fundo Snapshot
+                    </span>
                     <Link href="/learning" className="text-xs font-medium text-cyan-700 hover:text-cyan-900">
                       Open →
                     </Link>
@@ -1591,7 +1606,7 @@ export default function HomePage() {
                   <span className="text-sm font-medium text-gray-900 mb-3 block">Quick Actions</span>
                   <div className="space-y-2">
                     <Link href="/learning" className="flex items-center gap-2 text-xs text-gray-600 hover:text-impilo-500">
-                      <GraduationCap className="w-3.5 h-3.5" /> Impilo Fundo
+                      <ServiceLogo slug="fundo" size="compact" /> Impilo Fundo
                     </Link>
                     <Link href="/home/certifications" className="flex items-center gap-2 text-xs text-gray-600 hover:text-impilo-500">
                       <Award className="w-3.5 h-3.5" /> Certifications

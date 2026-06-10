@@ -32,7 +32,7 @@ export default function ButanoOpsPage() {
       <PageShell
         title="SHR Operations"
         subtitle="BUTANO (HAPI FHIR) reconciliation, FHIR stats, and trigger management"
-        icon={<Database className="h-6 w-6" />}
+        serviceSlug="butano"
       >
         <div className="space-y-6">
           {/* Summary metrics */}

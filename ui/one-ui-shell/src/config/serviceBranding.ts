@@ -211,6 +211,91 @@ export const COMMAND_CENTRE_TILE_SLUGS: Record<string, ServiceBrandingSlug> = {
   "wellness-hub": "simba",
 };
 
+/** Longest-prefix route → sovereign service slug (PageShell auto-branding). */
+export const ROUTE_SERVICE_SLUG_PREFIXES: ReadonlyArray<{
+  prefix: string;
+  slug: ServiceBrandingSlug;
+}> = [
+  { prefix: "/work/system-admin/tshepo", slug: "tshepo" },
+  { prefix: "/public-health/site-registry", slug: "indawo" },
+  { prefix: "/admin/consent", slug: "tshepo" },
+  { prefix: "/finance/mushex-platform", slug: "mushex" },
+  { prefix: "/operations/butano", slug: "butano" },
+  { prefix: "/operations/vito", slug: "vito" },
+  { prefix: "/registry/trust", slug: "tshepo" },
+  { prefix: "/registry/mvumo", slug: "mvumo" },
+  { prefix: "/registry/providers", slug: "varapi" },
+  { prefix: "/registry/facilities", slug: "tuso" },
+  { prefix: "/registry/terminology", slug: "zibo" },
+  { prefix: "/learning", slug: "fundo" },
+  { prefix: "/wellness", slug: "simba" },
+  { prefix: "/marketplace", slug: "msika" },
+  { prefix: "/nhume", slug: "nhume" },
+  { prefix: "/ndila", slug: "ndila" },
+  { prefix: "/madi", slug: "madi" },
+  { prefix: "/ubomi", slug: "ubomi" },
+  { prefix: "/ask", slug: "nompilo" },
+];
+
+export type ServiceSurfaceStatus = "surfaced" | "partial" | "no_dedicated_route";
+
+export interface ServiceSurfaceCoverage {
+  status: ServiceSurfaceStatus;
+  primaryRoutes?: string[];
+  notes?: string;
+}
+
+/** Where each sovereign service appears in the UI today (or why not). */
+export const SERVICE_SURFACE_COVERAGE: Record<ServiceBrandingSlug, ServiceSurfaceCoverage> = {
+  butano: {
+    status: "surfaced",
+    primaryRoutes: ["/operations/butano", "/queue/search"],
+    notes: "SHR clinical chart flows use Butano via queue search; ops hub at /operations/butano.",
+  },
+  fundo: {
+    status: "surfaced",
+    primaryRoutes: ["/learning", "/learning/studio", "/learning/admin"],
+  },
+  indawo: {
+    status: "surfaced",
+    primaryRoutes: ["/public-health/site-registry", "/public-health?tab=sites"],
+    notes: "Premises registry; also probed from /registry/intake.",
+  },
+  madi: { status: "surfaced", primaryRoutes: ["/madi", "/madi/donor"] },
+  msika: { status: "surfaced", primaryRoutes: ["/marketplace", "/registry/products"] },
+  mushex: { status: "surfaced", primaryRoutes: ["/finance/mushex-platform", "/finance"] },
+  mvumo: { status: "surfaced", primaryRoutes: ["/registry/mvumo", "/consent"] },
+  ndila: { status: "surfaced", primaryRoutes: ["/ndila"] },
+  nhume: { status: "surfaced", primaryRoutes: ["/nhume", "/operations/dispatch"] },
+  nompilo: { status: "surfaced", primaryRoutes: ["/ask", "/intelligence"] },
+  simba: { status: "surfaced", primaryRoutes: ["/wellness"] },
+  tshepo: {
+    status: "surfaced",
+    primaryRoutes: ["/registry/trust", "/work/system-admin/tshepo", "/admin/consent"],
+    notes: "Trust layer spans registry trust hub, admin consent, and system-admin Tshepo section.",
+  },
+  tuso: { status: "surfaced", primaryRoutes: ["/registry/facilities"] },
+  ubomi: { status: "surfaced", primaryRoutes: ["/ubomi"] },
+  varapi: { status: "surfaced", primaryRoutes: ["/registry/providers"] },
+  vito: { status: "surfaced", primaryRoutes: ["/operations/vito", "/registry/clients", "/id-services"] },
+  zibo: { status: "surfaced", primaryRoutes: ["/registry/terminology"] },
+};
+
+/** Infer sovereign service slug from the current pathname (longest prefix wins). */
+export function inferServiceSlugFromPath(
+  pathname: string | null | undefined,
+): ServiceBrandingSlug | undefined {
+  if (!pathname) return undefined;
+  const normalized = pathname.split("?")[0].replace(/\/$/, "") || "/";
+  const sorted = [...ROUTE_SERVICE_SLUG_PREFIXES].sort((a, b) => b.prefix.length - a.prefix.length);
+  for (const { prefix, slug } of sorted) {
+    if (normalized === prefix || normalized.startsWith(`${prefix}/`)) {
+      return slug;
+    }
+  }
+  return undefined;
+}
+
 const ALIAS_INDEX: Map<string, ServiceBrandingSlug> = (() => {
   const map = new Map<string, ServiceBrandingSlug>();
   for (const entry of Object.values(SERVICE_BRANDING)) {

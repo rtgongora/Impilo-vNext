@@ -41,6 +41,7 @@ export default function RegistryTrustHubPage() {
       <PageShell
         title="Trust & federation"
         subtitle="Registry-admin entry to operational trust surfaces backed by existing admin APIs"
+        serviceSlug="tshepo"
       >
         <RegistryPlaneContextBar preferStore />
 

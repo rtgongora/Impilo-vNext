@@ -33,7 +33,7 @@ const LEARNER_LINKS = [
 export function FundoStudioWorkspace({ title, subtitle, children }: Props) {
   return (
     <AppLayout>
-      <PageShell title={title} subtitle={subtitle}>
+      <PageShell title={title} subtitle={subtitle} serviceSlug="fundo">
         <div className="mb-4 rounded-lg border border-teal-200 bg-teal-50 px-4 py-3 text-sm text-teal-900">
           <p className="font-semibold">Role-aware Fundo experience</p>
           <p className="mt-1 text-teal-800">

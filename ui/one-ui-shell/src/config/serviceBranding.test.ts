@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   COMMAND_CENTRE_TILE_SLUGS,
+  inferServiceSlugFromPath,
+  SERVICE_SURFACE_COVERAGE,
   SERVICE_BRANDING,
   getServiceBranding,
   listSovereignServices,
@@ -45,5 +47,22 @@ describe("serviceBranding registry", () => {
     expect(COMMAND_CENTRE_TILE_SLUGS.fundo).toBe("fundo");
     expect(COMMAND_CENTRE_TILE_SLUGS["wellness-hub"]).toBe("simba");
     expect(getServiceBranding(COMMAND_CENTRE_TILE_SLUGS.vito)?.name).toBe("Vito");
+  });
+
+  it("infers service slug from route prefixes", () => {
+    expect(inferServiceSlugFromPath("/learning/studio/courses")).toBe("fundo");
+    expect(inferServiceSlugFromPath("/learning/admin/moderation")).toBe("fundo");
+    expect(inferServiceSlugFromPath("/operations/butano")).toBe("butano");
+    expect(inferServiceSlugFromPath("/public-health/site-registry/abc")).toBe("indawo");
+    expect(inferServiceSlugFromPath("/registry/trust")).toBe("tshepo");
+    expect(inferServiceSlugFromPath("/work/system-admin/tshepo")).toBe("tshepo");
+    expect(inferServiceSlugFromPath("/home")).toBeUndefined();
+  });
+
+  it("documents surface coverage for all sovereign services", () => {
+    for (const entry of listSovereignServices()) {
+      expect(SERVICE_SURFACE_COVERAGE[entry.slug]).toBeDefined();
+      expect(SERVICE_SURFACE_COVERAGE[entry.slug].status).toMatch(/^(surfaced|partial|no_dedicated_route)$/);
+    }
   });
 });
