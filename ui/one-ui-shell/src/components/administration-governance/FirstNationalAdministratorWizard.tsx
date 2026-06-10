@@ -51,16 +51,16 @@ export function FirstNationalAdministratorWizard() {
 
   async function handleValidateToken() {
     const validation = await validateBootstrapToken({ bootstrapMethod: method, bootstrapToken: token });
-    if ((validation as { tokenValid?: boolean }).tokenValid) setStep(3);
+    if (validation.tokenValid) setStep(3);
     else setError("Bootstrap token invalid or expired.");
   }
 
   async function handleCreatePending() {
     const response = await createFirstBootstrapAdmin(buildFirstAdminPayload(form, method, token));
     setResult({
-      status: response.status as AdminGovernanceActionResponse["status"],
-      friendlyTitle: response.friendlyTitle,
-      friendlyMessage: response.friendlyMessage,
+      status: (response.status ?? "pending") as AdminGovernanceActionResponse["status"],
+      friendlyTitle: response.friendlyTitle ?? "Bootstrap pending",
+      friendlyMessage: response.friendlyMessage ?? "Pending bootstrap account created.",
       allowedNextActions: [],
       bootstrapAccountId: response.bootstrapAccountId,
       auditStatus: response.auditStatus as AdminGovernanceActionResponse["auditStatus"],
@@ -76,9 +76,9 @@ export function FirstNationalAdministratorWizard() {
     if (!bootstrapAccountId) return;
     const response = await activateBootstrapAdmin({ bootstrapAccountId, password, mfaConfigured });
     setResult({
-      status: response.status as AdminGovernanceActionResponse["status"],
-      friendlyTitle: response.friendlyTitle,
-      friendlyMessage: response.friendlyMessage,
+      status: (response.status ?? "completed") as AdminGovernanceActionResponse["status"],
+      friendlyTitle: response.friendlyTitle ?? "Bootstrap complete",
+      friendlyMessage: response.friendlyMessage ?? "Bootstrap administrator activated.",
       allowedNextActions: [],
       bootstrapClosed: response.bootstrapClosed,
       auditStatus: response.auditStatus as AdminGovernanceActionResponse["auditStatus"],

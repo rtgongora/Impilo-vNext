@@ -243,12 +243,13 @@ export function resolveIdentityContext(input: IdentityContextInput): IdentityCon
   const hasProgrammeRole = user?.roles?.some((r) => PROGRAMME_ROLES.has(r)) ?? false;
   const hasAboveSiteRole = user?.roles?.some((r) => ABOVE_SITE_ROLES.has(r)) ?? false;
 
-  const needsProviderStatusResolution =
+  const needsProviderStatusResolution = Boolean(
     hasLinkedProviderId &&
-    statusNormalized &&
-    providerStatusBlocksWork(statusNormalized) &&
-    statusNormalized !== "active_restricted" &&
-    (providerLogin || isProviderActivated);
+      statusNormalized &&
+      providerStatusBlocksWork(statusNormalized) &&
+      statusNormalized !== "active_restricted" &&
+      (providerLogin || isProviderActivated),
+  );
 
   let shellMode: ShellMode = "citizen";
   if (needsProviderStatusResolution) {

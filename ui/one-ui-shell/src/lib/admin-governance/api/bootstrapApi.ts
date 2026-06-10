@@ -22,18 +22,32 @@ export async function getBootstrapStatus(): Promise<BootstrapStatus> {
   return unwrap(response);
 }
 
-export async function validateBootstrapToken(body: Record<string, unknown>) {
-  const response = await apiClient.post<AdminGovernanceEnvelope<Record<string, unknown>>>(`${BASE}/validate-token`, body);
+export interface BootstrapActionResult {
+  status: string;
+  bootstrapAccountId?: string;
+  organisationId?: string;
+  invitationId?: string;
+  friendlyTitle?: string;
+  friendlyMessage?: string;
+  bootstrapClosed?: boolean;
+  roleExpiry?: string;
+  auditStatus?: string;
+  auditEventId?: string;
+  tokenValid?: boolean;
+}
+
+export async function validateBootstrapToken(body: Record<string, unknown>): Promise<BootstrapActionResult> {
+  const response = await apiClient.post<AdminGovernanceEnvelope<BootstrapActionResult>>(`${BASE}/validate-token`, body);
   return unwrap(response);
 }
 
-export async function createFirstBootstrapAdmin(body: Record<string, unknown>) {
-  const response = await apiClient.post<AdminGovernanceEnvelope<Record<string, unknown>>>(`${BASE}/first-admin`, body);
+export async function createFirstBootstrapAdmin(body: Record<string, unknown>): Promise<BootstrapActionResult> {
+  const response = await apiClient.post<AdminGovernanceEnvelope<BootstrapActionResult>>(`${BASE}/first-admin`, body);
   return unwrap(response);
 }
 
-export async function activateBootstrapAdmin(body: Record<string, unknown>) {
-  const response = await apiClient.post<AdminGovernanceEnvelope<Record<string, unknown>>>(`${BASE}/activate`, body);
+export async function activateBootstrapAdmin(body: Record<string, unknown>): Promise<BootstrapActionResult> {
+  const response = await apiClient.post<AdminGovernanceEnvelope<BootstrapActionResult>>(`${BASE}/activate`, body);
   return unwrap(response);
 }
 

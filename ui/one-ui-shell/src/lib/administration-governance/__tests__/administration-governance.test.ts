@@ -104,7 +104,7 @@ describe("Administration & Governance entry", () => {
           assignmentType: "facility_assignment",
           assignmentStatus: "active",
           facilityId: "FAC-001",
-          roleTemplate: "facility_administrator",
+          roleTemplateId: "facility_administrator",
           employerOrganisationType: "public_facility",
         },
       ],

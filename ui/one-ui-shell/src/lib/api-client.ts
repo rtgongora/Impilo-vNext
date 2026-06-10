@@ -165,7 +165,7 @@ function getStoredJson<T>(key: string): T | null {
   }
 }
 
-function getStoredAuthUser(): { id?: string; actorType?: string } | null {
+function getStoredAuthUser(): { id?: string; actorType?: string; loginMethod?: string } | null {
   const liveUser = useAuthStore.getState().user;
   if (liveUser) {
     return { id: liveUser.id, actorType: liveUser.actorType };

@@ -68,13 +68,13 @@ export function resolvePostLoginDestination(
     user?.linkedIds?.providerId ??
     null;
 
+  const linkedIdsPayload: LinkedIdsAttributes = input.linkedIds ?? {
+    providerId: linkedProviderId ?? undefined,
+  };
+
   const context = resolveIdentityContext({
     user: user as AuthUser | null,
-    linkedIds: input.linkedIds ?? {
-      providerId: linkedProviderId ?? undefined,
-      providerStatus: input.linkedIds?.providerStatus,
-      licenceValid: input.linkedIds?.licenceValid,
-    },
+    linkedIds: linkedIdsPayload,
     affiliations: input.affiliations,
     workAssignments: input.workAssignments,
     loginMethod: input.loginMethod,

@@ -41,7 +41,7 @@ export function OrganisationRegistryPanel() {
       setLoading(true);
       const response = await listOrganisations();
       if (isActionResponse(response) && isPendingBackend(response)) {
-        setPendingMessage(response.friendlyMessage);
+        setPendingMessage(response.friendlyMessage ?? null);
         setItems([]);
       } else {
         const envelope = response as LookupEnvelope<{ items: OrganisationRecord[] }>;

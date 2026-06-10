@@ -55,6 +55,8 @@ export interface WorkAssignment {
   policyDecision?: "allow" | "limited" | "deny";
   auditMetadata?: Record<string, unknown>;
   provenanceMetadata?: Record<string, unknown>;
+  /** Employer organisation type for public-sector assignment gating (HSC doctrine). */
+  employerOrganisationType?: string;
 }
 
 export function isActiveWorkAssignment(assignment: Pick<WorkAssignment, "assignmentStatus">): boolean {

@@ -1,6 +1,9 @@
 export * from "./catalogue-schema";
 export * from "./loader";
-export * from "./validators";
+export {
+  runAllCatalogueValidators,
+  REQUIRED_CATALOGUE_CODES,
+} from "./validators";
 export * from "./types/work-assignment";
 export * from "./types/provider-professional-truth";
 export * from "./types/session-experience-contract";

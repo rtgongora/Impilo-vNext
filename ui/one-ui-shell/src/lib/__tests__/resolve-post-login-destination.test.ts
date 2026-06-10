@@ -9,6 +9,7 @@ describe("resolvePostLoginDestination", () => {
   it("routes provider with active assignment to work context", () => {
     const result = resolvePostLoginDestination({
       user: {
+        id: "user-provider-1",
         actorType: "PROVIDER",
         roles: ["CLINICIAN"],
         providerActivated: true,
@@ -35,6 +36,7 @@ describe("resolvePostLoginDestination", () => {
   it("routes verified provider without assignment to professional", () => {
     const result = resolvePostLoginDestination({
       user: {
+        id: "user-provider-1",
         actorType: "PROVIDER",
         roles: ["CLINICIAN"],
         providerActivated: true,
@@ -50,6 +52,7 @@ describe("resolvePostLoginDestination", () => {
   it("routes citizen to home with my_life mode", () => {
     const result = resolvePostLoginDestination({
       user: {
+        id: "user-citizen-1",
         actorType: "CITIZEN",
         roles: ["CITIZEN"],
         providerActivated: false,
@@ -61,6 +64,7 @@ describe("resolvePostLoginDestination", () => {
   it("sends linked-but-inactive provider to activation", () => {
     const result = resolvePostLoginDestination({
       user: {
+        id: "user-citizen-1",
         actorType: "CITIZEN",
         roles: ["CLINICIAN"],
         providerActivated: false,
@@ -73,6 +77,7 @@ describe("resolvePostLoginDestination", () => {
   it("honors safe returnTo and applies facility guard when needed", () => {
     const result = resolvePostLoginDestination({
       user: {
+        id: "user-provider-1",
         actorType: "PROVIDER",
         roles: ["CLINICIAN"],
         providerActivated: true,

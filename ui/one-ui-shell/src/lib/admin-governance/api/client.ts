@@ -7,7 +7,7 @@ import type {
   AdminGovernanceActionResponse,
   AdminGovernanceEnvelope,
   ApiClientErrorLike,
-} from "./types";
+} from "../types";
 
 const BASE = "/internal/v1/admin-governance";
 
