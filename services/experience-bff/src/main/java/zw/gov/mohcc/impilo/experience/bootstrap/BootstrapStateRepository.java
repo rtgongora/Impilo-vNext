@@ -69,6 +69,7 @@ public class BootstrapStateRepository {
                 null,
                 null,
                 null,
+                null,
                 OffsetDateTime.now().toString(),
                 OffsetDateTime.now().toString(),
                 Map.of()

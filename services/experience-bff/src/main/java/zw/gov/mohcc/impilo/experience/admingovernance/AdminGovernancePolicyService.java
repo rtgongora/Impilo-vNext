@@ -179,7 +179,7 @@ public class AdminGovernancePolicyService {
             warnings.add("Provider onboarding creates Professional access — Work requires a separate assignment.");
         }
         if ("AUTHORISED_REPRESENTATIVE_INVITE".equals(action)) {
-            String actorId = str(request.providerWorkerId());
+            String actorId = str(request.targetSubjectId());
             String targetUserId = request.context() != null ? str(request.context().get("targetUserId")) : null;
             String intent = request.context() != null ? str(request.context().get("intent")) : null;
             if ("SELF_ESCALATE".equalsIgnoreCase(intent)

@@ -430,11 +430,13 @@ public class AdminGovernanceService {
         }
         return accessRequestStore.list(tenantId).stream()
                 .flatMap(r -> r.auditTrail().stream())
-                .map(entry -> Map.of(
-                        "eventType", String.valueOf(entry.get("event")),
-                        "occurredAt", String.valueOf(entry.get("at")),
-                        "integrationStatus", "bff_access_request_trail"
-                ))
+                .map(entry -> {
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    row.put("eventType", String.valueOf(entry.get("event")));
+                    row.put("occurredAt", String.valueOf(entry.get("at")));
+                    row.put("integrationStatus", "bff_access_request_trail");
+                    return row;
+                })
                 .toList();
     }
 

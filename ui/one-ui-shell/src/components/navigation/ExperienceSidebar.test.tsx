@@ -18,6 +18,22 @@ vi.mock("@/providers/ExperienceEntryProvider", () => ({
   useExperienceEntry: () => mockUseExperienceEntry(),
 }));
 
+vi.mock("@/hooks/useSessionExperienceContract", () => ({
+  useSessionExperienceContract: () => ({
+    contract: {
+      tabs: {
+        work: { visible: true },
+        professional: { visible: true },
+        personal: { visible: true },
+      },
+      visibleWorkspaces: ["facility_staff_management"],
+      visibleManagementWorkspaces: ["national_organisation_registry"],
+      friendlyResolutionState: null,
+    },
+    isLoading: false,
+  }),
+}));
+
 const mockSetNavDrawerOpen = vi.fn();
 vi.mock("@/hooks/useShellStore", () => ({
   useShellStore: (selector?: (s: { navDrawerOpen: boolean; setNavDrawerOpen: typeof mockSetNavDrawerOpen }) => unknown) => {
