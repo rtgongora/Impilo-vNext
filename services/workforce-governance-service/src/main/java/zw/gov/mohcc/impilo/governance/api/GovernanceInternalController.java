@@ -551,6 +551,14 @@ public class GovernanceInternalController {
         return ResponseEntity.ok(ApiResponse.ok(importBatchService.recordInvitations(importBatchId, deliveries), corr()));
     }
 
+    @PatchMapping("/imports/{importBatchId}/rows/{rowId}")
+    public ResponseEntity<ApiResponse<ImportRowEntity>> patchImportRow(
+            @PathVariable UUID importBatchId,
+            @PathVariable UUID rowId,
+            @RequestBody Map<String, Object> body) {
+        return ResponseEntity.ok(ApiResponse.ok(importBatchService.updateRowInvitation(importBatchId, rowId, body), corr()));
+    }
+
     @GetMapping("/imports/templates/{importType}")
     public ResponseEntity<ApiResponse<Map<String, Object>>> importTemplate(@PathVariable String importType) {
         return ResponseEntity.ok(ApiResponse.ok(importBatchService.template(importType), corr()));

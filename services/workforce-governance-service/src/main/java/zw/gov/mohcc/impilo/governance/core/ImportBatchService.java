@@ -130,6 +130,7 @@ public class ImportBatchService {
             }
             row.setOutcome("invitation_sent");
             row.setInvitationId(String.valueOf(delivery.get("invitationId")));
+            mergeInvitationMetadata(row, delivery);
             rowRepository.save(row);
             sent++;
         }
@@ -140,6 +141,39 @@ public class ImportBatchService {
             batch.setStatus("invitations_pending");
         }
         return batchRepository.save(batch);
+    }
+
+    @Transactional
+    public ImportRowEntity updateRowInvitation(UUID batchId, UUID rowId, Map<String, Object> request) {
+        ImportRowEntity row = rowRepository.findById(rowId)
+                .orElseThrow(() -> new IllegalArgumentException("Import row not found"));
+        if (!batchId.equals(row.getImportBatchId())) {
+            throw new IllegalArgumentException("Import row does not belong to batch");
+        }
+        if (request.containsKey("outcome")) {
+            row.setOutcome(String.valueOf(request.get("outcome")));
+        }
+        if (request.containsKey("invitationId")) {
+            row.setInvitationId(String.valueOf(request.get("invitationId")));
+        }
+        mergeInvitationMetadata(row, request);
+        return rowRepository.save(row);
+    }
+
+    private void mergeInvitationMetadata(ImportRowEntity row, Map<String, Object> delivery) {
+        try {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> payload = row.getNormalizedPayloadJson() == null || row.getNormalizedPayloadJson().isBlank()
+                    ? new LinkedHashMap<>()
+                    : objectMapper.readValue(row.getNormalizedPayloadJson(), Map.class);
+            if (delivery.get("expiresAt") != null) payload.put("invitation_expires_at", delivery.get("expiresAt"));
+            if (delivery.get("keycloakUserId") != null) payload.put("keycloak_user_id", delivery.get("keycloakUserId"));
+            if (delivery.get("invitationStatus") != null) payload.put("invitation_status", delivery.get("invitationStatus"));
+            if (delivery.get("invitationAuditStatus") != null) payload.put("invitation_audit_status", delivery.get("invitationAuditStatus"));
+            row.setNormalizedPayloadJson(objectMapper.writeValueAsString(payload));
+        } catch (Exception ignored) {
+            // keep row outcome authoritative even if metadata merge fails
+        }
     }
 
     public Map<String, Object> template(String importType) {

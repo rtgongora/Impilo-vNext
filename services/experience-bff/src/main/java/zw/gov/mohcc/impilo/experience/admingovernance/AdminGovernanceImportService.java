@@ -114,7 +114,10 @@ public class AdminGovernanceImportService {
             deliveries.add(Map.of(
                     "rowId", row.path("id").asText(),
                     "invitationId", delivery.invitationId(),
-                    "keycloakUserId", delivery.keycloakUserId() != null ? delivery.keycloakUserId() : ""
+                    "keycloakUserId", delivery.keycloakUserId() != null ? delivery.keycloakUserId() : "",
+                    "expiresAt", delivery.expiresAt() != null ? delivery.expiresAt() : "",
+                    "invitationStatus", "sent",
+                    "invitationAuditStatus", delivery.auditStatus()
             ));
         }
 
@@ -166,6 +169,92 @@ public class AdminGovernanceImportService {
                 audit,
                 audit.auditStatus(),
                 Map.of("batch", batch, "deliveredCount", deliveries.size(), "blocked", blockedMessages));
+    }
+
+    public AdminGovernanceDtos.LookupEnvelope listRows(String importBatchId) {
+        JsonNode rowsNode = workforceGovernanceClient.getJson("/v1/internal/governance/imports/" + importBatchId + "/rows");
+        if (rowsNode == null || !rowsNode.isArray()) {
+            return unavailable("Import rows unavailable.");
+        }
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (JsonNode row : rowsNode) {
+            Map<String, Object> item = objectMapper.convertValue(row, Map.class);
+            item.put("invitation", InvitationLifecycle.toMap(InvitationLifecycle.fromImportRow(row, objectMapper)));
+            rows.add(item);
+        }
+        return live(Map.of("items", rows));
+    }
+
+    public AdminGovernanceDtos.ActionResponse resendRowInvitation(String actorId, String providerId, boolean hasFacility, String importBatchId, String rowId) {
+        JsonNode batchMeta = workforceGovernanceClient.getJson("/v1/internal/governance/imports/" + importBatchId);
+        if (batchMeta == null) return AdminGovernanceResponses.pendingBackend("Import batch unavailable.", null);
+        JsonNode row = findRow(importBatchId, rowId);
+        if (row == null) return AdminGovernanceResponses.pendingBackend("Import row not found.", null);
+        InvitationLifecycle.InvitationView view = InvitationLifecycle.fromImportRow(row, objectMapper);
+        if (!view.canResend()) {
+            return AdminGovernanceResponses.denied("Resend is not allowed for this import row invitation.", null);
+        }
+        String organisationId = batchMeta.path("organisationId").asText("");
+        String importType = batchMeta.path("importType").asText("organisation_users");
+        Map<String, String> payload = parseRowPayload(row.path("normalizedPayloadJson").asText(null));
+        String email = payload.getOrDefault("email", payload.getOrDefault("official_email", ""));
+        String displayName = payload.getOrDefault("full_name", email);
+        GovernanceInvitationService.InvitationDeliveryResult delivery = governanceInvitationService.deliverImportRowInvitation(
+                organisationId, importBatchId, email, displayName, importType);
+        if (!delivery.activated()) {
+            return AdminGovernanceResponses.of("denied", importBatchId, email, null, "Invitation not resent", delivery.friendlyMessage(),
+                    List.of("Review import row"), delivery.friendlyMessage(), null, null, delivery.auditStatus(), Map.of("rowId", rowId));
+        }
+        patchImportRow(importBatchId, rowId, delivery, "invitation_sent", "sent");
+        var audit = auditHelper.emit("import.invitation_resent", actorId, rowId, Map.of("invitationId", delivery.invitationId()));
+        return AdminGovernanceResponses.of("completed", importBatchId, email, null, "Import row invitation resent", delivery.friendlyMessage(),
+                List.of("View import history"), null, null, audit, delivery.auditStatus(), Map.of("rowId", rowId, "invitationId", delivery.invitationId()));
+    }
+
+    public AdminGovernanceDtos.ActionResponse revokeRowInvitation(String actorId, String providerId, boolean hasFacility, String importBatchId, String rowId) {
+        JsonNode row = findRow(importBatchId, rowId);
+        if (row == null) return AdminGovernanceResponses.pendingBackend("Import row not found.", null);
+        InvitationLifecycle.InvitationView view = InvitationLifecycle.fromImportRow(row, objectMapper);
+        if (!view.canRevoke()) {
+            return AdminGovernanceResponses.denied("Revoke is not allowed for this import row invitation.", null);
+        }
+        GovernanceInvitationService.InvitationRevocationResult revocation = governanceInvitationService.revokeInvitation(view.keycloakUserId());
+        if (!revocation.revoked()) {
+            return AdminGovernanceResponses.of("denied", importBatchId, null, null, "Invitation not revoked", revocation.friendlyMessage(),
+                    List.of("Contact Support"), revocation.friendlyMessage(), null, null, revocation.auditStatus(), Map.of("rowId", rowId));
+        }
+        workforceGovernanceClient.patchJson("/v1/internal/governance/imports/" + importBatchId + "/rows/" + rowId, Map.of(
+                "outcome", "invitation_revoked",
+                "invitationStatus", "revoked"
+        ));
+        var audit = auditHelper.emit("import.invitation_revoked", actorId, rowId, Map.of());
+        return AdminGovernanceResponses.of("completed", importBatchId, null, null, "Import row invitation revoked",
+                revocation.friendlyMessage(), List.of("View import history"), null, null, audit, revocation.auditStatus(), Map.of("rowId", rowId));
+    }
+
+    private JsonNode findRow(String importBatchId, String rowId) {
+        JsonNode rowsNode = workforceGovernanceClient.getJson("/v1/internal/governance/imports/" + importBatchId + "/rows");
+        if (rowsNode == null || !rowsNode.isArray()) return null;
+        for (JsonNode row : rowsNode) {
+            if (rowId.equals(row.path("id").asText())) return row;
+        }
+        return null;
+    }
+
+    private void patchImportRow(
+            String importBatchId,
+            String rowId,
+            GovernanceInvitationService.InvitationDeliveryResult delivery,
+            String outcome,
+            String invitationStatus) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("outcome", outcome);
+        body.put("invitationId", delivery.invitationId());
+        body.put("keycloakUserId", delivery.keycloakUserId());
+        body.put("expiresAt", delivery.expiresAt());
+        body.put("invitationStatus", invitationStatus);
+        body.put("invitationAuditStatus", delivery.auditStatus());
+        workforceGovernanceClient.patchJson("/v1/internal/governance/imports/" + importBatchId + "/rows/" + rowId, body);
     }
 
     public AdminGovernanceDtos.LookupEnvelope template(String importType) {

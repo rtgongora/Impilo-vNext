@@ -60,6 +60,7 @@ public class GovernanceInvitationService {
         }
 
         String invitationId = UUID.randomUUID().toString();
+        String expiresAt = OffsetDateTime.now().plusHours(invitationExpiryHours).toString();
         NotificationAttempt notification = sendOnboardingNotification(
                 invitationId,
                 email,
@@ -67,13 +68,14 @@ public class GovernanceInvitationService {
                 "bootstrap_first_admin",
                 Map.of(
                         "invitationType", "bootstrap_first_admin",
-                        "expiresAt", OffsetDateTime.now().plusHours(invitationExpiryHours).toString(),
+                        "expiresAt", expiresAt,
                         "mfaRequired", mfaRequired
                 ));
 
         return InvitationDeliveryResult.sent(
                 invitationId,
                 keycloak.userId(),
+                expiresAt,
                 notification.auditStatus(),
                 notification.friendlyMessage());
     }
@@ -116,6 +118,7 @@ public class GovernanceInvitationService {
 
         String userId = keycloak.userId();
         String invitationId = UUID.randomUUID().toString();
+        String expiresAt = OffsetDateTime.now().plusHours(invitationExpiryHours).toString();
         NotificationAttempt notification = sendOnboardingNotification(
                 invitationId,
                 email,
@@ -125,10 +128,28 @@ public class GovernanceInvitationService {
                         "organisationId", organisationId,
                         "roleTemplateId", roleTemplateId,
                         "invitationType", invitationType,
-                        "expiresAt", OffsetDateTime.now().plusHours(invitationExpiryHours).toString()
+                        "expiresAt", expiresAt
                 ));
 
-        return InvitationDeliveryResult.sent(invitationId, userId, notification.auditStatus(), notification.friendlyMessage());
+        return InvitationDeliveryResult.sent(invitationId, userId, expiresAt, notification.auditStatus(), notification.friendlyMessage());
+    }
+
+    public InvitationRevocationResult revokeInvitation(String keycloakUserId) {
+        if (keycloakUserId == null || keycloakUserId.isBlank()) {
+            return new InvitationRevocationResult(false, "pending_backend", "No Keycloak user is linked to this invitation.");
+        }
+        if (!keycloakAdminClient.isReady()) {
+            return new InvitationRevocationResult(false, "pending_backend", "Keycloak unavailable — invitation revoke not confirmed.");
+        }
+        boolean disabled = keycloakAdminClient.setUserEnabled(keycloakUserId, false);
+        if (!disabled) {
+            return new InvitationRevocationResult(false, "failed_non_blocking", "Keycloak did not confirm invitation revocation.");
+        }
+        return new InvitationRevocationResult(true, "ingested", "Invitation revoked in Keycloak. Account remains organisation-scoped and inactive.");
+    }
+
+    public int invitationExpiryHours() {
+        return invitationExpiryHours;
     }
 
     public InvitationDeliveryResult deliverImportRowInvitation(
@@ -179,6 +200,7 @@ public class GovernanceInvitationService {
     public record InvitationDeliveryResult(
             String invitationId,
             String keycloakUserId,
+            String expiresAt,
             String status,
             String auditStatus,
             String friendlyMessage
@@ -190,12 +212,14 @@ public class GovernanceInvitationService {
         public static InvitationDeliveryResult sent(
                 String invitationId,
                 String keycloakUserId,
+                String expiresAt,
                 String notificationAuditStatus,
                 String message) {
             String audit = "ingested".equals(notificationAuditStatus) ? "ingested" : "pending_backend";
             return new InvitationDeliveryResult(
                     invitationId,
                     keycloakUserId,
+                    expiresAt,
                     "invitation_sent",
                     audit,
                     message);
@@ -206,13 +230,19 @@ public class GovernanceInvitationService {
                 String keycloakUserId,
                 String auditStatus,
                 String message) {
-            return new InvitationDeliveryResult(invitationId, keycloakUserId, "invitations_pending", auditStatus, message);
+            return new InvitationDeliveryResult(invitationId, keycloakUserId, null, "invitations_pending", auditStatus, message);
         }
 
         public static InvitationDeliveryResult blocked(String invitationId, String auditStatus, String message) {
-            return new InvitationDeliveryResult(invitationId, null, "blocked", auditStatus, message);
+            return new InvitationDeliveryResult(invitationId, null, null, "blocked", auditStatus, message);
         }
     }
+
+    public record InvitationRevocationResult(
+            boolean revoked,
+            String auditStatus,
+            String friendlyMessage
+    ) {}
 
     private record NotificationAttempt(String auditStatus, String friendlyMessage) {}
 }

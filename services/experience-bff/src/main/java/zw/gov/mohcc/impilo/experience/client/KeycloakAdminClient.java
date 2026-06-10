@@ -107,6 +107,22 @@ public class KeycloakAdminClient {
         return sendExecuteActionsEmail(userId, actions, adminHeaders(adminToken));
     }
 
+    public boolean setUserEnabled(String userId, boolean enabled) {
+        String adminToken = getServiceAccountToken();
+        if (adminToken == null || userId == null || userId.isBlank()) {
+            return false;
+        }
+        try {
+            String url = usersUrl() + "/" + userId;
+            Map<String, Object> body = Map.of("enabled", enabled);
+            restTemplate.exchange(url, HttpMethod.PUT, new HttpEntity<>(body, adminHeaders(adminToken)), Void.class);
+            return true;
+        } catch (Exception e) {
+            log.warn("Keycloak user enable/disable failed for {}: {}", userId, e.getMessage());
+            return false;
+        }
+    }
+
     private boolean sendExecuteActionsEmail(String userId, List<String> actions, HttpHeaders adminHeaders) {
         try {
             String url = usersUrl() + "/" + userId + "/execute-actions-email";

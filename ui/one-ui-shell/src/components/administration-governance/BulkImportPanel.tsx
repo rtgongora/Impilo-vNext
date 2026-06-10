@@ -1,18 +1,22 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { GovernanceActionResult } from "./GovernanceActionResult";
+import { ImportRowReviewTable, type ImportRowReviewItem } from "./ImportRowReviewTable";
 import {
   IMPORT_TYPES,
   approveImportBatch,
   getImportTemplate,
+  listImportRows,
   parseCsvPreview,
+  resendImportRowInvitation,
+  revokeImportRowInvitation,
   sendImportInvitations,
   uploadImportBatch,
 } from "@/lib/admin-governance/api/importsApi";
 import { isActionResponse, isPendingBackend } from "@/lib/admin-governance/api/client";
-import type { AdminGovernanceActionResponse } from "@/lib/admin-governance/types";
+import type { AdminGovernanceActionResponse, LookupEnvelope } from "@/lib/admin-governance/types";
 
 export function BulkImportPanel() {
   const pathname = usePathname();
@@ -24,8 +28,31 @@ export function BulkImportPanel() {
   const [preview, setPreview] = useState<Array<Record<string, string>>>([]);
   const [template, setTemplate] = useState<Record<string, unknown> | null>(null);
   const [batchId, setBatchId] = useState<string | null>(null);
+  const [rows, setRows] = useState<ImportRowReviewItem[]>([]);
   const [result, setResult] = useState<AdminGovernanceActionResponse | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+
+  const refreshRows = useCallback(async () => {
+    if (!batchId) return;
+    const response = await listImportRows(batchId);
+    if (!isActionResponse(response)) {
+      const items = (response as LookupEnvelope<{ items: Record<string, unknown>[] }>).data?.items ?? [];
+      setRows(
+        items.map((item) => ({
+          id: String(item.id ?? ""),
+          rowNumber: typeof item.rowNumber === "number" ? item.rowNumber : undefined,
+          outcome: typeof item.outcome === "string" ? item.outcome : undefined,
+          invitationId: typeof item.invitationId === "string" ? item.invitationId : undefined,
+          normalizedPayloadJson: typeof item.normalizedPayloadJson === "string" ? item.normalizedPayloadJson : undefined,
+          invitation: item.invitation as Record<string, unknown> | undefined,
+        })),
+      );
+    }
+  }, [batchId]);
+
+  useEffect(() => {
+    void refreshRows();
+  }, [refreshRows]);
 
   if (!orgId) return null;
 
@@ -57,16 +84,31 @@ export function BulkImportPanel() {
     if ((response as { data?: { reconciliationRequired?: boolean } }).data?.reconciliationRequired) {
       setMessage("This import is queued in BFF fallback storage and will require reconciliation with workforce-governance.");
     }
+    await refreshRows();
   }
 
   async function handleApprove() {
     if (!batchId) return;
     setResult(await approveImportBatch(batchId));
+    await refreshRows();
   }
 
   async function handleSendInvitations() {
     if (!batchId) return;
     setResult(await sendImportInvitations(batchId));
+    await refreshRows();
+  }
+
+  async function handleResendRow(rowId: string) {
+    if (!batchId) return;
+    setResult(await resendImportRowInvitation(batchId, rowId));
+    await refreshRows();
+  }
+
+  async function handleRevokeRow(rowId: string) {
+    if (!batchId) return;
+    setResult(await revokeImportRowInvitation(batchId, rowId));
+    await refreshRows();
   }
 
   return (
@@ -124,6 +166,7 @@ export function BulkImportPanel() {
           Send invitations
         </button>
       </div>
+      <ImportRowReviewTable rows={rows} onResend={handleResendRow} onRevoke={handleRevokeRow} />
       {result ? <GovernanceActionResult result={result} /> : null}
     </section>
   );

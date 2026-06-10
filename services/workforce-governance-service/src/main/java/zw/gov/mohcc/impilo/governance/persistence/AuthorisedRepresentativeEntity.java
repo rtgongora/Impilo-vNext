@@ -58,6 +58,7 @@ public class AuthorisedRepresentativeEntity {
     public String getStatus() { return status; }
     public String getRepresentativeType() { return representativeType; }
     public String getRoleTemplateId() { return roleTemplateId; }
+    public String getAuditMetadata() { return auditMetadata; }
     public void setStatus(String status) { this.status = status; touch(); }
     public void setRoleTemplateId(String roleTemplateId) { this.roleTemplateId = roleTemplateId; touch(); }
     public void setApprovedByUserId(String approvedByUserId) { this.approvedByUserId = approvedByUserId; touch(); }

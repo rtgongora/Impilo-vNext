@@ -48,11 +48,15 @@ public class AuthorisedRepresentativeService {
         if (request.containsKey("dataResponsibilityAccepted")) {
             entity.acceptDataResponsibility();
         }
-        if (request.containsKey("invitationId") || request.containsKey("keycloakUserId") || request.containsKey("invitationAuditStatus")) {
+        if (request.containsKey("invitationId") || request.containsKey("keycloakUserId") || request.containsKey("invitationAuditStatus")
+                || request.containsKey("invitationStatus") || request.containsKey("expiresAt") || request.containsKey("invitationAuditTrail")) {
             Map<String, Object> meta = readMeta(entity.getAuditMetadata());
             if (request.containsKey("invitationId")) meta.put("invitationId", str(request.get("invitationId")));
             if (request.containsKey("keycloakUserId")) meta.put("keycloakUserId", str(request.get("keycloakUserId")));
             if (request.containsKey("invitationAuditStatus")) meta.put("invitationAuditStatus", str(request.get("invitationAuditStatus")));
+            if (request.containsKey("invitationStatus")) meta.put("invitationStatus", str(request.get("invitationStatus")));
+            if (request.containsKey("expiresAt")) meta.put("expiresAt", str(request.get("expiresAt")));
+            if (request.containsKey("invitationAuditTrail")) meta.put("invitationAuditTrail", request.get("invitationAuditTrail"));
             entity.setAuditMetadata(writeMeta(meta));
         }
         return repository.save(entity);

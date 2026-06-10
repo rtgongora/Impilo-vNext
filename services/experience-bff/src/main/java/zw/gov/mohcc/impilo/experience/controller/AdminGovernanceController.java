@@ -437,6 +437,71 @@ public class AdminGovernanceController {
         return ok(requestId, correlationId, importService.sendInvitations(actorId, importBatchId));
     }
 
+    @GetMapping("/imports/{importBatchId}/rows")
+    public ResponseEntity<Map<String, Object>> listImportRows(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String importBatchId) {
+        return ok(requestId, correlationId, importService.listRows(importBatchId));
+    }
+
+    @PostMapping("/imports/{importBatchId}/rows/{rowId}/invitations/resend")
+    public ResponseEntity<Map<String, Object>> resendImportRowInvitation(
+            @RequestHeader(CompanionHeaders.ACTOR_ID) String actorId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.PROVIDER_ID, required = false) String providerId,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @PathVariable String importBatchId,
+            @PathVariable String rowId) {
+        return ok(requestId, correlationId, importService.resendRowInvitation(actorId, providerId, hasFacility(facilityId), importBatchId, rowId));
+    }
+
+    @PostMapping("/imports/{importBatchId}/rows/{rowId}/invitations/revoke")
+    public ResponseEntity<Map<String, Object>> revokeImportRowInvitation(
+            @RequestHeader(CompanionHeaders.ACTOR_ID) String actorId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.PROVIDER_ID, required = false) String providerId,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @PathVariable String importBatchId,
+            @PathVariable String rowId) {
+        return ok(requestId, correlationId, importService.revokeRowInvitation(actorId, providerId, hasFacility(facilityId), importBatchId, rowId));
+    }
+
+    @PostMapping("/organisations/{orgId}/authorised-representatives/{repId}/invitations/resend")
+    public ResponseEntity<Map<String, Object>> resendAuthorisedRepresentativeInvitation(
+            @RequestHeader(CompanionHeaders.ACTOR_ID) String actorId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.PROVIDER_ID, required = false) String providerId,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @PathVariable String orgId,
+            @PathVariable String repId) {
+        return ok(requestId, correlationId, authorisedRepresentativeService.resendInvitation(actorId, providerId, hasFacility(facilityId), orgId, repId));
+    }
+
+    @PostMapping("/organisations/{orgId}/authorised-representatives/{repId}/invitations/revoke")
+    public ResponseEntity<Map<String, Object>> revokeAuthorisedRepresentativeInvitation(
+            @RequestHeader(CompanionHeaders.ACTOR_ID) String actorId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.PROVIDER_ID, required = false) String providerId,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @PathVariable String orgId,
+            @PathVariable String repId) {
+        return ok(requestId, correlationId, authorisedRepresentativeService.revokeInvitation(actorId, providerId, hasFacility(facilityId), orgId, repId));
+    }
+
+    @GetMapping("/organisations/{orgId}/authorised-representatives/{repId}/invitations/audit-trail")
+    public ResponseEntity<Map<String, Object>> authorisedRepresentativeInvitationAuditTrail(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String orgId,
+            @PathVariable String repId) {
+        return ok(requestId, correlationId, authorisedRepresentativeService.invitationAuditTrail(orgId, repId));
+    }
+
     @GetMapping("/imports/templates/{importType}")
     public ResponseEntity<Map<String, Object>> importTemplate(
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,

@@ -27,3 +27,23 @@ export async function revokeAuthorisedRepresentative(orgId: string, repId: strin
     {},
   );
 }
+
+export async function resendAuthorisedRepresentativeInvitation(orgId: string, repId: string) {
+  return postAdminGovernance<AdminGovernanceActionResponse>(
+    `/organisations/${encodeURIComponent(orgId)}/authorised-representatives/${encodeURIComponent(repId)}/invitations/resend`,
+    {},
+  );
+}
+
+export async function revokeAuthorisedRepresentativeInvitation(orgId: string, repId: string) {
+  return postAdminGovernance<AdminGovernanceActionResponse>(
+    `/organisations/${encodeURIComponent(orgId)}/authorised-representatives/${encodeURIComponent(repId)}/invitations/revoke`,
+    {},
+  );
+}
+
+export async function getAuthorisedRepresentativeInvitationAuditTrail(orgId: string, repId: string) {
+  return getAdminGovernance<LookupEnvelope<{ invitation: Record<string, unknown>; auditTrail: Record<string, unknown>[] }>>(
+    `/organisations/${encodeURIComponent(orgId)}/authorised-representatives/${encodeURIComponent(repId)}/invitations/audit-trail`,
+  );
+}

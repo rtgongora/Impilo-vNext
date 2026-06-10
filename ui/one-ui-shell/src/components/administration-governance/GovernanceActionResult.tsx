@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { InvitationStatusBadge } from "./InvitationStatusBadge";
+import { normalizeInvitationView } from "@/lib/admin-governance/invitation-lifecycle";
 import type { AdminGovernanceActionResponse } from "@/lib/admin-governance/types";
 
 interface GovernanceActionResultProps {
@@ -16,7 +18,15 @@ export function GovernanceActionResult({ result, requestHref }: GovernanceAction
         ? "border-amber-200 bg-amber-50 text-amber-950"
         : result.status === "pending"
           ? "border-indigo-200 bg-indigo-50 text-indigo-950"
-          : "border-emerald-200 bg-emerald-50 text-emerald-950";
+          : result.status === "completed"
+            ? "border-emerald-200 bg-emerald-50 text-emerald-950"
+            : "border-slate-200 bg-slate-50 text-slate-900";
+
+  const invitation = normalizeInvitationView(
+    (result.payload?.invitation as Record<string, unknown> | undefined) ??
+      (result.payload?.representative as Record<string, unknown> | undefined)?.invitation as Record<string, unknown> | undefined,
+  );
+  const showInvitation = invitation.status !== "not_sent" || Boolean(result.payload?.invitationId);
 
   return (
     <div className={`rounded-xl border px-4 py-4 text-sm ${tone}`}>
@@ -42,6 +52,14 @@ export function GovernanceActionResult({ result, requestHref }: GovernanceAction
       ) : null}
       {result.integrationStatus === "pending_backend" ? (
         <p className="mt-2 text-xs font-medium">Integration status: pending backend — not persisted as production truth.</p>
+      ) : null}
+      {showInvitation ? (
+        <div className="mt-3">
+          <InvitationStatusBadge invitation={invitation} />
+        </div>
+      ) : null}
+      {result.status !== "completed" && result.friendlyTitle.toLowerCase().includes("invit") ? (
+        <p className="mt-2 text-xs font-medium">Invitation outcome reflects BFF delivery status — activation is not implied until identity confirmation completes.</p>
       ) : null}
       <div className="mt-3 flex flex-wrap gap-2">
         {result.requestId && requestHref ? (

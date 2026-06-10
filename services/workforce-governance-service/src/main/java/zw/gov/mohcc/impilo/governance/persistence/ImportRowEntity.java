@@ -43,6 +43,7 @@ public class ImportRowEntity {
     public void setValidationStatus(String validationStatus) { this.validationStatus = validationStatus; touch(); }
     public void setPrecheckStatus(String precheckStatus) { this.precheckStatus = precheckStatus; touch(); }
     public void setInvitationId(String invitationId) { this.invitationId = invitationId; touch(); }
+    public void setNormalizedPayloadJson(String normalizedPayloadJson) { this.normalizedPayloadJson = normalizedPayloadJson; touch(); }
 
     private void touch() { this.updatedAt = Instant.now(); }
 }

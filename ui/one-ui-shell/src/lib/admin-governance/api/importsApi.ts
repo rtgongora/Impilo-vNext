@@ -17,6 +17,24 @@ export async function sendImportInvitations(importBatchId: string) {
   return postAdminGovernance<AdminGovernanceActionResponse>(`/imports/${encodeURIComponent(importBatchId)}/send-invitations`, {});
 }
 
+export async function listImportRows(importBatchId: string) {
+  return getAdminGovernance<LookupEnvelope<{ items: Record<string, unknown>[] }>>(`/imports/${encodeURIComponent(importBatchId)}/rows`);
+}
+
+export async function resendImportRowInvitation(importBatchId: string, rowId: string) {
+  return postAdminGovernance<AdminGovernanceActionResponse>(
+    `/imports/${encodeURIComponent(importBatchId)}/rows/${encodeURIComponent(rowId)}/invitations/resend`,
+    {},
+  );
+}
+
+export async function revokeImportRowInvitation(importBatchId: string, rowId: string) {
+  return postAdminGovernance<AdminGovernanceActionResponse>(
+    `/imports/${encodeURIComponent(importBatchId)}/rows/${encodeURIComponent(rowId)}/invitations/revoke`,
+    {},
+  );
+}
+
 export async function getImportTemplate(importType: string) {
   return getAdminGovernance<LookupEnvelope>(`/imports/templates/${encodeURIComponent(importType)}`);
 }
