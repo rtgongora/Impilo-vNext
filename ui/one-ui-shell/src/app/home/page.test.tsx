@@ -181,12 +181,16 @@ vi.mock("@/providers/ExperienceEntryProvider", () => ({
 }));
 
 vi.mock("@/hooks/useOperationalContextStore", () => ({
-  useOperationalContextStore: {
-    getState: () => ({
+  useOperationalContextStore: (
+    selector: (state: {
+      operationalMode: string;
+      setOperationalMode: typeof setOperationalModeMock;
+    }) => unknown,
+  ) =>
+    selector({
       setOperationalMode: setOperationalModeMock,
       operationalMode: "facility_work",
     }),
-  },
 }));
 
 vi.mock("@tanstack/react-query", () => ({
