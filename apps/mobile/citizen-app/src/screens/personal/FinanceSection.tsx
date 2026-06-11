@@ -30,6 +30,8 @@ import type { Transaction, Balance, PendingCharge } from "../../types";
 export function FinanceSection() {
   const [balance, setBalance] = useState<Balance | null>(null);
   const [charges, setCharges] = useState<PendingCharge[]>([]);
+  const [chargesBlocked, setChargesBlocked] = useState(false);
+  const [chargesBlockedReason, setChargesBlockedReason] = useState<string | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -38,13 +40,15 @@ export function FinanceSection() {
   const load = useCallback(async () => {
     setError(null);
     try {
-      const [bal, ch, txns] = await Promise.all([
+      const [bal, pending, txns] = await Promise.all([
         fetchBalance(),
         fetchPendingCharges(),
         fetchTransactions({ size: 50 }),
       ]);
       setBalance(bal);
-      setCharges(ch);
+      setCharges(pending.charges);
+      setChargesBlocked(pending.blocked);
+      setChargesBlockedReason(pending.blockedReason ?? null);
       setTransactions(txns);
     } catch (err) {
       setError(err instanceof Error ? err : new Error(String(err)));
@@ -103,7 +107,20 @@ export function FinanceSection() {
           <Badge variant="destructive">{String(charges.length)}</Badge>
         ) : null}
       </View>
-      {charges.length === 0 ? (
+      {chargesBlocked ? (
+        <Card>
+          <CardBody>
+            <View testID="costa-blocked-state" style={styles.blockedCard}>
+              <Badge variant="warning">Costa unavailable</Badge>
+              <Text style={styles.blockedTitle}>Pending charges not yet on mobile</Text>
+              <Text style={styles.blockedMessage}>
+                {chargesBlockedReason ??
+                  "Citizen billing quotes and pending charges require a COSTA BFF route that is not yet published."}
+              </Text>
+            </View>
+          </CardBody>
+        </Card>
+      ) : charges.length === 0 ? (
         <Text style={styles.emptyText}>No pending charges</Text>
       ) : (
         charges.map((charge) => (
@@ -265,6 +282,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
     color: "#DC2626",
+  },
+  blockedCard: {
+    gap: 8,
+  },
+  blockedTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#111827",
+  },
+  blockedMessage: {
+    fontSize: 13,
+    color: "#6B7280",
+    lineHeight: 18,
   },
   txnRow: {
     flexDirection: "row",

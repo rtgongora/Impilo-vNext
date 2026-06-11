@@ -7,7 +7,10 @@ import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
 
 export interface LoadingSpinnerProps {
   size?: "sm" | "md" | "lg";
+  /** Primary loading message shown below the spinner. */
   message?: string;
+  /** Back-compat alias used by several mobile screens. */
+  label?: string;
   fullScreen?: boolean;
   testID?: string;
 }
@@ -21,18 +24,20 @@ const SIZE_MAP: Record<"sm" | "md" | "lg", "small" | "large"> = {
 export function LoadingSpinner({
   size = "md",
   message,
+  label,
   fullScreen = false,
   testID,
 }: LoadingSpinnerProps) {
+  const resolvedMessage = message ?? label;
   return (
     <View
       testID={testID}
-      accessibilityLabel={message ?? "Loading"}
+      accessibilityLabel={resolvedMessage ?? "Loading"}
       accessibilityRole="progressbar"
       style={[styles.container, fullScreen ? styles.fullScreen : undefined]}
     >
       <ActivityIndicator size={SIZE_MAP[size]} />
-      {message ? <Text style={styles.message}>{message}</Text> : null}
+      {resolvedMessage ? <Text style={styles.message}>{resolvedMessage}</Text> : null}
     </View>
   );
 }

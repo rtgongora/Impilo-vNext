@@ -121,7 +121,6 @@ export function BookingsSection() {
         <CardHeader
           title="My Bookings"
           subtitle="Booking requests and transaction status — not yet confirmed appointments"
-          icon={<Ionicons name="document-text-outline" size={20} />}
           action={
             <Button
               title={showBooking ? "Cancel" : "Book service"}
@@ -245,13 +244,12 @@ export function BookingsSection() {
                 </Badge>
                 {booking.bookingStatus !== "CANCELLED" && booking.bookingStatus !== "FULFILLED" && (
                   <Button
+                    title="Cancel request"
                     variant="outline"
                     size="sm"
                     onPress={() => handleCancel(booking.id)}
                     testID={`cancel-booking-${booking.id}`}
-                  >
-                    Cancel request
-                  </Button>
+                  />
                 )}
               </View>
             ))

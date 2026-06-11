@@ -15,7 +15,7 @@ Source of truth: `apps/mobile/packages/mobile-registry/`.
 | **Msika** | marketplace, health-os-apps | apps/health-os | marketplaceService, healthOsLauncherService | msika-service | client, provider | fullyWired | launcher cache |
 | **Indawo** | home/facilities | outreach/field-tasks | facilityService, ndilaClient | indawo-service | client, provider | fullyWired | map tiles cached |
 | **PCT** | telehealth, appointments | queue, patients, encounter | telehealthService, encounterService, clinicalWorklistService | pct-service | client, provider | partiallyWired | telehealth requires connection |
-| **Costa** | personal/finance | tools/finance | financeService (blocked pending charges) | costa-service | client, provider | backendMissing | blocked state shown |
+| **Costa** | personal/finance (blocked UI) | tools/billing, tools/finance | citizen: financeService (blocked); provider: queueService.fetchCharges | costa-service, experience-bff | client, provider | partiallyWired (provider); citizen blocked | citizen blocked card; provider live charges |
 | **MusheX** | personal/finance, wallet | tools/finance | walletService, financeService | mushex-service | client, provider | partiallyWired | wallet read cache |
 | **Oros** | — | tools/lab, pharmacy, madi_orders | labService, prescriptionService | oros-service | provider | partiallyWired | requires connection |
 | **Simba** | personal/wellness | supervisor/stock | wellnessService, inventoryService | simba-service | client, provider | partiallyWired | wellness local cache |
@@ -37,7 +37,8 @@ Source of truth: `apps/mobile/packages/mobile-registry/`.
 
 ## Remaining gaps
 
-1. **Costa** — pending charges / quotes BFF route not implemented; UI shows blocked badge
+1. **Costa (citizen)** — pending charges / quotes BFF routes not published; see `mobile-costa-bff-contract.md`; UI shows `costa-blocked-state`
+2. **Costa (provider)** — `GET /internal/v1/mobile/provider/billing/charges` wired via `BillingScreen` / `queueService.fetchCharges`
 2. **PACS** — native DICOM viewer deferred; deep-link to web workspace
 3. **Oros** — no standalone orders hub; routed via lab/pharmacy/MADI tools
 4. **Tshepo/Butano** — indirect BFF proxy only (no direct service clients)

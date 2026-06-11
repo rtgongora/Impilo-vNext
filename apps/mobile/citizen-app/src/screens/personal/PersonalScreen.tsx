@@ -134,7 +134,7 @@ const PERSONAL_TABS: Array<{ id: PersonalTab; label: string; icon: IoniconsName 
   { id: "terms", label: "Terms", icon: "document-text" },
 ];
 
-const SECTIONS: Record<PersonalTab, React.FC> = {
+const SECTIONS: Partial<Record<PersonalTab, React.FC>> = {
   profile: ProfileSection,
   "health-id": HealthIdSection,
   allergies: AllergiesSection,
@@ -153,7 +153,6 @@ const SECTIONS: Record<PersonalTab, React.FC> = {
   wellness: WellnessSection,
   "madi-donor": MadiDonorHubScreen,
   "impilo-live": LiveDiscoverScreen,
-  "prod-ready": ProductionReadinessJourneyScreen,
   finance: FinanceSection,
   challenges: ChallengesScreen,
   programs: ProgramsScreen,

@@ -58,12 +58,28 @@ export async function fetchBalance(): Promise<Balance> {
   return adaptBalance(response.data?.data);
 }
 
+/** Citizen COSTA surface is blocked until BFF publishes pending-charge routes. */
+export const COSTA_CITIZEN_BLOCKED_REASON =
+  "Pending charges and cost quotes are not yet available in the citizen mobile app. " +
+  "The required experience-bff citizen COSTA routes are not published. " +
+  "Your MusheX wallet balance and transaction history below remain live.";
+
+export type PendingChargesResult = {
+  charges: PendingCharge[];
+  blocked: boolean;
+  blockedReason?: string;
+};
+
 /**
- * Stable stub — see file-level note. Always resolves to `[]` until a
- * dedicated COSTA-backed pending-charges route is wired in a future stage.
+ * Truthful blocked read — never fabricates pending charges.
+ * See {@link docs/implementation/mobile-costa-bff-contract.md} for required BFF routes.
  */
-export async function fetchPendingCharges(): Promise<PendingCharge[]> {
-  return [];
+export async function fetchPendingCharges(): Promise<PendingChargesResult> {
+  return {
+    charges: [],
+    blocked: true,
+    blockedReason: COSTA_CITIZEN_BLOCKED_REASON,
+  };
 }
 
 // ── Adapters ────────────────────────────────────────────────────────────

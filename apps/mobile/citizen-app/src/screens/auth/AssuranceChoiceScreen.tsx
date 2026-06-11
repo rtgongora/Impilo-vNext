@@ -2,7 +2,7 @@
  * AssuranceChoiceScreen — mirrors web /auth/register/assurance tier selection.
  */
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { View, Text, StyleSheet, Pressable, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Button, LoadingSpinner } from "@impilo/mobile-design-system";
@@ -14,11 +14,13 @@ import { appStore } from "../../stores/appStore";
 
 const GREEN = "#059669";
 
+type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
+
 const TIERS: Array<{
   id: AssuranceTier;
   title: string;
   description: string;
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: IoniconName;
 }> = [
   {
     id: "BASIC",

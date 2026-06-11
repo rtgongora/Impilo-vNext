@@ -33,6 +33,7 @@ import { PublicHealthFieldTasksScreen } from "./PublicHealthFieldTasksScreen";
 import { TelemedicineScreen } from "./TelemedicineScreen";
 import { FundoLearningShellScreen } from "./FundoLearningShellScreen";
 import { ProductionReadinessJourneyScreen } from "./ProductionReadinessJourneyScreen";
+import { CoreTransactionJourneyShellScreen } from "./CoreTransactionJourneyShellScreen";
 import { WorkflowDispatchOpsScreen } from "./WorkflowDispatchOpsScreen";
 import { MadiOrdersScreen } from "../madi/MadiOrdersScreen";
 import { MadiTransfusionScreen } from "../madi/MadiTransfusionScreen";

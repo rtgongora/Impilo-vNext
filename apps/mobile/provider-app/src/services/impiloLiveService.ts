@@ -231,7 +231,7 @@ export async function listCpdHistory(): Promise<Array<LiveEvent & { attendance?:
         return { ...event, attendance };
       }),
     );
-    return history.filter((row): row is LiveEvent & { attendance?: LiveAttendance | null } => row !== null);
+    return history.filter((row) => row !== null) as Array<LiveEvent & { attendance?: LiveAttendance | null }>;
   } catch {
     return [];
   }

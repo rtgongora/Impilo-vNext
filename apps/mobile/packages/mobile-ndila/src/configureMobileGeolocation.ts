@@ -26,7 +26,18 @@ function expoGeolocationAdapter(location: ExpoLocationModule): GeolocationLike {
         }
         location
           .getCurrentPositionAsync({ accuracy: options?.enableHighAccuracy ? 6 : 4 })
-          .then((pos) => onSuccess({ coords: pos.coords }))
+          .then((pos) =>
+            onSuccess({
+              coords: {
+                latitude: pos.coords.latitude,
+                longitude: pos.coords.longitude,
+                accuracy: pos.coords.accuracy ?? undefined,
+                altitude: pos.coords.altitude,
+                speed: pos.coords.speed,
+                heading: pos.coords.heading,
+              },
+            })
+          )
           .catch((err: Error) => onError({ code: 2, message: err.message }));
       });
     },

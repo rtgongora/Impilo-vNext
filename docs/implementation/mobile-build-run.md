@@ -48,10 +48,20 @@ npx pnpm@9 start
 
 | Target | Command | Notes |
 |--------|---------|-------|
-| Typecheck | `npx pnpm@9 mobile:build` | Blocking static build gate |
+| Typecheck | `npx pnpm@9 mobile:typecheck` | **PASS** — citizen + provider (closure wave) |
+| Tests | `npx pnpm@9 mobile:test` | **PASS** — citizen 122, provider 123, registry 4 |
+| Guards | `npx pnpm@9 guard:mobile-parity` | **PASS** |
 | EAS Android | `cd citizen-app && npx pnpm@9 build:android` | Requires EAS credentials |
 | EAS iOS | `cd citizen-app && npx pnpm@9 build:ios` | Requires Apple credentials |
-| Expo export | `npx expo export` | Bundle export when native toolchain available |
+| Expo export | `npx expo export` | **Blocked on VM** until `npx expo install react-native-web` in each app |
+
+### Expo export prerequisite
+
+```bash
+cd apps/mobile/citizen-app && npx expo install react-native-web
+cd apps/mobile/provider-app && npx expo install react-native-web
+EXPO_PUBLIC_APP_VARIANT=preview EXPO_PUBLIC_API_BASE_URL=http://41.57.127.235 npx expo export
+```
 
 ## Architecture summary
 

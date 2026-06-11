@@ -2,11 +2,13 @@
 
 Manual smoke against preview `http://41.57.127.235` or local BFF `:8160`.
 
+**Closure wave status (2026-06-11):** Static gates pass; runtime smoke **NOT RUN** on VM (no emulator/device in agent session). Use commands below on a device with Expo Go.
+
 ## Launch & branding
 
-- [ ] 1. App launches without crash
-- [ ] 2. Login screen shows Impilo branding (green citizen / blue provider)
-- [ ] 3. Citizen vs Provider apps are visually distinct
+- [ ] NOT RUN 1. App launches without crash
+- [ ] NOT RUN 2. Login screen shows Impilo branding (green citizen / blue provider)
+- [ ] NOT RUN 3. Citizen vs Provider apps are visually distinct
 
 ## Citizen
 

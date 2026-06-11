@@ -11,7 +11,7 @@ vi.mock("../../stores/appStore", () => ({
   useAppStore: vi.fn(),
 }));
 
-import { buildProviderCommsKpis } from "../../screens/provider/ProviderDashboardScreen";
+import { buildProviderCommsKpis } from "../../lib/providerCommsKpis";
 
 describe("ProviderDashboard Comms KPI actions", () => {
   beforeEach(() => {

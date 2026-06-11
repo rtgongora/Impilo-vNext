@@ -96,15 +96,15 @@ export const MOBILE_SERVICE_WIRING: Record<CanonicalServiceSlug, MobileServiceWi
     citizenRoutes: ["telehealth", "personal/appointments", "personal/bookings"],
     providerRoutes: ["queue", "patients", "encounter", "tools/telehealth"],
   }),
-  costa: wire("costa", "Costa", "backendMissing", "blocked", {
-    apiClients: ["financeService.fetchPendingCharges"],
-    backendServices: ["costa-service"],
+  costa: wire("costa", "Costa", "partiallyWired", "blocked", {
+    apiClients: ["financeService.fetchPendingCharges", "queueService.fetchCharges"],
+    backendServices: ["costa-service", "experience-bff"],
     requiredAuthContext: ["client", "provider"],
     citizenRoutes: ["personal/finance"],
-    providerRoutes: ["tools/finance"],
+    providerRoutes: ["tools/billing", "tools/finance"],
     knownGaps: [
-      "Pending charges / quotes route not wired in experience-bff",
-      "fetchPendingCharges returns truthful empty with blocked badge",
+      "Citizen pending charges / quotes BFF routes not published — see mobile-costa-bff-contract.md",
+      "Provider reads /internal/v1/mobile/provider/billing/charges via queueService.fetchCharges",
     ],
   }),
   mushex: wire("mushex", "MusheX", "partiallyWired", "native", {

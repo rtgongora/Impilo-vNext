@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { buildCitizenCommsKpis } from "../../screens/HomeScreen";
+import { buildCitizenCommsKpis } from "../../lib/homeCommsKpis";
 
 describe("HomeScreen Comms KPI actions", () => {
   it("routes threads and sent KPIs to messaging tab", () => {

@@ -1,6 +1,7 @@
 import { vi } from "vitest";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+(globalThis as { __DEV__?: boolean }).__DEV__ = true;
 
 // Minimal React Native shim for Vitest/Vite.
 // Prevents Vite from trying to import React Native internal files (e.g. Image) during tests.
@@ -67,6 +68,26 @@ vi.mock("@expo/vector-icons", async () => {
 vi.mock("expo-web-browser", () => ({
   openBrowserAsync: vi.fn(),
 }));
+
+vi.mock("expo-secure-store", () => ({
+  getItemAsync: vi.fn(async () => null),
+  setItemAsync: vi.fn(async () => undefined),
+  deleteItemAsync: vi.fn(async () => undefined),
+}));
+
+vi.mock("expo-modules-core", () => {
+  class EventEmitter {
+    addListener() {
+      return { remove: () => undefined };
+    }
+    removeAllListeners() {}
+    emit() {}
+  }
+  return {
+    Platform: { OS: "ios", select: (m: Record<string, unknown>) => m.ios ?? m.default },
+    EventEmitter,
+  };
+});
 
 vi.mock("@livekit/react-native", async () => {
   const React = await import("react");

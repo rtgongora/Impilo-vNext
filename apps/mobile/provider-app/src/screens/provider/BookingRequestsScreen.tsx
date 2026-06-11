@@ -21,7 +21,7 @@ import {
 import { useAppStore } from "../../stores/appStore";
 
 export function BookingRequestsScreen() {
-  const facilityId = useAppStore((s) => s.facilityId);
+  const { facilityId } = useAppStore();
   const [requests, setRequests] = useState<BookingRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -86,7 +86,6 @@ export function BookingRequestsScreen() {
         <CardHeader
           title="Booking Requests"
           subtitle="Pending requests needing triage or approval"
-          icon={<Ionicons name="mail-open-outline" size={20} />}
         />
         <CardBody>
           {requests.length === 0 ? (
@@ -108,20 +107,18 @@ export function BookingRequestsScreen() {
                 <Badge variant="outline">{req.bookingStatus ?? "REQUESTED"}</Badge>
                 <View style={styles.actions}>
                   <Button
+                    title="Approve"
                     size="sm"
                     disabled={actingId === req.id}
                     onPress={() => handleApprove(req.id)}
-                  >
-                    Approve
-                  </Button>
+                  />
                   <Button
+                    title="Reject"
                     variant="outline"
                     size="sm"
                     disabled={actingId === req.id}
                     onPress={() => handleReject(req.id)}
-                  >
-                    Reject
-                  </Button>
+                  />
                 </View>
               </View>
             ))

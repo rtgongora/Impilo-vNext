@@ -76,7 +76,7 @@ export function TheatreProcedureScreen() {
         {!episodeId ? (
           <View style={s.section}>
             <Text style={s.title}>Procedure cases</Text>
-            {episodes.map((ep: Record<string, unknown>) => (
+            {(episodes as Array<Record<string, unknown>>).map((ep) => (
               <TouchableOpacity key={String(ep.id)} style={s.card} onPress={() => setEpisodeId(String(ep.id))}>
                 <Text style={s.cardTitle}>{String(ep.procedure_name)}</Text>
                 <Badge label={String(ep.status)} variant="info" />

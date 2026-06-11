@@ -141,7 +141,7 @@ describe("provider madiService", () => {
       bag_number: "BAG-001",
       volume_ml: 450,
     });
-    expect(ok).toBe(true);
+    expect(ok).toEqual({ ok: true });
   });
 
   it("fetchCentralBankMetrics calls central bank metrics endpoint", async () => {
