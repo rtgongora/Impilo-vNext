@@ -30,6 +30,19 @@ function isPublicPath(pathname: string): boolean {
   return PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 }
 
+/** Browser-facing origin (docker-entrypoint sets x-forwarded-host / Host to public port). */
+export function publicOrigin(request: NextRequest): string {
+  const host =
+    request.headers.get("x-forwarded-host")?.split(",")[0]?.trim() ||
+    request.headers.get("host");
+  if (!host) return request.nextUrl.origin;
+  const proto =
+    request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() ||
+    request.nextUrl.protocol.replace(":", "") ||
+    "http";
+  return `${proto}://${host}`;
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -42,7 +55,7 @@ export function middleware(request: NextRequest) {
   const hasSession = request.cookies.get("exp_has_session")?.value === "1";
 
   if (!hasSession) {
-    const loginUrl = new URL("/auth/login", request.url);
+    const loginUrl = new URL("/auth/login", publicOrigin(request));
     loginUrl.searchParams.set("returnTo", pathname);
     return NextResponse.redirect(loginUrl);
   }

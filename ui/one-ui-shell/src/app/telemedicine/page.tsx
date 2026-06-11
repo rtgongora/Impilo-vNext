@@ -25,6 +25,12 @@ import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { usePatients, type PatientResource } from "@/hooks/queries/usePatients";
+import {
+  DEMO_PATIENT_ID,
+  DEMO_PATIENT_LABEL,
+  resolveTelemedicinePatientId,
+} from "@/lib/webrtc/dev-test-facility";
 import {
   useCreateTelemedicineSession,
   useJoinTelemedicineSession,
@@ -55,14 +61,45 @@ function toLocalDateTimeValue(date: Date) {
   return adjusted.toISOString().slice(0, 16);
 }
 
+function extractMutationError(error: unknown): string {
+  if (error && typeof error === "object") {
+    const err = error as { error?: { message?: string }; status?: number; message?: string };
+    if (err.error?.message) return err.error.message;
+    if (err.status === 403) {
+      return "Access denied. Confirm you are signed in with a clinical role and have selected a facility.";
+    }
+    if (err.message) return err.message;
+  }
+  return "The session could not be created. Confirm the workplace and patient context, then try again.";
+}
+
 function createDefaultComposer(): ComposerState {
   return {
-    patientId: "",
+    patientId: DEMO_PATIENT_ID,
     referralId: "",
     sessionType: "VIDEO",
     scheduledAt: toLocalDateTimeValue(new Date(Date.now() + 60 * 60 * 1000)),
     notes: "",
   };
+}
+
+function buildPatientOptions(rows: PatientResource[]) {
+  const options: { id: string; label: string }[] = [
+    { id: DEMO_PATIENT_ID, label: DEMO_PATIENT_LABEL },
+  ];
+  const seen = new Set<string>([DEMO_PATIENT_ID]);
+
+  for (const row of rows) {
+    const id = resolveTelemedicinePatientId(row.id);
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    options.push({
+      id,
+      label: row.attributes.displayName?.trim() || id,
+    });
+  }
+
+  return options;
 }
 
 export default function TelemedicinePage() {
@@ -73,6 +110,11 @@ export default function TelemedicinePage() {
   const [activeTab, setActiveTab] = useState<TabFilter>("all");
   const [showComposer, setShowComposer] = useState(false);
   const [composer, setComposer] = useState<ComposerState>(() => createDefaultComposer());
+  const { data: patientsData, isLoading: patientsLoading } = usePatients();
+  const patientOptions = useMemo(
+    () => buildPatientOptions(patientsData?.data ?? []),
+    [patientsData?.data],
+  );
 
   const statusParam = activeTab === "all" ? undefined : activeTab;
   const patientIdFilter = searchParams.get("patientId") ?? "";
@@ -145,10 +187,14 @@ export default function TelemedicinePage() {
   function handleCreateSession() {
     if (!facility || !composer.patientId.trim()) return;
 
+    const providerId =
+      user?.linkedIds?.providerId ?? user?.providerId ?? user?.id;
+
     createSession.mutate(
       {
-        patient_id: composer.patientId.trim(),
-        provider_id: user?.id,
+        patient_id: resolveTelemedicinePatientId(composer.patientId.trim()),
+        provider_id: providerId,
+        provider_user_id: user?.id,
         facility_id: facility.id,
         referral_id: composer.referralId.trim() || undefined,
         session_type: composer.sessionType,
@@ -158,6 +204,7 @@ export default function TelemedicinePage() {
       {
         onSuccess: (response) => {
           resetComposer();
+          createSession.reset();
           router.push(`/telemedicine/session/${response.data.id}`);
         },
       },
@@ -276,14 +323,19 @@ export default function TelemedicinePage() {
                 <div className="mt-4 space-y-4">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <label className="block">
-                      <span className="mb-1 block text-xs font-medium text-gray-600">Patient ID</span>
-                      <input
-                        type="text"
+                      <span className="mb-1 block text-xs font-medium text-gray-600">Patient</span>
+                      <select
                         value={composer.patientId}
                         onChange={(event) => updateComposer("patientId", event.target.value)}
-                        placeholder="Patient identifier"
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
-                      />
+                        disabled={patientsLoading}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 disabled:bg-gray-50"
+                      >
+                        {patientOptions.map((option) => (
+                          <option key={option.id} value={option.id}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
                     </label>
 
                     <label className="block">
@@ -338,8 +390,7 @@ export default function TelemedicinePage() {
 
                   {createSession.isError && (
                     <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-                      The session could not be created. Confirm the workplace and patient context,
-                      then try again.
+                      {extractMutationError(createSession.error)}
                     </p>
                   )}
 

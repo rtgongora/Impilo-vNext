@@ -62,20 +62,24 @@ public class FacilityController {
                     mapped.add(mapTusoSummaryToFacilityResource(row));
                 }
             }
-            long total = paged != null && paged.has("totalElements") ? paged.get("totalElements").asLong() : mapped.size();
-            return ResponseEntity.ok(Map.of(
-                    "data", mapped,
-                    "meta", Map.of(
-                            "request_id", requestId,
-                            "correlation_id", correlationId,
-                            "page", Map.of(
-                                    "number", page,
-                                    "size", size,
-                                    "total_elements", total,
-                                    "total_pages", size > 0 ? (int) Math.ceil((double) total / size) : 0
-                            )
-                    )
-            ));
+            if (mapped.isEmpty()) {
+                log.warn("TUSO facility search returned no rows — using seeded facilities");
+            } else {
+                long total = paged != null && paged.has("totalElements") ? paged.get("totalElements").asLong() : mapped.size();
+                return ResponseEntity.ok(Map.of(
+                        "data", mapped,
+                        "meta", Map.of(
+                                "request_id", requestId,
+                                "correlation_id", correlationId,
+                                "page", Map.of(
+                                        "number", page,
+                                        "size", size,
+                                        "total_elements", total,
+                                        "total_pages", size > 0 ? (int) Math.ceil((double) total / size) : 0
+                                )
+                        )
+                ));
+            }
             } catch (Exception e) {
                 log.warn("TUSO facility search failed, using seed: {}", e.getMessage());
             }
@@ -206,6 +210,12 @@ public class FacilityController {
     @SuppressWarnings("unchecked")
     private static List<Map<String, Object>> buildSeededFacilities() {
         List<Map<String, Object>> facilities = new ArrayList<>();
+
+        // ── Dev / integration test facility ────────────────────────────
+        facilities.add(facility("a1b2c3d4-00ff-4000-8000-000000000099", "ZW-TEST-001", "Test Facility",
+                "General Hospital", "Harare", "Harare Metropolitan", "Harare",
+                -17.8252, 31.0335, 50,
+                List.of("OUTPATIENT", "EMERGENCY", "TELEMEDICINE", "LABORATORY", "PHARMACY")));
 
         // ── Central Hospitals ────────────────────────────────────────
         facilities.add(facility("fac-hch", "ZW-HCH-001", "Harare Central Hospital",

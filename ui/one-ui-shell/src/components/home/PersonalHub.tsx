@@ -11,6 +11,7 @@ import {
   Calendar,
   Clock,
   Heart,
+  Home,
   Megaphone,
   MessageSquare,
   Pill,
@@ -47,14 +48,14 @@ export interface PersonalHubProps {
 }
 
 const HEALTH_TABS: { id: PersonalHealthTab; label: string; icon?: ComponentType<{ className?: string }> }[] = [
-  { id: PersonalHealthTab.Home, label: "Home" },
+  { id: PersonalHealthTab.Home, label: "Home", icon: Home },
   { id: PersonalHealthTab.HealthId, label: "Health ID", icon: QrCode },
   { id: PersonalHealthTab.Appointments, label: "Appointments", icon: Calendar },
   { id: PersonalHealthTab.Records, label: "Timeline", icon: Clock },
   { id: PersonalHealthTab.Medications, label: "Medications", icon: Pill },
   { id: PersonalHealthTab.Wallet, label: "Wallet", icon: Wallet },
   { id: PersonalHealthTab.Privacy, label: "Privacy", icon: Shield },
-  { id: PersonalHealthTab.Monitoring, label: "Monitoring", icon: Bluetooth },
+  { id: PersonalHealthTab.Monitoring, label: "Iot-Based Integration", icon: Bluetooth },
   { id: PersonalHealthTab.Messages, label: "Messages", icon: MessageSquare },
   { id: PersonalHealthTab.Marketplace, label: "Marketplace", icon: ShoppingCart },
   { id: PersonalHealthTab.Wellness, label: "Wellness", icon: Activity },
@@ -106,6 +107,36 @@ function healthTabAction(tab: PersonalHealthTab): { href?: string; pending?: Pen
   }
 }
 
+function HealthNavButton({
+  tab,
+  active,
+  onSelect,
+}: {
+  tab: (typeof HEALTH_TABS)[number];
+  active: boolean;
+  onSelect: (tab: PersonalHealthTab) => void;
+}) {
+  const Icon = tab.icon;
+  const isEmergency = tab.id === PersonalHealthTab.Emergency;
+
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(tab.id)}
+      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left text-sm transition-colors ${
+        active
+          ? "bg-impilo-50 text-impilo-700 font-medium"
+          : isEmergency
+            ? "text-red-600 hover:bg-red-50"
+            : "text-gray-600 hover:bg-gray-50"
+      }`}
+    >
+      {Icon ? <Icon className="h-4 w-4 shrink-0" /> : <span className="w-4" />}
+      <span className="truncate">{tab.label}</span>
+    </button>
+  );
+}
+
 export function PersonalHub({ user, communityGroups, onJoinGroup, joinPending }: PersonalHubProps) {
   const router = useRouter();
   const [activeSection, setActiveSection] = useState<PersonalSection>("health");
@@ -139,85 +170,89 @@ export function PersonalHub({ user, communityGroups, onJoinGroup, joinPending }:
     setActiveHealthTab(tab);
   };
 
-  const renderHealthPanel = () => {
-    if (activeHealthTab === PersonalHealthTab.Home) {
-      return (
-        <div className="space-y-4">
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="md:col-span-2 rounded-lg border bg-white p-4">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="h-14 w-14 rounded-full bg-impilo-100 flex items-center justify-center text-lg font-semibold text-impilo-700">
-                  {initials}
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900">{displayName}</h2>
-                  <p className="text-sm text-gray-500">Personal health account</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {[
-                  { id: "appointment", label: "Book visit", icon: Calendar, tab: PersonalHealthTab.Appointments },
-                  { id: "telehealth", label: "Video call", icon: Video, href: "/telemedicine" },
-                  { id: "rx", label: "Refill Rx", icon: Pill, tab: PersonalHealthTab.Medications },
-                  { id: "msg", label: "Messages", icon: MessageSquare, tab: PersonalHealthTab.Messages },
-                ].map((action) => (
-                  <button
-                    key={action.id}
-                    type="button"
-                    onClick={() => {
-                      if (action.href) {
-                        router.push(action.href);
-                        return;
-                      }
-                      if (action.tab) openHealthTab(action.tab);
-                    }}
-                    className="h-16 flex flex-col items-center justify-center gap-1 rounded-lg border hover:bg-gray-50 text-xs font-medium"
-                  >
-                    <action.icon className="h-4 w-4 text-impilo-600" />
-                    {action.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="rounded-lg border bg-gradient-to-br from-impilo-50 to-white p-4">
-              <Wallet className="h-5 w-5 text-impilo-600 mb-2" />
-              <p className="text-2xl font-bold">${walletBalance.toFixed(2)}</p>
-              <p className="text-xs text-gray-500 mb-3">Health wallet (demo)</p>
-              <button
-                type="button"
-                onClick={() => showBackendPendingToast(PendingApiRoute.PortalWalletTopUp, "Add funds")}
-                className="w-full text-sm py-2 rounded-lg bg-impilo-600 text-white hover:bg-impilo-700"
-              >
-                Add funds
-              </button>
-            </div>
+  const renderWalletSidebar = () => (
+    <div className="rounded-lg border bg-gradient-to-br from-impilo-50 to-white p-4">
+      <Wallet className="h-5 w-5 text-impilo-600 mb-2" />
+      <p className="text-2xl font-bold">${walletBalance.toFixed(2)}</p>
+      <p className="text-xs text-gray-500 mb-3">Health wallet (demo)</p>
+      <button
+        type="button"
+        onClick={() => showBackendPendingToast(PendingApiRoute.PortalWalletTopUp, "Add funds")}
+        className="w-full text-sm py-2 rounded-lg bg-impilo-600 text-white hover:bg-impilo-700"
+      >
+        Add funds
+      </button>
+    </div>
+  );
+
+  const renderHealthHomeFeed = () => (
+    <div className="space-y-4">
+      <div className="rounded-lg border bg-white p-4">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="h-14 w-14 rounded-full bg-impilo-100 flex items-center justify-center text-lg font-semibold text-impilo-700">
+            {initials}
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {[
-              { label: "Upcoming visits", value: upcomingAppointments, tab: PersonalHealthTab.Appointments },
-              { label: "Pending refills", value: pendingRefills, tab: PersonalHealthTab.Medications },
-              { label: "Unread messages", value: unreadMessages, tab: PersonalHealthTab.Messages },
-              { label: "Communities", value: communityGroups.length, section: "social" as const },
-            ].map((card) => (
-              <button
-                key={card.label}
-                type="button"
-                onClick={() => {
-                  if (card.section === "social") {
-                    setActiveSection("social");
-                    return;
-                  }
-                  if (card.tab) openHealthTab(card.tab);
-                }}
-                className="rounded-lg border bg-white p-4 text-center hover:shadow-md transition-shadow"
-              >
-                <p className="text-2xl font-bold text-gray-900">{card.value}</p>
-                <p className="text-xs text-gray-500">{card.label}</p>
-              </button>
-            ))}
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">{displayName}</h2>
+            <p className="text-sm text-gray-500">Personal health account</p>
           </div>
         </div>
-      );
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {[
+            { id: "appointment", label: "Book visit", icon: Calendar, tab: PersonalHealthTab.Appointments },
+            { id: "telehealth", label: "Video call", icon: Video, href: "/telemedicine" },
+            { id: "rx", label: "Refill Rx", icon: Pill, tab: PersonalHealthTab.Medications },
+            { id: "msg", label: "Messages", icon: MessageSquare, tab: PersonalHealthTab.Messages },
+          ].map((action) => (
+            <button
+              key={action.id}
+              type="button"
+              onClick={() => {
+                if (action.href) {
+                  router.push(action.href);
+                  return;
+                }
+                if (action.tab) openHealthTab(action.tab);
+              }}
+              className="h-16 flex flex-col items-center justify-center gap-1 rounded-lg border hover:bg-gray-50 text-xs font-medium"
+            >
+              <action.icon className="h-4 w-4 text-impilo-600" />
+              {action.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { label: "Upcoming visits", value: upcomingAppointments, tab: PersonalHealthTab.Appointments },
+          { label: "Pending refills", value: pendingRefills, tab: PersonalHealthTab.Medications },
+          { label: "Unread messages", value: unreadMessages, tab: PersonalHealthTab.Messages },
+          { label: "Communities", value: communityGroups.length, section: "social" as const },
+        ].map((card) => (
+          <button
+            key={card.label}
+            type="button"
+            onClick={() => {
+              if (card.section === "social") {
+                setActiveSection("social");
+                return;
+              }
+              if (card.tab) openHealthTab(card.tab);
+            }}
+            className="rounded-lg border bg-white p-4 text-center hover:shadow-md transition-shadow"
+          >
+            <p className="text-2xl font-bold text-gray-900">{card.value}</p>
+            <p className="text-xs text-gray-500">{card.label}</p>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderHealthPanel = () => {
+    if (activeHealthTab === PersonalHealthTab.Home) {
+      return renderHealthHomeFeed();
     }
 
     const action = healthTabAction(activeHealthTab);
@@ -321,6 +356,7 @@ export function PersonalHub({ user, communityGroups, onJoinGroup, joinPending }:
 
   return (
     <div className="space-y-4">
+      {/* Section switcher — stays at top */}
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
@@ -353,35 +389,95 @@ export function PersonalHub({ user, communityGroups, onJoinGroup, joinPending }:
         </button>
       </div>
 
+      {/* My Health — Facebook-style 3-column layout */}
       {activeSection === "health" && (
-        <div>
-          <div className="overflow-x-auto mb-4 pb-1">
-            <div className="inline-flex gap-1 min-w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)_260px] gap-4 lg:gap-5">
+          {/* LEFT — vertical nav (like FB shortcuts) */}
+          <aside className="hidden lg:block">
+            <nav className="rounded-lg border bg-white p-2 space-y-0.5 sticky top-4">
+              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-3 py-2">
+                My Life
+              </p>
               {HEALTH_TABS.map((tab) => (
-                <button
+                <HealthNavButton
                   key={tab.id}
-                  type="button"
-                  onClick={() => openHealthTab(tab.id)}
-                  className={`shrink-0 px-3 py-2 text-xs sm:text-sm rounded-lg border whitespace-nowrap ${
-                    activeHealthTab === tab.id
-                      ? "bg-impilo-600 text-white border-impilo-600"
-                      : "bg-white text-gray-600"
-                  } ${tab.id === PersonalHealthTab.Emergency ? "text-red-600 border-red-200" : ""}`}
-                >
-                  {tab.icon && <tab.icon className="h-3.5 w-3.5 inline mr-1" />}
-                  {tab.label}
-                </button>
+                  tab={tab}
+                  active={activeHealthTab === tab.id}
+                  onSelect={openHealthTab}
+                />
               ))}
+            </nav>
+          </aside>
+
+          {/* CENTER — main feed / panel */}
+          <main className="min-w-0 space-y-4">
+            {/* Mobile: horizontal tab strip */}
+            <div className="lg:hidden overflow-x-auto pb-1">
+              <div className="inline-flex gap-1">
+                {HEALTH_TABS.map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => openHealthTab(tab.id)}
+                    className={`shrink-0 px-3 py-2 text-xs rounded-lg border whitespace-nowrap ${
+                      activeHealthTab === tab.id
+                        ? "bg-impilo-600 text-white border-impilo-600"
+                        : "bg-white text-gray-600"
+                    } ${tab.id === PersonalHealthTab.Emergency ? "text-red-600 border-red-200" : ""}`}
+                  >
+                    {tab.icon && <tab.icon className="h-3.5 w-3.5 inline mr-1" />}
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-          {renderHealthPanel()}
+
+            {renderHealthPanel()}
+          </main>
+
+          {/* RIGHT — wallet & quick widgets (like FB sidebar) */}
+          <aside className="hidden lg:block space-y-4">
+            <div className="sticky top-4 space-y-4">
+              {renderWalletSidebar()}
+              <div className="rounded-lg border bg-white p-4">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Quick access</p>
+                <div className="space-y-1">
+                  <button
+                    type="button"
+                    onClick={() => openHealthTab(PersonalHealthTab.HealthId)}
+                    className="w-full text-left text-sm text-gray-700 px-2 py-1.5 rounded-lg hover:bg-gray-50"
+                  >
+                    Show Health ID
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => openHealthTab(PersonalHealthTab.Appointments)}
+                    className="w-full text-left text-sm text-gray-700 px-2 py-1.5 rounded-lg hover:bg-gray-50"
+                  >
+                    Book appointment
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveSection("social")}
+                    className="w-full text-left text-sm text-gray-700 px-2 py-1.5 rounded-lg hover:bg-gray-50"
+                  >
+                    Open Social Hub
+                  </button>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          {/* Mobile: wallet below feed */}
+          <div className="lg:hidden">{renderWalletSidebar()}</div>
         </div>
       )}
 
+      {/* Social Hub — existing FB-style layout preserved */}
       {activeSection === "social" && (
-        <div className="flex flex-col lg:flex-row gap-4">
-          <div className="hidden lg:block w-56 shrink-0">
-            <nav className="rounded-lg border bg-white p-2 space-y-1">
+        <div className="grid grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)_260px] gap-4 lg:gap-5">
+          <aside className="hidden lg:block">
+            <nav className="rounded-lg border bg-white p-2 space-y-1 sticky top-4">
               {SOCIAL_NAV.map((item) => (
                 <button
                   key={item.id}
@@ -407,8 +503,9 @@ export function PersonalHub({ user, communityGroups, onJoinGroup, joinPending }:
               <Store className="h-4 w-4 inline mr-1 text-green-600" />
               Marketplace
             </button>
-          </div>
-          <div className="flex-1 min-w-0">
+          </aside>
+
+          <main className="min-w-0">
             <div className="lg:hidden flex gap-1 overflow-x-auto mb-3 pb-1">
               {SOCIAL_NAV.map((item) => (
                 <button
@@ -424,7 +521,13 @@ export function PersonalHub({ user, communityGroups, onJoinGroup, joinPending }:
               ))}
             </div>
             {renderSocialPanel()}
-          </div>
+          </main>
+
+          <aside className="hidden lg:block">
+            <div className="sticky top-4 rounded-lg border bg-white p-4 text-sm text-gray-500">
+              Communities, clubs, and pages appear here as social widgets when BFF routes are live.
+            </div>
+          </aside>
         </div>
       )}
 
@@ -435,4 +538,3 @@ export function PersonalHub({ user, communityGroups, onJoinGroup, joinPending }:
     </div>
   );
 }
-

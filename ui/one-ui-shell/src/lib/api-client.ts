@@ -23,17 +23,14 @@
  */
 
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { getBffHttpOrigin } from "@/lib/bff-origin";
 
-// Use NEXT_PUBLIC_BFF_URL when explicitly set (Docker, tests, SSR).
-// In the browser without an explicit URL, use relative paths so requests proxy
-// through the Next.js dev server (see next.config.mjs rewrites), avoiding CORS.
-const BFF_BASE_URL = process.env.NEXT_PUBLIC_BFF_URL || (typeof window !== "undefined" ? "" : "http://localhost:8160");
+function bffBaseUrl(): string {
+  return getBffHttpOrigin();
+}
 
-// When BFF_BASE_URL is a full URL (non-empty), requests are cross-origin.
-// Use "include" to send HttpOnly cookies (refresh token) cross-origin.
-// Use "same-origin" for relative paths so the browser's same-origin cookie
-// policy is enforced in production where the BFF is behind the same reverse proxy.
-const fetchCredentials: RequestCredentials = BFF_BASE_URL ? "include" : "same-origin";
+// BFF is always on a separate port (8160) — cross-origin from the UI (3000).
+const fetchCredentials: RequestCredentials = "include";
 
 export interface ApiResponse<T> {
   data: T;
@@ -246,7 +243,7 @@ async function attemptRefresh(): Promise<boolean> {
   // When cross-origin (BFF_BASE_URL set), document.cookie belongs to the UI
   // origin and won't include cookies set by the BFF — skip the check to ensure
   // the refresh attempt always reaches the server.
-  if (!BFF_BASE_URL) {
+  if (!bffBaseUrl()) {
     const hasSessionCookie = document.cookie.includes("exp_has_session=1");
     if (!hasSessionCookie) return false;
   }
@@ -261,7 +258,7 @@ async function attemptRefresh(): Promise<boolean> {
       // Don't send the expired token for the refresh call
       delete headers["Authorization"];
 
-      const response = await fetch(`${BFF_BASE_URL}/internal/v1/auth/refresh`, {
+      const response = await fetch(`${bffBaseUrl()}/internal/v1/auth/refresh`, {
         method: "POST",
         headers,
         credentials: fetchCredentials,
@@ -339,7 +336,7 @@ async function request<T>(
     headers["Idempotency-Key"] = crypto.randomUUID();
   }
 
-  const response = await fetch(`${BFF_BASE_URL}${path}`, {
+  const response = await fetch(`${bffBaseUrl()}${path}`, {
     method,
     headers,
     credentials: fetchCredentials,
@@ -355,7 +352,7 @@ async function request<T>(
       if (["POST", "PUT", "PATCH"].includes(method) || (method === "DELETE" && body !== undefined)) {
         retryHeaders["Idempotency-Key"] = crypto.randomUUID();
       }
-      const retryResponse = await fetch(`${BFF_BASE_URL}${path}`, {
+      const retryResponse = await fetch(`${bffBaseUrl()}${path}`, {
         method,
         headers: retryHeaders,
         credentials: fetchCredentials,
@@ -410,7 +407,7 @@ async function requestForm<T>(
     headers["Idempotency-Key"] = crypto.randomUUID();
   }
 
-  const response = await fetch(`${BFF_BASE_URL}${path}`, {
+  const response = await fetch(`${bffBaseUrl()}${path}`, {
     method,
     headers,
     credentials: fetchCredentials,
@@ -426,7 +423,7 @@ async function requestForm<T>(
         retryHeaders["Idempotency-Key"] = crypto.randomUUID();
       }
 
-      const retryResponse = await fetch(`${BFF_BASE_URL}${path}`, {
+      const retryResponse = await fetch(`${bffBaseUrl()}${path}`, {
         method,
         headers: retryHeaders,
         credentials: fetchCredentials,
@@ -463,7 +460,7 @@ async function requestForm<T>(
 /** Authenticated GET returning a binary body (e.g. DICOM rendered frames). */
 async function requestBlob(path: string): Promise<Blob> {
   const headers = { ...getV11Headers() };
-  const response = await fetch(`${BFF_BASE_URL}${path}`, {
+  const response = await fetch(`${bffBaseUrl()}${path}`, {
     method: "GET",
     headers,
     credentials: fetchCredentials,
@@ -473,7 +470,7 @@ async function requestBlob(path: string): Promise<Blob> {
     const refreshed = await attemptRefresh();
     if (refreshed) {
       const retryHeaders = { ...getV11Headers() };
-      const retryResponse = await fetch(`${BFF_BASE_URL}${path}`, {
+      const retryResponse = await fetch(`${bffBaseUrl()}${path}`, {
         method: "GET",
         headers: retryHeaders,
         credentials: fetchCredentials,
@@ -509,7 +506,7 @@ async function requestDicomPost(path: string, body: ArrayBuffer): Promise<string
     "Idempotency-Key": crypto.randomUUID(),
   };
 
-  const response = await fetch(`${BFF_BASE_URL}${path}`, {
+  const response = await fetch(`${bffBaseUrl()}${path}`, {
     method: "POST",
     headers,
     credentials: fetchCredentials,
@@ -527,7 +524,7 @@ async function requestDicomPost(path: string, body: ArrayBuffer): Promise<string
       "Content-Type": "application/dicom",
       "Idempotency-Key": crypto.randomUUID(),
     };
-    const retry = await fetch(`${BFF_BASE_URL}${path}`, {
+    const retry = await fetch(`${bffBaseUrl()}${path}`, {
       method: "POST",
       headers: retryHeaders,
       credentials: fetchCredentials,

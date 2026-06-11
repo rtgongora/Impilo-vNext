@@ -14,6 +14,11 @@ const { push, replace, get, post } = vi.hoisted(() => ({
 vi.mock("next/navigation", () => ({
   useParams: () => ({ sessionId: "session-1" }),
   useRouter: () => ({ push, replace }),
+  useSearchParams: () => new URLSearchParams(),
+}));
+
+vi.mock("@/hooks/useRoleGroup", () => ({
+  useRoleGroup: () => ({ isCitizen: false }),
 }));
 
 vi.mock("@/components/AppLayout", () => ({
@@ -38,6 +43,26 @@ vi.mock("@/lib/api-client", () => ({
     get,
     post,
   },
+}));
+
+vi.mock("@/hooks/useWebRtcCall", () => ({
+  useWebRtcCall: () => ({
+    callActive: false,
+    callPhase: "idle" as const,
+    isVideoCall: false,
+    videoEnabled: false,
+    audioEnabled: true,
+    connectionState: "idle",
+    signalingStatus: "disconnected",
+    remotePeerId: null,
+    error: null,
+    localVideoRef: { current: null },
+    remoteVideoRef: { current: null },
+    startCall: vi.fn(),
+    endCall: vi.fn(),
+    toggleAudio: vi.fn(),
+    toggleVideo: vi.fn(),
+  }),
 }));
 
 vi.mock("@/hooks/queries/useTelemedicine", () => ({

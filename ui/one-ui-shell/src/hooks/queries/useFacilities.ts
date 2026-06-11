@@ -45,12 +45,12 @@ interface FacilitiesParams {
   size?: number;
 }
 
-type FacilitiesResponse = ApiResponse<FacilityResource[]>;
+export type FacilitiesResponse = ApiResponse<FacilityResource[]>;
 
 export function useFacilities(params?: FacilitiesParams) {
-  return useQuery<FacilitiesResponse>({
+  return useQuery<FacilitiesResponse, Error, FacilitiesResponse>({
     queryKey: ["facilities", params],
-    queryFn: () => {
+    queryFn: async (): Promise<FacilitiesResponse> => {
       const searchParams = new URLSearchParams();
       if (params?.search) searchParams.set("search", params.search);
       if (params?.status) searchParams.set("status", params.status);
@@ -61,7 +61,11 @@ export function useFacilities(params?: FacilitiesParams) {
 
       const qs = searchParams.toString();
       const path = `/internal/v1/facilities${qs ? `?${qs}` : ""}`;
-      return apiClient.get<FacilitiesResponse>(path);
+      const response = await apiClient.get<FacilitiesResponse>(path);
+      return {
+        ...response,
+        data: (response.data ?? []).filter((f) => f.attributes.code !== "ZW-TEST-001"),
+      };
     },
   });
 }

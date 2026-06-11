@@ -21,6 +21,11 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Type-check in CI/dev via `npm run type-check`. Skipping inside `next build`
+  // avoids Docker BuildKit OOM/EOF crashes on large workspaces during image builds.
+  typescript: {
+    ignoreDuringBuilds: true,
+  },
   webpack: (config, { isServer }) => {
     config.resolve.alias = {
       ...config.resolve.alias,

@@ -11,6 +11,8 @@ import { ShellSearchPalette } from "./ShellSearchPalette";
 import { ShellStartMenu } from "./ShellStartMenu";
 import { ShellTaskbar } from "./ShellTaskbar";
 import { ShellTaskManagerModal } from "./ShellTaskManagerModal";
+import { IncomingCallOverlay } from "@/components/telemedicine/IncomingCallOverlay";
+import { useTelemedicinePresence } from "@/hooks/useTelemedicinePresence";
 
 /**
  * Global OS-like shell: route sync + bottom taskbar + Start + search + task manager overlay.
@@ -18,6 +20,7 @@ import { ShellTaskManagerModal } from "./ShellTaskManagerModal";
 export function ShellChrome() {
   const pathname = usePathname();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  useTelemedicinePresence();
   const startOpen = useShellStore((s) => s.startOpen);
   const searchOpen = useShellStore((s) => s.searchOpen);
   const setStartOpen = useShellStore((s) => s.setStartOpen);
@@ -79,6 +82,7 @@ export function ShellChrome() {
       {show && startOpen ? <ShellStartMenu /> : null}
       {show && searchOpen ? <ShellSearchPalette /> : null}
       {show ? <ShellTaskManagerModal /> : null}
+      {show && isAuthenticated ? <IncomingCallOverlay /> : null}
     </>
   );
 }

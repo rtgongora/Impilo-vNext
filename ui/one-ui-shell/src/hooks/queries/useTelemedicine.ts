@@ -12,6 +12,7 @@ export interface TelemedicineSession {
     encounter_id: string | null;
     patient_id: string | null;
     provider_id: string | null;
+    provider_user_id?: string | null;
     facility_id: string | null;
     session_type: string;
     status: string;
@@ -33,6 +34,7 @@ interface CreateTelemedicineSessionPayload {
   encounter_id?: string;
   patient_id: string;
   provider_id?: string;
+  provider_user_id?: string;
   facility_id: string;
   referral_id?: string;
   session_type: string;
@@ -58,11 +60,11 @@ export function useTelemedicineSessions(params?: {
   if (params?.status) queryParams.set("status", params.status);
   const qs = queryParams.toString();
 
-  return useQuery<SessionsResponse>({
+  return useQuery<SessionsResponse, Error, SessionsResponse>({
     queryKey: ["telemedicine-sessions", params],
     queryFn: () =>
       apiClient.get<SessionsResponse>(
-        `/internal/v1/mobile/provider/telemedicine/sessions${qs ? `?${qs}` : ""}`
+        `/internal/v1/telemedicine/sessions${qs ? `?${qs}` : ""}`,
       ),
   });
 }
@@ -72,9 +74,7 @@ export function useJoinTelemedicineSession() {
 
   return useMutation<SessionResponse, unknown, { id: string }>({
     mutationFn: ({ id }) =>
-      apiClient.post<SessionResponse>(
-        `/internal/v1/mobile/provider/telemedicine/sessions/${id}/join`
-      ),
+      apiClient.post<SessionResponse>(`/internal/v1/telemedicine/sessions/${id}/join`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["telemedicine-sessions"] });
     },
@@ -91,8 +91,8 @@ export function useEndTelemedicineSession() {
   >({
     mutationFn: ({ id, notes }) =>
       apiClient.post<SessionResponse>(
-        `/internal/v1/mobile/provider/telemedicine/sessions/${id}/end`,
-        notes ? { notes } : undefined
+        `/internal/v1/telemedicine/sessions/${id}/end`,
+        notes ? { notes } : undefined,
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["telemedicine-sessions"] });
@@ -106,10 +106,7 @@ export function useCreateTelemedicineSession() {
   return useMutation<SessionResponse, unknown, CreateTelemedicineSessionPayload>(
     {
       mutationFn: (payload) =>
-        apiClient.post<SessionResponse>(
-          `/internal/v1/mobile/provider/telemedicine/sessions`,
-          payload
-        ),
+        apiClient.post<SessionResponse>(`/internal/v1/telemedicine/sessions`, payload),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["telemedicine-sessions"] });
       },

@@ -11,6 +11,7 @@ ARG NEXT_PUBLIC_API_GATEWAY_URL=http://localhost:10000
 ENV NEXT_PUBLIC_BFF_URL=$NEXT_PUBLIC_BFF_URL
 ENV NEXT_PUBLIC_API_GATEWAY_URL=$NEXT_PUBLIC_API_GATEWAY_URL
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 COPY ui/package.json ./package.json
 COPY ui/package-lock.json ./package-lock.json
@@ -29,10 +30,17 @@ RUN npm -w one-ui-shell run build
 FROM node:20-alpine AS runner
 ENV NODE_ENV=production
 ENV PORT=3000
+ENV INTERNAL_PORT=3001
 COPY --from=base /workspace/ui/one-ui-shell/.next-build/standalone /app
 COPY --from=base /workspace/ui/one-ui-shell/.next-build/static /app/one-ui-shell/.next-build/static
 COPY --from=base /workspace/ui/one-ui-shell/public /app/one-ui-shell/public
+# http-proxy + transitive deps for docker-entrypoint.cjs (not traced by Next standalone)
+COPY --from=base /workspace/ui/node_modules/http-proxy /app/one-ui-shell/node_modules/http-proxy
+COPY --from=base /workspace/ui/node_modules/eventemitter3 /app/one-ui-shell/node_modules/eventemitter3
+COPY --from=base /workspace/ui/node_modules/follow-redirects /app/one-ui-shell/node_modules/follow-redirects
+COPY --from=base /workspace/ui/node_modules/requires-port /app/one-ui-shell/node_modules/requires-port
+COPY ui/one-ui-shell/docker-entrypoint.cjs /app/one-ui-shell/docker-entrypoint.cjs
 
 WORKDIR /app/one-ui-shell
 EXPOSE 3000
-CMD ["node", "server.js"]
+CMD ["node", "docker-entrypoint.cjs"]

@@ -1,0 +1,16 @@
+# one-ui-shell image (context: repo root)
+**/node_modules
+**/.next
+**/.next-build
+.git
+vendor
+services
+apps
+docs
+tests
+reports
+infra
+compose
+ops
+tools
+*.md

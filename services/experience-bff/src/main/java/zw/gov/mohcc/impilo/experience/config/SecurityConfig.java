@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -112,6 +113,17 @@ public class SecurityConfig {
     private boolean allowAnonymous;
 
     @Bean
+    @Order(1)
+    public SecurityFilterChain webSocketSecurityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .securityMatcher("/ws/**")
+            .csrf(csrf -> csrf.disable())
+            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+        return http.build();
+    }
+
+    @Bean
+    @Order(2)
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource))
@@ -127,6 +139,12 @@ public class SecurityConfig {
                     // ── Public endpoints ──────────────────────────────────
                     .requestMatchers("/internal/v1/auth/**").permitAll()
                     .requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll()
+                    // WebRTC signaling — session id acts as room key; upgrade handshake cannot carry JWT headers reliably.
+                    .requestMatchers("/ws/telemedicine/**").permitAll()
+                    // Telemedicine session orchestration (web + mobile parity path)
+                    .requestMatchers("/internal/v1/telemedicine/sessions/**").authenticated()
+                    .requestMatchers("/internal/v1/telemedicine/calls/**").authenticated()
+                    .requestMatchers("/internal/v1/telemedicine/citizen/**").authenticated()
                     .requestMatchers(HttpMethod.GET, "/internal/v1/profile/visibility").authenticated()
 
                     // ── Admin zone ────────────────────────────────────────

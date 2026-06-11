@@ -67,6 +67,11 @@ impilo:
     redis-ttl-days: ${IMPILO_SHELL_WORKSPACE_REDIS_TTL_DAYS:120}
   security:
     allow-anonymous: false
+  telemedicine:
+    stun-urls: ${TELEMEDICINE_STUN_URLS:stun:stun.l.google.com:19302}
+    turn-urls: ${TELEMEDICINE_TURN_URLS:turn:localhost:3478}
+    turn-secret: ${TURN_SECRET:impilo-turn-secret}
+    turn-credential-ttl-seconds: ${TELEMEDICINE_TURN_TTL_SECONDS:86400}
   auth:
     fallback-enabled: ${AUTH_FALLBACK_ENABLED:false}
   scheduling:

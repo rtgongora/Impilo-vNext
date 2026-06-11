@@ -46,18 +46,18 @@ export function EHRLayout({ children }: { children: ReactNode }) {
         <OperationalContextStrip />
         <PatientBanner />
         {isEhrShell && <ClinicalToolbar hasActivePatient />}
-        <div className={`flex flex-1 min-h-0 ${menuRight ? "flex-row-reverse" : "flex-row"}`}>
-          <div className="relative">
+        <div className={`flex min-h-0 flex-1 overflow-hidden ${menuRight ? "flex-row-reverse" : "flex-row"}`}>
+          <div className="relative flex min-h-0 w-52 shrink-0 flex-col overflow-hidden">
             <EncounterMenu />
             <button
               onClick={togglePosition}
-              className="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors z-10"
+              className="absolute top-2 right-2 z-10 rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
               title={menuRight ? "Move menu to left" : "Move menu to right"}
             >
               {menuRight ? <PanelLeft className="w-3.5 h-3.5" /> : <PanelRight className="w-3.5 h-3.5" />}
             </button>
           </div>
-          <main className="relative flex-1 overflow-y-auto overflow-x-hidden p-3 pb-[calc(var(--shell-taskbar-height,0px)+0.75rem)]">
+          <main className="relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-3 pb-[calc(var(--shell-taskbar-height,0px)+0.75rem)]">
             {children}
             <ClinicalKnowledgeDock />
           </main>

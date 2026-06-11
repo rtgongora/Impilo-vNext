@@ -11,16 +11,24 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
-  ArrowLeft, CheckCircle2, Clock, FileText, Loader2, Lock,
-  MessageCircle, Mic, Phone, PhoneOff, Send, Shield, User,
-  Video, VideoOff, AlertTriangle, ClipboardList, Activity,
+  ArrowLeft, CheckCircle2, FileText, Loader2, Lock,
+  MessageCircle, Mic, MicOff, Phone, PhoneOff, Send, Shield, User,
+  Video, VideoOff, Activity,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { useRoleGroup } from "@/hooks/useRoleGroup";
+import { useWebRtcCall } from "@/hooks/useWebRtcCall";
+import { SHELL_TASKBAR_HEIGHT_PX } from "@/lib/shell/app-registry";
+import { prefetchIceServers } from "@/lib/webrtc/ice-servers";
+import {
+  DEMO_PATIENT_ID,
+  resolveTelemedicinePatientId,
+} from "@/lib/webrtc/dev-test-facility";
 
 interface Message {
   id: string;
@@ -34,8 +42,13 @@ interface Message {
 export default function TeleconsultSessionPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const sessionId = params.sessionId as string;
   const user = useAuthStore((s) => s.user);
+  const { isCitizen } = useRoleGroup();
+  const autoAnswer = searchParams.get("autoAnswer") === "1";
+  const autoAnswerVideo = searchParams.get("callType") === "video";
+  const invitePeerId = searchParams.get("peerId") ?? undefined;
 
   // Session state
   const [session, setSession] = useState<Record<string, unknown> | null>(null);
@@ -44,16 +57,65 @@ export default function TeleconsultSessionPage() {
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
 
-  // Communication state
-  const [callActive, setCallActive] = useState(false);
-  const [videoActive, setVideoActive] = useState(false);
+  const peerId = user?.id ?? "anonymous";
+  const sessionAttrs = (session?.attributes as Record<string, unknown> | undefined) ?? session;
+  const rawPatientId =
+    (sessionAttrs?.patient_id as string | undefined) ||
+    (sessionAttrs?.patientId as string | undefined) ||
+    (session?.patientId as string | undefined) ||
+    (session?.patient_id as string | undefined) ||
+    "";
+  const patientId = resolveTelemedicinePatientId(rawPatientId);
+  const providerUserId =
+    invitePeerId ||
+    (sessionAttrs?.provider_user_id as string | undefined) ||
+    (session?.provider_user_id as string | undefined);
+  const rtcPatientId = patientId || (!isCitizen ? DEMO_PATIENT_ID : undefined);
+  const {
+    callActive,
+    callPhase,
+    isVideoCall,
+    videoEnabled: cameraOn,
+    audioEnabled,
+    connectionState,
+    signalingStatus,
+    remotePeerId,
+    error: rtcError,
+    localVideoRef,
+    remoteVideoRef,
+    startCall,
+    endCall,
+    toggleAudio,
+    toggleVideo,
+  } = useWebRtcCall({
+    sessionId,
+    peerId,
+    patientId: isCitizen ? undefined : rtcPatientId,
+    targetUserId: isCitizen ? providerUserId : undefined,
+    callerName: user?.displayName || user?.email,
+    autoAnswer,
+    autoAnswerVideo,
+  });
+  const canStartCall =
+    !loading &&
+    !callActive &&
+    (isCitizen ? Boolean(providerUserId || autoAnswer) : Boolean(patientId || DEMO_PATIENT_ID));
+
   const [callDuration, setCallDuration] = useState(0);
   const callTimer = useRef<ReturnType<typeof setInterval> | null>(null);
-  const localVideoRef = useRef<HTMLVideoElement>(null);
-  const remoteVideoRef = useRef<HTMLVideoElement>(null);
-  const localStreamRef = useRef<MediaStream | null>(null);
-  const peerRef = useRef<RTCPeerConnection | null>(null);
-  const signalCursorRef = useRef(0);
+  const hadCallRef = useRef(false);
+
+  // Clear accept-call query params after a call ends so the same page can place or accept another call.
+  useEffect(() => {
+    if (callPhase !== "idle") {
+      hadCallRef.current = true;
+      return;
+    }
+    if (hadCallRef.current && (autoAnswer || invitePeerId)) {
+      router.replace(`/telemedicine/session/${sessionId}`, { scroll: false });
+      hadCallRef.current = false;
+    }
+  }, [autoAnswer, callPhase, invitePeerId, router, sessionId]);
 
   // Response draft (Stage 6)
   const [responseNote, setResponseNote] = useState("");
@@ -74,6 +136,11 @@ export default function TeleconsultSessionPage() {
   const [submittingCompletion, setSubmittingCompletion] = useState(false);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const messagesPath = `/internal/v1/telemedicine/sessions/${sessionId}/messages`;
+
+  useEffect(() => {
+    prefetchIceServers();
+  }, []);
 
   // Load session
   useEffect(() => {
@@ -82,17 +149,68 @@ export default function TeleconsultSessionPage() {
         const res = await apiClient.get<{ data: Record<string, unknown> }>(`/internal/v1/teleconsult/sessions/${sessionId}`);
         setSession(res.data);
       } catch {
-        // Session might not exist in teleconsult controller — create a shell
-        setSession({ id: sessionId, status: "IN_SESSION", stage: 5 });
+        try {
+          const list = await apiClient.get<{ data: Array<Record<string, unknown>> }>("/internal/v1/telemedicine/sessions");
+          const found = (list.data ?? []).find((s) => String(s.id) === sessionId);
+          if (found) {
+            setSession(found);
+          } else {
+            setSession({ id: sessionId, status: "IN_SESSION", stage: 5 });
+          }
+        } catch {
+          setSession({ id: sessionId, status: "IN_SESSION", stage: 5 });
+        }
       }
       try {
-        const msgs = await apiClient.get<{ data: Message[] }>(`/internal/v1/teleconsult/sessions/${sessionId}/messages`);
+        const msgs = await apiClient.get<{ data: Message[] }>(messagesPath);
         setMessages(msgs.data ?? []);
-      } catch { /* no messages yet */ }
+      } catch {
+        try {
+          const legacy = await apiClient.get<{ data: Message[] }>(
+            `/internal/v1/teleconsult/sessions/${sessionId}/messages`,
+          );
+          setMessages(legacy.data ?? []);
+        } catch { /* no messages yet */ }
+      }
+      try {
+        await apiClient.post(`/internal/v1/telemedicine/sessions/${sessionId}/join`, {});
+      } catch { /* join best-effort for RTC room */ }
       setLoading(false);
     }
     load();
-  }, [sessionId]);
+  }, [messagesPath, sessionId]);
+
+  // Poll chat so both participants see new messages without refresh
+  useEffect(() => {
+    let cancelled = false;
+
+    async function refreshMessages() {
+      try {
+        const res = await apiClient.get<{ data: Message[] }>(messagesPath);
+        if (!cancelled) {
+          setMessages(res.data ?? []);
+        }
+      } catch {
+        try {
+          const legacy = await apiClient.get<{ data: Message[] }>(
+            `/internal/v1/teleconsult/sessions/${sessionId}/messages`,
+          );
+          if (!cancelled) {
+            setMessages(legacy.data ?? []);
+          }
+        } catch { /* ignore */ }
+      }
+    }
+
+    const timer = setInterval(() => {
+      void refreshMessages();
+    }, 2000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [messagesPath, sessionId]);
 
   // Auto-scroll chat
   useEffect(() => {
@@ -121,113 +239,19 @@ export default function TeleconsultSessionPage() {
     return () => { if (callTimer.current) clearInterval(callTimer.current); };
   }, [callActive]);
 
-  useEffect(() => {
-    return () => {
-      localStreamRef.current?.getTracks().forEach((track) => track.stop());
-      peerRef.current?.close();
-    };
-  }, []);
-
-  async function postSignal(type: string, payload: unknown) {
-    await apiClient.post(`/internal/v1/mobile/provider/telemedicine/sessions/${sessionId}/rtc/signal`, {
-      type,
-      from: user?.id ?? "anonymous",
-      payload,
-    });
-  }
-
-  async function ensurePeerConnection() {
-    if (peerRef.current) return peerRef.current;
-    const pc = new RTCPeerConnection({
-      iceServers: [{ urls: ["stun:stun.l.google.com:19302"] }],
-    });
-    pc.onicecandidate = (event) => {
-      if (event.candidate) {
-        void postSignal("ice-candidate", event.candidate.toJSON());
-      }
-    };
-    pc.ontrack = (event) => {
-      if (remoteVideoRef.current && event.streams[0]) {
-        remoteVideoRef.current.srcObject = event.streams[0];
-      }
-    };
-    if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach((track) => {
-        pc.addTrack(track, localStreamRef.current as MediaStream);
-      });
-    }
-    peerRef.current = pc;
-    return pc;
-  }
-
-  async function startVideoCall() {
-    if (!localStreamRef.current) {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-      localStreamRef.current = stream;
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = stream;
-      }
-    }
-    const pc = await ensurePeerConnection();
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-    await postSignal("offer", offer);
-  }
-
-  async function stopVideoCall() {
-    setVideoActive(false);
-    setCallActive(false);
-    localStreamRef.current?.getTracks().forEach((track) => track.stop());
-    localStreamRef.current = null;
-    peerRef.current?.close();
-    peerRef.current = null;
-    if (localVideoRef.current) localVideoRef.current.srcObject = null;
-    if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
-  }
-
-  useEffect(() => {
-    if (!callActive) return;
-    const interval = setInterval(async () => {
-      try {
-        const res = await apiClient.get<{ data: Array<Record<string, unknown>> }>(
-          `/internal/v1/mobile/provider/telemedicine/sessions/${sessionId}/rtc/signals?after=${signalCursorRef.current}`,
-        );
-        const signals = res.data ?? [];
-        for (const signal of signals) {
-          const seq = Number(signal.sequence ?? 0);
-          if (seq > signalCursorRef.current) signalCursorRef.current = seq;
-          if ((signal.from as string) === (user?.id ?? "anonymous")) continue;
-          const type = String(signal.type ?? "");
-          const payload = signal.payload;
-          const pc = await ensurePeerConnection();
-          if (type === "offer" && payload) {
-            await pc.setRemoteDescription(new RTCSessionDescription(payload as RTCSessionDescriptionInit));
-            const answer = await pc.createAnswer();
-            await pc.setLocalDescription(answer);
-            await postSignal("answer", answer);
-          } else if (type === "answer" && payload) {
-            await pc.setRemoteDescription(new RTCSessionDescription(payload as RTCSessionDescriptionInit));
-          } else if (type === "ice-candidate" && payload) {
-            await pc.addIceCandidate(new RTCIceCandidate(payload as RTCIceCandidateInit));
-          }
-        }
-      } catch {
-        // Keep polling during call; transient errors are tolerated.
-      }
-    }, 1200);
-    return () => clearInterval(interval);
-  }, [callActive, sessionId, user?.id]);
-
   async function handleSendMessage() {
     if (!newMessage.trim()) return;
     setSending(true);
     try {
-      const res = await apiClient.post<{ data: Message }>(`/internal/v1/teleconsult/sessions/${sessionId}/messages`, {
+      const res = await apiClient.post<{ data: Message }>(messagesPath, {
         content: newMessage.trim(),
         senderName: user?.displayName || user?.email || "Unknown",
         type: "TEXT",
       });
-      setMessages((prev) => [...prev, res.data]);
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === res.data.id)) return prev;
+        return [...prev, res.data];
+      });
     } catch {
       setMessages((prev) => [...prev, {
         id: "local-" + Date.now(),
@@ -361,80 +385,150 @@ export default function TeleconsultSessionPage() {
   // ── 3-Pane Session Workspace ──
   return (
     <AppLayout>
-    <div className="flex h-full min-h-[calc(100dvh-8rem)] flex-col bg-gray-50">
-      {/* Top bar */}
-      <header className="h-12 bg-white border-b px-4 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-3">
+    <div
+      className="relative flex h-[calc(100dvh-5rem)] min-h-0 flex-col bg-gray-50"
+      style={{ paddingBottom: callActive ? SHELL_TASKBAR_HEIGHT_PX + 88 : 0 }}
+    >
+      <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b bg-white px-4 py-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-3">
           <Link href="/telemedicine" className="text-gray-400 hover:text-gray-600">
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="h-4 w-4" />
           </Link>
-          <Video className="w-4 h-4 text-impilo-500" />
+          <Video className="h-4 w-4 text-impilo-500" />
           <span className="text-sm font-semibold text-gray-900">Teleconsult Session</span>
-          <span className={`px-2 py-0.5 text-[10px] font-medium rounded-full ${
+          <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
             isClosed ? "bg-gray-100 text-gray-600"
             : isResponded ? "bg-blue-100 text-blue-700"
+            : callPhase === "ringing" ? "bg-sky-100 text-sky-700"
             : callActive ? "bg-green-100 text-green-700"
             : "bg-amber-100 text-amber-700"
           }`}>
-            {isClosed ? "CLOSED" : isResponded ? "RESPONDED" : callActive ? "IN CALL" : status}
+            {isClosed ? "CLOSED" : isResponded ? "RESPONDED" : callPhase === "ringing" ? "RINGING" : callActive ? "IN CALL" : status}
           </span>
           {callActive && (
-            <span className="text-xs text-green-600 font-mono">{formatTime(callDuration)}</span>
+            <span className="font-mono text-xs text-green-600">{formatTime(callDuration)}</span>
           )}
         </div>
         <div className="flex items-center gap-2">
           {isResponded && !isClosed && (
             <button onClick={() => setShowCompletion(true)}
-              className="px-3 py-1 text-xs font-medium bg-impilo-500 text-white rounded-md hover:bg-impilo-600">
+              className="rounded-md bg-impilo-500 px-3 py-1 text-xs font-medium text-white hover:bg-impilo-600">
               Complete & Close
             </button>
           )}
-          <span className="text-xs text-gray-400">{sessionId}</span>
+          <span className="max-w-[10rem] truncate text-xs text-gray-400">{sessionId}</span>
         </div>
       </header>
 
-      {/* 3-pane body */}
-      <div className="flex flex-1 min-h-0">
-
+      <div className="flex min-h-0 flex-1 overflow-hidden">
         {/* ═══ LEFT PANE — Communication ═══ */}
-        <div className="w-80 border-r bg-white flex flex-col shrink-0">
-          {/* Call controls */}
-          <div className="p-3 border-b flex items-center justify-center gap-2">
-            <button onClick={() => { if (callActive) { void stopVideoCall(); } else { setCallActive(true); } setVideoActive(false); }}
-              className={`p-2.5 rounded-full transition-colors ${callActive ? "bg-red-500 text-white" : "bg-green-100 text-green-700 hover:bg-green-200"}`}
-              title={callActive ? "End call" : "Audio call"}>
-              {callActive ? <PhoneOff className="w-5 h-5" /> : <Phone className="w-5 h-5" />}
-            </button>
-            <button onClick={async () => {
-              if (videoActive) {
-                await stopVideoCall();
-                return;
-              }
-              setCallActive(true);
-              setVideoActive(true);
-              await startVideoCall();
-            }}
-              className={`p-2.5 rounded-full transition-colors ${videoActive ? "bg-red-500 text-white" : "bg-blue-100 text-blue-700 hover:bg-blue-200"}`}
-              title={videoActive ? "Stop video" : "Video call"}>
-              {videoActive ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
-            </button>
-            <button className="p-2.5 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200" title="Voice note">
-              <Mic className="w-5 h-5" />
-            </button>
+        <div className="flex w-80 shrink-0 flex-col border-r bg-white">
+          <div className="border-b p-3">
+            <div className="flex items-center justify-center gap-2">
+              {!callActive ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => void startCall({ video: false })}
+                    disabled={!canStartCall}
+                    className="rounded-full bg-green-100 p-2.5 text-green-700 transition-colors hover:bg-green-200 disabled:cursor-not-allowed disabled:opacity-40"
+                    title="Start audio call"
+                  >
+                    <Phone className="h-5 w-5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void startCall({ video: true })}
+                    disabled={!canStartCall}
+                    className="rounded-full bg-blue-100 p-2.5 text-blue-700 transition-colors hover:bg-blue-200 disabled:cursor-not-allowed disabled:opacity-40"
+                    title="Start video call"
+                  >
+                    <Video className="h-5 w-5" />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={endCall}
+                    className="rounded-full bg-red-500 p-2.5 text-white transition-colors hover:bg-red-600"
+                    title="End call"
+                  >
+                    <PhoneOff className="h-5 w-5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={toggleAudio}
+                    className={`rounded-full p-2.5 transition-colors ${audioEnabled ? "bg-gray-100 text-gray-600 hover:bg-gray-200" : "bg-red-100 text-red-600"}`}
+                    title={audioEnabled ? "Mute microphone" : "Unmute microphone"}
+                  >
+                    {audioEnabled ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
+                  </button>
+                  {isVideoCall && (
+                    <button
+                      type="button"
+                      onClick={toggleVideo}
+                      className={`rounded-full p-2.5 transition-colors ${cameraOn ? "bg-blue-100 text-blue-700 hover:bg-blue-200" : "bg-amber-100 text-amber-700"}`}
+                      title={cameraOn ? "Turn camera off" : "Turn camera on"}
+                    >
+                      {cameraOn ? <Video className="h-5 w-5" /> : <VideoOff className="h-5 w-5" />}
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+            {(callPhase === "ringing" || rtcError || (!canStartCall && !callActive && !loading)) && (
+              <div className="mt-2 space-y-0.5 text-center">
+                {callPhase === "ringing" && (
+                  <p className="text-[11px] text-sky-700">Ringing — waiting for accept…</p>
+                )}
+                {!canStartCall && !callActive && !loading && !isCitizen && !patientId && (
+                  <p className="text-[11px] text-amber-700">Loading session patient context…</p>
+                )}
+                {rtcError && <p className="text-[11px] text-red-600">{rtcError}</p>}
+              </div>
+            )}
           </div>
 
-          {/* Video preview */}
-          {videoActive && (
-            <div className="grid h-48 grid-cols-2 gap-2 bg-gray-900 p-2">
-              <video ref={localVideoRef} autoPlay muted playsInline className="h-full w-full rounded object-cover" />
-              <video ref={remoteVideoRef} autoPlay playsInline className="h-full w-full rounded object-cover bg-gray-800" />
+          {callActive && isVideoCall && (
+            <div className="shrink-0 border-b bg-gray-900 p-2">
+              <div className="grid h-44 grid-cols-2 gap-1.5">
+                <div className="relative overflow-hidden rounded-md bg-gray-800">
+                  <span className="absolute left-1.5 top-1.5 z-10 rounded bg-black/60 px-1.5 py-0.5 text-[9px] font-medium text-white">You</span>
+                  <video ref={localVideoRef} autoPlay muted playsInline className={cameraOn ? "h-full w-full object-cover" : "hidden"} />
+                  {!cameraOn && (
+                    <div className="flex h-full min-h-[5.5rem] items-center justify-center text-[10px] text-gray-400">Camera off</div>
+                  )}
+                </div>
+                <div className="relative overflow-hidden rounded-md bg-gray-800">
+                  <span className="absolute left-1.5 top-1.5 z-10 rounded bg-black/60 px-1.5 py-0.5 text-[9px] font-medium text-white">Remote</span>
+                  <video ref={remoteVideoRef} autoPlay playsInline className="h-full w-full object-cover" />
+                </div>
+              </div>
+            </div>
+          )}
+          {callActive && !isVideoCall && (
+            <div className="sr-only" aria-hidden>
+              <video ref={localVideoRef} autoPlay muted playsInline />
+              <video ref={remoteVideoRef} autoPlay playsInline />
+            </div>
+          )}
+          {callActive && !isVideoCall && (
+            <div className="flex shrink-0 items-center justify-center gap-2 border-b bg-green-50 px-3 py-2 text-xs text-green-800">
+              <Phone className="h-3.5 w-3.5" />
+              Audio call active
             </div>
           )}
 
-          {/* Chat messages */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-2">
+          <div className="flex shrink-0 items-center gap-2 border-b px-3 py-2">
+            <MessageCircle className="h-3.5 w-3.5 text-impilo-500" />
+            <span className="text-xs font-semibold text-gray-800">Session chat</span>
+            <span className="text-[10px] text-gray-400">· live</span>
+          </div>
+
+          <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3">
             {messages.length === 0 && (
-              <p className="text-xs text-gray-400 text-center py-8">No messages yet. Start the conversation.</p>
+              <p className="py-8 text-center text-xs text-gray-400">No messages yet. Start the conversation.</p>
             )}
             {messages.map((msg) => {
               const isMe = msg.senderId === user?.id;
@@ -443,9 +537,9 @@ export default function TeleconsultSessionPage() {
                   <div className={`max-w-[85%] rounded-xl px-3 py-2 ${
                     isMe ? "bg-impilo-500 text-white" : "bg-gray-100 text-gray-900"
                   }`}>
-                    {!isMe && <p className="text-[10px] font-semibold opacity-70 mb-0.5">{msg.senderName}</p>}
-                    <p className="text-sm">{msg.content}</p>
-                    <p className={`text-[9px] mt-0.5 ${isMe ? "text-impilo-100" : "text-gray-400"}`}>
+                    {!isMe && <p className="mb-0.5 text-[10px] font-semibold opacity-70">{msg.senderName}</p>}
+                    <p className="text-sm leading-relaxed">{msg.content}</p>
+                    <p className={`mt-0.5 text-[9px] ${isMe ? "text-impilo-100" : "text-gray-400"}`}>
                       {new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                     </p>
                   </div>
@@ -455,30 +549,35 @@ export default function TeleconsultSessionPage() {
             <div ref={chatEndRef} />
           </div>
 
-          {/* Chat input */}
-          <div className="p-2 border-t">
+          <div className="shrink-0 border-t p-2">
             <div className="flex gap-1.5">
-              <input value={newMessage} onChange={(e) => setNewMessage(e.target.value)}
+              <input
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } }}
                 placeholder="Type a message..."
-                className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-impilo-400" />
-              <button onClick={handleSendMessage} disabled={sending || !newMessage.trim()}
-                className="p-2 bg-impilo-500 text-white rounded-lg hover:bg-impilo-600 disabled:opacity-40">
-                <Send className="w-4 h-4" />
+                className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-1 focus:ring-impilo-400"
+              />
+              <button
+                onClick={handleSendMessage}
+                disabled={sending || !newMessage.trim()}
+                className="rounded-lg bg-impilo-500 p-2 text-white hover:bg-impilo-600 disabled:opacity-40"
+              >
+                <Send className="h-4 w-4" />
               </button>
             </div>
           </div>
         </div>
 
         {/* ═══ CENTER PANE — Response Note Draft ═══ */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 min-w-0">
+        <div className="min-h-0 min-w-0 flex-1 space-y-4 overflow-y-auto p-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-              <FileText className="w-4 h-4 text-gray-500" /> Response Note
+            <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+              <FileText className="h-4 w-4 text-gray-500" /> Response Note
             </h3>
             <div className="flex items-center gap-2 text-xs text-gray-400">
               {lastSaved && <span>Saved {lastSaved}</span>}
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+              <span className="h-1.5 w-1.5 rounded-full bg-green-400" />
             </div>
           </div>
 
@@ -540,13 +639,12 @@ export default function TeleconsultSessionPage() {
         </div>
 
         {/* ═══ RIGHT PANE — Information ═══ */}
-        <div className="w-72 border-l bg-white overflow-y-auto shrink-0">
-          {/* Patient summary */}
-          <div className="p-3 border-b">
-            <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Patient</h4>
+        <div className="w-72 shrink-0 overflow-y-auto border-l bg-white">
+          <div className="border-b p-3">
+            <h4 className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Patient</h4>
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-impilo-100 flex items-center justify-center">
-                <User className="w-4 h-4 text-impilo-600" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-impilo-100">
+                <User className="h-4 w-4 text-impilo-600" />
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-900">{(session?.patientId as string)?.substring(0, 12) || "Patient"}</p>
@@ -555,9 +653,8 @@ export default function TeleconsultSessionPage() {
             </div>
           </div>
 
-          {/* Referral info */}
-          <div className="p-3 border-b">
-            <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Referral</h4>
+          <div className="border-b p-3">
+            <h4 className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Referral</h4>
             <div className="space-y-1.5 text-xs">
               <div className="flex justify-between"><span className="text-gray-500">Urgency</span><span className="font-medium">{(session?.urgency as string) || "—"}</span></div>
               <div className="flex justify-between"><span className="text-gray-500">Specialty</span><span className="font-medium">{(session?.specialty as string) || "—"}</span></div>
@@ -566,9 +663,8 @@ export default function TeleconsultSessionPage() {
             </div>
           </div>
 
-          {/* Consent */}
-          <div className="p-3 border-b">
-            <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Consent</h4>
+          <div className="border-b p-3">
+            <h4 className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Consent</h4>
             {Boolean(session?.consentToken) ? (
               <div className="flex items-center gap-1.5 text-xs text-green-700">
                 <Shield className="w-3.5 h-3.5" /> Verified
@@ -578,17 +674,15 @@ export default function TeleconsultSessionPage() {
             )}
           </div>
 
-          {/* Referral letter excerpt */}
           {Boolean(session?.referralLetter) && (
-            <div className="p-3 border-b">
-              <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Referral Letter</h4>
+            <div className="border-b p-3">
+              <h4 className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Referral Letter</h4>
               <p className="text-xs text-gray-600 line-clamp-6">{session?.referralLetter as string}</p>
             </div>
           )}
 
-          {/* Timeline */}
           <div className="p-3">
-            <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Timeline</h4>
+            <h4 className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Timeline</h4>
             <div className="space-y-2">
               {[
                 session?.createdAt && { label: "Created", time: session.createdAt as string, icon: Activity },
@@ -611,6 +705,32 @@ export default function TeleconsultSessionPage() {
           </div>
         </div>
       </div>
+
+      {callActive && (
+        <div
+          className="fixed inset-x-0 z-[250] mx-auto flex max-w-lg items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 shadow-2xl backdrop-blur-md"
+          style={{ bottom: `calc(${SHELL_TASKBAR_HEIGHT_PX}px + 0.75rem)` }}
+        >
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-gray-900">
+              {callPhase === "ringing" ? "Ringing…" : isVideoCall ? "Video call" : "Audio call"}
+              {callPhase !== "ringing" ? ` · ${formatTime(callDuration)}` : ""}
+            </p>
+            <p className="truncate text-xs text-gray-500">
+              {callPhase === "ringing"
+                ? "Waiting for accept"
+                : `${connectionState} · ${signalingStatus}${remotePeerId ? " · connected" : " · waiting for peer"}`}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={endCall}
+            className="shrink-0 rounded-full bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-600"
+          >
+            End
+          </button>
+        </div>
+      )}
     </div>
     </AppLayout>
   );

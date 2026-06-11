@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.telemedicine.TelemedicineSessionChatStore;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -29,7 +30,12 @@ public class TeleconsultController {
 
     private static final Logger log = LoggerFactory.getLogger(TeleconsultController.class);
     private static final List<Map<String, Object>> SESSIONS = new CopyOnWriteArrayList<>();
-    private static final List<Map<String, Object>> MESSAGES = new CopyOnWriteArrayList<>();
+
+    private final TelemedicineSessionChatStore chatStore;
+
+    public TeleconsultController(TelemedicineSessionChatStore chatStore) {
+        this.chatStore = chatStore;
+    }
 
     // ── Stage 1: Create session ───────────────────────────────────────
 
@@ -225,16 +231,12 @@ public class TeleconsultController {
             @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
             @RequestBody Map<String, Object> body) {
 
-        String msgId = "msg-" + UUID.randomUUID().toString().substring(0, 8);
-        Map<String, Object> msg = new LinkedHashMap<>();
-        msg.put("id", msgId);
-        msg.put("sessionId", id);
-        msg.put("senderId", actorId);
-        msg.put("senderName", body.getOrDefault("senderName", "Unknown"));
-        msg.put("content", body.get("content"));
-        msg.put("type", body.getOrDefault("type", "TEXT"));
-        msg.put("timestamp", OffsetDateTime.now().toString());
-        MESSAGES.add(msg);
+        Map<String, Object> msg = chatStore.addMessage(
+                id,
+                actorId,
+                body.get("senderName") != null ? body.get("senderName").toString() : null,
+                body.get("content") != null ? body.get("content").toString() : "",
+                body.get("type") != null ? body.get("type").toString() : "TEXT");
 
         return ResponseEntity.status(HttpStatus.CREATED).body(wrap(msg, requestId, correlationId));
     }
@@ -245,9 +247,9 @@ public class TeleconsultController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
-        List<Map<String, Object>> msgs = MESSAGES.stream()
-                .filter(m -> id.equals(m.get("sessionId"))).collect(Collectors.toList());
-        return ResponseEntity.ok(Map.of("data", msgs, "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        return ResponseEntity.ok(Map.of(
+                "data", chatStore.listMessages(id),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
     // ── Stage 6: Submit response ─────────────────────────────────────

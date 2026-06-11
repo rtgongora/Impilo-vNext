@@ -27,14 +27,8 @@ services:
       - "5432:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
+      # DB creation only — data seeds (02–08) require Flyway tables and fail on fresh init.
       - ./scripts/seed/01-init-databases.sql:/docker-entrypoint-initdb.d/01-init-databases.sql
-      - ./scripts/seed/02-seed-tuso.sql:/docker-entrypoint-initdb.d/02-seed-tuso.sql
-      - ./scripts/seed/03-seed-vito.sql:/docker-entrypoint-initdb.d/03-seed-vito.sql
-      - ./scripts/seed/04-seed-varapi.sql:/docker-entrypoint-initdb.d/04-seed-varapi.sql
-      - ./scripts/seed/05-seed-tshepo.sql:/docker-entrypoint-initdb.d/05-seed-tshepo.sql
-      - ./scripts/seed/06-seed-zibo.sql:/docker-entrypoint-initdb.d/06-seed-zibo.sql
-      - ./scripts/seed/07-seed-pct.sql:/docker-entrypoint-initdb.d/07-seed-pct.sql
-      - ./scripts/seed/08-seed-oros.sql:/docker-entrypoint-initdb.d/08-seed-oros.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-impilo}"]
       interval: 5s
@@ -563,9 +557,13 @@ services:
       TSHEPO_AUTHZ_BASE_URL: http://tshepo-authz:8081
       TSHEPO_BASE_URL: http://tshepo:8081
       ZIBO_BASE_URL: http://zibo:8085
+      TELEMEDICINE_STUN_URLS: stun:stun.l.google.com:19302
+      TELEMEDICINE_TURN_URLS: turn:${HOST_LAN_IP:-localhost}:3478
+      TURN_SECRET: ${TURN_SECRET:-impilo-turn-secret}
+      IMPILO_BFF_FACILITIES_MODE: ${IMPILO_BFF_FACILITIES_MODE:-stub}
     mem_limit: 1024m
     ports:
-      - "8160:8160"
+      - "0.0.0.0:8160:8160"
     depends_on:
       postgres:
         condition: service_healthy
@@ -621,7 +619,7 @@ services:
       --fingerprint
       --use-auth-secret
       --static-auth-secret=${TURN_SECRET:-impilo-turn-secret}
-      --external-ip=127.0.0.1
+      --external-ip=${HOST_LAN_IP:-127.0.0.1}
       --listening-port=3478
       --min-port=49152
       --max-port=49200
@@ -640,17 +638,18 @@ services:
         NEXT_PUBLIC_API_GATEWAY_URL: http://localhost:10000
     environment:
       NEXT_PUBLIC_BFF_URL: http://localhost:8160
+      NEXT_PUBLIC_BFF_WS_URL: ws://localhost:8160
       NEXT_PUBLIC_API_GATEWAY_URL: http://localhost:10000
       API_GATEWAY_URL: http://envoy:10000
       BFF_URL: http://experience-bff:8160
       HOSTNAME: "0.0.0.0"
     ports:
-      - "3000:3000"
+      - "0.0.0.0:3000:3000"
     depends_on:
       experience-bff:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000 || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/auth/login >/dev/null || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10

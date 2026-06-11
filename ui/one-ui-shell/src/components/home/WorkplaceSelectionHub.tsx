@@ -124,6 +124,13 @@ export function WorkplaceSelectionHub({
             <p className="mt-1 text-sm text-slate-500">
               Once facilities are provisioned, they will appear here for inline selection.
             </p>
+            <Link
+              href={browseHref}
+              className="mt-5 inline-flex items-center gap-2 rounded-full bg-sky-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-700"
+            >
+              Browse facilities
+              <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
