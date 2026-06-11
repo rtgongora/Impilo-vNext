@@ -46,9 +46,14 @@ export function ProviderTabs() {
   const tabs = [
     {
       key: "dashboard" as const,
-      label: "Launch",
-      icon: tabIcon(providerTab === "dashboard" ? "rocket" : "rocket-outline", providerTab === "dashboard"),
+      label: "Work",
+      icon: tabIcon(providerTab === "dashboard" ? "briefcase" : "briefcase-outline", providerTab === "dashboard"),
       badge: unreadNotifications > 0 ? unreadNotifications : undefined,
+    },
+    {
+      key: "professional" as const,
+      label: "My Professional",
+      icon: tabIcon(providerTab === "professional" ? "id-card" : "id-card-outline", providerTab === "professional"),
     },
     {
       key: "patients" as const,
@@ -91,13 +96,8 @@ export function ProviderTabs() {
     },
     {
       key: "apps" as const,
-      label: "Apps",
-      icon: tabIcon(providerTab === "apps" ? "apps" : "apps-outline", providerTab === "apps"),
-    },
-    {
-      key: "professional" as const,
-      label: "Profile",
-      icon: tabIcon(providerTab === "professional" ? "person-circle" : "person-circle-outline", providerTab === "professional"),
+      label: "Training",
+      icon: tabIcon(providerTab === "apps" ? "school" : "school-outline", providerTab === "apps"),
     },
   ];
 

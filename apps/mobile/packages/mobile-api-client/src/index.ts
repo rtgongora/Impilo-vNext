@@ -31,3 +31,7 @@ export type { MvumoCommunicationPreferencesEnvelope } from "./mvumo";
 // Pagination
 export { fetchPage, fetchAllPages, buildPaginationQuery } from "./pagination";
 export type { PaginationParams } from "./pagination";
+
+// Safe fetch wrapper
+export { safeApi } from "./safeApi";
+export type { ApiResult } from "./safeApi";

@@ -4,7 +4,7 @@
  * Shows assigned tasks, today's encounters, overdue items, and quick actions.
  */
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@impilo/mobile-auth";
@@ -19,7 +19,10 @@ import {
   LoadingSpinner,
   EmptyState,
   ErrorState,
+  DashboardSection,
+  ServiceCard,
 } from "@impilo/mobile-design-system";
+import { buildProviderServiceCards } from "../../navigation/providerServiceNavigation";
 import { useCommunicationDashboard } from "@impilo/mobile-messaging";
 import { appStore, useAppStore } from "../../stores/appStore";
 import { useEncounterStore } from "../../stores/encounterStore";
@@ -133,6 +136,16 @@ export function ProviderDashboardScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+
+  const serviceCards = useMemo(
+    () =>
+      buildProviderServiceCards({
+        setProviderTab,
+        setMode,
+        openClinicalTool: (toolId) => appStore.getState().setClinicalToolsInitialTab(toolId),
+      }),
+    [setProviderTab, setMode]
+  );
 
   const loadDashboard = useCallback(async () => {
     if (!facilityId) {
@@ -367,6 +380,30 @@ export function ProviderDashboardScreen() {
             </Pressable>
           ) : null}
         </View>
+
+        <DashboardSection
+          title="Work Services"
+          subtitle="Clinical, orders, imaging, blood bank, inventory, training, and live events"
+          testID="provider-service-hub"
+        >
+          {serviceCards.map((service) => (
+            <ServiceCard
+              key={service.slug}
+              testID={`service-card-${service.slug}`}
+              name={service.name}
+              description={service.description}
+              icon={
+                service.icon ? (
+                  <Ionicons name={service.icon as never} size={22} color={BLUE} />
+                ) : undefined
+              }
+              wiringStatus={service.wiringStatus}
+              onPress={service.onPress}
+              disabled={service.disabled}
+              accentColor={BLUE}
+            />
+          ))}
+        </DashboardSection>
 
         <Text style={styles.sectionLabel}>Fundo Learning Snapshot</Text>
         <View style={styles.metricsRow}>

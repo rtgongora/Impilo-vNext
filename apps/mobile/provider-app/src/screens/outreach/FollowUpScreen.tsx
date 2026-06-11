@@ -16,7 +16,7 @@ import {
   ErrorState,
 } from "@impilo/mobile-design-system";
 import { getHouseholds, getVisitsForHousehold } from "../../services/householdService";
-import { useAppStore } from "../../stores/appStore";
+import { appStore, useAppStore } from "../../stores/appStore";
 import type { Household, CommunityVisit } from "../../types";
 
 interface ScheduleItem {
@@ -93,7 +93,9 @@ export function FollowUpScreen() {
                     title="Start Visit"
                     variant="primary"
                     size="sm"
-                    onPress={() => {}}
+                    onPress={() => {
+                      appStore.getState().setMode("outreach");
+                    }}
                     testID={`start-followup-${household.id}`}
                   />
                 </View>

@@ -2,6 +2,18 @@
   "name": "@impilo/mobile",
   "private": true,
   "version": "0.1.0",
+  "scripts": {
+    "lint": "pnpm -r --if-present run lint",
+    "typecheck": "pnpm -r --if-present run type-check",
+    "test": "pnpm -r --if-present run test",
+    "build": "pnpm --filter @impilo/citizen-app exec tsc --noEmit && pnpm --filter @impilo/provider-app exec tsc --noEmit",
+    "guard:mobile-parity": "node ../../scripts/guard/mobile-service-parity.mjs && node ../../scripts/guard/mobile-service-wiring.mjs && node ../../scripts/guard/mobile-no-mocks.mjs",
+    "guard:mobile-wiring": "node ../../scripts/guard/mobile-service-wiring.mjs",
+    "mobile:lint": "pnpm --filter @impilo/citizen-app lint && pnpm --filter @impilo/provider-app lint",
+    "mobile:typecheck": "pnpm --filter @impilo/citizen-app type-check && pnpm --filter @impilo/provider-app type-check",
+    "mobile:test": "pnpm --filter @impilo/citizen-app test && pnpm --filter @impilo/provider-app test && pnpm --filter @impilo/mobile-registry test",
+    "mobile:build": "pnpm mobile:typecheck"
+  },
   "workspaces": [
     "citizen-app",
     "provider-app",

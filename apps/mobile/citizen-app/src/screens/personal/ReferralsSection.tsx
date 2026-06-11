@@ -19,6 +19,7 @@ import {
   ErrorState,
 } from "@impilo/mobile-design-system";
 import type { Referral } from "../../types";
+import { appStore } from "../../stores/appStore";
 
 const STATUS_VARIANT: Record<string, "default" | "warning" | "success" | "destructive"> = {
   PENDING: "warning",
@@ -147,7 +148,10 @@ export function ReferralsSection({ patientId }: ReferralsSectionProps) {
         <Button
           title="Request New Referral"
           variant="secondary"
-          onPress={() => {}}
+          onPress={() => {
+            appStore.getState().setPersonalSectionRequest("discover-providers");
+            appStore.getState().setActiveTab("personal");
+          }}
         />
       </ScrollView>
     </Screen>

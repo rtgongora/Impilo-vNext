@@ -20,6 +20,7 @@ import {
   Progress,
 } from "@impilo/mobile-design-system";
 import type { CarePlan } from "../../types";
+import { appStore } from "../../stores/appStore";
 
 const STATUS_VARIANT: Record<string, "default" | "warning" | "success" | "destructive"> = {
   ACTIVE: "default",
@@ -184,7 +185,7 @@ export function CarePlansSection({ patientId }: CarePlansSectionProps) {
         <Button
           title="Request Care Plan"
           variant="secondary"
-          onPress={() => {}}
+          onPress={() => appStore.getState().setActiveTab("telehealth")}
         />
       </ScrollView>
     </Screen>

@@ -40,6 +40,7 @@ import { PatientConsentScreen } from "./PatientConsentScreen";
 import { SupportScreen } from "../support/SupportScreen";
 import { NhumeTrackingScreen } from "../NhumeTrackingScreen";
 import { ProductionReadinessJourneyScreen } from "./ProductionReadinessJourneyScreen";
+import { ProviderDiscoveryScreen } from "../discover/ProviderDiscoveryScreen";
 import { MadiDonorHubScreen } from "../madi/MadiDonorHubScreen";
 import { LiveDiscoverScreen } from "../live/LiveDiscoverScreen";
 import { appStore, useAppStore } from "../../stores/appStore";
@@ -152,6 +153,7 @@ const SECTIONS: Record<PersonalTab, React.FC> = {
   wellness: WellnessSection,
   "madi-donor": MadiDonorHubScreen,
   "impilo-live": LiveDiscoverScreen,
+  "prod-ready": ProductionReadinessJourneyScreen,
   finance: FinanceSection,
   challenges: ChallengesScreen,
   programs: ProgramsScreen,
@@ -179,7 +181,7 @@ const SECTIONS: Record<PersonalTab, React.FC> = {
 export function PersonalScreen() {
   const { personalSectionRequest } = useAppStore();
   const [activeSection, setActiveSection] = useState<PersonalTab>("profile");
-  const SectionComponent = activeSection === "prod-ready" ? null : SECTIONS[activeSection];
+  const SectionComponent = SECTIONS[activeSection];
 
   useEffect(() => {
     if (personalSectionRequest) {

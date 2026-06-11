@@ -40,6 +40,12 @@ export type {
 } from "./components/IntegrationStatusBadge";
 export { NompiloLauncher } from "./components/NompiloLauncher";
 export type { NompiloLauncherProps } from "./components/NompiloLauncher";
+export { ServiceCard } from "./components/ServiceCard";
+export type { ServiceCardProps } from "./components/ServiceCard";
+export { ServiceStatusBadge, ServiceStatusLegend } from "./components/ServiceStatusBadge";
+export type { ServiceStatusBadgeProps, ServiceWiringBadgeStatus } from "./components/ServiceStatusBadge";
+export { PrimaryActionCard } from "./components/PrimaryActionCard";
+export type { PrimaryActionCardProps } from "./components/PrimaryActionCard";
 
 // Form Components
 export { TextField } from "./forms/TextField";
@@ -74,6 +80,10 @@ export { ErrorState } from "./feedback/ErrorState";
 export type { ErrorStateProps } from "./feedback/ErrorState";
 export { SkeletonLoader } from "./feedback/SkeletonLoader";
 export type { SkeletonLoaderProps } from "./feedback/SkeletonLoader";
+export { OfflineBanner } from "./feedback/OfflineBanner";
+export type { OfflineBannerProps } from "./feedback/OfflineBanner";
+export { UnauthorizedState } from "./feedback/UnauthorizedState";
+export type { UnauthorizedStateProps } from "./feedback/UnauthorizedState";
 
 // Layout Components
 export { Screen } from "./layout/Screen";
@@ -84,3 +94,5 @@ export { BottomSheet } from "./layout/BottomSheet";
 export type { BottomSheetProps } from "./layout/BottomSheet";
 export { TabBar } from "./layout/TabBar";
 export type { TabBarProps, TabItem } from "./layout/TabBar";
+export { DashboardSection } from "./layout/DashboardSection";
+export type { DashboardSectionProps } from "./layout/DashboardSection";

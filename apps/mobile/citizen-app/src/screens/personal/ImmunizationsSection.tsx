@@ -19,6 +19,7 @@ import {
   ErrorState,
 } from "@impilo/mobile-design-system";
 import type { Immunization } from "../../types";
+import { appStore } from "../../stores/appStore";
 
 const STATUS_VARIANT: Record<string, "default" | "warning" | "success" | "destructive"> = {
   COMPLETED: "success",
@@ -151,7 +152,7 @@ export function ImmunizationsSection({ patientId }: ImmunizationsSectionProps) {
         <Button
           title="Schedule Vaccination"
           variant="secondary"
-          onPress={() => {}}
+          onPress={() => appStore.getState().setActiveTab("telehealth")}
         />
       </ScrollView>
     </Screen>

@@ -16,7 +16,10 @@ import {
   Badge,
   LoadingSpinner,
   Avatar,
+  DashboardSection,
+  ServiceCard,
 } from "@impilo/mobile-design-system";
+import { buildCitizenServiceCards } from "../navigation/citizenServiceNavigation";
 import { useCommunicationDashboard } from "@impilo/mobile-messaging";
 import { useAppStore } from "../stores/appStore";
 import { fetchAppointments } from "../services/appointmentService";
@@ -101,7 +104,7 @@ const QUICK_ACTIONS: ReadonlyArray<QuickAction> = [
 ];
 
 export function HomeScreen() {
-  const { profile, setActiveTab, unreadNotifications, selectedFacilityName } = useAppStore();
+  const { profile, setActiveTab, setPersonalSectionRequest, unreadNotifications, selectedFacilityName } = useAppStore();
   const { dashboard: commsDashboard } = useCommunicationDashboard();
   const [facilityView, setFacilityView] = useState<null | { mode: "list" } | { mode: "detail"; id: string }>(null);
   const [trackingOpen, setTrackingOpen] = useState(false);
@@ -130,6 +133,18 @@ export function HomeScreen() {
   const greeting = profile
     ? `Hello, ${profile.givenName}`
     : "Welcome back";
+
+  const serviceCards = useMemo(
+    () =>
+      buildCitizenServiceCards({
+        setActiveTab,
+        openPersonalSection: (sectionId) => {
+          setPersonalSectionRequest(sectionId);
+          setActiveTab("personal");
+        },
+      }),
+    [setActiveTab, setPersonalSectionRequest]
+  );
 
   const facilityPicker = useMemo(() => {
     if (!facilityView) return null;
@@ -252,6 +267,30 @@ export function HomeScreen() {
             </Pressable>
           ))}
         </View>
+
+        <DashboardSection
+          title="My Life & Health Services"
+          subtitle="National Health OS journeys — wired, deep-linked, or truthfully unavailable"
+          testID="citizen-service-hub"
+        >
+          {serviceCards.map((service) => (
+            <ServiceCard
+              key={service.slug}
+              testID={`service-card-${service.slug}`}
+              name={service.name}
+              description={service.description}
+              icon={
+                service.icon ? (
+                  <Ionicons name={service.icon as never} size={22} color={GREEN} />
+                ) : undefined
+              }
+              wiringStatus={service.wiringStatus}
+              onPress={service.onPress}
+              disabled={service.disabled}
+              accentColor={GREEN}
+            />
+          ))}
+        </DashboardSection>
 
         {commsDashboard ? (
           <>

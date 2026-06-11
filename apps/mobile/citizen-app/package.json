@@ -33,6 +33,7 @@
     "@impilo/mobile-messaging": "workspace:*",
     "@impilo/mobile-ndila": "workspace:*",
     "@impilo/mobile-nompilo": "workspace:*",
+    "@impilo/mobile-registry": "workspace:*",
     "@impilo/mobile-offline": "workspace:*",
     "@impilo/mobile-timeline": "workspace:*",
     "@impilo/mobile-trust": "workspace:*",
