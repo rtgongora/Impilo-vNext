@@ -15,7 +15,7 @@
   "accessCodeLifespan": 60,
   "accessCodeLifespanUserAction": 300,
   "defaultSignatureAlgorithm": "RS256",
-  "bruteForceProtected": true,
+  "bruteForceProtected": false,
   "duplicateEmailsAllowed": false,
   "verifyEmail": false,
   "internationalizationEnabled": false,
@@ -846,10 +846,12 @@
       "serviceAccountsEnabled": false,
       "redirectUris": [
         "http://localhost:3000/*",
+        "http://41.57.127.235/*",
         "https://impilo.gov.zw/*"
       ],
       "webOrigins": [
         "http://localhost:3000",
+        "http://41.57.127.235",
         "https://impilo.gov.zw"
       ],
       "protocol": "openid-connect",
@@ -944,9 +946,52 @@
         "impilo-clinical",
         "impilo-admin"
       ]
+    },
+    {
+      "clientId": "impilo-backend",
+      "name": "Impilo Backend Service Account",
+      "enabled": true,
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "secret": "impilo-backend-secret",
+      "redirectUris": [],
+      "webOrigins": [],
+      "protocol": "openid-connect",
+      "fullScopeAllowed": true,
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "impilo-tenant"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt",
+        "impilo-trust-headers",
+        "impilo-clinical",
+        "impilo-admin"
+      ]
     }
   ],
   "users": [
+    {
+      "username": "service-account-impilo-backend",
+      "enabled": true,
+      "serviceAccountClientId": "impilo-backend",
+      "clientRoles": {
+        "realm-management": [
+          "manage-users",
+          "view-users",
+          "query-users",
+          "manage-realm"
+        ]
+      }
+    },
     {
       "username": "superadmin",
       "email": "superadmin@impilo.gov.zw",

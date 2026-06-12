@@ -26,6 +26,12 @@
       "available": 1,
       "healthy": true
     },
+    "booking-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
     "butano-fhir": {
       "replicas": 1,
       "ready": 1,
@@ -260,13 +266,31 @@
       "available": 1,
       "healthy": true
     },
+    "live-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
     "llm-orchestration-service": {
       "replicas": 1,
       "ready": 1,
       "available": 1,
       "healthy": true
     },
+    "madi-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
     "minio": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "msika-apps-service": {
       "replicas": 1,
       "ready": 1,
       "available": 1,
@@ -422,6 +446,12 @@
       "available": 1,
       "healthy": true
     },
+    "rtc-gateway-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
     "rules-service": {
       "replicas": 1,
       "ready": 1,
@@ -563,14 +593,14 @@
   },
   "missing_deployments": [],
   "unhealthy_deployments": [],
-  "runtime_pods_count": 93,
+  "runtime_pods_count": 98,
   "verify_pods_ignored": 0,
   "crashloop": [],
   "pending": [],
   "not_ready_pods": [],
   "jobs": [],
-  "health_version_reachable": false,
-  "health_version_snippet": null,
-  "health_version_note": "skipped \u2014 set FULL_BOOT_BASE_URL to port-forward BFF (e.g. http://127.0.0.1:18160)",
+  "health_version_reachable": true,
+  "health_version_snippet": "{\"service\":\"experience-bff\",\"environment\":\"full-preview\",\"branch\":\"unknown\",\"commit\":\"ba7064e2c3011a5736eed90d04e2420716f4d078\",\"buildDate\":\"2026-06-10T20:55:43Z\",\"status\":\"ok\"}",
+  "health_version_note": "checked via FULL_BOOT_BASE_URL",
   "pass": true
 }
