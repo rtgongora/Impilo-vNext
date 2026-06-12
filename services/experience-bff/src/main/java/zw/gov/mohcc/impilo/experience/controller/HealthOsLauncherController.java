@@ -45,12 +45,14 @@ public class HealthOsLauncherController {
         List<Map<String, Object>> apps = new ArrayList<>(CORE_PLATFORM_APPS);
         apps.addAll(parseMarketplaceLauncher(facilityId, roles, includeUnavailable, includeDeprecated));
 
+        Map<String, Object> actor = new LinkedHashMap<>();
+        actor.put("actorId", "");
+        actor.put("actorType", "");
+        actor.put("tenantId", "");
+        actor.put("facilityId", facilityId != null ? facilityId : "");
+
         Map<String, Object> body = new LinkedHashMap<>();
-        body.put("actor", Map.of(
-                "actorId", "",
-                "actorType", "",
-                "tenantId", "",
-                "facilityId", facilityId));
+        body.put("actor", actor);
         body.put("apps", apps);
         body.put("generatedAt", Instant.now().toString());
         return ResponseEntity.ok(body);

@@ -180,7 +180,7 @@ export function useHealthOsLauncher(opts: { facilityId?: string; roles?: string[
     queryKey: ["health-os-launcher", { facilityId, rolesParam }],
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (facilityId) params.set("facilityId", facilityId);
+      params.set("facilityId", facilityId);
       if (rolesParam) params.set("roles", rolesParam);
       const query = params.toString();
       const response = await apiClient.get<ApiResponse<LauncherAppsBffResponse> | LauncherAppsBffResponse>(
