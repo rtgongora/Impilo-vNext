@@ -4,7 +4,7 @@
 [[ -n "${_IMPILO_K3S_HELPER_COMMON_LOADED:-}" ]] && return 0
 _IMPILO_K3S_HELPER_COMMON_LOADED=1
 
-IMPILO_HELPER_VERSION="3"
+IMPILO_HELPER_VERSION="7"
 IMPILO_DEFAULT_REPO="/opt/impilo/repos/Impilo-vNext"
 IMPILO_HELPER_LOG="/var/log/impilo-k3s-image-helper.log"
 IMPILO_IMPORT_LOCK="/tmp/impilo-k3s-import.lock"
@@ -87,6 +87,84 @@ impilo_ctr_list() {
   return 1
 }
 
+# Canonical stale-27 runtime service ids (full-preview digest remediation).
+impilo_stale27_service_ids() {
+  cat <<'EOF'
+ai-model-registry-service
+audit-ledger-service
+butano-service
+community-service
+credential-verification-service
+document-service
+guidance-service
+identity-assurance-service
+inventory-elmis-adapter
+inventory-service
+llm-orchestration-service
+msika-service
+mushe-wallet-service
+pharmacy-service
+product-registry-service
+scheduling-service
+search-service
+share-slip-service
+tshepo-audit-service
+tshepo-authz-service
+tshepo-consent-service
+tshepo-identity-service
+tshepo-keys-service
+tshepo-offline-service
+ubomi-service
+varapi-service
+zibo-service
+EOF
+}
+
+# Returns 0 when ref is a scoped stale-27 registry image ref safe to remove.
+impilo_validate_stale27_ctr_ref() {
+  local ref="$1"
+  local sid="${2:-}"
+  if [[ -z "$ref" || -z "$sid" ]]; then
+    return 1
+  fi
+  local prefix="127.0.0.1:5000/impilo/${sid}"
+  if [[ "$ref" != "$prefix"* ]]; then
+    return 1
+  fi
+  case "$ref" in
+    "${prefix}:preview" | "${prefix}:preview-ba7064e2" | "${prefix}:preview-4917def8" | "${prefix}@sha256:"*)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+impilo_stale27_tag_refs() {
+  local sid="$1"
+  local tag="${2:-preview-4917def8}"
+  local prefix="127.0.0.1:5000/impilo/${sid}"
+  printf '%s\n' "${prefix}:preview" "${prefix}:preview-ba7064e2" "${prefix}:${tag}"
+}
+
+impilo_ctr_rm() {
+  local ref="$1"
+  if [[ -z "$ref" ]]; then
+    return 1
+  fi
+  if command -v k3s >/dev/null 2>&1; then
+    k3s ctr images rm "$ref"
+    return $?
+  fi
+  if command -v ctr >/dev/null 2>&1; then
+    ctr -n k8s.io images rm "$ref"
+    return $?
+  fi
+  echo "ERROR: k3s/ctr not found" >&2
+  return 1
+}
+
 # Returns 0 if ref appears present in containerd list file (missing-only skip).
 impilo_ref_in_containerd() {
   local ref="$1"
@@ -109,7 +187,24 @@ impilo_ref_in_containerd() {
   return 1
 }
 
+impilo_clear_stale_import_lock() {
+  local holder=""
+  holder="$(cat "${IMPILO_IMPORT_LOCK}.pid" 2>/dev/null || echo "")"
+  if [[ -z "$holder" ]]; then
+    rm -f "$IMPILO_IMPORT_LOCK" 2>/dev/null || true
+    return 0
+  fi
+  if kill -0 "$holder" 2>/dev/null; then
+    return 1
+  fi
+  rm -f "$IMPILO_IMPORT_LOCK" "${IMPILO_IMPORT_LOCK}.pid" 2>/dev/null || true
+  echo "Cleared stale import lock (dead PID $holder)"
+  impilo_helper_log "cleared stale import lock pid=$holder"
+  return 0
+}
+
 impilo_acquire_import_lock() {
+  impilo_clear_stale_import_lock || true
   exec {IMPILO_LOCK_FD}>"$IMPILO_IMPORT_LOCK"
   if ! flock -n "$IMPILO_LOCK_FD"; then
     local holder=""

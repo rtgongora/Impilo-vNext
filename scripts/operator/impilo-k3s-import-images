@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Root-only: import approved Impilo images from local Docker into k3s containerd.
 # Default: required_full_boot + infra, missing-only (no all-tag sweep).
-# Usage: impilo-k3s-import-images <tag> [repo_path] [--only id1,id2] [--all-local-preview] [--force]
+# Usage: impilo-k3s-import-images <tag> [repo_path] [--only id1,id2] [--runtime-only] [--all-local-preview] [--force]
 set -euo pipefail
 
 if [[ "$(id -u)" -ne 0 ]]; then
@@ -24,12 +24,17 @@ REPO="${2:-$IMPILO_DEFAULT_REPO}"
 shift 2 2>/dev/null || true
 ONLY_IDS=""
 ALL_LOCAL_PREVIEW=0
+RUNTIME_ONLY=0
 FORCE=0
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --only)
       ONLY_IDS="${2:-}"
       shift 2
+      ;;
+    --runtime-only)
+      RUNTIME_ONLY=1
+      shift
       ;;
     --all-local-preview)
       ALL_LOCAL_PREVIEW=1
@@ -41,7 +46,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     *)
       echo "ERROR: unknown argument: $1" >&2
-      echo "Usage: impilo-k3s-import-images <tag> [repo] [--only id1,id2] [--all-local-preview] [--force]" >&2
+      echo "Usage: impilo-k3s-import-images <tag> [repo] [--only id1,id2] [--runtime-only] [--all-local-preview] [--force]" >&2
       exit 2
       ;;
   esac
@@ -60,7 +65,7 @@ if ! impilo_acquire_import_lock; then
   exit 3
 fi
 
-impilo_helper_log "import START tag=$TAG repo=$REPO only=${ONLY_IDS:-none} all_local=$ALL_LOCAL_PREVIEW force=$FORCE"
+impilo_helper_log "import START tag=$TAG repo=$REPO only=${ONLY_IDS:-none} runtime_only=$RUNTIME_ONLY all_local=$ALL_LOCAL_PREVIEW force=$FORCE"
 
 IMPORTED=0
 FAILED=0
@@ -109,8 +114,47 @@ import_ref() {
   rm -f "$tar"
 }
 
+resolve_docker_ref() {
+  local sid="$1"
+  local candidates=(
+    "127.0.0.1:5000/impilo/${sid}:${TAG}"
+    "impilo/${sid}:${TAG}"
+  )
+  local c
+  for c in "${candidates[@]}"; do
+    if docker image inspect "$c" >/dev/null 2>&1; then
+      echo "$c"
+      return 0
+    fi
+  done
+  return 1
+}
+
 mapfile -t REQUIRED < <(impilo_required_refs "$TAG" "$REPO")
 if [[ -n "$ONLY_IDS" ]]; then
+  if [[ "$RUNTIME_ONLY" == "1" ]]; then
+    impilo_helper_log "import MODE runtime-selected ids=$ONLY_IDS"
+    echo "MODE: runtime-selected import (--runtime-only --only)"
+    IFS=',' read -ra WANT <<<"$ONLY_IDS"
+    for w in "${WANT[@]}"; do
+      w="${w// /}"
+      [[ -z "$w" ]] && continue
+      if ref="$(resolve_docker_ref "$w")"; then
+        import_ref "$ref" 1 || true
+      else
+        echo "FAIL  impilo/${w}:${TAG}  (not in local docker)"
+        impilo_helper_log "FAIL runtime missing docker impilo/${w}:${TAG}"
+        FAILED=$((FAILED + 1))
+      fi
+    done
+    echo ""
+    echo "imported_count=$IMPORTED failed_count=$FAILED skipped_count=$SKIPPED (runtime-selected)"
+    impilo_helper_log "import END runtime-selected imported=$IMPORTED failed=$FAILED skipped=$SKIPPED"
+    rm -f "$CTR_CACHE"
+    [[ "$FAILED" -gt 0 ]] && exit 1
+    exit 0
+  fi
+
   impilo_helper_log "import MODE selected-only ids=$ONLY_IDS"
   FILTERED=()
   IFS=',' read -ra WANT <<<"$ONLY_IDS"
@@ -122,7 +166,11 @@ if [[ -n "$ONLY_IDS" ]]; then
       w="${w// /}"
       [[ -z "$w" ]] && continue
       if [[ "$sid" == "$w" ]]; then
-        FILTERED+=("$ref")
+        if resolved="$(resolve_docker_ref "$sid")"; then
+          FILTERED+=("$resolved")
+        else
+          FILTERED+=("$ref")
+        fi
         break
       fi
     done
@@ -159,14 +207,14 @@ while read -r ref; do
 done < <(impilo_infra_refs)
 
 if [[ "$ALL_LOCAL_PREVIEW" == "1" ]]; then
-  echo "MODE: --all-local-preview sweep (impilo/*:${TAG} and preview-*)"
+  echo "MODE: --all-local-preview sweep (impilo/* and 127.0.0.1:5000/impilo/* :${TAG} and preview-*)"
   while read -r ref; do
     [[ -n "$ref" ]] || continue
     if printf '%s\n' "${REQUIRED[@]}" | grep -qxF "$ref" 2>/dev/null; then
       continue
     fi
     import_ref "$ref" 0 || true
-  done < <(docker images --format '{{.Repository}}:{{.Tag}}' | grep -E "^impilo/.+:(${TAG}|preview-)" || true)
+  done < <(docker images --format '{{.Repository}}:{{.Tag}}' | grep -E "^(127\\.0\\.0\\.1:5000/)?impilo/.+:(${TAG}|preview-)" || true)
 else
   echo "SKIP: all-local-preview sweep disabled (pass --all-local-preview to enable)"
 fi

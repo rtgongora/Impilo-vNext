@@ -36,6 +36,7 @@ Commands:
   registry-status     Local OCI registry health
   registry-up         Start local registry (no sudo)
   cleanup-imports     Stop duplicate imports via sudo checkpoint if needed
+  refresh-stale27-containerd-refs  Scoped containerd ref refresh for 27 stale services (sudo checkpoint)
   sudo-checkpoint-run   Product owner: run pending privileged checkpoint only
   sudo-checkpoint-status  Show pending checkpoint and last result
   wave-status           Show full-boot wave expansion progress
@@ -348,6 +349,11 @@ case "$CMD" in
       fb_request_cleanup_imports_checkpoint
     fi
     echo "OK: no duplicate imports detected; helper version $(fb_helper_version_installed)"
+    ;;
+  refresh-stale27-containerd-refs)
+    fb_ensure_reports
+    fb_guard_import_not_active
+    fb_request_refresh_stale27_containerd_checkpoint
     ;;
   deploy)
     fb_ensure_reports

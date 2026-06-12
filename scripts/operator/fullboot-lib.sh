@@ -92,7 +92,8 @@ fb_registry_ready() {
 
 fb_allowed_checkpoint_action() {
   case "$1" in
-    import_full_boot_images_to_k3s | list_full_boot_k3s_images | cleanup_stale_k3s_import_temp_files \
+    import_full_boot_images_to_k3s | list_full_boot_k3s_images | import_stale27_runtime_images \
+      | refresh_stale27_containerd_refs | cleanup_stale_k3s_import_temp_files \
       | cleanup_duplicate_k3s_import_processes | configure_k3s_local_registry)
       return 0
       ;;
@@ -124,6 +125,18 @@ fb_request_cleanup_imports_checkpoint() {
     "cd $(fb_repo) && git pull && sudo -v && bash scripts/operator/fullboot.sh sudo-checkpoint-run" \
     "$log" "post_cleanup_verify_and_registry"
   fb_workflow_update "awaiting_sudo_checkpoint" "post_cleanup_verify_and_registry"
+  fb_print_product_owner_block "$action"
+  exit 2
+}
+
+fb_request_refresh_stale27_containerd_checkpoint() {
+  local action="refresh_stale27_containerd_refs"
+  local marker="STALE27_CONTAINERD_REF_REFRESH: complete"
+  local log="$(fb_reports)/sudo-checkpoint-run.log"
+  fb_write_checkpoint "$action" "$marker" \
+    "cd $(fb_repo) && git pull && sudo -v && bash scripts/operator/fullboot.sh sudo-checkpoint-run" \
+    "$log" "stale27_containerd_refresh_and_reroll"
+  fb_workflow_update "awaiting_sudo_checkpoint" "stale27_containerd_refresh_and_reroll"
   fb_print_product_owner_block "$action"
   exit 2
 }
@@ -311,6 +324,16 @@ fb_run_checkpoint_action() {
       fb_sudo_run /usr/local/sbin/impilo-k3s-list-images "$tag" "$repo" 2>&1 | tee -a "$log"
       return "${PIPESTATUS[0]}"
       ;;
+    import_stale27_runtime_images)
+      echo "Running: import-stale27-k3s-images.sh (preview-4917def8, 27 runtime services)" | tee -a "$log"
+      fb_sudo_run bash "$repo/scripts/operator/import-stale27-k3s-images.sh" 2>&1 | tee -a "$log"
+      return "${PIPESTATUS[0]}"
+      ;;
+    refresh_stale27_containerd_refs)
+      echo "Running: refresh-stale27-containerd-refs.sh (scoped containerd rm + re-import)" | tee -a "$log"
+      fb_sudo_run bash "$repo/scripts/operator/refresh-stale27-containerd-refs.sh" 2>&1 | tee -a "$log"
+      return "${PIPESTATUS[0]}"
+      ;;
     cleanup_stale_k3s_import_temp_files)
       echo "Removing /tmp/impilo-image-*.tar" | tee -a "$log"
       fb_sudo_run rm -f /tmp/impilo-image-*.tar 2>&1 | tee -a "$log"
@@ -393,6 +416,12 @@ fb_checkpoint_success() {
       ;;
     configure_k3s_local_registry)
       grep -q 'CHECKPOINT_REGISTRY: k3s registries.yaml configured' "$log"
+      ;;
+    import_stale27_runtime_images)
+      grep -q 'STALE27_IMPORT: complete' "$log" && grep -q 'imported_count=' "$log" && ! grep -q 'failed_count=[1-9]' "$log"
+      ;;
+    refresh_stale27_containerd_refs)
+      grep -q 'STALE27_CONTAINERD_REF_REFRESH: complete' "$log" && ! grep -q 'failed_rm_count=[1-9]' "$log"
       ;;
     *) return 1 ;;
   esac
