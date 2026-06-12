@@ -2,6 +2,7 @@ package zw.gov.mohcc.impilo.msikaapps;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
@@ -12,6 +13,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * for the Impilo vNext Health OS. See doctrine.
  */
 @SpringBootApplication
+@EnableJpaRepositories(considerNestedRepositories = true)
 @EnableScheduling
 public class MsikaAppsApplication {
 

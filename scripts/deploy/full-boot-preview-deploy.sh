@@ -11,6 +11,7 @@ NAMESPACE="${FULL_BOOT_NAMESPACE:-impilo-full-preview}"
 CHART_DIR="deploy/helm/impilo-vnext"
 VALUES_FILE="$CHART_DIR/values-full-preview.yaml"
 RUNTIME_VALUES="$CHART_DIR/values-full-preview-runtime.generated.yaml"
+BFF_ENV_VALUES="$CHART_DIR/values-full-preview-bff-env.generated.yaml"
 RELEASE_NAME="impilo-full-preview"
 MODE="deploy"
 FULL_BOOT_MAX_WAVE="${FULL_BOOT_MAX_WAVE:-0}"
@@ -136,16 +137,22 @@ fi
 helm_values_args() {
   local args=(-f "$VALUES_FILE")
   node scripts/full-boot/generate-full-preview-runtime-values.mjs --max-wave "$FULL_BOOT_MAX_WAVE" >/dev/null
+  node scripts/full-boot/generate-full-preview-bff-downstream-env.mjs >/dev/null
   if [[ -f "$RUNTIME_VALUES" ]]; then
     args+=(-f "$RUNTIME_VALUES")
   else
     echo "WARN: missing $RUNTIME_VALUES"
   fi
+  if [[ -f "$BFF_ENV_VALUES" ]]; then
+    args+=(-f "$BFF_ENV_VALUES")
+  else
+    echo "WARN: missing $BFF_ENV_VALUES"
+  fi
   printf '%s\0' "${args[@]}"
 }
 
 readarray -d '' HELM_VALUE_FILES < <(helm_values_args)
-echo "Helm values: ${VALUES_FILE} + runtime overlay (max wave $FULL_BOOT_MAX_WAVE)"
+echo "Helm values: ${VALUES_FILE} + runtime + BFF downstream env (max wave $FULL_BOOT_MAX_WAVE)"
 
 echo "--- Chart integrity ---"
 if ! bash scripts/deploy/check-helm-chart-integrity.sh; then

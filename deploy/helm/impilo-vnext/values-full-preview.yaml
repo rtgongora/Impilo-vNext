@@ -153,7 +153,10 @@ experienceBff:
     REDIS_PORT: "6379"
     KEYCLOAK_URL: http://keycloak:8080
     KEYCLOAK_REALM: impilo
-    AUTH_FALLBACK_ENABLED: "true"
+    KEYCLOAK_CLIENT_ID: experience-ui
+    KEYCLOAK_BACKEND_CLIENT_ID: impilo-backend
+    KEYCLOAK_BACKEND_SECRET: impilo-backend-secret
+    AUTH_FALLBACK_ENABLED: "false"
     IMPILO_SECURITY_ALLOW_ANONYMOUS: "true"
     TSHEPO_AUTHZ_BASE_URL: http://tshepo-authz-service:8081
     VITO_BASE_URL: http://vito-service:8082
