@@ -1,7 +1,7 @@
 "use client";
 
-import { type ReactNode, useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useSessionExperienceContract } from "@/hooks/useSessionExperienceContract";
@@ -22,22 +22,7 @@ export function AdministrationGovernanceShell({
   requireGovernanceEntry = true,
 }: AdministrationGovernanceShellProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const { contract, isLoading } = useSessionExperienceContract();
-
-  useEffect(() => {
-    if (isLoading || !contract) return;
-    if (!contract.tabs.work.visible) {
-      router.replace(`/auth/resolving?reason=no_work&returnTo=${encodeURIComponent(pathname)}`);
-      return;
-    }
-    if (requireGovernanceEntry && !hasAdministrationGovernanceEntry(contract) && pathname === "/work/administration-governance") {
-      return;
-    }
-    if (!canAccessAdministrationPath(contract, pathname)) {
-      return;
-    }
-  }, [contract, isLoading, pathname, requireGovernanceEntry, router]);
 
   if (isLoading || !contract) {
     return (

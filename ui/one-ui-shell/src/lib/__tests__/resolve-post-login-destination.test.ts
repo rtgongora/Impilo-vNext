@@ -74,6 +74,21 @@ describe("resolvePostLoginDestination", () => {
     expect(result.href).toBe("/provider/activate?returnTo=%2Fprovider-workspace");
   });
 
+  it("does not replay blocked /work returnTo after no_work resolution", () => {
+    const result = resolvePostLoginDestination({
+      user: {
+        id: "user-admin-1",
+        actorType: "SYSTEM",
+        roles: ["SYSTEM_ADMIN"],
+        providerActivated: false,
+      },
+      returnTo: "/work/administration-governance",
+      resolutionReason: "no_work",
+    });
+    expect(result.href).toBe("/home");
+    expect(result.operationalMode).toBe("my_life");
+  });
+
   it("honors safe returnTo and applies facility guard when needed", () => {
     const result = resolvePostLoginDestination({
       user: {

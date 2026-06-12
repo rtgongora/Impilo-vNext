@@ -24,6 +24,8 @@ export interface ResolvePostLoginDestinationInput {
   loginMethod?: LoginMethod;
   hasFacility?: boolean;
   returnTo?: string | null;
+  /** When set (e.g. `no_work`), blocked returnTo targets must not be replayed after resolving. */
+  resolutionReason?: string | null;
 }
 
 export interface PostLoginDestinationResult {
@@ -58,10 +60,20 @@ function withReturnTo(base: string, returnTo: string): string {
   return `${base}${separator}returnTo=${encodeURIComponent(returnTo)}`;
 }
 
+function isBlockedReturnToAfterResolution(
+  returnTo: string,
+  resolutionReason: string | null | undefined,
+): boolean {
+  if (resolutionReason === "no_work" && returnTo.startsWith("/work/")) {
+    return true;
+  }
+  return false;
+}
+
 export function resolvePostLoginDestination(
   input: ResolvePostLoginDestinationInput,
 ): PostLoginDestinationResult {
-  const { user, returnTo, hasFacility = false } = input;
+  const { user, returnTo, hasFacility = false, resolutionReason } = input;
   const linkedProviderId =
     input.linkedProviderId ??
     input.linkedIds?.providerId ??
@@ -81,7 +93,7 @@ export function resolvePostLoginDestination(
     hasFacility,
   });
 
-  if (isSafeReturnTo(returnTo)) {
+  if (isSafeReturnTo(returnTo) && !isBlockedReturnToAfterResolution(returnTo, resolutionReason)) {
     if (context.isCitizenOnly && routeRequiresFacility(returnTo)) {
       return { href: "/home", operationalMode: "my_life" };
     }

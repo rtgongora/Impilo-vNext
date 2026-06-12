@@ -29,6 +29,7 @@ interface ResolverStep {
 export default function ResolvingPage() {
   const searchParams = useSearchParams();
   const returnTo = searchParams.get("returnTo");
+  const resolutionReason = searchParams.get("reason");
   const { user, activateProvider } = useAuthStore();
   const { data, isLoading, isSuccess, isError } = useLinkedIds();
   const { data: affiliations = [], isSuccess: affSuccess } = useAffiliations();
@@ -53,6 +54,7 @@ export default function ResolvingPage() {
       loginMethod,
       hasFacility: useFacilityStore.getState().hasFacility,
       returnTo,
+      resolutionReason,
     });
 
     if (destination.autoActivateProvider && destination.linkedProviderId) {
@@ -71,6 +73,7 @@ export default function ResolvingPage() {
     workAssignments,
     loginMethod,
     returnTo,
+    resolutionReason,
     user,
     activateProvider,
   ]);
