@@ -39,12 +39,12 @@ VALUES
     ('b0000000-0000-4000-8000-000000000006',
      '00000000-0000-4000-8000-000000000001',
      'Chiedza', 'Mutasa', '2019-06-15', 'FEMALE',
-     'f7a60b4e0d5f6a8dbce23f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4', 'ACTIVE'),
+     'f7a60b4e0d5f6a8dbce23f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b', 'ACTIVE'),
 
     ('b0000000-0000-4000-8000-000000000007',
      '00000000-0000-4000-8000-000000000001',
      'Simba', 'Nyamukapa', '1965-09-30', 'MALE',
-     'a8b71c5f1e6a7b9ecdf34a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5', 'ACTIVE'),
+     'a8b71c5f1e6a7b9ecdf34a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c', 'ACTIVE'),
 
     ('b0000000-0000-4000-8000-000000000008',
      '00000000-0000-4000-8000-000000000001',
@@ -54,7 +54,7 @@ VALUES
     ('b0000000-0000-4000-8000-000000000010',
      '00000000-0000-4000-8000-000000000001',
      'System', 'Admin', '1985-01-01', 'MALE',
-     'c0d91e7b3f8a2b4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9', 'ACTIVE');
+     'c0d91e7b3f8a2b4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d', 'ACTIVE');
 
 INSERT INTO vito.identity_alias
     (tenant_id, health_id, alias_type, lookup_hash, verifier, status)

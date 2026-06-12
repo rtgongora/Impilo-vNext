@@ -114,7 +114,8 @@ public class SessionExperienceService {
             JsonNode node = varapiClient.getProviderByHealthId(actorId);
             if (node == null || node.isNull()) return Map.of();
             Map<String, Object> m = new LinkedHashMap<>();
-            if (node.has("providerId")) m.put("providerId", node.get("providerId").asText());
+            String providerId = resolveProviderPublicId(node);
+            if (providerId != null) m.put("providerId", providerId);
             if (node.has("status")) m.put("providerStatus", node.get("status").asText());
             if (node.has("licenceValid")) m.put("licenceValid", node.get("licenceValid").asBoolean());
             return m;
@@ -345,5 +346,16 @@ public class SessionExperienceService {
     private static String normalizeStatus(String status) {
         if (status == null) return null;
         return status.trim().toLowerCase().replace(' ', '_').replace('-', '_');
+    }
+
+    private static String resolveProviderPublicId(JsonNode node) {
+        if (node == null || node.isNull()) return null;
+        if (node.has("providerId") && !node.get("providerId").asText().isBlank()) {
+            return node.get("providerId").asText();
+        }
+        if (node.has("providerPublicId") && !node.get("providerPublicId").asText().isBlank()) {
+            return node.get("providerPublicId").asText();
+        }
+        return null;
     }
 }

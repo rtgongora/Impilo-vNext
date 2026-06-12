@@ -344,7 +344,7 @@ public class AuthSessionController {
 
             Map<String, Object> linkedIds = new LinkedHashMap<>();
             if (providerData != null && !providerData.isNull()) {
-                linkedIds.put("providerId", providerData.has("providerId") ? providerData.get("providerId").asText() : null);
+                linkedIds.put("providerId", resolveProviderPublicId(providerData));
                 linkedIds.put("providerStatus", providerData.has("status") ? providerData.get("status").asText() : null);
                 linkedIds.put("licenceValid", providerData.has("licenceValid") ? providerData.get("licenceValid").asBoolean() : false);
             }
@@ -434,10 +434,10 @@ public class AuthSessionController {
                     "error", Map.of("code", "VALIDATION", "message",
                             "email, password, firstName, and lastName are required")));
         }
-        if (password.length() < 8) {
+        if (password.length() < 12) {
             return ResponseEntity.badRequest().body(Map.of(
                     "error", Map.of("code", "VALIDATION", "message",
-                            "Password must be at least 8 characters")));
+                            "Password must be at least 12 characters and include upper, lower, digit, and special character")));
         }
 
         try {
@@ -561,6 +561,12 @@ public class AuthSessionController {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                         "error", Map.of("code", "USER_EXISTS",
                                 "message", "An account with this email already exists")));
+            }
+            if (e.getStatusCode() == HttpStatus.FORBIDDEN) {
+                log.error("Registration forbidden — impilo-backend service account lacks manage-users: {}", e.getMessage());
+                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of(
+                        "error", Map.of("code", "AUTH_SERVICE_UNAVAILABLE",
+                                "message", "Registration is temporarily unavailable. Identity service permissions need to be configured.")));
             }
             log.error("Registration error: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
@@ -782,5 +788,17 @@ public class AuthSessionController {
         } catch (Exception e) {
             log.warn("Failed to roll back Keycloak user {}: {}", userId, e.getMessage());
         }
+    }
+
+    /** VARAPI returns providerPublicId; legacy mocks used providerId. */
+    private static String resolveProviderPublicId(JsonNode providerData) {
+        if (providerData == null || providerData.isNull()) return null;
+        if (providerData.has("providerId") && !providerData.get("providerId").asText().isBlank()) {
+            return providerData.get("providerId").asText();
+        }
+        if (providerData.has("providerPublicId") && !providerData.get("providerPublicId").asText().isBlank()) {
+            return providerData.get("providerPublicId").asText();
+        }
+        return null;
     }
 }

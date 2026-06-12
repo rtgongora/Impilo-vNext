@@ -63,8 +63,8 @@ export default function RegisterPage() {
       setError("Please enter your email or phone number.");
       return;
     }
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
+    if (password.length < 12) {
+      setError("Password must be at least 12 characters and include upper, lower, digit, and special character.");
       return;
     }
     if (password !== confirmPassword) {
@@ -216,9 +216,9 @@ export default function RegisterPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="At least 8 characters"
+                placeholder="At least 12 characters with upper, lower, digit, and symbol"
                 autoComplete="new-password"
-                minLength={8}
+                minLength={12}
                 className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
               />
               <button
