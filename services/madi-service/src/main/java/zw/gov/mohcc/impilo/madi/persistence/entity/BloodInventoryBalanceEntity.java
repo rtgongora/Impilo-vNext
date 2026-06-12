@@ -48,15 +48,11 @@ public class BloodInventoryBalanceEntity {
 @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private OffsetDateTime createdAt;
-
     @PrePersist
     protected void onCreate() {
         if (balanceId == null) {
             balanceId = UUID.randomUUID();
         }
-        createdAt = OffsetDateTime.now();
     }
 
     public Long getId() { return id; }
@@ -97,8 +93,5 @@ public class BloodInventoryBalanceEntity {
 
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(OffsetDateTime updatedAt) { this.updatedAt = updatedAt; }
-
-    public OffsetDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
 
 }

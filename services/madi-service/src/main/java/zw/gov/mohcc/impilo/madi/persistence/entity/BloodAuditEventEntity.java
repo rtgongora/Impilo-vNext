@@ -36,7 +36,7 @@ public class BloodAuditEventEntity {
 @Column(name = "jurisdiction")
     private String jurisdiction;
 
-@Column(name = "payload_json", columnDefinition = "TEXT")
+@Column(name = "payload_json", nullable = false, columnDefinition = "jsonb")
     private String payloadJson;
 
 @Column(name = "occurred_at")

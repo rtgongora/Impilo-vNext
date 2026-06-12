@@ -14,5 +14,5 @@ public interface BloodInventoryBalanceRepository extends JpaRepository<BloodInve
     Optional<BloodInventoryBalanceEntity> findByTenantIdAndBloodBankIdAndInventoryItemCodeAndBloodGroupAndComponentType(
             UUID tenantId, UUID bloodBankId, String inventoryItemCode, String bloodGroup, String componentType);
     List<BloodInventoryBalanceEntity> findByTenantIdAndBloodBankId(UUID tenantId, UUID bloodBankId);
-    List<BloodInventoryBalanceEntity> findByTenantIdOrderByCreatedAtDesc(UUID tenantId);
+    List<BloodInventoryBalanceEntity> findByTenantIdOrderByUpdatedAtDesc(UUID tenantId);
 }

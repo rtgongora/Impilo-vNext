@@ -24,7 +24,7 @@ public class BloodProcessingBatchEntity {
 @Column(name = "batch_status")
     private String batchStatus;
 
-@Column(name = "test_results_json", columnDefinition = "TEXT")
+@Column(name = "test_results_json", columnDefinition = "jsonb")
     private String testResultsJson;
 
 @Column(name = "quarantine_reason")
