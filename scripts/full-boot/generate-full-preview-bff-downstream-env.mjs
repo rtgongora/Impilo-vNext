@@ -93,7 +93,33 @@ const SERVICE_ENV = [
   ["CHANNELS_BASE_URL", "channels-service"],
   ["SUPPORT_BASE_URL", "support-service"],
   ["WORKFORCE_GOVERNANCE_BASE_URL", "workforce-governance-service"],
+  // Wave-1 product completion — previously missing downstream mappings
+  ["AUDIT_LEDGER_BASE_URL", "audit-ledger-service"],
+  ["BUTANO_FHIR_BASE_URL", "butano-fhir"],
+  ["CARD_PRINT_AGENT_BASE_URL", "card-print-agent"],
+  ["CONNECTOR_FHIR_BASE_URL", "connector-fhir-adapter"],
+  ["DEVELOPER_PORTAL_BASE_URL", "developer-portal-service"],
+  ["IDENTITY_ASSURANCE_BASE_URL", "identity-assurance-service"],
+  ["JOBS_SERVICE_BASE_URL", "jobs-service"],
+  ["OBSERVABILITY_BASE_URL", "observability-service"],
+  ["OFFLINE_EDGE_BASE_URL", "offline-edge-service"],
+  ["OFFLINE_SYNC_BASE_URL", "offline-sync-service"],
+  ["PHARMACY_ELMIS_BASE_URL", "pharmacy-elmis-adapter"],
+  ["PRODUCT_REGISTRY_BASE_URL", "product-registry-service"],
+  ["REFERRAL_SERVICE_BASE_URL", "referral-service"],
+  ["SCHEMA_REGISTRY_BASE_URL", "schema-registry-service"],
+  ["SECURITY_HARDENING_BASE_URL", "security-hardening-service"],
+  ["SHARE_SLIP_BASE_URL", "share-slip-service"],
 ];
+
+/**
+ * Enabled helm services intentionally not given a dedicated *_BASE_URL.
+ * Each must have a documented reason (supporting component, alias, or infra path).
+ */
+const BFF_DOWNSTREAM_EXCLUDED = {
+  "wellness-service":
+    "Deprecated SoR; wellness runtime absorbed by simba-service. BFF uses SIMBA_BASE_URL (wellness-base-url alias in application.yml).",
+};
 
 /** Fixed URLs not tied to a single fullBootServices entry. */
 const FIXED_ENV = {
@@ -106,9 +132,25 @@ const FIXED_ENV = {
   IMPILO_BFF_CITIZEN_LONGTAIL_FAILURE_POLICY: "stub_fallback",
 };
 
+function validateCoverage(services) {
+  const enabled = Object.entries(services)
+    .filter(([, v]) => v?.enabled)
+    .map(([id]) => id);
+  const mapped = new Set(SERVICE_ENV.map(([, id]) => id));
+  const excluded = new Set(Object.keys(BFF_DOWNSTREAM_EXCLUDED));
+  const gaps = enabled.filter((id) => !mapped.has(id) && !excluded.has(id));
+  if (gaps.length) {
+    console.error("BFF downstream gap — enabled services without mapping or exclusion:");
+    for (const id of gaps) console.error(`  - ${id}`);
+    process.exit(1);
+  }
+  return { enabled: enabled.length, mapped: mapped.size, excluded: excluded.size };
+}
+
 function main() {
   const runtime = yaml.load(fs.readFileSync(RUNTIME, "utf8"));
   const services = runtime.fullBootServices ?? {};
+  const coverage = validateCoverage(services);
   const env = { ...FIXED_ENV };
 
   for (const [varName, serviceId] of SERVICE_ENV) {
@@ -131,7 +173,10 @@ function main() {
     "",
   ].join("\n");
   fs.writeFileSync(OUT, header + yaml.dump({ experienceBff: { env } }), "utf8");
-  console.log(`Wrote ${path.relative(ROOT, OUT)} (${Object.keys(env).length} env vars)`);
+  console.log(
+    `Wrote ${path.relative(ROOT, OUT)} (${Object.keys(env).length} env vars; ` +
+      `coverage ${coverage.mapped} mapped + ${coverage.excluded} excluded / ${coverage.enabled} enabled)`
+  );
 }
 
 main();

@@ -1,6 +1,6 @@
 # AUTO-GENERATED — do not edit by hand.
 # Regenerate: node scripts/full-boot/generate-full-preview-bff-downstream-env.mjs
-# Downstream env vars: 81
+# Downstream env vars: 97
 experienceBff:
   env:
     FHIR_BASE_URL: http://hapi-fhir:8090/fhir
@@ -84,3 +84,19 @@ experienceBff:
     CHANNELS_BASE_URL: http://channels-service:8130
     SUPPORT_BASE_URL: http://support-service:8340
     WORKFORCE_GOVERNANCE_BASE_URL: http://workforce-governance-service:8165
+    AUDIT_LEDGER_BASE_URL: http://audit-ledger-service:8350
+    BUTANO_FHIR_BASE_URL: http://butano-fhir:8289
+    CARD_PRINT_AGENT_BASE_URL: http://card-print-agent:8291
+    CONNECTOR_FHIR_BASE_URL: http://connector-fhir-adapter:8151
+    DEVELOPER_PORTAL_BASE_URL: http://developer-portal-service:8370
+    IDENTITY_ASSURANCE_BASE_URL: http://identity-assurance-service:8201
+    JOBS_SERVICE_BASE_URL: http://jobs-service:8109
+    OBSERVABILITY_BASE_URL: http://observability-service:8211
+    OFFLINE_EDGE_BASE_URL: http://offline-edge-service:8360
+    OFFLINE_SYNC_BASE_URL: http://offline-sync-service:8095
+    PHARMACY_ELMIS_BASE_URL: http://pharmacy-elmis-adapter:8099
+    PRODUCT_REGISTRY_BASE_URL: http://product-registry-service:8097
+    REFERRAL_SERVICE_BASE_URL: http://referral-service:8399
+    SCHEMA_REGISTRY_BASE_URL: http://schema-registry-service:8371
+    SECURITY_HARDENING_BASE_URL: http://security-hardening-service:8221
+    SHARE_SLIP_BASE_URL: http://share-slip-service:8104
