@@ -116,6 +116,7 @@ impilo:
     pharmacy-base-url: ${PHARMACY_BASE_URL:http://localhost:8096}
     butano-base-url: ${BUTANO_BASE_URL:http://localhost:8090}
     msika-base-url: ${MSIKA_BASE_URL:http://localhost:8086}
+    msika-apps-base-url: ${MSIKA_APPS_BASE_URL:http://localhost:8181}
     msika-flow-base-url: ${MSIKA_FLOW_BASE_URL:http://localhost:8100}
     mushex-base-url: ${MUSHEX_BASE_URL:http://localhost:8102}
     dispatch-base-url: ${DISPATCH_BASE_URL:http://localhost:8320}
