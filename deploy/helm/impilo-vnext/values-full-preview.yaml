@@ -172,6 +172,9 @@ oneUiShell:
   env:
     NEXT_PUBLIC_BFF_URL: ""
     NEXT_PUBLIC_IMPILO_ENV: full-preview
+    # Defense-in-depth: UI /internal/* rewrites must not target localhost:10000.
+    API_GATEWAY_URL: "http://experience-bff:8160"
+    NEXT_PUBLIC_API_GATEWAY_URL: "http://experience-bff:8160"
 
 # Domain microservices: see values-full-preview-runtime.generated.yaml (wave-enabled set).
 # Regenerate: node scripts/full-boot/generate-full-preview-runtime-values.mjs --max-wave <N>

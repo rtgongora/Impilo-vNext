@@ -1,0 +1,36 @@
+{{- if .Values.ingress.enabled }}
+# BFF API surfaces — authoritative CRD routing at high priority.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ .Release.Name }}-bff
+  namespace: {{ .Release.Namespace }}
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: PathPrefix(`/internal`) || PathPrefix(`/actuator`) || PathPrefix(`/health`)
+      kind: Rule
+      priority: 100000
+      services:
+        - name: experience-bff
+          port: 8160
+---
+# UI catch-all excluding BFF paths. Kubernetes Ingress PathPrefix("/") also matches
+# /internal/* and can win over lower-priority BFF rules for specific paths in Traefik 3.x.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ .Release.Name }}-ui
+  namespace: {{ .Release.Namespace }}
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: PathPrefix(`/`) && !PathPrefix(`/internal`) && !PathPrefix(`/actuator`) && !PathPrefix(`/health`)
+      kind: Rule
+      priority: 1
+      services:
+        - name: one-ui-shell
+          port: 3000
+{{- end }}
