@@ -15,6 +15,8 @@ POD_CEILING="${PHASED_WAVE_POD_CEILING:-108}"
 PAUSE_SEC="${PHASED_WAVE_PAUSE_SEC:-30}"
 CHART="deploy/helm/impilo-vnext"
 RELEASE="impilo-full-preview"
+BFF_IMAGE_TAG="${IMPILO_BFF_IMAGE_TAG:-preview}"
+SHELL_IMAGE_TAG="${IMPILO_SHELL_IMAGE_TAG:-preview}"
 
 # shellcheck source=scripts/deploy/_preview-deploy-metadata.sh
 source "$REPO/scripts/deploy/_preview-deploy-metadata.sh"
@@ -91,10 +93,37 @@ helm_upgrade_wave() {
     --set global.buildDate="$PREVIEW_DEPLOY_BUILD_DATE" \
     --set global.imageTag=preview \
     --set global.imagePullPolicy=Always \
-    --set images.experienceBff.tag=preview \
-    --set images.oneUiShell.tag=preview \
+    --set images.experienceBff.tag="$BFF_IMAGE_TAG" \
+    --set images.oneUiShell.tag="$SHELL_IMAGE_TAG" \
     --no-hooks \
     2>&1 | tail -8
+}
+
+build_wave_images() {
+  local wave="$1"
+  echo "--- build images for wave $wave services only ---"
+  while read -r svc; do
+    [[ -n "$svc" ]] || continue
+    echo "  build: $svc"
+    bash "$REPO/scripts/build/build-full-vnext-images.sh" --only "$svc" 2>&1 | tail -4 || {
+      echo "  WARN: build $svc had errors"
+    }
+  done < <(wave_service_ids "$wave")
+}
+
+import_wave_images() {
+  local wave="$1"
+  local only
+  only="$(wave_service_ids "$wave" | paste -sd, -)"
+  [[ -n "$only" ]] || return 0
+  if [[ -x /usr/local/sbin/impilo-k3s-import-images ]]; then
+    echo "--- import k3s images for wave $wave services ---"
+    sudo -n /usr/local/sbin/impilo-k3s-import-images preview "$REPO" --runtime-only --only "$only" --force 2>&1 | tail -10 || {
+      echo "WARN: k3s import wave $wave had errors"
+    }
+  else
+    echo "WARN: impilo-k3s-import-images helper missing — relying on registry pull"
+  fi
 }
 
 echo "=== Phased full-preview promote: waves $START_WAVE..$END_WAVE ==="
@@ -106,10 +135,12 @@ for wave in $(seq "$START_WAVE" "$END_WAVE"); do
   echo "========== WAVE $wave =========="
   wait_for_pod_ceiling
 
+  build_wave_images "$wave"
   echo "--- push registry images for wave $wave (missing only) ---"
   IMPILO_PUSH_WAVE="$wave" bash "$REPO/scripts/build/push-images-to-local-registry.sh" wave "$wave" 2>&1 | tail -8 || {
     echo "WARN: push wave $wave had errors — continuing if images already in registry"
   }
+  import_wave_images "$wave"
 
   echo "--- helm upgrade through wave $wave ---"
   helm_upgrade_wave "$wave" || {
