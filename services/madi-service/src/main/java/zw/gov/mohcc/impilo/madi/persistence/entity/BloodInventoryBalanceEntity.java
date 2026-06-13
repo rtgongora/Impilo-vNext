@@ -45,6 +45,9 @@ public class BloodInventoryBalanceEntity {
 @Column(name = "jurisdiction")
     private String jurisdiction;
 
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private OffsetDateTime createdAt;
+
 @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
 
@@ -53,6 +56,7 @@ public class BloodInventoryBalanceEntity {
         if (balanceId == null) {
             balanceId = UUID.randomUUID();
         }
+        createdAt = OffsetDateTime.now();
     }
 
     public Long getId() { return id; }
@@ -90,6 +94,9 @@ public class BloodInventoryBalanceEntity {
 
     public String getJurisdiction() { return jurisdiction; }
     public void setJurisdiction(String jurisdiction) { this.jurisdiction = jurisdiction; }
+
+    public OffsetDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
 
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(OffsetDateTime updatedAt) { this.updatedAt = updatedAt; }
