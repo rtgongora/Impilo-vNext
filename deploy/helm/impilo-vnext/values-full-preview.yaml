@@ -175,3 +175,9 @@ oneUiShell:
 
 # Domain microservices: see values-full-preview-runtime.generated.yaml (wave-enabled set).
 # Regenerate: node scripts/full-boot/generate-full-preview-runtime-values.mjs --max-wave <N>
+#
+# Governed login orchestration requires workforce-governance (wave 7 optional) even when
+# FULL_BOOT_MAX_WAVE=0 — session contract work-tab resolution depends on it.
+fullBootServices:
+  workforce-governance-service:
+    enabled: true
