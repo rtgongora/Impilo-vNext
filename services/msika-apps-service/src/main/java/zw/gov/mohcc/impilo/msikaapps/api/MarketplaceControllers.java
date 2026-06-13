@@ -263,7 +263,7 @@ public final class MarketplaceControllers {
         public LauncherController(MarketplaceService service) { this.service = service; }
 
         @GetMapping
-        @PreAuthorize("isAuthenticated()")
+        @PreAuthorize("isAuthenticated() or @msikaInternalTrustAuthorization.allowLauncher()")
         public List<LauncherAppResponse> launcher(
                 @RequestParam(required = false) String facilityId,
                 @RequestParam(required = false) String roles) {

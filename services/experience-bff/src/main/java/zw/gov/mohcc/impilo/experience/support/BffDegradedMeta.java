@@ -28,6 +28,17 @@ public final class BffDegradedMeta {
         return meta;
     }
 
+    public static Map<String, Object> degradedWithStatus(
+            String requestId,
+            String correlationId,
+            String upstream,
+            int status,
+            String guidance) {
+        Map<String, Object> meta = degraded(requestId, correlationId, upstream, guidance);
+        meta.put("status", status);
+        return meta;
+    }
+
     public static Map<String, Object> withPaging(
             String requestId,
             String correlationId,

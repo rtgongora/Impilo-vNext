@@ -1,11 +1,22 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
-import zw.gov.mohcc.impilo.experience.client.MsikaAppsClient;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.RestClientException;
+import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.IntegrationRegistryClient;
+import zw.gov.mohcc.impilo.experience.client.MsikaAppsClient;
+import zw.gov.mohcc.impilo.experience.support.BffDegradedMeta;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * BFF surface for the Health OS Launcher, Capability Marketplace,
@@ -20,20 +31,53 @@ import zw.gov.mohcc.impilo.experience.client.IntegrationRegistryClient;
 @RequestMapping("/internal/v1/marketplace")
 public class HealthOsMarketplaceController {
 
+    private static final Logger log = LoggerFactory.getLogger(HealthOsMarketplaceController.class);
+
     private final MsikaAppsClient msikaApps;
     private final IntegrationRegistryClient integration;
+    private final ObjectMapper objectMapper;
 
-    public HealthOsMarketplaceController(MsikaAppsClient msikaApps, IntegrationRegistryClient integration) {
+    public HealthOsMarketplaceController(
+            MsikaAppsClient msikaApps,
+            IntegrationRegistryClient integration,
+            ObjectMapper objectMapper) {
         this.msikaApps = msikaApps;
         this.integration = integration;
+        this.objectMapper = objectMapper;
     }
 
     // ── Launcher ─────────────────────────────────────────────────────────────
     @GetMapping("/launcher")
     public ResponseEntity<String> launcher(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(required = false) String facilityId,
             @RequestParam(required = false) String roles) {
-        return msikaApps.launcher(facilityId, roles);
+        try {
+            return msikaApps.launcher(facilityId, roles);
+        } catch (HttpStatusCodeException e) {
+            log.warn("Marketplace launcher degraded: {}", e.getMessage());
+            return degradedLauncherResponse(requestId, correlationId, e.getStatusCode().value());
+        } catch (RestClientException e) {
+            log.warn("Marketplace launcher degraded: {}", e.getMessage());
+            return degradedLauncherResponse(requestId, correlationId, 502);
+        }
+    }
+
+    private ResponseEntity<String> degradedLauncherResponse(String requestId, String correlationId, int status) {
+        Map<String, Object> body = Map.of(
+                "data", List.of(),
+                "meta", BffDegradedMeta.degradedWithStatus(
+                        requestId,
+                        correlationId,
+                        "msika-apps-service",
+                        status,
+                        "Marketplace launcher tiles are temporarily unavailable. Registry catalogue apps remain available via /internal/v1/launcher/apps."));
+        try {
+            return ResponseEntity.ok(objectMapper.writeValueAsString(body));
+        } catch (JsonProcessingException e) {
+            return ResponseEntity.ok("{\"data\":[],\"meta\":{\"degraded\":true,\"upstream\":\"msika-apps-service\",\"status\":" + status + "}}");
+        }
     }
 
     // ── Catalogue ────────────────────────────────────────────────────────────

@@ -2,7 +2,7 @@ package zw.gov.mohcc.impilo.vito.config;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -26,17 +26,9 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContextFilter;
  *   Read-only identity verification, OpenCR $match, demographic lookup.
  *   No write access to cards, wallets, or identity merges.
  *
- * Endpoint access matrix:
- *   /v1/clients/**          — authenticated (both modes)
- *   /v1/identity/**         — authenticated (INTERNAL write, EXTERNAL read)
- *   /v1/cards/**            — authenticated (INTERNAL only for mutations)
- *   /v1/wallet/**           — authenticated (INTERNAL only for mutations)
- *   /v1/biometric/**        — authenticated (INTERNAL only)
- *   /v1/match/**            — authenticated (both modes — OpenCR interop)
- *   /v1/recovery/**         — authenticated (INTERNAL only)
- *   /v1/did/**              — authenticated (INTERNAL only)
- *   /actuator/health        — open (probes)
- *   /v3/api-docs/**         — open (documentation)
+ * Preview/test profile ({@code impilo.security.disable-oauth-for-tests=true}) opens
+ * {@code /v1/client-registry/**} for first-party BFF S2S with trust headers only.
+ * Production chain always requires authenticated JWT for business APIs.
  */
 @Configuration
 @EnableWebSecurity
@@ -47,9 +39,30 @@ public class SecurityConfig {
         return new TrustContextFilter(objectMapper);
     }
 
+    /**
+     * Preview/test chain: permit client-registry reads for BFF S2S without Bearer JWT.
+     * Flag-gated — never active when {@code impilo.security.disable-oauth-for-tests=false}.
+     */
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, TrustContextFilter trustContextFilter,
-            @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri:}") String issuerUri) throws Exception {
+    @ConditionalOnProperty(name = "impilo.security.disable-oauth-for-tests", havingValue = "true")
+    public SecurityFilterChain testFilterChain(HttpSecurity http, TrustContextFilter trustContextFilter) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .addFilterBefore(trustContextFilter, UsernamePasswordAuthenticationFilter.class)
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll()
+                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
+                .requestMatchers("/v1/client-registry/**").permitAll()
+                .anyRequest().authenticated());
+        return http.build();
+    }
+
+    @Bean
+    @ConditionalOnProperty(name = "impilo.security.disable-oauth-for-tests", havingValue = "false", matchIfMissing = true)
+    public SecurityFilterChain productionFilterChain(HttpSecurity http, TrustContextFilter trustContextFilter,
+            @org.springframework.beans.factory.annotation.Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri:}") String issuerUri) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session ->
