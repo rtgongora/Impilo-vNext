@@ -80,8 +80,8 @@ describe("RegisterPage", () => {
 
     await user.type(screen.getByPlaceholderText("Your full name"), "Tariro Moyo");
     await user.type(screen.getByPlaceholderText("you@example.com or +263..."), "tariro@example.com");
-    await user.type(screen.getByPlaceholderText("At least 8 characters"), "password123");
-    await user.type(screen.getByPlaceholderText("Repeat password"), "password123");
+    await user.type(screen.getByPlaceholderText("At least 12 characters with upper, lower, digit, and symbol"), "SecurePass123!");
+    await user.type(screen.getByPlaceholderText("Repeat password"), "SecurePass123!");
 
     const privacy = screen.getByRole("checkbox", { name: /Privacy Policy/i });
     const terms = screen.getByRole("checkbox", { name: /Terms of Use/i });

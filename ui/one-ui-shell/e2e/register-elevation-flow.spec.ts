@@ -42,7 +42,7 @@ test.describe("Register self-reg and elevation journey", () => {
     await page.goto("/auth/register");
     await page.getByPlaceholder("Your full name").fill("New Citizen");
     await page.getByPlaceholder("you@example.com or +263...").fill("new@impilo.zw");
-    await page.getByPlaceholder("At least 8 characters").fill("SecurePass123!");
+    await page.getByPlaceholder("At least 12 characters with upper, lower, digit, and symbol").fill("SecurePass123!");
     await page.getByPlaceholder("Repeat password").fill("SecurePass123!");
     const checkboxes = page.getByRole("checkbox");
     await checkboxes.nth(0).check();
