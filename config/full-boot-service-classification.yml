@@ -1,5 +1,5 @@
 metadata:
-  generated_at: '2026-06-11T05:25:13.923Z'
+  generated_at: '2026-06-13T06:14:16.745Z'
   source: docs/registry/services-registry.yaml
   doctrine: docs/environment/RUNTIME_IMAGE_STRATEGY_DOCTRINE.md
   total_entries: 146
@@ -9,8 +9,8 @@ classifications:
     plane: data
     domain: intelligence
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -51,8 +51,8 @@ classifications:
     plane: integration
     domain: platform-ops
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: platform_services
     build_required: true
@@ -93,8 +93,8 @@ classifications:
     plane: integration
     domain: platform-ops
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: platform_services
     build_required: true
@@ -135,8 +135,8 @@ classifications:
     plane: integration
     domain: platform-ops
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: platform_services
     build_required: true
@@ -215,8 +215,8 @@ classifications:
     plane: experience
     domain: workflow-orchestration
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: experience_layer
     build_required: true
@@ -255,8 +255,8 @@ classifications:
     plane: clinical
     domain: care-delivery
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -335,8 +335,8 @@ classifications:
     plane: experience
     domain: ui-workspace
     component_type: frontend_app
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: frontend
     deploy_order_group: experience_layer
     build_required: true
@@ -375,8 +375,8 @@ classifications:
     plane: data
     domain: public-health-campaigns
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -415,8 +415,8 @@ classifications:
     plane: integration
     domain: interoperability
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: platform_services
     build_required: true
@@ -455,8 +455,8 @@ classifications:
     plane: integration
     domain: interoperability
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: platform_services
     build_required: true
@@ -495,8 +495,8 @@ classifications:
     plane: experience
     domain: mobile
     component_type: mobile_app
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: mobile
     deploy_order_group: experience_layer
     build_required: true
@@ -575,8 +575,8 @@ classifications:
     plane: clinical
     domain: clinical-knowledge
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -617,8 +617,8 @@ classifications:
     plane: experience
     domain: workflow-orchestration
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: experience_layer
     build_required: true
@@ -657,8 +657,8 @@ classifications:
     plane: integration
     domain: interoperability
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: platform_services
     build_required: true
@@ -739,8 +739,8 @@ classifications:
     plane: experience
     domain: ui-workspace
     component_type: frontend_app
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: frontend
     deploy_order_group: experience_layer
     build_required: true
@@ -779,8 +779,8 @@ classifications:
     plane: enterprise
     domain: finance
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -819,8 +819,8 @@ classifications:
     plane: enterprise
     domain: finance
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -859,8 +859,8 @@ classifications:
     plane: enterprise
     domain: finance
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -899,8 +899,8 @@ classifications:
     plane: data
     domain: intelligence
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -941,8 +941,8 @@ classifications:
     plane: data
     domain: intelligence
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -983,8 +983,8 @@ classifications:
     plane: data
     domain: intelligence
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -1025,8 +1025,8 @@ classifications:
     plane: data
     domain: intelligence
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -1065,8 +1065,8 @@ classifications:
     plane: data
     domain: intelligence
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: data_layer
     build_required: true
@@ -1107,8 +1107,8 @@ classifications:
     plane: experience
     domain: ui-workspace
     component_type: frontend_app
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: frontend
     deploy_order_group: experience_layer
     build_required: true
@@ -1147,8 +1147,8 @@ classifications:
     plane: integration
     domain: platform-ops
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: platform_services
     build_required: true
@@ -1229,8 +1229,8 @@ classifications:
     plane: integration
     domain: platform-ops
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: platform_services
     build_required: true
@@ -1269,8 +1269,8 @@ classifications:
     plane: clinical
     domain: care-delivery
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -1629,8 +1629,8 @@ classifications:
     plane: clinical
     domain: clinical-knowledge
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -1669,8 +1669,8 @@ classifications:
     plane: enterprise
     domain: enterprise-resource
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -1711,8 +1711,8 @@ classifications:
     plane: clinical
     domain: clinical-knowledge
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -1791,8 +1791,8 @@ classifications:
     plane: enterprise
     domain: enterprise-resource
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -1831,8 +1831,8 @@ classifications:
     plane: trust
     domain: identity-governance
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: identity_trust_policy
     build_required: true
@@ -1873,8 +1873,8 @@ classifications:
     plane: registry
     domain: registry-spine
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: registries
     build_required: true
@@ -1913,8 +1913,8 @@ classifications:
     plane: clinical
     domain: care-delivery
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -1953,8 +1953,8 @@ classifications:
     plane: integration
     domain: interoperability
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: platform_services
     build_required: true
@@ -1993,8 +1993,8 @@ classifications:
     plane: clinical
     domain: care-delivery
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -2033,8 +2033,8 @@ classifications:
     plane: clinical
     domain: care-delivery
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -2073,8 +2073,8 @@ classifications:
     plane: experience
     domain: ui-workspace
     component_type: frontend_app
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: frontend
     deploy_order_group: experience_layer
     build_required: true
@@ -2113,8 +2113,8 @@ classifications:
     plane: integration
     domain: platform-ops
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: platform_services
     build_required: true
@@ -2153,8 +2153,8 @@ classifications:
     plane: integration
     domain: interoperability
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: platform_services
     build_required: true
@@ -2273,8 +2273,8 @@ classifications:
     plane: experience
     domain: ui-workspace
     component_type: frontend_app
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: frontend
     deploy_order_group: experience_layer
     build_required: true
@@ -2313,8 +2313,8 @@ classifications:
     plane: integration
     domain: interoperability
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: platform_services
     build_required: true
@@ -2355,8 +2355,8 @@ classifications:
     plane: experience
     domain: workflow-orchestration
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: experience_layer
     build_required: true
@@ -2435,8 +2435,8 @@ classifications:
     plane: experience
     domain: live-events-broadcast
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: experience_layer
     build_required: true
@@ -2475,8 +2475,8 @@ classifications:
     plane: integration
     domain: platform-ops
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: platform_services
     build_required: true
@@ -2517,8 +2517,8 @@ classifications:
     plane: clinical
     domain: platform-ops
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -2637,8 +2637,8 @@ classifications:
     plane: enterprise
     domain: marketplace
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -2677,8 +2677,8 @@ classifications:
     plane: experience
     domain: ui-workspace
     component_type: frontend_app
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: frontend
     deploy_order_group: experience_layer
     build_required: true
@@ -2717,8 +2717,8 @@ classifications:
     plane: experience
     domain: ui-workspace
     component_type: frontend_app
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: frontend
     deploy_order_group: experience_layer
     build_required: true
@@ -2757,8 +2757,8 @@ classifications:
     plane: enterprise
     domain: marketplace
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -2797,8 +2797,8 @@ classifications:
     plane: experience
     domain: ui-workspace
     component_type: frontend_app
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: frontend
     deploy_order_group: experience_layer
     build_required: true
@@ -2837,8 +2837,8 @@ classifications:
     plane: enterprise
     domain: marketplace
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -2877,8 +2877,8 @@ classifications:
     plane: experience
     domain: ui-workspace
     component_type: frontend_app
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: frontend
     deploy_order_group: experience_layer
     build_required: true
@@ -2917,8 +2917,8 @@ classifications:
     plane: enterprise
     domain: finance
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -3077,8 +3077,8 @@ classifications:
     plane: enterprise
     domain: finance
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -3117,8 +3117,8 @@ classifications:
     plane: trust
     domain: identity-governance
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: identity_trust_policy
     build_required: true
@@ -3157,8 +3157,8 @@ classifications:
     plane: data
     domain: intelligence
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -3199,8 +3199,8 @@ classifications:
     plane: integration
     domain: interoperability
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: platform_services
     build_required: true
@@ -3239,8 +3239,8 @@ classifications:
     plane: data
     domain: intelligence
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -3279,8 +3279,8 @@ classifications:
     plane: integration
     domain: interoperability
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: platform_services
     build_required: true
@@ -3319,8 +3319,8 @@ classifications:
     plane: integration
     domain: interoperability
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: platform_services
     build_required: true
@@ -3359,8 +3359,8 @@ classifications:
     plane: integration
     domain: platform-ops
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: observability
     build_required: true
@@ -3399,8 +3399,8 @@ classifications:
     plane: integration
     domain: platform-ops
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: platform_services
     build_required: true
@@ -3479,8 +3479,8 @@ classifications:
     plane: integration
     domain: interoperability
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: platform_services
     build_required: true
@@ -3559,8 +3559,8 @@ classifications:
     plane: trust
     domain: infrastructure
     component_type: infrastructure
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: infrastructure
     deploy_order_group: infrastructure
     build_required: false
@@ -3599,8 +3599,8 @@ classifications:
     plane: experience
     domain: ui-workspace
     component_type: frontend_app
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: frontend
     deploy_order_group: experience_layer
     build_required: true
@@ -3639,8 +3639,8 @@ classifications:
     plane: experience
     domain: ui-workspace
     component_type: frontend_app
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: frontend
     deploy_order_group: experience_layer
     build_required: true
@@ -3719,8 +3719,8 @@ classifications:
     plane: clinical
     domain: care-delivery
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -3759,8 +3759,8 @@ classifications:
     plane: experience
     domain: ui-workspace
     component_type: frontend_app
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: frontend
     deploy_order_group: experience_layer
     build_required: true
@@ -3799,8 +3799,8 @@ classifications:
     plane: clinical
     domain: care-delivery
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -3879,8 +3879,8 @@ classifications:
     plane: experience
     domain: ui-workspace
     component_type: frontend_app
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: frontend
     deploy_order_group: experience_layer
     build_required: true
@@ -3919,8 +3919,8 @@ classifications:
     plane: clinical
     domain: care-delivery
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -3961,8 +3961,8 @@ classifications:
     plane: clinical
     domain: care-delivery
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -4001,8 +4001,8 @@ classifications:
     plane: experience
     domain: ui-workspace
     component_type: frontend_app
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: frontend
     deploy_order_group: experience_layer
     build_required: true
@@ -4041,8 +4041,8 @@ classifications:
     plane: experience
     domain: ui-workspace
     component_type: frontend_app
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: frontend
     deploy_order_group: experience_layer
     build_required: true
@@ -4121,8 +4121,8 @@ classifications:
     plane: enterprise
     domain: enterprise-resource
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -4161,8 +4161,8 @@ classifications:
     plane: registry
     domain: registry-spine
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: registries
     build_required: true
@@ -4203,8 +4203,8 @@ classifications:
     plane: experience
     domain: mobile
     component_type: mobile_app
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: mobile
     deploy_order_group: experience_layer
     build_required: true
@@ -4283,8 +4283,8 @@ classifications:
     plane: integration
     domain: platform-ops
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: platform_services
     build_required: true
@@ -4323,8 +4323,8 @@ classifications:
     plane: data
     domain: intelligence
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -4363,8 +4363,8 @@ classifications:
     plane: integration
     domain: platform-ops
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: platform_services
     build_required: true
@@ -4403,8 +4403,8 @@ classifications:
     plane: clinical
     domain: clinical-knowledge
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -4443,8 +4443,8 @@ classifications:
     plane: clinical
     domain: care-delivery
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -4483,8 +4483,8 @@ classifications:
     plane: integration
     domain: platform-ops
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: event_backbone
     build_required: true
@@ -4525,8 +4525,8 @@ classifications:
     plane: data
     domain: intelligence
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -4605,8 +4605,8 @@ classifications:
     plane: integration
     domain: platform-ops
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: platform_services
     build_required: true
@@ -4647,8 +4647,8 @@ classifications:
     plane: experience
     domain: ui-workspace
     component_type: frontend_app
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: frontend
     deploy_order_group: experience_layer
     build_required: true
@@ -4687,8 +4687,8 @@ classifications:
     plane: enterprise
     domain: finance
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -4807,8 +4807,8 @@ classifications:
     plane: experience
     domain: ui-workspace
     component_type: frontend_app
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: frontend
     deploy_order_group: experience_layer
     build_required: true
@@ -4847,8 +4847,8 @@ classifications:
     plane: enterprise
     domain: wellness-personal-health-data
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -4927,8 +4927,8 @@ classifications:
     plane: experience
     domain: ui-workspace
     component_type: frontend_app
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: frontend
     deploy_order_group: experience_layer
     build_required: true
@@ -4967,8 +4967,8 @@ classifications:
     plane: integration
     domain: platform-ops
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: platform_services
     build_required: true
@@ -5007,8 +5007,8 @@ classifications:
     plane: data
     domain: public-health-surveillance
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -5409,8 +5409,8 @@ classifications:
     plane: trust
     domain: identity-governance
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: identity_trust_policy
     build_required: true
@@ -5689,8 +5689,8 @@ classifications:
     plane: enterprise
     domain: wellness-compatibility-alias
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -5729,8 +5729,8 @@ classifications:
     plane: integration
     domain: interoperability
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: platform_services
     build_required: true
@@ -5769,8 +5769,8 @@ classifications:
     plane: enterprise
     domain: workforce-operations
     component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: kubernetes_service
     deploy_order_group: domain_services
     build_required: true
@@ -5851,8 +5851,8 @@ classifications:
     plane: experience
     domain: ui-workspace
     component_type: frontend_app
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
     runtime_kind: frontend
     deploy_order_group: experience_layer
     build_required: true

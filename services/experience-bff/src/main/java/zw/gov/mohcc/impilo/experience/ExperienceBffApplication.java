@@ -10,6 +10,7 @@ import zw.gov.mohcc.impilo.experience.config.BffProviderHubsProperties;
 import zw.gov.mohcc.impilo.experience.config.BffWalletProperties;
 import zw.gov.mohcc.impilo.experience.config.ClinicalPlatformProperties;
 import zw.gov.mohcc.impilo.experience.config.LearningServiceRuntimeProperties;
+import zw.gov.mohcc.impilo.experience.config.OrchestrationBacklogEndpoints;
 import zw.gov.mohcc.impilo.experience.config.RegistryDownstreamProperties;
 
 @SpringBootApplication
@@ -22,6 +23,7 @@ import zw.gov.mohcc.impilo.experience.config.RegistryDownstreamProperties;
     BffFacilitiesProperties.class,
     BffProviderHubsProperties.class,
     BffWalletProperties.class,
+    OrchestrationBacklogEndpoints.class,
     zw.gov.mohcc.impilo.experience.bootstrap.BootstrapProperties.class
 })
 public class ExperienceBffApplication {

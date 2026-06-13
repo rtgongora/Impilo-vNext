@@ -29,6 +29,10 @@ export default function ProvidersPage() {
   const { data, isLoading } = useProviders(search ? { search } : undefined);
 
   const providers = data?.data ?? [];
+  const degraded = Boolean((data?.meta as { degraded?: boolean } | undefined)?.degraded);
+  const guidance =
+    (data?.meta as { guidance?: string } | undefined)?.guidance ??
+    "Provider registry returned no rows. Use New Provider to onboard or adjust your search.";
 
   return (
     <AppLayout>
@@ -89,6 +93,11 @@ export default function ProvidersPage() {
             <p className="text-gray-400 text-sm">
               {search ? "No providers match your search" : "No providers found"}
             </p>
+            {(degraded || !search) && (
+              <p className="mt-3 text-sm text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-4 py-3 max-w-lg mx-auto">
+                {guidance}
+              </p>
+            )}
           </div>
         ) : (
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">

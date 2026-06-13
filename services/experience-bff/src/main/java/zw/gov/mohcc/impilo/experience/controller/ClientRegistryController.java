@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
+import zw.gov.mohcc.impilo.experience.support.BffDegradedMeta;
 
 import java.util.Map;
 
@@ -48,8 +49,11 @@ public class ClientRegistryController {
                     "size", size,
                     "totalElements", 0,
                     "totalPages", 0,
-                    "hasNext", false
-            ));
+                    "hasNext", false), BffDegradedMeta.degraded(
+                    requestId,
+                    correlationId,
+                    "vito-service",
+                    "Client registry is temporarily unavailable. Use New registration for intake or retry when VITO is reachable."));
         }
     }
 
@@ -196,8 +200,11 @@ public class ClientRegistryController {
                     "pendingMatchReview", 0,
                     "openStewardshipActions", 0,
                     "mergeCasesOpen", 0,
-                    "clientsByStatus", Map.of()
-            ));
+                    "clientsByStatus", Map.of()), BffDegradedMeta.degraded(
+                    requestId,
+                    correlationId,
+                    "vito-service",
+                    "Client registry metrics are unavailable. List and intake flows may still work when VITO recovers."));
         }
     }
 
@@ -219,9 +226,14 @@ public class ClientRegistryController {
     }
 
     private ResponseEntity<Map<String, Object>> ok(String requestId, String correlationId, Object data) {
+        return ok(requestId, correlationId, data, BffDegradedMeta.base(requestId, correlationId));
+    }
+
+    private ResponseEntity<Map<String, Object>> ok(
+            String requestId, String correlationId, Object data, Map<String, Object> meta) {
         return ResponseEntity.ok(Map.of(
                 "data", data,
-                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+                "meta", meta
         ));
     }
 

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-11T05:25:13.923Z",
+  "generated_at": "2026-06-13T06:14:11.262Z",
   "components": [
     {
       "id": "banking-rails",
@@ -22,7 +22,7 @@
       "component_name": "citizen-app",
       "type": "mobile_app",
       "plane": "experience",
-      "classification": "optional_full_boot",
+      "classification": "wave_sequenced_full_boot",
       "build_required": true,
       "image_required": false,
       "image_strategy": "not-required-mobile-artifact",
@@ -262,7 +262,7 @@
       "component_name": "provider-app",
       "type": "mobile_app",
       "plane": "experience",
-      "classification": "optional_full_boot",
+      "classification": "wave_sequenced_full_boot",
       "build_required": true,
       "image_required": false,
       "image_strategy": "not-required-mobile-artifact",

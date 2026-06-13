@@ -192,6 +192,25 @@ impilo:
     scheduling-service-base-url: ${SCHEDULING_SERVICE_BASE_URL:http://localhost:8128}
     booking-base-url: ${BOOKING_BASE_URL:http://localhost:8265}
 
+    # PCW-2 orchestration backlog — preview env mapped; dedicated BFF clients not yet implemented.
+    orchestration-backlog:
+      audit-ledger-base-url: ${AUDIT_LEDGER_BASE_URL:http://localhost:8350}
+      butano-fhir-base-url: ${BUTANO_FHIR_BASE_URL:http://localhost:8289}
+      card-print-agent-base-url: ${CARD_PRINT_AGENT_BASE_URL:http://localhost:8291}
+      connector-fhir-base-url: ${CONNECTOR_FHIR_BASE_URL:http://localhost:8151}
+      developer-portal-base-url: ${DEVELOPER_PORTAL_BASE_URL:http://localhost:8370}
+      identity-assurance-base-url: ${IDENTITY_ASSURANCE_BASE_URL:http://localhost:8201}
+      jobs-service-base-url: ${JOBS_SERVICE_BASE_URL:http://localhost:8109}
+      observability-base-url: ${OBSERVABILITY_BASE_URL:http://localhost:8211}
+      offline-edge-base-url: ${OFFLINE_EDGE_BASE_URL:http://localhost:8360}
+      offline-sync-base-url: ${OFFLINE_SYNC_BASE_URL:http://localhost:8095}
+      pharmacy-elmis-base-url: ${PHARMACY_ELMIS_BASE_URL:http://localhost:8099}
+      product-registry-base-url: ${PRODUCT_REGISTRY_BASE_URL:http://localhost:8097}
+      referral-service-base-url: ${REFERRAL_SERVICE_BASE_URL:http://localhost:8399}
+      schema-registry-base-url: ${SCHEMA_REGISTRY_BASE_URL:http://localhost:8371}
+      security-hardening-base-url: ${SECURITY_HARDENING_BASE_URL:http://localhost:8221}
+      share-slip-base-url: ${SHARE_SLIP_BASE_URL:http://localhost:8104}
+
   clinical-platform:
     base-url: ${CLINICAL_KNOWLEDGE_PLATFORM_BASE_URL:http://localhost:8270}
 

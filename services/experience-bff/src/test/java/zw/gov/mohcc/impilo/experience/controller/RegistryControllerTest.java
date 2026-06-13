@@ -52,6 +52,11 @@ class RegistryControllerTest {
 
         assertEquals(200, response.getStatusCode().value());
         assertEquals(0, ((List<?>) response.getBody().get("data")).size());
+        @SuppressWarnings("unchecked")
+        Map<String, Object> meta = (Map<String, Object>) response.getBody().get("meta");
+        assertEquals(Boolean.TRUE, meta.get("degraded"));
+        assertEquals("varapi-service", meta.get("upstream"));
+        assertNotNull(meta.get("guidance"));
     }
 
     private static ServiceClientConfig.ServiceEndpoints endpoints() {

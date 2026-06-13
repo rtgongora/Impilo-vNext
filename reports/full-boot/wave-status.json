@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-06-04T17:59:38.505538+00:00",
+  "generated_at": "2026-06-13T04:06:42.214342+00:00",
   "namespace": "impilo-full-preview",
-  "max_wave": 7,
-  "assigned": 109,
-  "ready": 86,
+  "max_wave": null,
+  "assigned": 110,
+  "ready": 16,
   "services": [
     {
       "wave": 0,
@@ -98,332 +98,356 @@
     {
       "wave": 1,
       "service": "identity-assurance-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 1,
       "service": "mvumo-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 1,
       "service": "tshepo-offline-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 2,
       "service": "indawo-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 2,
       "service": "product-registry-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 3,
       "service": "butano-fhir",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 3,
       "service": "clinical-knowledge-platform-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 3,
       "service": "document-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 3,
       "service": "forms-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 3,
       "service": "guidance-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 3,
       "service": "inpatient-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
+    },
+    {
+      "wave": 3,
+      "service": "madi-service",
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 3,
       "service": "inventory-elmis-adapter",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 3,
       "service": "inventory-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 3,
       "service": "oros-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 3,
       "service": "pacs-adapter-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 3,
       "service": "pharmacy-elmis-adapter",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 3,
       "service": "pharmacy-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 3,
       "service": "rules-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 3,
       "service": "scheduling-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 4,
       "service": "ai-model-registry-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 4,
       "service": "campaigns-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 4,
       "service": "data-access-governance-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 4,
       "service": "data-governance-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 4,
       "service": "data-ingestion-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 4,
       "service": "data-pipeline-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 4,
       "service": "data-warehouse-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 4,
       "service": "national-data-repository-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 4,
       "service": "ndr-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 4,
       "service": "reporting-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 4,
       "service": "search-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 4,
       "service": "surveillance-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 5,
       "service": "analytics-pipeline-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 5,
       "service": "asset-registry-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 5,
       "service": "audit-ledger-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 5,
       "service": "card-print-agent",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 5,
       "service": "channels-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 5,
       "service": "connector-fhir-adapter",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 5,
       "service": "developer-portal-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 5,
       "service": "dispatch-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 5,
       "service": "integration-hub",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 5,
       "service": "iot-ingestion-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 5,
       "service": "jobs-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 5,
       "service": "landela-adapter-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 5,
       "service": "llm-orchestration-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 5,
       "service": "ndila-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 5,
       "service": "nhume-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 5,
       "service": "notification-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 5,
       "service": "observability-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 5,
       "service": "offline-edge-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 5,
       "service": "offline-sync-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 5,
       "service": "referral-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 5,
       "service": "schema-registry-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 5,
       "service": "security-hardening-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 5,
       "service": "support-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 5,
       "service": "workflow-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
+    },
+    {
+      "wave": 5,
+      "service": "rtc-gateway-service",
+      "deployed": false,
+      "ready": false
+    },
+    {
+      "wave": 6,
+      "service": "booking-service",
+      "deployed": false,
+      "ready": false
+    },
+    {
+      "wave": 6,
+      "service": "live-service",
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 6,
@@ -434,8 +458,8 @@
     {
       "wave": 6,
       "service": "community-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 6,
@@ -446,12 +470,6 @@
     {
       "wave": 6,
       "service": "developer-console",
-      "deployed": false,
-      "ready": false
-    },
-    {
-      "wave": 6,
-      "service": "ehr",
       "deployed": false,
       "ready": false
     },
@@ -470,8 +488,8 @@
     {
       "wave": 6,
       "service": "learning-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 6,
@@ -494,24 +512,6 @@
     {
       "wave": 6,
       "service": "msika-web",
-      "deployed": false,
-      "ready": false
-    },
-    {
-      "wave": 6,
-      "service": "mushex-finance-console",
-      "deployed": false,
-      "ready": false
-    },
-    {
-      "wave": 6,
-      "service": "mushex-ops-console",
-      "deployed": false,
-      "ready": false
-    },
-    {
-      "wave": 6,
-      "service": "mushex-payer-portal",
       "deployed": false,
       "ready": false
     },
@@ -578,86 +578,92 @@
     {
       "wave": 7,
       "service": "costing-engine-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 7,
       "service": "coverage-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 7,
       "service": "credential-verification-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 7,
       "service": "general-ledger-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 7,
       "service": "hr-payroll-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
+    },
+    {
+      "wave": 7,
+      "service": "msika-apps-service",
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 7,
       "service": "msika-flow-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 7,
       "service": "msika-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 7,
       "service": "mushe-wallet-service",
-      "deployed": true,
-      "ready": true
-    },
-    {
-      "wave": 7,
-      "service": "mushex-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 7,
       "service": "procurement-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 7,
       "service": "share-slip-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 7,
       "service": "simba-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 7,
       "service": "wellness-service",
-      "deployed": true,
-      "ready": true
+      "deployed": false,
+      "ready": false
     },
     {
       "wave": 7,
       "service": "workforce-governance-service",
       "deployed": true,
       "ready": true
+    },
+    {
+      "wave": 8,
+      "service": "mushex-service",
+      "deployed": false,
+      "ready": false
     }
   ]
 }

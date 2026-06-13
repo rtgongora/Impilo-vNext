@@ -12,7 +12,7 @@
     "registry": 7
   },
   "by_classification": {
-    "optional_full_boot": 98,
+    "wave_sequenced_full_boot": 98,
     "external_dependency": 9,
     "required_full_boot": 22,
     "internal_package": 12,
@@ -162,11 +162,11 @@
   "runtime_healthy": true,
   "build_pass": 0,
   "build_fail": 0,
-  "image_pass": 4,
+  "image_pass": 1,
   "image_fail": 0,
   "blocking_failure_count": 0,
   "image_strategy_summary": {
-    "selected_target_count": 4,
+    "selected_target_count": 1,
     "runtime_image_required_count": 22,
     "dockerfile_count": 1,
     "shared_template_count": 70,
@@ -177,7 +177,7 @@
     "not_required_count": 28,
     "unknown_needs_review_count": 0,
     "missing_required_image_strategy_count": 0,
-    "image_build_pass_count": 4,
+    "image_build_pass_count": 1,
     "image_build_fail_count": 0,
     "blocking_failure_count": 0,
     "advisory_count": 0

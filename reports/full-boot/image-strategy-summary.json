@@ -1,15 +1,12 @@
 {
-  "generated_at": "2026-06-11T15:51:47.492739+00:00",
-  "tag_sha": "preview-46254765",
+  "generated_at": "2026-06-13T04:34:04.256194+00:00",
+  "tag_sha": "preview-0ff0a6eb",
   "doctrine": "runtime_image_strategy_required",
   "mode": "only",
   "only_services": [
-    "experience-bff",
-    "one-ui-shell",
-    "notification-service",
-    "msika-apps-service"
+    "madi-service"
   ],
-  "selected_target_count": 4,
+  "selected_target_count": 1,
   "total_components": 146,
   "runtime_image_required_count": 22,
   "dockerfile_count": 1,
@@ -21,20 +18,17 @@
   "not_required_count": 28,
   "unknown_needs_review_count": 0,
   "missing_required_image_strategy_count": 0,
-  "image_build_pass_count": 4,
+  "image_build_pass_count": 1,
   "image_build_fail_count": 0,
   "blocking_failure_count": 0,
   "advisory_count": 0,
-  "pass": 4,
+  "pass": 1,
   "fail": 0,
   "skip": 0,
   "official_validated": 0,
   "missing_required_image_strategy": 0,
   "required_fail": 0,
   "per_service": {
-    "experience-bff": "pass_shared_template",
-    "msika-apps-service": "pass_shared_template",
-    "notification-service": "pass_shared_template",
-    "one-ui-shell": "pass"
+    "madi-service": "pass_shared_template"
   }
 }

@@ -1,6 +1,6 @@
 # Backend Capability to Frontend Surfacing Matrix
 
-> Generated: 2026-06-11. Regenerate: `node scripts/frontend/generate-parity-docs.mjs`
+> Generated: 2026-06-13. Regenerate: `node scripts/frontend/generate-parity-docs.mjs`
 
 ## Summary
 

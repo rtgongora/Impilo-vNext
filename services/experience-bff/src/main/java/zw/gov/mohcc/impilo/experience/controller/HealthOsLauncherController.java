@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.experience.client.MsikaAppsClient;
+import zw.gov.mohcc.impilo.experience.service.HealthOsLauncherCatalogService;
 
 import java.time.Instant;
 import java.util.*;
@@ -14,26 +15,23 @@ import java.util.*;
 /**
  * Health OS launcher contract surface ({@code /internal/v1/launcher/apps/**}).
  *
- * <p>Merges curated core platform apps with marketplace launcher tiles from msika-apps-service.</p>
+ * <p>Merges registry-aligned platform catalogue with marketplace launcher tiles from msika-apps-service.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/launcher/apps")
 public class HealthOsLauncherController {
 
-    private static final List<Map<String, Object>> CORE_PLATFORM_APPS = List.of(
-            launcherTile("home", "Home", "Role-aware dashboard and workplace hub", "/home", "citizen", true, 0),
-            launcherTile("command_centre", "Production Command Centre",
-                    "Discover and navigate the full Health OS", "/production-command-centre", "system", true, 1),
-            launcherTile("learning", "Impilo Fundo", "Courses, SOPs, and role-aware training", "/learning", "citizen", false, 3),
-            launcherTile("clinical", "Clinical Hub", "Clinical care modules", "/clinical", "clinical", false, 10)
-    );
-
     private final MsikaAppsClient msikaApps;
     private final ObjectMapper objectMapper;
+    private final HealthOsLauncherCatalogService catalogService;
 
-    public HealthOsLauncherController(MsikaAppsClient msikaApps, ObjectMapper objectMapper) {
+    public HealthOsLauncherController(
+            MsikaAppsClient msikaApps,
+            ObjectMapper objectMapper,
+            HealthOsLauncherCatalogService catalogService) {
         this.msikaApps = msikaApps;
         this.objectMapper = objectMapper;
+        this.catalogService = catalogService;
     }
 
     @GetMapping
@@ -42,7 +40,7 @@ public class HealthOsLauncherController {
             @RequestParam(required = false) Boolean includeDeprecated,
             @RequestParam(required = false) String facilityId,
             @RequestParam(required = false) String roles) {
-        List<Map<String, Object>> apps = new ArrayList<>(CORE_PLATFORM_APPS);
+        List<Map<String, Object>> apps = new ArrayList<>(catalogService.platformApps());
         apps.addAll(parseMarketplaceLauncher(facilityId, roles, includeUnavailable, includeDeprecated));
 
         Map<String, Object> actor = new LinkedHashMap<>();
@@ -54,6 +52,8 @@ public class HealthOsLauncherController {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("actor", actor);
         body.put("apps", apps);
+        body.put("catalogCount", catalogService.catalogSize());
+        body.put("marketplaceCount", apps.size() - catalogService.catalogSize());
         body.put("generatedAt", Instant.now().toString());
         return ResponseEntity.ok(body);
     }
@@ -171,34 +171,13 @@ public class HealthOsLauncherController {
         app.put("pinned", false);
         app.put("recentlyUsed", false);
         app.put("stateExplanation", tile.get("reason"));
-        return app;
-    }
-
-    private static Map<String, Object> launcherTile(
-            String appCode,
-            String name,
-            String description,
-            String href,
-            String category,
-            boolean systemApp,
-            int weight) {
-        Map<String, Object> app = new LinkedHashMap<>();
-        app.put("id", "core-" + appCode);
-        app.put("appCode", appCode);
-        app.put("name", name);
-        app.put("description", description);
-        app.put("icon", null);
-        app.put("href", href);
-        app.put("category", category);
-        app.put("state", "AVAILABLE");
-        app.put("marketplaceItemId", null);
-        app.put("installationId", null);
-        app.put("systemAppFlag", systemApp);
-        app.put("weight", weight);
-        app.put("requiredRole", null);
-        app.put("pinned", false);
-        app.put("recentlyUsed", false);
-        app.put("stateExplanation", null);
+        app.put("serviceSlug", "msika-apps");
+        app.put("plane", "enterprise");
+        app.put("route", app.get("href"));
+        app.put("apiBacked", true);
+        app.put("fallbackState", false);
+        app.put("readiness", "ready");
+        app.put("requiredContext", List.of("facilityId"));
         return app;
     }
 }

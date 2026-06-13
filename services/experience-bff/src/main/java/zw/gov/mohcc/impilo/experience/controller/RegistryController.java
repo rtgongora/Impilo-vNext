@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
+import zw.gov.mohcc.impilo.experience.support.BffDegradedMeta;
 
 import java.util.*;
 
@@ -57,14 +58,18 @@ public class RegistryController {
             }
             return ResponseEntity.ok(Map.of(
                     "data", rows,
-                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId,
-                            "page", page, "size", size)));
+                    "meta", BffDegradedMeta.withPaging(requestId, correlationId, page, size)));
         } catch (Exception e) {
             log.warn("VARAPI provider search failed: {}", e.getMessage());
             return ResponseEntity.ok(Map.of(
                     "data", List.of(),
-                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId,
-                            "page", page, "size", size)));
+                    "meta", BffDegradedMeta.degradedWithPaging(
+                            requestId,
+                            correlationId,
+                            "varapi-service",
+                            "Provider registry is temporarily unavailable. Retry shortly or open Provider onboarding to register a new provider.",
+                            page,
+                            size)));
         }
     }
 
@@ -80,9 +85,14 @@ public class RegistryController {
                     "data", data != null ? data : Map.of(),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
+            log.warn("VARAPI provider detail failed for id={}: {}", id, e.getMessage());
             return ResponseEntity.ok(Map.of(
                     "data", Map.of(),
-                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+                    "meta", BffDegradedMeta.degraded(
+                            requestId,
+                            correlationId,
+                            "varapi-service",
+                            "Provider profile could not be loaded. Confirm the Provider ID exists or retry when VARAPI is available.")));
         }
     }
 
@@ -139,14 +149,18 @@ public class RegistryController {
             }
             return ResponseEntity.ok(Map.of(
                     "data", rows,
-                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId,
-                            "page", page, "size", size)));
+                    "meta", BffDegradedMeta.withPaging(requestId, correlationId, page, size)));
         } catch (Exception e) {
             log.warn("TUSO facility search (registry path) failed: {}", e.getMessage());
             return ResponseEntity.ok(Map.of(
                     "data", List.of(),
-                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId,
-                            "page", page, "size", size)));
+                    "meta", BffDegradedMeta.degradedWithPaging(
+                            requestId,
+                            correlationId,
+                            "tuso-service",
+                            "Facility registry is temporarily unavailable. Select a facility from session context or retry when TUSO is reachable.",
+                            page,
+                            size)));
         }
     }
 

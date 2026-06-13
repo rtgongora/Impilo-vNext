@@ -59,8 +59,10 @@
 
 | File | Change |
 |------|--------|
-| `scripts/full-boot/generate-full-preview-bff-downstream-env.mjs` | +16 mappings, `BFF_DOWNSTREAM_EXCLUDED`, `validateCoverage()` |
-| `deploy/helm/impilo-vnext/values-full-preview-bff-env.generated.yaml` | Regenerated — **97 env vars**, no localhost |
+| `scripts/full-boot/generate-full-preview-bff-downstream-env.mjs` | +16 mappings, `BFF_DOWNSTREAM_EXCLUDED`, `validateCoverage()`, PCW-2 `IMPILO_BFF_FACILITIES_MODE: live` |
+| `deploy/helm/impilo-vnext/values-full-preview-bff-env.generated.yaml` | Regenerated — **97 env vars**, no localhost, facilities **live** |
+| `services/experience-bff/src/main/resources/application.yml` | `orchestration-backlog` bindings for 16 env vars |
+| `services/experience-bff/.../OrchestrationBacklogEndpoints.java` | Spring binding for backlog endpoints |
 | `scripts/guard/check-bff-downstream-mappings.sh` | **New** — fails CI if gaps reappear |
 
 ---
@@ -76,12 +78,14 @@ bash scripts/guard/check-bff-downstream-mappings.sh
 
 ---
 
-## Follow-up (not this wave)
+## Follow-up (PCW-2 complete; redeploy pending)
 
-1. Wire BFF `application.yml` properties for new env vars where Java clients are added
-2. Add integration tests per new downstream client
-3. **Preview redeploy required** to apply generated env to running BFF pod (user authorization)
-4. Switch `IMPILO_BFF_FACILITIES_MODE` from `stub` → `live` when TUSO seed confirmed
+1. ~~Wire BFF `application.yml` properties for new env vars where Java clients are added~~ → **16/16 bound in `orchestration-backlog`; clients backlog**
+2. Add integration tests per new downstream client (as clients are implemented)
+3. **Preview redeploy required** to apply PCW-1/PCW-2 generated env + BFF image (user authorization)
+4. ~~Switch `IMPILO_BFF_FACILITIES_MODE` from `stub` → `live` when TUSO seed confirmed~~ → **done in PCW-2**
+
+See `reports/product/pcw-2-tier1-parity-closure-report.md`.
 
 ---
 

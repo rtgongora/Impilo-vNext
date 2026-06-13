@@ -130,11 +130,11 @@ function classifyEntry(entry) {
   if (type === "external_dependency") return "external_dependency";
   if (type === "infrastructure") {
     if (REQUIRED_INFRA.has(id)) return "required_full_boot";
-    return "optional_full_boot";
+    return "wave_sequenced_full_boot";
   }
   if (type === "ui_workspace" || type === "mobile_app") {
     if (id === "one-ui-shell") return "required_full_boot";
-    return "optional_full_boot";
+    return "wave_sequenced_full_boot";
   }
   if (REQUIRED_EXPERIENCE.has(id) || REQUIRED_TRUST.has(id) || REQUIRED_REGISTRY.has(id)) {
     return "required_full_boot";
@@ -149,7 +149,12 @@ function classifyEntry(entry) {
   if (!entry.buildable && entry.implementation_status === "not-implemented") {
     return "doctrine_only_future";
   }
-  return "optional_full_boot";
+  return "wave_sequenced_full_boot";
+}
+
+/** Backwards-compatible alias for pre-PCW-2 classification labels. */
+function normalizeClassification(value) {
+  return value === "optional_full_boot" ? "wave_sequenced_full_boot" : value;
 }
 
 function deployOrderGroup(entry, classification) {
@@ -532,7 +537,7 @@ function writeClassificationYaml(catalog) {
     classification: e.full_boot_classification,
     runtime_kind: e.runtime_kind ?? null,
     deploy_order_group: e.deploy_order_group,
-    build_required: ["required_full_boot", "optional_full_boot"].includes(e.full_boot_classification) && e.buildable,
+    build_required: ["required_full_boot", "wave_sequenced_full_boot"].includes(e.full_boot_classification) && e.buildable,
     image_required: !!e.image_required,
     runtime_image_required: !!e.image_required,
     image_strategy: e.image_strategy,

@@ -11,6 +11,7 @@
 | `docs/architecture/SERVICE_TO_SERVICE_TRUST_PATTERN.md` | human-review | all planes | advisory |
 | `docs/architecture/VNEXT_DOCTRINE_COMPLIANCE_MATRIX.md` | human-review | all planes | advisory |
 | `docs/architecture/VNEXT_DOCTRINE_INDEX.md` | human-review | all planes | advisory |
+| `docs/architecture/VNEXT_KEYCLOAK_TRUST_ALIGNMENT_REPORT.md` | human-review | all planes | advisory |
 | `docs/architecture/clinical-encounter-journey-state-machine.md` | human-review | all planes | advisory |
 | `docs/architecture/clinical-experience-wiring-map.md` | human-review | all planes | advisory |
 | `docs/architecture/core-transaction-bff-composition.md` | human-review | all planes | advisory |

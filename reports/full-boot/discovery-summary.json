@@ -10,7 +10,7 @@
     "enterprise": 16
   },
   "by_classification": {
-    "optional_full_boot": 98,
+    "wave_sequenced_full_boot": 98,
     "external_dependency": 9,
     "required_full_boot": 22,
     "internal_package": 12,

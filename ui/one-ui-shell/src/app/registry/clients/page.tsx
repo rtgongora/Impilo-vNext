@@ -30,6 +30,10 @@ export default function ClientRegistryPage() {
   const list = useClientRegistryClients({ query, status, verificationState, page: 0, size: 30 });
   const dashboard = useClientRegistryDashboard();
   const items = list.data?.data.items ?? [];
+  const degraded = Boolean((list.data?.meta as { degraded?: boolean } | undefined)?.degraded);
+  const guidance =
+    (list.data?.meta as { guidance?: string } | undefined)?.guidance ??
+    "No clients matched the current filters. Start a new registration or broaden your search.";
 
   const metrics = useMemo(
     () => [
@@ -162,6 +166,9 @@ export default function ClientRegistryPage() {
           <div className="rounded-2xl border border-gray-200 bg-white p-12 text-center">
             <Users className="mx-auto mb-3 h-10 w-10 text-gray-300" />
             <p className="text-sm text-gray-500">No clients matched the current filters.</p>
+            <p className="mx-auto mt-3 max-w-lg rounded-lg border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              {guidance}
+            </p>
           </div>
         ) : (
           <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
