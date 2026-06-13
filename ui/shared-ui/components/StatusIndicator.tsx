@@ -16,8 +16,8 @@ const statusColors: Record<string, string> = {
 export function StatusIndicator({ status, label, className = "" }: StatusIndicatorProps) {
   return (
     <div className={`inline-flex items-center gap-2 ${className}`}>
-      <span className={`w-2 h-2 rounded-full ${statusColors[status]}`} />
-      {label && <span className="text-sm text-neutral-900">{label}</span>}
+      <span className={`h-2 w-2 rounded-full ${statusColors[status]}`} />
+      {label ? <span className="text-sm text-foreground">{label}</span> : null}
     </div>
   );
 }

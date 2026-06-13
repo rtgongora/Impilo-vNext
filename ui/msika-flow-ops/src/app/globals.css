@@ -1,40 +1,18 @@
+@import "../../../shared-ui/tokens.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import "shared-ui/tokens.css";
 
 @layer base {
   body {
-    @apply bg-neutral-50 text-neutral-900 antialiased;
-  }
-}
-
-@layer components {
-  .btn-primary {
-    @apply inline-flex items-center justify-center px-4 py-2 rounded-lg bg-brand-primary text-white font-medium text-sm hover:bg-emerald-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
-  }
-  .btn-secondary {
-    @apply inline-flex items-center justify-center px-4 py-2 rounded-lg bg-white text-neutral-700 font-medium text-sm border border-neutral-300 hover:bg-neutral-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
-  }
-  .btn-danger {
-    @apply inline-flex items-center justify-center px-4 py-2 rounded-lg bg-danger text-white font-medium text-sm hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
-  }
-  .card {
-    @apply bg-white rounded-lg border border-neutral-200 shadow-subtle;
-  }
-  .input-field {
-    @apply w-full px-3 py-2 rounded-lg border border-neutral-300 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-primary/50 focus:border-brand-primary transition-colors;
-  }
-  .badge {
-    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
-  }
-  .badge-pending {
-    @apply badge bg-yellow-100 text-yellow-800;
-  }
-  .badge-approved {
-    @apply badge bg-emerald-100 text-emerald-800;
-  }
-  .badge-rejected {
-    @apply badge bg-red-100 text-red-800;
+    font-family: var(--font-sans);
+    color: var(--text-primary);
+    background:
+      radial-gradient(circle at 10% -10%, rgba(0, 151, 57, 0.06), transparent 36%),
+      radial-gradient(circle at 88% 0%, rgba(252, 227, 0, 0.05), transparent 30%),
+      var(--background);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }

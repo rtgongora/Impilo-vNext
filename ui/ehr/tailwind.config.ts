@@ -1,23 +1,13 @@
 import type { Config } from "tailwindcss";
+import impiloPreset from "../shared-ui/tailwind-preset";
 
 const config: Config = {
-  content: [
-    "./src/**/*.{js,ts,jsx,tsx,mdx}",
-    "../shared-ui/src/**/*.{js,ts,jsx,tsx}",
-  ],
+  presets: [impiloPreset],
+  content: ["./src/**/*.{js,ts,jsx,tsx,mdx}", "../shared-ui/src/**/*.{js,ts,jsx,tsx}"],
   theme: {
-    extend: {
-      colors: {
-        impilo: {
-          primary: "#1e40af",
-          secondary: "#059669",
-          warning: "#d97706",
-          danger: "#dc2626",
-          surface: "#f8fafc",
-        },
-      },
-    },
+    extend: {},
   },
   plugins: [],
 };
+
 export default config;

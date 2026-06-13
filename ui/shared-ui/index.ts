@@ -26,6 +26,24 @@ export type { CardProps } from "./components/Card";
 export { Badge } from "./components/Badge";
 export type { BadgeProps } from "./components/Badge";
 
+export { StatusBadge } from "./components/StatusBadge";
+export type { StatusBadgeProps, StatusBadgeVariant } from "./components/StatusBadge";
+
+export { AlertBanner } from "./components/AlertBanner";
+export type { AlertBannerProps, AlertBannerVariant } from "./components/AlertBanner";
+
+export { ServiceCard } from "./components/ServiceCard";
+export type { ServiceCardProps } from "./components/ServiceCard";
+
+export { WorkspaceHero } from "./components/WorkspaceHero";
+export type { WorkspaceHeroProps } from "./components/WorkspaceHero";
+
+export { BrandedPageShell } from "./components/BrandedPageShell";
+export type { BrandedPageShellProps } from "./components/BrandedPageShell";
+
+export { NompiloTipCard } from "./components/NompiloTipCard";
+export type { NompiloTipCardProps } from "./components/NompiloTipCard";
+
 export { StatusIndicator } from "./components/StatusIndicator";
 export type { StatusIndicatorProps } from "./components/StatusIndicator";
 
@@ -57,3 +75,6 @@ export {
   sectionCatalog,
 } from "./lib/finance/tariff-library-groups";
 export type { CostaTariffListRow, TariffListSectionKey } from "./lib/finance/tariff-library-groups";
+
+// Tailwind preset (for workspace tailwind.config.ts)
+export { default as impiloPreset } from "./tailwind-preset";
