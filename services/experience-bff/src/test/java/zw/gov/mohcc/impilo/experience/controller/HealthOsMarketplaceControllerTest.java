@@ -77,6 +77,25 @@ class HealthOsMarketplaceControllerTest {
         }
     }
 
+    @Test
+    void items_returnsDegradedResponseWhenMsikaReturns403() throws Exception {
+        HealthOsMarketplaceController controller = new HealthOsMarketplaceController(
+                new FailingMsikaAppsClient(),
+                new IntegrationRegistryClient(new RestTemplate(), ServiceClientConfig.testServiceEndpoints()),
+                MAPPER);
+
+        ResponseEntity<String> response = controller.items("req-3", "corr-3", null, null, null);
+
+        assertEquals(200, response.getStatusCode().value());
+        JsonNode body = MAPPER.readTree(response.getBody());
+        assertTrue(body.get("data").isArray());
+        assertEquals(0, body.get("data").size());
+        JsonNode meta = body.get("meta");
+        assertEquals(true, meta.get("degraded").asBoolean());
+        assertEquals("msika-apps-service", meta.get("upstream").asText());
+        assertEquals(403, meta.get("status").asInt());
+    }
+
     private static final class FailingMsikaAppsClient extends MsikaAppsClient {
         FailingMsikaAppsClient() {
             super(new RestTemplate(), ServiceClientConfig.testServiceEndpoints());
@@ -84,6 +103,16 @@ class HealthOsMarketplaceControllerTest {
 
         @Override
         public ResponseEntity<String> launcher(String facilityId, String roles) {
+            throw HttpClientErrorException.create(
+                    HttpStatus.FORBIDDEN,
+                    "Forbidden",
+                    null,
+                    null,
+                    null);
+        }
+
+        @Override
+        public ResponseEntity<String> catalogue(org.springframework.util.MultiValueMap<String, String> params) {
             throw HttpClientErrorException.create(
                     HttpStatus.FORBIDDEN,
                     "Forbidden",

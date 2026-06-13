@@ -83,6 +83,8 @@ public class HealthOsMarketplaceController {
     // ── Catalogue ────────────────────────────────────────────────────────────
     @GetMapping("/items")
     public ResponseEntity<String> items(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(required = false) String type,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String publisherId) {
@@ -90,7 +92,31 @@ public class HealthOsMarketplaceController {
         if (type != null)        params.add("type", type);
         if (category != null)    params.add("category", category);
         if (publisherId != null) params.add("publisherId", publisherId);
-        return msikaApps.catalogue(params);
+        try {
+            return msikaApps.catalogue(params);
+        } catch (HttpStatusCodeException e) {
+            log.warn("Marketplace catalogue degraded: {}", e.getMessage());
+            return degradedCatalogueResponse(requestId, correlationId, e.getStatusCode().value());
+        } catch (RestClientException e) {
+            log.warn("Marketplace catalogue degraded: {}", e.getMessage());
+            return degradedCatalogueResponse(requestId, correlationId, 502);
+        }
+    }
+
+    private ResponseEntity<String> degradedCatalogueResponse(String requestId, String correlationId, int status) {
+        Map<String, Object> body = Map.of(
+                "data", List.of(),
+                "meta", BffDegradedMeta.degradedWithStatus(
+                        requestId,
+                        correlationId,
+                        "msika-apps-service",
+                        status,
+                        "Marketplace catalogue is temporarily unavailable."));
+        try {
+            return ResponseEntity.ok(objectMapper.writeValueAsString(body));
+        } catch (JsonProcessingException e) {
+            return ResponseEntity.ok("{\"data\":[],\"meta\":{\"degraded\":true,\"upstream\":\"msika-apps-service\",\"status\":" + status + "}}");
+        }
     }
 
     @GetMapping("/items/{id}")
