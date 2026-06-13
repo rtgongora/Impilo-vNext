@@ -48,13 +48,13 @@ export default function RegistryTrustHubPage() {
         <div className="mb-4">
           <Link
             href="/registry-admin"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="h-4 w-4" /> Back to registry administration
           </Link>
         </div>
 
-        <p className="mb-4 text-sm text-gray-600">
+        <p className="mb-4 text-sm text-muted-foreground">
           Only typed Experience BFF trust routes are treated as live. Federation and key inventory stay explicitly
           unavailable until canonical contracts exist; consent governance uses subject-scoped TSHEPO trust routes.
         </p>
@@ -66,16 +66,16 @@ export default function RegistryTrustHubPage() {
               <Link
                 key={d.id}
                 href={`${d.href}?from=registry-admin`}
-                className="group flex flex-col rounded-2xl border border-amber-200 bg-white p-5 shadow-sm transition hover:border-amber-400 hover:shadow-md"
+                className="group flex flex-col rounded-2xl border border-warning/35 bg-card p-5 shadow-sm transition hover:border-amber-400 hover:shadow-md"
               >
                 <div className="flex items-start justify-between gap-2">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-800">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-warning-foreground">
                     <Icon className="h-5 w-5" />
                   </div>
-                  <ArrowUpRight className="h-4 w-4 text-gray-400 group-hover:text-amber-700" />
+                  <ArrowUpRight className="h-4 w-4 text-muted-foreground group-hover:text-warning-foreground" />
                 </div>
-                <h3 className="mt-3 font-medium text-gray-900 group-hover:text-amber-900">{d.title}</h3>
-                <p className="mt-1 text-sm text-gray-600">{d.description}</p>
+                <h3 className="mt-3 font-medium text-foreground group-hover:text-warning-foreground">{d.title}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{d.description}</p>
               </Link>
             );
           })}

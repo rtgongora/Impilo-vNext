@@ -174,9 +174,9 @@ export default function WorkflowOperationsPage() {
               },
             ].map((metric) => (
               <section key={metric.label} className="impilo-surface-card p-4">
-                <p className="text-xs uppercase tracking-wide text-slate-500">{metric.label}</p>
-                <p className="mt-1 text-2xl font-semibold text-slate-900">{metric.value}</p>
-                <p className="mt-1 text-xs text-slate-600">{metric.detail}</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">{metric.label}</p>
+                <p className="mt-1 text-2xl font-semibold text-foreground">{metric.value}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{metric.detail}</p>
               </section>
             ))}
           </div>
@@ -192,10 +192,10 @@ export default function WorkflowOperationsPage() {
             maxItems={12}
             controls={
               <div className="grid gap-2 sm:grid-cols-2">
-                <label className="text-xs text-slate-600">
+                <label className="text-xs text-muted-foreground">
                   Workflow status
                   <select
-                    className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"
+                    className="mt-1 w-full rounded-md border border-border bg-card px-2 py-1 text-sm"
                     value={status}
                     onChange={(event) => setFilter({ status: event.target.value })}
                   >
@@ -206,10 +206,10 @@ export default function WorkflowOperationsPage() {
                     ))}
                   </select>
                 </label>
-                <label className="text-xs text-slate-600">
+                <label className="text-xs text-muted-foreground">
                   Workflow type
                   <select
-                    className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"
+                    className="mt-1 w-full rounded-md border border-border bg-card px-2 py-1 text-sm"
                     value={type}
                     onChange={(event) => setFilter({ type: event.target.value })}
                   >
@@ -229,73 +229,73 @@ export default function WorkflowOperationsPage() {
 
           <div className="grid gap-3 md:grid-cols-2">
             <section className="impilo-surface-card p-4">
-              <h3 className="text-sm font-semibold text-slate-900">Start workflow instance</h3>
-              <p className="mt-1 text-xs text-slate-600">
+              <h3 className="text-sm font-semibold text-foreground">Start workflow instance</h3>
+              <p className="mt-1 text-xs text-muted-foreground">
                 Sends a live command to <code>/internal/v1/workflows/instances</code>. No demo mode.
               </p>
               <textarea
-                className="mt-3 h-40 w-full rounded-md border border-slate-300 bg-white p-2 font-mono text-xs text-slate-800"
+                className="mt-3 h-40 w-full rounded-md border border-border bg-card p-2 font-mono text-xs text-foreground"
                 value={startPayloadText}
                 onChange={(event) => setStartPayloadText(event.target.value)}
               />
               <div className="mt-2 flex items-center gap-2">
                 <button
                   type="button"
-                  className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                  className="rounded-md border border-border bg-card px-2 py-1 text-xs font-medium text-foreground hover:bg-background disabled:opacity-50"
                   onClick={submitStartInstance}
                   disabled={startInstance.isPending}
                 >
                   {startInstance.isPending ? "Starting..." : "Start instance"}
                 </button>
-                {startFeedback ? <span className="text-xs text-slate-700">{startFeedback}</span> : null}
+                {startFeedback ? <span className="text-xs text-foreground">{startFeedback}</span> : null}
               </div>
             </section>
 
             <section className="impilo-surface-card p-4">
-              <h3 className="text-sm font-semibold text-slate-900">Transition workflow instance</h3>
-              <p className="mt-1 text-xs text-slate-600">
+              <h3 className="text-sm font-semibold text-foreground">Transition workflow instance</h3>
+              <p className="mt-1 text-xs text-muted-foreground">
                 Sends a live command to <code>/internal/v1/workflows/instances/:id/transition</code>.
               </p>
-              <label className="mt-3 block text-xs text-slate-600">
+              <label className="mt-3 block text-xs text-muted-foreground">
                 Instance id
                 <input
-                  className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-800"
+                  className="mt-1 w-full rounded-md border border-border bg-card px-2 py-1 text-sm text-foreground"
                   value={transitionInstanceId}
                   onChange={(event) => setTransitionInstanceId(event.target.value)}
                   placeholder="Workflow instance UUID"
                 />
               </label>
               <textarea
-                className="mt-3 h-32 w-full rounded-md border border-slate-300 bg-white p-2 font-mono text-xs text-slate-800"
+                className="mt-3 h-32 w-full rounded-md border border-border bg-card p-2 font-mono text-xs text-foreground"
                 value={transitionPayloadText}
                 onChange={(event) => setTransitionPayloadText(event.target.value)}
               />
               <div className="mt-2 flex items-center gap-2">
                 <button
                   type="button"
-                  className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                  className="rounded-md border border-border bg-card px-2 py-1 text-xs font-medium text-foreground hover:bg-background disabled:opacity-50"
                   onClick={submitTransitionInstance}
                   disabled={transitionInstance.isPending || !transitionInstanceId.trim()}
                 >
                   {transitionInstance.isPending ? "Transitioning..." : "Submit transition"}
                 </button>
-                {transitionFeedback ? <span className="text-xs text-slate-700">{transitionFeedback}</span> : null}
+                {transitionFeedback ? <span className="text-xs text-foreground">{transitionFeedback}</span> : null}
               </div>
             </section>
           </div>
 
           <div className="grid gap-3 md:grid-cols-2">
             <section className="impilo-surface-card p-4">
-              <h3 className="text-sm font-semibold text-slate-900">Workflow definitions</h3>
-              <p className="mt-1 text-xs text-slate-600">
+              <h3 className="text-sm font-semibold text-foreground">Workflow definitions</h3>
+              <p className="mt-1 text-xs text-muted-foreground">
                 Canonical definitions exposed by workflow service through the Experience edge.
               </p>
               {definitions.isLoading ? (
-                <p className="mt-3 text-sm text-slate-600">Loading definitions...</p>
+                <p className="mt-3 text-sm text-muted-foreground">Loading definitions...</p>
               ) : definitions.isError ? (
-                <p className="mt-3 text-sm text-rose-700">Workflow definitions unavailable.</p>
+                <p className="mt-3 text-sm text-danger">Workflow definitions unavailable.</p>
               ) : definitions.items.length === 0 ? (
-                <p className="mt-3 text-sm text-slate-600">No workflow definitions returned.</p>
+                <p className="mt-3 text-sm text-muted-foreground">No workflow definitions returned.</p>
               ) : (
                 <ol className="mt-3 space-y-2">
                   {definitions.items.slice(0, 8).map((entry, index) => {
@@ -303,10 +303,10 @@ export default function WorkflowOperationsPage() {
                     const name = readOperatorString(entry, ["name", "title"], "Workflow definition");
                     const version = readOperatorString(entry, ["version", "revision"], "n/a");
                     return (
-                      <li key={`${id}-${index}`} className="rounded-md border border-slate-200 bg-slate-50 p-2">
-                        <p className="text-sm font-medium text-slate-900">{name}</p>
-                        <p className="text-xs text-slate-600">{id}</p>
-                        <p className="text-xs text-slate-600">Version: {version}</p>
+                      <li key={`${id}-${index}`} className="rounded-md border border-border bg-background p-2">
+                        <p className="text-sm font-medium text-foreground">{name}</p>
+                        <p className="text-xs text-muted-foreground">{id}</p>
+                        <p className="text-xs text-muted-foreground">Version: {version}</p>
                       </li>
                     );
                   })}
@@ -315,8 +315,8 @@ export default function WorkflowOperationsPage() {
             </section>
 
             <section className="impilo-surface-card p-4">
-              <h3 className="text-sm font-semibold text-slate-900">Workflow instances</h3>
-              <p className="mt-1 text-xs text-slate-600">
+              <h3 className="text-sm font-semibold text-foreground">Workflow instances</h3>
+              <p className="mt-1 text-xs text-muted-foreground">
                 Runtime instances for operational monitoring and handoff continuity.
               </p>
               <div className="mt-3">

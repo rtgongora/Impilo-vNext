@@ -42,14 +42,14 @@ export default function PreferencesPage() {
       <PageShell title="Preferences" subtitle="Configure your language, theme, and notification settings">
         <form onSubmit={handleSubmit} className="max-w-xl space-y-6">
           {/* Language */}
-          <div className="bg-white rounded-lg border border-gray-200 p-5">
-            <h3 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+          <div className="bg-card rounded-lg border border-border p-5">
+            <h3 className="font-medium text-foreground mb-3 flex items-center gap-2">
               <Globe className="w-4 h-4" /> Language
             </h3>
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+              className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
             >
               <option value="en">English</option>
               <option value="sn">Shona</option>
@@ -60,8 +60,8 @@ export default function PreferencesPage() {
           </div>
 
           {/* Theme */}
-          <div className="bg-white rounded-lg border border-gray-200 p-5">
-            <h3 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+          <div className="bg-card rounded-lg border border-border p-5">
+            <h3 className="font-medium text-foreground mb-3 flex items-center gap-2">
               <Palette className="w-4 h-4" /> Theme
             </h3>
             <div className="flex gap-3">
@@ -74,8 +74,8 @@ export default function PreferencesPage() {
                   key={opt.value}
                   className={`flex-1 text-center p-3 rounded-lg border cursor-pointer text-sm transition-colors ${
                     theme === opt.value
-                      ? "border-impilo-400 bg-impilo-50 text-impilo-600 font-medium"
-                      : "border-gray-200 text-gray-600 hover:border-gray-300"
+                      ? "border-impilo-400 bg-primary-soft text-primary font-medium"
+                      : "border-border text-muted-foreground hover:border-border"
                   }`}
                 >
                   <input
@@ -93,13 +93,13 @@ export default function PreferencesPage() {
           </div>
 
           {/* Notifications */}
-          <div className="bg-white rounded-lg border border-gray-200 p-5">
-            <h3 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+          <div className="bg-card rounded-lg border border-border p-5">
+            <h3 className="font-medium text-foreground mb-3 flex items-center gap-2">
               <Bell className="w-4 h-4" /> Notification Preferences
             </h3>
             <div className="space-y-3">
               <label className="flex items-center justify-between cursor-pointer">
-                <span className="text-sm text-gray-700">Email Notifications</span>
+                <span className="text-sm text-foreground">Email Notifications</span>
                 <input
                   type="checkbox"
                   checked={emailNotifications}
@@ -108,7 +108,7 @@ export default function PreferencesPage() {
                 />
               </label>
               <label className="flex items-center justify-between cursor-pointer">
-                <span className="text-sm text-gray-700">Push Notifications</span>
+                <span className="text-sm text-foreground">Push Notifications</span>
                 <input
                   type="checkbox"
                   checked={pushNotifications}
@@ -117,7 +117,7 @@ export default function PreferencesPage() {
                 />
               </label>
               <label className="flex items-center justify-between cursor-pointer">
-                <span className="text-sm text-gray-700">SMS Notifications</span>
+                <span className="text-sm text-foreground">SMS Notifications</span>
                 <input
                   type="checkbox"
                   checked={smsNotifications}
@@ -135,7 +135,7 @@ export default function PreferencesPage() {
           )}
 
           {savePreferences.isError && (
-            <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+            <div className="p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-danger">
               Failed to save preferences. Please try again.
             </div>
           )}
@@ -144,7 +144,7 @@ export default function PreferencesPage() {
             <button
               type="submit"
               disabled={savePreferences.isPending}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-impilo-500 text-white rounded-lg text-sm font-medium hover:bg-impilo-600 disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-hover disabled:opacity-50"
             >
               {savePreferences.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

@@ -29,18 +29,18 @@ function MetricCard({ icon: Icon, label, value, sub, trend, color, highlight }: 
   highlight?: boolean;
 }) {
   return (
-    <div className={`bg-white border rounded-lg ${highlight ? 'border-orange-200' : 'border-gray-200'}`}>
+    <div className={`bg-card border rounded-lg ${highlight ? 'border-orange-200' : 'border-border'}`}>
       <div className="pt-4 pb-3 px-4">
         <div className="flex items-center justify-between mb-1.5">
-          <Icon className={`h-5 w-5 ${color || 'text-gray-400'}`} />
+          <Icon className={`h-5 w-5 ${color || 'text-muted-foreground'}`} />
           {trend && (trend === 'up'
             ? <ArrowUpRight className="h-4 w-4 text-amber-500" />
             : <ArrowDownRight className="h-4 w-4 text-green-500" />
           )}
         </div>
         <p className="text-2xl font-bold leading-tight">{value}</p>
-        <p className="text-xs text-gray-500 mt-0.5 leading-snug">{sub}</p>
-        <p className="text-[10px] text-gray-400 mt-1 uppercase tracking-wide">{label}</p>
+        <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{sub}</p>
+        <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-wide">{label}</p>
       </div>
     </div>
   );
@@ -105,7 +105,7 @@ export function WorkspaceDashboardPanel({ facilityId: facilityIdProp }: Workspac
 
   if (!fid) {
     return (
-      <div className="text-center py-10 px-4 text-sm text-gray-500 border border-dashed border-gray-200 rounded-lg">
+      <div className="text-center py-10 px-4 text-sm text-muted-foreground border border-dashed border-border rounded-lg">
         Select a facility to load live workspace operations metrics.
       </div>
     );
@@ -113,7 +113,7 @@ export function WorkspaceDashboardPanel({ facilityId: facilityIdProp }: Workspac
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-16 text-gray-500 text-sm gap-2">
+      <div className="flex items-center justify-center py-16 text-muted-foreground text-sm gap-2">
         <Loader2 className="h-5 w-5 animate-spin" /> Loading operations…
       </div>
     );
@@ -125,14 +125,14 @@ export function WorkspaceDashboardPanel({ facilityId: facilityIdProp }: Workspac
         <button
           type="button"
           onClick={refresh}
-          className="text-xs text-impilo-500 hover:text-impilo-700"
+          className="text-xs text-primary hover:text-primary-hover"
         >
           Refresh data
         </button>
       </div>
 
       <div>
-        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-1">Operations (live)</h3>
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">Operations (live)</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           <MetricCard
             icon={Bed}
@@ -151,7 +151,7 @@ export function WorkspaceDashboardPanel({ facilityId: facilityIdProp }: Workspac
                 ? `~${avgWaitMin} min avg (today)`
                 : 'Today’s queue snapshot'
             }
-            color="text-impilo-500"
+            color="text-primary"
           />
           <MetricCard
             icon={Activity}
@@ -163,20 +163,20 @@ export function WorkspaceDashboardPanel({ facilityId: facilityIdProp }: Workspac
         </div>
       </div>
 
-      <div className="rounded-lg border border-gray-200 bg-slate-50/80 p-4 text-sm text-slate-700">
-        <p className="font-medium text-slate-800">Extended KPIs</p>
-        <p className="mt-1 text-xs text-slate-600 leading-relaxed">
+      <div className="rounded-lg border border-border bg-background/80 p-4 text-sm text-foreground">
+        <p className="font-medium text-foreground">Extended KPIs</p>
+        <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
           Supply, billing, lab, and longitudinal patient-quality metrics are not published on the Experience BFF in this
           release. This dashboard intentionally shows only capacity, queue, and staffing signals that are backed by
           live APIs.
         </p>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-lg">
+      <div className="bg-card border border-border rounded-lg">
         <div className="px-4 pt-4 pb-2 flex items-center gap-2">
           <AlertTriangle className="h-5 w-5 text-amber-500" />
           <h3 className="text-base font-semibold">Active alerts</h3>
-          <span className="ml-auto px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-xs font-medium">
+          <span className="ml-auto px-2 py-0.5 rounded-full bg-red-100 text-danger text-xs font-medium">
             {alerts.filter((a) => a.type === 'critical').length} critical
           </span>
         </div>
@@ -187,15 +187,15 @@ export function WorkspaceDashboardPanel({ facilityId: facilityIdProp }: Workspac
                 key={alert.id}
                 className={`text-sm p-3 rounded-lg border ${
                   alert.type === 'critical'
-                    ? 'border-red-200 bg-red-50'
+                    ? 'border-danger/28 bg-danger-soft'
                     : alert.type === 'warning'
-                      ? 'border-amber-200 bg-amber-50'
-                      : 'border-impilo-200 bg-impilo-50'
+                      ? 'border-warning/35 bg-warning-soft'
+                      : 'border-primary/25 bg-primary-soft'
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <span className="font-medium">{alert.message}</span>
-                  <span className="text-gray-400 whitespace-nowrap text-xs">{alert.time}</span>
+                  <span className="text-muted-foreground whitespace-nowrap text-xs">{alert.time}</span>
                 </div>
               </div>
             ))}
@@ -204,14 +204,14 @@ export function WorkspaceDashboardPanel({ facilityId: facilityIdProp }: Workspac
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        <div className="bg-white border border-gray-200 rounded-lg flex flex-col">
+        <div className="bg-card border border-border rounded-lg flex flex-col">
           <div className="px-4 pt-4 pb-2 flex items-center gap-2">
-            <Bed className="h-4 w-4 text-gray-400" />
+            <Bed className="h-4 w-4 text-muted-foreground" />
             <h3 className="text-base font-semibold">Ward capacity</h3>
           </div>
           <div className="flex-1 px-4 pb-4 space-y-3">
             {wards.length === 0 ? (
-              <p className="text-sm text-gray-500">No wards configured.</p>
+              <p className="text-sm text-muted-foreground">No wards configured.</p>
             ) : (
               wards.map((w) => {
                 const a = w.attributes;
@@ -222,11 +222,11 @@ export function WorkspaceDashboardPanel({ facilityId: facilityIdProp }: Workspac
                   <div key={w.id} className="space-y-1">
                     <div className="flex justify-between text-sm">
                       <span className="font-medium">{a.name}</span>
-                      <span className="text-gray-400 text-xs">
+                      <span className="text-muted-foreground text-xs">
                         {occ}/{total} ({pct}%)
                       </span>
                     </div>
-                    <div className="w-full bg-gray-100 rounded-full h-2">
+                    <div className="w-full bg-neutral-100 rounded-full h-2">
                       <div
                         className={`h-2 rounded-full ${pct > 90 ? 'bg-red-500' : pct > 75 ? 'bg-amber-500' : 'bg-green-500'}`}
                         style={{ width: `${pct}%` }}
@@ -239,26 +239,26 @@ export function WorkspaceDashboardPanel({ facilityId: facilityIdProp }: Workspac
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-lg flex flex-col">
+        <div className="bg-card border border-border rounded-lg flex flex-col">
           <div className="px-4 pt-4 pb-2 flex items-center gap-2">
-            <Users className="h-4 w-4 text-gray-400" />
+            <Users className="h-4 w-4 text-muted-foreground" />
             <h3 className="text-base font-semibold">Queue types (waiting)</h3>
           </div>
           <div className="flex-1 px-4 pb-4 space-y-3">
             {queueByType.length === 0 ? (
-              <p className="text-sm text-gray-500">No waiting entries.</p>
+              <p className="text-sm text-muted-foreground">No waiting entries.</p>
             ) : (
               queueByType.map((q) => (
-                <div key={q.name} className="flex items-center justify-between text-sm p-2 rounded-lg bg-gray-50">
+                <div key={q.name} className="flex items-center justify-between text-sm p-2 rounded-lg bg-background">
                   <div>
                     <span className="font-medium">{q.name}</span>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-xs text-gray-500">{q.waiting} waiting</span>
+                      <span className="text-xs text-muted-foreground">{q.waiting} waiting</span>
                     </div>
                   </div>
                   <span
                     className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                      q.avgWait > 30 ? 'bg-red-100 text-red-700' : q.avgWait > 20 ? 'bg-gray-100 text-gray-600' : 'bg-green-100 text-green-700'
+                      q.avgWait > 30 ? 'bg-red-100 text-danger' : q.avgWait > 20 ? 'bg-neutral-100 text-muted-foreground' : 'bg-green-100 text-green-700'
                     }`}
                   >
                     ~{q.avgWait} min
@@ -270,12 +270,12 @@ export function WorkspaceDashboardPanel({ facilityId: facilityIdProp }: Workspac
         </div>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-lg flex flex-col">
+      <div className="bg-card border border-border rounded-lg flex flex-col">
         <div className="px-4 pt-4 pb-2 flex items-center gap-2">
-          <Activity className="h-4 w-4 text-gray-400" />
+          <Activity className="h-4 w-4 text-muted-foreground" />
           <h3 className="text-base font-semibold">Activity</h3>
         </div>
-        <div className="px-4 pb-4 text-sm text-gray-500">
+        <div className="px-4 pb-4 text-sm text-muted-foreground">
           A chronological activity stream is not yet backed by an audit or clinical-events feed on the Experience BFF.
         </div>
       </div>

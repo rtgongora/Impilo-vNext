@@ -59,12 +59,12 @@ export default function LiveEventReplayPage() {
         </div>
 
         {eventLoading || replayLoading ? (
-          <div className="flex items-center gap-2 py-12 text-sm text-gray-500">
+          <div className="flex items-center gap-2 py-12 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
             Preparing replay…
           </div>
         ) : hasLiveKitReplay && replay?.replayAccessToken ? (
-          <div className="rounded-2xl border border-gray-200 overflow-hidden min-h-[420px] bg-gray-950">
+          <div className="rounded-2xl border border-border overflow-hidden min-h-[420px] bg-neutral-900">
             <LiveKitConsultRoom
               serverUrl={liveKitUrl}
               token={replay.replayAccessToken}
@@ -83,11 +83,11 @@ export default function LiveEventReplayPage() {
             </p>
           </div>
         ) : isProcessing ? (
-          <p className="text-sm text-amber-700">
+          <p className="text-sm text-warning-foreground">
             Recording is being processed. Refresh in a moment once the organiser publishes the replay.
           </p>
         ) : (
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             Replay media is not available for this event yet. Check back after recording processing completes.
           </p>
         )}

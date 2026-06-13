@@ -15,12 +15,12 @@ import { ShieldAlert, ArrowUpRight, CheckCircle2 } from "lucide-react";
 import { useAssuranceStatus, type AssuranceStatus } from "@/hooks/queries/useIdentity";
 
 const STATE_LABELS: Record<string, { label: string; color: string }> = {
-  SELF_REGISTERED: { label: "Self-Registered", color: "border-amber-300 bg-amber-50 text-amber-900" },
-  ASSISTED_REGISTRATION: { label: "Assisted Registration", color: "border-impilo-200 bg-impilo-50 text-impilo-800" },
+  SELF_REGISTERED: { label: "Self-Registered", color: "border-amber-300 bg-warning-soft text-warning-foreground" },
+  ASSISTED_REGISTRATION: { label: "Assisted Registration", color: "border-primary/25 bg-primary-soft text-impilo-800" },
   FACILITY_CONFIRMED: { label: "Facility Confirmed", color: "border-green-300 bg-green-50 text-green-900" },
   REGISTRY_MATCHED: { label: "Registry Matched", color: "border-green-400 bg-green-50 text-green-900" },
-  COUNCIL_VALIDATED: { label: "Council Validated", color: "border-emerald-400 bg-emerald-50 text-emerald-900" },
-  FULLY_VERIFIED: { label: "Fully Verified", color: "border-emerald-500 bg-emerald-50 text-emerald-900" },
+  COUNCIL_VALIDATED: { label: "Council Validated", color: "border-emerald-400 bg-success-soft text-primary-hover" },
+  FULLY_VERIFIED: { label: "Fully Verified", color: "border-emerald-500 bg-success-soft text-primary-hover" },
 };
 
 export function IdentityAssuranceBanner() {
@@ -48,7 +48,7 @@ export function IdentityAssuranceBanner() {
               <p className="text-[10px] uppercase tracking-wide font-medium mb-1">Available permissions</p>
               <div className="flex gap-1 flex-wrap">
                 {status.permissionsAvailable.map((p) => (
-                  <span key={p} className="inline-flex items-center gap-1 rounded-full bg-white/60 px-2 py-0.5 text-[10px]">
+                  <span key={p} className="inline-flex items-center gap-1 rounded-full bg-card/60 px-2 py-0.5 text-[10px]">
                     <CheckCircle2 className="h-2.5 w-2.5" /> {p}
                   </span>
                 ))}
@@ -77,7 +77,7 @@ export function IdentityAssuranceBanner() {
                   <Link
                     key={path.id}
                     href={path.href}
-                    className="inline-flex items-center gap-1 rounded-lg border border-current/20 bg-white/40 px-2.5 py-1 text-xs font-medium hover:bg-white/60 transition"
+                    className="inline-flex items-center gap-1 rounded-lg border border-current/20 bg-card/40 px-2.5 py-1 text-xs font-medium hover:bg-card/60 transition"
                   >
                     {path.label} <ArrowUpRight className="h-3 w-3" />
                   </Link>

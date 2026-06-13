@@ -26,7 +26,7 @@ export default function NhumeCourierConsolePage() {
         subtitle="Your assigned deliveries — accept, pickup, transit, deliver"
         icon={<PackageCheck className="h-6 w-6" />}
       >
-        <p className="text-sm text-gray-500 mb-4">
+        <p className="text-sm text-muted-foreground mb-4">
           Assigned deliveries are filtered to the current actor by the backend. Click any row to
           progress its lifecycle, capture proof of delivery or record chain-of-custody events.
         </p>
@@ -42,20 +42,20 @@ function StatusBucket({ status }: { status: string }) {
   const { data, isPending } = useNhumeDeliveries({ status, size: 25 });
   const rows = data?.data ?? [];
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white">
-      <div className="border-b border-gray-100 px-5 py-3 flex items-center justify-between">
-        <h3 className="font-semibold text-gray-900">
+    <div className="rounded-2xl border border-border bg-card">
+      <div className="border-b border-border px-5 py-3 flex items-center justify-between">
+        <h3 className="font-semibold text-foreground">
           {status.replace(/_/g, " ").toLowerCase()}
         </h3>
         <NhumeStatusChip status={status} />
       </div>
       {isPending ? (
-        <div className="px-5 py-6 text-sm text-gray-500 text-center">
+        <div className="px-5 py-6 text-sm text-muted-foreground text-center">
           <Loader2 className="inline-block h-4 w-4 animate-spin text-teal-500 mr-2" />
           Loading…
         </div>
       ) : rows.length === 0 ? (
-        <div className="px-5 py-6 text-sm text-gray-500 text-center">Nothing here.</div>
+        <div className="px-5 py-6 text-sm text-muted-foreground text-center">Nothing here.</div>
       ) : (
         <ul className="divide-y divide-gray-100">
           {rows.map((d) => (
@@ -64,7 +64,7 @@ function StatusBucket({ status }: { status: string }) {
                 <Link href={`/nhume/deliveries/${d.delivery_id}`} className="font-medium text-teal-700 hover:text-teal-900">
                   {d.reference}
                 </Link>
-                <div className="text-xs text-gray-500 mt-1">
+                <div className="text-xs text-muted-foreground mt-1">
                   {d.origin_label ?? "?"} → {d.destination_label ?? "?"}
                 </div>
               </div>

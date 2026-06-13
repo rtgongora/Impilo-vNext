@@ -101,19 +101,19 @@ export default function DevicesPage() {
         icon={<Smartphone className="h-6 w-6" />}
       >
         {!patientId && (
-          <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 mb-6">
+          <p className="text-sm text-warning-foreground bg-warning-soft border border-warning/35 rounded-lg px-4 py-3 mb-6">
             Sign in to load devices for your Health ID.
           </p>
         )}
 
         {patientId && isLoading && (
-          <div className="flex items-center gap-2 text-gray-600 py-8">
+          <div className="flex items-center gap-2 text-muted-foreground py-8">
             <Loader2 className="h-5 w-5 animate-spin" /> Loading devices…
           </div>
         )}
 
         {patientId && isError && (
-          <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-6">
+          <p className="text-sm text-danger bg-danger-soft border border-danger/28 rounded-lg px-4 py-3 mb-6">
             Could not load devices. {error instanceof Error ? error.message : "Try again later."}
           </p>
         )}
@@ -122,11 +122,11 @@ export default function DevicesPage() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <span className="text-sm text-gray-500">Connected devices: {devices.length}</span>
+                <span className="text-sm text-muted-foreground">Connected devices: {devices.length}</span>
                 <button
                   type="button"
                   onClick={() => void refetch()}
-                  className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900"
+                  className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
                   title="Refresh list"
                 >
                   <RefreshCw className="h-4 w-4" /> Refresh
@@ -144,44 +144,44 @@ export default function DevicesPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
-                { label: "Bluetooth Devices", description: "Blood pressure monitors, glucometers, pulse oximeters", Icon: Bluetooth, color: "bg-impilo-50 text-impilo-500" },
+                { label: "Bluetooth Devices", description: "Blood pressure monitors, glucometers, pulse oximeters", Icon: Bluetooth, color: "bg-primary-soft text-primary" },
                 { label: "Wi-Fi Devices", description: "Smart scales, sleep trackers, home monitors", Icon: Wifi, color: "bg-green-50 text-green-600" },
-                { label: "Wearables", description: "Fitness bands, smartwatches, CGM sensors", Icon: BatteryMedium, color: "bg-purple-50 text-purple-600" },
+                { label: "Wearables", description: "Fitness bands, smartwatches, CGM sensors", Icon: BatteryMedium, color: "bg-warning-soft text-purple-600" },
               ].map(({ label, description, Icon, color }) => (
-                <div key={label} className="rounded-lg border border-gray-200 bg-white p-5">
+                <div key={label} className="rounded-lg border border-border bg-card p-5">
                   <div className="flex items-center gap-3 mb-2">
                     <div className={`rounded-lg p-2 ${color.split(" ")[0]}`}>
                       <Icon className={`h-5 w-5 ${color.split(" ")[1]}`} />
                     </div>
-                    <h3 className="font-semibold text-gray-900">{label}</h3>
+                    <h3 className="font-semibold text-foreground">{label}</h3>
                   </div>
-                  <p className="text-sm text-gray-600">{description}</p>
+                  <p className="text-sm text-muted-foreground">{description}</p>
                 </div>
               ))}
             </div>
 
             {devices.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-12 text-center">
-                <Smartphone className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-4 text-sm font-semibold text-gray-900">No devices paired</h3>
-                <p className="mt-2 text-sm text-gray-600">
+              <div className="rounded-lg border border-dashed border-border bg-background p-12 text-center">
+                <Smartphone className="mx-auto h-12 w-12 text-muted-foreground" />
+                <h3 className="mt-4 text-sm font-semibold text-foreground">No devices paired</h3>
+                <p className="mt-2 text-sm text-muted-foreground">
                   Pair a health device to register it for your account. Sync readings to populate your vitals timeline.
                 </p>
               </div>
             ) : (
-              <ul className="divide-y divide-gray-200 rounded-lg border border-gray-200 bg-white">
+              <ul className="divide-y divide-gray-200 rounded-lg border border-border bg-card">
                 {devices.map((d) => (
                   <li key={d.id} className="px-4 py-4 space-y-3">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
-                        <p className="font-medium text-gray-900">{d.deviceName}</p>
-                        <p className="text-sm text-gray-500">
+                        <p className="font-medium text-foreground">{d.deviceName}</p>
+                        <p className="text-sm text-muted-foreground">
                           {d.deviceType} · {d.connectionType}
                           {d.manufacturer ? ` · ${d.manufacturer}` : ""}
                           {d.model ? ` ${d.model}` : ""}
                         </p>
                         {d.lastSyncAt && (
-                          <p className="text-xs text-gray-400 mt-1">Last sync: {d.lastSyncAt}</p>
+                          <p className="text-xs text-muted-foreground mt-1">Last sync: {d.lastSyncAt}</p>
                         )}
                       </div>
                       <button
@@ -195,21 +195,21 @@ export default function DevicesPage() {
                     </div>
                     {syncTargetId === d.id && (
                       <div className="rounded-lg border border-orange-100 bg-orange-50/60 p-3 flex flex-wrap items-end gap-3">
-                        <label className="text-xs text-gray-600 flex flex-col gap-1">
+                        <label className="text-xs text-muted-foreground flex flex-col gap-1">
                           Latest value
                           <input
                             type="number"
                             step="any"
-                            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm w-32"
+                            className="rounded-lg border border-border px-3 py-1.5 text-sm w-32"
                             value={syncValue}
                             onChange={(e) => setSyncValue(e.target.value)}
                             placeholder="e.g. 120"
                           />
                         </label>
-                        <label className="text-xs text-gray-600 flex flex-col gap-1">
+                        <label className="text-xs text-muted-foreground flex flex-col gap-1">
                           Unit
                           <input
-                            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm w-24"
+                            className="rounded-lg border border-border px-3 py-1.5 text-sm w-24"
                             value={syncUnit}
                             onChange={(e) => setSyncUnit(e.target.value)}
                           />
@@ -225,7 +225,7 @@ export default function DevicesPage() {
                         <button
                           type="button"
                           onClick={() => setSyncTargetId(null)}
-                          className="text-sm text-gray-600 hover:text-gray-900"
+                          className="text-sm text-muted-foreground hover:text-foreground"
                         >
                           Cancel
                         </button>
@@ -238,23 +238,23 @@ export default function DevicesPage() {
 
             {showPair && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-                <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-                  <h3 className="text-lg font-semibold text-gray-900">Pair a device</h3>
-                  <p className="text-sm text-gray-500 mt-1">Registers the device against your Health ID (CPID scope).</p>
+                <div className="w-full max-w-md rounded-xl bg-card p-6 shadow-xl">
+                  <h3 className="text-lg font-semibold text-foreground">Pair a device</h3>
+                  <p className="text-sm text-muted-foreground mt-1">Registers the device against your Health ID (CPID scope).</p>
                   <div className="mt-4 space-y-3">
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-foreground">
                       Display name
                       <input
-                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
                         value={pairForm.deviceName}
                         onChange={(e) => setPairForm((f) => ({ ...f, deviceName: e.target.value }))}
                         placeholder="e.g. Home blood pressure cuff"
                       />
                     </label>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-foreground">
                       Device type
                       <select
-                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
                         value={pairForm.deviceType}
                         onChange={(e) => setPairForm((f) => ({ ...f, deviceType: e.target.value }))}
                       >
@@ -267,18 +267,18 @@ export default function DevicesPage() {
                       </select>
                     </label>
                     <div className="grid grid-cols-2 gap-2">
-                      <label className="block text-sm font-medium text-gray-700">
+                      <label className="block text-sm font-medium text-foreground">
                         Manufacturer
                         <input
-                          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                          className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
                           value={pairForm.manufacturer}
                           onChange={(e) => setPairForm((f) => ({ ...f, manufacturer: e.target.value }))}
                         />
                       </label>
-                      <label className="block text-sm font-medium text-gray-700">
+                      <label className="block text-sm font-medium text-foreground">
                         Model
                         <input
-                          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                          className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
                           value={pairForm.model}
                           onChange={(e) => setPairForm((f) => ({ ...f, model: e.target.value }))}
                         />
@@ -292,7 +292,7 @@ export default function DevicesPage() {
                     <button
                       type="button"
                       onClick={() => setShowPair(false)}
-                      className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                      className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-background"
                     >
                       Cancel
                     </button>

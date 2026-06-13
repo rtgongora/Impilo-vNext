@@ -49,16 +49,16 @@ export function NdilaWorkspaceMapPanel() {
 
   return (
     <section
-      className="rounded-xl border border-indigo-200 bg-white p-4 shadow-sm"
+      className="rounded-xl border border-info/25 bg-card p-4 shadow-sm"
       data-testid="ndila-workspace-map-panel"
     >
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <div className="flex items-center gap-2 text-sm font-medium text-indigo-950">
+          <div className="flex items-center gap-2 text-sm font-medium text-primary-hover">
             <MapPin className="h-4 w-4 text-indigo-600" />
             Ndila map workspace
           </div>
-          <p className="mt-1 text-xs text-indigo-900/80">
+          <p className="mt-1 text-xs text-primary-hover/80">
             Governed tiles, geocoding, nearby services, and route preview — provider selection is server-side only.
           </p>
         </div>
@@ -69,7 +69,7 @@ export function NdilaWorkspaceMapPanel() {
       </div>
 
       {tileQ.isLoading ? (
-        <div className="mb-3 flex items-center gap-2 text-xs text-slate-500">
+        <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
           <Loader2 className="h-3.5 w-3.5 animate-spin" />
           Loading Ndila tile policy…
         </div>
@@ -80,7 +80,7 @@ export function NdilaWorkspaceMapPanel() {
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <div className="space-y-3">
           <div>
-            <p className="mb-1 text-xs font-medium text-slate-700">Search map centre</p>
+            <p className="mb-1 text-xs font-medium text-foreground">Search map centre</p>
             <NdilaAddressSearchBox
               country="ZWE"
               purposeOfUse="GEOSPATIAL_INTELLIGENCE"
@@ -88,7 +88,7 @@ export function NdilaWorkspaceMapPanel() {
             />
           </div>
           <div>
-            <p className="mb-1 text-xs font-medium text-slate-700">Route destination (optional)</p>
+            <p className="mb-1 text-xs font-medium text-foreground">Route destination (optional)</p>
             <NdilaAddressSearchBox
               country="ZWE"
               purposeOfUse="GEOSPATIAL_INTELLIGENCE"
@@ -97,13 +97,13 @@ export function NdilaWorkspaceMapPanel() {
               }
             />
           </div>
-          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             <label htmlFor="ndila-radius-km" className="font-medium">
               Nearby radius
             </label>
             <select
               id="ndila-radius-km"
-              className="rounded border border-slate-300 px-2 py-1 text-xs"
+              className="rounded border border-border px-2 py-1 text-xs"
               value={radiusKm}
               onChange={(e) => setRadiusKm(Number(e.target.value))}
             >
@@ -126,7 +126,7 @@ export function NdilaWorkspaceMapPanel() {
 
         <div className="space-y-4">
           <div>
-            <p className="mb-2 text-xs font-medium text-slate-700">Nearby governed services</p>
+            <p className="mb-2 text-xs font-medium text-foreground">Nearby governed services</p>
             <NdilaNearbyServicesMap
               origin={origin}
               radiusMeters={radiusKm * 1000}
@@ -136,14 +136,14 @@ export function NdilaWorkspaceMapPanel() {
           </div>
           {destination ? (
             <div data-testid="ndila-route-preview-section">
-              <p className="mb-2 flex items-center gap-1 text-xs font-medium text-slate-700">
+              <p className="mb-2 flex items-center gap-1 text-xs font-medium text-foreground">
                 <Navigation className="h-3.5 w-3.5" />
                 Route preview
               </p>
               <NdilaRoutePreview origin={origin} destination={destination} mode="MOTORBIKE" />
             </div>
           ) : (
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted-foreground">
               Add a route destination above to preview governed ETA and distance.
             </p>
           )}

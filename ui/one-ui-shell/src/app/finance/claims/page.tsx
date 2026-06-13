@@ -40,10 +40,10 @@ function useClaims() {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  SUBMITTED: "bg-impilo-100 text-impilo-600",
+  SUBMITTED: "bg-primary-soft text-primary",
   ADJUDICATED: "bg-yellow-100 text-yellow-700",
   PAID: "bg-green-100 text-green-700",
-  REJECTED: "bg-red-100 text-red-700",
+  REJECTED: "bg-red-100 text-danger",
 };
 
 export default function ClaimsPage() {
@@ -91,7 +91,7 @@ export default function ClaimsPage() {
         <div className="mb-4">
           <Link
             href={withHandoff("/finance")}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to finance
@@ -99,14 +99,14 @@ export default function ClaimsPage() {
         </div>
 
         {error ? (
-          <div className="bg-white rounded-lg border border-red-200 p-12 text-center">
+          <div className="bg-card rounded-lg border border-danger/28 p-12 text-center">
             <AlertCircle className="w-10 h-10 text-red-300 mx-auto mb-3" />
             <p className="text-red-600 text-sm">Failed to load claims</p>
           </div>
         ) : isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading claims...</span>
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading claims...</span>
           </div>
         ) : (
           <div className="space-y-6">
@@ -143,61 +143,61 @@ export default function ClaimsPage() {
               ]}
             />
 
-            <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+            <div className="rounded-3xl border border-border bg-background/70 p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
                 Claim loop status
               </p>
-              <p className="mt-2 text-sm text-slate-800">
+              <p className="mt-2 text-sm text-foreground">
                 {source === "discharge"
                   ? "This claims view was reached from encounter outcome, so the loop here is keeping payer submission and adjudication tied to the same encounter and patient."
                   : "This workspace shows the broader payer queue, but claims still need to stay connected to billing, payments, and the source encounter when context exists."}
               </p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Open a claim below for adjudication detail, or move back to billing, payments, the encounter, or the chart when payer follow-through needs clarification.
               </p>
             </div>
 
             {claims.length === 0 ? (
-              <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-                <FileText className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-400 text-sm">No claims submitted</p>
+              <div className="bg-card rounded-lg border border-border p-12 text-center">
+                <FileText className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                <p className="text-muted-foreground text-sm">No claims submitted</p>
               </div>
             ) : (
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div className="bg-card rounded-lg border border-border overflow-hidden">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b bg-gray-50">
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Claim #</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Patient</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Scheme</th>
-                      <th className="text-right px-4 py-3 font-medium text-gray-600">Amount</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Date</th>
+                    <tr className="border-b bg-background">
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Claim #</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Patient</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Scheme</th>
+                      <th className="text-right px-4 py-3 font-medium text-muted-foreground">Amount</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Date</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {claims.map((claim) => {
                       const statusStyle =
-                        STATUS_STYLES[claim.attributes.status] ?? "bg-gray-100 text-gray-600";
+                        STATUS_STYLES[claim.attributes.status] ?? "bg-neutral-100 text-muted-foreground";
                       return (
-                        <tr key={claim.id} className="hover:bg-gray-50 transition-colors">
+                        <tr key={claim.id} className="hover:bg-background transition-colors">
                           <td className="px-4 py-3">
                             <Link
                               href={withHandoff(`/finance/claims/${claim.id}`)}
-                              className="font-medium text-impilo-500 hover:text-impilo-700"
+                              className="font-medium text-primary hover:text-primary-hover"
                             >
                               {claim.attributes.claimNumber}
                             </Link>
                           </td>
-                          <td className="px-4 py-3 text-gray-600">
+                          <td className="px-4 py-3 text-muted-foreground">
                             {claim.attributes.patient}
                           </td>
-                          <td className="px-4 py-3 text-gray-600">
-                            <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-purple-100 text-purple-700">
+                          <td className="px-4 py-3 text-muted-foreground">
+                            <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-purple-100 text-warning-foreground">
                               {claim.attributes.scheme}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-right font-mono text-gray-900">
+                          <td className="px-4 py-3 text-right font-mono text-foreground">
                             {claim.attributes.currency}{" "}
                             {claim.attributes.amount.toLocaleString(undefined, {
                               minimumFractionDigits: 2,
@@ -210,7 +210,7 @@ export default function ClaimsPage() {
                               {claim.attributes.status}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
+                          <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
                             {new Date(claim.attributes.date).toLocaleDateString()}
                           </td>
                         </tr>

@@ -46,7 +46,7 @@ export default function OpsLayout({
   return (
     <div className="min-h-screen flex">
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-neutral-200 flex flex-col">
+      <aside className="w-64 bg-card border-r border-neutral-200 flex flex-col">
         <div className="p-4 border-b border-neutral-200">
           <Link href="/documents" className="text-lg font-semibold text-brand-primary tracking-tight">
             Impilo Docs

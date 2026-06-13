@@ -78,13 +78,13 @@ export default function ProviderDetailPage() {
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <Link
             href="/registry/providers"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="w-4 h-4" /> Back to Providers
           </Link>
           <Link
             href={`/registry/providers/${id}/edit`}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary-hover bg-info-soft border border-info/25 rounded-lg hover:bg-blue-100 transition-colors"
           >
             <Pencil className="w-4 h-4" />
             Edit
@@ -93,29 +93,29 @@ export default function ProviderDetailPage() {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading provider...</span>
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading provider...</span>
           </div>
         ) : error || !provider ? (
-          <div className="bg-red-50 rounded-lg border border-red-200 p-6 text-center">
+          <div className="bg-danger-soft rounded-lg border border-danger/28 p-6 text-center">
             <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-2" />
             <p className="text-red-600 text-sm">Failed to load provider</p>
           </div>
         ) : (
           <div className="max-w-2xl space-y-6">
             {/* Basic Info */}
-            <div className="bg-white rounded-lg border border-gray-200 p-5">
+            <div className="bg-card rounded-lg border border-border p-5">
               <div className="flex items-start gap-4 mb-4">
                 <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
-                  <UserCircle className="w-6 h-6 text-blue-600" />
+                  <UserCircle className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-medium text-gray-900">
+                  <h3 className="text-lg font-medium text-foreground">
                     {provider.attributes.displayName}
                   </h3>
-                  <p className="text-sm text-gray-500">{provider.attributes.email}</p>
+                  <p className="text-sm text-muted-foreground">{provider.attributes.email}</p>
                   {provider.attributes.phone && (
-                    <p className="text-sm text-gray-500">{provider.attributes.phone}</p>
+                    <p className="text-sm text-muted-foreground">{provider.attributes.phone}</p>
                   )}
                 </div>
               </div>
@@ -124,7 +124,7 @@ export default function ProviderDetailPage() {
                   className={`inline-block px-2 py-0.5 text-xs rounded-full font-medium ${
                     provider.attributes.status === "ACTIVE"
                       ? "bg-green-100 text-green-700"
-                      : "bg-gray-100 text-gray-700"
+                      : "bg-neutral-100 text-foreground"
                   }`}
                 >
                   {provider.attributes.status}
@@ -133,48 +133,48 @@ export default function ProviderDetailPage() {
             </div>
 
             {/* Specialties */}
-            <div className="bg-white rounded-lg border border-gray-200 p-5">
-              <h3 className="font-medium text-gray-900 mb-3">Specialties</h3>
+            <div className="bg-card rounded-lg border border-border p-5">
+              <h3 className="font-medium text-foreground mb-3">Specialties</h3>
               {(provider.attributes.specialties?.length ?? 0) > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {provider.attributes.specialties.map((spec) => (
                     <span
                       key={spec}
-                      className="inline-block px-3 py-1 text-xs rounded-full bg-blue-50 text-blue-700 font-medium"
+                      className="inline-block px-3 py-1 text-xs rounded-full bg-info-soft text-primary-hover font-medium"
                     >
                       {spec}
                     </span>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-gray-400">No specialties listed</p>
+                <p className="text-sm text-muted-foreground">No specialties listed</p>
               )}
             </div>
 
             {/* Qualifications */}
-            <div className="bg-white rounded-lg border border-gray-200 p-5">
-              <h3 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+            <div className="bg-card rounded-lg border border-border p-5">
+              <h3 className="font-medium text-foreground mb-3 flex items-center gap-2">
                 <GraduationCap className="w-4 h-4" /> Qualifications
               </h3>
               {(provider.attributes.qualifications?.length ?? 0) > 0 ? (
                 <div className="space-y-2">
                   {provider.attributes.qualifications.map((qual, i) => (
-                    <div key={i} className="p-3 bg-gray-50 rounded-lg">
-                      <p className="text-sm font-medium text-gray-900">{qual.name}</p>
-                      <p className="text-xs text-gray-500">
+                    <div key={i} className="p-3 bg-background rounded-lg">
+                      <p className="text-sm font-medium text-foreground">{qual.name}</p>
+                      <p className="text-xs text-muted-foreground">
                         {qual.institution} &middot; {qual.year}
                       </p>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-gray-400">No qualifications listed</p>
+                <p className="text-sm text-muted-foreground">No qualifications listed</p>
               )}
             </div>
 
             {/* Facilities */}
-            <div className="bg-white rounded-lg border border-gray-200 p-5">
-              <h3 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+            <div className="bg-card rounded-lg border border-border p-5">
+              <h3 className="font-medium text-foreground mb-3 flex items-center gap-2">
                 <Building2 className="w-4 h-4" /> Associated Facilities
               </h3>
               {(provider.attributes.facilities?.length ?? 0) > 0 ? (
@@ -183,15 +183,15 @@ export default function ProviderDetailPage() {
                     <Link
                       key={fac.id}
                       href={`/registry/facilities/${fac.id}`}
-                      className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 text-sm"
+                      className="flex items-center gap-2 p-3 bg-background rounded-lg hover:bg-neutral-100 text-sm"
                     >
-                      <Building2 className="w-4 h-4 text-gray-400" />
-                      <span className="font-medium text-gray-900">{fac.name}</span>
+                      <Building2 className="w-4 h-4 text-muted-foreground" />
+                      <span className="font-medium text-foreground">{fac.name}</span>
                     </Link>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-gray-400">No facilities assigned</p>
+                <p className="text-sm text-muted-foreground">No facilities assigned</p>
               )}
             </div>
 
@@ -202,18 +202,18 @@ export default function ProviderDetailPage() {
             ) : null}
 
             {/* Varapi + Tuso work context */}
-            <div className="bg-white rounded-lg border border-gray-200 p-5">
-              <h3 className="font-medium text-gray-900 mb-3">Work context (Varapi + Tuso)</h3>
+            <div className="bg-card rounded-lg border border-border p-5">
+              <h3 className="font-medium text-foreground mb-3">Work context (Varapi + Tuso)</h3>
               {workContext ? (
                 <JsonApiDataTable data={workContext} columns={REGISTRY_ENTITY_COLUMNS} emptyTitle="No work context" />
               ) : (
-                <p className="text-sm text-gray-400">Loading or unavailable…</p>
+                <p className="text-sm text-muted-foreground">Loading or unavailable…</p>
               )}
             </div>
 
             {/* Schedule */}
-            <div className="bg-white rounded-lg border border-gray-200 p-5">
-              <h3 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+            <div className="bg-card rounded-lg border border-border p-5">
+              <h3 className="font-medium text-foreground mb-3 flex items-center gap-2">
                 <Calendar className="w-4 h-4" /> Schedule
               </h3>
               {(provider.attributes.schedule?.length ?? 0) > 0 ? (
@@ -221,17 +221,17 @@ export default function ProviderDetailPage() {
                   {provider.attributes.schedule.map((slot, i) => (
                     <div
                       key={i}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg text-sm"
+                      className="flex items-center justify-between p-3 bg-background rounded-lg text-sm"
                     >
-                      <span className="font-medium text-gray-900">{slot.day}</span>
-                      <span className="text-gray-600">
+                      <span className="font-medium text-foreground">{slot.day}</span>
+                      <span className="text-muted-foreground">
                         {slot.startTime} - {slot.endTime}
                       </span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-gray-400">No schedule configured</p>
+                <p className="text-sm text-muted-foreground">No schedule configured</p>
               )}
             </div>
           </div>

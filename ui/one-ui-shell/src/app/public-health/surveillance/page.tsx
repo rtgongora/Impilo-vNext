@@ -58,10 +58,10 @@ function severityTone(sev: string): "red" | "amber" | "green" {
 
 function badgeClass(status: string): string {
   const u = status.toUpperCase();
-  if (u.includes("ACTIVE") || u.includes("OPEN")) return "bg-emerald-100 text-emerald-800";
-  if (u.includes("CLOSED") || u.includes("RESOLVED")) return "bg-slate-100 text-slate-700";
+  if (u.includes("ACTIVE") || u.includes("OPEN")) return "bg-emerald-100 text-primary-hover";
+  if (u.includes("CLOSED") || u.includes("RESOLVED")) return "bg-neutral-100 text-foreground";
   if (u.includes("ESCAL")) return "bg-rose-100 text-rose-800";
-  return "bg-amber-50 text-amber-900";
+  return "bg-warning-soft text-warning-foreground";
 }
 
 export default function SurveillanceDashboardPage() {
@@ -117,7 +117,7 @@ export default function SurveillanceDashboardPage() {
         ? String((err as { error?: { message?: string } }).error?.message ?? "Request failed")
         : "Request failed";
     return (
-      <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 flex items-center gap-2">
+      <div className="rounded-lg border border-danger/28 bg-danger-soft px-3 py-2 text-sm text-red-800 flex items-center gap-2">
         <AlertTriangle className="h-4 w-4 shrink-0" />
         {msg}
       </div>
@@ -139,9 +139,9 @@ export default function SurveillanceDashboardPage() {
         </div>
 
         <div className="space-y-8">
-          <section className="rounded-xl border border-slate-200 bg-white p-4">
-            <h2 className="text-sm font-semibold text-slate-900 mb-1">Surveillance geography (Ndila layers)</h2>
-            <p className="text-xs text-slate-500 mb-3">
+          <section className="rounded-xl border border-border bg-card p-4">
+            <h2 className="text-sm font-semibold text-foreground mb-1">Surveillance geography (Ndila layers)</h2>
+            <p className="text-xs text-muted-foreground mb-3">
               Sovereign map tiles with syndrome signal markers — facility tables below remain authoritative for counts.
             </p>
             <NdilaMap
@@ -163,60 +163,60 @@ export default function SurveillanceDashboardPage() {
           </section>
 
           <section>
-            <h2 className="text-sm font-semibold text-slate-900 mb-3 flex items-center gap-2">
-              <Radio className="h-4 w-4 text-slate-500" />
+            <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+              <Radio className="h-4 w-4 text-muted-foreground" />
               Active alerts by severity
             </h2>
             {alertsQ.isLoading && (
-              <p className="text-sm text-slate-500 flex items-center gap-2">
+              <p className="text-sm text-muted-foreground flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" /> Loading alerts…
               </p>
             )}
             {alertsQ.isError && errorBanner(alertsQ.error)}
             <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-xl border border-rose-200 bg-rose-50/80 p-4 shadow-sm">
+              <div className="rounded-xl border border-danger/28 bg-danger-soft/80 p-4 shadow-sm">
                 <p className="text-xs font-medium uppercase tracking-wide text-rose-800">Red / high</p>
-                <p className="mt-2 text-3xl font-semibold text-rose-900">{severitySummary.red}</p>
-                <p className="text-xs text-rose-700 mt-1">Critical or high-priority surveillance items</p>
+                <p className="mt-2 text-3xl font-semibold text-danger">{severitySummary.red}</p>
+                <p className="text-xs text-danger mt-1">Critical or high-priority surveillance items</p>
               </div>
-              <div className="rounded-xl border border-amber-200 bg-amber-50/80 p-4 shadow-sm">
-                <p className="text-xs font-medium uppercase tracking-wide text-amber-900">Amber / watch</p>
-                <p className="mt-2 text-3xl font-semibold text-amber-950">{severitySummary.amber}</p>
-                <p className="text-xs text-amber-900 mt-1">Medium priority — monitor closely</p>
+              <div className="rounded-xl border border-warning/35 bg-warning-soft/80 p-4 shadow-sm">
+                <p className="text-xs font-medium uppercase tracking-wide text-warning-foreground">Amber / watch</p>
+                <p className="mt-2 text-3xl font-semibold text-warning-foreground">{severitySummary.amber}</p>
+                <p className="text-xs text-warning-foreground mt-1">Medium priority — monitor closely</p>
               </div>
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50/80 p-4 shadow-sm">
-                <p className="text-xs font-medium uppercase tracking-wide text-emerald-900">Green / stable</p>
+              <div className="rounded-xl border border-success/25 bg-success-soft/80 p-4 shadow-sm">
+                <p className="text-xs font-medium uppercase tracking-wide text-primary-hover">Green / stable</p>
                 <p className="mt-2 text-3xl font-semibold text-emerald-950">{severitySummary.green}</p>
-                <p className="text-xs text-emerald-900 mt-1">Low priority or routine signals</p>
+                <p className="text-xs text-primary-hover mt-1">Low priority or routine signals</p>
               </div>
             </div>
             {!alertsQ.isLoading && severitySummary.total === 0 && (
-              <p className="mt-2 text-sm text-slate-500">No alerts returned for this tenant.</p>
+              <p className="mt-2 text-sm text-muted-foreground">No alerts returned for this tenant.</p>
             )}
           </section>
 
-          <section className="rounded-xl border border-slate-200 bg-white p-4 space-y-3">
-            <h2 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-              <Shield className="h-4 w-4 text-slate-500" />
+          <section className="rounded-xl border border-border bg-card p-4 space-y-3">
+            <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <Shield className="h-4 w-4 text-muted-foreground" />
               Operational actions
             </h2>
             <div className="grid gap-4 lg:grid-cols-3">
-              <div className="space-y-2 rounded-lg border border-slate-100 p-3">
-                <p className="text-xs font-medium text-slate-600">Create signal definition</p>
+              <div className="space-y-2 rounded-lg border border-border p-3">
+                <p className="text-xs font-medium text-muted-foreground">Create signal definition</p>
                 <input
-                  className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                  className="w-full rounded-md border border-border px-2 py-1.5 text-sm"
                   placeholder="Name"
                   value={sigName}
                   onChange={(e) => setSigName(e.target.value)}
                 />
                 <input
-                  className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                  className="w-full rounded-md border border-border px-2 py-1.5 text-sm"
                   placeholder="Event type"
                   value={sigEventType}
                   onChange={(e) => setSigEventType(e.target.value)}
                 />
                 <input
-                  className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                  className="w-full rounded-md border border-border px-2 py-1.5 text-sm"
                   placeholder="Threshold"
                   value={sigThreshold}
                   onChange={(e) => setSigThreshold(e.target.value)}
@@ -235,24 +235,24 @@ export default function SurveillanceDashboardPage() {
                       severity: "MEDIUM",
                     })
                   }
-                  className="inline-flex items-center gap-1 rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+                  className="inline-flex items-center gap-1 rounded-md bg-neutral-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-primary-hover disabled:opacity-50"
                 >
                   {createSignalM.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
                   Create signal
                 </button>
                 {createSignalM.isError && errorBanner(createSignalM.error)}
-                {createSignalM.isSuccess && <p className="text-xs text-emerald-700">Signal created.</p>}
+                {createSignalM.isSuccess && <p className="text-xs text-primary-hover">Signal created.</p>}
               </div>
-              <div className="space-y-2 rounded-lg border border-slate-100 p-3">
-                <p className="text-xs font-medium text-slate-600">Ingest surveillance event</p>
+              <div className="space-y-2 rounded-lg border border-border p-3">
+                <p className="text-xs font-medium text-muted-foreground">Ingest surveillance event</p>
                 <input
-                  className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                  className="w-full rounded-md border border-border px-2 py-1.5 text-sm"
                   placeholder="Event type"
                   value={ingestType}
                   onChange={(e) => setIngestType(e.target.value)}
                 />
                 <input
-                  className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                  className="w-full rounded-md border border-border px-2 py-1.5 text-sm"
                   placeholder="Facility UUID (optional)"
                   value={ingestFacility}
                   onChange={(e) => setIngestFacility(e.target.value)}
@@ -267,23 +267,23 @@ export default function SurveillanceDashboardPage() {
                       facilityId: ingestFacility.trim() || undefined,
                     })
                   }
-                  className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
+                  className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-background disabled:opacity-50"
                 >
                   {ingestM.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Activity className="h-3 w-3" />}
                   Ingest event
                 </button>
                 {ingestM.isError && errorBanner(ingestM.error)}
               </div>
-              <div className="space-y-2 rounded-lg border border-slate-100 p-3">
-                <p className="text-xs font-medium text-slate-600">Case intake (via ingest)</p>
+              <div className="space-y-2 rounded-lg border border-border p-3">
+                <p className="text-xs font-medium text-muted-foreground">Case intake (via ingest)</p>
                 <input
-                  className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                  className="w-full rounded-md border border-border px-2 py-1.5 text-sm"
                   placeholder="Event type for case linkage"
                   value={caseEventType}
                   onChange={(e) => setCaseEventType(e.target.value)}
                 />
                 <input
-                  className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                  className="w-full rounded-md border border-border px-2 py-1.5 text-sm"
                   placeholder="Title / syndrome"
                   value={caseTitle}
                   onChange={(e) => setCaseTitle(e.target.value)}
@@ -298,7 +298,7 @@ export default function SurveillanceDashboardPage() {
                       facilityId: ingestFacility.trim() || undefined,
                     })
                   }
-                  className="inline-flex items-center gap-1 rounded-md bg-indigo-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-800 disabled:opacity-50"
+                  className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-800 disabled:opacity-50"
                 >
                   {createCaseM.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Shield className="h-3 w-3" />}
                   Submit case intake
@@ -308,51 +308,51 @@ export default function SurveillanceDashboardPage() {
             </div>
           </section>
 
-          <div className="flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-4">
-            <label className="text-xs font-medium text-slate-600">
+          <div className="flex flex-wrap items-end gap-3 rounded-xl border border-border bg-card p-4">
+            <label className="text-xs font-medium text-muted-foreground">
               Filter signals (syndrome text)
               <input
-                className="mt-1 block w-48 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                className="mt-1 block w-48 rounded-md border border-border px-2 py-1.5 text-sm"
                 value={syndromeFilter}
                 onChange={(e) => setSyndromeFilter(e.target.value)}
               />
             </label>
-            <label className="text-xs font-medium text-slate-600">
+            <label className="text-xs font-medium text-muted-foreground">
               Counters from (ISO date)
               <input
-                className="mt-1 block w-40 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                className="mt-1 block w-40 rounded-md border border-border px-2 py-1.5 text-sm"
                 value={periodFrom}
                 onChange={(e) => setPeriodFrom(e.target.value)}
                 placeholder="2025-01-01"
               />
             </label>
-            <label className="text-xs font-medium text-slate-600">
+            <label className="text-xs font-medium text-muted-foreground">
               Counters to
               <input
-                className="mt-1 block w-40 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                className="mt-1 block w-40 rounded-md border border-border px-2 py-1.5 text-sm"
                 value={periodTo}
                 onChange={(e) => setPeriodTo(e.target.value)}
               />
             </label>
           </div>
 
-          <section className="rounded-xl border border-slate-200 bg-white overflow-hidden">
-            <div className="border-b border-slate-100 px-4 py-3 flex items-center gap-2">
-              <Activity className="h-4 w-4 text-slate-500" />
-              <h2 className="text-sm font-semibold text-slate-900">Signal detection</h2>
+          <section className="rounded-xl border border-border bg-card overflow-hidden">
+            <div className="border-b border-border px-4 py-3 flex items-center gap-2">
+              <Activity className="h-4 w-4 text-muted-foreground" />
+              <h2 className="text-sm font-semibold text-foreground">Signal detection</h2>
             </div>
             {signalsQ.isLoading && (
-              <p className="px-4 py-6 text-sm text-slate-500 flex items-center gap-2">
+              <p className="px-4 py-6 text-sm text-muted-foreground flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" /> Loading signals…
               </p>
             )}
             {signalsQ.isError && <div className="p-4">{errorBanner(signalsQ.error)}</div>}
             {!signalsQ.isLoading && (signalsQ.data?.length ?? 0) === 0 && (
-              <p className="px-4 py-6 text-sm text-slate-500">No signals for the current filters.</p>
+              <p className="px-4 py-6 text-sm text-muted-foreground">No signals for the current filters.</p>
             )}
             {(signalsQ.data?.length ?? 0) > 0 && (
               <table className="w-full text-sm">
-                <thead className="bg-slate-50 text-left text-xs text-slate-600">
+                <thead className="bg-background text-left text-xs text-muted-foreground">
                   <tr>
                     <th className="px-3 py-2">Syndrome / signal</th>
                     <th className="px-3 py-2">Facility</th>
@@ -363,9 +363,9 @@ export default function SurveillanceDashboardPage() {
                 </thead>
                 <tbody>
                   {signalsQ.data!.map((s) => (
-                    <tr key={s.id} className="border-t border-slate-100">
-                      <td className="px-3 py-2 font-medium text-slate-900">{s.disease}</td>
-                      <td className="px-3 py-2 text-slate-600">{s.facility}</td>
+                    <tr key={s.id} className="border-t border-border">
+                      <td className="px-3 py-2 font-medium text-foreground">{s.disease}</td>
+                      <td className="px-3 py-2 text-muted-foreground">{s.facility}</td>
                       <td className="px-3 py-2 text-right">{s.cases}</td>
                       <td className="px-3 py-2 text-right">{s.threshold}</td>
                       <td className="px-3 py-2">
@@ -381,22 +381,22 @@ export default function SurveillanceDashboardPage() {
           </section>
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <section className="rounded-xl border border-slate-200 bg-white overflow-hidden">
-              <div className="border-b border-slate-100 px-4 py-3">
-                <h2 className="text-sm font-semibold text-slate-900">Case registry</h2>
+            <section className="rounded-xl border border-border bg-card overflow-hidden">
+              <div className="border-b border-border px-4 py-3">
+                <h2 className="text-sm font-semibold text-foreground">Case registry</h2>
               </div>
               {casesQ.isLoading && (
-                <p className="px-4 py-6 text-sm text-slate-500 flex items-center gap-2">
+                <p className="px-4 py-6 text-sm text-muted-foreground flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" /> Loading cases…
                 </p>
               )}
               {casesQ.isError && <div className="p-4">{errorBanner(casesQ.error)}</div>}
               {!casesQ.isLoading && (casesQ.data?.length ?? 0) === 0 && (
-                <p className="px-4 py-6 text-sm text-slate-500">No cases returned.</p>
+                <p className="px-4 py-6 text-sm text-muted-foreground">No cases returned.</p>
               )}
               {(casesQ.data?.length ?? 0) > 0 && (
                 <table className="w-full text-sm">
-                  <thead className="bg-slate-50 text-left text-xs text-slate-600">
+                  <thead className="bg-background text-left text-xs text-muted-foreground">
                     <tr>
                       <th className="px-3 py-2">Case ID</th>
                       <th className="px-3 py-2">Syndrome</th>
@@ -407,7 +407,7 @@ export default function SurveillanceDashboardPage() {
                   </thead>
                   <tbody>
                     {casesQ.data!.map((c) => (
-                      <tr key={c.id} className="border-t border-slate-100">
+                      <tr key={c.id} className="border-t border-border">
                         <td className="px-3 py-2 font-mono text-xs">{c.id || "—"}</td>
                         <td className="px-3 py-2">{c.disease}</td>
                         <td className="px-3 py-2">
@@ -415,8 +415,8 @@ export default function SurveillanceDashboardPage() {
                             {c.status}
                           </span>
                         </td>
-                        <td className="px-3 py-2 text-slate-600">{c.facility}</td>
-                        <td className="px-3 py-2 text-slate-600">{c.reportedAt || "—"}</td>
+                        <td className="px-3 py-2 text-muted-foreground">{c.facility}</td>
+                        <td className="px-3 py-2 text-muted-foreground">{c.reportedAt || "—"}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -424,25 +424,25 @@ export default function SurveillanceDashboardPage() {
               )}
             </section>
 
-            <section className="rounded-xl border border-slate-200 bg-white overflow-hidden">
-              <div className="border-b border-slate-100 px-4 py-3">
-                <h2 className="text-sm font-semibold text-slate-900">Daily counter summary (by district bucket)</h2>
-                <p className="text-xs text-slate-500 mt-1">
+            <section className="rounded-xl border border-border bg-card overflow-hidden">
+              <div className="border-b border-border px-4 py-3">
+                <h2 className="text-sm font-semibold text-foreground">Daily counter summary (by district bucket)</h2>
+                <p className="text-xs text-muted-foreground mt-1">
                   Aggregated from facility-level counters when district metadata is unavailable.
                 </p>
               </div>
               {countersQ.isLoading && (
-                <p className="px-4 py-6 text-sm text-slate-500 flex items-center gap-2">
+                <p className="px-4 py-6 text-sm text-muted-foreground flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" /> Loading counters…
                 </p>
               )}
               {countersQ.isError && <div className="p-4">{errorBanner(countersQ.error)}</div>}
               {!countersQ.isLoading && districtSummary.length === 0 && (
-                <p className="px-4 py-6 text-sm text-slate-500">No counter rows for this period.</p>
+                <p className="px-4 py-6 text-sm text-muted-foreground">No counter rows for this period.</p>
               )}
               {districtSummary.length > 0 && (
                 <table className="w-full text-sm">
-                  <thead className="bg-slate-50 text-left text-xs text-slate-600">
+                  <thead className="bg-background text-left text-xs text-muted-foreground">
                     <tr>
                       <th className="px-3 py-2">District (bucket)</th>
                       <th className="px-3 py-2 text-right">Events (sum)</th>
@@ -450,7 +450,7 @@ export default function SurveillanceDashboardPage() {
                   </thead>
                   <tbody>
                     {districtSummary.map(([d, n]) => (
-                      <tr key={d} className="border-t border-slate-100">
+                      <tr key={d} className="border-t border-border">
                         <td className="px-3 py-2 font-medium">{d}</td>
                         <td className="px-3 py-2 text-right">{n}</td>
                       </tr>

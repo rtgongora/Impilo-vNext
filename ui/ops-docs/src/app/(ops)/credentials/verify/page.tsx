@@ -66,7 +66,7 @@ export default function VerifyCredentialPage() {
 
       {error && (
         <Card className="max-w-xl">
-          <div className="p-4 text-red-800 bg-red-50 rounded-lg">{error}</div>
+          <div className="p-4 text-red-800 bg-danger-soft rounded-lg">{error}</div>
         </Card>
       )}
 
@@ -76,12 +76,12 @@ export default function VerifyCredentialPage() {
             <div className={`text-center mb-4 p-4 rounded-lg ${
               result.status === "VALID" ? "bg-green-50" :
               result.status === "EXPIRED" ? "bg-yellow-50" :
-              "bg-red-50"
+              "bg-danger-soft"
             }`}>
               <span className={`text-2xl font-bold ${
                 result.status === "VALID" ? "text-green-700" :
                 result.status === "EXPIRED" ? "text-yellow-700" :
-                "text-red-700"
+                "text-danger"
               }`}>{result.status}</span>
             </div>
             <dl className="space-y-2 text-sm">

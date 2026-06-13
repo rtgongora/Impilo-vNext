@@ -24,12 +24,12 @@ export function NdilaProviderStatusBadge({
   return (
     <span
       title={policyDecisionId ? `Policy decision: ${policyDecisionId}` : undefined}
-      className="inline-flex items-center gap-1 rounded-full bg-slate-100 border border-slate-200 px-2 py-0.5 text-[10px] text-slate-800"
+      className="inline-flex items-center gap-1 rounded-full bg-neutral-100 border border-border px-2 py-0.5 text-[10px] text-foreground"
     >
-      {productionSafe ? <ShieldCheck className="h-3 w-3 text-emerald-600" /> : <ShieldCheck className="h-3 w-3 text-red-600" />}
+      {productionSafe ? <ShieldCheck className="h-3 w-3 text-primary" /> : <ShieldCheck className="h-3 w-3 text-red-600" />}
       <span className="font-medium">{provider}</span>
-      {fallbackUsed && <span className="text-amber-700">fallback</span>}
-      {servedFromCache ? <Wifi className="h-3 w-3 text-emerald-600" /> : <WifiOff className="h-3 w-3 text-slate-400" />}
+      {fallbackUsed && <span className="text-warning-foreground">fallback</span>}
+      {servedFromCache ? <Wifi className="h-3 w-3 text-primary" /> : <WifiOff className="h-3 w-3 text-muted-foreground" />}
     </span>
   );
 }

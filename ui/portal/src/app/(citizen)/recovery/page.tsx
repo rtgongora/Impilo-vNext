@@ -76,7 +76,7 @@ export default function RecoveryPage() {
   if (step === "enter-id") {
     return (
       <div className="max-w-lg mx-auto">
-        <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
+        <div className="bg-card rounded-xl shadow-sm border border-neutral-200 p-6">
           <h1 className="text-xl font-semibold text-neutral-900 mb-1">
             ID Recovery
           </h1>
@@ -87,11 +87,11 @@ export default function RecoveryPage() {
 
           {/* Step-up required notice */}
           {stepUpRequired && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
-              <h3 className="text-sm font-medium text-amber-800 mb-1">
+            <div className="bg-warning-soft border border-warning/35 rounded-lg p-4 mb-4">
+              <h3 className="text-sm font-medium text-warning-foreground mb-1">
                 Additional Verification Required
               </h3>
-              <p className="text-sm text-amber-700 mb-3">
+              <p className="text-sm text-warning-foreground mb-3">
                 ID recovery requires additional identity verification. Please
                 enter your step-up verification token below.
               </p>
@@ -125,8 +125,8 @@ export default function RecoveryPage() {
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <p className="text-sm text-red-700">{error}</p>
+              <div className="bg-danger-soft border border-danger/28 rounded-lg p-3">
+                <p className="text-sm text-danger">{error}</p>
               </div>
             )}
 
@@ -152,7 +152,7 @@ export default function RecoveryPage() {
   if (step === "verify") {
     return (
       <div className="max-w-lg mx-auto">
-        <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
+        <div className="bg-card rounded-xl shadow-sm border border-neutral-200 p-6">
           <h1 className="text-xl font-semibold text-neutral-900 mb-1">
             Verify Your Identity
           </h1>
@@ -201,8 +201,8 @@ export default function RecoveryPage() {
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <p className="text-sm text-red-700">{error}</p>
+              <div className="bg-danger-soft border border-danger/28 rounded-lg p-3">
+                <p className="text-sm text-danger">{error}</p>
               </div>
             )}
 

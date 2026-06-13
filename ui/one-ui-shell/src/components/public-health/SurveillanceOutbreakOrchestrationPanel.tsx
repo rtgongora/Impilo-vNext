@@ -27,12 +27,12 @@ export function SurveillanceOutbreakOrchestrationPanel() {
 
   return (
     <section
-      className="mb-6 rounded-2xl border border-rose-200 bg-rose-50/70 p-4"
+      className="mb-6 rounded-2xl border border-danger/28 bg-danger-soft/70 p-4"
       data-testid="surveillance-outbreak-orchestration-panel"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="flex items-center gap-2 text-sm font-semibold text-rose-900">
+          <p className="flex items-center gap-2 text-sm font-semibold text-danger">
             <Radio className="h-4 w-4" />
             Surveillance & outbreak orchestration
           </p>
@@ -41,21 +41,21 @@ export function SurveillanceOutbreakOrchestrationPanel() {
               ? "Loading syndrome signals…"
               : `${signalCount} signal(s) · ${caseCount} case(s) · ${alertCount} alert(s)`}
           </p>
-          <p className="mt-1 text-xs text-rose-700" data-testid="surveillance-ndila-probe">
+          <p className="mt-1 text-xs text-danger" data-testid="surveillance-ndila-probe">
             {ndilaProbeLabel(ndilaQ.isLoading, ndilaQ.isError, ndilaQ.data)}
           </p>
         </div>
         <div className="flex flex-wrap gap-2 text-xs">
           <Link
             href="/public-health?tab=outbreaks"
-            className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-white px-2.5 py-1.5 font-medium text-rose-900 hover:border-rose-300"
+            className="inline-flex items-center gap-1 rounded-lg border border-danger/28 bg-card px-2.5 py-1.5 font-medium text-danger hover:border-rose-300"
           >
             <AlertTriangle className="h-3.5 w-3.5" />
             Outbreaks
           </Link>
           <Link
             href="/ndila"
-            className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-white px-2.5 py-1.5 font-medium text-rose-900 hover:border-rose-300"
+            className="inline-flex items-center gap-1 rounded-lg border border-danger/28 bg-card px-2.5 py-1.5 font-medium text-danger hover:border-rose-300"
           >
             <Map className="h-3.5 w-3.5" />
             Ndila workspace
@@ -63,7 +63,7 @@ export function SurveillanceOutbreakOrchestrationPanel() {
         </div>
       </div>
       {(signalsQ.isLoading || ndilaQ.isLoading) && (
-        <div className="mt-2 flex items-center gap-2 text-xs text-rose-700">
+        <div className="mt-2 flex items-center gap-2 text-xs text-danger">
           <Loader2 className="h-3.5 w-3.5 animate-spin" />
           Correlating surveillance with geospatial context…
         </div>

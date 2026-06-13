@@ -87,7 +87,7 @@ export default function StatsPage() {
       {stats && (
         <>
           {/* Summary bar */}
-          <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-5 mb-6 flex items-center justify-between">
+          <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-5 mb-6 flex items-center justify-between">
             <div>
               <p className="text-sm text-neutral-500">Total Resources</p>
               <p className="text-3xl font-semibold text-neutral-900 tabular-nums">
@@ -104,7 +104,7 @@ export default function StatsPage() {
 
           {/* Resource cards grid */}
           {sortedEntries.length === 0 ? (
-            <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-8 text-center text-neutral-500 text-sm">
+            <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-8 text-center text-neutral-500 text-sm">
               No resources found in the current tenant partition.
             </div>
           ) : (

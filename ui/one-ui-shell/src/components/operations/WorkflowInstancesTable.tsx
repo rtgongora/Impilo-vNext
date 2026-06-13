@@ -66,7 +66,7 @@ export function WorkflowInstancesTable({
           render: (row) => (
             <button
               type="button"
-              className={`text-left font-mono text-xs ${selectedId === row.id ? "text-impilo-700 font-semibold" : "text-slate-800"}`}
+              className={`text-left font-mono text-xs ${selectedId === row.id ? "text-primary-hover font-semibold" : "text-foreground"}`}
               onClick={() => onSelect?.(row.id)}
             >
               {row.id}

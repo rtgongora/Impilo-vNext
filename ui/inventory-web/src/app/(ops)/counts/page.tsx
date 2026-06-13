@@ -193,17 +193,17 @@ export default function CountsPage() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-red-800">
           {error}
         </div>
       )}
 
       {successMessage && (
-        <div className="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-sm text-emerald-800">
+        <div className="mb-4 p-3 rounded-lg bg-success-soft border border-success/25 text-sm text-primary-hover">
           {successMessage}
           <button
             onClick={() => setSuccessMessage(null)}
-            className="ml-2 text-emerald-600 hover:text-emerald-800 font-medium"
+            className="ml-2 text-primary hover:text-primary-hover font-medium"
           >
             Dismiss
           </button>
@@ -317,7 +317,7 @@ export default function CountsPage() {
               <div>
                 <span className="text-neutral-500">Total Variance:</span>
                 <span className={`ml-2 font-medium ${
-                  currentCount.totalVariance === 0 ? "text-emerald-600" : "text-red-600"
+                  currentCount.totalVariance === 0 ? "text-primary" : "text-red-600"
                 }`}>
                   {currentCount.totalVariance}
                 </span>
@@ -422,7 +422,7 @@ export default function CountsPage() {
                       line.variance === null
                         ? "text-neutral-400"
                         : line.variance === 0
-                          ? "text-emerald-600"
+                          ? "text-primary"
                           : "text-red-600"
                     }`}>
                       {line.variance !== null ? (line.variance > 0 ? `+${line.variance}` : line.variance) : "-"}
@@ -435,7 +435,7 @@ export default function CountsPage() {
                               <button
                                 onClick={() => handleRecordLine(line.id)}
                                 disabled={actionLoading}
-                                className="text-xs text-emerald-600 hover:text-emerald-800 font-medium"
+                                className="text-xs text-primary hover:text-primary-hover font-medium"
                               >
                                 Save
                               </button>
@@ -452,7 +452,7 @@ export default function CountsPage() {
                                 setEditingLineId(line.id);
                                 setCountedQty(line.countedQty ?? line.expectedQty);
                               }}
-                              className="text-xs text-amber-600 hover:text-amber-800 font-medium"
+                              className="text-xs text-amber-600 hover:text-warning-foreground font-medium"
                             >
                               {line.countedQty !== null ? "Re-count" : "Count"}
                             </button>

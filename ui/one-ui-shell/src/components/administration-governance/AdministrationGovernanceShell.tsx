@@ -28,7 +28,7 @@ export function AdministrationGovernanceShell({
     return (
       <AppLayout>
         <PageShell title={title} subtitle={subtitle}>
-          <p className="text-sm text-slate-500">Loading session experience…</p>
+          <p className="text-sm text-muted-foreground">Loading session experience…</p>
         </PageShell>
       </AppLayout>
     );

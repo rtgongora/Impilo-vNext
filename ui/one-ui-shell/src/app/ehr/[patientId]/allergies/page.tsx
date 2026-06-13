@@ -24,14 +24,14 @@ import { useFacilityStore } from "@/hooks/useFacilityStore";
 /* ------------------------------------------------------------------ */
 
 const TYPE_BADGE: Record<string, string> = {
-  MEDICATION: "bg-purple-100 text-purple-700",
+  MEDICATION: "bg-purple-100 text-warning-foreground",
   FOOD: "bg-orange-100 text-orange-700",
   ENVIRONMENTAL: "bg-teal-100 text-teal-700" };
 
 const SEVERITY_BADGE: Record<string, string> = {
   MILD: "bg-green-100 text-green-700",
   MODERATE: "bg-yellow-100 text-yellow-700",
-  SEVERE: "bg-red-100 text-red-700" };
+  SEVERE: "bg-red-100 text-danger" };
 
 /* ------------------------------------------------------------------ */
 /*  Empty form state                                                   */
@@ -98,8 +98,8 @@ export default function AllergiesPage() {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading allergies...</span>
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading allergies...</span>
           </div>
         ) : (
           <div className="space-y-6">
@@ -145,14 +145,14 @@ export default function AllergiesPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <ShieldAlert className="w-5 h-5 text-red-500" />
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 className="text-lg font-semibold text-foreground">
                   Allergies ({allergies.length})
                 </h2>
               </div>
               <button
                 type="button"
                 onClick={() => setShowForm((prev) => !prev)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 transition-colors"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 Add Allergy
@@ -161,12 +161,12 @@ export default function AllergiesPage() {
 
             {/* Add Allergy form */}
             {showForm && (
-              <div className="bg-white rounded-lg border border-gray-200 p-5">
-                <h3 className="font-medium text-gray-900 mb-4">New Allergy</h3>
+              <div className="bg-card rounded-lg border border-border p-5">
+                <h3 className="font-medium text-foreground mb-4">New Allergy</h3>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
                         Allergen
                       </label>
                       <input
@@ -175,17 +175,17 @@ export default function AllergiesPage() {
                         onChange={(e) => updateField("allergen", e.target.value)}
                         placeholder="e.g. Penicillin"
                         required
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
                         Allergen Type
                       </label>
                       <select
                         value={form.allergen_type}
                         onChange={(e) => updateField("allergen_type", e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                       >
                         <option value="MEDICATION">Medication</option>
                         <option value="FOOD">Food</option>
@@ -193,7 +193,7 @@ export default function AllergiesPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
                         Reaction
                       </label>
                       <input
@@ -201,17 +201,17 @@ export default function AllergiesPage() {
                         value={form.reaction}
                         onChange={(e) => updateField("reaction", e.target.value)}
                         placeholder="e.g. Rash, Anaphylaxis"
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
                         Severity
                       </label>
                       <select
                         value={form.severity}
                         onChange={(e) => updateField("severity", e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                       >
                         <option value="MILD">Mild</option>
                         <option value="MODERATE">Moderate</option>
@@ -219,18 +219,18 @@ export default function AllergiesPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
                         Onset Date
                       </label>
                       <input
                         type="date"
                         value={form.onset_date}
                         onChange={(e) => updateField("onset_date", e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
                         Recorded By
                       </label>
                       <input
@@ -239,7 +239,7 @@ export default function AllergiesPage() {
                         onChange={(e) => updateField("recorded_by", e.target.value)}
                         placeholder="Dr. Jane Smith"
                         required
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                       />
                     </div>
                   </div>
@@ -248,7 +248,7 @@ export default function AllergiesPage() {
                     <button
                       type="submit"
                       disabled={createAllergy.isPending}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       {createAllergy.isPending && (
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -261,7 +261,7 @@ export default function AllergiesPage() {
                         setForm({ ...EMPTY_FORM });
                         setShowForm(false);
                       }}
-                      className="px-4 py-2 text-sm font-medium text-gray-700 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+                      className="px-4 py-2 text-sm font-medium text-foreground rounded-lg border border-border hover:bg-background transition-colors"
                     >
                       Cancel
                     </button>
@@ -278,22 +278,22 @@ export default function AllergiesPage() {
 
             {/* Allergies table */}
             {allergies.length === 0 ? (
-              <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-                <ShieldAlert className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-400 text-sm">No allergies recorded yet</p>
+              <div className="bg-card rounded-lg border border-border p-12 text-center">
+                <ShieldAlert className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                <p className="text-muted-foreground text-sm">No allergies recorded yet</p>
               </div>
             ) : (
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div className="bg-card rounded-lg border border-border overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-gray-200 bg-gray-50">
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">Allergen</th>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">Type</th>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">Severity</th>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">Reaction</th>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">Onset Date</th>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
+                      <tr className="border-b border-border bg-background">
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">Allergen</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">Type</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">Severity</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">Reaction</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">Onset Date</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -302,13 +302,13 @@ export default function AllergiesPage() {
                         return (
                           <tr
                             key={allergy.id}
-                            className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                            className="border-b border-border hover:bg-background transition-colors"
                           >
-                            <td className="px-4 py-3 font-medium text-gray-900">{a.allergen}</td>
+                            <td className="px-4 py-3 font-medium text-foreground">{a.allergen}</td>
                             <td className="px-4 py-3">
                               <span
                                 className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${
-                                  TYPE_BADGE[a.allergenType] ?? "bg-gray-100 text-gray-600"
+                                  TYPE_BADGE[a.allergenType] ?? "bg-neutral-100 text-muted-foreground"
                                 }`}
                               >
                                 {a.allergenType}
@@ -317,19 +317,19 @@ export default function AllergiesPage() {
                             <td className="px-4 py-3">
                               <span
                                 className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${
-                                  SEVERITY_BADGE[a.severity] ?? "bg-gray-100 text-gray-600"
+                                  SEVERITY_BADGE[a.severity] ?? "bg-neutral-100 text-muted-foreground"
                                 }`}
                               >
                                 {a.severity}
                               </span>
                             </td>
-                            <td className="px-4 py-3 text-gray-700">{a.reaction ?? "—"}</td>
-                            <td className="px-4 py-3 text-gray-700">
+                            <td className="px-4 py-3 text-foreground">{a.reaction ?? "—"}</td>
+                            <td className="px-4 py-3 text-foreground">
                               {a.onsetDate
                                 ? new Date(a.onsetDate).toLocaleDateString()
                                 : "—"}
                             </td>
-                            <td className="px-4 py-3 text-gray-700">{a.status}</td>
+                            <td className="px-4 py-3 text-foreground">{a.status}</td>
                           </tr>
                         );
                       })}

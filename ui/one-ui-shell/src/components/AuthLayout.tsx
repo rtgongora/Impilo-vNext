@@ -16,19 +16,31 @@ import { ImpiloBrandLogo } from "@/components/brand/ImpiloBrandLogo";
 
 export function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen flex bg-gray-50">
+    <div className="min-h-screen flex bg-background">
       {/* Left Panel — Branding (desktop only) */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-impilo-500 via-impilo-600 to-impilo-800 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-impilo-700 via-impilo-600 to-impilo-800 relative overflow-hidden">
+        {/* Connected-health watermark */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.08]"
+          style={{
+            backgroundImage: "url('/brand/mark-rgb.svg')",
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "right 8% bottom 12%",
+            backgroundSize: "min(320px, 45vw)",
+            filter: "brightness(0) invert(1)",
+          }}
+          aria-hidden
+        />
         {/* Decorative elements */}
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-20 w-64 h-64 rounded-full bg-white/20 blur-3xl" />
-          <div className="absolute bottom-20 right-20 w-96 h-96 rounded-full bg-brand-yellow/20 blur-3xl" />
+          <div className="absolute top-20 left-20 w-64 h-64 rounded-full bg-card/20 blur-3xl" />
+          <div className="absolute bottom-20 right-20 w-96 h-96 rounded-full bg-warning/20 blur-3xl" />
         </div>
 
         <div className="relative z-10 flex flex-col justify-between p-12 text-white">
           <div data-testid="auth-desktop-hero-logo">
             <ImpiloBrandLogo variant="hero" tone="white" />
-            <p className="text-sm text-impilo-100 mt-2">Health Operating System</p>
+            <p className="text-sm text-white/85 mt-2">Health Operating System</p>
           </div>
 
           <div className="space-y-6">
@@ -38,7 +50,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
                 <br />
                 One experience.
               </h2>
-              <p className="text-lg text-impilo-100 mt-3 max-w-md">
+              <p className="text-lg text-white/85 mt-3 max-w-md">
                 Empowering healthcare providers with seamless, secure,
                 and intelligent clinical solutions.
               </p>
@@ -46,19 +58,19 @@ export function AuthLayout({ children }: { children: ReactNode }) {
 
             <div className="flex items-center gap-6 pt-2">
               <div className="flex items-center gap-2">
-                <div className="h-9 w-9 rounded-lg bg-white/15 flex items-center justify-center">
+                <div className="h-9 w-9 rounded-lg bg-card/15 flex items-center justify-center">
                   <Heart className="h-4 w-4" />
                 </div>
                 <span className="text-sm">Person-Centered</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="h-9 w-9 rounded-lg bg-white/15 flex items-center justify-center">
+                <div className="h-9 w-9 rounded-lg bg-card/15 flex items-center justify-center">
                   <Shield className="h-4 w-4" />
                 </div>
                 <span className="text-sm">Trust-First</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="h-9 w-9 rounded-lg bg-white/15 flex items-center justify-center">
+                <div className="h-9 w-9 rounded-lg bg-card/15 flex items-center justify-center">
                   <Activity className="h-4 w-4" />
                 </div>
                 <span className="text-sm">Real-time</span>
@@ -66,7 +78,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
 
-          <p className="text-xs text-impilo-200">
+          <p className="text-xs text-white/70">
             Impilo Health Operating System
           </p>
         </div>
@@ -80,26 +92,26 @@ export function AuthLayout({ children }: { children: ReactNode }) {
             <div className="flex justify-center">
               <ImpiloBrandLogo variant="hero" />
             </div>
-            <p className="text-xs text-gray-500 mt-1">Health Operating System</p>
+            <p className="text-xs text-muted-foreground mt-1">Health Operating System</p>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-8">{children}</div>
+          <div className="bg-card rounded-xl border border-border shadow-impilo-card p-8">{children}</div>
 
           <div className="mt-4 text-center space-y-2">
-            <p className="text-xs text-gray-400 flex items-center justify-center gap-1.5">
+            <p className="text-xs text-muted-foreground flex items-center justify-center gap-1.5">
               <Shield className="w-3 h-3" />
               Secure authentication powered by Impilo Trust Layer
             </p>
-            <p className="text-xs text-gray-400 flex items-center justify-center gap-3">
-              <Link href="/privacy" className="hover:text-gray-600 transition-colors">
+            <p className="text-xs text-muted-foreground flex items-center justify-center gap-3">
+              <Link href="/privacy" className="hover:text-foreground transition-colors">
                 Privacy Policy
               </Link>
               <span>&middot;</span>
-              <Link href="/terms" className="hover:text-gray-600 transition-colors">
+              <Link href="/terms" className="hover:text-foreground transition-colors">
                 Terms of Use
               </Link>
               <span>&middot;</span>
-              <Link href="/account-deletion" className="hover:text-gray-600 transition-colors">
+              <Link href="/account-deletion" className="hover:text-foreground transition-colors">
                 Account Deletion
               </Link>
             </p>

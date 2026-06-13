@@ -14,17 +14,17 @@ export default function FundoStudioCourseDetailPage({ params }: { params: { cour
 
   return (
     <FundoStudioWorkspace title="Studio Course Detail" subtitle="Review course structure, readiness, and open builder/preview flows.">
-      <div className="rounded-lg border border-gray-200 bg-white p-4">
-        <p className="text-lg font-semibold text-gray-900">{structure?.title ?? "Course"}</p>
-        <p className="text-sm text-gray-600">{structure?.description ?? "No description yet."}</p>
+      <div className="rounded-lg border border-border bg-card p-4">
+        <p className="text-lg font-semibold text-foreground">{structure?.title ?? "Course"}</p>
+        <p className="text-sm text-muted-foreground">{structure?.description ?? "No description yet."}</p>
         <div className="mt-2 flex gap-2 text-xs">
-          <Link href={`/learning/studio/courses/${courseId}/builder`} className="rounded border border-gray-300 px-2 py-1 text-gray-700">Open builder</Link>
-          <Link href={`/learning/courses/${courseId}`} className="rounded border border-gray-300 px-2 py-1 text-gray-700">Learner preview</Link>
+          <Link href={`/learning/studio/courses/${courseId}/builder`} className="rounded border border-border px-2 py-1 text-foreground">Open builder</Link>
+          <Link href={`/learning/courses/${courseId}`} className="rounded border border-border px-2 py-1 text-foreground">Learner preview</Link>
         </div>
       </div>
-      <div className="mt-4 rounded-lg border border-gray-200 bg-white p-4">
-        <p className="text-sm font-semibold text-gray-900">Readiness checklist</p>
-        <ul className="mt-2 space-y-1 text-sm text-gray-700">
+      <div className="mt-4 rounded-lg border border-border bg-card p-4">
+        <p className="text-sm font-semibold text-foreground">Readiness checklist</p>
+        <ul className="mt-2 space-y-1 text-sm text-foreground">
           {checklist.map((c) => (
             <li key={c.item}>
               {c.ok ? "✓" : "•"} {c.item}

@@ -61,20 +61,20 @@ export function DispatchDeliveryOrchestrationPanel() {
         <div className="flex flex-wrap gap-2 text-xs">
           <Link
             href="/nhume/dashboard"
-            className="inline-flex items-center gap-1 rounded-lg border border-sky-200 bg-white px-2.5 py-1.5 font-medium text-sky-900 hover:border-sky-300"
+            className="inline-flex items-center gap-1 rounded-lg border border-sky-200 bg-card px-2.5 py-1.5 font-medium text-sky-900 hover:border-sky-300"
           >
             <Package className="h-3.5 w-3.5" />
             NHUME dashboard
           </Link>
           <Link
             href="/nhume/dispatcher"
-            className="rounded-lg border border-sky-200 bg-white px-2.5 py-1.5 font-medium text-sky-900 hover:border-sky-300"
+            className="rounded-lg border border-sky-200 bg-card px-2.5 py-1.5 font-medium text-sky-900 hover:border-sky-300"
           >
             Dispatcher console
           </Link>
           <Link
             href="/nhume/deliveries"
-            className="rounded-lg border border-sky-200 bg-white px-2.5 py-1.5 font-medium text-sky-900 hover:border-sky-300"
+            className="rounded-lg border border-sky-200 bg-card px-2.5 py-1.5 font-medium text-sky-900 hover:border-sky-300"
           >
             Deliveries
           </Link>

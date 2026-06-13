@@ -32,11 +32,11 @@ export function RegistryAdministrationOrchestrationRail() {
 
   return (
     <section
-      className="rounded-xl border border-indigo-200 bg-indigo-50/50 px-4 py-4"
+      className="rounded-xl border border-info/25 bg-info-soft/50 px-4 py-4"
       data-testid="registry-administration-orchestration-rail"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex items-start gap-2 text-sm text-indigo-950">
+        <div className="flex items-start gap-2 text-sm text-primary-hover">
           <Shield className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" />
           <div>
             <p className="font-medium">Registry administration orchestration</p>
@@ -45,16 +45,16 @@ export function RegistryAdministrationOrchestrationRail() {
               linked to its live operations surface (not placeholder shells).
             </p>
             {queueLoading ? (
-              <p className="mt-1 flex items-center gap-1 text-xs text-indigo-700">
+              <p className="mt-1 flex items-center gap-1 text-xs text-primary-hover">
                 <Loader2 className="h-3 w-3 animate-spin" />
                 Loading reconciliation queues…
               </p>
             ) : queueError ? (
-              <p className="mt-1 text-xs text-amber-800">
+              <p className="mt-1 text-xs text-warning-foreground">
                 One or more registry queues unavailable — use plane cards and VITO ops links below.
               </p>
             ) : (
-              <ul className="mt-1 space-y-0.5 text-xs text-indigo-800" data-testid="registry-queue-summary">
+              <ul className="mt-1 space-y-0.5 text-xs text-primary-hover" data-testid="registry-queue-summary">
                 <li>{pendingProviders.length} provider(s) pending verification (current page)</li>
                 <li>
                   {provisionalTotal ?? "—"} provisional ID(s) awaiting reconciliation
@@ -68,33 +68,33 @@ export function RegistryAdministrationOrchestrationRail() {
         <div className="flex flex-wrap gap-2">
           <Link
             href="/registry/providers/verification"
-            className="inline-flex items-center gap-1 rounded-lg bg-indigo-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-800"
+            className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-800"
           >
             <UserCheck className="h-3.5 w-3.5" />
             Verification queue
           </Link>
           <Link
             href="/operations/vito/registry-admin"
-            className="inline-flex items-center gap-1 rounded-lg border border-indigo-300 bg-white px-3 py-1.5 text-xs font-medium text-indigo-900 hover:bg-indigo-50"
+            className="inline-flex items-center gap-1 rounded-lg border border-indigo-300 bg-card px-3 py-1.5 text-xs font-medium text-primary-hover hover:bg-info-soft"
           >
             Provisional reconciliation
           </Link>
           <Link
             href="/operations/vito/dedup"
-            className="inline-flex items-center gap-1 rounded-lg border border-indigo-300 bg-white px-3 py-1.5 text-xs font-medium text-indigo-900 hover:bg-indigo-50"
+            className="inline-flex items-center gap-1 rounded-lg border border-indigo-300 bg-card px-3 py-1.5 text-xs font-medium text-primary-hover hover:bg-info-soft"
           >
             <GitMerge className="h-3.5 w-3.5" />
             Dedup queue
           </Link>
           <Link
             href="/operations/vito/match"
-            className="inline-flex items-center gap-1 rounded-lg border border-indigo-300 bg-white px-3 py-1.5 text-xs font-medium text-indigo-900 hover:bg-indigo-50"
+            className="inline-flex items-center gap-1 rounded-lg border border-indigo-300 bg-card px-3 py-1.5 text-xs font-medium text-primary-hover hover:bg-info-soft"
           >
             OpenCR match
           </Link>
           <Link
             href="/operations/vito/issuance"
-            className="inline-flex items-center gap-1 rounded-lg border border-indigo-300 bg-white px-3 py-1.5 text-xs font-medium text-indigo-900 hover:bg-indigo-50"
+            className="inline-flex items-center gap-1 rounded-lg border border-indigo-300 bg-card px-3 py-1.5 text-xs font-medium text-primary-hover hover:bg-info-soft"
           >
             <IdCard className="h-3.5 w-3.5" />
             Issuance queue

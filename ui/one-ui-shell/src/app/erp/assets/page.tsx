@@ -25,13 +25,13 @@ export default function ErpFixedAssetsPage() {
         subtitle="Financial detail and depreciation schedule from asset-registry via BFF"
       >
         <div className="mb-4 flex flex-wrap items-center gap-3">
-          <Link href="/erp" className="text-sm text-impilo-500 hover:underline">
+          <Link href="/erp" className="text-sm text-primary hover:underline">
             ← ERP hub
           </Link>
-          <label className="flex flex-wrap items-center gap-2 text-sm text-slate-700">
+          <label className="flex flex-wrap items-center gap-2 text-sm text-foreground">
             Asset ID (UUID)
             <input
-              className="min-w-[280px] rounded border border-slate-300 px-2 py-1 font-mono text-xs"
+              className="min-w-[280px] rounded border border-border px-2 py-1 font-mono text-xs"
               value={assetId}
               onChange={(e) => setAssetId(e.target.value)}
               placeholder="00000000-0000-0000-0000-000000000000"

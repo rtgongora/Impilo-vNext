@@ -47,17 +47,17 @@ import {
 } from "@/lib/clinical-guidance-events";
 
 const STATUS_BADGE: Record<string, string> = {
-  ORDERED: "bg-impilo-100 text-impilo-600",
+  ORDERED: "bg-primary-soft text-primary",
   COLLECTED: "bg-yellow-100 text-yellow-700",
   RESULTED: "bg-green-100 text-green-700",
-  REVIEWED: "bg-purple-100 text-purple-700",
-  CANCELLED: "bg-gray-100 text-gray-600",
+  REVIEWED: "bg-purple-100 text-warning-foreground",
+  CANCELLED: "bg-neutral-100 text-muted-foreground",
 };
 
 const PRIORITY_BADGE: Record<string, string> = {
-  STAT: "bg-red-100 text-red-700",
+  STAT: "bg-red-100 text-danger",
   URGENT: "bg-orange-100 text-orange-700",
-  ROUTINE: "bg-impilo-100 text-impilo-600",
+  ROUTINE: "bg-primary-soft text-primary",
 };
 
 const EMPTY_FORM = {
@@ -422,23 +422,23 @@ export default function OrdersPage() {
       <PageShell title="Lab Orders">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading orders...</span>
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading orders...</span>
           </div>
         ) : (
           <div className="space-y-6">
             {guidanceDraft && (
-              <div className="flex items-start justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50/90 p-3 text-sm text-emerald-900">
+              <div className="flex items-start justify-between gap-3 rounded-lg border border-success/25 bg-success-soft/90 p-3 text-sm text-primary-hover">
                 <div>
                   <p className="font-medium">Clinical guidance (reference only)</p>
-                  <p className="mt-1 text-xs text-emerald-800/90">
+                  <p className="mt-1 text-xs text-primary-hover/90">
                     {guidanceDraft.generic
                       ? `Medication context: ${guidanceDraft.generic}${guidanceDraft.doseMg ? `, ${guidanceDraft.doseMg} mg` : ""}.`
                       : "Prescribing evaluation summary received."}{" "}
                     This does not create a lab order; use it while you complete the order form.
                   </p>
                   {guidanceDraft.alerts && guidanceDraft.alerts.length > 0 && (
-                    <ul className="mt-2 list-disc pl-4 text-xs text-amber-900">
+                    <ul className="mt-2 list-disc pl-4 text-xs text-warning-foreground">
                       {guidanceDraft.alerts.slice(0, 5).map((a, i) => (
                         <li key={i}>{String(a.message ?? a.code ?? "Alert")}</li>
                       ))}
@@ -447,7 +447,7 @@ export default function OrdersPage() {
                 </div>
                 <button
                   type="button"
-                  className="shrink-0 text-xs text-emerald-800 underline hover:text-emerald-950"
+                  className="shrink-0 text-xs text-primary-hover underline hover:text-emerald-950"
                   onClick={() => setGuidanceDraft(null)}
                 >
                   Dismiss
@@ -494,12 +494,12 @@ export default function OrdersPage() {
             />
 
             {!activeEncounter && (
-              <div className="rounded-3xl border border-amber-200 bg-amber-50/80 p-4">
+              <div className="rounded-3xl border border-warning/35 bg-warning-soft/80 p-4">
                 <div className="flex items-start gap-3">
                   <AlertTriangle className="mt-0.5 h-5 w-5 text-amber-600" />
                   <div>
-                    <p className="text-sm font-medium text-amber-900">No active encounter is in scope</p>
-                    <p className="mt-1 text-sm text-amber-800">
+                    <p className="text-sm font-medium text-warning-foreground">No active encounter is in scope</p>
+                    <p className="mt-1 text-sm text-warning-foreground">
                       Existing orders remain visible, but new orders should start from an active encounter so collection, results, and follow-up stay tied to the right clinical episode.
                     </p>
                   </div>
@@ -507,11 +507,11 @@ export default function OrdersPage() {
               </div>
             )}
 
-            <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+            <div className="rounded-3xl border border-border bg-background/70 p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
                 Ordering loop status
               </p>
-              <p className="mt-2 text-sm text-slate-800">
+              <p className="mt-2 text-sm text-foreground">
                 {collectedCount > 0
                   ? `${collectedCount} collected order${collectedCount === 1 ? " is" : "s are"} ready for result entry in this workspace.`
                   : orderedCount > 0
@@ -520,52 +520,52 @@ export default function OrdersPage() {
                       ? `${awaitingReviewCount} result${awaitingReviewCount === 1 ? " is" : "s are"} ready for clinical acknowledgement.`
                       : "The diagnostic loop is clear right now. New orders can be placed here when the encounter needs additional workup."}
               </p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Use the actions below to keep ordering, collection, result entry, and review on one surface instead of switching across multiple pages.
               </p>
             </div>
 
-            <div className="rounded-3xl border border-indigo-200 bg-indigo-50/60 p-4">
+            <div className="rounded-3xl border border-info/25 bg-info-soft/60 p-4">
               <p className="text-xs font-medium uppercase tracking-[0.18em] text-indigo-600">
                 Unified order orchestration
               </p>
-              <p className="mt-2 text-sm text-indigo-900">
+              <p className="mt-2 text-sm text-primary-hover">
                 This workspace now composes cross-domain actions (lab, pharmacy, referrals, telemedicine) from the clinical worklist rail instead of treating lab as the only active lane.
               </p>
               <div className="mt-3 grid gap-3 md:grid-cols-4">
-                <div className="rounded-xl border border-indigo-100 bg-white p-3">
+                <div className="rounded-xl border border-indigo-100 bg-card p-3">
                   <p className="text-xs text-indigo-500">Orders</p>
-                  <p className="text-xl font-semibold text-indigo-900">{laneCounts.orders}</p>
+                  <p className="text-xl font-semibold text-primary-hover">{laneCounts.orders}</p>
                 </div>
-                <div className="rounded-xl border border-indigo-100 bg-white p-3">
+                <div className="rounded-xl border border-indigo-100 bg-card p-3">
                   <p className="text-xs text-indigo-500">Pharmacy</p>
-                  <p className="text-xl font-semibold text-indigo-900">{laneCounts.pharmacy}</p>
+                  <p className="text-xl font-semibold text-primary-hover">{laneCounts.pharmacy}</p>
                 </div>
-                <div className="rounded-xl border border-indigo-100 bg-white p-3">
+                <div className="rounded-xl border border-indigo-100 bg-card p-3">
                   <p className="text-xs text-indigo-500">Referrals</p>
-                  <p className="text-xl font-semibold text-indigo-900">{laneCounts.referrals}</p>
+                  <p className="text-xl font-semibold text-primary-hover">{laneCounts.referrals}</p>
                 </div>
-                <div className="rounded-xl border border-indigo-100 bg-white p-3">
+                <div className="rounded-xl border border-indigo-100 bg-card p-3">
                   <p className="text-xs text-indigo-500">Telemedicine</p>
-                  <p className="text-xl font-semibold text-indigo-900">{laneCounts.telemedicine}</p>
+                  <p className="text-xl font-semibold text-primary-hover">{laneCounts.telemedicine}</p>
                 </div>
               </div>
               <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                <Link href={`/ehr/${patientId}/medications`} className="rounded-lg border border-indigo-200 bg-white px-2.5 py-1.5 text-indigo-700 hover:bg-indigo-100">
+                <Link href={`/ehr/${patientId}/medications`} className="rounded-lg border border-info/25 bg-card px-2.5 py-1.5 text-primary-hover hover:bg-indigo-100">
                   Medication lane
                 </Link>
-                <Link href={`/home/referrals`} className="rounded-lg border border-indigo-200 bg-white px-2.5 py-1.5 text-indigo-700 hover:bg-indigo-100">
+                <Link href={`/home/referrals`} className="rounded-lg border border-info/25 bg-card px-2.5 py-1.5 text-primary-hover hover:bg-indigo-100">
                   Referral lane
                 </Link>
-                <Link href={`/ehr/${patientId}/imaging`} className="rounded-lg border border-indigo-200 bg-white px-2.5 py-1.5 text-indigo-700 hover:bg-indigo-100">
+                <Link href={`/ehr/${patientId}/imaging`} className="rounded-lg border border-info/25 bg-card px-2.5 py-1.5 text-primary-hover hover:bg-indigo-100">
                   Imaging lane
                 </Link>
-                <Link href={`/ehr/${patientId}/procedures`} className="rounded-lg border border-indigo-200 bg-white px-2.5 py-1.5 text-indigo-700 hover:bg-indigo-100">
+                <Link href={`/ehr/${patientId}/procedures`} className="rounded-lg border border-info/25 bg-card px-2.5 py-1.5 text-primary-hover hover:bg-indigo-100">
                   Procedure lane
                 </Link>
                 <Link
                   href={`/madi/orders?patientId=${encodeURIComponent(patientCpid || patientId)}`}
-                  className="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-rose-800 hover:bg-rose-100 inline-flex items-center gap-1"
+                  className="rounded-lg border border-danger/28 bg-danger-soft px-2.5 py-1.5 text-rose-800 hover:bg-rose-100 inline-flex items-center gap-1"
                   data-testid="ehr-order-blood-link"
                 >
                   <Droplet className="h-3.5 w-3.5" />
@@ -574,11 +574,11 @@ export default function OrdersPage() {
               </div>
             </div>
 
-            <div className="rounded-3xl border border-rose-200 bg-rose-50/60 p-4">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-rose-700">
+            <div className="rounded-3xl border border-danger/28 bg-danger-soft/60 p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-danger">
                 Blood products
               </p>
-              <p className="mt-2 text-sm text-rose-900">
+              <p className="mt-2 text-sm text-danger">
                 Order crossmatched blood for this patient through Madi — sample collection, crossmatch, issue and transfusion are tracked in the blood bank workspace.
               </p>
               <Link
@@ -615,7 +615,7 @@ export default function OrdersPage() {
                       className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
                         active
                           ? "border-cyan-400 bg-cyan-100 text-cyan-900"
-                          : "border-cyan-200 bg-white text-cyan-700 hover:bg-cyan-100/60"
+                          : "border-cyan-200 bg-card text-cyan-700 hover:bg-cyan-100/60"
                       }`}
                     >
                       <Icon className="h-3.5 w-3.5" />
@@ -625,10 +625,10 @@ export default function OrdersPage() {
                 })}
               </div>
 
-              <form onSubmit={handleGuidedSubmit} className="mt-4 space-y-3 rounded-xl border border-cyan-100 bg-white p-4">
+              <form onSubmit={handleGuidedSubmit} className="mt-4 space-y-3 rounded-xl border border-cyan-100 bg-card p-4">
                 {guidedLane === "LAB" && (
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                    <label className="text-xs font-medium text-gray-700">
+                    <label className="text-xs font-medium text-foreground">
                       Test Name
                       <input
                         type="text"
@@ -636,11 +636,11 @@ export default function OrdersPage() {
                         value={guidedForm.lab_name}
                         onChange={(e) => updateGuidedField("lab_name", e.target.value)}
                         required
-                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
                         placeholder="e.g. FBC"
                       />
                     </label>
-                    <label className="text-xs font-medium text-gray-700">
+                    <label className="text-xs font-medium text-foreground">
                       Test Code
                       <input
                         type="text"
@@ -648,16 +648,16 @@ export default function OrdersPage() {
                         value={guidedForm.lab_code}
                         onChange={(e) => updateGuidedField("lab_code", e.target.value)}
                         required
-                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
                         placeholder="e.g. CBC"
                       />
                     </label>
-                    <label className="text-xs font-medium text-gray-700">
+                    <label className="text-xs font-medium text-foreground">
                       Priority
                       <select
                         value={guidedForm.lab_priority}
                         onChange={(e) => updateGuidedField("lab_priority", e.target.value)}
-                        className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+                        className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm"
                       >
                         <option value="ROUTINE">Routine</option>
                         <option value="URGENT">Urgent</option>
@@ -669,7 +669,7 @@ export default function OrdersPage() {
 
                 {guidedLane === "MEDICATION" && (
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-                    <label className="text-xs font-medium text-gray-700">
+                    <label className="text-xs font-medium text-foreground">
                       Medication
                       <input
                         type="text"
@@ -677,11 +677,11 @@ export default function OrdersPage() {
                         onChange={(e) => updateGuidedField("medication_name", e.target.value)}
                         required
                         data-testid="guided-medication-name"
-                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
                         placeholder="e.g. Amoxicillin"
                       />
                     </label>
-                    <label className="text-xs font-medium text-gray-700">
+                    <label className="text-xs font-medium text-foreground">
                       Dosage
                       <input
                         type="text"
@@ -689,26 +689,26 @@ export default function OrdersPage() {
                         onChange={(e) => updateGuidedField("dosage", e.target.value)}
                         required
                         data-testid="guided-medication-dosage"
-                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
                         placeholder="e.g. 500mg"
                       />
                     </label>
-                    <label className="text-xs font-medium text-gray-700">
+                    <label className="text-xs font-medium text-foreground">
                       Frequency
                       <input
                         type="text"
                         value={guidedForm.frequency}
                         onChange={(e) => updateGuidedField("frequency", e.target.value)}
-                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
                       />
                     </label>
-                    <label className="text-xs font-medium text-gray-700">
+                    <label className="text-xs font-medium text-foreground">
                       Duration
                       <input
                         type="text"
                         value={guidedForm.duration}
                         onChange={(e) => updateGuidedField("duration", e.target.value)}
-                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
                         placeholder="e.g. 5 days"
                       />
                     </label>
@@ -717,7 +717,7 @@ export default function OrdersPage() {
 
                 {guidedLane === "REFERRAL" && (
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                    <label className="text-xs font-medium text-gray-700">
+                    <label className="text-xs font-medium text-foreground">
                       Specialty
                       <input
                         type="text"
@@ -725,11 +725,11 @@ export default function OrdersPage() {
                         onChange={(e) => updateGuidedField("referral_specialty", e.target.value)}
                         required
                         data-testid="guided-referral-specialty"
-                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
                         placeholder="e.g. Cardiology"
                       />
                     </label>
-                    <label className="text-xs font-medium text-gray-700">
+                    <label className="text-xs font-medium text-foreground">
                       Reason
                       <input
                         type="text"
@@ -737,15 +737,15 @@ export default function OrdersPage() {
                         onChange={(e) => updateGuidedField("referral_reason", e.target.value)}
                         required
                         data-testid="guided-referral-reason"
-                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
                       />
                     </label>
-                    <label className="text-xs font-medium text-gray-700">
+                    <label className="text-xs font-medium text-foreground">
                       Urgency
                       <select
                         value={guidedForm.referral_urgency}
                         onChange={(e) => updateGuidedField("referral_urgency", e.target.value)}
-                        className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+                        className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm"
                       >
                         <option value="ROUTINE">Routine</option>
                         <option value="URGENT">Urgent</option>
@@ -757,13 +757,13 @@ export default function OrdersPage() {
 
                 {guidedLane === "TELEMEDICINE" && (
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                    <label className="text-xs font-medium text-gray-700">
+                    <label className="text-xs font-medium text-foreground">
                       Session type
                       <select
                         value={guidedForm.tele_mode}
                         onChange={(e) => updateGuidedField("tele_mode", e.target.value)}
                         data-testid="guided-tele-mode"
-                        className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+                        className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm"
                       >
                         <option value="VIDEO">Video</option>
                         <option value="AUDIO">Audio</option>
@@ -771,24 +771,24 @@ export default function OrdersPage() {
                         <option value="CASE_REVIEW">Case Review</option>
                       </select>
                     </label>
-                    <label className="text-xs font-medium text-gray-700">
+                    <label className="text-xs font-medium text-foreground">
                       Scheduled for
                       <input
                         type="datetime-local"
                         value={guidedForm.tele_when}
                         onChange={(e) => updateGuidedField("tele_when", e.target.value)}
                         data-testid="guided-tele-when"
-                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
                       />
                     </label>
-                    <label className="text-xs font-medium text-gray-700 md:col-span-1">
+                    <label className="text-xs font-medium text-foreground md:col-span-1">
                       Notes
                       <input
                         type="text"
                         value={guidedForm.tele_notes}
                         onChange={(e) => updateGuidedField("tele_notes", e.target.value)}
                         data-testid="guided-tele-notes"
-                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
                         placeholder="Reason for teleconsult"
                       />
                     </label>
@@ -797,7 +797,7 @@ export default function OrdersPage() {
 
                 {guidedLane === "IMAGING" && (
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                    <label className="text-xs font-medium text-gray-700 md:col-span-2">
+                    <label className="text-xs font-medium text-foreground md:col-span-2">
                       Study / procedure
                       <input
                         type="text"
@@ -805,16 +805,16 @@ export default function OrdersPage() {
                         value={guidedForm.imaging_name}
                         onChange={(e) => updateGuidedField("imaging_name", e.target.value)}
                         required
-                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
                         placeholder="e.g. Chest X-ray PA view"
                       />
                     </label>
-                    <label className="text-xs font-medium text-gray-700">
+                    <label className="text-xs font-medium text-foreground">
                       Modality
                       <select
                         value={guidedForm.imaging_modality}
                         onChange={(e) => updateGuidedField("imaging_modality", e.target.value)}
-                        className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+                        className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm"
                       >
                         <option value="XRAY">X-ray</option>
                         <option value="CT">CT</option>
@@ -823,26 +823,26 @@ export default function OrdersPage() {
                         <option value="MAMMOGRAPHY">Mammography</option>
                       </select>
                     </label>
-                    <label className="text-xs font-medium text-gray-700">
+                    <label className="text-xs font-medium text-foreground">
                       Priority
                       <select
                         value={guidedForm.imaging_priority}
                         onChange={(e) => updateGuidedField("imaging_priority", e.target.value)}
-                        className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+                        className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm"
                       >
                         <option value="ROUTINE">Routine</option>
                         <option value="URGENT">Urgent</option>
                         <option value="STAT">STAT</option>
                       </select>
                     </label>
-                    <label className="text-xs font-medium text-gray-700 md:col-span-2">
+                    <label className="text-xs font-medium text-foreground md:col-span-2">
                       Clinical indication
                       <input
                         type="text"
                         data-testid="guided-imaging-notes"
                         value={guidedForm.imaging_notes}
                         onChange={(e) => updateGuidedField("imaging_notes", e.target.value)}
-                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
                         placeholder="Brief indication"
                       />
                     </label>
@@ -850,12 +850,12 @@ export default function OrdersPage() {
                 )}
 
                 {(guidedLane === "PROCEDURE" || guidedLane === "ORDER_SET") && (
-                  <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                  <div className="rounded-lg border border-warning/35 bg-warning-soft px-3 py-2 text-xs text-warning-foreground">
                     This lane is intentionally read-only until a typed Experience BFF write contract is available.
                   </div>
                 )}
                 {guidedValidationError && !unsupportedLane ? (
-                  <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+                  <div className="rounded-lg border border-danger/28 bg-danger-soft px-3 py-2 text-xs text-danger">
                     {guidedValidationError}
                   </div>
                 ) : null}
@@ -871,7 +871,7 @@ export default function OrdersPage() {
                     Submit guided action
                   </button>
                   {guidedSuccess ? <span className="text-xs text-green-700">{guidedSuccess}</span> : null}
-                  {guidedError ? <span className="text-xs text-red-700">{guidedError}</span> : null}
+                  {guidedError ? <span className="text-xs text-danger">{guidedError}</span> : null}
                 </div>
               </form>
             </div>
@@ -879,14 +879,14 @@ export default function OrdersPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <ClipboardList className="h-5 w-5 text-indigo-500" />
-                <h2 className="text-lg font-semibold text-gray-900">Orders ({orders.length})</h2>
+                <h2 className="text-lg font-semibold text-foreground">Orders ({orders.length})</h2>
               </div>
               {isClinical && (
                 <button
                   type="button"
                   onClick={() => setShowForm((prev) => !prev)}
                   disabled={!activeEncounter}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-impilo-500 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Plus className="h-4 w-4" />
                   Add Order
@@ -895,30 +895,30 @@ export default function OrdersPage() {
             </div>
 
             {showForm && (
-              <div className="rounded-lg border border-gray-200 bg-white p-5">
+              <div className="rounded-lg border border-border bg-card p-5">
                 <div className="mb-4 flex items-center gap-2">
                   <TestTube2 className="h-5 w-5 text-indigo-500" />
-                  <h3 className="font-medium text-gray-900">New Lab Order</h3>
+                  <h3 className="font-medium text-foreground">New Lab Order</h3>
                 </div>
-                <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800">
-                  <p className="font-medium text-slate-900">Product / service lookup (shared rail)</p>
-                  <p className="mt-1 text-xs text-slate-600">
+                <div className="mb-4 rounded-lg border border-border bg-background px-4 py-3 text-sm text-foreground">
+                  <p className="font-medium text-foreground">Product / service lookup (shared rail)</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
                     Optional assistance: search{" "}
-                    <code className="rounded bg-white px-1">GET /internal/v1/product-registry/search</code> to fill Test Name and
+                    <code className="rounded bg-card px-1">GET /internal/v1/product-registry/search</code> to fill Test Name and
                     Test Code. If nothing matches, you can still enter a free-text order (no fake catalog is shown).
                   </p>
                   <div className="mt-3 flex flex-wrap items-end gap-3">
-                    <label className="text-xs font-medium text-slate-700">
+                    <label className="text-xs font-medium text-foreground">
                       Search term
                       <input
                         type="text"
                         value={catalogQuery}
                         onChange={(e) => setCatalogQuery(e.target.value)}
                         placeholder="e.g. CBC, Malaria smear, CXR"
-                        className="mt-1 block w-80 max-w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                        className="mt-1 block w-80 max-w-full rounded-lg border border-border bg-card px-3 py-2 text-sm"
                       />
                     </label>
-                    <div className="text-xs text-slate-600">
+                    <div className="text-xs text-muted-foreground">
                       {catalogQuery.trim().length < 2
                         ? "Type at least 2 characters to search."
                         : productSearch.isLoading
@@ -931,9 +931,9 @@ export default function OrdersPage() {
                     </div>
                   </div>
                   {catalogQuery.trim().length >= 2 && productCandidates.length > 0 && (
-                    <div className="mt-3 overflow-x-auto rounded-lg border border-slate-200 bg-white">
+                    <div className="mt-3 overflow-x-auto rounded-lg border border-border bg-card">
                       <table className="w-full min-w-[520px] text-sm">
-                        <thead className="bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                        <thead className="bg-background text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                           <tr>
                             <th className="px-3 py-2">Name</th>
                             <th className="px-3 py-2">Code</th>
@@ -943,10 +943,10 @@ export default function OrdersPage() {
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                           {productCandidates.map((c) => (
-                            <tr key={c.id} className="hover:bg-slate-50/70">
-                              <td className="px-3 py-2 text-slate-900">{c.name || "—"}</td>
-                              <td className="px-3 py-2 font-mono text-xs text-slate-700">{c.code || "—"}</td>
-                              <td className="px-3 py-2 text-slate-700">{c.kind ?? "—"}</td>
+                            <tr key={c.id} className="hover:bg-background/70">
+                              <td className="px-3 py-2 text-foreground">{c.name || "—"}</td>
+                              <td className="px-3 py-2 font-mono text-xs text-foreground">{c.code || "—"}</td>
+                              <td className="px-3 py-2 text-foreground">{c.kind ?? "—"}</td>
                               <td className="px-3 py-2">
                                 <button
                                   type="button"
@@ -954,7 +954,7 @@ export default function OrdersPage() {
                                     if (c.name) updateField("test_name", c.name);
                                     if (c.code) updateField("test_code", c.code);
                                   }}
-                                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-800 hover:bg-slate-50"
+                                  className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-background"
                                 >
                                   Use
                                 </button>
@@ -969,33 +969,33 @@ export default function OrdersPage() {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-600">Test Name</label>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Test Name</label>
                       <input
                         type="text"
                         value={form.test_name}
                         onChange={(e) => updateField("test_name", e.target.value)}
                         placeholder="e.g. Complete Blood Count"
                         required
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                       />
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-600">Test Code</label>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Test Code</label>
                       <input
                         type="text"
                         value={form.test_code}
                         onChange={(e) => updateField("test_code", e.target.value)}
                         placeholder="e.g. CBC"
                         required
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                       />
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-600">Category</label>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Category</label>
                       <select
                         value={form.category}
                         onChange={(e) => updateField("category", e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                        className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                       >
                         <option value="LABORATORY">Laboratory</option>
                         <option value="RADIOLOGY">Radiology</option>
@@ -1003,11 +1003,11 @@ export default function OrdersPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-600">Priority</label>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Priority</label>
                       <select
                         value={form.priority}
                         onChange={(e) => updateField("priority", e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                        className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                       >
                         <option value="ROUTINE">Routine</option>
                         <option value="URGENT">Urgent</option>
@@ -1015,47 +1015,47 @@ export default function OrdersPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-600">Ordered By (ID)</label>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Ordered By (ID)</label>
                       <input
                         type="text"
                         value={form.ordered_by}
                         onChange={(e) => updateField("ordered_by", e.target.value)}
                         placeholder="Practitioner ID"
                         required
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                       />
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-600">Ordered By (Name)</label>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Ordered By (Name)</label>
                       <input
                         type="text"
                         value={form.ordered_by_name}
                         onChange={(e) => updateField("ordered_by_name", e.target.value)}
                         placeholder="Dr. Jane Smith"
                         required
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-600">Facility ID</label>
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Facility ID</label>
                     <input
                       type="text"
                       value={form.facility_id}
                       onChange={(e) => updateField("facility_id", e.target.value)}
                       placeholder="facility-uuid"
                       required
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                      className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-600">Clinical Notes</label>
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Clinical Notes</label>
                     <textarea
                       value={form.clinical_notes}
                       onChange={(e) => updateField("clinical_notes", e.target.value)}
                       placeholder="Any relevant clinical context..."
                       rows={3}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 resize-none"
+                      className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none"
                     />
                   </div>
                   <div className="flex gap-3">
@@ -1065,14 +1065,14 @@ export default function OrdersPage() {
                         setShowForm(false);
                         setForm(buildFormState());
                       }}
-                      className="flex-1 rounded-lg bg-gray-100 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200"
+                      className="flex-1 rounded-lg bg-neutral-100 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-neutral-100"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={createOrder.isPending}
-                      className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-impilo-500 py-2.5 text-sm font-medium text-white transition-colors hover:bg-impilo-600 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {createOrder.isPending ? (
                         <>
@@ -1097,11 +1097,11 @@ export default function OrdersPage() {
             )}
 
             {resultingOrder && (
-              <div className="rounded-lg border-2 border-green-300 bg-white p-5">
+              <div className="rounded-lg border-2 border-green-300 bg-card p-5">
                 <div className="mb-4 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <TestTube2 className="h-5 w-5 text-green-600" />
-                    <h3 className="font-medium text-gray-900">
+                    <h3 className="font-medium text-foreground">
                       Enter Results: {resultingOrder.attributes.testName}
                     </h3>
                   </div>
@@ -1112,7 +1112,7 @@ export default function OrdersPage() {
                       setResultValues([{ name: "", value: "", unit: "", referenceRange: "", interpretation: "NORMAL" }]);
                       setResultNotes("");
                     }}
-                    className="text-xs text-gray-500 hover:text-gray-700"
+                    className="text-xs text-muted-foreground hover:text-foreground"
                   >
                     Cancel
                   </button>
@@ -1129,7 +1129,7 @@ export default function OrdersPage() {
                           next[index] = { ...value, name: e.target.value };
                           setResultValues(next);
                         }}
-                        className="rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
+                        className="rounded border border-border px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
                       />
                       <input
                         type="text"
@@ -1140,7 +1140,7 @@ export default function OrdersPage() {
                           next[index] = { ...value, value: e.target.value };
                           setResultValues(next);
                         }}
-                        className="rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
+                        className="rounded border border-border px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
                       />
                       <input
                         type="text"
@@ -1151,7 +1151,7 @@ export default function OrdersPage() {
                           next[index] = { ...value, unit: e.target.value };
                           setResultValues(next);
                         }}
-                        className="rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
+                        className="rounded border border-border px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
                       />
                       <input
                         type="text"
@@ -1162,7 +1162,7 @@ export default function OrdersPage() {
                           next[index] = { ...value, referenceRange: e.target.value };
                           setResultValues(next);
                         }}
-                        className="rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
+                        className="rounded border border-border px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
                       />
                       <select
                         value={value.interpretation}
@@ -1171,7 +1171,7 @@ export default function OrdersPage() {
                           next[index] = { ...value, interpretation: e.target.value };
                           setResultValues(next);
                         }}
-                        className="rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
+                        className="rounded border border-border px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
                       >
                         <option value="NORMAL">Normal</option>
                         <option value="ABNORMAL">Abnormal</option>
@@ -1182,7 +1182,7 @@ export default function OrdersPage() {
                   <button
                     type="button"
                     onClick={() => setResultValues([...resultValues, { name: "", value: "", unit: "", referenceRange: "", interpretation: "NORMAL" }])}
-                    className="text-xs text-impilo-500 hover:text-impilo-700"
+                    className="text-xs text-primary hover:text-primary-hover"
                   >
                     + Add row
                   </button>
@@ -1192,7 +1192,7 @@ export default function OrdersPage() {
                   onChange={(e) => setResultNotes(e.target.value)}
                   rows={2}
                   placeholder="Result notes..."
-                  className="mb-3 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+                  className="mb-3 w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
                 />
                 <button
                   type="button"
@@ -1231,44 +1231,44 @@ export default function OrdersPage() {
             )}
 
             {orders.length === 0 ? (
-              <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
-                <TestTube2 className="mx-auto mb-3 h-10 w-10 text-gray-300" />
-                <p className="text-sm text-gray-400">No lab orders found</p>
+              <div className="rounded-lg border border-border bg-card p-12 text-center">
+                <TestTube2 className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">No lab orders found</p>
               </div>
             ) : (
-              <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+              <div className="overflow-hidden rounded-lg border border-border bg-card">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-gray-200 bg-gray-50">
-                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Order #</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Test Name</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Category</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Priority</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Ordered By</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
-                        <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
+                      <tr className="border-b border-border bg-background">
+                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Order #</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Test Name</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Category</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Priority</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Status</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Ordered By</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Date</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                       {orders.map((order) => (
-                        <tr key={order.id} className="transition-colors hover:bg-gray-50">
-                          <td className="whitespace-nowrap px-4 py-3 font-medium text-gray-900">{order.attributes.orderNumber}</td>
-                          <td className="whitespace-nowrap px-4 py-3 text-gray-900">{order.attributes.testName}</td>
-                          <td className="whitespace-nowrap px-4 py-3 text-gray-500">{order.attributes.category}</td>
+                        <tr key={order.id} className="transition-colors hover:bg-background">
+                          <td className="whitespace-nowrap px-4 py-3 font-medium text-foreground">{order.attributes.orderNumber}</td>
+                          <td className="whitespace-nowrap px-4 py-3 text-foreground">{order.attributes.testName}</td>
+                          <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{order.attributes.category}</td>
                           <td className="whitespace-nowrap px-4 py-3">
-                            <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${PRIORITY_BADGE[order.attributes.priority] ?? "bg-gray-100 text-gray-600"}`}>
+                            <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${PRIORITY_BADGE[order.attributes.priority] ?? "bg-neutral-100 text-muted-foreground"}`}>
                               {order.attributes.priority}
                             </span>
                           </td>
                           <td className="whitespace-nowrap px-4 py-3">
-                            <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_BADGE[order.attributes.status] ?? "bg-gray-100 text-gray-600"}`}>
+                            <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_BADGE[order.attributes.status] ?? "bg-neutral-100 text-muted-foreground"}`}>
                               {order.attributes.status}
                             </span>
                           </td>
-                          <td className="whitespace-nowrap px-4 py-3 text-gray-500">{order.attributes.orderedByName}</td>
-                          <td className="whitespace-nowrap px-4 py-3 text-gray-500">{new Date(order.attributes.createdAt).toLocaleDateString()}</td>
+                          <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{order.attributes.orderedByName}</td>
+                          <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{new Date(order.attributes.createdAt).toLocaleDateString()}</td>
                           <td className="whitespace-nowrap px-4 py-3 text-right">
                             {order.attributes.status === "ORDERED" && (
                               <div className="inline-flex gap-1">
@@ -1284,7 +1284,7 @@ export default function OrdersPage() {
                                   type="button"
                                   onClick={() => cancelOrder.mutate({ id: order.id })}
                                   disabled={cancelOrder.isPending}
-                                  className="rounded bg-red-50 px-2.5 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-100"
+                                  className="rounded bg-danger-soft px-2.5 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-100"
                                 >
                                   Cancel
                                 </button>
@@ -1306,7 +1306,7 @@ export default function OrdersPage() {
                                   await apiClient.post(`/internal/v1/lab-orders/${order.id}/acknowledge`);
                                   await queryClient.invalidateQueries({ queryKey: ["lab-orders"] });
                                 }}
-                                className="rounded bg-purple-100 px-2.5 py-1 text-xs font-medium text-purple-700 transition-colors hover:bg-purple-200"
+                                className="rounded bg-purple-100 px-2.5 py-1 text-xs font-medium text-warning-foreground transition-colors hover:bg-purple-200"
                               >
                                 Acknowledge
                               </button>

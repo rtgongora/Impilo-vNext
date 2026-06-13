@@ -16,9 +16,9 @@ const PAGE_SIZE = 20;
 
 function StatusBadge({ status }: { status: MatchResult["status"] }) {
   const map: Record<MatchResult["status"], string> = {
-    PENDING: "bg-amber-50 text-amber-700 border-amber-200",
-    CONFIRMED: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    REJECTED: "bg-red-50 text-red-700 border-red-200",
+    PENDING: "bg-warning-soft text-warning-foreground border-warning/35",
+    CONFIRMED: "bg-success-soft text-primary-hover border-success/25",
+    REJECTED: "bg-danger-soft text-danger border-danger/28",
   };
   return (
     <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${map[status]}`}>
@@ -39,16 +39,16 @@ function MatchRow({
   isPending: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-2 rounded-2xl border border-gray-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-2 rounded-2xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="font-mono text-sm font-medium text-gray-900">{match.sourceHealthId}</span>
-          <span className="text-gray-400">↔</span>
-          <span className="font-mono text-sm font-medium text-gray-900">{match.candidateHealthId}</span>
+          <span className="font-mono text-sm font-medium text-foreground">{match.sourceHealthId}</span>
+          <span className="text-muted-foreground">↔</span>
+          <span className="font-mono text-sm font-medium text-foreground">{match.candidateHealthId}</span>
           <StatusBadge status={match.status} />
         </div>
-        <p className="mt-1 text-xs text-gray-500">
-          Score <span className="font-semibold text-gray-700">{match.score.toFixed(4)}</span>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Score <span className="font-semibold text-foreground">{match.score.toFixed(4)}</span>
           {" · "}
           Matched {new Date(match.matchedAt).toLocaleString()}
         </p>
@@ -67,7 +67,7 @@ function MatchRow({
             type="button"
             disabled={isPending}
             onClick={onReject}
-            className="rounded-xl border border-red-300 px-3 py-1.5 text-xs font-medium text-red-700 hover:border-red-400 hover:bg-red-50 disabled:opacity-50"
+            className="rounded-xl border border-red-300 px-3 py-1.5 text-xs font-medium text-danger hover:border-red-400 hover:bg-danger-soft disabled:opacity-50"
           >
             Reject
           </button>
@@ -99,18 +99,18 @@ export default function VitoMatchPage() {
           <div className="flex flex-wrap gap-3">
             <Link
               href="/operations/vito"
-              className="text-sm text-gray-600 hover:text-gray-900 underline-offset-2 hover:underline"
+              className="text-sm text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
             >
               ← Identity operations
             </Link>
           </div>
 
-          <div className="rounded-2xl border border-gray-200 bg-white p-5">
+          <div className="rounded-2xl border border-border bg-card p-5">
             <div className="flex items-center gap-2">
-              <Search className="h-4 w-4 text-gray-500" />
-              <h2 className="text-sm font-semibold text-gray-900">Find matches by Health ID</h2>
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <h2 className="text-sm font-semibold text-foreground">Find matches by Health ID</h2>
             </div>
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-muted-foreground">
               Trigger a match search for a specific person. Results are added to the pending queue below.
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
@@ -119,7 +119,7 @@ export default function VitoMatchPage() {
                 value={triggerHealthId}
                 onChange={(e) => setTriggerHealthId(e.target.value)}
                 placeholder="Enter Health ID…"
-                className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-400"
+                className="rounded-lg border border-border px-3 py-1.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-primary/40"
               />
               <button
                 type="button"
@@ -131,7 +131,7 @@ export default function VitoMatchPage() {
                     });
                   }
                 }}
-                className="inline-flex items-center gap-2 rounded-xl bg-impilo-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-impilo-700 disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-xl bg-primary-hover px-4 py-1.5 text-sm font-medium text-white hover:bg-impilo-700 disabled:opacity-50"
               >
                 {findMatches.isPending ? "Searching…" : "Find matches"}
               </button>
@@ -140,28 +140,28 @@ export default function VitoMatchPage() {
               <p className="mt-2 text-sm text-red-600">Search failed. Ensure the BFF and VITO service are reachable.</p>
             )}
             {findMatches.isSuccess && (
-              <p className="mt-2 text-sm text-emerald-700">Match search completed. Queue refreshed.</p>
+              <p className="mt-2 text-sm text-primary-hover">Match search completed. Queue refreshed.</p>
             )}
           </div>
 
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-gray-500">
+              <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                 Pending candidates
               </h2>
               {pendingMatches.isLoading && (
-                <span className="text-xs text-gray-400">Loading…</span>
+                <span className="text-xs text-muted-foreground">Loading…</span>
               )}
             </div>
 
             {pendingMatches.isError && (
-              <div className="rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-red-700">
+              <div className="rounded-2xl border border-red-100 bg-danger-soft p-4 text-sm text-danger">
                 Failed to load match queue. Ensure the Experience BFF and VITO service are reachable.
               </div>
             )}
 
             {!pendingMatches.isLoading && !pendingMatches.isError && matches.length === 0 && (
-              <div className="rounded-2xl bg-gray-50 p-8 text-center text-sm text-gray-500">
+              <div className="rounded-2xl bg-background p-8 text-center text-sm text-muted-foreground">
                 No pending match candidates. Use the search panel above to trigger a match run.
               </div>
             )}
@@ -189,17 +189,17 @@ export default function VitoMatchPage() {
                 type="button"
                 disabled={page === 0 || pendingMatches.isLoading}
                 onClick={() => setPage((p) => Math.max(0, p - 1))}
-                className="inline-flex items-center gap-1 rounded-xl border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:border-gray-400 disabled:opacity-40"
+                className="inline-flex items-center gap-1 rounded-xl border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:border-gray-400 disabled:opacity-40"
               >
                 <ChevronLeft className="h-4 w-4" />
                 Previous
               </button>
-              <span className="text-xs text-gray-500">Page {page + 1}</span>
+              <span className="text-xs text-muted-foreground">Page {page + 1}</span>
               <button
                 type="button"
                 disabled={matches.length < PAGE_SIZE || pendingMatches.isLoading}
                 onClick={() => setPage((p) => p + 1)}
-                className="inline-flex items-center gap-1 rounded-xl border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:border-gray-400 disabled:opacity-40"
+                className="inline-flex items-center gap-1 rounded-xl border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:border-gray-400 disabled:opacity-40"
               >
                 Next
                 <ChevronRight className="h-4 w-4" />

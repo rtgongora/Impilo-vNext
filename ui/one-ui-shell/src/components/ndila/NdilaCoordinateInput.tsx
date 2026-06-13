@@ -69,21 +69,21 @@ export function NdilaCoordinateInput({
   return (
     <div className="space-y-2">
       <div className="grid grid-cols-2 gap-2">
-        <label className="block text-xs text-gray-700">
+        <label className="block text-xs text-foreground">
           Latitude
           <input
             type="number" step="any" value={lat} disabled={disabled}
             onChange={(e) => setLat(e.target.value)}
-            className="mt-0.5 w-full rounded border border-gray-300 px-2 py-1 text-sm tabular-nums"
+            className="mt-0.5 w-full rounded border border-border px-2 py-1 text-sm tabular-nums"
             placeholder="-17.8292"
           />
         </label>
-        <label className="block text-xs text-gray-700">
+        <label className="block text-xs text-foreground">
           Longitude
           <input
             type="number" step="any" value={lng} disabled={disabled}
             onChange={(e) => setLng(e.target.value)}
-            className="mt-0.5 w-full rounded border border-gray-300 px-2 py-1 text-sm tabular-nums"
+            className="mt-0.5 w-full rounded border border-border px-2 py-1 text-sm tabular-nums"
             placeholder="31.0522"
           />
         </label>
@@ -99,12 +99,12 @@ export function NdilaCoordinateInput({
             Use device GPS
           </button>
         )}
-        <span className="text-[10px] text-gray-500">
+        <span className="text-[10px] text-muted-foreground">
           {accuracy !== undefined ? `±${Math.round(accuracy)}m accuracy` : ""}
         </span>
       </div>
       {validating ? (
-        <p className="text-[10px] text-gray-500">Validating with Ndila…</p>
+        <p className="text-[10px] text-muted-foreground">Validating with Ndila…</p>
       ) : feedback ? (
         <div className="text-[10px] space-y-0.5">
           {feedback.errors.map((e) => (
@@ -114,7 +114,7 @@ export function NdilaCoordinateInput({
             <p key={w} className="text-amber-600">⚠ {w}</p>
           ))}
           {feedback.valid && feedback.plausible && feedback.warnings.length === 0 && feedback.errors.length === 0 && (
-            <p className="text-emerald-600">✓ Coordinate looks plausible.</p>
+            <p className="text-primary">✓ Coordinate looks plausible.</p>
           )}
         </div>
       ) : null}

@@ -128,17 +128,17 @@ export default function PharmacyDispensePage() {
     <AppLayout>
       <PageShell title="Dispensing" subtitle="Review and dispense pending prescriptions">
         {!isDispenser ? (
-          <div className="bg-white rounded-lg border border-red-200 p-12 text-center">
+          <div className="bg-card rounded-lg border border-danger/28 p-12 text-center">
             <ShieldAlert className="w-10 h-10 text-red-300 mx-auto mb-3" />
             <p className="text-red-600 text-sm font-medium">Access Denied</p>
-            <p className="text-gray-500 text-xs mt-1">Only pharmacists can access the dispensing workflow.</p>
+            <p className="text-muted-foreground text-xs mt-1">Only pharmacists can access the dispensing workflow.</p>
           </div>
         ) : (<>
         {/* Back link */}
         <div className="mb-4">
           <Link
             href={withHandoff("/pharmacy")}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to pharmacy
@@ -147,13 +147,13 @@ export default function PharmacyDispensePage() {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">
               Loading pending prescriptions...
             </span>
           </div>
         ) : isError ? (
-          <div className="bg-red-50 rounded-lg border border-red-200 p-12 text-center">
+          <div className="bg-danger-soft rounded-lg border border-danger/28 p-12 text-center">
             <p className="text-red-600 text-sm">
               Failed to load prescriptions. Please try again later.
             </p>
@@ -193,16 +193,16 @@ export default function PharmacyDispensePage() {
               ]}
             />
 
-            <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+            <div className="rounded-3xl border border-border bg-background/70 p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
                 Dispense loop status
               </p>
-              <p className="mt-2 text-sm text-slate-800">
+              <p className="mt-2 text-sm text-foreground">
                 {source === "discharge"
                   ? "This dispense view was reached from encounter outcome, so the loop here is fulfilling discharge medications without losing the linked encounter, chart, or prescription context."
                   : "This workspace runs the broader dispense queue, but it should still connect cleanly back to prescriptions, stock, and the source encounter when context exists."}
               </p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Dispense in place below, then move into prescriptions, stock, the encounter, or the chart when the medication handoff needs the next action.
               </p>
             </div>
@@ -210,17 +210,17 @@ export default function PharmacyDispensePage() {
             {/* Header */}
             <div className="flex items-center gap-2">
               <Pill className="w-5 h-5 text-indigo-500" />
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-lg font-semibold text-foreground">
                 Pending Prescriptions ({prescriptions.length})
               </h2>
             </div>
 
             {/* Payment collection at dispense */}
             {prescriptions.length > 0 && (
-              <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <div className="bg-card rounded-lg border border-border p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <CreditCard className="w-4 h-4 text-gray-500" />
-                  <p className="text-sm font-medium text-gray-700">Collect payment at dispense</p>
+                  <CreditCard className="w-4 h-4 text-muted-foreground" />
+                  <p className="text-sm font-medium text-foreground">Collect payment at dispense</p>
                 </div>
                 <PaymentMethodPicker value={paymentMethod} onChange={setPaymentMethod} compact />
               </div>
@@ -228,9 +228,9 @@ export default function PharmacyDispensePage() {
 
             {/* Prescription Cards */}
             {prescriptions.length === 0 ? (
-              <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-                <Pill className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-400 text-sm">
+              <div className="bg-card rounded-lg border border-border p-12 text-center">
+                <Pill className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                <p className="text-muted-foreground text-sm">
                   No pending prescriptions to dispense
                 </p>
               </div>
@@ -244,16 +244,16 @@ export default function PharmacyDispensePage() {
                   return (
                     <div
                       key={rx.id}
-                      className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-sm transition-shadow"
+                      className="bg-card rounded-lg border border-border p-4 hover:shadow-sm transition-shadow"
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-2">
                           <Pill className="w-4 h-4 text-indigo-500 mt-0.5" />
                           <div>
-                            <p className="text-sm font-semibold text-gray-900">
+                            <p className="text-sm font-semibold text-foreground">
                               {rx.medication_name}
                             </p>
-                            <p className="text-xs text-gray-500 mt-0.5">
+                            <p className="text-xs text-muted-foreground mt-0.5">
                               {rx.dosage} &middot; {rx.frequency} &middot;{" "}
                               {rx.duration}
                             </p>
@@ -264,7 +264,7 @@ export default function PharmacyDispensePage() {
                         </span>
                       </div>
 
-                      <div className="mt-3 flex items-center gap-4 text-xs text-gray-500">
+                      <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
                         <span>
                           Patient:{" "}
                           <span className="font-medium">{rx.patient_name}</span>
@@ -291,7 +291,7 @@ export default function PharmacyDispensePage() {
                           <button
                             onClick={() => handleDispense(rx.id)}
                             disabled={isDispensing}
-                            className="inline-flex items-center gap-1.5 px-3 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            className="inline-flex items-center gap-1.5 px-3 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                           >
                             {isDispensing ? (
                               <>

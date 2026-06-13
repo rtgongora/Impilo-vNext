@@ -68,10 +68,10 @@ interface AppointmentResource {
 }
 
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
-  SCHEDULED: { label: "Scheduled", className: "bg-impilo-100 text-impilo-600" },
+  SCHEDULED: { label: "Scheduled", className: "bg-primary-soft text-primary" },
   CONFIRMED: { label: "Confirmed", className: "bg-green-100 text-green-700" },
-  CANCELLED: { label: "Cancelled", className: "bg-gray-100 text-gray-600" },
-  COMPLETED: { label: "Completed", className: "bg-purple-100 text-purple-700" },
+  CANCELLED: { label: "Cancelled", className: "bg-neutral-100 text-muted-foreground" },
+  COMPLETED: { label: "Completed", className: "bg-purple-100 text-warning-foreground" },
 };
 
 const APPOINTMENT_TYPES = [
@@ -312,7 +312,7 @@ export default function SchedulingPage() {
           <div className="mb-4">
             <Link
               href="/organization-admin/staffing?from=organization-admin"
-              className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+              className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="h-4 w-4" /> Back to staffing hub
             </Link>
@@ -320,8 +320,8 @@ export default function SchedulingPage() {
         )}
         <FacilityWorkClusterRibbon shiftExpected={false} />
 
-        <div className="mb-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-600">
-          <span className="font-medium text-slate-700">Scheduling cluster</span>
+        <div className="mb-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+          <span className="font-medium text-foreground">Scheduling cluster</span>
           <Link
             href={fromOrgAdmin ? "/scheduling/roster?from=organization-admin" : "/scheduling/roster"}
             className="text-sky-700 hover:underline"
@@ -349,16 +349,16 @@ export default function SchedulingPage() {
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-4">
             {/* View mode toggle */}
-            <div className="flex bg-gray-100 rounded-lg p-0.5">
+            <div className="flex bg-neutral-100 rounded-lg p-0.5">
               <button onClick={() => setViewMode("list")}
                 className={`px-3 py-1.5 text-xs font-medium rounded-md flex items-center gap-1.5 transition-colors ${
-                  viewMode === "list" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                  viewMode === "list" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                 }`}>
                 <List className="w-3.5 h-3.5" /> List
               </button>
               <button onClick={() => setViewMode("calendar")}
                 className={`px-3 py-1.5 text-xs font-medium rounded-md flex items-center gap-1.5 transition-colors ${
-                  viewMode === "calendar" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                  viewMode === "calendar" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                 }`}>
                 <CalendarRange className="w-3.5 h-3.5" /> Calendar
               </button>
@@ -366,15 +366,15 @@ export default function SchedulingPage() {
 
             {/* List tabs (only shown in list mode) */}
             {viewMode === "list" && (
-              <div className="flex gap-1 border-b border-gray-200">
+              <div className="flex gap-1 border-b border-border">
                 {tabs.map((tab) => (
                   <button
                     key={tab.key}
                     onClick={() => setActiveTab(tab.key)}
                     className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                       activeTab === tab.key
-                        ? "border-impilo-500 text-impilo-500"
-                        : "border-transparent text-gray-500 hover:text-gray-700"
+                        ? "border-impilo-500 text-primary"
+                        : "border-transparent text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     {tab.label}
@@ -385,7 +385,7 @@ export default function SchedulingPage() {
           </div>
           <button
             onClick={() => setShowCreate((v) => !v)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 transition-colors"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover transition-colors"
           >
             <Plus className="w-4 h-4" />
             New Appointment
@@ -394,23 +394,23 @@ export default function SchedulingPage() {
 
         {/* Create Form */}
         {showCreate && (
-          <div className="bg-white rounded-lg border border-gray-200 p-5 mb-5 space-y-4">
-            <h3 className="text-sm font-medium text-gray-900 flex items-center gap-2">
+          <div className="bg-card rounded-lg border border-border p-5 mb-5 space-y-4">
+            <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
               <CalendarDays className="w-4 h-4 text-impilo-400" />
               Schedule Appointment
             </h3>
             <div className="grid grid-cols-2 gap-3">
               <div className="relative">
-                <label className="block text-xs font-medium text-gray-600 mb-1">Patient *</label>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Patient *</label>
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input
                     type="text"
                     value={patientSearch}
                     onChange={(e) => handlePatientSearchChange(e.target.value)}
                     onFocus={() => patients.length > 0 && setShowPatientDropdown(true)}
                     placeholder="Search by name or CPID..."
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                    className="w-full pl-10 pr-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                   />
                 </div>
                 {selectedPatient && (
@@ -420,44 +420,44 @@ export default function SchedulingPage() {
                   </div>
                 )}
                 {showPatientDropdown && patients.length > 0 && !selectedPatient && (
-                  <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                  <div className="absolute z-20 mt-1 w-full bg-card border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
                     {patients.map((p) => (
                       <button
                         key={p.id}
                         onClick={() => handleSelectPatient(p)}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-impilo-50 transition-colors"
+                        className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-primary-soft transition-colors"
                       >
-                        <User className="w-4 h-4 text-gray-400" />
+                        <User className="w-4 h-4 text-muted-foreground" />
                         <div>
-                          <p className="text-sm font-medium text-gray-900">{maskName(p.attributes.displayName, usePrivacyDisplayStore.getState().level)}</p>
-                          <p className="text-xs text-gray-500">CPID: {displayCpid(p.attributes.cpid)} · {p.attributes.gender} · {maskDob(p.attributes.dateOfBirth, usePrivacyDisplayStore.getState().level)}</p>
+                          <p className="text-sm font-medium text-foreground">{maskName(p.attributes.displayName, usePrivacyDisplayStore.getState().level)}</p>
+                          <p className="text-xs text-muted-foreground">CPID: {displayCpid(p.attributes.cpid)} · {p.attributes.gender} · {maskDob(p.attributes.dateOfBirth, usePrivacyDisplayStore.getState().level)}</p>
                         </div>
                       </button>
                     ))}
                   </div>
                 )}
                 {showPatientDropdown && debouncedSearch.length >= 2 && patients.length === 0 && !selectedPatient && (
-                  <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg p-3 text-center">
-                    <p className="text-xs text-gray-500">No patients found for &ldquo;{debouncedSearch}&rdquo;</p>
+                  <div className="absolute z-20 mt-1 w-full bg-card border border-border rounded-lg shadow-lg p-3 text-center">
+                    <p className="text-xs text-muted-foreground">No patients found for &ldquo;{debouncedSearch}&rdquo;</p>
                   </div>
                 )}
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Type</label>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Type</label>
                 <select value={form.appointment_type} onChange={(e) => setForm({ ...form, appointment_type: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400">
+                  className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40">
                   {APPOINTMENT_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Date *</label>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Date *</label>
                 <input type="date" required value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
+                  className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Resource (optional)</label>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Resource (optional)</label>
                 <select value={selectedResourceId} onChange={(e) => setSelectedResourceId(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400">
+                  className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40">
                   <option value="">No specific resource</option>
                   {resources.map((r) => (
                     <option key={r.id} value={r.id}>{r.name} ({r.resourceType})</option>
@@ -469,7 +469,7 @@ export default function SchedulingPage() {
             {/* Availability Grid — shown when resource + date selected */}
             {selectedResourceId && form.date && (
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-2">
+                <label className="block text-xs font-medium text-muted-foreground mb-2">
                   Available Time Slots
                   {loadingAvailability && <Loader2 className="w-3 h-3 animate-spin inline ml-2" />}
                 </label>
@@ -483,10 +483,10 @@ export default function SchedulingPage() {
                         onClick={() => setForm({ ...form, time: slot.time })}
                         className={`px-2 py-1.5 text-xs font-medium rounded border transition-colors ${
                           form.time === slot.time
-                            ? "bg-impilo-500 text-white border-impilo-500"
+                            ? "bg-primary text-white border-impilo-500"
                             : slot.available
-                              ? "bg-white text-gray-700 border-gray-200 hover:bg-impilo-50 hover:border-impilo-200"
-                              : "bg-gray-100 text-gray-400 border-gray-100 cursor-not-allowed line-through"
+                              ? "bg-card text-foreground border-border hover:bg-primary-soft hover:border-primary/25"
+                              : "bg-neutral-100 text-muted-foreground border-border cursor-not-allowed line-through"
                         }`}
                       >
                         {slot.time}
@@ -494,7 +494,7 @@ export default function SchedulingPage() {
                     ))}
                   </div>
                 ) : !loadingAvailability ? (
-                  <p className="text-xs text-gray-400">Select a date and resource to see availability</p>
+                  <p className="text-xs text-muted-foreground">Select a date and resource to see availability</p>
                 ) : null}
               </div>
             )}
@@ -502,9 +502,9 @@ export default function SchedulingPage() {
             {/* Fallback time selector when no resource selected */}
             {!selectedResourceId && (
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Time</label>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Time</label>
                 <select value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400">
+                  className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40">
                   {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
@@ -512,25 +512,25 @@ export default function SchedulingPage() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Reason</label>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Reason</label>
                 <input type="text" value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })}
                   placeholder="e.g. Follow-up diabetes check"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
+                  className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Notes</label>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Notes</label>
                 <input type="text" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })}
                   placeholder="Additional scheduling notes"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
+                  className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
               </div>
             </div>
             <div className="flex gap-3">
               <button onClick={() => setShowCreate(false)}
-                className="flex-1 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">
+                className="flex-1 py-2 bg-neutral-100 text-foreground text-sm font-medium rounded-lg hover:bg-neutral-100 transition-colors">
                 Cancel
               </button>
               <button onClick={handleCreate} disabled={creating || !selectedPatient || !form.date}
-                className="flex-1 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors">
+                className="flex-1 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover disabled:opacity-50 flex items-center justify-center gap-2 transition-colors">
                 {creating ? <><Loader2 className="w-4 h-4 animate-spin" /> Scheduling...</> : <><Save className="w-4 h-4" /> Schedule</>}
               </button>
             </div>
@@ -544,18 +544,18 @@ export default function SchedulingPage() {
             <div className="flex items-center justify-between">
               <button
                 onClick={() => { const d = new Date(weekStart); d.setDate(d.getDate() - 7); setWeekStart(d); }}
-                className="px-3 py-1.5 text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-1"
+                className="px-3 py-1.5 text-sm text-muted-foreground bg-neutral-100 rounded-lg hover:bg-neutral-100 transition-colors flex items-center gap-1"
               >
                 <ChevronLeft className="w-4 h-4" /> Previous
               </button>
-              <h3 className="text-sm font-medium text-gray-900">
+              <h3 className="text-sm font-medium text-foreground">
                 {weekStart.toLocaleDateString("en-ZA", { month: "short", day: "numeric" })} — {
                   (() => { const end = new Date(weekStart); end.setDate(end.getDate() + 6); return end.toLocaleDateString("en-ZA", { month: "short", day: "numeric", year: "numeric" }); })()
                 }
               </h3>
               <button
                 onClick={() => { const d = new Date(weekStart); d.setDate(d.getDate() + 7); setWeekStart(d); }}
-                className="px-3 py-1.5 text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-1"
+                className="px-3 py-1.5 text-sm text-muted-foreground bg-neutral-100 rounded-lg hover:bg-neutral-100 transition-colors flex items-center gap-1"
               >
                 Next <ChevronRight className="w-4 h-4" />
               </button>
@@ -571,22 +571,22 @@ export default function SchedulingPage() {
                 const isToday = isSameDay(date, new Date());
 
                 return (
-                  <div key={date.toISOString()} className={`bg-white rounded-lg border ${isToday ? "border-impilo-400 ring-2 ring-blue-100" : "border-gray-200"}`}>
-                    <div className={`px-3 py-2 border-b ${isToday ? "bg-impilo-50" : "bg-gray-50"}`}>
-                      <div className={`text-xs font-medium ${isToday ? "text-impilo-600" : "text-gray-600"}`}>
+                  <div key={date.toISOString()} className={`bg-card rounded-lg border ${isToday ? "border-impilo-400 ring-2 ring-blue-100" : "border-border"}`}>
+                    <div className={`px-3 py-2 border-b ${isToday ? "bg-primary-soft" : "bg-background"}`}>
+                      <div className={`text-xs font-medium ${isToday ? "text-primary" : "text-muted-foreground"}`}>
                         {date.toLocaleDateString("en-ZA", { weekday: "short" })}
                       </div>
-                      <div className={`text-lg font-semibold ${isToday ? "text-impilo-600" : "text-gray-900"}`}>
+                      <div className={`text-lg font-semibold ${isToday ? "text-primary" : "text-foreground"}`}>
                         {date.getDate()}
                       </div>
                     </div>
                     <div className="p-2 min-h-[200px] max-h-[350px] overflow-y-auto space-y-1.5">
                       {dayAppts.length === 0 ? (
-                        <p className="text-[10px] text-gray-400 text-center py-4">No appointments</p>
+                        <p className="text-[10px] text-muted-foreground text-center py-4">No appointments</p>
                       ) : (
                         dayAppts.map((appt) => {
                           const a = appt.attributes;
-                          const status = STATUS_BADGE[a.status] ?? { label: a.status, className: "bg-gray-100 text-gray-600" };
+                          const status = STATUS_BADGE[a.status] ?? { label: a.status, className: "bg-neutral-100 text-muted-foreground" };
                           const time = a.scheduled_at ? new Date(a.scheduled_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
                           const statusBorderColor =
                             a.status === "SCHEDULED" ? "border-l-blue-500" :
@@ -595,16 +595,16 @@ export default function SchedulingPage() {
                             "border-l-purple-500";
 
                           return (
-                            <div key={appt.id} className={`p-2 rounded border border-l-4 ${statusBorderColor} bg-white hover:bg-gray-50 transition-colors`}>
+                            <div key={appt.id} className={`p-2 rounded border border-l-4 ${statusBorderColor} bg-card hover:bg-background transition-colors`}>
                               <div className="flex items-center gap-1 mb-0.5">
-                                <Clock className="w-3 h-3 text-gray-400" />
-                                <span className="text-xs font-medium text-gray-900">{time}</span>
+                                <Clock className="w-3 h-3 text-muted-foreground" />
+                                <span className="text-xs font-medium text-foreground">{time}</span>
                               </div>
-                              <p className="text-xs text-gray-700 truncate">
+                              <p className="text-xs text-foreground truncate">
                                 {APPOINTMENT_TYPES.find((t) => t.value === a.appointment_type)?.label ?? a.appointment_type}
                               </p>
                               {a.provider_name && (
-                                <p className="text-[10px] text-gray-500 truncate">{a.provider_name}</p>
+                                <p className="text-[10px] text-muted-foreground truncate">{a.provider_name}</p>
                               )}
                               <span className={`inline-block mt-1 px-1.5 py-0.5 text-[10px] font-medium rounded-full ${status.className}`}>
                                 {status.label}
@@ -624,35 +624,35 @@ export default function SchedulingPage() {
         {/* Appointment List (list mode only) */}
         {viewMode === "list" && isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>
         ) : viewMode === "list" && appointments.length === 0 ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <CalendarDays className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-400 text-sm">No appointments found</p>
+          <div className="bg-card rounded-lg border border-border p-12 text-center">
+            <CalendarDays className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground text-sm">No appointments found</p>
           </div>
         ) : viewMode === "list" ? (
           <div className="space-y-3">
             {appointments.map((appt) => {
               const a = appt.attributes;
-              const status = STATUS_BADGE[a.status] ?? { label: a.status, className: "bg-gray-100 text-gray-600" };
+              const status = STATUS_BADGE[a.status] ?? { label: a.status, className: "bg-neutral-100 text-muted-foreground" };
               const isActionable = a.status === "SCHEDULED" || a.status === "CONFIRMED";
               const scheduledDate = a.scheduled_at ? new Date(a.scheduled_at) : null;
 
               return (
-                <div key={appt.id} className="bg-white rounded-lg border border-gray-200 p-4">
+                <div key={appt.id} className="bg-card rounded-lg border border-border p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-impilo-50 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-lg bg-primary-soft flex items-center justify-center">
                         {a.appointment_type === "TELECONSULT" ? (
-                          <Video className="w-5 h-5 text-impilo-500" />
+                          <Video className="w-5 h-5 text-primary" />
                         ) : (
-                          <CalendarDays className="w-5 h-5 text-impilo-500" />
+                          <CalendarDays className="w-5 h-5 text-primary" />
                         )}
                       </div>
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-medium text-gray-900">
+                          <span className="text-sm font-medium text-foreground">
                             {APPOINTMENT_TYPES.find((t) => t.value === a.appointment_type)?.label ?? a.appointment_type}
                           </span>
                           <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${status.className}`}>
@@ -664,7 +664,7 @@ export default function SchedulingPage() {
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center gap-3 text-xs text-gray-500">
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
                           {scheduledDate && (
                             <span className="flex items-center gap-1">
                               <Clock className="w-3 h-3" />
@@ -672,7 +672,7 @@ export default function SchedulingPage() {
                             </span>
                           )}
                           {a.patient_id && (
-                            <Link href={`/ehr/${a.patient_id}`} className="flex items-center gap-1 text-impilo-500 hover:text-impilo-700">
+                            <Link href={`/ehr/${a.patient_id}`} className="flex items-center gap-1 text-primary hover:text-primary-hover">
                               <User className="w-3 h-3" />
                               Patient
                             </Link>
@@ -685,7 +685,7 @@ export default function SchedulingPage() {
                           )}
                         </div>
                         {a.reason && (
-                          <p className="text-xs text-gray-500 mt-1">{a.reason}</p>
+                          <p className="text-xs text-muted-foreground mt-1">{a.reason}</p>
                         )}
                         {isActionable && (
                           <AppointmentMessagePanel
@@ -703,7 +703,7 @@ export default function SchedulingPage() {
                           <button
                             onClick={() => handleCheckIn(appt.id, a.patient_id)}
                             disabled={actionPending === appt.id}
-                            className="px-3 py-1.5 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-lg hover:bg-emerald-200 disabled:opacity-50 transition-colors flex items-center gap-1"
+                            className="px-3 py-1.5 bg-emerald-100 text-primary-hover text-xs font-medium rounded-lg hover:bg-emerald-200 disabled:opacity-50 transition-colors flex items-center gap-1"
                           >
                             <CheckCircle2 className="w-3 h-3" /> Check in
                           </button>
@@ -720,7 +720,7 @@ export default function SchedulingPage() {
                         <button
                           onClick={() => handleCancel(appt.id)}
                           disabled={actionPending === appt.id}
-                          className="px-3 py-1.5 bg-red-50 text-red-600 text-xs font-medium rounded-lg hover:bg-red-100 disabled:opacity-50 transition-colors flex items-center gap-1"
+                          className="px-3 py-1.5 bg-danger-soft text-red-600 text-xs font-medium rounded-lg hover:bg-red-100 disabled:opacity-50 transition-colors flex items-center gap-1"
                         >
                           <XCircle className="w-3 h-3" /> Cancel
                         </button>

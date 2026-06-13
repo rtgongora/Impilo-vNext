@@ -16,20 +16,20 @@ export default function MadiLogisticsPage() {
       >
         <MadiBloodLogisticsPanel />
 
-        <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-6 space-y-4">
-          <p className="text-sm text-gray-700">
+        <div className="mt-6 rounded-2xl border border-border bg-card p-6 space-y-4">
+          <p className="text-sm text-foreground">
             Blood unit dispatch uses Nhume last-mile logistics with chain-of-custody tracking.
             Create a delivery with delivery type <strong>BLOOD_PRODUCT</strong> and link clinical context
             from the issuing blood bank.
           </p>
           <div className="flex flex-wrap gap-3">
-            <Link href="/nhume/deliveries/new" className="inline-flex rounded-xl bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700">
+            <Link href="/nhume/deliveries/new" className="inline-flex rounded-xl bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary">
               New blood dispatch (Nhume)
             </Link>
-            <Link href="/nhume/deliveries" className="inline-flex rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+            <Link href="/nhume/deliveries" className="inline-flex rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-background">
               Track deliveries
             </Link>
-            <Link href="/madi/blood-bank/issue" className="inline-flex rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-800 hover:bg-rose-100">
+            <Link href="/madi/blood-bank/issue" className="inline-flex rounded-xl border border-danger/28 bg-danger-soft px-4 py-2 text-sm font-medium text-rose-800 hover:bg-rose-100">
               Issue from blood bank
             </Link>
           </div>

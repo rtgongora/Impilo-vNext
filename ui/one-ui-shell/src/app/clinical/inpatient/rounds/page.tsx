@@ -46,7 +46,7 @@ export default function InpatientRoundsPage() {
       <TrustContextBanner purposeOfUse="INPATIENT_CLINICAL" />
 
       {admissionsQuery.isLoading ? (
-        <div className="flex items-center py-8 text-slate-500">
+        <div className="flex items-center py-8 text-muted-foreground">
           <Loader2 className="mr-2 h-5 w-5 animate-spin" />
           Loading admissions for rounds…
         </div>
@@ -59,16 +59,16 @@ export default function InpatientRoundsPage() {
         />
       ) : (
         <div className="space-y-4">
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-muted-foreground">
             Showing ward rounds for admission{" "}
-            <Link href={`/clinical/inpatient/admissions/${firstAdmissionId}`} className="font-medium text-impilo-600">
+            <Link href={`/clinical/inpatient/admissions/${firstAdmissionId}`} className="font-medium text-primary">
               {firstAdmissionId}
             </Link>
           </p>
           {roundsQuery.isLoading ? (
-            <p className="text-sm text-slate-500">Loading ward rounds…</p>
+            <p className="text-sm text-muted-foreground">Loading ward rounds…</p>
           ) : roundsQuery.data ? (
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+            <div className="rounded-xl border border-border bg-background p-4 text-sm text-foreground">
               Ward round data returned from BFF. Open the admission episode for full documentation.
             </div>
           ) : (

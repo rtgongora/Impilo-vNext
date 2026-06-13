@@ -33,19 +33,19 @@ const CLINICAL_RELATED_LINKS = [
 ];
 
 const CLINICAL_MODULES = [
-  { label: "My Dashboard", description: "Worklist, tasks, and alerts", href: "/queue", icon: ClipboardList, color: "bg-impilo-100 text-impilo-500" },
+  { label: "My Dashboard", description: "Worklist, tasks, and alerts", href: "/queue", icon: ClipboardList, color: "bg-primary-soft text-primary" },
   { label: "Patient Queue", description: "Waiting patients and triage", href: "/queue", icon: Users, color: "bg-orange-100 text-orange-600" },
-  { label: "ED / Casualty", description: "Emergency activations on live BFF", href: "/clinical/emergency", icon: Ambulance, color: "bg-red-100 text-red-700" },
-  { label: "Inpatient workspace", description: "Admissions, ward board, rounds, discharge", href: "/clinical/inpatient", icon: BedDouble, color: "bg-purple-100 text-purple-700", clinical: true },
-  { label: "Patient encounters", description: "Clinical documentation and care", href: "/queue/search", icon: Stethoscope, color: "bg-impilo-100 text-impilo-500", clinical: true },
+  { label: "ED / Casualty", description: "Emergency activations on live BFF", href: "/clinical/emergency", icon: Ambulance, color: "bg-red-100 text-danger" },
+  { label: "Inpatient workspace", description: "Admissions, ward board, rounds, discharge", href: "/clinical/inpatient", icon: BedDouble, color: "bg-purple-100 text-warning-foreground", clinical: true },
+  { label: "Patient encounters", description: "Clinical documentation and care", href: "/queue/search", icon: Stethoscope, color: "bg-primary-soft text-primary", clinical: true },
   { label: "Nursing workbench", description: "Assigned patients and nursing tasks", href: "/clinical/inpatient/nursing", icon: Users, color: "bg-teal-100 text-teal-700", clinical: true },
   { label: "Medical rounds", description: "Ward round notes and reviews", href: "/clinical/inpatient/rounds", icon: Stethoscope, color: "bg-cyan-100 text-cyan-700", clinical: true },
-  { label: "Orders & results", description: "Lab worklist and results", href: "/lab", icon: FlaskConical, color: "bg-blue-100 text-blue-700", clinical: true },
+  { label: "Orders & results", description: "Lab worklist and results", href: "/lab", icon: FlaskConical, color: "bg-blue-100 text-primary-hover", clinical: true },
   { label: "Rx / pharmacy", description: "Prescriptions and dispensing", href: "/pharmacy", icon: Pill, color: "bg-green-100 text-green-700", clinical: true },
-  { label: "PACS / imaging", description: "Imaging studies via patient chart", href: "/queue/search", icon: Scan, color: "bg-indigo-100 text-indigo-700", clinical: true },
+  { label: "PACS / imaging", description: "Imaging studies via patient chart", href: "/queue/search", icon: Scan, color: "bg-indigo-100 text-primary-hover", clinical: true },
   { label: "Discharge", description: "Discharge planning and summaries", href: "/clinical/inpatient/admissions", icon: DoorOpen, color: "bg-amber-100 text-amber-600", clinical: true },
   { label: "Control tower", description: "Real-time facility operations", href: "/clinical/control-tower", icon: Gauge, color: "bg-rose-100 text-rose-600" },
-  { label: "Communication", description: "Messages and notifications", href: "/home/notifications", icon: MessageSquare, color: "bg-impilo-100 text-impilo-500" },
+  { label: "Communication", description: "Messages and notifications", href: "/home/notifications", icon: MessageSquare, color: "bg-primary-soft text-primary" },
 ];
 
 export default function ClinicalHubPage() {
@@ -62,13 +62,13 @@ export default function ClinicalHubPage() {
                 <Link
                   key={mod.label}
                   href={mod.href}
-                  className="group rounded-lg border border-gray-200 bg-white p-5 text-center hover:border-impilo-200 hover:shadow-md"
+                  className="group rounded-lg border border-border bg-card p-5 text-center hover:border-primary/25 hover:shadow-md"
                 >
                   <div className={`mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg ${mod.color}`}>
                     <Icon className="h-6 w-6" />
                   </div>
-                  <h3 className="text-sm font-medium text-gray-900 group-hover:text-impilo-500">{mod.label}</h3>
-                  <p className="mt-1 text-xs text-gray-500">{mod.description}</p>
+                  <h3 className="text-sm font-medium text-foreground group-hover:text-primary">{mod.label}</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">{mod.description}</p>
                 </Link>
               );
             })}

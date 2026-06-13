@@ -61,20 +61,20 @@ export default function DonorScreeningPage() {
         </div>
 
         {isPending && (
-          <div className="flex items-center gap-2 text-gray-500">
+          <div className="flex items-center gap-2 text-muted-foreground">
             <Loader2 className="h-5 w-5 animate-spin" /> Loading…
           </div>
         )}
 
         {isError && (
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm flex gap-2">
+          <div className="rounded-xl border border-warning/35 bg-warning-soft p-4 text-sm flex gap-2">
             <AlertTriangle className="h-4 w-4 shrink-0" /> Could not verify donor status.
           </div>
         )}
 
         {!isPending && !donor && (
-          <div className="rounded-2xl border border-dashed border-gray-300 p-8 text-center">
-            <p className="text-sm text-gray-600">Register first, then complete your wellness check.</p>
+          <div className="rounded-2xl border border-dashed border-border p-8 text-center">
+            <p className="text-sm text-muted-foreground">Register first, then complete your wellness check.</p>
             <Link href="/madi/donor/register" className="mt-3 inline-block text-sm font-medium text-rose-600">
               Register as donor →
             </Link>
@@ -84,8 +84,8 @@ export default function DonorScreeningPage() {
         {donor && (
           <form onSubmit={handleSubmit} className="space-y-4 max-w-lg">
             {QUESTIONS.map((q) => (
-              <fieldset key={q.id} className="rounded-xl border border-gray-200 bg-white p-4">
-                <legend className="text-sm font-medium text-gray-900 px-1">{q.label}</legend>
+              <fieldset key={q.id} className="rounded-xl border border-border bg-card p-4">
+                <legend className="text-sm font-medium text-foreground px-1">{q.label}</legend>
                 <div className="mt-2 flex gap-4 text-sm">
                   <label className="flex items-center gap-2">
                     <input
@@ -125,19 +125,19 @@ export default function DonorScreeningPage() {
               className={`rounded-2xl border p-4 flex gap-3 ${
                 outcome === "PROCEED_TO_DRIVE"
                   ? "border-green-200 bg-green-50"
-                  : "border-amber-200 bg-amber-50"
+                  : "border-warning/35 bg-warning-soft"
               }`}
             >
-              <CheckCircle2 className="h-5 w-5 shrink-0 text-gray-700" />
+              <CheckCircle2 className="h-5 w-5 shrink-0 text-foreground" />
               <div>
-                <p className="text-sm font-medium text-gray-900">
+                <p className="text-sm font-medium text-foreground">
                   {outcome === "PROCEED_TO_DRIVE"
                     ? "You may be ready to visit a drive"
                     : outcome === "DEFER_SAFELY"
                       ? "It may be better to wait before donating"
                       : "Please speak with blood bank staff"}
                 </p>
-                {safeMessage && <p className="mt-1 text-sm text-gray-700">{safeMessage}</p>}
+                {safeMessage && <p className="mt-1 text-sm text-foreground">{safeMessage}</p>}
               </div>
             </div>
             <MadiDonorAssistPanel

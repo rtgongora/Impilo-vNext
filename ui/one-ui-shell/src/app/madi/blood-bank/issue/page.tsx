@@ -23,19 +23,19 @@ export default function BloodBankIssuePage() {
     <AppLayout>
       <PageShell title="Issue Blood" subtitle="Release matched units to clinical teams" icon={<Droplet className="h-6 w-6" />}>
         {!bloodBankId ? (
-          <div className="rounded-2xl border border-dashed border-gray-300 p-8 text-center">
+          <div className="rounded-2xl border border-dashed border-border p-8 text-center">
             <Link href="/madi/blood-bank" className="text-sm font-medium text-rose-600">Configure blood bank →</Link>
           </div>
         ) : (
-          <div className="max-w-md space-y-4 rounded-2xl border border-gray-200 bg-white p-6">
-            <p className="text-sm text-gray-600">
+          <div className="max-w-md space-y-4 rounded-2xl border border-border bg-card p-6">
+            <p className="text-sm text-muted-foreground">
               Issue is performed on a submitted order after crossmatch. Open the order to reserve and issue units.
             </p>
             <input
               value={orderId}
               onChange={(e) => setOrderId(e.target.value)}
               placeholder="Blood order UUID"
-              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm font-mono"
+              className="w-full rounded-xl border border-border px-3 py-2 text-sm font-mono"
             />
             <button
               type="button"

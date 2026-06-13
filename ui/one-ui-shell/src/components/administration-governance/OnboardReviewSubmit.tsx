@@ -88,20 +88,20 @@ export function OnboardReviewSubmit({ flowId, option }: OnboardReviewSubmitProps
   }
 
   return (
-    <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
       <div>
-        <h3 className="text-base font-semibold text-slate-900">Review & Submit</h3>
-        <p className="mt-1 text-sm text-slate-600">
+        <h3 className="text-base font-semibold text-foreground">Review & Submit</h3>
+        <p className="mt-1 text-sm text-muted-foreground">
           Actor type: <strong>{option.title}</strong>. Expected outcome: {option.outcome}
         </p>
       </div>
 
       <div className="grid gap-3 md:grid-cols-2">
         {fields.map((field) => (
-          <label key={String(field.key)} className="text-sm text-slate-700">
+          <label key={String(field.key)} className="text-sm text-foreground">
             {field.label}
             <input
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+              className="mt-1 w-full rounded-lg border border-border px-3 py-2"
               type={field.type ?? "text"}
               placeholder={field.placeholder}
               value={String(form[field.key as keyof OnboardingFlowSubmission] ?? "")}
@@ -114,7 +114,7 @@ export function OnboardReviewSubmit({ flowId, option }: OnboardReviewSubmitProps
           </label>
         ))}
         {flowId === "external-partner-user" ? (
-          <label className="flex items-center gap-2 text-sm text-slate-700 md:col-span-2">
+          <label className="flex items-center gap-2 text-sm text-foreground md:col-span-2">
             <input
               type="checkbox"
               checked={!!form.crossBorderFlag}
@@ -125,7 +125,7 @@ export function OnboardReviewSubmit({ flowId, option }: OnboardReviewSubmitProps
         ) : null}
       </div>
 
-      <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-xs text-slate-700">
+      <div className="rounded-xl border border-border bg-background px-4 py-3 text-xs text-foreground">
         <p>
           Organisation: {contract?.organisation?.organisationName ?? contract?.organisation?.organisationId ?? "current scope"}
         </p>
@@ -145,7 +145,7 @@ export function OnboardReviewSubmit({ flowId, option }: OnboardReviewSubmitProps
         <button
           type="button"
           onClick={() => void handlePrecheckRefresh()}
-          className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-background"
         >
           Refresh precheck
         </button>
@@ -153,11 +153,11 @@ export function OnboardReviewSubmit({ flowId, option }: OnboardReviewSubmitProps
           type="button"
           disabled={submitDisabled}
           onClick={() => void handleSubmit()}
-          className="rounded-lg bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-800 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-indigo-800 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {submitMutation.isPending ? "Submitting…" : "Submit onboarding"}
         </button>
-        <Link href="/work/administration-governance/access-requests" className="rounded-lg px-4 py-2 text-sm font-medium text-indigo-700 hover:underline">
+        <Link href="/work/administration-governance/access-requests" className="rounded-lg px-4 py-2 text-sm font-medium text-primary-hover hover:underline">
           View access requests
         </Link>
       </div>

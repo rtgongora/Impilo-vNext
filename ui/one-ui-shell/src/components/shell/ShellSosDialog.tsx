@@ -125,10 +125,10 @@ export function ShellSosDialog({ open, onClose }: ShellSosDialogProps) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="sos-title"
-        className="relative w-full max-w-md rounded-2xl border border-red-200 bg-white p-5 shadow-2xl dark:border-red-900/50 dark:bg-slate-950"
+        className="relative w-full max-w-md rounded-2xl border border-danger/28 bg-card p-5 shadow-2xl dark:border-red-900/50 dark:bg-card"
       >
         <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-2 text-red-700 dark:text-red-400">
+          <div className="flex items-center gap-2 text-danger dark:text-red-400">
             <AlertTriangle className="h-6 w-6 shrink-0" />
             <h2 id="sos-title" className="text-lg font-semibold">
               SOS — Escalate
@@ -136,21 +136,21 @@ export function ShellSosDialog({ open, onClose }: ShellSosDialogProps) {
           </div>
           <button
             type="button"
-            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900"
+            className="rounded-lg p-2 text-muted-foreground hover:bg-neutral-100 dark:hover:bg-neutral-900"
             onClick={handleCancel}
             aria-label="Close"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
-        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+        <p className="mt-2 text-sm text-muted-foreground dark:text-muted-foreground">
           Use for real emergencies and operational incidents. This action is audited.
         </p>
 
-        <label className="mt-4 block text-sm font-medium text-slate-800 dark:text-slate-100">
+        <label className="mt-4 block text-sm font-medium text-foreground dark:text-foreground">
           Escalation type
           <select
-            className="mt-1 block w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900"
+            className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm dark:border-border dark:bg-neutral-900"
             value={typeId}
             onChange={(e) => setTypeId(e.target.value)}
           >
@@ -162,10 +162,10 @@ export function ShellSosDialog({ open, onClose }: ShellSosDialogProps) {
           </select>
         </label>
 
-        <label className="mt-3 block text-sm font-medium text-slate-800 dark:text-slate-100">
+        <label className="mt-3 block text-sm font-medium text-foreground dark:text-foreground">
           Details (optional)
           <textarea
-            className="mt-1 block w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900"
+            className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm dark:border-border dark:bg-neutral-900"
             rows={3}
             value={note}
             onChange={(e) => setNote(e.target.value)}
@@ -174,12 +174,12 @@ export function ShellSosDialog({ open, onClose }: ShellSosDialogProps) {
         </label>
 
         {backendError ? (
-          <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
+          <p className="mt-3 rounded-lg border border-warning/35 bg-warning-soft p-3 text-sm text-warning-foreground dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
             {backendError}
           </p>
         ) : null}
         {statusMessage ? (
-          <p className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-100">
+          <p className="mt-3 rounded-lg border border-success/25 bg-success-soft p-3 text-sm text-primary-hover dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-100">
             {statusMessage}
           </p>
         ) : null}
@@ -187,7 +187,7 @@ export function ShellSosDialog({ open, onClose }: ShellSosDialogProps) {
         <div className="mt-5 flex flex-wrap justify-end gap-2">
           <button
             type="button"
-            className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-900"
+            className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-background dark:border-border dark:text-foreground dark:hover:bg-neutral-900"
             onClick={handleCancel}
           >
             {statusMessage || backendError ? "Close" : "Cancel"}

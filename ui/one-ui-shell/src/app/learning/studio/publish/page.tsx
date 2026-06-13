@@ -36,12 +36,12 @@ export default function FundoStudioPublishPage() {
 
   return (
     <FundoStudioWorkspace title="Studio Publish" subtitle="Draft/review/publish/archive controls with readiness checks and learner preview links.">
-      <div className="mb-3 rounded border border-gray-200 bg-white p-3">
-        <label className="text-xs text-gray-600">Select course for publish controls</label>
+      <div className="mb-3 rounded border border-border bg-card p-3">
+        <label className="text-xs text-muted-foreground">Select course for publish controls</label>
         <select
           value={selectedCourseId}
           onChange={(e) => setSelectedCourseId(e.target.value)}
-          className="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm"
+          className="mt-1 w-full rounded border border-border px-3 py-2 text-sm"
         >
           <option value="">Choose a course...</option>
           {items.map((c) => (
@@ -52,15 +52,15 @@ export default function FundoStudioPublishPage() {
         </select>
         {selectedCourseId ? (
           <div className="mt-2 flex flex-wrap gap-2 text-xs">
-            <button type="button" onClick={() => updateStatus("DRAFT")} className="rounded border border-gray-300 px-2 py-1 text-gray-700">Move to Draft</button>
+            <button type="button" onClick={() => updateStatus("DRAFT")} className="rounded border border-border px-2 py-1 text-foreground">Move to Draft</button>
             <button type="button" onClick={() => updateStatus("PUBLISHED")} className="rounded border border-teal-400 px-2 py-1 text-teal-700">Publish</button>
-            <button type="button" onClick={() => updateStatus("ARCHIVED")} className="rounded border border-red-300 px-2 py-1 text-red-700">Archive</button>
+            <button type="button" onClick={() => updateStatus("ARCHIVED")} className="rounded border border-red-300 px-2 py-1 text-danger">Archive</button>
           </div>
         ) : null}
       </div>
       {selectedCourseId ? (
-        <div className="mb-3 rounded border border-gray-200 bg-white p-3 text-xs text-gray-700">
-          <p className="font-semibold text-gray-900">Readiness</p>
+        <div className="mb-3 rounded border border-border bg-card p-3 text-xs text-foreground">
+          <p className="font-semibold text-foreground">Readiness</p>
           <ul className="mt-1 list-disc pl-4">
             {(((readiness.data?.data ?? {}) as { readinessChecklist?: Array<{ item: string; ok: boolean }> }).readinessChecklist ?? []).map((item) => (
               <li key={item.item}>
@@ -72,12 +72,12 @@ export default function FundoStudioPublishPage() {
       ) : null}
       <ul className="space-y-2">
         {items.map((c) => (
-          <li key={c.id} className="rounded border border-gray-200 bg-white p-3 text-sm">
-            <p className="font-medium text-gray-900">{c.title}</p>
-            <p className="text-xs text-gray-500">Current state: {c.status}</p>
+          <li key={c.id} className="rounded border border-border bg-card p-3 text-sm">
+            <p className="font-medium text-foreground">{c.title}</p>
+            <p className="text-xs text-muted-foreground">Current state: {c.status}</p>
             <div className="mt-2 flex gap-2 text-xs">
-              <Link href={`/learning/studio/courses/${c.id}`} className="rounded border border-gray-300 px-2 py-1 text-gray-700">Readiness</Link>
-              <Link href={`/learning/studio/courses/${c.id}/builder`} className="rounded border border-gray-300 px-2 py-1 text-gray-700">Revise builder</Link>
+              <Link href={`/learning/studio/courses/${c.id}`} className="rounded border border-border px-2 py-1 text-foreground">Readiness</Link>
+              <Link href={`/learning/studio/courses/${c.id}/builder`} className="rounded border border-border px-2 py-1 text-foreground">Revise builder</Link>
             </div>
           </li>
         ))}

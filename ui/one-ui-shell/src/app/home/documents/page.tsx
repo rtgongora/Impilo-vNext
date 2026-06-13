@@ -92,12 +92,12 @@ export default function MyDocumentsPage() {
         icon={<FileText className="h-6 w-6" />}
       >
         <div className="space-y-6">
-          <div className="rounded-xl border border-impilo-200 bg-impilo-50 p-4 text-sm text-impilo-800">
+          <div className="rounded-xl border border-primary/25 bg-primary-soft p-4 text-sm text-impilo-800">
             <p className="font-semibold text-impilo-800">Canonical Experience document vault</p>
             <p className="mt-1">
               This page now reads your document vault through the Experience clinical-tools bridge. It focuses on retrieval
               and download access. Public claim flow still lives at{" "}
-              <Link href="/share/claim" className="font-medium text-impilo-600 underline underline-offset-2">
+              <Link href="/share/claim" className="font-medium text-primary underline underline-offset-2">
                 /share/claim
               </Link>
               .
@@ -105,68 +105,68 @@ export default function MyDocumentsPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="rounded-lg border border-gray-200 bg-white p-5">
+            <div className="rounded-lg border border-border bg-card p-5">
               <div className="mb-3 flex items-center gap-2">
-                <FileText className="h-5 w-5 text-impilo-500" />
-                <h3 className="font-semibold text-gray-900">Vault</h3>
+                <FileText className="h-5 w-5 text-primary" />
+                <h3 className="font-semibold text-foreground">Vault</h3>
               </div>
-              <p className="text-2xl font-semibold text-gray-900">{documents.length}</p>
-              <p className="mt-2 text-sm text-gray-600">Documents currently visible through the Experience bridge</p>
+              <p className="text-2xl font-semibold text-foreground">{documents.length}</p>
+              <p className="mt-2 text-sm text-muted-foreground">Documents currently visible through the Experience bridge</p>
             </div>
-            <div className="rounded-lg border border-gray-200 bg-white p-5">
+            <div className="rounded-lg border border-border bg-card p-5">
               <div className="mb-3 flex items-center gap-2">
                 <Download className="h-5 w-5 text-green-600" />
-                <h3 className="font-semibold text-gray-900">Ready to download</h3>
+                <h3 className="font-semibold text-foreground">Ready to download</h3>
               </div>
-              <p className="text-2xl font-semibold text-gray-900">{downloadableDocuments}</p>
-              <p className="mt-2 text-sm text-gray-600">Documents with a retrievable object identifier</p>
+              <p className="text-2xl font-semibold text-foreground">{downloadableDocuments}</p>
+              <p className="mt-2 text-sm text-muted-foreground">Documents with a retrievable object identifier</p>
             </div>
-            <div className="rounded-lg border border-gray-200 bg-white p-5">
+            <div className="rounded-lg border border-border bg-card p-5">
               <div className="mb-3 flex items-center gap-2">
                 <Share2 className="h-5 w-5 text-green-600" />
-                <h3 className="font-semibold text-gray-900">Recent activity</h3>
+                <h3 className="font-semibold text-foreground">Recent activity</h3>
               </div>
-              <p className="text-2xl font-semibold text-gray-900">{recentDocuments}</p>
-              <p className="mt-2 text-sm text-gray-600">Documents added or updated in the last 30 days</p>
+              <p className="text-2xl font-semibold text-foreground">{recentDocuments}</p>
+              <p className="mt-2 text-sm text-muted-foreground">Documents added or updated in the last 30 days</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_280px]">
-            <div className="rounded-lg border border-gray-200 bg-white p-5">
+            <div className="rounded-lg border border-border bg-card p-5">
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <h2 className="text-base font-semibold text-gray-900">Document vault</h2>
-                  <p className="text-sm text-gray-500">Search your current document view and prepare download links on demand.</p>
+                  <h2 className="text-base font-semibold text-foreground">Document vault</h2>
+                  <p className="text-sm text-muted-foreground">Search your current document view and prepare download links on demand.</p>
                 </div>
                 <label className="relative block md:w-80">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <input
                     type="search"
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
                     placeholder="Search title, type, or mime type"
-                    className="w-full rounded-lg border border-gray-300 py-2 pl-9 pr-3 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400/20"
+                    className="w-full rounded-lg border border-border py-2 pl-9 pr-3 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-primary/40/20"
                   />
                 </label>
               </div>
 
               {downloadError ? (
-                <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                <div className="mt-4 rounded-lg border border-warning/35 bg-warning-soft p-3 text-sm text-warning-foreground">
                   {downloadError}
                 </div>
               ) : null}
 
               {isLoading ? (
                 <div className="flex items-center justify-center py-16">
-                  <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
               ) : isError ? (
-                <div className="rounded-lg border border-red-200 bg-red-50 p-5 text-sm text-red-800">
+                <div className="rounded-lg border border-danger/28 bg-danger-soft p-5 text-sm text-red-800">
                   We could not load your document vault from the Experience bridge right now.
                 </div>
               ) : filteredDocuments.length === 0 ? (
-                <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-10 text-center text-sm text-gray-500">
-                  <FileText className="mx-auto mb-3 h-8 w-8 text-gray-300" />
+                <div className="rounded-lg border border-dashed border-border bg-background p-10 text-center text-sm text-muted-foreground">
+                  <FileText className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
                   {documents.length === 0
                     ? "No documents are available yet in your Experience vault."
                     : "No documents match your current search."}
@@ -180,21 +180,21 @@ export default function MyDocumentsPage() {
                     return (
                       <article
                         key={document.id || document.title}
-                        className="rounded-lg border border-gray-200 p-4 transition-colors hover:border-gray-300"
+                        className="rounded-lg border border-border p-4 transition-colors hover:border-border"
                       >
                         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-2">
-                              <h3 className="text-sm font-semibold text-gray-900">{document.title}</h3>
-                              <span className="rounded-full bg-impilo-50 px-2.5 py-1 text-xs font-medium text-impilo-600">
+                              <h3 className="text-sm font-semibold text-foreground">{document.title}</h3>
+                              <span className="rounded-full bg-primary-soft px-2.5 py-1 text-xs font-medium text-primary">
                                 {document.documentTypeCode}
                               </span>
-                              <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-600">
+                              <span className="rounded-full bg-neutral-100 px-2.5 py-1 text-xs text-muted-foreground">
                                 {document.lifecycleState}
                               </span>
                             </div>
-                            <p className="mt-1 text-sm text-gray-600">{document.originalFilename}</p>
-                            <div className="mt-2 flex flex-wrap gap-3 text-xs text-gray-500">
+                            <p className="mt-1 text-sm text-muted-foreground">{document.originalFilename}</p>
+                            <div className="mt-2 flex flex-wrap gap-3 text-xs text-muted-foreground">
                               <span>{document.mimeType}</span>
                               <span>{formatDate(document.createdAt)}</span>
                               {document.fileSize ? <span>{formatFileSize(document.fileSize)}</span> : null}
@@ -207,7 +207,7 @@ export default function MyDocumentsPage() {
                                 href={downloadUrl}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="inline-flex items-center gap-1.5 rounded-lg bg-impilo-500 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600"
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
                               >
                                 <Download className="h-4 w-4" />
                                 Download document
@@ -217,7 +217,7 @@ export default function MyDocumentsPage() {
                                 type="button"
                                 onClick={() => void handlePrepareDownload(document)}
                                 disabled={!document.id || isPreparing}
-                                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-background disabled:cursor-not-allowed disabled:opacity-60"
                               >
                                 {isPreparing ? (
                                   <>
@@ -242,12 +242,12 @@ export default function MyDocumentsPage() {
             </div>
 
             <div className="space-y-4">
-              <div className="rounded-lg border border-gray-200 bg-white p-5">
+              <div className="rounded-lg border border-border bg-card p-5">
                 <div className="mb-3 flex items-center gap-2">
                   <Share2 className="h-5 w-5 text-green-600" />
-                  <h3 className="font-semibold text-gray-900">Shared documents</h3>
+                  <h3 className="font-semibold text-foreground">Shared documents</h3>
                 </div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   Claim time-limited shared bundles through the public Experience flow when someone sends you a share token.
                 </p>
                 <Link href="/share/claim" className="mt-3 inline-flex text-sm font-medium text-green-700 hover:underline">
@@ -255,12 +255,12 @@ export default function MyDocumentsPage() {
                 </Link>
               </div>
 
-              <div className="rounded-lg border border-gray-200 bg-white p-5">
+              <div className="rounded-lg border border-border bg-card p-5">
                 <div className="mb-3 flex items-center gap-2">
                   <Shield className="h-5 w-5 text-purple-600" />
-                  <h3 className="font-semibold text-gray-900">Scope of this route</h3>
+                  <h3 className="font-semibold text-foreground">Scope of this route</h3>
                 </div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   This route now replaces the self-service read and download vault. Upload, consent, and print-job workflows
                   still live in their own operational surfaces and are not simulated here.
                 </p>

@@ -126,9 +126,9 @@ export function SocialRightRail({ recentPosts = [] }: Props) {
         ) : (
           <ul className="space-y-2">
             {alerts.slice(0, 3).map((alert) => (
-              <li key={alert.id} className="rounded-lg border border-amber-100 bg-amber-50/60 px-2.5 py-2 text-xs">
-                <p className="font-medium text-amber-900">{alert.title || "Surveillance alert"}</p>
-                <p className="text-amber-800">{alert.severity}</p>
+              <li key={alert.id} className="rounded-lg border border-amber-100 bg-warning-soft/60 px-2.5 py-2 text-xs">
+                <p className="font-medium text-warning-foreground">{alert.title || "Surveillance alert"}</p>
+                <p className="text-warning-foreground">{alert.severity}</p>
               </li>
             ))}
             <li>

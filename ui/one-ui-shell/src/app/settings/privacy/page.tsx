@@ -82,7 +82,7 @@ export default function PrivacySettingsPage() {
         <div className="mb-4">
           <Link
             href="/settings"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to settings
@@ -91,15 +91,15 @@ export default function PrivacySettingsPage() {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading privacy settings...</span>
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading privacy settings...</span>
           </div>
         ) : (
           <div className="space-y-6 max-w-2xl">
             {/* ── Consent Status ──────────────────────────── */}
-            <section className="bg-white rounded-lg border border-gray-200 p-6">
-              <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <Shield className="w-4 h-4 text-blue-600" />
+            <section className="bg-card rounded-lg border border-border p-6">
+              <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Shield className="w-4 h-4 text-primary" />
                 Policy Consent
               </h3>
 
@@ -125,26 +125,26 @@ export default function PrivacySettingsPage() {
                 />
               </div>
 
-              <p className="mt-4 text-xs text-gray-400">
+              <p className="mt-4 text-xs text-muted-foreground">
                 Policy version: {CURRENT_CONSENT_VERSION}. Revoking consent will
                 require you to re-accept before continuing to use Impilo.
               </p>
             </section>
 
             {/* ── Your Rights ─────────────────────────────── */}
-            <section className="bg-white rounded-lg border border-gray-200 p-6">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <section className="bg-card rounded-lg border border-border p-6">
+              <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                 <FileText className="w-4 h-4 text-indigo-600" />
                 Your Data Rights
               </h3>
 
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-muted-foreground mb-4">
                 Subject to applicable law, you have the right to access, correct,
                 delete, restrict, or export your personal data. For requests
                 beyond what is available here, contact{" "}
                 <a
                   href="mailto:support@impilo.io"
-                  className="text-blue-600 hover:text-blue-800"
+                  className="text-primary hover:text-blue-800"
                 >
                   support@impilo.io
                 </a>
@@ -155,7 +155,7 @@ export default function PrivacySettingsPage() {
                 <Link
                   href="/privacy#16"
                   target="_blank"
-                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-700 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-foreground border border-border rounded-lg hover:border-blue-300 hover:bg-info-soft transition-colors"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
                   View Your Rights
@@ -164,7 +164,7 @@ export default function PrivacySettingsPage() {
                   onClick={() => {
                     /* Data export is a future feature — placeholder */
                   }}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-700 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-foreground border border-border rounded-lg hover:border-blue-300 hover:bg-info-soft transition-colors"
                 >
                   <Download className="w-3.5 h-3.5" />
                   Request Data Export
@@ -173,18 +173,18 @@ export default function PrivacySettingsPage() {
             </section>
 
             {/* ── Account Deletion ────────────────────────── */}
-            <section className="bg-white rounded-lg border border-red-100 p-6">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <section className="bg-card rounded-lg border border-red-100 p-6">
+              <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                 <Trash2 className="w-4 h-4 text-red-500" />
                 Delete Account
               </h3>
 
               {hasPendingDeletion ? (
                 <div className="space-y-3">
-                  <div className="flex items-start gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                  <div className="flex items-start gap-3 p-3 bg-warning-soft border border-warning/35 rounded-lg">
                     <Clock className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
                     <div>
-                      <p className="text-sm font-medium text-amber-800">
+                      <p className="text-sm font-medium text-warning-foreground">
                         Deletion request pending
                       </p>
                       <p className="text-xs text-amber-600 mt-0.5">
@@ -201,7 +201,7 @@ export default function PrivacySettingsPage() {
                   <button
                     onClick={() => cancelDeletion.mutate()}
                     disabled={cancelDeletion.isPending}
-                    className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-700 border border-gray-200 rounded-lg hover:border-gray-400 transition-colors disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-foreground border border-border rounded-lg hover:border-gray-400 transition-colors disabled:opacity-50"
                   >
                     {cancelDeletion.isPending ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -213,7 +213,7 @@ export default function PrivacySettingsPage() {
                 </div>
               ) : showDeleteConfirm ? (
                 <div className="space-y-4">
-                  <div className="flex items-start gap-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="flex items-start gap-3 p-3 bg-danger-soft border border-danger/28 rounded-lg">
                     <AlertTriangle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
                     <div>
                       <p className="text-sm font-medium text-red-800">
@@ -228,27 +228,27 @@ export default function PrivacySettingsPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                    <label className="block text-xs font-medium text-foreground mb-1">
                       Reason (optional)
                     </label>
                     <textarea
                       value={deleteReason}
                       onChange={(e) => setDeleteReason(e.target.value)}
                       placeholder="Help us understand why you're leaving..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
+                      className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
                       rows={2}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                    <label className="block text-xs font-medium text-foreground mb-1">
                       Type <strong>DELETE</strong> to confirm
                     </label>
                     <input
                       type="text"
                       value={deleteConfirmText}
                       onChange={(e) => setDeleteConfirmText(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                      className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                       placeholder="DELETE"
                     />
                   </div>
@@ -280,7 +280,7 @@ export default function PrivacySettingsPage() {
                         setDeleteConfirmText("");
                         setDeleteReason("");
                       }}
-                      className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                      className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                     >
                       Cancel
                     </button>
@@ -288,14 +288,14 @@ export default function PrivacySettingsPage() {
                 </div>
               ) : (
                 <div>
-                  <p className="text-sm text-gray-600 mb-3">
+                  <p className="text-sm text-muted-foreground mb-3">
                     Permanently delete your Impilo account and request removal of
                     your personal data. This action will revoke all consents and
                     deactivate your account.
                   </p>
                   <button
                     onClick={() => setShowDeleteConfirm(true)}
-                    className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-red-600 border border-danger/28 rounded-lg hover:bg-danger-soft transition-colors"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                     Request Account Deletion
@@ -305,16 +305,16 @@ export default function PrivacySettingsPage() {
             </section>
 
             {/* ── Legal Documents ───────────────────────────── */}
-            <section className="bg-white rounded-lg border border-gray-200 p-6">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <FileText className="w-4 h-4 text-gray-500" />
+            <section className="bg-card rounded-lg border border-border p-6">
+              <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                <FileText className="w-4 h-4 text-muted-foreground" />
                 Legal Documents
               </h3>
               <div className="flex flex-wrap gap-3">
                 <Link
                   href="/privacy"
                   target="_blank"
-                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-700 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-foreground border border-border rounded-lg hover:border-blue-300 hover:bg-info-soft transition-colors"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
                   Privacy Policy
@@ -322,7 +322,7 @@ export default function PrivacySettingsPage() {
                 <Link
                   href="/terms"
                   target="_blank"
-                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-700 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-foreground border border-border rounded-lg hover:border-blue-300 hover:bg-info-soft transition-colors"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
                   Terms of Use
@@ -330,7 +330,7 @@ export default function PrivacySettingsPage() {
                 <Link
                   href="/account-deletion"
                   target="_blank"
-                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-700 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-foreground border border-border rounded-lg hover:border-blue-300 hover:bg-info-soft transition-colors"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
                   Account Deletion Notice
@@ -338,7 +338,7 @@ export default function PrivacySettingsPage() {
                 <Link
                   href="/privacy/app-stores"
                   target="_blank"
-                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-700 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-foreground border border-border rounded-lg hover:border-blue-300 hover:bg-info-soft transition-colors"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
                   App Store Privacy
@@ -347,13 +347,13 @@ export default function PrivacySettingsPage() {
             </section>
 
             {/* ── Contact ─────────────────────────────────── */}
-            <section className="bg-gray-50 rounded-lg border border-gray-200 p-5">
-              <p className="text-xs text-gray-500">
+            <section className="bg-background rounded-lg border border-border p-5">
+              <p className="text-xs text-muted-foreground">
                 For privacy questions, data requests, or account deletion
                 assistance, contact{" "}
                 <a
                   href="mailto:support@impilo.io"
-                  className="text-blue-600 hover:text-blue-800"
+                  className="text-primary hover:text-blue-800"
                 >
                   support@impilo.io
                 </a>{" "}
@@ -362,7 +362,7 @@ export default function PrivacySettingsPage() {
                   href="https://www.impilo.io"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800"
+                  className="text-primary hover:text-blue-800"
                 >
                   www.impilo.io
                 </a>
@@ -398,22 +398,22 @@ function ConsentRow({
   revoking: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 p-3 bg-gray-50 rounded-lg">
+    <div className="flex items-center justify-between gap-4 p-3 bg-background rounded-lg">
       <div className="flex items-center gap-3 min-w-0">
         {accepted ? (
           <CheckCircle className="w-4 h-4 text-green-600 shrink-0" />
         ) : (
-          <XCircle className="w-4 h-4 text-gray-400 shrink-0" />
+          <XCircle className="w-4 h-4 text-muted-foreground shrink-0" />
         )}
         <div className="min-w-0">
           <Link
             href={href}
             target="_blank"
-            className="text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors"
+            className="text-sm font-medium text-foreground hover:text-primary transition-colors"
           >
             {label}
           </Link>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-muted-foreground">
             {accepted && acceptedAt
               ? `Accepted ${new Date(acceptedAt).toLocaleDateString()} (v${version})`
               : "Not accepted"}
@@ -424,7 +424,7 @@ function ConsentRow({
         <button
           onClick={onRevoke}
           disabled={revoking}
-          className="text-xs text-gray-400 hover:text-red-600 transition-colors disabled:opacity-50 shrink-0"
+          className="text-xs text-muted-foreground hover:text-red-600 transition-colors disabled:opacity-50 shrink-0"
         >
           {revoking ? "Revoking..." : "Revoke"}
         </button>

@@ -69,9 +69,9 @@ function cellStateForShift(attrs: StaffingShiftResource["attributes"], dayYmd: s
 }
 
 const CELL_STYLES: Record<CellState, string> = {
-  active: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  active: "bg-emerald-100 text-primary-hover border-success/25",
   worked: "bg-sky-100 text-sky-800 border-sky-200",
-  "": "bg-white text-gray-300 border-dashed border-gray-200",
+  "": "bg-card text-muted-foreground border-dashed border-border",
 };
 
 const CELL_LABELS: Record<CellState, string> = {
@@ -144,7 +144,7 @@ export default function RosterPage() {
           <div className="mb-4">
             <Link
               href="/organization-admin/staffing?from=organization-admin"
-              className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+              className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="h-4 w-4" /> Back to staffing hub
             </Link>
@@ -153,7 +153,7 @@ export default function RosterPage() {
         <FacilityWorkClusterRibbon shiftExpected={false} />
 
         {!facility?.id ? (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <div className="rounded-lg border border-warning/35 bg-warning-soft px-4 py-3 text-sm text-warning-foreground">
             Select a facility to load the roster. Organization operators can pick a facility from the facility hub before opening
             staffing surfaces.
           </div>
@@ -161,11 +161,11 @@ export default function RosterPage() {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading roster...</span>
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading roster...</span>
           </div>
         ) : isError ? (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <div className="rounded-lg border border-danger/28 bg-danger-soft px-4 py-3 text-sm text-red-800">
             Could not load roster data. Check that the Experience BFF is running and migrations are applied.
           </div>
         ) : (
@@ -173,24 +173,24 @@ export default function RosterPage() {
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-cyan-600" />
-                <h2 className="text-lg font-semibold text-gray-900">Weekly Roster</h2>
+                <h2 className="text-lg font-semibold text-foreground">Weekly Roster</h2>
               </div>
               <div className="flex flex-wrap items-center gap-3">
-                <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-lg">
+                <div className="flex items-center gap-1 bg-card border border-border rounded-lg">
                   <button
                     type="button"
                     onClick={() => setWeekOffset((p) => p - 1)}
-                    className="p-2 hover:bg-gray-50 rounded-l-lg transition-colors"
+                    className="p-2 hover:bg-background rounded-l-lg transition-colors"
                   >
-                    <ChevronLeft className="w-4 h-4 text-gray-600" />
+                    <ChevronLeft className="w-4 h-4 text-muted-foreground" />
                   </button>
-                  <span className="px-3 text-sm font-medium text-gray-700">{weekLabel}</span>
+                  <span className="px-3 text-sm font-medium text-foreground">{weekLabel}</span>
                   <button
                     type="button"
                     onClick={() => setWeekOffset((p) => p + 1)}
-                    className="p-2 hover:bg-gray-50 rounded-r-lg transition-colors"
+                    className="p-2 hover:bg-background rounded-r-lg transition-colors"
                   >
-                    <ChevronRight className="w-4 h-4 text-gray-600" />
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
                   </button>
                 </div>
                 <Link
@@ -202,13 +202,13 @@ export default function RosterPage() {
               </div>
             </div>
 
-            <div className="flex items-start gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
-              <Info className="w-4 h-4 shrink-0 mt-0.5 text-slate-500" />
+            <div className="flex items-start gap-2 rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground">
+              <Info className="w-4 h-4 shrink-0 mt-0.5 text-muted-foreground" />
               <p>
                 Cells reflect <span className="font-medium">real shift records</span> from the BFF (overlap with each calendar day).
                 Planning labels such as Day/Night are not stored yet; use shift start/end for ground truth.{" "}
                 {workspace?.id ? (
-                  <span className="text-slate-600">Including shifts for this workspace or facility-wide (no workspace).</span>
+                  <span className="text-muted-foreground">Including shifts for this workspace or facility-wide (no workspace).</span>
                 ) : null}
               </p>
             </div>
@@ -219,18 +219,18 @@ export default function RosterPage() {
               <span className={`px-2.5 py-1 rounded border font-medium ${CELL_STYLES[""]}`}>No overlap</span>
             </div>
 
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="bg-card rounded-lg border border-border overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-gray-200 bg-gray-50">
-                      <th className="text-left px-4 py-3 font-medium text-gray-600 w-48 sticky left-0 bg-gray-50 z-10">
+                    <tr className="border-b border-border bg-background">
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground w-48 sticky left-0 bg-background z-10">
                         Staff
                       </th>
                       {DAYS.map((day, i) => (
-                        <th key={day} className="text-center px-3 py-3 font-medium text-gray-600 min-w-[100px]">
+                        <th key={day} className="text-center px-3 py-3 font-medium text-muted-foreground min-w-[100px]">
                           <p>{day}</p>
-                          <p className="text-[10px] text-gray-400 font-normal">{dateColumns[i]?.slice(5)}</p>
+                          <p className="text-[10px] text-muted-foreground font-normal">{dateColumns[i]?.slice(5)}</p>
                         </th>
                       ))}
                     </tr>
@@ -238,17 +238,17 @@ export default function RosterPage() {
                   <tbody>
                     {rows.length === 0 ? (
                       <tr>
-                        <td colSpan={8} className="px-4 py-10 text-center text-sm text-gray-500">
+                        <td colSpan={8} className="px-4 py-10 text-center text-sm text-muted-foreground">
                           No shift records overlap this week for this facility
                           {workspace?.id ? " and workspace filter" : ""}. Start a shift from the shift page to populate this grid.
                         </td>
                       </tr>
                     ) : (
                       rows.map((row) => (
-                        <tr key={row.userId} className="border-b border-gray-100 hover:bg-gray-50/50">
-                          <td className="px-4 py-3 sticky left-0 bg-white z-10">
-                            <p className="font-medium text-gray-900 text-xs">{row.displayName}</p>
-                            <p className="text-[10px] text-gray-400">{row.userId}</p>
+                        <tr key={row.userId} className="border-b border-border hover:bg-background/50">
+                          <td className="px-4 py-3 sticky left-0 bg-card z-10">
+                            <p className="font-medium text-foreground text-xs">{row.displayName}</p>
+                            <p className="text-[10px] text-muted-foreground">{row.userId}</p>
                           </td>
                           {dateColumns.map((date) => {
                             const cell = row.days[date] ?? "";
@@ -266,9 +266,9 @@ export default function RosterPage() {
                         </tr>
                       ))
                     )}
-                    <tr className="bg-gray-50 border-t-2 border-gray-300">
-                      <td className="px-4 py-3 sticky left-0 bg-gray-50 z-10">
-                        <p className="font-medium text-gray-700 text-xs flex items-center gap-1">
+                    <tr className="bg-background border-t-2 border-border">
+                      <td className="px-4 py-3 sticky left-0 bg-background z-10">
+                        <p className="font-medium text-foreground text-xs flex items-center gap-1">
                           <Users className="w-3 h-3" /> Coverage
                         </p>
                       </td>
@@ -278,7 +278,7 @@ export default function RosterPage() {
                         return (
                           <td key={date} className="px-1 py-3 text-center">
                             <span className={`text-sm font-bold ${isLow ? "text-red-600" : "text-green-600"}`}>{count}</span>
-                            <p className="text-[10px] text-gray-400">staff</p>
+                            <p className="text-[10px] text-muted-foreground">staff</p>
                           </td>
                         );
                       })}

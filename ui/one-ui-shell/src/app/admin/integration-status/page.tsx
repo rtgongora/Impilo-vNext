@@ -43,13 +43,13 @@ export default function IntegrationStatusPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Globe className="w-5 h-5 text-teal-600" />
-              <h2 className="text-lg font-semibold text-gray-900">Integration hub</h2>
+              <h2 className="text-lg font-semibold text-foreground">Integration hub</h2>
             </div>
-            <span className="text-xs text-gray-400">GET /internal/v1/integration-hub/*</span>
+            <span className="text-xs text-muted-foreground">GET /internal/v1/integration-hub/*</span>
           </div>
 
-          <div className="rounded-lg border border-impilo-200 bg-impilo-50/90 p-4 flex gap-3">
-            <Info className="w-5 h-5 text-impilo-600 shrink-0 mt-0.5" />
+          <div className="rounded-lg border border-primary/25 bg-primary-soft/90 p-4 flex gap-3">
+            <Info className="w-5 h-5 text-primary shrink-0 mt-0.5" />
             <div className="text-sm text-impilo-800">
               <p className="font-medium">Live data from Experience BFF</p>
               <p className="mt-2 text-xs leading-relaxed text-impilo-800/90">
@@ -62,42 +62,42 @@ export default function IntegrationStatusPage() {
           </div>
 
           <div className="grid grid-cols-3 gap-4">
-            <div className="bg-white rounded-lg p-4 flex items-center gap-3 border border-gray-200">
+            <div className="bg-card rounded-lg p-4 flex items-center gap-3 border border-border">
               <Plug className="w-8 h-8 text-teal-600" />
               <div>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-2xl font-bold text-foreground">
                   {routesQ.isLoading ? "…" : String(routeRows.length || (routeRaw ? "1" : "0"))}
                 </p>
-                <p className="text-xs text-gray-500">Hub routes (parsed rows)</p>
+                <p className="text-xs text-muted-foreground">Hub routes (parsed rows)</p>
               </div>
             </div>
-            <div className="bg-white rounded-lg p-4 flex items-center gap-3 border border-gray-200">
+            <div className="bg-card rounded-lg p-4 flex items-center gap-3 border border-border">
               <Plug className="w-8 h-8 text-amber-600" />
               <div>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-2xl font-bold text-foreground">
                   {deadQ.isLoading ? "…" : deadPayload && typeof deadPayload === "object" && "totalElements" in deadPayload
                     ? String((deadPayload as { totalElements?: number }).totalElements ?? "—")
                     : "—"}
                 </p>
-                <p className="text-xs text-gray-500">Dead letters (page 0)</p>
+                <p className="text-xs text-muted-foreground">Dead letters (page 0)</p>
               </div>
             </div>
-            <div className="bg-white rounded-lg p-4 flex items-center gap-3 border border-gray-200">
-              <Plug className="w-8 h-8 text-gray-400" />
+            <div className="bg-card rounded-lg p-4 flex items-center gap-3 border border-border">
+              <Plug className="w-8 h-8 text-muted-foreground" />
               <div>
-                <p className="text-2xl font-bold text-gray-400">—</p>
-                <p className="text-xs text-gray-500">External probes (not tracked)</p>
+                <p className="text-2xl font-bold text-muted-foreground">—</p>
+                <p className="text-xs text-muted-foreground">External probes (not tracked)</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="bg-card rounded-lg border border-border overflow-hidden">
             <div className="px-4 py-3 border-b flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-gray-900">Route registry</h3>
-              {routesQ.isFetching && <Loader2 className="h-4 w-4 animate-spin text-gray-400" aria-hidden />}
+              <h3 className="text-sm font-semibold text-foreground">Route registry</h3>
+              {routesQ.isFetching && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" aria-hidden />}
             </div>
             {routesQ.isError && (
-              <div className="px-4 py-6 text-sm text-red-700">
+              <div className="px-4 py-6 text-sm text-danger">
                 Could not load routes. Confirm you have an admin-equivalent role and the integration-hub service is
                 reachable.
               </div>
@@ -112,24 +112,24 @@ export default function IntegrationStatusPage() {
               </div>
             )}
             {!routesQ.isError && routeRows.length === 0 && routeRaw && (
-              <pre className="p-4 text-xs overflow-x-auto bg-gray-50 text-gray-800 max-h-96">{routeRaw}</pre>
+              <pre className="p-4 text-xs overflow-x-auto bg-background text-foreground max-h-96">{routeRaw}</pre>
             )}
             {!routesQ.isError && routeRows.length === 0 && !routeRaw && !routesQ.isLoading && (
-              <div className="px-4 py-12 text-center text-sm text-gray-500">No routes returned (empty registry).</div>
+              <div className="px-4 py-12 text-center text-sm text-muted-foreground">No routes returned (empty registry).</div>
             )}
             {routesQ.isLoading && (
-              <div className="px-4 py-12 flex justify-center text-gray-500 text-sm">
+              <div className="px-4 py-12 flex justify-center text-muted-foreground text-sm">
                 <Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading routes…
               </div>
             )}
           </div>
 
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="bg-card rounded-lg border border-border overflow-hidden">
             <div className="px-4 py-3 border-b">
-              <h3 className="text-sm font-semibold text-gray-900">Dead letters (preview)</h3>
+              <h3 className="text-sm font-semibold text-foreground">Dead letters (preview)</h3>
             </div>
             {deadQ.isError && (
-              <div className="px-4 py-6 text-sm text-amber-800">Dead letter list unavailable (hub down or forbidden).</div>
+              <div className="px-4 py-6 text-sm text-warning-foreground">Dead letter list unavailable (hub down or forbidden).</div>
             )}
             {!deadQ.isError && (
               <div className="p-4">

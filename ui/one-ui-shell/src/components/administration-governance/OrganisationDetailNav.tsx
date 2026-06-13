@@ -23,7 +23,7 @@ export function OrganisationDetailNav() {
   const base = `/work/administration-governance/organisations/${orgId}`;
 
   return (
-    <nav className="flex flex-wrap gap-2 border-b border-slate-200 pb-3" aria-label="Organisation sections">
+    <nav className="flex flex-wrap gap-2 border-b border-border pb-3" aria-label="Organisation sections">
       {ORG_TABS.map((tab) => {
         const href = `${base}${tab.suffix}`;
         const active = tab.suffix === "" ? pathname === base : pathname.startsWith(href);
@@ -33,8 +33,8 @@ export function OrganisationDetailNav() {
             href={href}
             className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
               active
-                ? "bg-indigo-700 text-white"
-                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                ? "bg-primary text-white"
+                : "bg-neutral-100 text-foreground hover:bg-primary-soft"
             }`}
           >
             {tab.label}

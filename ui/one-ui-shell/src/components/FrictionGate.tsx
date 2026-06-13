@@ -54,7 +54,7 @@ export function FrictionGate({ level, onConfirm, actionDescription, children }: 
 
       {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-6 shadow-xl">
+          <div className="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-xl">
             <div className="flex items-center gap-3 mb-4">
               {level === "MAXIMUM" ? (
                 <ShieldAlert className="h-6 w-6 text-red-500" />
@@ -62,20 +62,20 @@ export function FrictionGate({ level, onConfirm, actionDescription, children }: 
                 <AlertTriangle className="h-6 w-6 text-amber-500" />
               )}
               <div>
-                <h3 className="font-semibold text-gray-900">
+                <h3 className="font-semibold text-foreground">
                   {level === "MAXIMUM" ? "Maximum Assurance Required" : "Confirm Action"}
                 </h3>
-                <p className="text-xs text-gray-500">{hints.label}</p>
+                <p className="text-xs text-muted-foreground">{hints.label}</p>
               </div>
             </div>
 
-            <p className="text-sm text-gray-700 mb-4">
+            <p className="text-sm text-foreground mb-4">
               {actionDescription ?? "This action requires elevated trust verification. Please confirm to proceed."}
             </p>
 
             {hints.requirePin && (
               <div className="mb-4">
-                <label className="block text-xs font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-medium text-foreground mb-1">
                   Enter PIN or password to confirm
                 </label>
                 <input
@@ -83,7 +83,7 @@ export function FrictionGate({ level, onConfirm, actionDescription, children }: 
                   value={pin}
                   onChange={(e) => setPin(e.target.value)}
                   placeholder="PIN"
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-impilo-400 focus:ring-1 focus:ring-impilo-200 focus:outline-none"
+                  className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-impilo-400 focus:ring-1 focus:ring-impilo-200 focus:outline-none"
                   autoFocus
                 />
               </div>
@@ -92,7 +92,7 @@ export function FrictionGate({ level, onConfirm, actionDescription, children }: 
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => { setShowConfirm(false); setPin(""); }}
-                className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="px-4 py-2 text-sm font-medium text-foreground border border-border rounded-lg hover:bg-background"
               >
                 Cancel
               </button>

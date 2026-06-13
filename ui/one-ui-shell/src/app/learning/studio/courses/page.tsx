@@ -28,17 +28,17 @@ export default function FundoStudioCoursesPage() {
           New course
         </Link>
       </div>
-      <div className="mb-3 grid gap-2 rounded border border-gray-200 bg-white p-3 md:grid-cols-2">
+      <div className="mb-3 grid gap-2 rounded border border-border bg-card p-3 md:grid-cols-2">
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search courses, topics, descriptions..."
-          className="rounded border border-gray-300 px-3 py-2 text-sm"
+          className="rounded border border-border px-3 py-2 text-sm"
         />
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as "ALL" | "DRAFT" | "PUBLISHED" | "ARCHIVED")}
-          className="rounded border border-gray-300 px-3 py-2 text-sm"
+          className="rounded border border-border px-3 py-2 text-sm"
         >
           <option value="ALL">All statuses</option>
           <option value="DRAFT">Draft</option>
@@ -46,15 +46,15 @@ export default function FundoStudioCoursesPage() {
           <option value="ARCHIVED">Archived</option>
         </select>
       </div>
-      {isLoading ? <p className="text-sm text-gray-600">Loading courses...</p> : null}
+      {isLoading ? <p className="text-sm text-muted-foreground">Loading courses...</p> : null}
       <ul className="space-y-3">
         {filtered.map((course) => (
-          <li key={course.id} className="rounded-lg border border-gray-200 bg-white p-4">
-            <p className="font-semibold text-gray-900">{course.title}</p>
-            <p className="text-xs text-gray-500">{course.status} · {course.category ?? "GENERAL"} · {course.level ?? "FOUNDATION"}</p>
+          <li key={course.id} className="rounded-lg border border-border bg-card p-4">
+            <p className="font-semibold text-foreground">{course.title}</p>
+            <p className="text-xs text-muted-foreground">{course.status} · {course.category ?? "GENERAL"} · {course.level ?? "FOUNDATION"}</p>
             <div className="mt-2 flex flex-wrap gap-2 text-xs">
-              <Link href={`/learning/studio/courses/${course.id}`} className="rounded border border-gray-300 px-2 py-1 text-gray-700">Details</Link>
-              <Link href={`/learning/studio/courses/${course.id}/builder`} className="rounded border border-gray-300 px-2 py-1 text-gray-700">Builder</Link>
+              <Link href={`/learning/studio/courses/${course.id}`} className="rounded border border-border px-2 py-1 text-foreground">Details</Link>
+              <Link href={`/learning/studio/courses/${course.id}/builder`} className="rounded border border-border px-2 py-1 text-foreground">Builder</Link>
             </div>
           </li>
         ))}

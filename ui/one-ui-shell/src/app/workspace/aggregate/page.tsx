@@ -23,8 +23,8 @@ export default function AggregateWorkspacePage() {
         title="Aggregate oversight workspace"
         subtitle="KPIs, counts, and regional summaries aligned to your current data visibility. Person-level charts stay hidden when your session is aggregate-only or de-identified."
       >
-        <div className="mb-6 flex flex-wrap items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
-          <Shield className="h-4 w-4 text-impilo-500" aria-hidden />
+        <div className="mb-6 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm text-foreground shadow-sm dark:border-border dark:bg-neutral-900 dark:text-foreground">
+          <Shield className="h-4 w-4 text-primary" aria-hidden />
           {isLoading && <span>Loading visibility profile…</span>}
           {isError && <span>Could not load visibility profile from the BFF.</span>}
           {!isLoading && !isError && data && (
@@ -42,36 +42,36 @@ export default function AggregateWorkspacePage() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
-          <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+          <div className="rounded-lg border border-border bg-card p-4 shadow-sm dark:border-border dark:bg-neutral-900">
             <LayoutDashboard className="mb-2 h-8 w-8 text-purple-500" />
-            <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">Coverage KPIs</h2>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+            <h2 className="text-base font-semibold text-foreground dark:text-foreground">Coverage KPIs</h2>
+            <p className="mt-1 text-sm text-muted-foreground dark:text-muted-foreground">
               Facility and programme coverage as percentages — no named patient lists in this view.
             </p>
           </div>
-          <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-            <BarChart3 className="mb-2 h-8 w-8 text-impilo-500" />
-            <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">Trends</h2>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+          <div className="rounded-lg border border-border bg-card p-4 shadow-sm dark:border-border dark:bg-neutral-900">
+            <BarChart3 className="mb-2 h-8 w-8 text-primary" />
+            <h2 className="text-base font-semibold text-foreground dark:text-foreground">Trends</h2>
+            <p className="mt-1 text-sm text-muted-foreground dark:text-muted-foreground">
               Weekly encounter volumes and stock-out signals at district or provincial grain.
             </p>
           </div>
-          <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-            <FileSpreadsheet className="mb-2 h-8 w-8 text-emerald-600" />
-            <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">Redacted exports</h2>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              When export policy is <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">REDACTED</code>, the
+          <div className="rounded-lg border border-border bg-card p-4 shadow-sm dark:border-border dark:bg-neutral-900">
+            <FileSpreadsheet className="mb-2 h-8 w-8 text-primary" />
+            <h2 className="text-base font-semibold text-foreground dark:text-foreground">Redacted exports</h2>
+            <p className="mt-1 text-sm text-muted-foreground dark:text-muted-foreground">
+              When export policy is <code className="rounded bg-neutral-100 px-1 dark:bg-neutral-900">REDACTED</code>, the
               reporting service masks sensitive columns while still delivering analytics extracts.
             </p>
           </div>
         </div>
 
         <div className="mt-8 flex flex-wrap gap-3 text-sm">
-          <Link href="/reports" className="text-impilo-600 underline-offset-2 hover:underline dark:text-impilo-400">
+          <Link href="/reports" className="text-primary underline-offset-2 hover:underline dark:text-impilo-400">
             Go to Reports hub
           </Link>
           {!aggregate ? (
-            <span className="text-slate-500 dark:text-slate-400">
+            <span className="text-muted-foreground dark:text-muted-foreground">
               Your session is not aggregate-only; clinical and operational apps remain available from the main menu.
             </span>
           ) : null}

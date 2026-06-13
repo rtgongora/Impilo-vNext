@@ -42,7 +42,7 @@ export function InvitationLifecycleActions({
         </button>
       ) : null}
       {canRevoke ? (
-        <button type="button" className="text-xs underline text-rose-700" disabled={busy || disabled} onClick={() => void run(onRevoke)}>
+        <button type="button" className="text-xs underline text-danger" disabled={busy || disabled} onClick={() => void run(onRevoke)}>
           Revoke invitation
         </button>
       ) : null}
@@ -52,7 +52,7 @@ export function InvitationLifecycleActions({
         </button>
       ) : null}
       {invitation.status === "revoked" ? (
-        <span className="text-xs text-rose-700">Revoked invitations cannot be used for activation.</span>
+        <span className="text-xs text-danger">Revoked invitations cannot be used for activation.</span>
       ) : null}
     </div>
   );

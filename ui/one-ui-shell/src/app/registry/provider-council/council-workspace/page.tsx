@@ -154,7 +154,7 @@ function CouncilApplicationActions({
             data-testid={`council-review-reject-${appId}`}
             disabled={busy}
             onClick={() => runReview("REJECTED")}
-            className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-2.5 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+            className="inline-flex items-center gap-1 rounded-lg border border-danger/28 px-2.5 py-1 text-xs font-medium text-danger hover:bg-danger-soft disabled:opacity-50"
           >
             <XCircle className="h-3.5 w-3.5" />
             Reject
@@ -164,7 +164,7 @@ function CouncilApplicationActions({
             data-testid={`council-review-needs-info-${appId}`}
             disabled={busy}
             onClick={() => runReview("NEEDS_INFO")}
-            className="inline-flex items-center gap-1 rounded-lg border border-amber-200 px-2.5 py-1 text-xs font-medium text-amber-800 hover:bg-amber-50 disabled:opacity-50"
+            className="inline-flex items-center gap-1 rounded-lg border border-warning/35 px-2.5 py-1 text-xs font-medium text-warning-foreground hover:bg-warning-soft disabled:opacity-50"
           >
             <HelpCircle className="h-3.5 w-3.5" />
             Needs info
@@ -211,17 +211,17 @@ export default function CouncilWorkspacePage() {
         <div className="mb-4">
           <Link
             href="/registry-admin"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to registry administration
           </Link>
         </div>
 
-        <p className="text-sm text-gray-600 mb-4">
-          Use <code className="bg-gray-100 px-1 rounded">?councilId=&lt;id&gt;</code> and optional{" "}
-          <code className="bg-gray-100 px-1 rounded">workflowStates=</code> (comma-separated). Add{" "}
-          <code className="bg-gray-100 px-1 rounded">providerPublicId=</code> to surface learning-service
+        <p className="text-sm text-muted-foreground mb-4">
+          Use <code className="bg-neutral-100 px-1 rounded">?councilId=&lt;id&gt;</code> and optional{" "}
+          <code className="bg-neutral-100 px-1 rounded">workflowStates=</code> (comma-separated). Add{" "}
+          <code className="bg-neutral-100 px-1 rounded">providerPublicId=</code> to surface learning-service
           completion evidence for a provider.
         </p>
 
@@ -230,18 +230,18 @@ export default function CouncilWorkspacePage() {
         </div>
 
         {!councilId ? (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          <div className="rounded-lg border border-warning/35 bg-warning-soft p-4 text-sm text-warning-foreground">
             Add <strong>councilId</strong> to load the council queue from Varapi.
           </div>
         ) : null}
 
         {councilId ? (
           <section
-            className="rounded-lg border border-gray-200 bg-white p-4"
+            className="rounded-lg border border-border bg-card p-4"
             data-testid="council-workspace-queue"
           >
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-sm font-semibold text-gray-900">Council application queue</h2>
+              <h2 className="text-sm font-semibold text-foreground">Council application queue</h2>
               <div className="flex flex-wrap gap-2">
                 {QUEUE_TABS.map((tab) => (
                   <button
@@ -252,7 +252,7 @@ export default function CouncilWorkspacePage() {
                     className={`rounded-full px-3 py-1 text-xs font-medium ${
                       activeTab === tab.id
                         ? "bg-blue-600 text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        : "bg-neutral-100 text-foreground hover:bg-neutral-100"
                     }`}
                   >
                     {tab.label} ({tabCounts[tab.id] ?? 0})
@@ -262,11 +262,11 @@ export default function CouncilWorkspacePage() {
             </div>
 
             {isLoading ? (
-              <div className="flex items-center gap-2 text-gray-500 text-sm">
+              <div className="flex items-center gap-2 text-muted-foreground text-sm">
                 <Loader2 className="w-4 h-4 animate-spin" /> Loading…
               </div>
             ) : filtered.length === 0 ? (
-              <p className="text-sm text-gray-500">No applications in the {activeTab} queue.</p>
+              <p className="text-sm text-muted-foreground">No applications in the {activeTab} queue.</p>
             ) : (
               <ul className="divide-y divide-gray-100">
                 {filtered.map((app) => {
@@ -278,10 +278,10 @@ export default function CouncilWorkspacePage() {
                       data-testid={appId ? `council-application-${appId}` : undefined}
                     >
                       <div>
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-sm font-medium text-foreground">
                           Application #{appId ?? "—"} · {String(app.applicationType ?? "REGISTRATION")}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-muted-foreground">
                           Workflow: {String(app.workflowState ?? "—")} · Review:{" "}
                           {String(app.reviewState ?? "pending")} · Fee: {String(app.feeState ?? "—")}
                         </p>

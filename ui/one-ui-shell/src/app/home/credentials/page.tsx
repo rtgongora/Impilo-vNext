@@ -30,9 +30,9 @@ function useCouncilAffiliations(providerId: string | undefined) {
 
 const LICENSE_STATUS_STYLES: Record<string, { bg: string; text: string; icon: typeof CheckCircle2 }> = {
   ACTIVE: { bg: "bg-green-50 border-green-200", text: "text-green-700", icon: CheckCircle2 },
-  SUSPENDED: { bg: "bg-amber-50 border-amber-200", text: "text-amber-700", icon: AlertTriangle },
-  REVOKED: { bg: "bg-red-50 border-red-200", text: "text-red-700", icon: AlertTriangle },
-  EXPIRED: { bg: "bg-gray-50 border-gray-200", text: "text-gray-700", icon: Clock },
+  SUSPENDED: { bg: "bg-warning-soft border-warning/35", text: "text-warning-foreground", icon: AlertTriangle },
+  REVOKED: { bg: "bg-danger-soft border-danger/28", text: "text-danger", icon: AlertTriangle },
+  EXPIRED: { bg: "bg-background border-border", text: "text-foreground", icon: Clock },
 };
 
 function formatCredentialDate(value: string | null | undefined): string {
@@ -61,7 +61,7 @@ export default function CredentialsPage() {
           <CredentialVerificationWorkflowPanel />
         </div>
         <div className="mb-4">
-          <Link href="/home" className="inline-flex items-center gap-1 text-sm text-gray-500 transition-colors hover:text-gray-700">
+          <Link href="/home" className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground">
             <ArrowLeft className="h-4 w-4" /> Back to Home
           </Link>
         </div>
@@ -73,16 +73,16 @@ export default function CredentialsPage() {
             workflowCode="provider_cpd"
             title="CPD & professional learning"
           />
-          <div className={`rounded-lg border-2 p-6 ${hasActive ? "border-green-200 bg-green-50" : "border-amber-200 bg-amber-50"}`}>
+          <div className={`rounded-lg border-2 p-6 ${hasActive ? "border-green-200 bg-green-50" : "border-warning/35 bg-warning-soft"}`}>
             <div className="mb-4 flex items-center gap-3">
               <div className={`flex h-12 w-12 items-center justify-center rounded-full ${hasActive ? "bg-green-100" : "bg-amber-100"}`}>
                 {hasActive ? <CheckCircle2 className="h-6 w-6 text-green-600" /> : <AlertTriangle className="h-6 w-6 text-amber-600" />}
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 className="text-lg font-semibold text-foreground">
                   {hasActive ? "Professional License Active" : "License Status Requires Attention"}
                 </h2>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   {licenses.length} license{licenses.length !== 1 ? "s" : ""} on record
                   {activeLicenses.length > 0 && ` · ${activeLicenses.length} active`}
                 </p>
@@ -90,9 +90,9 @@ export default function CredentialsPage() {
             </div>
 
             {isLoading ? (
-              <p className="text-sm text-gray-500">Loading license data...</p>
+              <p className="text-sm text-muted-foreground">Loading license data...</p>
             ) : licenses.length === 0 ? (
-              <p className="text-sm text-gray-500">No license records found. Contact your licensing council.</p>
+              <p className="text-sm text-muted-foreground">No license records found. Contact your licensing council.</p>
             ) : (
               <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
                 {licenses.map((lic, idx) => {
@@ -105,11 +105,11 @@ export default function CredentialsPage() {
                           <StatusIcon className={`h-4 w-4 ${style.text}`} />
                           <span className={`text-sm font-semibold ${style.text}`}>{lic.status}</span>
                         </div>
-                        {lic.licenseNumber ? <span className="font-mono text-xs text-gray-500">{lic.licenseNumber}</span> : null}
+                        {lic.licenseNumber ? <span className="font-mono text-xs text-muted-foreground">{lic.licenseNumber}</span> : null}
                       </div>
-                      {lic.issuedBy ? <p className="text-xs text-gray-600">Issued by: {lic.issuedBy}</p> : null}
-                      {lic.cadre ? <p className="text-xs text-gray-600">Cadre: {lic.cadre}</p> : null}
-                      <div className="mt-2 flex gap-4 text-xs text-gray-500">
+                      {lic.issuedBy ? <p className="text-xs text-muted-foreground">Issued by: {lic.issuedBy}</p> : null}
+                      {lic.cadre ? <p className="text-xs text-muted-foreground">Cadre: {lic.cadre}</p> : null}
+                      <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
                         {lic.validFrom ? <span>From: {new Date(lic.validFrom).toLocaleDateString()}</span> : null}
                         {lic.validTo ? <span>To: {new Date(lic.validTo).toLocaleDateString()}</span> : null}
                       </div>
@@ -120,95 +120,95 @@ export default function CredentialsPage() {
             )}
           </div>
 
-          <div className="rounded-lg border border-gray-200 bg-white p-6">
+          <div className="rounded-lg border border-border bg-card p-6">
             <div className="mb-4 flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-impilo-500" />
-              <h3 className="text-base font-semibold text-gray-900">CPD Tracker</h3>
+              <BookOpen className="h-5 w-5 text-primary" />
+              <h3 className="text-base font-semibold text-foreground">CPD Tracker</h3>
             </div>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
                 {cpd?.currentCycle ? (
                   <>
-                    <p className="mb-1 text-xs text-gray-500">
+                    <p className="mb-1 text-xs text-muted-foreground">
                       Current Cycle: {cpd.currentCycle.startDate?.slice(0, 4)}-{cpd.currentCycle.endDate?.slice(0, 4)}
                     </p>
                     <div className="flex items-center gap-3">
                       <div className="flex-1">
-                        <div className="h-3 rounded-full bg-gray-200">
+                        <div className="h-3 rounded-full bg-neutral-100">
                           <div
-                            className="h-3 rounded-full bg-impilo-500 transition-all"
+                            className="h-3 rounded-full bg-primary transition-all"
                             style={{ width: `${Math.min(100, Math.round((cpd.currentCycle.earnedPoints / cpd.currentCycle.requiredPoints) * 100))}%` }}
                           />
                         </div>
                       </div>
-                      <span className="text-sm font-semibold text-gray-900">
+                      <span className="text-sm font-semibold text-foreground">
                         {cpd.currentCycle.earnedPoints}/{cpd.currentCycle.requiredPoints}
                       </span>
                     </div>
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-1 text-xs text-muted-foreground">
                       {Math.max(0, cpd.currentCycle.requiredPoints - cpd.currentCycle.earnedPoints)} points needed
                       {cpd.currentCycle.endDate && ` · Deadline: ${cpd.currentCycle.endDate}`}
                     </p>
                   </>
                 ) : (
-                  <p className="text-xs text-gray-500">No active CPD cycle. Contact your council to start one.</p>
+                  <p className="text-xs text-muted-foreground">No active CPD cycle. Contact your council to start one.</p>
                 )}
               </div>
               <div className="flex gap-3">
-                <button className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-impilo-50 px-4 py-2.5 text-sm font-medium text-impilo-600 transition-colors hover:bg-impilo-100">
+                <button className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary-soft px-4 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-primary-soft">
                   <BookOpen className="h-4 w-4" /> Browse Courses
                 </button>
-                <button className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-amber-50 px-4 py-2.5 text-sm font-medium text-amber-700 transition-colors hover:bg-amber-100">
+                <button className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-warning-soft px-4 py-2.5 text-sm font-medium text-warning-foreground transition-colors hover:bg-amber-100">
                   <Award className="h-4 w-4" /> Log Activity
                 </button>
               </div>
             </div>
           </div>
 
-          <div className="rounded-lg border border-gray-200 bg-white p-6">
+          <div className="rounded-lg border border-border bg-card p-6">
             <div className="mb-4 flex items-center gap-2">
               <BadgeCheck className="h-5 w-5 text-indigo-600" />
-              <h3 className="text-base font-semibold text-gray-900">Digital credential vault</h3>
+              <h3 className="text-base font-semibold text-foreground">Digital credential vault</h3>
             </div>
-            <p className="mb-4 text-sm text-gray-500">
+            <p className="mb-4 text-sm text-muted-foreground">
               Citizen-scoped digital credentials now flow through the Experience BFF. Public verification still uses the standalone verifier.
             </p>
 
             {personalCredentialsLoading ? (
-              <p className="text-sm text-gray-500">Loading digital credentials...</p>
+              <p className="text-sm text-muted-foreground">Loading digital credentials...</p>
             ) : personalCredentialsError ? (
-              <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+              <div className="rounded-lg border border-danger/28 bg-danger-soft p-4 text-sm text-red-800">
                 We could not load your digital credential vault right now.
               </div>
             ) : personalCredentials.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-6 text-sm text-gray-500">
+              <div className="rounded-lg border border-dashed border-border bg-background p-6 text-sm text-muted-foreground">
                 No digital credentials were returned for your signed-in identity.
               </div>
             ) : (
               <div className="grid gap-4 md:grid-cols-2">
                 {personalCredentials.map((credential) => (
-                  <div key={credential.credentialId} className="rounded-lg border border-gray-200 p-4">
+                  <div key={credential.credentialId} className="rounded-lg border border-border p-4">
                     <div className="mb-3 flex items-start justify-between gap-3">
                       <div>
-                        <p className="text-sm font-semibold text-gray-900">{credential.title}</p>
-                        <p className="text-xs text-gray-500">{credential.credentialType}</p>
+                        <p className="text-sm font-semibold text-foreground">{credential.title}</p>
+                        <p className="text-xs text-muted-foreground">{credential.credentialType}</p>
                       </div>
-                      <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${credential.status === "ACTIVE" ? "bg-green-100 text-green-700" : credential.status === "EXPIRED" ? "bg-amber-100 text-amber-700" : "bg-gray-100 text-gray-600"}`}>
+                      <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${credential.status === "ACTIVE" ? "bg-green-100 text-green-700" : credential.status === "EXPIRED" ? "bg-amber-100 text-warning-foreground" : "bg-neutral-100 text-muted-foreground"}`}>
                         {credential.status}
                       </span>
                     </div>
-                    <dl className="space-y-1 text-xs text-gray-600">
+                    <dl className="space-y-1 text-xs text-muted-foreground">
                       <div className="flex justify-between gap-3">
                         <dt>Issued by</dt>
-                        <dd className="text-right text-gray-900">{credential.issuedBy || "Unknown issuer"}</dd>
+                        <dd className="text-right text-foreground">{credential.issuedBy || "Unknown issuer"}</dd>
                       </div>
                       <div className="flex justify-between gap-3">
                         <dt>Holder</dt>
-                        <dd className="text-right text-gray-900">{credential.subjectName || "Current user"}</dd>
+                        <dd className="text-right text-foreground">{credential.subjectName || "Current user"}</dd>
                       </div>
                       <div className="flex justify-between gap-3">
                         <dt>Valid</dt>
-                        <dd className="text-right text-gray-900">
+                        <dd className="text-right text-foreground">
                           {formatCredentialDate(credential.validFrom)} - {formatCredentialDate(credential.validTo)}
                         </dd>
                       </div>
@@ -218,7 +218,7 @@ export default function CredentialsPage() {
                         href={`${BFF_BASE_URL}/internal/v1/credentials/${credential.credentialId}/pdf`}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-impilo-500 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-impilo-600"
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-primary-hover"
                       >
                         <Download className="h-4 w-4" /> Download PDF
                       </a>
@@ -227,7 +227,7 @@ export default function CredentialsPage() {
                           href={credential.verificationUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-gray-100 px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-200"
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-100 px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-neutral-100"
                         >
                           <Shield className="h-4 w-4" /> Verify
                         </a>
@@ -239,10 +239,10 @@ export default function CredentialsPage() {
             )}
           </div>
 
-          <div className="rounded-lg border border-gray-200 bg-white p-6">
+          <div className="rounded-lg border border-border bg-card p-6">
             <div className="mb-4 flex items-center gap-2">
               <Shield className="h-5 w-5 text-purple-600" />
-              <h3 className="text-base font-semibold text-gray-900">Certifications & Specialist Credentials</h3>
+              <h3 className="text-base font-semibold text-foreground">Certifications & Specialist Credentials</h3>
             </div>
             {(() => {
               const certs = licenses.filter((l) => {
@@ -252,7 +252,7 @@ export default function CredentialsPage() {
               const rows = certs.length === 0 ? licenses : certs;
 
               return rows.length === 0 ? (
-                <p className="py-3 text-sm text-gray-400">No certifications on record.</p>
+                <p className="py-3 text-sm text-muted-foreground">No certifications on record.</p>
               ) : (
                 <div className="divide-y divide-gray-100">
                   {rows.map((lic, idx) => {
@@ -260,12 +260,12 @@ export default function CredentialsPage() {
                     return (
                       <div key={idx} className="flex items-center justify-between py-3">
                         <div>
-                          <p className="text-sm font-medium text-gray-900">
+                          <p className="text-sm font-medium text-foreground">
                             {lic.cadre ?? lic.issuedBy ?? "License"} - {((lic as Record<string, unknown>).licenseType as string) ?? "PRACTICE"}
                           </p>
-                          <p className="text-xs text-gray-500">{lic.issuedBy ?? "Licensing Council"}</p>
+                          <p className="text-xs text-muted-foreground">{lic.issuedBy ?? "Licensing Council"}</p>
                         </div>
-                        <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${lic.status === "ACTIVE" && !isExpiring ? "bg-green-100 text-green-700" : isExpiring ? "bg-amber-100 text-amber-700" : "bg-gray-100 text-gray-600"}`}>
+                        <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${lic.status === "ACTIVE" && !isExpiring ? "bg-green-100 text-green-700" : isExpiring ? "bg-amber-100 text-warning-foreground" : "bg-neutral-100 text-muted-foreground"}`}>
                           {lic.status === "ACTIVE" && isExpiring ? "Expiring Soon" : lic.status}
                         </span>
                       </div>

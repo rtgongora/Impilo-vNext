@@ -60,7 +60,7 @@ export default function FundoStudioAnalyticsPage() {
             key={role}
             type="button"
             onClick={() => setRoleView(role)}
-            className={`rounded border px-3 py-1 text-xs ${roleView === role ? "border-teal-600 bg-teal-50 text-teal-700" : "border-gray-300 text-gray-700"}`}
+            className={`rounded border px-3 py-1 text-xs ${roleView === role ? "border-teal-600 bg-teal-50 text-teal-700" : "border-border text-foreground"}`}
           >
             {role}
           </button>
@@ -68,20 +68,20 @@ export default function FundoStudioAnalyticsPage() {
       </div>
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
         {kpis.map(([label, value]) => (
-          <div key={label} className="rounded border border-gray-200 bg-white p-4">
-            <p className="text-xs text-gray-500">{label}</p>
-            <p className="mt-1 text-2xl font-semibold text-gray-900">{value}</p>
+          <div key={label} className="rounded border border-border bg-card p-4">
+            <p className="text-xs text-muted-foreground">{label}</p>
+            <p className="mt-1 text-2xl font-semibold text-foreground">{value}</p>
           </div>
         ))}
       </div>
       <div className="mt-4 grid gap-3 md:grid-cols-2">
         {roleCards.map((metric) => (
-          <div key={metric.label} className="rounded border border-gray-200 bg-white p-4">
+          <div key={metric.label} className="rounded border border-border bg-card p-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-gray-800">{metric.label}</p>
-              <p className="text-sm font-semibold text-gray-900">{metric.value}</p>
+              <p className="text-sm font-medium text-foreground">{metric.label}</p>
+              <p className="text-sm font-semibold text-foreground">{metric.value}</p>
             </div>
-            <div className="mt-2 h-2 rounded bg-gray-100">
+            <div className="mt-2 h-2 rounded bg-neutral-100">
               <div className="h-2 rounded bg-teal-500" style={{ width: `${metric.pct}%` }} />
             </div>
           </div>

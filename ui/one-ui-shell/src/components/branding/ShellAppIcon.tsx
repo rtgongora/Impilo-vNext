@@ -32,7 +32,7 @@ export function ShellAppIcon({
   if (slug) {
     return (
       <span
-        className={`flex shrink-0 items-center justify-center rounded-md bg-white p-0.5 dark:bg-slate-900 ${
+        className={`flex shrink-0 items-center justify-center rounded-md bg-card p-0.5 dark:bg-neutral-900 ${
           size === "card" ? "h-9 w-9" : "h-6 w-6"
         } ${className ?? ""}`}
       >
@@ -43,13 +43,13 @@ export function ShellAppIcon({
 
   return (
     <span
-      className={`flex shrink-0 items-center justify-center rounded-md bg-slate-100 dark:bg-slate-800 ${
+      className={`flex shrink-0 items-center justify-center rounded-md bg-neutral-100 dark:bg-neutral-900 ${
         size === "card" ? "h-9 w-9" : "h-6 w-6"
       } ${className ?? ""}`}
     >
       <ShellIcon
         name={icon}
-        className={`text-slate-700 dark:text-slate-200 ${size === "card" ? "h-5 w-5" : "h-4 w-4"}`}
+        className={`text-foreground dark:text-foreground ${size === "card" ? "h-5 w-5" : "h-4 w-4"}`}
       />
     </span>
   );

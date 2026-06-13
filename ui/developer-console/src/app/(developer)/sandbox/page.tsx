@@ -162,7 +162,7 @@ export default function SandboxPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Sample payloads */}
-        <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6">
+        <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6">
           <h2 className="text-lg font-semibold text-neutral-900 mb-4">Sample Payloads</h2>
           <div className="space-y-2 mb-4">
             {SAMPLE_PAYLOADS.map((p, i) => (
@@ -191,7 +191,7 @@ export default function SandboxPage() {
 
         {/* Client sandbox info */}
         <div className="space-y-6">
-          <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6">
+          <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6">
             <h2 className="text-lg font-semibold text-neutral-900 mb-4">Client Keys</h2>
             {clientKeys.length === 0 ? (
               <p className="text-sm text-neutral-500 text-center py-4">No keys issued</p>
@@ -210,7 +210,7 @@ export default function SandboxPage() {
             )}
           </div>
 
-          <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6">
+          <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6">
             <h2 className="text-lg font-semibold text-neutral-900 mb-4">Certification History</h2>
             {certHistory.length === 0 ? (
               <p className="text-sm text-neutral-500 text-center py-4">No certification runs</p>

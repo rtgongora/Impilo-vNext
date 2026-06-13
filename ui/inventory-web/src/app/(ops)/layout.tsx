@@ -36,10 +36,10 @@ export default function OpsLayout({
   return (
     <div className="min-h-screen flex">
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-neutral-200 flex flex-col">
+      <aside className="w-64 bg-card border-r border-neutral-200 flex flex-col">
         <div className="px-5 py-5 border-b border-neutral-200">
           <Link href="/dashboard" className="block">
-            <h1 className="text-lg font-semibold text-amber-700 tracking-tight">
+            <h1 className="text-lg font-semibold text-warning-foreground tracking-tight">
               Inventory
             </h1>
             <p className="text-xs text-neutral-500 mt-0.5">
@@ -67,7 +67,7 @@ export default function OpsLayout({
                         href={href}
                         className={`block px-2 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                           isActive
-                            ? "bg-amber-50 text-amber-700"
+                            ? "bg-warning-soft text-warning-foreground"
                             : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100"
                         }`}
                         aria-current={isActive ? "page" : undefined}

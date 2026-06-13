@@ -56,21 +56,21 @@ export default function MyAppointmentsPage() {
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <Link
             href="/home"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" /> Back to Home
           </Link>
           <div className="flex gap-2">
             <Link
               href="/home/bookings"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-background"
             >
               <CalendarClock className="w-4 h-4" />
               My Bookings
             </Link>
             <Link
               href="/home/bookings/new"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white hover:bg-impilo-600 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover transition-colors"
             >
               <Plus className="w-4 h-4" />
               Book a service
@@ -78,7 +78,7 @@ export default function MyAppointmentsPage() {
           </div>
         </div>
 
-        <div className="mb-4 rounded-lg border border-impilo-100 bg-impilo-50 px-4 py-3 text-xs text-impilo-800">
+        <div className="mb-4 rounded-lg border border-primary/20 bg-primary-soft px-4 py-3 text-xs text-impilo-800">
           Booking requests (pending consent, payment, or approval) are listed on{" "}
           <Link href="/home/bookings" className="font-medium underline">
             My Bookings
@@ -87,25 +87,25 @@ export default function MyAppointmentsPage() {
         </div>
 
         {error ? (
-          <div className="rounded-lg border border-red-200 bg-red-50 p-12 text-center">
+          <div className="rounded-lg border border-danger/28 bg-danger-soft p-12 text-center">
             <AlertCircle className="mx-auto mb-3 h-10 w-10 text-red-300" />
-            <p className="text-sm text-red-700">Failed to load your appointments.</p>
+            <p className="text-sm text-danger">Failed to load your appointments.</p>
           </div>
         ) : isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading appointments…</span>
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading appointments…</span>
           </div>
         ) : upcoming.length === 0 ? (
-          <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
-            <Calendar className="mx-auto mb-3 h-10 w-10 text-gray-300" />
-            <p className="text-sm text-gray-500">No confirmed appointments yet.</p>
-            <p className="mt-1 text-xs text-gray-400">
+          <div className="rounded-lg border border-border bg-card p-12 text-center">
+            <Calendar className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">No confirmed appointments yet.</p>
+            <p className="mt-1 text-xs text-muted-foreground">
               Book a service to create a booking request — appointments appear here once confirmed.
             </p>
             <Link
               href="/home/bookings/new"
-              className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white hover:bg-impilo-600"
+              className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
             >
               <Plus className="w-4 h-4" /> Book a service
             </Link>
@@ -115,18 +115,18 @@ export default function MyAppointmentsPage() {
             {upcoming.map((appt) => {
               const statusStyle =
                 APPOINTMENT_STATUS_STYLES[appt.status.toUpperCase()] ??
-                "bg-gray-100 text-gray-600";
+                "bg-neutral-100 text-muted-foreground";
               const cancellable = ["SCHEDULED", "CONFIRMED", "REMINDED"].includes(
                 appt.status.toUpperCase(),
               );
               return (
-                <div key={appt.id} className="rounded-lg border border-gray-200 bg-white p-5">
+                <div key={appt.id} className="rounded-lg border border-border bg-card p-5">
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
                         <Link
                           href={`/home/appointments/${appt.id}`}
-                          className="text-sm font-semibold text-gray-900 hover:text-impilo-600"
+                          className="text-sm font-semibold text-foreground hover:text-primary"
                         >
                           {appt.appointmentType.replace(/_/g, " ")}
                         </Link>
@@ -134,18 +134,18 @@ export default function MyAppointmentsPage() {
                           {appt.status.replace(/_/g, " ")}
                         </span>
                       </div>
-                      <p className="mt-1 flex items-center gap-1 text-xs text-gray-600">
+                      <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
                         <Clock className="h-3 w-3" />
                         {formatWhen(appt.startTime)}
                       </p>
                       {appt.facilityName && (
-                        <p className="mt-0.5 flex items-center gap-1 text-xs text-gray-500">
+                        <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
                           <Building2 className="h-3 w-3" />
                           {appt.facilityName}
                         </p>
                       )}
                       {appt.reason && (
-                        <p className="mt-1 text-xs text-gray-500">{appt.reason}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">{appt.reason}</p>
                       )}
                     </div>
                     {cancellable && (
@@ -156,7 +156,7 @@ export default function MyAppointmentsPage() {
                           void refetch();
                         }}
                         disabled={cancelAppointment.isPending}
-                        className="inline-flex items-center gap-1 rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-50"
+                        className="inline-flex items-center gap-1 rounded-lg border border-danger/28 px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-danger-soft disabled:opacity-50"
                       >
                         <XCircle className="h-3 w-3" />
                         Cancel

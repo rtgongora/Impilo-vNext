@@ -118,7 +118,7 @@ export default function KioskPage() {
             </p>
           </div>
 
-          <div className="bg-white rounded-[2rem] border-2 border-[color:var(--border-soft)] p-8 shadow-impilo-floating">
+          <div className="bg-card rounded-[2rem] border-2 border-[color:var(--border-soft)] p-8 shadow-impilo-floating">
             <p className="text-base text-[color:var(--text-secondary)] mb-6">
               Before checking in, please acknowledge the Impilo Privacy Policy
               and Terms of Use. Your information is protected under privacy-by-design
@@ -182,7 +182,7 @@ export default function KioskPage() {
         </div>
 
         {!facility ? (
-          <div className="bg-white rounded-3xl border border-[color:var(--border-soft)] p-8 text-center shadow-impilo-card">
+          <div className="bg-card rounded-3xl border border-[color:var(--border-soft)] p-8 text-center shadow-impilo-card">
             <AlertCircle className="w-10 h-10 text-amber-500 mx-auto mb-3" />
             <p className="text-[color:var(--text-secondary)]">Kiosk not configured. Please set up facility context.</p>
           </div>
@@ -217,7 +217,7 @@ export default function KioskPage() {
                   <button key={patient.id}
                     onClick={() => handleCheckIn(patient.id, patient.attributes.displayName ?? patient.attributes.givenName ?? "Patient")}
                     disabled={checkIn.isPending}
-                    className="w-full text-left bg-white rounded-3xl border-2 border-[color:var(--border-soft)] p-5 hover:border-[color:var(--primary-muted)] hover:shadow-impilo-card transition-all">
+                    className="w-full text-left bg-card rounded-3xl border-2 border-[color:var(--border-soft)] p-5 hover:border-[color:var(--primary-muted)] hover:shadow-impilo-card transition-all">
                     <p className="text-lg font-semibold text-[color:var(--text-primary)]">
                       {patient.attributes.displayName ?? `${patient.attributes.givenName} ${patient.attributes.familyName}`}
                     </p>
@@ -230,7 +230,7 @@ export default function KioskPage() {
             )}
 
             {searchSubmitted && !searching && patients.length === 0 && (
-              <div className="bg-white rounded-3xl border border-[color:var(--border-soft)] p-8 text-center shadow-impilo-card">
+              <div className="bg-card rounded-3xl border border-[color:var(--border-soft)] p-8 text-center shadow-impilo-card">
                 <p className="text-[color:var(--text-secondary)]">No patients found for &quot;{searchSubmitted}&quot;</p>
                 <p className="text-sm text-[color:var(--text-muted)] mt-1">Please check your name or ID and try again.</p>
               </div>

@@ -22,8 +22,8 @@ import { useFacilityStore } from "@/hooks/useFacilityStore";
 
 const URGENCY_LEVELS = [
   { id: "ROUTINE", label: "Routine", color: "bg-green-100 text-green-700" },
-  { id: "URGENT", label: "Urgent", color: "bg-amber-100 text-amber-700" },
-  { id: "EMERGENCY", label: "Emergency", color: "bg-red-100 text-red-700" },
+  { id: "URGENT", label: "Urgent", color: "bg-amber-100 text-warning-foreground" },
+  { id: "EMERGENCY", label: "Emergency", color: "bg-red-100 text-danger" },
 ] as const;
 
 const SPECIALTIES = [
@@ -168,10 +168,10 @@ export default function NewTeleconsultPage() {
       <AppLayout>
         <PageShell title="Referral Submitted">
           <div className="max-w-lg mx-auto text-center py-16">
-            <CheckCircle2 className="w-16 h-16 text-impilo-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Referral Submitted Successfully</h2>
-            <p className="text-sm text-gray-500">Your teleconsultation referral has been submitted and routed. You will be notified when a consultant accepts.</p>
-            <p className="text-xs text-gray-400 mt-4">Redirecting to session workspace...</p>
+            <CheckCircle2 className="w-16 h-16 text-primary mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-foreground mb-2">Referral Submitted Successfully</h2>
+            <p className="text-sm text-muted-foreground">Your teleconsultation referral has been submitted and routed. You will be notified when a consultant accepts.</p>
+            <p className="text-xs text-muted-foreground mt-4">Redirecting to session workspace...</p>
           </div>
         </PageShell>
       </AppLayout>
@@ -195,12 +195,12 @@ export default function NewTeleconsultPage() {
                   key={step.id}
                   onClick={() => setActiveStep(step.id)}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left text-sm transition-colors ${
-                    isActive ? "bg-impilo-50 text-impilo-700 font-medium" : "text-gray-600 hover:bg-gray-50"
+                    isActive ? "bg-primary-soft text-primary-hover font-medium" : "text-muted-foreground hover:bg-background"
                   }`}
                 >
                   <span className="text-base">{step.num}</span>
                   <span className="flex-1 truncate">{step.label}</span>
-                  {isDone && <CheckCircle2 className="w-3.5 h-3.5 text-impilo-500 shrink-0" />}
+                  {isDone && <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0" />}
                   {step.required && !isDone && <span className="text-red-400 text-xs">*</span>}
                 </button>
               );
@@ -210,12 +210,12 @@ export default function NewTeleconsultPage() {
 
             {/* Urgency */}
             <div className="px-3">
-              <p className="text-[10px] font-semibold text-gray-400 uppercase mb-1.5">Urgency</p>
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase mb-1.5">Urgency</p>
               <div className="space-y-1">
                 {URGENCY_LEVELS.map((u) => (
                   <button key={u.id} onClick={() => setUrgency(u.id)}
                     className={`w-full text-left px-2 py-1 text-xs rounded-md border ${
-                      urgency === u.id ? `${u.color} ring-1 ring-offset-1` : "border-gray-200 text-gray-500"
+                      urgency === u.id ? `${u.color} ring-1 ring-offset-1` : "border-border text-muted-foreground"
                     }`}>
                     {u.label}
                   </button>
@@ -224,18 +224,18 @@ export default function NewTeleconsultPage() {
             </div>
 
             <div className="px-3 pt-2">
-              <p className="text-[10px] font-semibold text-gray-400 uppercase mb-1.5">Specialty</p>
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase mb-1.5">Specialty</p>
               <select value={specialty} onChange={(e) => setSpecialty(e.target.value)}
-                className="w-full text-xs border border-gray-300 rounded-md px-2 py-1.5">
+                className="w-full text-xs border border-border rounded-md px-2 py-1.5">
                 <option value="">Select...</option>
                 {SPECIALTIES.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
 
             <div className="px-3 pt-2">
-              <p className="text-[10px] font-semibold text-gray-400 uppercase mb-1.5">Purpose of Use</p>
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase mb-1.5">Purpose of Use</p>
               <select value={purposeOfUse} onChange={(e) => setPurposeOfUse(e.target.value)}
-                className="w-full text-xs border border-gray-300 rounded-md px-2 py-1.5">
+                className="w-full text-xs border border-border rounded-md px-2 py-1.5">
                 <option value="TREATMENT">Treatment</option>
                 <option value="EMERGENCY">Emergency</option>
                 <option value="OPERATIONS">Operations</option>
@@ -248,30 +248,30 @@ export default function NewTeleconsultPage() {
           {/* Main content area */}
           <div className="flex-1 min-w-0">
             {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 flex items-center gap-2">
+              <div className="mb-4 p-3 bg-danger-soft border border-danger/28 rounded-lg text-sm text-danger flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 shrink-0" /> {error}
               </div>
             )}
 
             {/* ① Referral Letter */}
             {activeStep === "letter" && (
-              <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-                <h3 className="text-base font-semibold text-gray-900">① Referral Letter</h3>
-                <p className="text-sm text-gray-500">Describe the clinical situation and what you need from the consultant.</p>
+              <div className="bg-card rounded-xl border border-border p-6 space-y-4">
+                <h3 className="text-base font-semibold text-foreground">① Referral Letter</h3>
+                <p className="text-sm text-muted-foreground">Describe the clinical situation and what you need from the consultant.</p>
                 <label className="block">
-                  <span className="text-sm font-medium text-gray-700">Presenting problems *</span>
+                  <span className="text-sm font-medium text-foreground">Presenting problems *</span>
                   <textarea value={presentingProblems} onChange={(e) => setPresentingProblems(e.target.value)} rows={3}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="One problem per line..." />
+                    className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" placeholder="One problem per line..." />
                 </label>
                 <label className="block">
-                  <span className="text-sm font-medium text-gray-700">Clinical question</span>
+                  <span className="text-sm font-medium text-foreground">Clinical question</span>
                   <input value={clinicalQuestion} onChange={(e) => setClinicalQuestion(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="What specific question do you need answered?" />
+                    className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" placeholder="What specific question do you need answered?" />
                 </label>
                 <label className="block">
-                  <span className="text-sm font-medium text-gray-700">Referral letter / clinical narrative *</span>
+                  <span className="text-sm font-medium text-foreground">Referral letter / clinical narrative *</span>
                   <textarea value={referralLetter} onChange={(e) => setReferralLetter(e.target.value)} rows={8}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                     placeholder="Dear Colleague,&#10;&#10;I am referring this patient for your opinion regarding...&#10;&#10;History: ...&#10;Examination: ...&#10;Investigations: ...&#10;Current management: ...&#10;&#10;I would be grateful for your advice on..." />
                 </label>
               </div>
@@ -279,46 +279,46 @@ export default function NewTeleconsultPage() {
 
             {/* ② Patient Summary */}
             {activeStep === "summary" && (
-              <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-                <h3 className="text-base font-semibold text-gray-900">② Patient Summary</h3>
-                <p className="text-sm text-gray-500">Auto-generated from the patient record. The consultant will see this.</p>
-                <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-600 space-y-2">
+              <div className="bg-card rounded-xl border border-border p-6 space-y-4">
+                <h3 className="text-base font-semibold text-foreground">② Patient Summary</h3>
+                <p className="text-sm text-muted-foreground">Auto-generated from the patient record. The consultant will see this.</p>
+                <div className="bg-background rounded-lg p-4 text-sm text-muted-foreground space-y-2">
                   <p><strong>Patient ID:</strong> {patientId || "Not specified"}</p>
                   <p><strong>Encounter:</strong> {encounterId || "Active encounter"}</p>
                   <p><strong>Referring facility:</strong> {facility?.name || "Not selected"}</p>
                   <p><strong>Referring clinician:</strong> {user?.displayName || user?.email}</p>
-                  <p className="text-xs text-gray-400 mt-3">Active conditions, medications, allergies, and recent results will be auto-attached when the session is created.</p>
+                  <p className="text-xs text-muted-foreground mt-3">Active conditions, medications, allergies, and recent results will be auto-attached when the session is created.</p>
                 </div>
               </div>
             )}
 
             {/* ③ Visit Summary */}
             {activeStep === "visit" && (
-              <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-                <h3 className="text-base font-semibold text-gray-900">③ Visit Summary</h3>
-                <p className="text-sm text-gray-500">Current encounter context — auto-generated from the active visit.</p>
-                <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-600 space-y-2">
+              <div className="bg-card rounded-xl border border-border p-6 space-y-4">
+                <h3 className="text-base font-semibold text-foreground">③ Visit Summary</h3>
+                <p className="text-sm text-muted-foreground">Current encounter context — auto-generated from the active visit.</p>
+                <div className="bg-background rounded-lg p-4 text-sm text-muted-foreground space-y-2">
                   <p><strong>Encounter type:</strong> Outpatient</p>
                   <p><strong>Chief complaint:</strong> {presentingProblems.split("\n")[0] || "—"}</p>
                   <p><strong>Vitals:</strong> Will be auto-attached</p>
                   <p><strong>Investigations:</strong> Will be auto-attached</p>
-                  <p className="text-xs text-gray-400 mt-3">This panel is read-only and auto-populated from the encounter record.</p>
+                  <p className="text-xs text-muted-foreground mt-3">This panel is read-only and auto-populated from the encounter record.</p>
                 </div>
               </div>
             )}
 
             {/* ④ Attachments */}
             {activeStep === "attachments" && (
-              <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-                <h3 className="text-base font-semibold text-gray-900">④ Attachments</h3>
-                <p className="text-sm text-gray-500">Upload or reference supporting documents, images, or files.</p>
+              <div className="bg-card rounded-xl border border-border p-6 space-y-4">
+                <h3 className="text-base font-semibold text-foreground">④ Attachments</h3>
+                <p className="text-sm text-muted-foreground">Upload or reference supporting documents, images, or files.</p>
                 <label className="block">
-                  <span className="text-sm font-medium text-gray-700">Attachment references (one per line)</span>
+                  <span className="text-sm font-medium text-foreground">Attachment references (one per line)</span>
                   <textarea value={attachmentRefs} onChange={(e) => setAttachmentRefs(e.target.value)} rows={4}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                     placeholder="e.g. X-ray chest PA — 2026-04-14&#10;Blood results — FBC, U&E&#10;ECG tracing" />
                 </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center text-gray-400">
+                <div className="border-2 border-dashed border-border rounded-lg p-8 text-center text-muted-foreground">
                   <Upload className="w-8 h-8 mx-auto mb-2" />
                   <p className="text-sm">Drag & drop files here or click to browse</p>
                   <p className="text-xs mt-1">PDF, JPEG, PNG, DICOM up to 25MB each</p>
@@ -328,28 +328,28 @@ export default function NewTeleconsultPage() {
 
             {/* ⑤ Routing */}
             {activeStep === "routing" && (
-              <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-                <h3 className="text-base font-semibold text-gray-900">⑤ Routing & Targeting *</h3>
-                <p className="text-sm text-gray-500">Choose where this referral should be routed.</p>
+              <div className="bg-card rounded-xl border border-border p-6 space-y-4">
+                <h3 className="text-base font-semibold text-foreground">⑤ Routing & Targeting *</h3>
+                <p className="text-sm text-muted-foreground">Choose where this referral should be routed.</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {ROUTING_TYPES.map((rt) => {
                     const Icon = rt.icon;
                     return (
                       <button key={rt.id} onClick={() => setRoutingType(rt.id)}
                         className={`text-left flex items-center gap-3 p-3 rounded-lg border transition-all ${
-                          routingType === rt.id ? "border-impilo-400 bg-impilo-50 ring-1 ring-impilo-300" : "border-gray-200 hover:border-gray-300"
+                          routingType === rt.id ? "border-impilo-400 bg-primary-soft ring-1 ring-impilo-300" : "border-border hover:border-border"
                         }`}>
-                        <Icon className={`w-5 h-5 ${routingType === rt.id ? "text-impilo-600" : "text-gray-400"}`} />
-                        <span className={`text-sm ${routingType === rt.id ? "font-medium text-impilo-700" : "text-gray-700"}`}>{rt.label}</span>
+                        <Icon className={`w-5 h-5 ${routingType === rt.id ? "text-primary" : "text-muted-foreground"}`} />
+                        <span className={`text-sm ${routingType === rt.id ? "font-medium text-primary-hover" : "text-foreground"}`}>{rt.label}</span>
                       </button>
                     );
                   })}
                 </div>
                 {routingType && (
                   <label className="block">
-                    <span className="text-sm font-medium text-gray-700">Target (name, ID, or facility)</span>
+                    <span className="text-sm font-medium text-foreground">Target (name, ID, or facility)</span>
                     <input value={routingTarget} onChange={(e) => setRoutingTarget(e.target.value)}
-                      className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                       placeholder={routingType === "PRACTITIONER" ? "Dr. name or Provider ID..." : "Workspace, ward, or facility name..."} />
                   </label>
                 )}
@@ -358,14 +358,14 @@ export default function NewTeleconsultPage() {
 
             {/* ⑥ Consent */}
             {activeStep === "consent" && (
-              <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-                <h3 className="text-base font-semibold text-gray-900">⑥ Digital Consent *</h3>
-                <p className="text-sm text-gray-500">Patient consent is required before the referral can be submitted. The consent token verifies the identities of the patient, referrer, and intended receiver.</p>
+              <div className="bg-card rounded-xl border border-border p-6 space-y-4">
+                <h3 className="text-base font-semibold text-foreground">⑥ Digital Consent *</h3>
+                <p className="text-sm text-muted-foreground">Patient consent is required before the referral can be submitted. The consent token verifies the identities of the patient, referrer, and intended receiver.</p>
                 <div className="grid grid-cols-2 gap-2">
                   {CONSENT_TYPES.map((ct) => (
                     <button key={ct.id} onClick={() => setConsentType(ct.id)}
                       className={`text-left px-3 py-2 rounded-lg border text-sm transition-all ${
-                        consentType === ct.id ? "border-impilo-400 bg-impilo-50 font-medium" : "border-gray-200 hover:border-gray-300"
+                        consentType === ct.id ? "border-impilo-400 bg-primary-soft font-medium" : "border-border hover:border-border"
                       }`}>
                       {ct.label}
                     </button>
@@ -373,7 +373,7 @@ export default function NewTeleconsultPage() {
                 </div>
                 {consentType && !consentReference && (
                   <button onClick={handleRecordConsent}
-                    className="flex items-center gap-2 px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 transition-colors">
+                    className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover transition-colors">
                     <Shield className="w-4 h-4" /> Record Consent & Issue Token
                   </button>
                 )}
@@ -390,8 +390,8 @@ export default function NewTeleconsultPage() {
             )}
 
             {/* Submit bar */}
-            <div className="mt-6 flex items-center justify-between bg-white rounded-xl border border-gray-200 px-6 py-4">
-              <div className="text-xs text-gray-400">
+            <div className="mt-6 flex items-center justify-between bg-card rounded-xl border border-border px-6 py-4">
+              <div className="text-xs text-muted-foreground">
                 {referralLetter.trim() ? "✓ Letter" : "○ Letter"} ·{" "}
                 {routingType ? "✓ Routing" : "○ Routing"} ·{" "}
                 {consentReference ? "✓ Consent" : "○ Consent"}
@@ -399,7 +399,7 @@ export default function NewTeleconsultPage() {
               <button
                 onClick={handleSubmit}
                 disabled={!canSubmit || submitting}
-                className="flex items-center gap-2 px-6 py-2.5 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 {submitting ? "Submitting..." : "Send Referral"}

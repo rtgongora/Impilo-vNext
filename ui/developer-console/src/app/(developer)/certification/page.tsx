@@ -144,7 +144,7 @@ function CertificationPageContent() {
 
       {/* Current run results */}
       {currentRun && (
-        <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6 mb-8">
+        <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6 mb-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-neutral-900">Latest Run Result</h2>
             <CertResultBadge result={currentRun.result} />
@@ -190,7 +190,7 @@ function CertificationPageContent() {
       )}
 
       {/* Certification history */}
-      <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6">
+      <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6">
         <h2 className="text-lg font-semibold text-neutral-900 mb-4">Certification History</h2>
         {certifications.length === 0 ? (
           <p className="text-sm text-neutral-500 py-4 text-center">No certifications yet. Run your first check above.</p>
@@ -238,7 +238,7 @@ function CertificationPageContent() {
       {/* Report modal */}
       {selectedReport && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-[16px] shadow-lg max-w-lg w-full max-h-[80vh] overflow-y-auto p-6">
+          <div className="bg-card rounded-[16px] shadow-lg max-w-lg w-full max-h-[80vh] overflow-y-auto p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-neutral-900">Certification Report</h3>
               <button onClick={() => setSelectedReport(null)} className="text-neutral-400 hover:text-neutral-600">

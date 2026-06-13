@@ -11,7 +11,7 @@ import { useCreateFacilityApplication } from "@/hooks/queries/useFacilityRegulat
 import type { NdilaCoordinate } from "@/lib/ndila/ndila-client";
 
 const inputClass =
-  "w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500";
+  "w-full rounded-xl border border-border px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500";
 
 export default function NewFacilityPage() {
   const router = useRouter();
@@ -105,17 +105,17 @@ export default function NewFacilityPage() {
         <div className="mb-4">
           <Link
             href="/registry/facilities"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to facility operations
           </Link>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl border border-gray-200 bg-white p-6">
+        <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl border border-border bg-card p-6">
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                 Application type
               </label>
               <select
@@ -132,7 +132,7 @@ export default function NewFacilityPage() {
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                 Registration pathway
               </label>
               <select
@@ -150,7 +150,7 @@ export default function NewFacilityPage() {
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">Applicant name</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Applicant name</label>
               <input
                 required
                 value={form.applicantName}
@@ -159,7 +159,7 @@ export default function NewFacilityPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">Organisation</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Organisation</label>
               <input
                 value={form.applicantOrganisation}
                 onChange={(event) => setForm((current) => ({ ...current, applicantOrganisation: event.target.value }))}
@@ -167,7 +167,7 @@ export default function NewFacilityPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">Applicant email</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Applicant email</label>
               <input
                 type="email"
                 value={form.applicantEmail}
@@ -176,7 +176,7 @@ export default function NewFacilityPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">Applicant phone</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Applicant phone</label>
               <input
                 value={form.applicantPhone}
                 onChange={(event) => setForm((current) => ({ ...current, applicantPhone: event.target.value }))}
@@ -187,7 +187,7 @@ export default function NewFacilityPage() {
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">Facility name</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Facility name</label>
               <input
                 required
                 value={form.facilityName}
@@ -196,7 +196,7 @@ export default function NewFacilityPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">Facility code</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Facility code</label>
               <input
                 value={form.facilityCode}
                 onChange={(event) => setForm((current) => ({ ...current, facilityCode: event.target.value }))}
@@ -205,7 +205,7 @@ export default function NewFacilityPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">Facility type</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Facility type</label>
               <select
                 value={form.facilityType}
                 onChange={(event) => setForm((current) => ({ ...current, facilityType: event.target.value }))}
@@ -218,7 +218,7 @@ export default function NewFacilityPage() {
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">Ownership</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Ownership</label>
               <select
                 value={form.ownershipType}
                 onChange={(event) => setForm((current) => ({ ...current, ownershipType: event.target.value }))}
@@ -234,7 +234,7 @@ export default function NewFacilityPage() {
 
           <div className="grid gap-4 md:grid-cols-3">
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">Province</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Province</label>
               <input
                 required
                 value={form.province}
@@ -243,7 +243,7 @@ export default function NewFacilityPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">District</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">District</label>
               <input
                 required
                 value={form.district}
@@ -252,7 +252,7 @@ export default function NewFacilityPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">City / locality</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">City / locality</label>
               <input
                 value={form.city}
                 onChange={(event) => setForm((current) => ({ ...current, city: event.target.value }))}
@@ -260,7 +260,7 @@ export default function NewFacilityPage() {
               />
             </div>
             <div className="md:col-span-2">
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">Address line 1</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Address line 1</label>
               <input
                 value={form.addressLine1}
                 onChange={(event) => setForm((current) => ({ ...current, addressLine1: event.target.value }))}
@@ -268,7 +268,7 @@ export default function NewFacilityPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">Ward</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Ward</label>
               <input
                 value={form.ward}
                 onChange={(event) => setForm((current) => ({ ...current, ward: event.target.value }))}
@@ -276,7 +276,7 @@ export default function NewFacilityPage() {
               />
             </div>
             <div className="md:col-span-2">
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">Address line 2</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Address line 2</label>
               <input
                 value={form.addressLine2}
                 onChange={(event) => setForm((current) => ({ ...current, addressLine2: event.target.value }))}
@@ -286,8 +286,8 @@ export default function NewFacilityPage() {
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-              <h3 className="text-sm font-semibold text-gray-900">Practitioner in charge</h3>
+            <div className="rounded-2xl border border-border bg-background p-4">
+              <h3 className="text-sm font-semibold text-foreground">Practitioner in charge</h3>
               <div className="mt-3 space-y-3">
                 <input
                   placeholder="Provider public ID"
@@ -303,8 +303,8 @@ export default function NewFacilityPage() {
                 />
               </div>
             </div>
-            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-              <h3 className="text-sm font-semibold text-gray-900">Initial unit / department</h3>
+            <div className="rounded-2xl border border-border bg-background p-4">
+              <h3 className="text-sm font-semibold text-foreground">Initial unit / department</h3>
               <div className="mt-3 space-y-3">
                 <input
                   placeholder="Unit name"
@@ -327,7 +327,7 @@ export default function NewFacilityPage() {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">Workflow notes</label>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Workflow notes</label>
             <textarea
               rows={4}
               value={form.workflowNotes}

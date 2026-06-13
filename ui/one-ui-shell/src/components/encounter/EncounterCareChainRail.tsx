@@ -57,21 +57,21 @@ export function EncounterCareChainRail({ encounterId, patientId, patientCpid }: 
 
   return (
     <section
-      className="rounded-xl border border-slate-200 bg-white px-4 py-4 shadow-sm"
+      className="rounded-xl border border-border bg-card px-4 py-4 shadow-sm"
       data-testid="encounter-care-chain-rail"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-slate-900">Encounter care & billing chain</h3>
+        <h3 className="text-sm font-semibold text-foreground">Encounter care & billing chain</h3>
         <Link
           href={`/finance/costa/encounter/${encounterId}?patientId=${encodeURIComponent(patientId)}${patientCpid ? `&patientCpid=${encodeURIComponent(patientCpid)}` : ""}`}
-          className="text-xs font-medium text-impilo-600 hover:underline"
+          className="text-xs font-medium text-primary hover:underline"
         >
           Full COSTA timeline →
         </Link>
       </div>
 
       {loading ? (
-        <div className="mt-3 flex items-center gap-2 text-sm text-slate-500">
+        <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" /> Loading OROS, COSTA, and MusheX signals…
         </div>
       ) : (
@@ -81,17 +81,17 @@ export function EncounterCareChainRail({ encounterId, patientId, patientCpid }: 
               <ScanLine className="h-3.5 w-3.5" />
               OROS orders
             </div>
-            <p className="mt-1 text-2xl font-semibold text-slate-900">{encounterOrders.length}</p>
-            <p className="text-xs text-slate-600">Lab & imaging orders linked to this encounter.</p>
+            <p className="mt-1 text-2xl font-semibold text-foreground">{encounterOrders.length}</p>
+            <p className="text-xs text-muted-foreground">Lab & imaging orders linked to this encounter.</p>
           </div>
 
-          <div className="rounded-lg border border-emerald-100 bg-emerald-50/60 p-3">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-emerald-800">
+          <div className="rounded-lg border border-emerald-100 bg-success-soft/60 p-3">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary-hover">
               <Receipt className="h-3.5 w-3.5" />
               Costa billing
             </div>
-            <p className="mt-1 text-2xl font-semibold text-slate-900">{costEventCount}</p>
-            <p className="text-xs text-slate-600">
+            <p className="mt-1 text-2xl font-semibold text-foreground">{costEventCount}</p>
+            <p className="text-xs text-muted-foreground">
               Cost events · {invoiceRows.length} invoice row{invoiceRows.length === 1 ? "" : "s"}.
             </p>
           </div>
@@ -101,8 +101,8 @@ export function EncounterCareChainRail({ encounterId, patientId, patientCpid }: 
               <Wallet className="h-3.5 w-3.5" />
               MusheX payments
             </div>
-            <p className="mt-1 text-2xl font-semibold text-slate-900">{intentRows.length}</p>
-            <p className="text-xs text-slate-600">
+            <p className="mt-1 text-2xl font-semibold text-foreground">{intentRows.length}</p>
+            <p className="text-xs text-muted-foreground">
               Payment intents · {settlementCount} linked settlement row{settlementCount === 1 ? "" : "s"}.
             </p>
           </div>

@@ -78,13 +78,13 @@ export default function RoutesPage() {
         <WellnessPlacesMapPanel />
 
         {simbaRoutes.length > 0 && (
-          <div className="rounded-xl border border-impilo-200 bg-impilo-50 mb-6 p-5">
+          <div className="rounded-xl border border-primary/25 bg-primary-soft mb-6 p-5">
             <h2 className="font-semibold text-impilo-900 mb-3">Governed wellness routes (Simba)</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {simbaRoutes.map((route, idx) => (
-                <div key={String(route.routeId ?? route.route_id ?? idx)} className="rounded-lg border border-impilo-100 bg-white p-4 text-sm">
-                  <p className="font-medium text-gray-900">{String(route.title ?? route.routeCode ?? "Route")}</p>
-                  <p className="text-gray-600 mt-1">
+                <div key={String(route.routeId ?? route.route_id ?? idx)} className="rounded-lg border border-primary/20 bg-card p-4 text-sm">
+                  <p className="font-medium text-foreground">{String(route.title ?? route.routeCode ?? "Route")}</p>
+                  <p className="text-muted-foreground mt-1">
                     {route.distanceKm != null || route.distance_km != null
                       ? `${String(route.distanceKm ?? route.distance_km)} km`
                       : "Distance n/a"}
@@ -94,7 +94,7 @@ export default function RoutesPage() {
                     {route.difficulty ? ` · ${String(route.difficulty)}` : ""}
                   </p>
                   {route.facilityName || route.facility_name ? (
-                    <p className="text-xs text-gray-500 mt-1">{String(route.facilityName ?? route.facility_name)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{String(route.facilityName ?? route.facility_name)}</p>
                   ) : null}
                 </div>
               ))}
@@ -121,12 +121,12 @@ export default function RoutesPage() {
 
         <div className="flex flex-col sm:flex-row gap-3 mb-5">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by name, facility, or description…"
-              className="w-full rounded-xl border border-gray-200 pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full rounded-xl border border-border pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
             />
           </div>
           <div className="flex gap-2 flex-wrap items-center">
@@ -138,7 +138,7 @@ export default function RoutesPage() {
                 className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
                   categoryFilter === category
                     ? "bg-green-600 text-white"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    : "bg-neutral-100 text-muted-foreground hover:bg-neutral-100"
                 }`}
               >
                 {category}
@@ -147,7 +147,7 @@ export default function RoutesPage() {
             <button
               type="button"
               onClick={() => setSortBy(sortBy === "rating" ? "name" : "rating")}
-              className="rounded-full px-3 py-1.5 text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200"
+              className="rounded-full px-3 py-1.5 text-sm font-medium bg-neutral-100 text-muted-foreground hover:bg-neutral-100"
             >
               Sort: {sortBy === "rating" ? "Top rated" : "Name A–Z"}
             </button>
@@ -163,7 +163,7 @@ export default function RoutesPage() {
             <WellnessRouteServiceCard key={service.id} service={service} />
           ))}
           {!discoverQ.isLoading && filtered.length === 0 ? (
-            <p className="col-span-full text-center text-gray-400 py-8">No services match your filters</p>
+            <p className="col-span-full text-center text-muted-foreground py-8">No services match your filters</p>
           ) : null}
         </div>
       </PageShell>
@@ -193,16 +193,16 @@ function WellnessRouteServiceCard({ service }: { service: WellnessDiscoverServic
   }
 
   return (
-    <article className="rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+    <article className="rounded-xl border border-border bg-card shadow-sm hover:shadow-md transition-shadow overflow-hidden">
       <div className="p-5">
         <div className="flex items-start gap-3 mb-2">
           <div className="h-11 w-11 rounded-xl bg-green-100 text-green-700 flex items-center justify-center shrink-0">
             <MapPin className="h-6 w-6" aria-hidden />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-gray-900">{service.name}</h3>
+            <h3 className="font-semibold text-foreground">{service.name}</h3>
             {service.facilityName ? (
-              <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+              <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                 <MapPin className="h-3 w-3 shrink-0" />
                 {service.facilityName}
               </p>
@@ -216,22 +216,22 @@ function WellnessRouteServiceCard({ service }: { service: WellnessDiscoverServic
         </div>
 
         {service.description ? (
-          <p className="text-sm text-gray-600 mb-3 line-clamp-3">{service.description}</p>
+          <p className="text-sm text-muted-foreground mb-3 line-clamp-3">{service.description}</p>
         ) : (
-          <p className="text-sm text-gray-400 mb-3 italic">No description provided.</p>
+          <p className="text-sm text-muted-foreground mb-3 italic">No description provided.</p>
         )}
 
         <div className="flex flex-wrap items-center gap-3 text-sm mb-3">
           {service.rating != null ? (
-            <span className="inline-flex items-center gap-1 text-gray-800">
+            <span className="inline-flex items-center gap-1 text-foreground">
               <Star className="h-4 w-4 fill-amber-400 text-amber-400" aria-hidden />
               {service.rating.toFixed(1)}
             </span>
           ) : (
-            <span className="text-xs text-gray-400">Rating not available</span>
+            <span className="text-xs text-muted-foreground">Rating not available</span>
           )}
           {priceLabel ? (
-            <span className="text-xs font-medium text-gray-700">{priceLabel}</span>
+            <span className="text-xs font-medium text-foreground">{priceLabel}</span>
           ) : null}
         </div>
 
@@ -247,7 +247,7 @@ function WellnessRouteServiceCard({ service }: { service: WellnessDiscoverServic
           </button>
           <Link
             href="/wellness/dashboard"
-            className="inline-flex items-center rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+            className="inline-flex items-center rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-background"
           >
             Open wellness dashboard
           </Link>

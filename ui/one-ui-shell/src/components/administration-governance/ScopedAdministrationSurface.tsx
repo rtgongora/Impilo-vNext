@@ -33,7 +33,7 @@ export function ScopedAdministrationSurface({ surfaceId, backHref = "/work/admin
   if (!surface || !contract) {
     return (
       <AdministrationGovernanceShell title="Administration" requireGovernanceEntry={false}>
-        <p className="text-sm text-slate-500">Loading…</p>
+        <p className="text-sm text-muted-foreground">Loading…</p>
       </AdministrationGovernanceShell>
     );
   }
@@ -43,7 +43,7 @@ export function ScopedAdministrationSurface({ surfaceId, backHref = "/work/admin
   return (
     <AdministrationGovernanceShell title={surface.title} subtitle={surface.subtitle} requireGovernanceEntry={false}>
       <div className="space-y-6">
-        <Link href={backHref} className="inline-flex items-center gap-1 text-sm text-slate-600 hover:text-slate-900">
+        <Link href={backHref} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" />
           Administration & Governance
         </Link>
@@ -52,7 +52,7 @@ export function ScopedAdministrationSurface({ surfaceId, backHref = "/work/admin
           <FriendlyBlockedState state={contract.friendlyResolutionState ?? "policy_denied"} />
         ) : (
           <>
-            <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 px-4 py-3 text-sm text-indigo-950">
+            <div className="rounded-xl border border-indigo-100 bg-info-soft/60 px-4 py-3 text-sm text-primary-hover">
               Actions on this page are organisation-scoped and OPA-enforced. Keycloak roles alone do not grant access.
             </div>
             {pathname.includes("/organisations/") && !pathname.endsWith("/new") ? <OrganisationDetailNav /> : null}
@@ -62,15 +62,15 @@ export function ScopedAdministrationSurface({ surfaceId, backHref = "/work/admin
                   <Link
                     key={section.title}
                     href={section.href}
-                    className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-indigo-300"
+                    className="rounded-2xl border border-border bg-card p-5 shadow-sm transition hover:border-indigo-300"
                   >
-                    <h4 className="font-medium text-slate-900">{section.title}</h4>
-                    <p className="mt-1 text-sm text-slate-600">{section.description}</p>
+                    <h4 className="font-medium text-foreground">{section.title}</h4>
+                    <p className="mt-1 text-sm text-muted-foreground">{section.description}</p>
                   </Link>
                 ) : (
-                  <div key={section.title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <h4 className="font-medium text-slate-900">{section.title}</h4>
-                    <p className="mt-1 text-sm text-slate-600">{section.description}</p>
+                  <div key={section.title} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                    <h4 className="font-medium text-foreground">{section.title}</h4>
+                    <p className="mt-1 text-sm text-muted-foreground">{section.description}</p>
                   </div>
                 ),
               )}
@@ -90,18 +90,18 @@ export function ScopedAdministrationSurface({ surfaceId, backHref = "/work/admin
 
 function AuditPanel() {
   const { data, isLoading } = useAdminGovernanceAudit();
-  if (isLoading) return <p className="text-sm text-slate-600">Loading audit events…</p>;
+  if (isLoading) return <p className="text-sm text-muted-foreground">Loading audit events…</p>;
   if (isGovernanceActionResult(data)) return <GovernanceActionResult result={data} />;
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
+    <div className="rounded-xl border border-border bg-card p-4 text-sm text-foreground">
       {(data ?? []).length === 0 ? (
         <p>No audit events returned for your scope yet.</p>
       ) : (
         <ul className="space-y-2">
           {(data ?? []).map((event, index) => (
-            <li key={`${event.eventType}-${index}`} className="rounded-lg border border-slate-100 px-3 py-2">
+            <li key={`${event.eventType}-${index}`} className="rounded-lg border border-border px-3 py-2">
               <span className="font-medium">{event.eventType}</span>
-              {event.occurredAt ? <span className="text-slate-500"> · {event.occurredAt}</span> : null}
+              {event.occurredAt ? <span className="text-muted-foreground"> · {event.occurredAt}</span> : null}
             </li>
           ))}
         </ul>

@@ -85,17 +85,17 @@ export default function SleepPage() {
     <AppLayout>
       <PageShell title="Sleep & Recovery" subtitle="Sleep hours and quality sync to your wellness activity log" icon={<Moon className="h-6 w-6" />}>
         {!patientId && (
-          <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">Sign in to log sleep.</p>
+          <p className="text-sm text-warning-foreground bg-warning-soft border border-warning/35 rounded-lg px-4 py-3">Sign in to log sleep.</p>
         )}
 
         {patientId && isLoading && (
-          <div className="flex items-center gap-2 text-gray-600 py-8">
+          <div className="flex items-center gap-2 text-muted-foreground py-8">
             <Loader2 className="h-5 w-5 animate-spin" /> Loading…
           </div>
         )}
 
         {patientId && isError && (
-          <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3">Could not load sleep history.</p>
+          <p className="text-sm text-danger bg-danger-soft border border-danger/28 rounded-lg px-4 py-3">Could not load sleep history.</p>
         )}
 
         {patientId && !isLoading && !isError && (
@@ -128,8 +128,8 @@ export default function SleepPage() {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-6 flex flex-col items-center justify-center">
-                <p className="text-sm font-medium text-gray-500 mb-3">Recovery Score</p>
+              <div className="rounded-xl border border-border bg-card shadow-sm p-6 flex flex-col items-center justify-center">
+                <p className="text-sm font-medium text-muted-foreground mb-3">Recovery Score</p>
                 <div className="relative h-32 w-32">
                   <svg viewBox="0 0 36 36" className="h-32 w-32 -rotate-90">
                     <circle cx="18" cy="18" r="15.5" fill="none" stroke="#e5e7eb" strokeWidth="3" />
@@ -145,23 +145,23 @@ export default function SleepPage() {
                     />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-3xl font-bold text-gray-900">{recoveryScore}%</span>
-                    <span className="text-xs text-gray-500">{recoveryScore >= 75 ? "Great" : recoveryScore >= 50 ? "Fair" : "Low"}</span>
+                    <span className="text-3xl font-bold text-foreground">{recoveryScore}%</span>
+                    <span className="text-xs text-muted-foreground">{recoveryScore >= 75 ? "Great" : recoveryScore >= 50 ? "Fair" : "Low"}</span>
                   </div>
                 </div>
-                <p className="text-xs text-gray-400 mt-2">Based on recent logged sleep (target 8h)</p>
+                <p className="text-xs text-muted-foreground mt-2">Based on recent logged sleep (target 8h)</p>
               </div>
             </div>
 
-            <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-6 mb-6">
-              <h3 className="font-semibold text-gray-800 mb-4">Recent sleep (from wellness log)</h3>
+            <div className="rounded-xl border border-border bg-card shadow-sm p-6 mb-6">
+              <h3 className="font-semibold text-foreground mb-4">Recent sleep (from wellness log)</h3>
               {chartDays.length === 0 ? (
-                <p className="text-sm text-gray-500">No rows yet. Log sleep below — data will match the citizen mobile app.</p>
+                <p className="text-sm text-muted-foreground">No rows yet. Log sleep below — data will match the citizen mobile app.</p>
               ) : (
                 <div className="flex items-end gap-3 h-44">
                   {chartDays.map((d, i) => (
                     <div key={d.iso + i} className="flex-1 flex flex-col items-center gap-1">
-                      <span className="text-xs font-medium text-gray-600">{d.hours}h</span>
+                      <span className="text-xs font-medium text-muted-foreground">{d.hours}h</span>
                       <div
                         className="w-full rounded-t-lg transition-all"
                         style={{
@@ -174,20 +174,20 @@ export default function SleepPage() {
                                 : "linear-gradient(to top, #ef4444, #f87171)",
                         }}
                       />
-                      <span className="text-xs text-gray-500">{d.day}</span>
+                      <span className="text-xs text-muted-foreground">{d.day}</span>
                     </div>
                   ))}
                 </div>
               )}
             </div>
 
-            <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-6">
+            <div className="rounded-xl border border-border bg-card shadow-sm p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-800">Log sleep (today)</h3>
+                <h3 className="font-semibold text-foreground">Log sleep (today)</h3>
                 <button
                   type="button"
                   onClick={() => setShowForm(!showForm)}
-                  className="text-indigo-600 hover:text-indigo-700 text-sm font-medium flex items-center gap-1"
+                  className="text-indigo-600 hover:text-primary-hover text-sm font-medium flex items-center gap-1"
                 >
                   {showForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
                   {showForm ? "Cancel" : "New Entry"}
@@ -196,7 +196,7 @@ export default function SleepPage() {
               {showForm && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">
                       <Moon className="h-3 w-3 inline mr-1" />
                       Bedtime
                     </label>
@@ -208,7 +208,7 @@ export default function SleepPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">
                       <Sun className="h-3 w-3 inline mr-1" />
                       Wake time
                     </label>
@@ -220,14 +220,14 @@ export default function SleepPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">
                       <Star className="h-3 w-3 inline mr-1" />
                       Quality (1-5)
                     </label>
                     <div className="flex gap-1 mt-1">
                       {Array.from({ length: 5 }).map((_, i) => (
                         <button key={i} type="button" onClick={() => setForm({ ...form, quality: i + 1 })} className="focus:outline-none">
-                          <Star className={`h-6 w-6 ${i < form.quality ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`} />
+                          <Star className={`h-6 w-6 ${i < form.quality ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"}`} />
                         </button>
                       ))}
                     </div>
@@ -237,7 +237,7 @@ export default function SleepPage() {
                       type="button"
                       onClick={submitSleep}
                       disabled={logActivity.isPending}
-                      className="rounded-lg bg-indigo-600 text-white px-6 py-2 text-sm font-medium hover:bg-indigo-700 disabled:opacity-60 inline-flex items-center gap-2"
+                      className="rounded-lg bg-indigo-600 text-white px-6 py-2 text-sm font-medium hover:bg-primary disabled:opacity-60 inline-flex items-center gap-2"
                     >
                       {logActivity.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                       Save Sleep Entry

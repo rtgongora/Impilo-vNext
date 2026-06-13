@@ -12,7 +12,7 @@ export function TrustContextBanner(props: { purposeOfUse?: string }) {
       data-testid="trust-context-banner"
       className="impilo-surface-soft impilo-subtle-african-accent flex flex-wrap items-center gap-2 px-3 py-2 text-xs"
     >
-      <Shield className="h-3.5 w-3.5 text-impilo-600" />
+      <Shield className="h-3.5 w-3.5 text-primary" />
       <span className="font-medium text-[var(--text-primary)]">Trust context</span>
       {facility?.name ? (
         <span className="text-[var(--text-secondary)]">Facility: {facility.name}</span>
@@ -23,7 +23,7 @@ export function TrustContextBanner(props: { purposeOfUse?: string }) {
       {props.purposeOfUse ? (
         <span className="text-[var(--text-secondary)]">Purpose: {props.purposeOfUse}</span>
       ) : null}
-      <Link href="/registry/trust" className="ml-auto font-medium text-impilo-600 hover:underline">
+      <Link href="/registry/trust" className="ml-auto font-medium text-primary hover:underline">
         Trust admin
       </Link>
     </div>

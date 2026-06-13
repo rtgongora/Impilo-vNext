@@ -30,29 +30,29 @@ export function CoverageGeoMapPanel() {
     : DEFAULT_CENTER;
 
   return (
-    <section className="rounded-xl border border-violet-200 bg-white p-4" data-testid="coverage-geo-map-panel">
-      <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+    <section className="rounded-xl border border-violet-200 bg-card p-4" data-testid="coverage-geo-map-panel">
+      <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
         <MapPin className="h-4 w-4 text-violet-600" />
         Coverage geography (Ndila)
       </div>
-      <p className="mt-1 text-xs text-gray-500">
+      <p className="mt-1 text-xs text-muted-foreground">
         Contracted facility footprint for payer network planning — tiles via{" "}
         <code className="text-[10px]">GET /internal/v1/ndila/tiles/config</code>, sites from Tuso facility registry.
       </p>
 
       {ndilaQ.isLoading || facilitiesQ.isLoading ? (
-        <div className="mt-4 flex items-center gap-2 py-8 text-sm text-gray-500">
+        <div className="mt-4 flex items-center gap-2 py-8 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" /> Loading map context…
         </div>
       ) : ndilaQ.isError ? (
         <p className="mt-4 text-xs text-red-600">Ndila tile config unavailable.</p>
       ) : (
-        <div className="mt-4 overflow-hidden rounded-xl border border-gray-200">
+        <div className="mt-4 overflow-hidden rounded-xl border border-border">
           <NdilaMap center={center} zoom={6} markers={markers} height={360} mode="DASHBOARD" fitToMarkers />
         </div>
       )}
 
-      <p className="mt-2 text-[11px] text-gray-500">
+      <p className="mt-2 text-[11px] text-muted-foreground">
         {markers.length} geo-tagged facilities on map · provider contracting detail on the Contracts tab.
       </p>
     </section>

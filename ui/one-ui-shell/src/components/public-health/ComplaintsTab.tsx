@@ -51,12 +51,12 @@ export function ComplaintsTab() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border border-emerald-200 bg-emerald-50/90 p-3 text-xs text-emerald-950">
+      <div className="rounded-lg border border-success/25 bg-success-soft/90 p-3 text-xs text-emerald-950">
         <strong>Live:</strong> environmental complaints and surveillance alerts use governed BFF routes with Tshepo PDP
         checks on mutations.
       </div>
 
-      <div className="flex flex-wrap gap-1 border-b border-gray-200">
+      <div className="flex flex-wrap gap-1 border-b border-border">
         {[
           { key: "environmental" as const, label: "Environmental & nuisance (live)" },
           { key: "health_alerts" as const, label: "Health & surveillance alerts (live)" },
@@ -66,7 +66,7 @@ export function ComplaintsTab() {
             type="button"
             onClick={() => setPanel(t.key)}
             className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
-              panel === t.key ? "border-amber-600 text-amber-600" : "border-transparent text-gray-500 hover:text-gray-700"
+              panel === t.key ? "border-amber-600 text-amber-600" : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
             {t.label}
@@ -78,14 +78,14 @@ export function ComplaintsTab() {
         <>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             {[
-              { label: "Open complaints", value: String(openComplaints), color: "text-emerald-700" },
-              { label: "Received today", value: String(complaints.length), color: "text-gray-700" },
-              { label: "Open surveillance alerts", value: String(openCount), color: "text-amber-700" },
-              { label: "High / critical alerts", value: String(criticalish), color: "text-red-700" },
+              { label: "Open complaints", value: String(openComplaints), color: "text-primary-hover" },
+              { label: "Received today", value: String(complaints.length), color: "text-foreground" },
+              { label: "Open surveillance alerts", value: String(openCount), color: "text-warning-foreground" },
+              { label: "High / critical alerts", value: String(criticalish), color: "text-danger" },
             ].map((kpi) => (
-              <div key={kpi.label} className="rounded-lg border border-gray-200 bg-white p-3 text-center">
+              <div key={kpi.label} className="rounded-lg border border-border bg-card p-3 text-center">
                 <p className={`text-2xl font-bold ${kpi.color}`}>{kpi.value}</p>
-                <p className="text-xs font-medium text-gray-900">{kpi.label}</p>
+                <p className="text-xs font-medium text-foreground">{kpi.label}</p>
               </div>
             ))}
           </div>
@@ -101,14 +101,14 @@ export function ComplaintsTab() {
           </div>
 
           {showForm && (
-            <div className="rounded-lg border border-emerald-200 bg-white p-4 space-y-3">
+            <div className="rounded-lg border border-success/25 bg-card p-4 space-y-3">
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Complaint title *"
-                className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                className="w-full rounded border border-border px-3 py-2 text-sm"
               />
-              <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full rounded border border-gray-300 px-3 py-2 text-sm">
+              <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full rounded border border-border px-3 py-2 text-sm">
                 <option value="NUISANCE">Nuisance</option>
                 <option value="WATER">Water quality</option>
                 <option value="WASTE">Solid waste</option>
@@ -120,11 +120,11 @@ export function ComplaintsTab() {
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Description"
                 rows={2}
-                className="w-full rounded border border-gray-300 px-3 py-2 text-sm resize-none"
+                className="w-full rounded border border-border px-3 py-2 text-sm resize-none"
               />
               <div className="grid grid-cols-2 gap-2">
-                <input value={province} onChange={(e) => setProvince(e.target.value)} placeholder="Province" className="rounded border border-gray-300 px-3 py-2 text-sm" />
-                <input value={district} onChange={(e) => setDistrict(e.target.value)} placeholder="District" className="rounded border border-gray-300 px-3 py-2 text-sm" />
+                <input value={province} onChange={(e) => setProvince(e.target.value)} placeholder="Province" className="rounded border border-border px-3 py-2 text-sm" />
+                <input value={district} onChange={(e) => setDistrict(e.target.value)} placeholder="District" className="rounded border border-border px-3 py-2 text-sm" />
               </div>
               <button
                 type="button"
@@ -137,17 +137,17 @@ export function ComplaintsTab() {
             </div>
           )}
 
-          <div className="rounded-lg border border-gray-200 bg-white">
+          <div className="rounded-lg border border-border bg-card">
             <div className="border-b px-4 py-3">
-              <h4 className="text-sm font-semibold text-gray-900">Environmental complaints register</h4>
+              <h4 className="text-sm font-semibold text-foreground">Environmental complaints register</h4>
             </div>
             <div className="p-4">
               {complaintsLoading ? (
-                <div className="flex items-center gap-2 text-sm text-gray-500 py-6">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground py-6">
                   <Loader2 className="h-4 w-4 animate-spin" /> Loading complaints…
                 </div>
               ) : complaints.length === 0 ? (
-                <p className="text-sm text-gray-500">No complaints filed yet.</p>
+                <p className="text-sm text-muted-foreground">No complaints filed yet.</p>
               ) : (
                 <ul className="divide-y divide-gray-100">
                   {complaints.map((c) => {
@@ -155,18 +155,18 @@ export function ComplaintsTab() {
                     return (
                       <li key={c.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
                         <div>
-                          <p className="text-sm font-medium text-gray-900">{c.title}</p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-sm font-medium text-foreground">{c.title}</p>
+                          <p className="text-xs text-muted-foreground">
                             {c.category} · {c.district !== "—" ? `${c.district}, ${c.province}` : c.province}
                           </p>
                         </div>
-                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] text-emerald-800">{c.status}</span>
+                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] text-primary-hover">{c.status}</span>
                         {next && (
                           <button
                             type="button"
                             disabled={transitionComplaint.isPending}
                             onClick={() => transitionComplaint.mutate({ complaintId: c.id, status: next })}
-                            className="text-[10px] text-impilo-600 hover:underline"
+                            className="text-[10px] text-primary hover:underline"
                           >
                             → {next}
                           </button>
@@ -182,39 +182,39 @@ export function ComplaintsTab() {
       )}
 
       {panel === "health_alerts" && (
-        <div className="rounded-lg border border-gray-200 bg-white">
+        <div className="rounded-lg border border-border bg-card">
           <div className="border-b px-4 py-3">
-            <h4 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+            <h4 className="flex items-center gap-2 text-sm font-semibold text-foreground">
               <AlertTriangle className="h-4 w-4" /> Surveillance alerts
             </h4>
           </div>
           <div className="p-4">
             {alertsLoading && (
-              <div className="flex items-center justify-center gap-2 py-8 text-sm text-gray-500">
+              <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
                 <Loader2 className="h-5 w-5 animate-spin" /> Loading alerts…
               </div>
             )}
             {alertsError && <p className="py-4 text-center text-sm text-red-600">Failed to load alerts.</p>}
             {!alertsLoading && !alertsError && alerts.length === 0 && (
-              <p className="py-6 text-center text-sm text-gray-500">No alerts returned.</p>
+              <p className="py-6 text-center text-sm text-muted-foreground">No alerts returned.</p>
             )}
             {!alertsLoading && !alertsError && alerts.length > 0 && (
               <ul className="max-h-[420px] divide-y divide-gray-100 overflow-y-auto">
                 {alerts.map((a) => (
                   <li key={a.id} className="flex flex-wrap justify-between gap-2 py-3">
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{a.title}</p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-sm font-medium text-foreground">{a.title}</p>
+                      <p className="text-xs text-muted-foreground">
                         {a.location} · {a.severity} · {a.detectedAt || "—"}
                       </p>
                     </div>
-                    <span className="h-fit rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-700">{a.status}</span>
+                    <span className="h-fit rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] text-foreground">{a.status}</span>
                     {a.status !== "acknowledged" && (
                       <button
                         type="button"
                         disabled={acknowledgeAlert.isPending}
                         onClick={() => acknowledgeAlert.mutate(a.id)}
-                        className="h-fit rounded-md border border-slate-300 px-2 py-0.5 text-[10px] text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                        className="h-fit rounded-md border border-border px-2 py-0.5 text-[10px] text-foreground hover:bg-background disabled:opacity-50"
                       >
                         Acknowledge
                       </button>

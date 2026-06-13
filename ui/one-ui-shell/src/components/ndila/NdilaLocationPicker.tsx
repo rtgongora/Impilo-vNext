@@ -63,7 +63,7 @@ export function NdilaLocationPicker({
         />
       )}
       {verificationRequired && selected && (
-        <p className="text-[10px] text-amber-700">
+        <p className="text-[10px] text-warning-foreground">
           Coordinate captured. Field verification still required before this location is marked verified.
         </p>
       )}

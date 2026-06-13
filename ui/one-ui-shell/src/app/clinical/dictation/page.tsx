@@ -115,12 +115,12 @@ export default function DictationPage() {
         subtitle="Local recording controls only — no connected speech-to-text or dictation store yet"
       >
         <div className="space-y-6">
-          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+          <div className="rounded-xl border border-warning/35 bg-warning-soft px-4 py-3 text-sm text-warning-foreground">
             <div className="flex gap-2">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" aria-hidden />
               <div>
                 <p className="font-medium">Not a clinical transcript pipeline</p>
-                <p className="mt-1 text-xs text-amber-900/90">
+                <p className="mt-1 text-xs text-warning-foreground/90">
                   Stopping a recording does not generate text. Recent dictations are empty until a dictation or ASR API is available (tracked for Agent 0). Type or paste into the transcript area, or use Notes from the chart.
                 </p>
               </div>
@@ -131,14 +131,14 @@ export default function DictationPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Mic className="w-5 h-5 text-pink-600" />
-              <h2 className="text-lg font-semibold text-gray-900">Dictation Studio</h2>
+              <h2 className="text-lg font-semibold text-foreground">Dictation Studio</h2>
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-600 mr-2">Note Type:</label>
+              <label className="text-xs font-medium text-muted-foreground mr-2">Note Type:</label>
               <select
                 value={noteType}
                 onChange={(e) => setNoteType(e.target.value as NoteType)}
-                className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                className="rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
               >
                 <option>SOAP</option>
                 <option>Progress</option>
@@ -150,14 +150,14 @@ export default function DictationPage() {
           </div>
 
           {/* Recording Panel */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-card rounded-lg border border-border p-6">
             {/* Waveform Visualization */}
             <div className="flex items-end justify-center gap-0.5 h-16 mb-6">
               {heights.map((h, i) => (
                 <div
                   key={i}
                   className={`w-1.5 rounded-full transition-all duration-150 ${
-                    recordingState === "recording" ? "bg-red-400" : recordingState === "paused" ? "bg-amber-300" : "bg-gray-200"
+                    recordingState === "recording" ? "bg-red-400" : recordingState === "paused" ? "bg-amber-300" : "bg-neutral-100"
                   }`}
                   style={{ height: `${h}%` }}
                 />
@@ -166,7 +166,7 @@ export default function DictationPage() {
 
             {/* Timer */}
             <div className="text-center mb-6">
-              <span className={`text-3xl font-mono font-bold ${recordingState === "recording" ? "text-red-600" : "text-gray-700"}`}>
+              <span className={`text-3xl font-mono font-bold ${recordingState === "recording" ? "text-red-600" : "text-foreground"}`}>
                 {formatTime(elapsed)}
               </span>
               {recordingState === "recording" && (
@@ -213,18 +213,18 @@ export default function DictationPage() {
                 </>
               )}
               {recordingState === "processing" && (
-                <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
-                  <Loader2 className="w-7 h-7 text-gray-400 animate-spin" />
+                <div className="w-16 h-16 rounded-full bg-neutral-100 flex items-center justify-center">
+                  <Loader2 className="w-7 h-7 text-muted-foreground animate-spin" />
                 </div>
               )}
             </div>
           </div>
 
           {/* Transcript Editor */}
-          <div className="bg-white rounded-lg border border-gray-200 p-5">
+          <div className="bg-card rounded-lg border border-border p-5">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-medium text-gray-900">Transcript</h3>
-              <span className="text-xs text-gray-400">
+              <h3 className="font-medium text-foreground">Transcript</h3>
+              <span className="text-xs text-muted-foreground">
                 {transcript ? `${transcript.split(/\s+/).length} words` : "No transcript yet"}
               </span>
             </div>
@@ -232,13 +232,13 @@ export default function DictationPage() {
               value={transcript}
               onChange={(e) => setTranscript(e.target.value)}
               rows={8}
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 leading-relaxed"
+              className="w-full rounded-lg border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 leading-relaxed"
               placeholder="No speech-to-text is connected — type or paste the note here after recording."
             />
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <button
                 disabled={!transcript}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <Save className="w-4 h-4" /> Save to Notes
               </button>
@@ -246,7 +246,7 @@ export default function DictationPage() {
                 type="button"
                 disabled={!transcript}
                 onClick={() => void copyTranscript()}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-background disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <ClipboardCopy className="h-4 w-4" aria-hidden />
                 Copy transcript
@@ -254,40 +254,40 @@ export default function DictationPage() {
               <button
                 disabled={!transcript}
                 onClick={() => setTranscript("")}
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-700 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-foreground rounded-lg border border-border hover:bg-background disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <Trash2 className="w-4 h-4" /> Clear
               </button>
-              {copyHint && <span className="text-xs text-gray-500">{copyHint}</span>}
+              {copyHint && <span className="text-xs text-muted-foreground">{copyHint}</span>}
             </div>
           </div>
 
           {/* Recent Dictations */}
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <div className="px-5 py-4 border-b border-gray-200 flex items-center gap-2">
-              <Clock className="w-4 h-4 text-gray-500" />
-              <h3 className="font-medium text-gray-900">Recent Dictations</h3>
+          <div className="bg-card rounded-lg border border-border overflow-hidden">
+            <div className="px-5 py-4 border-b border-border flex items-center gap-2">
+              <Clock className="w-4 h-4 text-muted-foreground" />
+              <h3 className="font-medium text-foreground">Recent Dictations</h3>
             </div>
             <div className="divide-y divide-gray-100">
               {recentDictations.length === 0 ? (
-                <div className="px-5 py-8 text-center text-sm text-gray-500">
+                <div className="px-5 py-8 text-center text-sm text-muted-foreground">
                   No saved dictation history yet. This list needs a backend dictation or notes integration.
                 </div>
               ) : (
                 recentDictations.map((d) => (
-                  <div key={d.id} className="px-5 py-3 hover:bg-gray-50 transition-colors">
+                  <div key={d.id} className="px-5 py-3 hover:bg-background transition-colors">
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm font-medium text-gray-900">{d.noteType} Note</span>
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${d.status === "Saved" ? "bg-green-100 text-green-700" : d.status === "Draft" ? "bg-amber-100 text-amber-700" : "bg-impilo-100 text-impilo-600"}`}>
+                        <FileText className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm font-medium text-foreground">{d.noteType} Note</span>
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${d.status === "Saved" ? "bg-green-100 text-green-700" : d.status === "Draft" ? "bg-amber-100 text-warning-foreground" : "bg-primary-soft text-primary"}`}>
                           {d.status}
                         </span>
                       </div>
-                      <span className="text-xs text-gray-400">{d.date}</span>
+                      <span className="text-xs text-muted-foreground">{d.date}</span>
                     </div>
-                    <p className="text-xs text-gray-500 truncate">{d.preview}</p>
-                    <div className="flex items-center gap-3 mt-1 text-[10px] text-gray-400">
+                    <p className="text-xs text-muted-foreground truncate">{d.preview}</p>
+                    <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground">
                       <span>Duration: {d.duration}</span>
                       <span>{d.wordCount} words</span>
                     </div>

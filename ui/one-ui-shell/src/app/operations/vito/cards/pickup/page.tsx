@@ -40,33 +40,33 @@ function VerifyPanel({
   const canSubmit = pickupToken.trim().length > 0 && delegateOtp.trim().length > 0;
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
+    <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
       <div className="flex items-center gap-2">
-        <PackageCheck className="h-4 w-4 text-impilo-600" />
-        <h2 className="text-sm font-semibold text-gray-900">Sub-panel A — Verify pickup token</h2>
+        <PackageCheck className="h-4 w-4 text-primary" />
+        <h2 className="text-sm font-semibold text-foreground">Sub-panel A — Verify pickup token</h2>
       </div>
-      <p className="text-sm text-gray-500">
+      <p className="text-sm text-muted-foreground">
         Enter the pickup token and delegate OTP to confirm delegate identity before handing over the card.
       </p>
       <form onSubmit={handleSubmit} className="space-y-3">
-        <label className="text-xs text-gray-500 flex flex-col gap-1">
+        <label className="text-xs text-muted-foreground flex flex-col gap-1">
           Pickup token
           <input
             type="text"
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+            className="rounded-lg border border-border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
             placeholder="e.g. PT-XXXX-YYYY"
             value={pickupToken}
             onChange={(e) => setPickupToken(e.target.value)}
             required
           />
         </label>
-        <label className="text-xs text-gray-500 flex flex-col gap-1">
+        <label className="text-xs text-muted-foreground flex flex-col gap-1">
           Delegate OTP
           <input
             type="text"
             inputMode="numeric"
             maxLength={8}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm tracking-widest focus:outline-none focus:ring-2 focus:ring-impilo-400"
+            className="rounded-lg border border-border px-3 py-1.5 text-sm tracking-widest focus:outline-none focus:ring-2 focus:ring-primary/40"
             placeholder="6-digit code"
             value={delegateOtp}
             onChange={(e) => setDelegateOtp(e.target.value)}
@@ -76,14 +76,14 @@ function VerifyPanel({
         <button
           type="submit"
           disabled={verifyMutation.isPending || !canSubmit}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-impilo-600 px-4 py-2 text-sm font-medium text-white hover:bg-impilo-700 disabled:opacity-50"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary-hover px-4 py-2 text-sm font-medium text-white hover:bg-impilo-700 disabled:opacity-50"
         >
           {verifyMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
           {verifyMutation.isPending ? "Verifying…" : "Verify token"}
         </button>
 
         {verifyMutation.isError && (
-          <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          <div className="flex items-center gap-2 rounded-xl border border-danger/28 bg-danger-soft px-3 py-2 text-sm text-danger">
             <AlertTriangle className="h-4 w-4 flex-shrink-0" />
             Verification failed. Check the token and OTP, then try again.
           </div>
@@ -124,20 +124,20 @@ function VerifiedDetails({
 
   if (confirmed) {
     return (
-      <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 space-y-3">
+      <div className="rounded-2xl border border-success/25 bg-success-soft p-5 space-y-3">
         <div className="flex items-center gap-2">
-          <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-          <h2 className="text-sm font-semibold text-emerald-900">Handover confirmed</h2>
+          <CheckCircle2 className="h-5 w-5 text-primary" />
+          <h2 className="text-sm font-semibold text-primary-hover">Handover confirmed</h2>
         </div>
-        <p className="text-sm text-emerald-800">
+        <p className="text-sm text-primary-hover">
           Card <span className="font-medium">{result.cardId}</span> has been successfully handed over to{" "}
           <span className="font-medium">{result.delegateName}</span>.
         </p>
-        <p className="text-xs text-emerald-700">Confirmed at: {fmt(confirmedAt)}</p>
+        <p className="text-xs text-primary-hover">Confirmed at: {fmt(confirmedAt)}</p>
         <button
           type="button"
           onClick={onReset}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-white px-3 py-1.5 text-xs font-medium text-emerald-800 hover:bg-emerald-100"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-card px-3 py-1.5 text-xs font-medium text-primary-hover hover:bg-emerald-100"
         >
           Process another pickup
         </button>
@@ -146,29 +146,29 @@ function VerifiedDetails({
   }
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
+    <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
       <div className="flex items-center gap-2">
-        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-        <h2 className="text-sm font-semibold text-gray-900">Sub-panel B — Confirm handover</h2>
+        <CheckCircle2 className="h-4 w-4 text-primary" />
+        <h2 className="text-sm font-semibold text-foreground">Sub-panel B — Confirm handover</h2>
       </div>
 
-      <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 space-y-2 text-sm">
+      <div className="rounded-xl border border-border bg-background p-4 space-y-2 text-sm">
         <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
-          <span className="text-xs text-gray-500">Delegate</span>
-          <span className="text-xs font-medium text-gray-900">{result.delegateName}</span>
+          <span className="text-xs text-muted-foreground">Delegate</span>
+          <span className="text-xs font-medium text-foreground">{result.delegateName}</span>
 
-          <span className="text-xs text-gray-500">Facility</span>
-          <span className="text-xs font-medium text-gray-900">{result.facilityName}</span>
+          <span className="text-xs text-muted-foreground">Facility</span>
+          <span className="text-xs font-medium text-foreground">{result.facilityName}</span>
 
-          <span className="text-xs text-gray-500">Card ID</span>
-          <span className="text-xs font-medium text-gray-900">{result.cardId}</span>
+          <span className="text-xs text-muted-foreground">Card ID</span>
+          <span className="text-xs font-medium text-foreground">{result.cardId}</span>
 
-          <span className="text-xs text-gray-500">Token expires</span>
-          <span className="text-xs font-medium text-gray-900">{fmt(result.expiresAt)}</span>
+          <span className="text-xs text-muted-foreground">Token expires</span>
+          <span className="text-xs font-medium text-foreground">{fmt(result.expiresAt)}</span>
         </div>
       </div>
 
-      <p className="text-sm text-gray-600">
+      <p className="text-sm text-muted-foreground">
         Confirm you have physically verified the delegate&apos;s identity and are handing over the card.
       </p>
 
@@ -185,14 +185,14 @@ function VerifiedDetails({
         <button
           type="button"
           onClick={onReset}
-          className="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:border-gray-400"
+          className="rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground hover:border-gray-400"
         >
           Cancel
         </button>
       </div>
 
       {confirmMutation.isError && (
-        <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <div className="flex items-center gap-2 rounded-xl border border-danger/28 bg-danger-soft px-3 py-2 text-sm text-danger">
           <AlertTriangle className="h-4 w-4 flex-shrink-0" />
           Handover confirmation failed. Please try again or contact support.
         </div>
@@ -227,14 +227,14 @@ export default function CardPickupPage() {
           <div className="flex flex-wrap gap-3">
             <Link
               href="/operations/vito/cards"
-              className="text-sm text-gray-600 hover:text-gray-900 underline-offset-2 hover:underline"
+              className="text-sm text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
             >
               ← Smart card management
             </Link>
-            <span className="text-gray-300">·</span>
+            <span className="text-muted-foreground">·</span>
             <Link
               href="/operations/vito"
-              className="text-sm text-gray-600 hover:text-gray-900 underline-offset-2 hover:underline"
+              className="text-sm text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
             >
               Identity operations
             </Link>
@@ -244,7 +244,7 @@ export default function CardPickupPage() {
             <VerifyPanel onVerified={handleVerified} />
           ) : (
             <>
-              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 flex items-center gap-2">
+              <div className="rounded-2xl border border-success/25 bg-success-soft px-4 py-3 text-sm text-primary-hover flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
                 Token verified for delegate <strong className="ml-1">{verified.result.delegateName}</strong>
               </div>

@@ -73,7 +73,7 @@ export default function ReconciliationQueuePage() {
         </div>
       )}
 
-      <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 overflow-hidden">
+      <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-neutral-100 bg-neutral-50">

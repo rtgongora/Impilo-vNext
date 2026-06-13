@@ -37,9 +37,9 @@ import {
 } from "@/hooks/queries/useTelemedicine";
 
 const STATUS_STYLES: Record<string, { label: string; className: string }> = {
-  SCHEDULED: { label: "Scheduled", className: "bg-impilo-100 text-impilo-600" },
+  SCHEDULED: { label: "Scheduled", className: "bg-primary-soft text-primary" },
   IN_PROGRESS: { label: "In Progress", className: "bg-green-100 text-green-700" },
-  COMPLETED: { label: "Completed", className: "bg-gray-100 text-gray-600" },
+  COMPLETED: { label: "Completed", className: "bg-neutral-100 text-muted-foreground" },
   CANCELLED: { label: "Cancelled", className: "bg-red-100 text-red-600" },
 };
 
@@ -214,15 +214,15 @@ export default function TelemedicinePage() {
           />
         </div>
         {!facility ? (
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-8 text-center">
+          <div className="rounded-2xl border border-warning/35 bg-warning-soft p-8 text-center">
             <AlertCircle className="mx-auto mb-3 h-10 w-10 text-amber-600" />
-            <h2 className="text-lg font-semibold text-gray-900">Facility context is required</h2>
-            <p className="mt-2 text-sm text-gray-600">
+            <h2 className="text-lg font-semibold text-foreground">Facility context is required</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
               Select a workplace first so teleconsult routing and downstream headers stay aligned.
             </p>
             <Link
               href="/facility"
-              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800"
+              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
             >
               Select Facility
             </Link>
@@ -232,60 +232,60 @@ export default function TelemedicinePage() {
             <div className="mb-4 flex justify-end">
               <Link
                 href="/telemedicine/analytics"
-                className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:border-impilo-200"
+                className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground hover:border-primary/25"
               >
-                <Calendar className="h-4 w-4 text-impilo-500" />
+                <Calendar className="h-4 w-4 text-primary" />
                 Lifecycle SLA analytics
               </Link>
             </div>
             <div className="mb-6 grid gap-4 lg:grid-cols-3">
-              <div className="rounded-2xl border border-impilo-200 bg-impilo-50 p-5">
+              <div className="rounded-2xl border border-primary/25 bg-primary-soft p-5">
                 <div className="mb-3 flex items-center gap-2">
-                  <ArrowDownLeft className="h-5 w-5 text-impilo-500" />
+                  <ArrowDownLeft className="h-5 w-5 text-primary" />
                   <h3 className="text-sm font-semibold text-impilo-800">Incoming Consults</h3>
                 </div>
-                <p className="text-3xl font-semibold text-gray-900">{incomingSessions.length}</p>
-                <p className="mt-1 text-sm text-impilo-700">
+                <p className="text-3xl font-semibold text-foreground">{incomingSessions.length}</p>
+                <p className="mt-1 text-sm text-primary-hover">
                   Sessions initiated by another clinician and waiting on your team.
                 </p>
                 <Link
                   href="/queue/incoming-referrals"
-                  className="mt-4 inline-flex text-sm font-medium text-impilo-600 transition-colors hover:text-impilo-800"
+                  className="mt-4 inline-flex text-sm font-medium text-primary transition-colors hover:text-impilo-800"
                 >
                   Review incoming referrals
                 </Link>
               </div>
 
-              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+              <div className="rounded-2xl border border-success/25 bg-success-soft p-5">
                 <div className="mb-3 flex items-center gap-2">
-                  <ArrowUpRight className="h-5 w-5 text-emerald-600" />
-                  <h3 className="text-sm font-semibold text-emerald-900">Outgoing Consults</h3>
+                  <ArrowUpRight className="h-5 w-5 text-primary" />
+                  <h3 className="text-sm font-semibold text-primary-hover">Outgoing Consults</h3>
                 </div>
-                <p className="text-3xl font-semibold text-gray-900">{outgoingSessions.length}</p>
-                <p className="mt-1 text-sm text-emerald-800">
+                <p className="text-3xl font-semibold text-foreground">{outgoingSessions.length}</p>
+                <p className="mt-1 text-sm text-primary-hover">
                   Sessions being coordinated from your currently selected workplace.
                 </p>
                 <button
                   type="button"
                   onClick={() => setShowComposer((current) => !current)}
-                  className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-emerald-700 transition-colors hover:text-emerald-900"
+                  className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary-hover transition-colors hover:text-primary-hover"
                 >
                   <Plus className="h-4 w-4" />
                   Schedule a teleconsult
                 </button>
               </div>
 
-              <div className="rounded-2xl border border-gray-200 bg-white p-5">
+              <div className="rounded-2xl border border-border bg-card p-5">
                 <div className="mb-3 flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-gray-700" />
-                  <h3 className="text-sm font-semibold text-gray-900">Operational Context</h3>
+                  <CheckCircle2 className="h-5 w-5 text-foreground" />
+                  <h3 className="text-sm font-semibold text-foreground">Operational Context</h3>
                 </div>
-                <p className="text-3xl font-semibold text-gray-900">{activeSessions.length}</p>
-                <p className="mt-1 text-sm text-gray-600">
+                <p className="text-3xl font-semibold text-foreground">{activeSessions.length}</p>
+                <p className="mt-1 text-sm text-muted-foreground">
                   Active sessions in the current facility context right now.
                 </p>
                 {isScoped ? (
-                  <p className="mt-4 rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-600">
+                  <p className="mt-4 rounded-lg bg-background px-3 py-2 text-xs text-muted-foreground">
                     Scoped to
                     {patientIdFilter ? ` patient ${patientIdFilter.slice(0, 8)}...` : ""}
                     {patientIdFilter && referralIdFilter ? " and" : ""}
@@ -294,7 +294,7 @@ export default function TelemedicinePage() {
                 ) : (
                   <Link
                     href="/queue"
-                    className="mt-4 inline-flex text-sm font-medium text-gray-700 transition-colors hover:text-gray-900"
+                    className="mt-4 inline-flex text-sm font-medium text-foreground transition-colors hover:text-foreground"
                   >
                     Open the broader work queue
                   </Link>
@@ -302,11 +302,11 @@ export default function TelemedicinePage() {
               </div>
             </div>
 
-            <div className="mb-6 rounded-2xl border border-gray-200 bg-white p-5">
+            <div className="mb-6 rounded-2xl border border-border bg-card p-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-900">Schedule Teleconsult</h3>
-                  <p className="mt-1 text-sm text-gray-600">
+                  <h3 className="text-sm font-semibold text-foreground">Schedule Teleconsult</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
                     Start from a patient, a referral, or a direct provider handoff without leaving
                     the workplace context.
                   </p>
@@ -314,7 +314,7 @@ export default function TelemedicinePage() {
                 <button
                   type="button"
                   onClick={() => setShowComposer((current) => !current)}
-                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                  className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-background"
                 >
                   {showComposer ? "Hide" : "Open"}
                 </button>
@@ -324,35 +324,35 @@ export default function TelemedicinePage() {
                 <div className="mt-4 space-y-4">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <label className="block">
-                      <span className="mb-1 block text-xs font-medium text-gray-600">Patient ID</span>
+                      <span className="mb-1 block text-xs font-medium text-muted-foreground">Patient ID</span>
                       <input
                         type="text"
                         value={composer.patientId}
                         onChange={(event) => updateComposer("patientId", event.target.value)}
                         placeholder="Patient identifier"
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                       />
                     </label>
 
                     <label className="block">
-                      <span className="mb-1 block text-xs font-medium text-gray-600">Referral ID</span>
+                      <span className="mb-1 block text-xs font-medium text-muted-foreground">Referral ID</span>
                       <input
                         type="text"
                         value={composer.referralId}
                         onChange={(event) => updateComposer("referralId", event.target.value)}
                         placeholder="Optional referral link"
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                       />
                     </label>
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <label className="block">
-                      <span className="mb-1 block text-xs font-medium text-gray-600">Session Type</span>
+                      <span className="mb-1 block text-xs font-medium text-muted-foreground">Session Type</span>
                       <select
                         value={composer.sessionType}
                         onChange={(event) => updateComposer("sessionType", event.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                       >
                         <option value="VIDEO">Video</option>
                         <option value="AUDIO">Audio</option>
@@ -363,11 +363,11 @@ export default function TelemedicinePage() {
                     </label>
 
                     <label className="block">
-                      <span className="mb-1 block text-xs font-medium text-gray-600">Purpose of Use</span>
+                      <span className="mb-1 block text-xs font-medium text-muted-foreground">Purpose of Use</span>
                       <select
                         value={composer.purposeOfUse}
                         onChange={(event) => updateComposer("purposeOfUse", event.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                       >
                         <option value="TREATMENT">Treatment</option>
                         <option value="EMERGENCY">Emergency</option>
@@ -380,17 +380,17 @@ export default function TelemedicinePage() {
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <label className="block">
-                      <span className="mb-1 block text-xs font-medium text-gray-600">Scheduled For</span>
+                      <span className="mb-1 block text-xs font-medium text-muted-foreground">Scheduled For</span>
                       <input
                         type="datetime-local"
                         value={composer.scheduledAt}
                         onChange={(event) => updateComposer("scheduledAt", event.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                       />
                     </label>
                     {(composer.sessionType === "VIDEO" || composer.sessionType === "AUDIO") ? (
                       <label className="block">
-                        <span className="mb-1 block text-xs font-medium text-gray-600">
+                        <span className="mb-1 block text-xs font-medium text-muted-foreground">
                           Consent Reference {composer.purposeOfUse === "EMERGENCY" ? "(optional for emergency)" : "*"}
                         </span>
                         <input
@@ -398,25 +398,25 @@ export default function TelemedicinePage() {
                           value={composer.consentReference}
                           onChange={(event) => updateComposer("consentReference", event.target.value)}
                           placeholder="mvumo-consent-id"
-                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                          className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                         />
                       </label>
                     ) : <div />}
                   </div>
 
                   <label className="block">
-                    <span className="mb-1 block text-xs font-medium text-gray-600">Notes</span>
+                    <span className="mb-1 block text-xs font-medium text-muted-foreground">Notes</span>
                     <textarea
                       value={composer.notes}
                       onChange={(event) => updateComposer("notes", event.target.value)}
                       rows={4}
                       placeholder="Reason for consult, prep requested, or coordination notes"
-                      className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                      className="w-full resize-none rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                     />
                   </label>
 
                   {createSession.isError && (
-                    <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+                    <p className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">
                       The session could not be created. Confirm the workplace and patient context,
                       then try again.
                     </p>
@@ -426,7 +426,7 @@ export default function TelemedicinePage() {
                     {patientIdFilter && (
                       <Link
                         href={`/ehr/${patientIdFilter}/consults?tab=teleconsults`}
-                        className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                        className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-background"
                       >
                         <User className="h-3.5 w-3.5" />
                         Open patient consults
@@ -434,7 +434,7 @@ export default function TelemedicinePage() {
                     )}
                     <Link
                       href="/queue/incoming-referrals"
-                      className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                      className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-background"
                     >
                       <ArrowDownLeft className="h-3.5 w-3.5" />
                       Incoming referrals
@@ -445,7 +445,7 @@ export default function TelemedicinePage() {
                     <button
                       type="button"
                       onClick={resetComposer}
-                      className="flex-1 rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200"
+                      className="flex-1 rounded-lg bg-neutral-100 px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-neutral-100"
                     >
                       Cancel
                     </button>
@@ -461,7 +461,7 @@ export default function TelemedicinePage() {
                           !composer.consentReference.trim()
                         )
                       }
-                      className="flex-1 rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex-1 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {createSession.isPending ? "Scheduling..." : "Create Session"}
                     </button>
@@ -470,7 +470,7 @@ export default function TelemedicinePage() {
               )}
             </div>
 
-            <div className="mb-6 flex gap-1 border-b border-gray-200">
+            <div className="mb-6 flex gap-1 border-b border-border">
               {tabs.map((tab) => (
                 <button
                   key={tab.key}
@@ -478,8 +478,8 @@ export default function TelemedicinePage() {
                   onClick={() => setActiveTab(tab.key)}
                   className={`border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
                     activeTab === tab.key
-                      ? "border-impilo-500 text-impilo-500"
-                      : "border-transparent text-gray-500 hover:text-gray-700"
+                      ? "border-impilo-500 text-primary"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {tab.label}
@@ -487,14 +487,14 @@ export default function TelemedicinePage() {
               ))}
             </div>
             {isLoading ? (
-              <div className="flex items-center justify-center rounded-2xl border border-gray-200 bg-white py-16">
-                <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-                <span className="ml-2 text-sm text-gray-500">Loading sessions...</span>
+              <div className="flex items-center justify-center rounded-2xl border border-border bg-card py-16">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <span className="ml-2 text-sm text-muted-foreground">Loading sessions...</span>
               </div>
             ) : sessions.length === 0 ? (
-              <div className="rounded-2xl border border-gray-200 bg-white p-12 text-center">
-                <Video className="mx-auto mb-3 h-10 w-10 text-gray-300" />
-                <p className="text-sm text-gray-500">
+              <div className="rounded-2xl border border-border bg-card p-12 text-center">
+                <Video className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
                   {isScoped
                     ? "No teleconsult sessions match this referral context yet."
                     : "No telemedicine sessions found for the selected facility."}
@@ -502,7 +502,7 @@ export default function TelemedicinePage() {
                 <button
                   type="button"
                   onClick={() => setShowComposer(true)}
-                  className="mt-4 inline-flex items-center gap-2 rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600"
+                  className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
                 >
                   <Plus className="h-4 w-4" />
                   Schedule first session
@@ -514,7 +514,7 @@ export default function TelemedicinePage() {
                   const attrs = session.attributes;
                   const status = STATUS_STYLES[attrs.status] ?? {
                     label: attrs.status,
-                    className: "bg-gray-100 text-gray-600",
+                    className: "bg-neutral-100 text-muted-foreground",
                   };
                   const isJoinable = attrs.status === "SCHEDULED" || attrs.status === "IN_PROGRESS";
                   const isOutgoing = attrs.provider_id === user?.id;
@@ -522,25 +522,25 @@ export default function TelemedicinePage() {
                   return (
                     <div
                       key={session.id}
-                      className="rounded-2xl border border-gray-200 bg-white p-5 transition-colors hover:border-gray-300"
+                      className="rounded-2xl border border-border bg-card p-5 transition-colors hover:border-border"
                     >
                       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div className="min-w-0 flex-1">
                           <div className="mb-3 flex items-start gap-3">
                             <div
                               className={`flex h-11 w-11 items-center justify-center rounded-full ${
-                                isOutgoing ? "bg-emerald-50" : "bg-impilo-50"
+                                isOutgoing ? "bg-success-soft" : "bg-primary-soft"
                               }`}
                             >
                               {isOutgoing ? (
-                                <ArrowUpRight className="h-5 w-5 text-emerald-600" />
+                                <ArrowUpRight className="h-5 w-5 text-primary" />
                               ) : (
-                                <ArrowDownLeft className="h-5 w-5 text-impilo-500" />
+                                <ArrowDownLeft className="h-5 w-5 text-primary" />
                               )}
                             </div>
                             <div className="min-w-0">
                               <div className="flex flex-wrap items-center gap-2">
-                                <h3 className="text-sm font-semibold text-gray-900">
+                                <h3 className="text-sm font-semibold text-foreground">
                                   {attrs.session_type} Teleconsult
                                 </h3>
                                 <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${status.className}`}>
@@ -548,13 +548,13 @@ export default function TelemedicinePage() {
                                 </span>
                                 <span
                                   className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                                    isOutgoing ? "bg-emerald-100 text-emerald-700" : "bg-impilo-100 text-impilo-600"
+                                    isOutgoing ? "bg-emerald-100 text-primary-hover" : "bg-primary-soft text-primary"
                                   }`}
                                 >
                                   {isOutgoing ? "Outgoing" : "Incoming"}
                                 </span>
                               </div>
-                              <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-gray-500">
+                              <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                                 {attrs.patient_id && (
                                   <span className="flex items-center gap-1">
                                     <User className="h-3 w-3" />
@@ -586,11 +586,11 @@ export default function TelemedicinePage() {
                           {(attrs.referral_id || attrs.notes) && (
                             <div className="space-y-2 pl-14">
                               {attrs.referral_id && (
-                                <p className="text-xs font-medium text-impilo-600">
+                                <p className="text-xs font-medium text-primary">
                                   Referral-linked orchestration is enabled for this session.
                                 </p>
                               )}
-                              {attrs.notes && <p className="text-sm text-gray-600">{attrs.notes}</p>}
+                              {attrs.notes && <p className="text-sm text-muted-foreground">{attrs.notes}</p>}
                             </div>
                           )}
                         </div>
@@ -609,7 +609,7 @@ export default function TelemedicinePage() {
                           )}
                           <Link
                             href={`/telemedicine/session/${session.id}`}
-                            className="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200"
+                            className="inline-flex items-center gap-2 rounded-lg bg-neutral-100 px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-neutral-100"
                           >
                             <Video className="h-4 w-4" />
                             Details

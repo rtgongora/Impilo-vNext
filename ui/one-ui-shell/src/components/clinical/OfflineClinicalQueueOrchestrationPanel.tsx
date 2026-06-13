@@ -20,16 +20,16 @@ export function OfflineClinicalQueueOrchestrationPanel() {
 
   return (
     <section
-      className="mb-4 rounded-xl border border-amber-200 bg-amber-50/80 p-4"
+      className="mb-4 rounded-xl border border-warning/35 bg-warning-soft/80 p-4"
       data-testid="offline-clinical-queue-orchestration-panel"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="flex items-center gap-2 text-sm font-semibold text-amber-900">
+          <p className="flex items-center gap-2 text-sm font-semibold text-warning-foreground">
             <WifiOff className="h-4 w-4" />
             Offline clinical queue orchestration
           </p>
-          <p className="mt-1 text-xs text-amber-800" data-testid="offline-queue-kpi-strip">
+          <p className="mt-1 text-xs text-warning-foreground" data-testid="offline-queue-kpi-strip">
             {!facility
               ? "Facility context required to probe offline reconciliation queue"
               : queueQ.isLoading
@@ -48,7 +48,7 @@ export function OfflineClinicalQueueOrchestrationPanel() {
                   conflictResolution: "user_prompted",
                 })
               }
-              className="inline-flex items-center gap-1 rounded-lg border border-amber-300 bg-white px-2.5 py-1.5 text-xs font-medium text-amber-900 hover:border-amber-400 disabled:opacity-50"
+              className="inline-flex items-center gap-1 rounded-lg border border-amber-300 bg-card px-2.5 py-1.5 text-xs font-medium text-warning-foreground hover:border-amber-400 disabled:opacity-50"
               data-testid="offline-reconcile-submit"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${reconcile.isPending ? "animate-spin" : ""}`} />
@@ -57,19 +57,19 @@ export function OfflineClinicalQueueOrchestrationPanel() {
           )}
           <Link
             href="/clinical-tools"
-            className="inline-flex items-center gap-1 rounded-lg border border-amber-200 bg-white px-2.5 py-1.5 text-xs font-medium text-amber-900 hover:border-amber-300"
+            className="inline-flex items-center gap-1 rounded-lg border border-warning/35 bg-card px-2.5 py-1.5 text-xs font-medium text-warning-foreground hover:border-amber-300"
           >
             Offline sync tab
           </Link>
         </div>
       </div>
       {pending.length > 0 && (
-        <ul className="mt-3 space-y-1 text-xs text-amber-900" data-testid="offline-conflict-list">
+        <ul className="mt-3 space-y-1 text-xs text-warning-foreground" data-testid="offline-conflict-list">
           {pending.slice(0, 3).map((batch, idx) => {
             const row = batch && typeof batch === "object" ? (batch as Record<string, unknown>) : {};
             const id = String(row.id ?? row.batchId ?? `batch-${idx}`);
             return (
-              <li key={id} className="rounded border border-amber-100 bg-white px-2 py-1">
+              <li key={id} className="rounded border border-amber-100 bg-card px-2 py-1">
                 Pending reconcile batch {id}
               </li>
             );
@@ -77,7 +77,7 @@ export function OfflineClinicalQueueOrchestrationPanel() {
         </ul>
       )}
       {(queueQ.isLoading || pendingQ.isLoading) && facility && (
-        <div className="mt-2 flex items-center gap-2 text-xs text-amber-700">
+        <div className="mt-2 flex items-center gap-2 text-xs text-warning-foreground">
           <Loader2 className="h-3.5 w-3.5 animate-spin" />
           Bridging web shell → TSHEPO offline federation path…
         </div>

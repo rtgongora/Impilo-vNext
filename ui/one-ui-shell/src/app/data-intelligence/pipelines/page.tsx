@@ -31,10 +31,10 @@ function MetricCard({
   tone?: "slate" | "emerald" | "amber" | "rose";
 }) {
   const tones = {
-    slate: "border-slate-200 bg-white text-slate-900",
-    emerald: "border-emerald-200 bg-emerald-50 text-emerald-900",
-    amber: "border-amber-200 bg-amber-50 text-amber-900",
-    rose: "border-rose-200 bg-rose-50 text-rose-900",
+    slate: "border-border bg-card text-foreground",
+    emerald: "border-success/25 bg-success-soft text-primary-hover",
+    amber: "border-warning/35 bg-warning-soft text-warning-foreground",
+    rose: "border-danger/28 bg-danger-soft text-danger",
   } as const;
 
   return (
@@ -76,7 +76,7 @@ export default function DataPipelinesPage() {
       </div>
 
       {metrics.isLoading ? (
-        <div className="flex items-center gap-2 py-8 text-sm text-slate-500">
+        <div className="flex items-center gap-2 py-8 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
           Loading pipeline signals from Experience BFF…
         </div>
@@ -157,11 +157,11 @@ export default function DataPipelinesPage() {
       </div>
 
       {!metrics.isLoading && metrics.isPartial && watermarks.isError ? (
-        <div className="mt-6 flex gap-3 rounded-xl border border-amber-200 bg-amber-50/80 p-4 text-sm text-amber-950">
+        <div className="mt-6 flex gap-3 rounded-xl border border-warning/35 bg-warning-soft/80 p-4 text-sm text-warning-foreground">
           <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
           <div>
             <p className="font-medium">Partial pipeline visibility</p>
-            <p className="mt-1 text-xs leading-relaxed text-amber-900/90">
+            <p className="mt-1 text-xs leading-relaxed text-warning-foreground/90">
               Integration-hub and core-transaction telemetry are live. Start{" "}
               <code className="text-[11px]">data-pipeline-service</code> for watermark and source lag panels.
             </p>
@@ -172,16 +172,16 @@ export default function DataPipelinesPage() {
       <div className="mt-6 grid gap-3 sm:grid-cols-2">
         <Link
           href="/admin/integration-status"
-          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-800 hover:border-impilo-200 hover:bg-impilo-50"
+          className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground hover:border-primary/25 hover:bg-primary-soft"
         >
           <Radio className="h-4 w-4 text-teal-600" />
           Full integration status admin
         </Link>
         <Link
           href="/platform-journey"
-          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-800 hover:border-impilo-200 hover:bg-impilo-50"
+          className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground hover:border-primary/25 hover:bg-primary-soft"
         >
-          <GitBranch className="h-4 w-4 text-impilo-600" />
+          <GitBranch className="h-4 w-4 text-primary" />
           Platform journey monitor
         </Link>
       </div>

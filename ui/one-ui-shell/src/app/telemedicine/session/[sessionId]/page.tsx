@@ -241,8 +241,8 @@ export default function TeleconsultSessionPage() {
     return (
       <AppLayout>
         <div className="flex items-center justify-center h-[calc(100vh-8rem)]">
-          <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-          <span className="ml-2 text-sm text-gray-500">Loading session...</span>
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          <span className="ml-2 text-sm text-muted-foreground">Loading session...</span>
         </div>
       </AppLayout>
     );
@@ -254,31 +254,31 @@ export default function TeleconsultSessionPage() {
       <AppLayout>
         <div className="max-w-2xl mx-auto p-4 space-y-4">
           <Link href={`/telemedicine/session/${sessionId}`} onClick={(e) => { e.preventDefault(); setShowCompletion(false); }}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-4 h-4" /> Back to session
           </Link>
-          <div className="bg-white rounded-xl border-2 border-impilo-200 p-6 space-y-5">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-impilo-500" /> Stage 7 — Completion Note & Loop Closure
+          <div className="bg-card rounded-xl border-2 border-primary/25 p-6 space-y-5">
+            <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-primary" /> Stage 7 — Completion Note & Loop Closure
             </h2>
             <label className="block" htmlFor="teleconsult-completion-actions">
-              <span className="text-sm font-medium text-gray-700">Actions taken *</span>
+              <span className="text-sm font-medium text-foreground">Actions taken *</span>
               <textarea
                 id="teleconsult-completion-actions"
                 value={actionsTaken}
                 onChange={(e) => setActionsTaken(e.target.value)}
                 rows={3}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                 placeholder="Medications administered, tests done, procedures, monitoring, counseling..."
               />
             </label>
             <label className="block" htmlFor="teleconsult-completion-outcome">
-              <span className="text-sm font-medium text-gray-700">Patient outcome *</span>
+              <span className="text-sm font-medium text-foreground">Patient outcome *</span>
               <select
                 id="teleconsult-completion-outcome"
                 value={patientOutcome}
                 onChange={(e) => setPatientOutcome(e.target.value)}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
               >
                 <option value="">Select...</option>
                 <option value="IMPROVED">Improved</option>
@@ -290,12 +290,12 @@ export default function TeleconsultSessionPage() {
               </select>
             </label>
             <label className="block" htmlFor="teleconsult-completion-followup">
-              <span className="text-sm font-medium text-gray-700">Follow-up execution</span>
+              <span className="text-sm font-medium text-foreground">Follow-up execution</span>
               <select
                 id="teleconsult-completion-followup"
                 value={followUpExecution}
                 onChange={(e) => setFollowUpExecution(e.target.value)}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
               >
                 <option value="">Select...</option>
                 <option value="COMPLETED">Completed</option>
@@ -304,18 +304,18 @@ export default function TeleconsultSessionPage() {
               </select>
             </label>
             <label className="block" htmlFor="teleconsult-completion-narrative">
-              <span className="text-sm font-medium text-gray-700">Case closure narrative</span>
+              <span className="text-sm font-medium text-foreground">Case closure narrative</span>
               <textarea
                 id="teleconsult-completion-narrative"
                 value={closureNarrative}
                 onChange={(e) => setClosureNarrative(e.target.value)}
                 rows={3}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                 placeholder="Brief summary of the case and its resolution..."
               />
             </label>
             <button onClick={handleSubmitCompletion} disabled={submittingCompletion || !actionsTaken.trim()}
-              className="w-full flex items-center justify-center gap-2 py-2.5 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-40 transition-colors">
+              className="w-full flex items-center justify-center gap-2 py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover disabled:opacity-40 transition-colors">
               {submittingCompletion ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
               {submittingCompletion ? "Closing..." : "Close Case & Archive"}
             </button>
@@ -327,20 +327,20 @@ export default function TeleconsultSessionPage() {
 
   // ── 3-Pane Session Workspace ──
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="flex flex-col h-screen bg-background">
       {/* Top bar */}
-      <header className="h-12 bg-white border-b px-4 flex items-center justify-between shrink-0">
+      <header className="h-12 bg-card border-b px-4 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
-          <Link href="/telemedicine" className="text-gray-400 hover:text-gray-600">
+          <Link href="/telemedicine" className="text-muted-foreground hover:text-muted-foreground">
             <ArrowLeft className="w-4 h-4" />
           </Link>
-          <Video className="w-4 h-4 text-impilo-500" />
-          <span className="text-sm font-semibold text-gray-900">Teleconsult Session</span>
+          <Video className="w-4 h-4 text-primary" />
+          <span className="text-sm font-semibold text-foreground">Teleconsult Session</span>
           <span className={`px-2 py-0.5 text-[10px] font-medium rounded-full ${
-            isClosed ? "bg-gray-100 text-gray-600"
-            : isResponded ? "bg-blue-100 text-blue-700"
+            isClosed ? "bg-neutral-100 text-muted-foreground"
+            : isResponded ? "bg-blue-100 text-primary-hover"
             : callActive ? "bg-green-100 text-green-700"
-            : "bg-amber-100 text-amber-700"
+            : "bg-amber-100 text-warning-foreground"
           }`}>
             {isClosed ? "CLOSED" : isResponded ? "RESPONDED" : callActive ? "IN CALL" : status}
           </span>
@@ -351,11 +351,11 @@ export default function TeleconsultSessionPage() {
         <div className="flex items-center gap-2">
           {isResponded && !isClosed && (
             <button onClick={() => setShowCompletion(true)}
-              className="px-3 py-1 text-xs font-medium bg-impilo-500 text-white rounded-md hover:bg-impilo-600">
+              className="px-3 py-1 text-xs font-medium bg-primary text-white rounded-md hover:bg-primary-hover">
               Complete & Close
             </button>
           )}
-          <span className="text-xs text-gray-400">{sessionId}</span>
+          <span className="text-xs text-muted-foreground">{sessionId}</span>
         </div>
       </header>
 
@@ -363,7 +363,7 @@ export default function TeleconsultSessionPage() {
       <div className="flex flex-1 min-h-0">
 
         {/* ═══ LEFT PANE — Communication ═══ */}
-        <div className="w-80 border-r bg-white flex flex-col shrink-0">
+        <div className="w-80 border-r bg-card flex flex-col shrink-0">
           <div className="p-2 border-b">
             <TelemedicineRtcHealthPanel />
           </div>
@@ -391,17 +391,17 @@ export default function TeleconsultSessionPage() {
               if (ready) { setVideoActive(!videoActive); if (!callActive) setCallActive(true); }
             }}
               disabled={mediaTokenM.isPending}
-              className={`p-2.5 rounded-full transition-colors ${videoActive ? "bg-red-500 text-white" : "bg-blue-100 text-blue-700 hover:bg-blue-200"}`}
+              className={`p-2.5 rounded-full transition-colors ${videoActive ? "bg-red-500 text-white" : "bg-blue-100 text-primary-hover hover:bg-blue-200"}`}
               title={hasGovernedMedia ? (videoActive ? "Stop video" : "Video call") : "Waiting for governed RTC media"}>
               {videoActive ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
             </button>
-            <button className="p-2.5 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200" title="Voice note">
+            <button className="p-2.5 rounded-full bg-neutral-100 text-muted-foreground hover:bg-neutral-100" title="Voice note">
               <Mic className="w-5 h-5" />
             </button>
           </div>
 
           {/* Video preview */}
-          <div className="h-40 bg-gray-900 flex flex-col items-center justify-center text-gray-300 text-xs gap-2 px-3">
+          <div className="h-40 bg-neutral-900 flex flex-col items-center justify-center text-muted-foreground text-xs gap-2 px-3">
             {hasGovernedMedia ? (
               <LiveKitConsultRoom
                 serverUrl={mediaRoomUrl}
@@ -420,14 +420,14 @@ export default function TeleconsultSessionPage() {
             ) : (
               <>
                 <Video className="w-8 h-8 opacity-60" />
-                <span className="text-center text-gray-400">
+                <span className="text-center text-muted-foreground">
                   Live media is blocked until the Telemedicine service returns a governed room and scoped token.
                 </span>
               </>
             )}
           </div>
           {mediaError ? (
-            <div className="mx-3 mt-2 rounded-md border border-amber-300 bg-amber-50 p-2 text-[11px] text-amber-700">
+            <div className="mx-3 mt-2 rounded-md border border-amber-300 bg-warning-soft p-2 text-[11px] text-warning-foreground">
               {mediaError} Continue governed teleconsult workflow via notes/messages while support stabilizes media.
             </div>
           ) : null}
@@ -435,18 +435,18 @@ export default function TeleconsultSessionPage() {
           {/* Chat messages */}
           <div className="flex-1 overflow-y-auto p-3 space-y-2">
             {messages.length === 0 && (
-              <p className="text-xs text-gray-400 text-center py-8">No messages yet. Start the conversation.</p>
+              <p className="text-xs text-muted-foreground text-center py-8">No messages yet. Start the conversation.</p>
             )}
             {messages.map((msg) => {
               const isMe = msg.senderId === user?.id;
               return (
                 <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                   <div className={`max-w-[85%] rounded-xl px-3 py-2 ${
-                    isMe ? "bg-impilo-500 text-white" : "bg-gray-100 text-gray-900"
+                    isMe ? "bg-primary text-white" : "bg-neutral-100 text-foreground"
                   }`}>
                     {!isMe && <p className="text-[10px] font-semibold opacity-70 mb-0.5">{msg.senderName}</p>}
                     <p className="text-sm">{msg.content}</p>
-                    <p className={`text-[9px] mt-0.5 ${isMe ? "text-impilo-100" : "text-gray-400"}`}>
+                    <p className={`text-[9px] mt-0.5 ${isMe ? "text-white/85" : "text-muted-foreground"}`}>
                       {new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                     </p>
                   </div>
@@ -462,9 +462,9 @@ export default function TeleconsultSessionPage() {
               <input value={newMessage} onChange={(e) => setNewMessage(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } }}
                 placeholder="Type a message..."
-                className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-impilo-400" />
+                className="flex-1 px-3 py-2 text-sm border border-border rounded-lg focus:ring-1 focus:ring-primary/40" />
               <button onClick={handleSendMessage} disabled={sending || !newMessage.trim()}
-                className="p-2 bg-impilo-500 text-white rounded-lg hover:bg-impilo-600 disabled:opacity-40">
+                className="p-2 bg-primary text-white rounded-lg hover:bg-primary-hover disabled:opacity-40">
                 <Send className="w-4 h-4" />
               </button>
             </div>
@@ -474,10 +474,10 @@ export default function TeleconsultSessionPage() {
         {/* ═══ CENTER PANE — Response Note Draft ═══ */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4 min-w-0">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-              <FileText className="w-4 h-4 text-gray-500" /> Response Note
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <FileText className="w-4 h-4 text-muted-foreground" /> Response Note
             </h3>
-            <div className="flex items-center gap-2 text-xs text-gray-400">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
               {lastSaved && <span>Saved {lastSaved}</span>}
               <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
             </div>
@@ -485,49 +485,49 @@ export default function TeleconsultSessionPage() {
 
           <div className="space-y-3">
             <label className="block">
-              <span className="text-xs font-medium text-gray-600">Clinical interpretation & response *</span>
+              <span className="text-xs font-medium text-muted-foreground">Clinical interpretation & response *</span>
               <textarea value={responseNote} onChange={(e) => setResponseNote(e.target.value)} rows={6}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                 placeholder="Thank you for this referral. On review of the clinical information provided...&#10;&#10;Impression: ...&#10;Recommendations: ..." />
             </label>
 
             <div className="grid grid-cols-2 gap-3">
               <label className="block">
-                <span className="text-xs font-medium text-gray-600">Working / final diagnosis</span>
+                <span className="text-xs font-medium text-muted-foreground">Working / final diagnosis</span>
                 <input value={diagnosis} onChange={(e) => setDiagnosis(e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="ICD-11 or free text..." />
+                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" placeholder="ICD-11 or free text..." />
               </label>
               <label className="block">
-                <span className="text-xs font-medium text-gray-600">Red flags</span>
+                <span className="text-xs font-medium text-muted-foreground">Red flags</span>
                 <input value={redFlags} onChange={(e) => setRedFlags(e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Danger signs to watch for..." />
+                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" placeholder="Danger signs to watch for..." />
               </label>
             </div>
 
             <label className="block">
-              <span className="text-xs font-medium text-gray-600">Action plan *</span>
+              <span className="text-xs font-medium text-muted-foreground">Action plan *</span>
               <textarea value={actionPlan} onChange={(e) => setActionPlan(e.target.value)} rows={3}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                 placeholder="1. Continue current management&#10;2. Add ...&#10;3. Monitor for ..." />
             </label>
 
             <label className="block">
-              <span className="text-xs font-medium text-gray-600">Orders (one per line)</span>
+              <span className="text-xs font-medium text-muted-foreground">Orders (one per line)</span>
               <textarea value={orders} onChange={(e) => setOrders(e.target.value)} rows={3}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                 placeholder="FBC + differential&#10;Chest X-ray PA&#10;Start Amoxicillin 500mg TDS x 5 days" />
             </label>
 
             <label className="block">
-              <span className="text-xs font-medium text-gray-600">Follow-up instructions</span>
+              <span className="text-xs font-medium text-muted-foreground">Follow-up instructions</span>
               <input value={followUp} onChange={(e) => setFollowUp(e.target.value)}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                 placeholder="Review in 1 week, or sooner if deterioration..." />
             </label>
 
             {!isResponded && (
               <button onClick={handleSubmitResponse} disabled={submittingResponse || !responseNote.trim()}
-                className="w-full flex items-center justify-center gap-2 py-2.5 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-40 transition-colors">
+                className="w-full flex items-center justify-center gap-2 py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover disabled:opacity-40 transition-colors">
                 {submittingResponse ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 {submittingResponse ? "Submitting..." : "Submit Response Package"}
               </button>
@@ -541,55 +541,55 @@ export default function TeleconsultSessionPage() {
         </div>
 
         {/* ═══ RIGHT PANE — Information ═══ */}
-        <div className="w-72 border-l bg-white overflow-y-auto shrink-0">
+        <div className="w-72 border-l bg-card overflow-y-auto shrink-0">
           {/* Patient summary */}
           <div className="p-3 border-b">
-            <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Patient</h4>
+            <h4 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Patient</h4>
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-impilo-100 flex items-center justify-center">
-                <User className="w-4 h-4 text-impilo-600" />
+              <div className="w-8 h-8 rounded-full bg-primary-soft flex items-center justify-center">
+                <User className="w-4 h-4 text-primary" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-900">{(session?.patientId as string)?.substring(0, 12) || "Patient"}</p>
-                <p className="text-[10px] text-gray-400">Click to view chart</p>
+                <p className="text-sm font-medium text-foreground">{(session?.patientId as string)?.substring(0, 12) || "Patient"}</p>
+                <p className="text-[10px] text-muted-foreground">Click to view chart</p>
               </div>
             </div>
           </div>
 
           {/* Referral info */}
           <div className="p-3 border-b">
-            <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Referral</h4>
+            <h4 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Referral</h4>
             <div className="space-y-1.5 text-xs">
-              <div className="flex justify-between"><span className="text-gray-500">Urgency</span><span className="font-medium">{(session?.urgency as string) || "—"}</span></div>
-              <div className="flex justify-between"><span className="text-gray-500">Specialty</span><span className="font-medium">{(session?.specialty as string) || "—"}</span></div>
-              <div className="flex justify-between"><span className="text-gray-500">Routing</span><span className="font-medium">{(session?.routingType as string) || "—"}</span></div>
-              <div className="flex justify-between"><span className="text-gray-500">Stage</span><span className="font-medium">{(session?.stage as number) || "—"}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Urgency</span><span className="font-medium">{(session?.urgency as string) || "—"}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Specialty</span><span className="font-medium">{(session?.specialty as string) || "—"}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Routing</span><span className="font-medium">{(session?.routingType as string) || "—"}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Stage</span><span className="font-medium">{(session?.stage as number) || "—"}</span></div>
             </div>
           </div>
 
           {/* Consent */}
           <div className="p-3 border-b">
-            <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Consent</h4>
+            <h4 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Consent</h4>
             {Boolean(session?.consentToken) ? (
               <div className="flex items-center gap-1.5 text-xs text-green-700">
                 <Shield className="w-3.5 h-3.5" /> Verified
               </div>
             ) : (
-              <p className="text-xs text-gray-400">Pending</p>
+              <p className="text-xs text-muted-foreground">Pending</p>
             )}
           </div>
 
           {/* Referral letter excerpt */}
           {Boolean(session?.referralLetter) && (
             <div className="p-3 border-b">
-              <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Referral Letter</h4>
-              <p className="text-xs text-gray-600 line-clamp-6">{session?.referralLetter as string}</p>
+              <h4 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Referral Letter</h4>
+              <p className="text-xs text-muted-foreground line-clamp-6">{session?.referralLetter as string}</p>
             </div>
           )}
 
           {/* Timeline */}
           <div className="p-3">
-            <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Timeline</h4>
+            <h4 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Timeline</h4>
             <div className="space-y-2">
               {[
                 session?.createdAt && { label: "Created", time: session.createdAt as string, icon: Activity },
@@ -602,9 +602,9 @@ export default function TeleconsultSessionPage() {
                 const Icon = ev.icon;
                 return (
                   <div key={ev.label} className="flex items-center gap-2 text-xs">
-                    <Icon className="w-3 h-3 text-gray-400 shrink-0" />
-                    <span className="text-gray-600">{ev.label}</span>
-                    <span className="text-gray-400 ml-auto">{new Date(ev.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                    <Icon className="w-3 h-3 text-muted-foreground shrink-0" />
+                    <span className="text-muted-foreground">{ev.label}</span>
+                    <span className="text-muted-foreground ml-auto">{new Date(ev.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
                   </div>
                 );
               })}

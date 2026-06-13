@@ -44,7 +44,7 @@ const RISK_TO_FRICTION: Record<MarketplaceRiskClassification, MarketplaceFrictio
     requiresFacility: false,
     maxQtyPerOrder: null,
     checkoutLabel: "Add to Cart",
-    checkoutColor: "bg-impilo-500 hover:bg-impilo-600",
+    checkoutColor: "bg-primary hover:bg-primary-hover",
     warningText: null,
   },
   MODERATE_RISK: {
@@ -53,7 +53,7 @@ const RISK_TO_FRICTION: Record<MarketplaceRiskClassification, MarketplaceFrictio
     requiresFacility: true,
     maxQtyPerOrder: 100,
     checkoutLabel: "Order (Facility)",
-    checkoutColor: "bg-impilo-500 hover:bg-impilo-600",
+    checkoutColor: "bg-primary hover:bg-primary-hover",
     warningText: "This item requires facility context for ordering.",
   },
   HIGH_RISK: {

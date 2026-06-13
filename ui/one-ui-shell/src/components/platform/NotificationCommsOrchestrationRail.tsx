@@ -52,11 +52,11 @@ export function NotificationCommsOrchestrationRail() {
   if (loading) {
     return (
       <section
-        className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
+        className="rounded-xl border border-border bg-background px-4 py-3"
         data-testid="notification-comms-orchestration-rail"
         aria-busy="true"
       >
-        <div className="flex items-center gap-2 text-sm text-slate-500">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
           Loading notification &amp; comms orchestration…
         </div>
@@ -117,21 +117,21 @@ export function NotificationCommsOrchestrationRail() {
         <div className="flex flex-wrap gap-2">
           <Link
             href="/omnichannel?tab=campaigns"
-            className="inline-flex items-center gap-1 rounded-lg bg-teal-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-800"
+            className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-800"
           >
             <Megaphone className="h-3.5 w-3.5" />
             Compose campaign
           </Link>
           <Link
             href="/admin/notifications/templates"
-            className="inline-flex items-center gap-1 rounded-lg border border-teal-300 bg-white px-3 py-1.5 text-xs font-medium text-teal-900 hover:bg-teal-50"
+            className="inline-flex items-center gap-1 rounded-lg border border-teal-300 bg-card px-3 py-1.5 text-xs font-medium text-teal-900 hover:bg-teal-50"
           >
             <Bell className="h-3.5 w-3.5" />
             Templates
           </Link>
           <Link
             href="/communication"
-            className="inline-flex items-center gap-1 rounded-lg border border-teal-300 bg-white px-3 py-1.5 text-xs font-medium text-teal-900 hover:bg-teal-50"
+            className="inline-flex items-center gap-1 rounded-lg border border-teal-300 bg-card px-3 py-1.5 text-xs font-medium text-teal-900 hover:bg-teal-50"
           >
             Secure messaging
           </Link>

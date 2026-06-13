@@ -29,24 +29,24 @@ export default function DelegationPage() {
             {TABS.map(({ label, Icon, description }) => (
               <div
                 key={label}
-                className="rounded-lg border border-gray-200 bg-white p-5 hover:border-purple-400 hover:shadow-sm transition-all cursor-pointer"
+                className="rounded-lg border border-border bg-card p-5 hover:border-purple-400 hover:shadow-sm transition-all cursor-pointer"
               >
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="rounded-lg bg-purple-50 p-2">
+                  <div className="rounded-lg bg-warning-soft p-2">
                     <Icon className="h-5 w-5 text-purple-600" />
                   </div>
-                  <h3 className="font-semibold text-gray-900">{label}</h3>
+                  <h3 className="font-semibold text-foreground">{label}</h3>
                 </div>
-                <p className="text-sm text-gray-600">{description}</p>
+                <p className="text-sm text-muted-foreground">{description}</p>
               </div>
             ))}
           </div>
 
           {/* Empty state */}
-          <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-12 text-center">
-            <Share2 className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-4 text-sm font-semibold text-gray-900">No delegations</h3>
-            <p className="mt-2 text-sm text-gray-600">
+          <div className="rounded-lg border border-dashed border-border bg-background p-12 text-center">
+            <Share2 className="mx-auto h-12 w-12 text-muted-foreground" />
+            <h3 className="mt-4 text-sm font-semibold text-foreground">No delegations</h3>
+            <p className="mt-2 text-sm text-muted-foreground">
               You have no active care delegation arrangements. Invite a caregiver to share responsibilities.
             </p>
           </div>

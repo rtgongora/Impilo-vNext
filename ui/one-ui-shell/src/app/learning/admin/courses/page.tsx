@@ -16,8 +16,8 @@ export default function AdminCoursesPage() {
         </Link>
         <ul className="mt-3 space-y-2">
           {items.map((c) => (
-            <li key={c.id} className="rounded border border-gray-200 bg-white p-3 text-sm">
-              <p className="font-medium text-gray-900">{c.title}</p>
+            <li key={c.id} className="rounded border border-border bg-card p-3 text-sm">
+              <p className="font-medium text-foreground">{c.title}</p>
               <Link href={`/learning/admin/courses/${c.id}/edit`} className="text-teal-700 hover:underline">
                 Edit
               </Link>

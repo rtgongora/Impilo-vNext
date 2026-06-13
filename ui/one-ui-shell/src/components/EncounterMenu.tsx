@@ -309,18 +309,18 @@ export function EncounterMenu() {
   if (!patientId) return null;
 
   return (
-    <aside className="w-52 bg-white border-r overflow-y-auto shrink-0 flex flex-col">
+    <aside className="w-52 bg-card border-r overflow-y-auto shrink-0 flex flex-col">
       {/* Patient header */}
-      <div className="px-3 py-2 border-b bg-slate-50">
+      <div className="px-3 py-2 border-b bg-background">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full bg-impilo-100 flex items-center justify-center shrink-0">
-            <User className="w-3.5 h-3.5 text-impilo-600" />
+          <div className="w-7 h-7 rounded-full bg-primary-soft flex items-center justify-center shrink-0">
+            <User className="w-3.5 h-3.5 text-primary" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold text-gray-900 truncate">
+            <p className="text-xs font-semibold text-foreground truncate">
               {maskName(String(patient?.attributes.displayName ?? ""), usePrivacyDisplayStore.getState().level) || "Patient"}
             </p>
-            <p className="text-[10px] text-gray-400 truncate">
+            <p className="text-[10px] text-muted-foreground truncate">
               {displayCpid(String(patient?.attributes.cpid ?? patientId))}
             </p>
           </div>
@@ -334,12 +334,12 @@ export function EncounterMenu() {
 
       {/* Progress bar */}
       <div className="px-3 py-2 border-b">
-        <div className="flex items-center justify-between text-[10px] text-gray-400 mb-1">
+        <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1">
           <span>Progress</span>
           <span>{visited.size}/{allSteps.length} steps</span>
         </div>
-        <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-          <div className="h-full bg-impilo-500 rounded-full transition-all"
+        <div className="h-1.5 bg-neutral-100 rounded-full overflow-hidden">
+          <div className="h-full bg-primary rounded-full transition-all"
             style={{ width: `${(visited.size / allSteps.length) * 100}%` }} />
         </div>
       </div>
@@ -347,18 +347,18 @@ export function EncounterMenu() {
       {/* Next step suggestion */}
       {nextStep && (
         <Link href={`/ehr/${patientId}/${nextStep.segment}`}
-          className="mx-2 mt-2 flex items-center gap-2 px-2.5 py-2 bg-impilo-50 border border-impilo-200 rounded-lg text-xs hover:bg-impilo-100 transition-colors">
-          <ArrowRight className="w-3.5 h-3.5 text-impilo-500 shrink-0" />
+          className="mx-2 mt-2 flex items-center gap-2 px-2.5 py-2 bg-primary-soft border border-primary/25 rounded-lg text-xs hover:bg-primary-soft transition-colors">
+          <ArrowRight className="w-3.5 h-3.5 text-primary shrink-0" />
           <div className="min-w-0">
-            <p className="font-semibold text-impilo-700 truncate">Next: {nextStep.label}</p>
-            {nextStep.hint && <p className="text-impilo-500 truncate">{nextStep.hint}</p>}
+            <p className="font-semibold text-primary-hover truncate">Next: {nextStep.label}</p>
+            {nextStep.hint && <p className="text-primary truncate">{nextStep.hint}</p>}
           </div>
         </Link>
       )}
 
       {/* Chart link */}
       <Link href={`/ehr/${patientId}`}
-        className="flex items-center gap-2 mx-2 mt-2 px-2 py-1.5 text-xs text-gray-500 hover:text-impilo-600 hover:bg-impilo-50 rounded-md transition-colors">
+        className="flex items-center gap-2 mx-2 mt-2 px-2 py-1.5 text-xs text-muted-foreground hover:text-primary hover:bg-primary-soft rounded-md transition-colors">
         <LayoutDashboard className="w-3.5 h-3.5" /> Patient Chart
       </Link>
 
@@ -366,7 +366,7 @@ export function EncounterMenu() {
       <nav className="flex-1 py-1 px-1">
         {phases.map((phase) => (
           <div key={phase.title} className="mb-1">
-            <div className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+            <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
               {phase.title}
             </div>
             <div className="space-y-0.5">
@@ -379,19 +379,19 @@ export function EncounterMenu() {
                   <Link key={step.segment} href={href}
                     className={`flex items-center gap-2 px-2 py-1.5 rounded-md transition-colors ${
                       isActive
-                        ? "bg-impilo-100 text-impilo-700"
+                        ? "bg-primary-soft text-primary-hover"
                         : isVisited
-                          ? "text-gray-700 hover:bg-gray-50"
-                          : "text-gray-400 hover:bg-gray-50 hover:text-gray-600"
+                          ? "text-foreground hover:bg-background"
+                          : "text-muted-foreground hover:bg-background hover:text-muted-foreground"
                     }`}>
                     {/* Step indicator */}
                     <div className="w-4 h-4 flex items-center justify-center shrink-0">
                       {isVisited && !isActive ? (
-                        <CheckCircle2 className="w-3.5 h-3.5 text-impilo-500" />
+                        <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
                       ) : isActive ? (
-                        <div className="w-2.5 h-2.5 rounded-full bg-impilo-500" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-primary" />
                       ) : (
-                        <Circle className="w-3 h-3 text-gray-300" />
+                        <Circle className="w-3 h-3 text-muted-foreground" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -399,7 +399,7 @@ export function EncounterMenu() {
                         {step.label}
                       </p>
                       {isActive && step.hint && (
-                        <p className="text-[9px] text-impilo-500 truncate">{step.hint}</p>
+                        <p className="text-[9px] text-primary truncate">{step.hint}</p>
                       )}
                     </div>
                   </Link>
@@ -411,7 +411,7 @@ export function EncounterMenu() {
 
         {/* More sections (collapsed) */}
         <details className="mt-1">
-          <summary className="px-2 py-1 text-[10px] font-bold text-gray-300 uppercase tracking-wider cursor-pointer hover:text-gray-500">
+          <summary className="px-2 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider cursor-pointer hover:text-muted-foreground">
             More...
           </summary>
           <div className="space-y-0.5 mt-0.5">
@@ -432,7 +432,7 @@ export function EncounterMenu() {
               return (
                 <Link key={item.segment} href={`/ehr/${patientId}/${item.segment}`}
                   className={`flex items-center gap-2 px-2 py-1 rounded-md text-[11px] transition-colors ${
-                    isActive ? "bg-impilo-100 text-impilo-700 font-medium" : "text-gray-400 hover:bg-gray-50 hover:text-gray-600"
+                    isActive ? "bg-primary-soft text-primary-hover font-medium" : "text-muted-foreground hover:bg-background hover:text-muted-foreground"
                   }`}>
                   <Icon className="w-3 h-3" /> {item.label}
                 </Link>
@@ -446,13 +446,13 @@ export function EncounterMenu() {
       <div className="border-t px-2 py-2 flex items-center gap-1">
         {prevStep ? (
           <Link href={`/ehr/${patientId}/${prevStep.segment}`}
-            className="flex-1 text-center text-[10px] text-gray-400 hover:text-gray-600 py-1 rounded hover:bg-gray-50">
+            className="flex-1 text-center text-[10px] text-muted-foreground hover:text-muted-foreground py-1 rounded hover:bg-background">
             ← {prevStep.label}
           </Link>
         ) : <div className="flex-1" />}
         {nextSeqStep ? (
           <Link href={`/ehr/${patientId}/${nextSeqStep.segment}`}
-            className="flex-1 text-center text-[10px] font-medium text-impilo-600 hover:text-impilo-700 py-1 rounded hover:bg-impilo-50">
+            className="flex-1 text-center text-[10px] font-medium text-primary hover:text-primary-hover py-1 rounded hover:bg-primary-soft">
             {nextSeqStep.label} →
           </Link>
         ) : <div className="flex-1" />}

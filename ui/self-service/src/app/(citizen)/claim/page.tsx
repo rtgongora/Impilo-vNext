@@ -82,7 +82,7 @@ export default function ClaimPage() {
               <input type="text" value={shareToken} onChange={(e) => setShareToken(e.target.value)}
                 placeholder="Paste your share token..." className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm" required />
             </div>
-            {error && <div className="p-3 bg-red-50 text-red-800 rounded-lg text-sm">{error}</div>}
+            {error && <div className="p-3 bg-danger-soft text-red-800 rounded-lg text-sm">{error}</div>}
             <button type="submit" disabled={loading}
               className="px-4 py-2 bg-brand-primary text-white rounded-lg text-sm font-medium hover:bg-brand-primary/90 disabled:opacity-50">
               {loading ? "Checking..." : "Continue"}
@@ -101,7 +101,7 @@ export default function ClaimPage() {
               <input type="text" value={otp} onChange={(e) => setOtp(e.target.value)}
                 placeholder="6-digit OTP" maxLength={6} className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm text-center text-lg tracking-widest" required />
             </div>
-            {error && <div className="p-3 bg-red-50 text-red-800 rounded-lg text-sm">{error}</div>}
+            {error && <div className="p-3 bg-danger-soft text-red-800 rounded-lg text-sm">{error}</div>}
             <div className="flex gap-2">
               <button type="button" onClick={() => { setStep("token"); setError(""); }}
                 className="px-4 py-2 bg-neutral-200 text-neutral-700 rounded-lg text-sm font-medium hover:bg-neutral-300">
@@ -119,8 +119,8 @@ export default function ClaimPage() {
       {step === "result" && result && (
         <Card className="max-w-xl">
           <div className="p-6">
-            <div className={`text-center mb-4 p-4 rounded-lg ${result.success ? "bg-green-50" : "bg-red-50"}`}>
-              <span className={`text-xl font-bold ${result.success ? "text-green-700" : "text-red-700"}`}>
+            <div className={`text-center mb-4 p-4 rounded-lg ${result.success ? "bg-green-50" : "bg-danger-soft"}`}>
+              <span className={`text-xl font-bold ${result.success ? "text-green-700" : "text-danger"}`}>
                 {result.success ? "Documents Ready" : "Claim Failed"}
               </span>
               <p className="text-sm text-neutral-600 mt-1">{result.message}</p>
@@ -130,7 +130,7 @@ export default function ClaimPage() {
                 <h3 className="text-sm font-semibold text-neutral-700">Download Links</h3>
                 {result.signedUrls.map((url, i) => (
                   <a key={i} href={url} target="_blank" rel="noopener noreferrer"
-                    className="block px-4 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm hover:bg-blue-100 transition-colors">
+                    className="block px-4 py-2 bg-info-soft text-primary-hover rounded-lg text-sm hover:bg-blue-100 transition-colors">
                     Document {i + 1} — Click to download
                   </a>
                 ))}

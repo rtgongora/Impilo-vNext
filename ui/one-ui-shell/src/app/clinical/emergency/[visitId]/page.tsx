@@ -62,12 +62,12 @@ export default function EdVisitPage({ params }: { params: { visitId: string } })
               key={label}
               type="button"
               onClick={() => setStep(i)}
-              className={`rounded-full px-3 py-1 ${step === i ? "bg-red-600 text-white" : "bg-gray-100"}`}
+              className={`rounded-full px-3 py-1 ${step === i ? "bg-red-600 text-white" : "bg-neutral-100"}`}
             >
               {i + 1}. {label}
             </button>
           ))}
-          <Link href="/clinical/emergency" className="ml-auto text-impilo-600 underline text-sm">
+          <Link href="/clinical/emergency" className="ml-auto text-primary underline text-sm">
             ← ED trackboard
           </Link>
         </div>
@@ -95,7 +95,7 @@ export default function EdVisitPage({ params }: { params: { visitId: string } })
                   key={sys}
                   type="button"
                   onClick={() => setTriageSystem(sys)}
-                  className={`rounded-full px-3 py-1 ${triageSystem === sys ? "bg-gray-900 text-white" : "bg-gray-100"}`}
+                  className={`rounded-full px-3 py-1 ${triageSystem === sys ? "bg-neutral-900 text-white" : "bg-neutral-100"}`}
                 >
                   {sys === "IMPILO_5" ? "Impilo 5-level" : sys}
                 </button>
@@ -151,7 +151,7 @@ export default function EdVisitPage({ params }: { params: { visitId: string } })
               type="button"
               disabled={actions.startEncounter.isPending || status === "IN_TREATMENT"}
               onClick={() => actions.startEncounter.mutate()}
-              className="rounded-lg bg-impilo-500 px-4 py-2 text-sm text-white"
+              className="rounded-lg bg-primary px-4 py-2 text-sm text-white"
             >
               {status === "IN_TREATMENT" ? "Encounter active" : "Start ED encounter"}
             </button>
@@ -195,7 +195,7 @@ export default function EdVisitPage({ params }: { params: { visitId: string } })
                 <button
                   type="button"
                   onClick={() => actions.endTrauma.mutate({ outcome: "STABILISED" })}
-                  className="rounded-lg border border-red-300 px-4 py-2 text-sm text-red-700"
+                  className="rounded-lg border border-red-300 px-4 py-2 text-sm text-danger"
                 >
                   End trauma activation
                 </button>
@@ -213,7 +213,7 @@ export default function EdVisitPage({ params }: { params: { visitId: string } })
                   <span>
                     {String(s.label)}
                     {s.recommended ? " ★" : ""}
-                    <span className="block text-xs text-gray-500">{String(s.rationale)}</span>
+                    <span className="block text-xs text-muted-foreground">{String(s.rationale)}</span>
                   </span>
                   <button
                     type="button"
@@ -223,7 +223,7 @@ export default function EdVisitPage({ params }: { params: { visitId: string } })
                       patientCpid: patientId,
                       encounterId: visit.encounter_id,
                     })}
-                    className="rounded bg-impilo-500 px-2 py-1 text-xs text-white"
+                    className="rounded bg-primary px-2 py-1 text-xs text-white"
                   >
                     Apply
                   </button>

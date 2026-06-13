@@ -15,7 +15,7 @@ export type { OpsMapMarker };
 const NdilaMapLibre = dynamic(() => import("../ndila/NdilaMapLibre").then((mod) => mod.NdilaMapLibre), {
   ssr: false,
   loading: () => (
-    <div className="flex h-44 items-center justify-center text-xs text-slate-500">
+    <div className="flex h-44 items-center justify-center text-xs text-muted-foreground">
       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
       Loading map…
     </div>
@@ -47,16 +47,16 @@ export function OpsMapPanel({
   const geoOnly = markers.filter((marker) => marker.latitude != null && marker.longitude != null);
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-4">
+    <section className="rounded-xl border border-border bg-card p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <MapPin className="h-4 w-4 text-rose-600" />
           <div>
-            <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
-            {subtitle ? <p className="text-xs text-slate-500">{subtitle}</p> : null}
+            <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+            {subtitle ? <p className="text-xs text-muted-foreground">{subtitle}</p> : null}
           </div>
         </div>
-        <span className="text-[10px] text-slate-500">
+        <span className="text-[10px] text-muted-foreground">
           {geoOnly.length}/{markers.length} geo-tagged
         </span>
       </div>
@@ -72,19 +72,19 @@ export function OpsMapPanel({
       />
 
       {tilesQ.isError ? (
-        <p className="mt-2 text-xs text-amber-700">
+        <p className="mt-2 text-xs text-warning-foreground">
           Ndila tiles unavailable — interactive canvas with geo markers only until geospatial service recovers.
         </p>
       ) : null}
 
       {markers.length === 0 ? (
-        <p className="mt-2 text-xs text-slate-500">{emptyHint ?? "No geo-tagged assets for this view yet."}</p>
+        <p className="mt-2 text-xs text-muted-foreground">{emptyHint ?? "No geo-tagged assets for this view yet."}</p>
       ) : (
         <ul className="mt-3 max-h-48 space-y-2 overflow-y-auto text-xs">
           {markers.map((marker) => (
-            <li key={marker.id} className="flex justify-between gap-2 rounded-lg bg-slate-50 px-2 py-1.5">
-              <span className="font-medium text-slate-800">{marker.label}</span>
-              <span className="text-slate-500">
+            <li key={marker.id} className="flex justify-between gap-2 rounded-lg bg-background px-2 py-1.5">
+              <span className="font-medium text-foreground">{marker.label}</span>
+              <span className="text-muted-foreground">
                 {marker.latitude != null && marker.longitude != null
                   ? `${marker.latitude.toFixed(3)}, ${marker.longitude.toFixed(3)}`
                   : (marker.status ?? "no coordinates")}

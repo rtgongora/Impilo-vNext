@@ -36,25 +36,25 @@ import {
 } from "@/hooks/queries/useFacilityOperations";
 
 const PRIORITY_STYLES: Record<string, string> = {
-  Urgent: "bg-red-100 text-red-700",
-  Normal: "bg-impilo-100 text-impilo-600",
-  Low: "bg-gray-100 text-gray-600",
+  Urgent: "bg-red-100 text-danger",
+  Normal: "bg-primary-soft text-primary",
+  Low: "bg-neutral-100 text-muted-foreground",
 };
 
 const ALERT_STYLES: Record<string, string> = {
-  critical: "border-l-red-500 bg-red-50",
-  warning: "border-l-amber-500 bg-amber-50",
-  info: "border-l-blue-500 bg-impilo-50",
+  critical: "border-l-red-500 bg-danger-soft",
+  warning: "border-l-amber-500 bg-warning-soft",
+  info: "border-l-blue-500 bg-primary-soft",
 };
 
 const WORKLIST_PRIORITY: Record<string, string> = {
-  URGENT: "bg-red-100 text-red-700",
-  EMERGENCY: "bg-red-100 text-red-700",
-  STAT: "bg-red-100 text-red-700",
-  HIGH: "bg-amber-100 text-amber-700",
-  MEDIUM: "bg-impilo-100 text-impilo-600",
-  ROUTINE: "bg-impilo-100 text-impilo-600",
-  LOW: "bg-gray-100 text-gray-600",
+  URGENT: "bg-red-100 text-danger",
+  EMERGENCY: "bg-red-100 text-danger",
+  STAT: "bg-red-100 text-danger",
+  HIGH: "bg-amber-100 text-warning-foreground",
+  MEDIUM: "bg-primary-soft text-primary",
+  ROUTINE: "bg-primary-soft text-primary",
+  LOW: "bg-neutral-100 text-muted-foreground",
 };
 
 export default function ControlTowerPage() {
@@ -107,7 +107,7 @@ export default function ControlTowerPage() {
         value: String(occupied),
         footnote: total > 0 ? `${occupied} occupied of ${total} configured beds` : "No bed rows for facility",
         icon: Users,
-        color: "bg-impilo-500",
+        color: "bg-primary",
       },
       {
         label: "Avg wait (waiting, today)",
@@ -155,30 +155,30 @@ export default function ControlTowerPage() {
     <AppLayout>
       <PageShell title="Control Tower" subtitle="Facility operations dashboard (live BFF data)">
         {!fid ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <BarChart3 className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-600 text-sm">Select a facility to load control tower metrics.</p>
-            <Link href="/home" className="mt-2 inline-block text-sm text-impilo-500 hover:text-impilo-700">
+          <div className="bg-card rounded-lg border border-border p-12 text-center">
+            <BarChart3 className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground text-sm">Select a facility to load control tower metrics.</p>
+            <Link href="/home" className="mt-2 inline-block text-sm text-primary hover:text-primary-hover">
               Go to Home →
             </Link>
           </div>
         ) : loading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading dashboard…</span>
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading dashboard…</span>
           </div>
         ) : (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-rose-600" />
-                <h2 className="text-lg font-semibold text-gray-900">Facility overview</h2>
-                <span className="text-xs text-gray-500">({facility.name})</span>
+                <h2 className="text-lg font-semibold text-foreground">Facility overview</h2>
+                <span className="text-xs text-muted-foreground">({facility.name})</span>
               </div>
               <button
                 type="button"
                 onClick={onRefresh}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-muted-foreground border border-border rounded-lg hover:bg-background transition-colors"
               >
                 <RefreshCw className="w-3.5 h-3.5" /> Refresh
               </button>
@@ -188,61 +188,61 @@ export default function ControlTowerPage() {
               {statCards.map((stat) => {
                 const Icon = stat.icon;
                 return (
-                  <div key={stat.label} className="bg-white rounded-lg border border-gray-200 p-5">
+                  <div key={stat.label} className="bg-card rounded-lg border border-border p-5">
                     <div className="flex items-center justify-between mb-3">
                       <div className={`w-10 h-10 rounded-lg ${stat.color} flex items-center justify-center`}>
                         <Icon className="w-5 h-5 text-white" />
                       </div>
                     </div>
-                    <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                    <p className="text-xs text-gray-500 mt-1">{stat.label}</p>
-                    <p className="text-[10px] text-gray-400 mt-2 leading-snug">{stat.footnote}</p>
+                    <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{stat.label}</p>
+                    <p className="text-[10px] text-muted-foreground mt-2 leading-snug">{stat.footnote}</p>
                   </div>
                 );
               })}
             </div>
 
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-              <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
+            <div className="bg-card rounded-lg border border-border overflow-hidden">
+              <div className="px-5 py-4 border-b border-border flex items-center justify-between">
                 <div>
-                  <h3 className="font-medium text-gray-900">Clinician worklist inbox</h3>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <h3 className="font-medium text-foreground">Clinician worklist inbox</h3>
+                  <p className="text-xs text-muted-foreground mt-1">
                     Composed queue, referral, task, order, pharmacy, and telemedicine actions.
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-semibold text-gray-900">{worklistSummary?.total ?? 0} items</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-sm font-semibold text-foreground">{worklistSummary?.total ?? 0} items</p>
+                  <p className="text-xs text-muted-foreground">
                     {worklistSummary?.urgent ?? 0} urgent · {worklistSummary?.overdue ?? 0} overdue
                   </p>
                 </div>
               </div>
               <div className="divide-y divide-gray-100">
                 {worklistItems.length === 0 ? (
-                  <div className="px-5 py-8 text-center text-sm text-gray-500">
+                  <div className="px-5 py-8 text-center text-sm text-muted-foreground">
                     No composed worklist items for this facility snapshot.
                   </div>
                 ) : (
                   worklistItems.slice(0, 8).map((item) => {
                     const priority = String(item.priority ?? "MEDIUM").toUpperCase();
-                    const priorityClass = WORKLIST_PRIORITY[priority] ?? "bg-gray-100 text-gray-600";
+                    const priorityClass = WORKLIST_PRIORITY[priority] ?? "bg-neutral-100 text-muted-foreground";
                     const href = typeof item.href === "string" && item.href.length > 0 ? item.href : "/clinical";
                     return (
                       <div key={String(item.id)} className="px-5 py-3 flex items-center justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">{String(item.title ?? "Clinical action")}</p>
-                          <p className="text-xs text-gray-500 truncate">
+                          <p className="text-sm font-medium text-foreground truncate">{String(item.title ?? "Clinical action")}</p>
+                          <p className="text-xs text-muted-foreground truncate">
                             {String(item.kind ?? "ITEM")} · {String(item.status ?? "PENDING")} · {String(item.source ?? "unknown")}
                           </p>
                           {item.description ? (
-                            <p className="text-xs text-gray-400 mt-1 truncate">{String(item.description)}</p>
+                            <p className="text-xs text-muted-foreground mt-1 truncate">{String(item.description)}</p>
                           ) : null}
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${priorityClass}`}>
                             {priority}
                           </span>
-                          <Link href={href} className="text-xs text-impilo-600 hover:text-impilo-700">
+                          <Link href={href} className="text-xs text-primary hover:text-primary-hover">
                             Open
                           </Link>
                         </div>
@@ -254,23 +254,23 @@ export default function ControlTowerPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
-                  <h3 className="font-medium text-gray-900">Queue — waiting</h3>
-                  <span className="text-xs text-gray-400">{queueRows.length} entries (page)</span>
+              <div className="bg-card rounded-lg border border-border overflow-hidden">
+                <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+                  <h3 className="font-medium text-foreground">Queue — waiting</h3>
+                  <span className="text-xs text-muted-foreground">{queueRows.length} entries (page)</span>
                 </div>
                 <div className="divide-y divide-gray-100">
                   {queueRows.length === 0 ? (
-                    <div className="px-5 py-8 text-center text-sm text-gray-500">No WAITING queue entries.</div>
+                    <div className="px-5 py-8 text-center text-sm text-muted-foreground">No WAITING queue entries.</div>
                   ) : (
                     queueRows.map((item) => (
                       <div
                         key={item.id}
-                        className="px-5 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                        className="px-5 py-3 flex items-center justify-between hover:bg-background transition-colors"
                       >
                         <div>
-                          <p className="text-sm font-medium text-gray-900">{item.patientName}</p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-sm font-medium text-foreground">{item.patientName}</p>
+                          <p className="text-xs text-muted-foreground">
                             {item.type} &middot; Waiting {item.waitTime}
                           </p>
                         </div>
@@ -292,27 +292,27 @@ export default function ControlTowerPage() {
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                <div className="px-5 py-4 border-b border-gray-200">
-                  <h3 className="font-medium text-gray-900">Bed utilization by ward</h3>
+              <div className="bg-card rounded-lg border border-border overflow-hidden">
+                <div className="px-5 py-4 border-b border-border">
+                  <h3 className="font-medium text-foreground">Bed utilization by ward</h3>
                 </div>
                 <div className="p-5 space-y-4">
                   {bedUtil.length === 0 ? (
-                    <p className="text-sm text-gray-500">No ward or bed data for this facility.</p>
+                    <p className="text-sm text-muted-foreground">No ward or bed data for this facility.</p>
                   ) : (
                     bedUtil.map((ward) => {
                       const occupancyPct = ward.total > 0 ? Math.round((ward.occupied / ward.total) * 100) : 0;
                       return (
                         <div key={ward.ward}>
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm text-gray-700">{ward.ward}</span>
-                            <span className="text-xs text-gray-500">
+                            <span className="text-sm text-foreground">{ward.ward}</span>
+                            <span className="text-xs text-muted-foreground">
                               {ward.occupied}/{ward.total} ({occupancyPct}%)
                             </span>
                           </div>
-                          <div className="w-full bg-gray-100 rounded-full h-3 flex overflow-hidden">
+                          <div className="w-full bg-neutral-100 rounded-full h-3 flex overflow-hidden">
                             <div
-                              className="bg-impilo-500 h-3"
+                              className="bg-primary h-3"
                               style={{
                                 width: ward.total > 0 ? `${(ward.occupied / ward.total) * 100}%` : "0%",
                               }}
@@ -324,7 +324,7 @@ export default function ControlTowerPage() {
                               }}
                             />
                           </div>
-                          <div className="flex items-center gap-3 mt-1 text-[10px] text-gray-400">
+                          <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground">
                             <span>{ward.available} available</span>
                             {ward.cleaning > 0 && <span>{ward.cleaning} cleaning</span>}
                           </div>
@@ -336,27 +336,27 @@ export default function ControlTowerPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-              <div className="px-5 py-4 border-b border-gray-200">
-                <h3 className="font-medium text-gray-900">Waiting load by queue type</h3>
-                <p className="text-xs text-gray-500 mt-1">Derived from the same WAITING page as the queue list.</p>
+            <div className="bg-card rounded-lg border border-border overflow-hidden">
+              <div className="px-5 py-4 border-b border-border">
+                <h3 className="font-medium text-foreground">Waiting load by queue type</h3>
+                <p className="text-xs text-muted-foreground mt-1">Derived from the same WAITING page as the queue list.</p>
               </div>
               <div className="p-5 space-y-3">
                 {queueByType.length === 0 ? (
-                  <p className="text-sm text-gray-500">No waiting entries to group.</p>
+                  <p className="text-sm text-muted-foreground">No waiting entries to group.</p>
                 ) : (
                   queueByType.map((q) => (
-                    <div key={q.name} className="flex items-center justify-between text-sm p-2 rounded-lg bg-gray-50">
+                    <div key={q.name} className="flex items-center justify-between text-sm p-2 rounded-lg bg-background">
                       <div>
                         <span className="font-medium">{q.name}</span>
-                        <div className="text-xs text-gray-500 mt-0.5">{q.waiting} waiting</div>
+                        <div className="text-xs text-muted-foreground mt-0.5">{q.waiting} waiting</div>
                       </div>
                       <span
                         className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                           q.avgWait > 30
-                            ? "bg-red-100 text-red-700"
+                            ? "bg-red-100 text-danger"
                             : q.avgWait > 20
-                              ? "bg-gray-100 text-gray-600"
+                              ? "bg-neutral-100 text-muted-foreground"
                               : "bg-green-100 text-green-700"
                         }`}
                       >
@@ -368,17 +368,17 @@ export default function ControlTowerPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-              <div className="px-5 py-4 border-b border-gray-200 flex items-center gap-2">
+            <div className="bg-card rounded-lg border border-border overflow-hidden">
+              <div className="px-5 py-4 border-b border-border flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-amber-500" />
-                <h3 className="font-medium text-gray-900">Alerts &amp; thresholds</h3>
+                <h3 className="font-medium text-foreground">Alerts &amp; thresholds</h3>
               </div>
               <div className="divide-y divide-gray-100">
                 {alerts.map((alert) => (
                   <div key={alert.id} className={`px-5 py-3 border-l-4 ${ALERT_STYLES[alert.type]}`}>
                     <div className="flex items-center justify-between">
-                      <p className="text-sm text-gray-800">{alert.message}</p>
-                      <span className="text-xs text-gray-400 shrink-0 ml-4">{alert.time}</span>
+                      <p className="text-sm text-foreground">{alert.message}</p>
+                      <span className="text-xs text-muted-foreground shrink-0 ml-4">{alert.time}</span>
                     </div>
                   </div>
                 ))}

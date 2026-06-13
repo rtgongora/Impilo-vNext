@@ -49,10 +49,10 @@ interface ExportJobRow {
 
 const STATUS_STYLES: Record<string, { bg: string; icon: React.ElementType }> = {
   Completed: { bg: "bg-green-100 text-green-700", icon: CheckCircle2 },
-  Running: { bg: "bg-impilo-100 text-impilo-600", icon: RefreshCw },
-  Failed: { bg: "bg-red-100 text-red-700", icon: AlertCircle },
-  Scheduled: { bg: "bg-purple-100 text-purple-700", icon: Clock },
-  Queued: { bg: "bg-gray-100 text-gray-600", icon: Clock },
+  Running: { bg: "bg-primary-soft text-primary", icon: RefreshCw },
+  Failed: { bg: "bg-red-100 text-danger", icon: AlertCircle },
+  Scheduled: { bg: "bg-purple-100 text-warning-foreground", icon: Clock },
+  Queued: { bg: "bg-neutral-100 text-muted-foreground", icon: Clock },
 };
 
 function parseParams(json: string | null): Record<string, unknown> {
@@ -217,16 +217,16 @@ export default function DataExportPage() {
       <PageShell title="Data Export" subtitle="Queued report jobs (Experience BFF)">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading export jobs...</span>
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading export jobs...</span>
           </div>
         ) : (
           <div className="space-y-6">
-            <div className="rounded-lg border border-slate-200 bg-slate-50/90 p-4 text-sm text-slate-800 flex gap-3">
-              <FileText className="w-5 h-5 text-slate-500 shrink-0" />
+            <div className="rounded-lg border border-border bg-background/90 p-4 text-sm text-foreground flex gap-3">
+              <FileText className="w-5 h-5 text-muted-foreground shrink-0" />
               <div>
-                <p className="font-medium text-slate-900">How exports work here</p>
-                <p className="mt-1 text-xs text-slate-600 leading-relaxed">
+                <p className="font-medium text-foreground">How exports work here</p>
+                <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
                   Jobs are rows in <code className="text-[11px]">report_jobs</code> created via{" "}
                   <code className="text-[11px]">POST /internal/v1/reports/generate</code>, listed via{" "}
                   <code className="text-[11px]">GET /internal/v1/admin/reports/jobs</code>, and inspected per job via{" "}
@@ -241,28 +241,28 @@ export default function DataExportPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Download className="w-5 h-5 text-impilo-500" />
-                <h2 className="text-lg font-semibold text-gray-900">Export Jobs</h2>
-                <span className="text-xs text-gray-400">{jobs.length} total</span>
+                <Download className="w-5 h-5 text-primary" />
+                <h2 className="text-lg font-semibold text-foreground">Export Jobs</h2>
+                <span className="text-xs text-muted-foreground">{jobs.length} total</span>
               </div>
-              <button type="button" onClick={() => setShowForm(true)} className="inline-flex items-center gap-1.5 px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 transition-colors">
+              <button type="button" onClick={() => setShowForm(true)} className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover transition-colors">
                 <Plus className="w-4 h-4" /> New Export
               </button>
             </div>
 
             {lastQueuedJobId && (
-              <div className="rounded-lg border border-impilo-200 bg-impilo-50/90 px-4 py-3 text-sm text-impilo-800 flex flex-wrap items-center justify-between gap-2">
+              <div className="rounded-lg border border-primary/25 bg-primary-soft/90 px-4 py-3 text-sm text-impilo-800 flex flex-wrap items-center justify-between gap-2">
                 <span>Export queued.</span>
                 <Link
                   href={`/reports/${lastQueuedJobId}`}
-                  className="font-medium text-impilo-600 hover:underline"
+                  className="font-medium text-primary hover:underline"
                 >
                   Open job status →
                 </Link>
                 <button
                   type="button"
                   onClick={() => setLastQueuedJobId(null)}
-                  className="text-xs text-impilo-500 hover:text-impilo-700 ml-auto"
+                  className="text-xs text-primary hover:text-primary-hover ml-auto"
                 >
                   Dismiss
                 </button>
@@ -270,7 +270,7 @@ export default function DataExportPage() {
             )}
 
             {jobsQ.isError && (
-              <div className="text-sm text-red-600 border border-red-200 rounded-lg p-3">
+              <div className="text-sm text-red-600 border border-danger/28 rounded-lg p-3">
                 Could not load report jobs. You need admin role access to{" "}
                 <code className="text-xs">/internal/v1/admin/reports/jobs</code>.
               </div>
@@ -278,20 +278,20 @@ export default function DataExportPage() {
 
             {/* New Export Form */}
             {showForm && (
-              <div className="bg-white rounded-lg border border-gray-200 p-5">
+              <div className="bg-card rounded-lg border border-border p-5">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-medium text-gray-900">Create New Export</h3>
-                  <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
+                  <h3 className="font-medium text-foreground">Create New Export</h3>
+                  <button onClick={() => setShowForm(false)} className="text-muted-foreground hover:text-muted-foreground"><X className="w-4 h-4" /></button>
                 </div>
                 {formError && <p className="text-sm text-red-600 mb-3">{formError}</p>}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Export Name</label>
-                    <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" placeholder="e.g., Monthly Patient Summary" />
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Export Name</label>
+                    <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" placeholder="e.g., Monthly Patient Summary" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Format</label>
-                    <select value={newFormat} onChange={(e) => setNewFormat(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400">
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Format</label>
+                    <select value={newFormat} onChange={(e) => setNewFormat(e.target.value)} className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40">
                       <option>CSV</option>
                       <option>JSON</option>
                       <option>FHIR Bundle</option>
@@ -299,19 +299,19 @@ export default function DataExportPage() {
                     </select>
                   </div>
                   <div>
-                    <label htmlFor="admin-export-date-from" className="block text-xs font-medium text-gray-600 mb-1">Date From</label>
-                    <input id="admin-export-date-from" type="date" value={newDateFrom} onChange={(e) => setNewDateFrom(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
+                    <label htmlFor="admin-export-date-from" className="block text-xs font-medium text-muted-foreground mb-1">Date From</label>
+                    <input id="admin-export-date-from" type="date" value={newDateFrom} onChange={(e) => setNewDateFrom(e.target.value)} className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
                   </div>
                   <div>
-                    <label htmlFor="admin-export-date-to" className="block text-xs font-medium text-gray-600 mb-1">Date To</label>
-                    <input id="admin-export-date-to" type="date" value={newDateTo} onChange={(e) => setNewDateTo(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
+                    <label htmlFor="admin-export-date-to" className="block text-xs font-medium text-muted-foreground mb-1">Date To</label>
+                    <input id="admin-export-date-to" type="date" value={newDateTo} onChange={(e) => setNewDateTo(e.target.value)} className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
                   </div>
                 </div>
                 <div className="mt-4">
-                  <label className="block text-xs font-medium text-gray-600 mb-2">Data Types</label>
+                  <label className="block text-xs font-medium text-muted-foreground mb-2">Data Types</label>
                   <div className="flex flex-wrap gap-2">
                     {DATA_TYPE_OPTIONS.map((dt) => (
-                      <label key={dt} className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-200 text-xs text-gray-700 cursor-pointer hover:bg-gray-100">
+                      <label key={dt} className="flex items-center gap-1.5 px-3 py-1.5 bg-background rounded-lg border border-border text-xs text-foreground cursor-pointer hover:bg-neutral-100">
                         <input type="checkbox" className="rounded" checked={!!types[dt]} onChange={() => toggleType(dt)} />
                         {dt}
                       </label>
@@ -320,40 +320,40 @@ export default function DataExportPage() {
                 </div>
                 <div className="mt-4 flex items-center gap-2">
                   <input type="checkbox" id="recurring" checked={newRecurring} onChange={(e) => setNewRecurring(e.target.checked)} className="rounded" />
-                  <label htmlFor="recurring" className="text-xs text-gray-600">Schedule as recurring export</label>
+                  <label htmlFor="recurring" className="text-xs text-muted-foreground">Schedule as recurring export</label>
                 </div>
                 <div className="flex items-center gap-3 pt-4">
-                  <button type="button" onClick={startExport} disabled={generateReport.isPending} className="px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 transition-colors disabled:opacity-50">Queue Export</button>
-                  <button onClick={() => setShowForm(false)} className="px-4 py-2 text-sm font-medium text-gray-700 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors">Cancel</button>
+                  <button type="button" onClick={startExport} disabled={generateReport.isPending} className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50">Queue Export</button>
+                  <button onClick={() => setShowForm(false)} className="px-4 py-2 text-sm font-medium text-foreground rounded-lg border border-border hover:bg-background transition-colors">Cancel</button>
                 </div>
               </div>
             )}
 
             {/* Jobs List */}
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="bg-card rounded-lg border border-border overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-gray-200 bg-gray-50">
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Name</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Format</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Date Range</th>
+                    <tr className="border-b border-border bg-background">
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Name</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Format</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Date Range</th>
                       <th
-                        className="text-left px-4 py-3 font-medium text-gray-600 max-w-[10rem]"
+                        className="text-left px-4 py-3 font-medium text-muted-foreground max-w-[10rem]"
                         title="ReportJob has no file size or row-count fields in the BFF contract."
                       >
                         File metrics
                       </th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Actions</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {!jobsQ.isError && jobs.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="px-4 py-10 text-center text-sm text-gray-500">
-                          <p className="font-medium text-gray-700">No export jobs yet</p>
-                          <p className="mt-1 text-xs text-gray-500 max-w-md mx-auto">
+                        <td colSpan={6} className="px-4 py-10 text-center text-sm text-muted-foreground">
+                          <p className="font-medium text-foreground">No export jobs yet</p>
+                          <p className="mt-1 text-xs text-muted-foreground max-w-md mx-auto">
                             Queue an export above. Jobs appear here from{" "}
                             <code className="text-[11px]">GET /internal/v1/admin/reports/jobs</code>—nothing is simulated in
                             the table.
@@ -365,15 +365,15 @@ export default function DataExportPage() {
                       const style = STATUS_STYLES[job.status];
                       const StatusIcon = style.icon;
                       return (
-                        <tr key={job.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                        <tr key={job.id} className="border-b border-border hover:bg-background transition-colors">
                           <td className="px-4 py-3">
                             <Link
                               href={`/reports/${job.id}`}
-                              className="text-gray-900 font-medium hover:text-impilo-500 hover:underline"
+                              className="text-foreground font-medium hover:text-primary hover:underline"
                             >
                               {job.name}
                             </Link>
-                            <p className="text-[10px] text-gray-400">{job.dataTypes.join(", ")}</p>
+                            <p className="text-[10px] text-muted-foreground">{job.dataTypes.join(", ")}</p>
                             {job.recurring && <span className="text-[10px] text-purple-500 flex items-center gap-0.5 mt-0.5"><Calendar className="w-2.5 h-2.5" /> {job.schedule}</span>}
                           </td>
                           <td className="px-4 py-3">
@@ -382,21 +382,21 @@ export default function DataExportPage() {
                               <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${style.bg}`}>{job.status}</span>
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-gray-700">{job.format}</td>
-                          <td className="px-4 py-3 text-gray-500 text-xs">{job.dateRange}</td>
-                          <td className="px-4 py-3 text-xs text-gray-400 leading-snug">
+                          <td className="px-4 py-3 text-foreground">{job.format}</td>
+                          <td className="px-4 py-3 text-muted-foreground text-xs">{job.dateRange}</td>
+                          <td className="px-4 py-3 text-xs text-muted-foreground leading-snug">
                             Not in BFF contract (no size / row count on ReportJob).
                           </td>
                           <td className="px-4 py-3">
                             {job.resultUrl ? (
-                              <a href={job.resultUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2.5 py-1 text-xs text-impilo-500 border border-impilo-200 rounded hover:bg-impilo-50 transition-colors">
+                              <a href={job.resultUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2.5 py-1 text-xs text-primary border border-primary/25 rounded hover:bg-primary-soft transition-colors">
                                 <Download className="w-3 h-3" /> Download
                               </a>
                             ) : job.status === "Completed" ? (
-                              <span className="text-xs text-gray-400" title="Worker did not set result_url">No URL</span>
+                              <span className="text-xs text-muted-foreground" title="Worker did not set result_url">No URL</span>
                             ) : null}
                             {job.status === "Failed" && (
-                              <button type="button" onClick={() => retryJob(job)} disabled={generateReport.isPending} className="ml-2 inline-flex items-center gap-1 px-2.5 py-1 text-xs text-amber-600 border border-amber-200 rounded hover:bg-amber-50 transition-colors disabled:opacity-50">
+                              <button type="button" onClick={() => retryJob(job)} disabled={generateReport.isPending} className="ml-2 inline-flex items-center gap-1 px-2.5 py-1 text-xs text-amber-600 border border-warning/35 rounded hover:bg-warning-soft transition-colors disabled:opacity-50">
                                 <RefreshCw className="w-3 h-3" /> Retry
                               </button>
                             )}

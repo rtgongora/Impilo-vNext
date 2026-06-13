@@ -100,9 +100,9 @@ function statusClass(status: string) {
     return "bg-green-100 text-green-700";
   }
   if (status === "REJECTED" || status === "DENIED" || status === "OVERTURNED") {
-    return "bg-red-100 text-red-700";
+    return "bg-red-100 text-danger";
   }
-  return "bg-amber-100 text-amber-700";
+  return "bg-amber-100 text-warning-foreground";
 }
 
 const COVERAGE_COMMAND_LABELS: Record<CoverageCommandKind, string> = {
@@ -239,17 +239,17 @@ function EligibilityExtraFields({ payload }: { payload: Record<string, unknown> 
   const entries = Object.entries(payload).filter(([k]: [string, unknown]) => !ELIGIBILITY_SUMMARY_KEYS.has(k));
   if (entries.length === 0) {
     return (
-      <p className="mt-3 text-xs text-gray-500">
+      <p className="mt-3 text-xs text-muted-foreground">
         No additional fields in this response. GOP and packaged benefit lines are not simulated in the UI.
       </p>
     );
   }
   return (
-    <dl className="mt-3 grid grid-cols-1 gap-2 rounded-lg border border-white/60 bg-white/50 p-3 text-xs">
+    <dl className="mt-3 grid grid-cols-1 gap-2 rounded-lg border border-white/60 bg-card/50 p-3 text-xs">
       {entries.slice(0, 16).map(([k, v]: [string, unknown]) => (
         <div key={k} className="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
-          <dt className="shrink-0 font-medium text-gray-600">{k}</dt>
-          <dd className="font-mono text-gray-800 break-all">
+          <dt className="shrink-0 font-medium text-muted-foreground">{k}</dt>
+          <dd className="font-mono text-foreground break-all">
             {v !== null && typeof v === "object" ? JSON.stringify(v) : String(v)}
           </dd>
         </div>
@@ -274,10 +274,10 @@ export default function CoveragePage() {
                 <UserCircle2 className="h-7 w-7" />
               </div>
               <div className="min-w-0 flex-1">
-                <h2 className="text-lg font-semibold text-gray-900 group-hover:text-violet-700 transition-colors">
+                <h2 className="text-lg font-semibold text-foreground group-hover:text-violet-700 transition-colors">
                   My Coverage (member view)
                 </h2>
-                <p className="text-sm text-gray-600 mt-0.5">
+                <p className="text-sm text-muted-foreground mt-0.5">
                   See your plans, eligibility checks, claims, contributions, preauths, and appeals in one dashboard.
                 </p>
               </div>
@@ -286,17 +286,17 @@ export default function CoveragePage() {
           </Link>
           <Link
             href="/coverage/contracts"
-            className="block rounded-xl border-2 border-slate-200 bg-gradient-to-r from-slate-50 to-zinc-50 p-5 shadow-sm hover:border-violet-400 hover:shadow-md transition-all group"
+            className="block rounded-xl border-2 border-border bg-gradient-to-r from-slate-50 to-zinc-50 p-5 shadow-sm hover:border-violet-400 hover:shadow-md transition-all group"
           >
             <div className="flex flex-wrap items-center gap-4">
               <div className="rounded-lg bg-slate-700 p-3 text-white shadow">
                 <Network className="h-7 w-7" />
               </div>
               <div className="min-w-0 flex-1">
-                <h2 className="text-lg font-semibold text-gray-900 group-hover:text-violet-700 transition-colors">
+                <h2 className="text-lg font-semibold text-foreground group-hover:text-violet-700 transition-colors">
                   Provider contracts
                 </h2>
-                <p className="text-sm text-gray-600 mt-0.5">
+                <p className="text-sm text-muted-foreground mt-0.5">
                   Payer admin: contracts, suspend/reinstate, and provider networks with membership.
                 </p>
               </div>
@@ -305,13 +305,13 @@ export default function CoveragePage() {
           </Link>
         </div>
         <CoverageCommandConsole />
-        <div className="flex gap-1 mb-6 border-b border-gray-200">
+        <div className="flex gap-1 mb-6 border-b border-border">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             return (
               <button key={tab.key} onClick={() => setActiveTab(tab.key)}
                 className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === tab.key ? "border-violet-600 text-violet-600" : "border-transparent text-gray-500 hover:text-gray-700"
+                  activeTab === tab.key ? "border-violet-600 text-violet-600" : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}>
                 <Icon className="w-4 h-4" /> {tab.label}
               </button>
@@ -390,12 +390,12 @@ function CoverageCommandConsole() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-violet-700">Coverage service commands</p>
-          <h2 className="mt-1 text-base font-semibold text-gray-900">Action console</h2>
-          <p className="mt-1 max-w-3xl text-sm text-gray-600">
+          <h2 className="mt-1 text-base font-semibold text-foreground">Action console</h2>
+          <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
             Additive command surface for the real Coverage BFF paths. Existing tabs below remain intact for guided workflows.
           </p>
         </div>
-        <span className="rounded-full border border-violet-200 bg-white px-3 py-1 text-xs font-medium text-violet-700">
+        <span className="rounded-full border border-violet-200 bg-card px-3 py-1 text-xs font-medium text-violet-700">
           live commands
         </span>
       </div>
@@ -409,34 +409,34 @@ function CoverageCommandConsole() {
               onClick={() => selectCommand(option)}
               className={`w-full rounded-lg border px-3 py-2 text-left text-sm font-medium ${
                 command === option
-                  ? "border-violet-500 bg-white text-violet-700"
-                  : "border-violet-100 bg-white/60 text-gray-700 hover:bg-white"
+                  ? "border-violet-500 bg-card text-violet-700"
+                  : "border-violet-100 bg-card/60 text-foreground hover:bg-card"
               }`}
             >
               {COVERAGE_COMMAND_LABELS[option]}
             </button>
           ))}
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+          <div className="rounded-lg border border-warning/35 bg-warning-soft p-3 text-xs text-warning-foreground">
             Refunds and settlement payouts stay on the dedicated finance routes to preserve separation of duties.
           </div>
         </div>
 
-        <div className="rounded-lg border border-violet-100 bg-white p-4">
+        <div className="rounded-lg border border-violet-100 bg-card p-4">
           <div className="grid gap-3 md:grid-cols-2">
             {COVERAGE_COMMAND_FIELDS[command].map((field) => (
-              <label key={field.key} className="block text-xs font-medium text-gray-600">
+              <label key={field.key} className="block text-xs font-medium text-muted-foreground">
                 {field.label}
                 <input
                   type={field.type ?? "text"}
-                  className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800"
+                  className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
                   value={currentPayload[field.key] ?? ""}
                   onChange={(event) => updatePayloadField(field.key, event.target.value)}
                 />
               </label>
             ))}
           </div>
-          <details className="mt-3 rounded-lg border border-slate-100 bg-slate-50 p-3 text-xs text-slate-600">
-            <summary className="cursor-pointer font-medium text-slate-700">Payload preview</summary>
+          <details className="mt-3 rounded-lg border border-border bg-background p-3 text-xs text-muted-foreground">
+            <summary className="cursor-pointer font-medium text-foreground">Payload preview</summary>
             <JsonApiDataTable data={currentPayload} columns={COVERAGE_COMMAND_FIELDS[command].map((f) => ({ key: f.key, header: f.label, fields: [f.key] }))} emptyTitle="Empty payload" />
           </details>
           <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -448,7 +448,7 @@ function CoverageCommandConsole() {
             >
               {mutation.isPending ? "Submitting..." : `Run ${COVERAGE_COMMAND_LABELS[command]}`}
             </button>
-            {feedback ? <span className="text-xs text-gray-700">{feedback}</span> : null}
+            {feedback ? <span className="text-xs text-foreground">{feedback}</span> : null}
           </div>
           {mutation.data ? (
             <div className="mt-3">
@@ -489,26 +489,26 @@ function DashboardTab() {
           <p className="text-xs text-green-600">Remittance rows</p>
           <p className="text-[10px] text-green-600/90 mt-1">Not a claims ledger total</p>
         </div>
-        <div className="bg-blue-50 rounded-lg border border-blue-200 p-4 text-center">
-          <p className="text-2xl font-bold text-blue-700">
+        <div className="bg-info-soft rounded-lg border border-info/25 p-4 text-center">
+          <p className="text-2xl font-bold text-primary-hover">
             {remQ.isLoading ? "…" : formatCoverageCurrency(remittanceTotal, primaryCurrency)}
           </p>
-          <p className="text-xs text-blue-600">Sum of remittance amounts</p>
+          <p className="text-xs text-primary">Sum of remittance amounts</p>
         </div>
-        <div className="bg-amber-50 rounded-lg border border-amber-200 p-4 text-center">
-          <p className="text-2xl font-bold text-amber-700">—</p>
+        <div className="bg-warning-soft rounded-lg border border-warning/35 p-4 text-center">
+          <p className="text-2xl font-bold text-warning-foreground">—</p>
           <p className="text-xs text-amber-600">Claim mix / approval rate</p>
           <p className="text-[10px] text-amber-600/90 mt-1">Needs aggregated reporting API</p>
         </div>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 p-5">
-        <h3 className="text-sm font-semibold text-gray-900 mb-2">Settlement lifecycle</h3>
-        <p className="text-xs text-gray-600 leading-relaxed">
+      <div className="bg-card rounded-lg border border-border p-5">
+        <h3 className="text-sm font-semibold text-foreground mb-2">Settlement lifecycle</h3>
+        <p className="text-xs text-muted-foreground leading-relaxed">
           Stage-level volumes are not aggregated in this UI. Use the{" "}
-          <span className="font-medium text-gray-800">Settlement</span> tab for remittance rows from{" "}
+          <span className="font-medium text-foreground">Settlement</span> tab for remittance rows from{" "}
           <code className="text-[10px]">GET /internal/v1/coverage/remittances</code>, and the{" "}
-          <span className="font-medium text-gray-800">Claims</span> tab with a coverage id to load claims.
+          <span className="font-medium text-foreground">Claims</span> tab with a coverage id to load claims.
         </p>
       </div>
     </div>
@@ -521,23 +521,23 @@ function SchemesTab() {
 
   return (
     <div className="space-y-4">
-      <h3 className="text-base font-semibold text-gray-900">Coverage Schemes & Products</h3>
+      <h3 className="text-base font-semibold text-foreground">Coverage Schemes & Products</h3>
       {isLoading ? (
-        <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-gray-400" /></div>
+        <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
       ) : plans.length === 0 ? (
-        <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-          <Briefcase className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-400 text-sm">No coverage schemes configured</p>
+        <div className="bg-card rounded-lg border border-border p-12 text-center">
+          <Briefcase className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+          <p className="text-muted-foreground text-sm">No coverage schemes configured</p>
         </div>
       ) : (
         <div className="space-y-3">
           {plans.map((plan) => (
-            <div key={plan.id} className="bg-white rounded-lg border border-gray-200 p-5 flex items-center justify-between">
+            <div key={plan.id} className="bg-card rounded-lg border border-border p-5 flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-900">{plan.planName}</p>
-                <p className="text-xs text-gray-500">{plan.planCode || "—"} · {plan.planType} · Payer: {plan.payerId || "—"}</p>
+                <p className="text-sm font-medium text-foreground">{plan.planName}</p>
+                <p className="text-xs text-muted-foreground">{plan.planCode || "—"} · {plan.planType} · Payer: {plan.payerId || "—"}</p>
               </div>
-              <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${plan.status === "ACTIVE" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>
+              <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${plan.status === "ACTIVE" ? "bg-green-100 text-green-700" : "bg-neutral-100 text-muted-foreground"}`}>
                 {plan.status}
               </span>
             </div>
@@ -566,24 +566,24 @@ function EligibilityTab() {
 
   return (
     <div className="space-y-6">
-      <form onSubmit={handleCheck} className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
-        <h3 className="text-base font-semibold text-gray-900">Real-time Eligibility Check</h3>
-        <p className="text-sm text-gray-500">Verify patient coverage eligibility and entitlement before service delivery.</p>
+      <form onSubmit={handleCheck} className="bg-card rounded-lg border border-border p-6 space-y-4">
+        <h3 className="text-base font-semibold text-foreground">Real-time Eligibility Check</h3>
+        <p className="text-sm text-muted-foreground">Verify patient coverage eligibility and entitlement before service delivery.</p>
         <div className="grid grid-cols-3 gap-4">
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Patient Reference</label>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Patient Reference</label>
             <input type="text" value={patientRef} onChange={(e) => setPatientRef(e.target.value)} required
-              placeholder="CPID or PHID" className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg" />
+              placeholder="CPID or PHID" className="w-full px-3 py-2 text-sm border border-border rounded-lg" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Coverage ID</label>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Coverage ID</label>
             <input type="text" value={coverageId} onChange={(e) => setCoverageId(e.target.value)} required
-              placeholder="Plan membership ID" className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg" />
+              placeholder="Plan membership ID" className="w-full px-3 py-2 text-sm border border-border rounded-lg" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Service Code</label>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Service Code</label>
             <input type="text" value={serviceCode} onChange={(e) => setServiceCode(e.target.value)}
-              placeholder="Optional service code" className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg" />
+              placeholder="Optional service code" className="w-full px-3 py-2 text-sm border border-border rounded-lg" />
           </div>
         </div>
         <button type="submit" disabled={check.isPending || !patientRef || !coverageId}
@@ -597,7 +597,7 @@ function EligibilityTab() {
         <div className="space-y-4">
           <div className={`rounded-lg border-2 p-5 ${
             (check.data?.data as Record<string, unknown>)?.result_code === "ELIGIBLE"
-              ? "border-green-300 bg-green-50" : "border-red-300 bg-red-50"
+              ? "border-green-300 bg-green-50" : "border-red-300 bg-danger-soft"
           }`}>
             <div className="flex items-center gap-2 mb-2">
               {(check.data?.data as Record<string, unknown>)?.result_code === "ELIGIBLE"
@@ -605,14 +605,14 @@ function EligibilityTab() {
                 : <AlertCircle className="w-6 h-6 text-red-600" />}
               <h4 className="text-base font-semibold">{String((check.data?.data as Record<string, unknown>)?.result_code ?? "UNKNOWN")}</h4>
             </div>
-            <p className="text-sm text-gray-700">{String((check.data?.data as Record<string, unknown>)?.result_message ?? "")}</p>
+            <p className="text-sm text-foreground">{String((check.data?.data as Record<string, unknown>)?.result_message ?? "")}</p>
             <EligibilityExtraFields payload={check.data?.data as Record<string, unknown> | undefined} />
           </div>
         </div>
       )}
       {check.isError && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-2">
-          <AlertCircle className="w-5 h-5 text-red-500" /><p className="text-sm text-red-700">Eligibility check failed.</p>
+        <div className="bg-danger-soft border border-danger/28 rounded-lg p-4 flex items-center gap-2">
+          <AlertCircle className="w-5 h-5 text-red-500" /><p className="text-sm text-danger">Eligibility check failed.</p>
         </div>
       )}
     </div>
@@ -641,27 +641,27 @@ function ClaimsTab() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-base font-semibold text-gray-900">Claims & Adjudication</h3>
+        <h3 className="text-base font-semibold text-foreground">Claims & Adjudication</h3>
         <button type="button" onClick={() => setShowForm(!showForm)}
           className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">
           <Plus className="w-4 h-4" /> Submit Claim
         </button>
       </div>
-      <p className="text-sm text-gray-600">
+      <p className="text-sm text-muted-foreground">
         Scheme-scoped claims use coverage-service. MusheX adjudication and payer queues live on{" "}
-        <Link href="/finance/claims" className="font-medium text-impilo-700 hover:text-impilo-900">
+        <Link href="/finance/claims" className="font-medium text-primary-hover hover:text-impilo-900">
           /finance/claims
         </Link>{" "}
         and{" "}
-        <Link href="/finance/payer-claims" className="font-medium text-impilo-700 hover:text-impilo-900">
+        <Link href="/finance/payer-claims" className="font-medium text-primary-hover hover:text-impilo-900">
           /finance/payer-claims
         </Link>
         .
       </p>
 
-      <div className="bg-slate-50 rounded-lg border border-slate-200 p-4 flex flex-col gap-2 sm:flex-row sm:items-end">
+      <div className="bg-background rounded-lg border border-border p-4 flex flex-col gap-2 sm:flex-row sm:items-end">
         <div className="flex-1">
-          <label htmlFor="claims-list-coverage" className="block text-xs font-medium text-gray-600 mb-1">
+          <label htmlFor="claims-list-coverage" className="block text-xs font-medium text-muted-foreground mb-1">
             Coverage ID (list claims)
           </label>
           <input
@@ -670,43 +670,43 @@ function ClaimsTab() {
             value={listCoverageId}
             onChange={(e) => setListCoverageId(e.target.value)}
             placeholder="Same id used when submitting claims"
-            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg"
+            className="w-full px-3 py-2 text-sm border border-border rounded-lg"
           />
         </div>
         <button
           type="button"
           onClick={applyListFilter}
-          className="px-4 py-2 bg-slate-800 text-white text-sm font-medium rounded-lg hover:bg-slate-900"
+          className="px-4 py-2 bg-primary-hover text-white text-sm font-medium rounded-lg hover:bg-neutral-900"
         >
           Load claims
         </button>
       </div>
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-muted-foreground">
         Uses <code className="text-[10px]">GET /internal/v1/coverage/claims?coverageId=…</code> via Experience BFF.
       </p>
 
       {showForm && (
-        <div className="bg-white rounded-lg border border-blue-200 p-5 space-y-3">
-          <h4 className="text-sm font-semibold text-gray-900">New Claim Submission</h4>
+        <div className="bg-card rounded-lg border border-info/25 p-5 space-y-3">
+          <h4 className="text-sm font-semibold text-foreground">New Claim Submission</h4>
           <div className="grid grid-cols-2 gap-3">
             <input
               type="text"
               placeholder="Coverage ID"
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+              className="px-3 py-2 text-sm border border-border rounded-lg"
               value={claimForm.coverageId}
               onChange={(event) => setClaimForm((current) => ({ ...current, coverageId: event.target.value }))}
             />
             <input
               type="text"
               placeholder="Claim Type (e.g., OUTPATIENT)"
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+              className="px-3 py-2 text-sm border border-border rounded-lg"
               value={claimForm.claimType}
               onChange={(event) => setClaimForm((current) => ({ ...current, claimType: event.target.value }))}
             />
             <input
               type="text"
               placeholder="Facility ID"
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+              className="px-3 py-2 text-sm border border-border rounded-lg"
               value={claimForm.facilityId}
               onChange={(event) => setClaimForm((current) => ({ ...current, facilityId: event.target.value }))}
             />
@@ -714,13 +714,13 @@ function ClaimsTab() {
               type="number"
               placeholder="Total Amount"
               step="0.01"
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+              className="px-3 py-2 text-sm border border-border rounded-lg"
               value={claimForm.totalAmount}
               onChange={(event) => setClaimForm((current) => ({ ...current, totalAmount: event.target.value }))}
             />
           </div>
           <div className="flex gap-2">
-            <button type="button" onClick={() => setShowForm(false)} className="flex-1 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg">Cancel</button>
+            <button type="button" onClick={() => setShowForm(false)} className="flex-1 py-2 bg-neutral-100 text-foreground text-sm rounded-lg">Cancel</button>
             <button type="button" onClick={() => {
               submit.mutate(
                 claimForm,
@@ -741,40 +741,40 @@ function ClaimsTab() {
       )}
 
       {appliedCoverageId && claimsQ.isLoading && (
-        <div className="flex items-center justify-center py-12 gap-2 text-gray-500 text-sm">
+        <div className="flex items-center justify-center py-12 gap-2 text-muted-foreground text-sm">
           <Loader2 className="w-5 h-5 animate-spin" /> Loading claims…
         </div>
       )}
       {appliedCoverageId && claimsQ.isError && (
-        <div className="text-sm text-red-600 border border-red-200 rounded-lg p-3">Could not load claims for this coverage id.</div>
+        <div className="text-sm text-red-600 border border-danger/28 rounded-lg p-3">Could not load claims for this coverage id.</div>
       )}
       {appliedCoverageId && !claimsQ.isLoading && !claimsQ.isError && (claimsQ.data?.length ?? 0) === 0 && (
-        <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-          <FileText className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-400 text-sm">No claims returned for this coverage id</p>
-          <p className="text-gray-400 text-xs mt-1">Lifecycle: SUBMITTED → ADJUDICATED → APPROVED → REMITTED</p>
+        <div className="bg-card rounded-lg border border-border p-12 text-center">
+          <FileText className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+          <p className="text-muted-foreground text-sm">No claims returned for this coverage id</p>
+          <p className="text-muted-foreground text-xs mt-1">Lifecycle: SUBMITTED → ADJUDICATED → APPROVED → REMITTED</p>
         </div>
       )}
       {appliedCoverageId && !claimsQ.isLoading && (claimsQ.data?.length ?? 0) > 0 && claimsQ.data && (
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-card rounded-lg border border-border overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b bg-gray-50 text-left">
-                <th className="px-4 py-2 font-medium text-gray-600">Claim #</th>
-                <th className="px-4 py-2 font-medium text-gray-600">Type</th>
-                <th className="px-4 py-2 font-medium text-gray-600">Amount</th>
-                <th className="px-4 py-2 font-medium text-gray-600">Status</th>
-                <th className="px-4 py-2 font-medium text-gray-600">Created</th>
+              <tr className="border-b bg-background text-left">
+                <th className="px-4 py-2 font-medium text-muted-foreground">Claim #</th>
+                <th className="px-4 py-2 font-medium text-muted-foreground">Type</th>
+                <th className="px-4 py-2 font-medium text-muted-foreground">Amount</th>
+                <th className="px-4 py-2 font-medium text-muted-foreground">Status</th>
+                <th className="px-4 py-2 font-medium text-muted-foreground">Created</th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {claimsQ.data.map((c: CoverageClaim) => (
-                <tr key={c.id} className="hover:bg-gray-50">
+                <tr key={c.id} className="hover:bg-background">
                   <td className="px-4 py-2 font-mono text-xs">{c.claimNumber}</td>
                   <td className="px-4 py-2">{c.claimType}</td>
                   <td className="px-4 py-2">{formatCoverageCurrency(c.totalAmount, "USD")}</td>
-                  <td className="px-4 py-2"><span className="text-xs rounded-full bg-gray-100 px-2 py-0.5">{c.status}</span></td>
-                  <td className="px-4 py-2 text-xs text-gray-500">{formatCoverageDate(c.createdAt)}</td>
+                  <td className="px-4 py-2"><span className="text-xs rounded-full bg-neutral-100 px-2 py-0.5">{c.status}</span></td>
+                  <td className="px-4 py-2 text-xs text-muted-foreground">{formatCoverageDate(c.createdAt)}</td>
                 </tr>
               ))}
             </tbody>
@@ -782,8 +782,8 @@ function ClaimsTab() {
         </div>
       )}
       {!appliedCoverageId && (
-        <div className="bg-white rounded-lg border border-gray-200 p-8 text-center text-sm text-gray-500">
-          Enter a coverage id and choose <span className="font-medium text-gray-700">Load claims</span> to list rows from the coverage service.
+        <div className="bg-card rounded-lg border border-border p-8 text-center text-sm text-muted-foreground">
+          Enter a coverage id and choose <span className="font-medium text-foreground">Load claims</span> to list rows from the coverage service.
         </div>
       )}
     </div>
@@ -796,36 +796,36 @@ function SettlementTab() {
 
   return (
     <div className="space-y-4">
-      <h3 className="text-base font-semibold text-gray-900">Settlement & Remittance</h3>
-      <p className="text-sm text-gray-500">
+      <h3 className="text-base font-semibold text-foreground">Settlement & Remittance</h3>
+      <p className="text-sm text-muted-foreground">
         Rows from <code className="text-xs">GET /internal/v1/coverage/remittances</code>. Finance operators can also use the dedicated{" "}
-        <Link href="/finance/remittances" className="font-medium text-impilo-700 hover:text-impilo-900">
+        <Link href="/finance/remittances" className="font-medium text-primary-hover hover:text-impilo-900">
           /finance/remittances
         </Link>{" "}
         hub for separation-of-duties reporting.
       </p>
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-gray-400" /></div>
+        <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
       ) : remittances.length === 0 ? (
-        <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-          <DollarSign className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-400 text-sm">No remittances recorded</p>
+        <div className="bg-card rounded-lg border border-border p-12 text-center">
+          <DollarSign className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+          <p className="text-muted-foreground text-sm">No remittances recorded</p>
         </div>
       ) : (
         <div className="space-y-3">
           {remittances.map((rem) => (
-            <div key={rem.id} className="bg-white rounded-lg border border-gray-200 p-4 flex items-center justify-between">
+            <div key={rem.id} className="bg-card rounded-lg border border-border p-4 flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-900">Remittance {rem.remittanceNumber}</p>
-                <p className="text-xs text-gray-500">Coverage: {rem.coverageId || "—"} · Remitted: {formatCoverageDate(rem.remittedAt)}</p>
+                <p className="text-sm font-medium text-foreground">Remittance {rem.remittanceNumber}</p>
+                <p className="text-xs text-muted-foreground">Coverage: {rem.coverageId || "—"} · Remitted: {formatCoverageDate(rem.remittedAt)}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm font-mono font-bold text-gray-900">
+                <p className="text-sm font-mono font-bold text-foreground">
                   {rem.currency}{" "}
                   {rem.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
-                <span className={`px-2 py-0.5 text-xs rounded-full ${rem.status === "PAID" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
+                <span className={`px-2 py-0.5 text-xs rounded-full ${rem.status === "PAID" ? "bg-green-100 text-green-700" : "bg-amber-100 text-warning-foreground"}`}>
                   {rem.status}
                 </span>
               </div>
@@ -851,39 +851,39 @@ function MembershipTab() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-base font-semibold text-gray-900">Membership Administration</h3>
+        <h3 className="text-base font-semibold text-foreground">Membership Administration</h3>
         <button onClick={() => setShowForm(!showForm)}
           className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">
           <Plus className="w-4 h-4" /> Enroll Member
         </button>
       </div>
       {showForm && (
-        <div className="bg-white rounded-lg border border-blue-200 p-5 space-y-3">
-          <h4 className="text-sm font-semibold text-gray-900">New Member Enrollment</h4>
+        <div className="bg-card rounded-lg border border-info/25 p-5 space-y-3">
+          <h4 className="text-sm font-semibold text-foreground">New Member Enrollment</h4>
           <div className="grid grid-cols-2 gap-3">
             <input
               type="text"
               placeholder="Client ID (CPID)"
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+              className="px-3 py-2 text-sm border border-border rounded-lg"
               value={memberForm.clientId}
               onChange={(event) => setMemberForm((current) => ({ ...current, clientId: event.target.value }))}
             />
             <input
               type="text"
               placeholder="Plan ID"
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+              className="px-3 py-2 text-sm border border-border rounded-lg"
               value={memberForm.planId}
               onChange={(event) => setMemberForm((current) => ({ ...current, planId: event.target.value }))}
             />
             <input
               type="text"
               placeholder="Member Number"
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+              className="px-3 py-2 text-sm border border-border rounded-lg"
               value={memberForm.memberNumber}
               onChange={(event) => setMemberForm((current) => ({ ...current, memberNumber: event.target.value }))}
             />
             <select
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+              className="px-3 py-2 text-sm border border-border rounded-lg"
               value={memberForm.relationship}
               onChange={(event) => setMemberForm((current) => ({ ...current, relationship: event.target.value }))}
             >
@@ -892,7 +892,7 @@ function MembershipTab() {
             </select>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => setShowForm(false)} className="flex-1 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg">Cancel</button>
+            <button onClick={() => setShowForm(false)} className="flex-1 py-2 bg-neutral-100 text-foreground text-sm rounded-lg">Cancel</button>
             <button type="button" onClick={() => {
               enroll.mutate(
                 memberForm,
@@ -907,9 +907,9 @@ function MembershipTab() {
           {enroll.isError && <p className="text-xs text-red-600">Enrollment failed.</p>}
         </div>
       )}
-      <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-        <Users className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-        <p className="text-gray-400 text-sm">Search by plan or member to view enrollments</p>
+      <div className="bg-card rounded-lg border border-border p-12 text-center">
+        <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+        <p className="text-muted-foreground text-sm">Search by plan or member to view enrollments</p>
       </div>
     </div>
   );
@@ -935,39 +935,39 @@ function PreauthTab() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-base font-semibold text-gray-900">Pre-Authorization Requests</h3>
+        <h3 className="text-base font-semibold text-foreground">Pre-Authorization Requests</h3>
         <button onClick={() => setShowForm(!showForm)}
           className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">
           <Plus className="w-4 h-4" /> New Pre-Auth
         </button>
       </div>
-      <p className="text-sm text-gray-500">
+      <p className="text-sm text-muted-foreground">
         Read rows from <code className="text-xs">GET /internal/v1/coverage/preauths</code>. Create form continues to use{" "}
         <code className="text-xs">POST /internal/v1/coverage/preauth</code>.
       </p>
 
       {preauthListQ.isLoading ? (
         <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
         </div>
       ) : preauthListQ.isError ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-lg border border-danger/28 bg-danger-soft p-3 text-sm text-danger">
           Could not load pre-authorization rows.
         </div>
       ) : preauthRows.length === 0 ? (
-        <div className="rounded-lg border border-gray-200 bg-white p-4 text-sm text-gray-500">
+        <div className="rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">
           No pre-authorization rows returned by the coverage service.
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+        <div className="overflow-x-auto rounded-lg border border-border bg-card">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b bg-gray-50 text-left">
-                <th className="px-3 py-2 font-medium text-gray-600">Preauth</th>
-                <th className="px-3 py-2 font-medium text-gray-600">Coverage</th>
-                <th className="px-3 py-2 font-medium text-gray-600">Type</th>
-                <th className="px-3 py-2 font-medium text-gray-600">Status</th>
-                <th className="px-3 py-2 font-medium text-gray-600">Requested</th>
+              <tr className="border-b bg-background text-left">
+                <th className="px-3 py-2 font-medium text-muted-foreground">Preauth</th>
+                <th className="px-3 py-2 font-medium text-muted-foreground">Coverage</th>
+                <th className="px-3 py-2 font-medium text-muted-foreground">Type</th>
+                <th className="px-3 py-2 font-medium text-muted-foreground">Status</th>
+                <th className="px-3 py-2 font-medium text-muted-foreground">Requested</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -977,18 +977,18 @@ function PreauthTab() {
                   readUnknownString(row, "status", "decision", "result", "state").toUpperCase() || "UNKNOWN";
                 return (
                   <tr key={`${id}-${idx}`}>
-                    <td className="px-3 py-2 font-mono text-xs text-gray-700">{id}</td>
-                    <td className="px-3 py-2 text-gray-700">
+                    <td className="px-3 py-2 font-mono text-xs text-foreground">{id}</td>
+                    <td className="px-3 py-2 text-foreground">
                       {readUnknownString(row, "coverage_id", "coverageId", "member_id", "memberId") || "—"}
                     </td>
-                    <td className="px-3 py-2 text-gray-700">
+                    <td className="px-3 py-2 text-foreground">
                       {readUnknownString(row, "request_type", "requestType", "type", "service_type", "serviceType") ||
                         "—"}
                     </td>
                     <td className="px-3 py-2">
                       <span className={`rounded-full px-2 py-0.5 text-xs ${statusClass(status)}`}>{status}</span>
                     </td>
-                    <td className="px-3 py-2 text-xs text-gray-500">
+                    <td className="px-3 py-2 text-xs text-muted-foreground">
                       {formatCoverageDate(
                         readUnknownString(row, "requested_at", "requestedAt", "created_at", "createdAt"),
                       )}
@@ -1001,34 +1001,34 @@ function PreauthTab() {
         </div>
       )}
       {showForm && (
-        <div className="bg-white rounded-lg border border-blue-200 p-5 space-y-3">
-          <h4 className="text-sm font-semibold text-gray-900">Pre-Authorization Request</h4>
+        <div className="bg-card rounded-lg border border-info/25 p-5 space-y-3">
+          <h4 className="text-sm font-semibold text-foreground">Pre-Authorization Request</h4>
           <div className="grid grid-cols-2 gap-3">
             <input
               type="text"
               placeholder="Coverage ID"
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+              className="px-3 py-2 text-sm border border-border rounded-lg"
               value={preauthForm.coverageId}
               onChange={(event) => setPreauthForm((current) => ({ ...current, coverageId: event.target.value }))}
             />
             <input
               type="text"
               placeholder="Request Type (e.g., SURGERY)"
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+              className="px-3 py-2 text-sm border border-border rounded-lg"
               value={preauthForm.requestType}
               onChange={(event) => setPreauthForm((current) => ({ ...current, requestType: event.target.value }))}
             />
             <input
               type="text"
               placeholder="Facility ID"
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+              className="px-3 py-2 text-sm border border-border rounded-lg"
               value={preauthForm.facilityId}
               onChange={(event) => setPreauthForm((current) => ({ ...current, facilityId: event.target.value }))}
             />
             <input
               type="text"
               placeholder="Provider ID"
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+              className="px-3 py-2 text-sm border border-border rounded-lg"
               value={preauthForm.providerId}
               onChange={(event) => setPreauthForm((current) => ({ ...current, providerId: event.target.value }))}
             />
@@ -1038,10 +1038,10 @@ function PreauthTab() {
             rows={3}
             value={preauthForm.clinicalInfo}
             onChange={(event) => setPreauthForm((current) => ({ ...current, clinicalInfo: event.target.value }))}
-            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg"
+            className="w-full px-3 py-2 text-sm border border-border rounded-lg"
           />
           <div className="flex gap-2">
-            <button onClick={() => setShowForm(false)} className="flex-1 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg">Cancel</button>
+            <button onClick={() => setShowForm(false)} className="flex-1 py-2 bg-neutral-100 text-foreground text-sm rounded-lg">Cancel</button>
             <button onClick={() => {
               create.mutate(preauthForm);
             }} disabled={create.isPending || !preauthForm.coverageId.trim() || !preauthForm.requestType.trim() || !preauthForm.facilityId.trim() || !preauthForm.providerId.trim()}
@@ -1052,8 +1052,8 @@ function PreauthTab() {
           {create.isSuccess && <p className="text-xs text-green-600">Pre-authorization submitted.</p>}
         </div>
       )}
-      <div className="bg-white rounded-lg border border-gray-200 p-5">
-        <p className="text-sm text-gray-500">Lifecycle: <span className="font-mono text-xs">PENDING → APPROVED / DENIED → EXPIRED</span></p>
+      <div className="bg-card rounded-lg border border-border p-5">
+        <p className="text-sm text-muted-foreground">Lifecycle: <span className="font-mono text-xs">PENDING → APPROVED / DENIED → EXPIRED</span></p>
       </div>
     </div>
   );
@@ -1065,34 +1065,34 @@ function ContributionsTab() {
   const contributionRows = (contributionsQ.data ?? []).map(asRecord);
   return (
     <div className="space-y-4">
-      <h3 className="text-base font-semibold text-gray-900">Contributions & Premiums</h3>
-      <p className="text-sm text-gray-500">
+      <h3 className="text-base font-semibold text-foreground">Contributions & Premiums</h3>
+      <p className="text-sm text-muted-foreground">
         Read rows from <code className="text-xs">GET /internal/v1/coverage/contributions</code>.
       </p>
 
       {contributionsQ.isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
         </div>
       ) : contributionsQ.isError ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-lg border border-danger/28 bg-danger-soft p-3 text-sm text-danger">
           Could not load contribution rows.
         </div>
       ) : contributionRows.length === 0 ? (
-        <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-          <CreditCard className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-400 text-sm">No contribution records yet</p>
+        <div className="bg-card rounded-lg border border-border p-12 text-center">
+          <CreditCard className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+          <p className="text-muted-foreground text-sm">No contribution records yet</p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+        <div className="overflow-x-auto rounded-lg border border-border bg-card">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b bg-gray-50 text-left">
-                <th className="px-3 py-2 font-medium text-gray-600">Contribution</th>
-                <th className="px-3 py-2 font-medium text-gray-600">Member</th>
-                <th className="px-3 py-2 font-medium text-gray-600">Period</th>
-                <th className="px-3 py-2 font-medium text-gray-600">Amount</th>
-                <th className="px-3 py-2 font-medium text-gray-600">Status</th>
+              <tr className="border-b bg-background text-left">
+                <th className="px-3 py-2 font-medium text-muted-foreground">Contribution</th>
+                <th className="px-3 py-2 font-medium text-muted-foreground">Member</th>
+                <th className="px-3 py-2 font-medium text-muted-foreground">Period</th>
+                <th className="px-3 py-2 font-medium text-muted-foreground">Amount</th>
+                <th className="px-3 py-2 font-medium text-muted-foreground">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -1104,14 +1104,14 @@ function ContributionsTab() {
                 const end = readUnknownString(row, "period_end", "periodEnd", "contribution_end");
                 return (
                   <tr key={`${id}-${idx}`}>
-                    <td className="px-3 py-2 font-mono text-xs text-gray-700">{id}</td>
-                    <td className="px-3 py-2 text-gray-700">
+                    <td className="px-3 py-2 font-mono text-xs text-foreground">{id}</td>
+                    <td className="px-3 py-2 text-foreground">
                       {readUnknownString(row, "member_id", "memberId", "coverage_id", "coverageId") || "—"}
                     </td>
-                    <td className="px-3 py-2 text-gray-700">
+                    <td className="px-3 py-2 text-foreground">
                       {start || end ? `${start || "?"} → ${end || "?"}` : "—"}
                     </td>
-                    <td className="px-3 py-2 text-gray-700">
+                    <td className="px-3 py-2 text-foreground">
                       {formatCoverageCurrency(readUnknownNumber(row, "amount", "total_amount", "paid_amount"), currency)}
                     </td>
                     <td className="px-3 py-2">
@@ -1135,44 +1135,44 @@ function SubsidiesTab() {
 
   return (
     <div className="space-y-4" data-testid="coverage-subsidies-tab">
-      <h3 className="text-base font-semibold text-gray-900">Subsidy programmes</h3>
-      <p className="text-sm text-gray-500">
+      <h3 className="text-base font-semibold text-foreground">Subsidy programmes</h3>
+      <p className="text-sm text-muted-foreground">
         Governed programmes from <code className="text-xs">GET /internal/v1/coverage/subsidies</code> — government, donor, and facility assistance rails.
       </p>
       {subsidiesQ.isLoading ? (
         <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
         </div>
       ) : subsidiesQ.isError ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-lg border border-danger/28 bg-danger-soft p-3 text-sm text-danger">
           Could not load subsidy programmes.
         </div>
       ) : subsidyRows.length === 0 ? (
-        <div className="bg-white rounded-lg border border-gray-200 p-5 text-sm text-gray-500">
+        <div className="bg-card rounded-lg border border-border p-5 text-sm text-muted-foreground">
           No active subsidy programmes for this tenant.
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+        <div className="overflow-x-auto rounded-lg border border-border bg-card">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b bg-gray-50 text-left">
-                <th className="px-3 py-2 font-medium text-gray-600">Programme</th>
-                <th className="px-3 py-2 font-medium text-gray-600">Type</th>
-                <th className="px-3 py-2 font-medium text-gray-600">Annual cap</th>
-                <th className="px-3 py-2 font-medium text-gray-600">Status</th>
+              <tr className="border-b bg-background text-left">
+                <th className="px-3 py-2 font-medium text-muted-foreground">Programme</th>
+                <th className="px-3 py-2 font-medium text-muted-foreground">Type</th>
+                <th className="px-3 py-2 font-medium text-muted-foreground">Annual cap</th>
+                <th className="px-3 py-2 font-medium text-muted-foreground">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {subsidyRows.map((row, idx) => (
                 <tr key={`${readUnknownString(row, "id", "programCode", "program_code") || "sub"}-${idx}`}>
-                  <td className="px-3 py-2 text-gray-700">
+                  <td className="px-3 py-2 text-foreground">
                     {readUnknownString(row, "programName", "program_name") || "—"}
-                    <span className="ml-2 font-mono text-[10px] text-gray-400">
+                    <span className="ml-2 font-mono text-[10px] text-muted-foreground">
                       {readUnknownString(row, "programCode", "program_code")}
                     </span>
                   </td>
-                  <td className="px-3 py-2 text-gray-700">{readUnknownString(row, "subsidyType", "subsidy_type") || "—"}</td>
-                  <td className="px-3 py-2 text-gray-700">
+                  <td className="px-3 py-2 text-foreground">{readUnknownString(row, "subsidyType", "subsidy_type") || "—"}</td>
+                  <td className="px-3 py-2 text-foreground">
                     {formatCoverageCurrency(
                       readUnknownNumber(row, "annualCap", "annual_cap"),
                       readUnknownString(row, "currency") || "USD",
@@ -1216,40 +1216,40 @@ function AppealsTab() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-base font-semibold text-gray-900">Claims Appeals</h3>
+        <h3 className="text-base font-semibold text-foreground">Claims Appeals</h3>
         <button onClick={() => setShowForm(!showForm)}
           className="inline-flex items-center gap-1.5 px-3 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700">
           <Plus className="w-4 h-4" /> File Appeal
         </button>
       </div>
-      <p className="text-sm text-gray-500">
+      <p className="text-sm text-muted-foreground">
         Read rows from <code className="text-xs">GET /internal/v1/coverage/appeals</code>. New appeals submit through{" "}
         <code className="text-xs">POST /internal/v1/appeals</code>; operator review/decision uses{" "}
         <code className="text-xs">PUT /internal/v1/appeals/&#123;id&#125;/review|decide</code>.
       </p>
       {appealsQ.isLoading ? (
         <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
         </div>
       ) : appealsQ.isError ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-lg border border-danger/28 bg-danger-soft p-3 text-sm text-danger">
           Could not load appeal rows.
         </div>
       ) : appealRows.length === 0 ? (
-        <div className="bg-white rounded-lg border border-gray-200 p-5 text-sm text-gray-500">
+        <div className="bg-card rounded-lg border border-border p-5 text-sm text-muted-foreground">
           No appeal rows returned by the coverage service.
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+        <div className="overflow-x-auto rounded-lg border border-border bg-card">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b bg-gray-50 text-left">
-                <th className="px-3 py-2 font-medium text-gray-600">Appeal</th>
-                <th className="px-3 py-2 font-medium text-gray-600">Claim</th>
-                <th className="px-3 py-2 font-medium text-gray-600">Coverage</th>
-                <th className="px-3 py-2 font-medium text-gray-600">Status</th>
-                <th className="px-3 py-2 font-medium text-gray-600">Filed</th>
-                <th className="px-3 py-2 font-medium text-gray-600">Action</th>
+              <tr className="border-b bg-background text-left">
+                <th className="px-3 py-2 font-medium text-muted-foreground">Appeal</th>
+                <th className="px-3 py-2 font-medium text-muted-foreground">Claim</th>
+                <th className="px-3 py-2 font-medium text-muted-foreground">Coverage</th>
+                <th className="px-3 py-2 font-medium text-muted-foreground">Status</th>
+                <th className="px-3 py-2 font-medium text-muted-foreground">Filed</th>
+                <th className="px-3 py-2 font-medium text-muted-foreground">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -1258,21 +1258,21 @@ function AppealsTab() {
                 const status = readUnknownString(row, "status", "decision", "state").toUpperCase() || "UNKNOWN";
                 return (
                   <tr key={`${id}-${idx}`}>
-                    <td className="px-3 py-2 font-mono text-xs text-gray-700">{id}</td>
-                    <td className="px-3 py-2 text-gray-700">{readUnknownString(row, "claim_id", "claimId") || "—"}</td>
-                    <td className="px-3 py-2 text-gray-700">
+                    <td className="px-3 py-2 font-mono text-xs text-foreground">{id}</td>
+                    <td className="px-3 py-2 text-foreground">{readUnknownString(row, "claim_id", "claimId") || "—"}</td>
+                    <td className="px-3 py-2 text-foreground">
                       {readUnknownString(row, "coverage_id", "coverageId", "member_id", "memberId") || "—"}
                     </td>
                     <td className="px-3 py-2">
                       <span className={`rounded-full px-2 py-0.5 text-xs ${statusClass(status)}`}>{status}</span>
                     </td>
-                    <td className="px-3 py-2 text-xs text-gray-500">
+                    <td className="px-3 py-2 text-xs text-muted-foreground">
                       {formatCoverageDate(readUnknownString(row, "filed_at", "filedAt", "created_at", "createdAt"))}
                     </td>
                     <td className="px-3 py-2">
                       <button
                         type="button"
-                        className="rounded border border-amber-200 px-2 py-1 text-xs text-amber-800 hover:bg-amber-50"
+                        className="rounded border border-warning/35 px-2 py-1 text-xs text-warning-foreground hover:bg-warning-soft"
                         onClick={() => setSelectedAppealId(id)}
                       >
                         Use
@@ -1286,36 +1286,36 @@ function AppealsTab() {
         </div>
       )}
       {showForm && (
-        <div className="bg-white rounded-lg border border-amber-200 p-5 space-y-3">
-          <h4 className="text-sm font-semibold text-gray-900">New Appeal</h4>
+        <div className="bg-card rounded-lg border border-warning/35 p-5 space-y-3">
+          <h4 className="text-sm font-semibold text-foreground">New Appeal</h4>
           <div className="grid grid-cols-2 gap-3">
             <input
               type="text"
               placeholder="Claim ID"
               value={appealForm.claimId}
               onChange={(event) => setAppealForm((current) => ({ ...current, claimId: event.target.value }))}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+              className="px-3 py-2 text-sm border border-border rounded-lg"
             />
             <input
               type="text"
               placeholder="Coverage ID (optional)"
               value={appealForm.coverageId}
               onChange={(event) => setAppealForm((current) => ({ ...current, coverageId: event.target.value }))}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+              className="px-3 py-2 text-sm border border-border rounded-lg"
             />
             <input
               type="text"
               placeholder="Appellant ID"
               value={appealForm.appellantId}
               onChange={(event) => setAppealForm((current) => ({ ...current, appellantId: event.target.value }))}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+              className="px-3 py-2 text-sm border border-border rounded-lg"
             />
             <input
               type="text"
               placeholder="Evidence summary"
               value={appealForm.evidenceSummary}
               onChange={(event) => setAppealForm((current) => ({ ...current, evidenceSummary: event.target.value }))}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+              className="px-3 py-2 text-sm border border-border rounded-lg"
             />
           </div>
           <textarea
@@ -1323,10 +1323,10 @@ function AppealsTab() {
             rows={3}
             value={appealForm.reason}
             onChange={(event) => setAppealForm((current) => ({ ...current, reason: event.target.value }))}
-            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg"
+            className="w-full px-3 py-2 text-sm border border-border rounded-lg"
           />
           <div className="flex gap-2">
-            <button onClick={() => setShowForm(false)} className="flex-1 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg">Cancel</button>
+            <button onClick={() => setShowForm(false)} className="flex-1 py-2 bg-neutral-100 text-foreground text-sm rounded-lg">Cancel</button>
             <button onClick={() => {
               submitAppeal.mutate(
                 {
@@ -1347,9 +1347,9 @@ function AppealsTab() {
           {submitAppeal.isError ? <p className="text-xs text-red-600">Appeal submission failed.</p> : null}
         </div>
       )}
-      <div className="rounded-lg border border-amber-200 bg-amber-50/60 p-5">
-        <h4 className="text-sm font-semibold text-gray-900">Appeal operator actions</h4>
-        <p className="mt-1 text-xs text-amber-900">
+      <div className="rounded-lg border border-warning/35 bg-warning-soft/60 p-5">
+        <h4 className="text-sm font-semibold text-foreground">Appeal operator actions</h4>
+        <p className="mt-1 text-xs text-warning-foreground">
           Review moves an appeal from PENDING to UNDER_REVIEW. Decisions on OVERTURNED or PARTIAL trigger the backend
           resubmission notification for the linked claim.
         </p>
@@ -1359,19 +1359,19 @@ function AppealsTab() {
             placeholder="Appeal ID"
             value={selectedAppealId}
             onChange={(event) => setSelectedAppealId(event.target.value)}
-            className="px-3 py-2 text-sm border border-amber-200 rounded-lg"
+            className="px-3 py-2 text-sm border border-warning/35 rounded-lg"
           />
           <input
             type="text"
             placeholder="Reviewer ID"
             value={reviewerId}
             onChange={(event) => setReviewerId(event.target.value)}
-            className="px-3 py-2 text-sm border border-amber-200 rounded-lg"
+            className="px-3 py-2 text-sm border border-warning/35 rounded-lg"
           />
           <select
             value={decision}
             onChange={(event) => setDecision(event.target.value as "UPHELD" | "OVERTURNED" | "PARTIAL")}
-            className="px-3 py-2 text-sm border border-amber-200 rounded-lg"
+            className="px-3 py-2 text-sm border border-warning/35 rounded-lg"
           >
             <option value="UPHELD">UPHELD</option>
             <option value="OVERTURNED">OVERTURNED</option>
@@ -1382,7 +1382,7 @@ function AppealsTab() {
             placeholder="Decided by"
             value={decidedBy}
             onChange={(event) => setDecidedBy(event.target.value)}
-            className="px-3 py-2 text-sm border border-amber-200 rounded-lg"
+            className="px-3 py-2 text-sm border border-warning/35 rounded-lg"
           />
         </div>
         <textarea
@@ -1390,7 +1390,7 @@ function AppealsTab() {
           rows={2}
           value={decisionReason}
           onChange={(event) => setDecisionReason(event.target.value)}
-          className="mt-3 w-full px-3 py-2 text-sm border border-amber-200 rounded-lg"
+          className="mt-3 w-full px-3 py-2 text-sm border border-warning/35 rounded-lg"
         />
         <div className="mt-3 flex flex-wrap gap-2">
           <button
@@ -1405,23 +1405,23 @@ function AppealsTab() {
             type="button"
             disabled={decideAppeal.isPending || !selectedAppealId.trim() || !decisionReason.trim() || !decidedBy.trim()}
             onClick={() => decideAppeal.mutate({ appealId: selectedAppealId, decision, decisionReason, decidedBy })}
-            className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+            className="rounded-lg bg-neutral-900 px-3 py-2 text-sm font-medium text-white hover:bg-primary-hover disabled:opacity-50"
           >
             {decideAppeal.isPending ? "Deciding..." : "Record decision"}
           </button>
         </div>
-        {reviewAppeal.isError ? <p className="mt-2 text-xs text-red-700">Review transition failed.</p> : null}
-        {decideAppeal.isError ? <p className="mt-2 text-xs text-red-700">Decision failed; check status is UNDER_REVIEW.</p> : null}
+        {reviewAppeal.isError ? <p className="mt-2 text-xs text-danger">Review transition failed.</p> : null}
+        {decideAppeal.isError ? <p className="mt-2 text-xs text-danger">Decision failed; check status is UNDER_REVIEW.</p> : null}
         {reviewAppeal.isSuccess || decideAppeal.isSuccess ? (
           <p className="mt-2 text-xs text-green-700">Appeal action accepted and rows will refresh.</p>
         ) : null}
       </div>
-      <div className="bg-white rounded-lg border border-gray-200 p-5">
-        <p className="text-sm text-gray-500">Appeal workflow: <span className="font-mono text-xs">PENDING → UNDER_REVIEW → UPHELD / OVERTURNED / PARTIAL</span></p>
+      <div className="bg-card rounded-lg border border-border p-5">
+        <p className="text-sm text-muted-foreground">Appeal workflow: <span className="font-mono text-xs">PENDING → UNDER_REVIEW → UPHELD / OVERTURNED / PARTIAL</span></p>
       </div>
-      {appealRows.length === 0 ? <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-        <Scale className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-        <p className="text-gray-400 text-sm">No appeals filed</p>
+      {appealRows.length === 0 ? <div className="bg-card rounded-lg border border-border p-12 text-center">
+        <Scale className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+        <p className="text-muted-foreground text-sm">No appeals filed</p>
       </div> : null}
     </div>
   );
@@ -1437,30 +1437,30 @@ function ContractingTab() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-base font-semibold text-gray-900">Provider Contracting & Network Management</h3>
+        <h3 className="text-base font-semibold text-foreground">Provider Contracting & Network Management</h3>
         <Link
           href="/coverage/contracts"
-          className="text-sm font-medium text-impilo-700 hover:text-impilo-800"
+          className="text-sm font-medium text-primary-hover hover:text-impilo-800"
         >
           Open full contracts admin →
         </Link>
       </div>
       {contractsQ.isLoading ? (
-        <p className="text-sm text-gray-500">Loading payer–provider contracts from coverage BFF…</p>
+        <p className="text-sm text-muted-foreground">Loading payer–provider contracts from coverage BFF…</p>
       ) : rows.length === 0 ? (
-        <div className="rounded-lg border border-gray-200 bg-white p-8 text-center text-sm text-gray-500">
+        <div className="rounded-lg border border-border bg-card p-8 text-center text-sm text-muted-foreground">
           No active contracts in the current scope. Use contracts admin to create payer–provider agreements.
         </div>
       ) : (
-        <ul className="divide-y divide-gray-100 rounded-lg border border-gray-200 bg-white">
+        <ul className="divide-y divide-gray-100 rounded-lg border border-border bg-card">
           {rows.slice(0, 8).map((row, idx) => {
             const id = String(row.id ?? row.contractId ?? idx);
             const provider = String(row.providerId ?? row.providerName ?? "Provider");
             const status = String(row.status ?? "UNKNOWN");
             return (
               <li key={id} className="flex items-center justify-between px-4 py-3 text-sm">
-                <span className="font-medium text-gray-900">{provider}</span>
-                <span className="text-xs text-gray-500">{status}</span>
+                <span className="font-medium text-foreground">{provider}</span>
+                <span className="text-xs text-muted-foreground">{status}</span>
               </li>
             );
           })}
@@ -1484,19 +1484,19 @@ function IntelligenceTab() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-base font-semibold text-gray-900">Payer Intelligence & Analytics</h3>
-        <div className="flex gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1 text-xs">
+        <h3 className="text-base font-semibold text-foreground">Payer Intelligence & Analytics</h3>
+        <div className="flex gap-1 rounded-lg border border-border bg-background p-1 text-xs">
           <button
             type="button"
             onClick={() => setIntelView("analytics")}
-            className={`rounded-md px-3 py-1.5 font-medium ${intelView === "analytics" ? "bg-white text-violet-700 shadow-sm" : "text-gray-600"}`}
+            className={`rounded-md px-3 py-1.5 font-medium ${intelView === "analytics" ? "bg-card text-violet-700 shadow-sm" : "text-muted-foreground"}`}
           >
             Analytics
           </button>
           <button
             type="button"
             onClick={() => setIntelView("geography")}
-            className={`rounded-md px-3 py-1.5 font-medium ${intelView === "geography" ? "bg-white text-violet-700 shadow-sm" : "text-gray-600"}`}
+            className={`rounded-md px-3 py-1.5 font-medium ${intelView === "geography" ? "bg-card text-violet-700 shadow-sm" : "text-muted-foreground"}`}
           >
             Geography
           </button>
@@ -1507,60 +1507,60 @@ function IntelligenceTab() {
 
       {intelView === "analytics" ? (
         <>
-      <p className="text-sm text-gray-500">
+      <p className="text-sm text-muted-foreground">
         Remittance snapshot plus utilization rows from{" "}
         <code className="text-xs">GET /internal/v1/coverage/utilization</code>. Fraud and MLR KPIs still require a
         dedicated reporting service.
       </p>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
-          <p className="text-2xl font-bold text-gray-900">{isLoading ? "…" : n}</p>
-          <p className="text-xs text-gray-500">Remittance rows</p>
+        <div className="bg-card rounded-lg border border-border p-4 text-center">
+          <p className="text-2xl font-bold text-foreground">{isLoading ? "…" : n}</p>
+          <p className="text-xs text-muted-foreground">Remittance rows</p>
         </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
-          <p className="text-2xl font-bold text-gray-900">{isLoading ? "…" : formatCoverageCurrency(total, cur)}</p>
-          <p className="text-xs text-gray-500">Total remitted (sum)</p>
+        <div className="bg-card rounded-lg border border-border p-4 text-center">
+          <p className="text-2xl font-bold text-foreground">{isLoading ? "…" : formatCoverageCurrency(total, cur)}</p>
+          <p className="text-xs text-muted-foreground">Total remitted (sum)</p>
         </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
+        <div className="bg-card rounded-lg border border-border p-4 text-center">
           <p className="text-2xl font-bold text-green-700">{isLoading || n === 0 ? "—" : formatCoverageCurrency(avg, cur)}</p>
-          <p className="text-xs text-gray-500">Avg remittance</p>
+          <p className="text-xs text-muted-foreground">Avg remittance</p>
         </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
-          <p className="text-2xl font-bold text-amber-700">{utilizationQ.isLoading ? "…" : utilizationRows.length}</p>
-          <p className="text-xs text-gray-500">Utilization rows</p>
-          <p className="text-[10px] text-gray-400 mt-1">BFF coverage utilization list</p>
+        <div className="bg-card rounded-lg border border-border p-4 text-center">
+          <p className="text-2xl font-bold text-warning-foreground">{utilizationQ.isLoading ? "…" : utilizationRows.length}</p>
+          <p className="text-xs text-muted-foreground">Utilization rows</p>
+          <p className="text-[10px] text-muted-foreground mt-1">BFF coverage utilization list</p>
         </div>
       </div>
       {utilizationQ.isError ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-lg border border-danger/28 bg-danger-soft p-3 text-sm text-danger">
           Could not load utilization rows.
         </div>
       ) : null}
       {!utilizationQ.isLoading && !utilizationQ.isError && utilizationRows.length > 0 ? (
-        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+        <div className="overflow-x-auto rounded-lg border border-border bg-card">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b bg-gray-50 text-left">
-                <th className="px-3 py-2 font-medium text-gray-600">Metric</th>
-                <th className="px-3 py-2 font-medium text-gray-600">Value</th>
-                <th className="px-3 py-2 font-medium text-gray-600">Coverage</th>
-                <th className="px-3 py-2 font-medium text-gray-600">Period</th>
+              <tr className="border-b bg-background text-left">
+                <th className="px-3 py-2 font-medium text-muted-foreground">Metric</th>
+                <th className="px-3 py-2 font-medium text-muted-foreground">Value</th>
+                <th className="px-3 py-2 font-medium text-muted-foreground">Coverage</th>
+                <th className="px-3 py-2 font-medium text-muted-foreground">Period</th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {utilizationRows.slice(0, 25).map((row, idx) => (
                 <tr key={`${readUnknownString(row, "id", "metric_id", "metricId") || "metric"}-${idx}`}>
-                  <td className="px-3 py-2 text-gray-700">
+                  <td className="px-3 py-2 text-foreground">
                     {readUnknownString(row, "metric", "metric_name", "metricName", "name") || "—"}
                   </td>
-                  <td className="px-3 py-2 text-gray-700">
+                  <td className="px-3 py-2 text-foreground">
                     {readUnknownString(row, "value", "metric_value", "metricValue") ||
                       String(readUnknownNumber(row, "value", "metric_value", "metricValue"))}
                   </td>
-                  <td className="px-3 py-2 text-gray-700">
+                  <td className="px-3 py-2 text-foreground">
                     {readUnknownString(row, "coverage_id", "coverageId", "scheme_id", "schemeId") || "—"}
                   </td>
-                  <td className="px-3 py-2 text-xs text-gray-500">
+                  <td className="px-3 py-2 text-xs text-muted-foreground">
                     {readUnknownString(row, "period", "period_label", "periodLabel") ||
                       [
                         readUnknownString(row, "period_start", "periodStart"),
@@ -1576,9 +1576,9 @@ function IntelligenceTab() {
           </table>
         </div>
       ) : null}
-      <div className="bg-white rounded-lg border border-gray-200 p-5" data-testid="coverage-intelligence-advanced-note">
-        <h4 className="text-sm font-semibold text-gray-900 mb-2">Advanced analytics (deferred)</h4>
-        <p className="text-xs text-gray-600">
+      <div className="bg-card rounded-lg border border-border p-5" data-testid="coverage-intelligence-advanced-note">
+        <h4 className="text-sm font-semibold text-foreground mb-2">Advanced analytics (deferred)</h4>
+        <p className="text-xs text-muted-foreground">
           Remittance and utilization KPIs above are live from coverage-service. Fraud scoring, MLR benchmarking, and forecasting remain on the reporting-service roadmap.
         </p>
       </div>

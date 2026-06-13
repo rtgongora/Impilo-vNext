@@ -36,18 +36,18 @@ export default function NewPathwayPage() {
   return (
     <AppLayout>
       <PageShell title="New pathway" subtitle="Basic native pathway authoring.">
-        <div className="max-w-xl space-y-2 rounded border border-gray-200 bg-white p-4">
-          <input className="w-full rounded border border-gray-300 px-2 py-1 text-sm" placeholder="Pathway code" value={code} onChange={(e) => setCode(e.target.value)} />
-          <input className="w-full rounded border border-gray-300 px-2 py-1 text-sm" placeholder="Pathway title" value={title} onChange={(e) => setTitle(e.target.value)} />
-          <textarea className="w-full rounded border border-gray-300 px-2 py-1 text-sm" placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} />
-          <select className="w-full rounded border border-gray-300 px-2 py-1 text-sm" value={status} onChange={(e) => setStatus(e.target.value)}>
+        <div className="max-w-xl space-y-2 rounded border border-border bg-card p-4">
+          <input className="w-full rounded border border-border px-2 py-1 text-sm" placeholder="Pathway code" value={code} onChange={(e) => setCode(e.target.value)} />
+          <input className="w-full rounded border border-border px-2 py-1 text-sm" placeholder="Pathway title" value={title} onChange={(e) => setTitle(e.target.value)} />
+          <textarea className="w-full rounded border border-border px-2 py-1 text-sm" placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} />
+          <select className="w-full rounded border border-border px-2 py-1 text-sm" value={status} onChange={(e) => setStatus(e.target.value)}>
             <option value="DRAFT">DRAFT</option>
             <option value="PUBLISHED">PUBLISHED</option>
             <option value="ARCHIVED">ARCHIVED</option>
           </select>
-          <button onClick={save} className="rounded bg-teal-700 px-3 py-1.5 text-sm text-white">Create pathway</button>
-          {error ? <p className="text-xs text-rose-700">{error}</p> : null}
-          {saved ? <p className="text-xs text-emerald-700">Saved.</p> : null}
+          <button onClick={save} className="rounded bg-primary px-3 py-1.5 text-sm text-white">Create pathway</button>
+          {error ? <p className="text-xs text-danger">{error}</p> : null}
+          {saved ? <p className="text-xs text-primary-hover">Saved.</p> : null}
           {pathwayId ? (
             <Link href={`/learning/admin/pathways/${pathwayId}/edit`} className="text-xs text-teal-700 hover:underline">
               Continue to pathway item authoring

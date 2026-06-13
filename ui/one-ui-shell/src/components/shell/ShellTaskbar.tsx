@@ -41,7 +41,7 @@ function TaskbarButton({
     <button
       type="button"
       onClick={onClick}
-      className={`flex h-11 shrink-0 items-center gap-1.5 rounded-lg border border-transparent px-2 hover:bg-slate-100 dark:hover:bg-slate-900 ${className}`}
+      className={`flex h-11 shrink-0 items-center gap-1.5 rounded-lg border border-transparent px-2 hover:bg-primary-soft dark:hover:bg-primary-soft ${className}`}
       title={title}
       aria-label={ariaLabel}
     >
@@ -78,7 +78,7 @@ export function ShellTaskbar() {
     <>
       <ShellSosDialog open={sosDialogOpen} onClose={() => setSosDialogOpen(false)} />
       <div
-        className="pointer-events-auto fixed bottom-0 left-0 right-0 z-[10000] border-t border-slate-200/90 bg-white/95 text-slate-800 shadow-[0_-4px_24px_rgba(15,23,42,0.08)] backdrop-blur-md dark:border-slate-700 dark:bg-slate-950/95 dark:text-slate-100"
+        className="pointer-events-auto fixed bottom-0 left-0 right-0 z-[10000] border-t border-border bg-card/95 text-foreground shadow-[0_-4px_24px_rgba(15,23,42,0.08)] backdrop-blur-md dark:border-border dark:bg-card/95 dark:text-foreground"
         style={{ height: SHELL_TASKBAR_HEIGHT_PX }}
         role="navigation"
         aria-label="Experience shell"
@@ -86,24 +86,24 @@ export function ShellTaskbar() {
         <div className="mx-auto flex h-full max-w-[1920px] items-center gap-0.5 overflow-x-auto px-1 sm:gap-1 sm:px-2">
           <TaskbarButton onClick={() => toggleStart()} title="Start — launcher" ariaLabel="Start menu">
             <ImpiloBrandLogo variant="mark" size={28} className="h-7 w-7" />
-            <span className="hidden text-xs font-semibold text-slate-700 sm:inline dark:text-slate-200">Start</span>
+            <span className="hidden text-xs font-semibold text-foreground sm:inline dark:text-foreground">Start</span>
           </TaskbarButton>
 
           <TaskbarButton onClick={() => toggleSearch()} title="Search (Ctrl+K)" ariaLabel="Open search and commands">
-            <Search className="h-5 w-5 text-slate-600 dark:text-slate-300" />
-            <span className="hidden text-xs font-medium text-slate-700 sm:inline dark:text-slate-200">Search</span>
+            <Search className="h-5 w-5 text-muted-foreground dark:text-muted-foreground" />
+            <span className="hidden text-xs font-medium text-foreground sm:inline dark:text-foreground">Search</span>
           </TaskbarButton>
 
           <details className="relative shrink-0">
-            <summary className="flex h-11 cursor-pointer list-none items-center gap-1 rounded-lg border border-transparent px-2 marker:hidden hover:bg-slate-100 dark:hover:bg-slate-900 [&::-webkit-details-marker]:hidden">
-              <Building2 className="h-5 w-5 text-slate-600 dark:text-slate-300" />
-              <span className="hidden text-xs font-medium text-slate-700 lg:inline dark:text-slate-200">Context</span>
-              <ChevronDown className="hidden h-3.5 w-3.5 text-slate-400 lg:inline" aria-hidden />
+            <summary className="flex h-11 cursor-pointer list-none items-center gap-1 rounded-lg border border-transparent px-2 marker:hidden hover:bg-primary-soft dark:hover:bg-primary-soft [&::-webkit-details-marker]:hidden">
+              <Building2 className="h-5 w-5 text-muted-foreground dark:text-muted-foreground" />
+              <span className="hidden text-xs font-medium text-foreground lg:inline dark:text-foreground">Context</span>
+              <ChevronDown className="hidden h-3.5 w-3.5 text-muted-foreground lg:inline" aria-hidden />
             </summary>
-            <div className="absolute bottom-full left-0 z-[10001] mb-1 min-w-[200px] rounded-xl border border-slate-200 bg-white py-1 text-sm shadow-xl dark:border-slate-700 dark:bg-slate-950">
+            <div className="absolute bottom-full left-0 z-[10001] mb-1 min-w-[200px] rounded-xl border border-border bg-card py-1 text-sm shadow-xl dark:border-border dark:bg-card">
               <button
                 type="button"
-                className="block w-full px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-900"
+                className="block w-full px-3 py-2 text-left hover:bg-background dark:hover:bg-primary-soft"
                 onClick={() => {
                   router.push("/facility");
                   (document.activeElement as HTMLElement | null)?.blur?.();
@@ -113,7 +113,7 @@ export function ShellTaskbar() {
               </button>
               <button
                 type="button"
-                className="block w-full px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-900"
+                className="block w-full px-3 py-2 text-left hover:bg-background dark:hover:bg-primary-soft"
                 onClick={() => {
                   router.push("/workspace");
                   (document.activeElement as HTMLElement | null)?.blur?.();
@@ -123,7 +123,7 @@ export function ShellTaskbar() {
               </button>
               <button
                 type="button"
-                className="block w-full px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-900"
+                className="block w-full px-3 py-2 text-left hover:bg-background dark:hover:bg-primary-soft"
                 onClick={() => {
                   router.push("/shift");
                   (document.activeElement as HTMLElement | null)?.blur?.();
@@ -139,8 +139,8 @@ export function ShellTaskbar() {
             title="Comms hub — secure messaging"
             ariaLabel="Open communications hub"
           >
-            <MessageSquare className="h-5 w-5 text-slate-600 dark:text-slate-300" />
-            <span className="hidden text-xs font-medium text-slate-700 xl:inline dark:text-slate-200">Comms</span>
+            <MessageSquare className="h-5 w-5 text-muted-foreground dark:text-muted-foreground" />
+            <span className="hidden text-xs font-medium text-foreground xl:inline dark:text-foreground">Comms</span>
           </TaskbarButton>
 
           <TaskbarButton
@@ -148,12 +148,12 @@ export function ShellTaskbar() {
             title="Help articles and knowledge base"
             ariaLabel="Open help"
           >
-            <LifeBuoy className="h-5 w-5 text-slate-600 dark:text-slate-300" />
-            <span className="hidden text-xs font-medium text-slate-700 xl:inline dark:text-slate-200">Help</span>
+            <LifeBuoy className="h-5 w-5 text-muted-foreground dark:text-muted-foreground" />
+            <span className="hidden text-xs font-medium text-foreground xl:inline dark:text-foreground">Help</span>
           </TaskbarButton>
 
           <TaskbarButton onClick={() => router.push("/ask")} title="Ask Nompilo" ariaLabel="Open Nompilo Ask">
-            <span className="text-xs font-semibold text-impilo-600 dark:text-impilo-400">Nompilo</span>
+            <span className="text-xs font-semibold text-primary dark:text-impilo-400">Nompilo</span>
           </TaskbarButton>
 
           <TaskbarButton
@@ -161,19 +161,19 @@ export function ShellTaskbar() {
             title="System support and tickets"
             ariaLabel="Open system support"
           >
-            <Headphones className="h-5 w-5 text-slate-600 dark:text-slate-300" />
-            <span className="hidden text-xs font-medium text-slate-700 2xl:inline dark:text-slate-200">Support</span>
+            <Headphones className="h-5 w-5 text-muted-foreground dark:text-muted-foreground" />
+            <span className="hidden text-xs font-medium text-foreground 2xl:inline dark:text-foreground">Support</span>
           </TaskbarButton>
 
           <TaskbarButton onClick={() => setSosDialogOpen(true)} title="SOS — emergency escalation" ariaLabel="Open SOS">
             <Siren className="h-5 w-5 text-red-600 dark:text-red-400" />
-            <span className="hidden text-xs font-semibold text-red-700 sm:inline dark:text-red-400">SOS</span>
+            <span className="hidden text-xs font-semibold text-danger sm:inline dark:text-red-400">SOS</span>
           </TaskbarButton>
 
-          <div className="mx-0.5 hidden h-8 w-px shrink-0 bg-slate-200 sm:mx-1 sm:block dark:bg-slate-700" />
+          <div className="mx-0.5 hidden h-8 w-px shrink-0 bg-border sm:mx-1 sm:block dark:bg-slate-700" />
 
           <TaskbarButton onClick={() => setTaskManagerOpen(true)} title="Task manager" ariaLabel="Open task manager">
-            <Layers className="h-5 w-5 text-slate-600 dark:text-slate-300" />
+            <Layers className="h-5 w-5 text-muted-foreground dark:text-muted-foreground" />
           </TaskbarButton>
 
           <TaskbarButton
@@ -181,14 +181,14 @@ export function ShellTaskbar() {
             title="File manager"
             ariaLabel="Open file manager"
           >
-            <FolderOpen className="h-5 w-5 text-slate-600 dark:text-slate-300" />
+            <FolderOpen className="h-5 w-5 text-muted-foreground dark:text-muted-foreground" />
           </TaskbarButton>
 
-          <div className="mx-0.5 hidden h-8 w-px shrink-0 bg-slate-200 sm:mx-1 md:block dark:bg-slate-700" />
+          <div className="mx-0.5 hidden h-8 w-px shrink-0 bg-border sm:mx-1 md:block dark:bg-slate-700" />
 
           <div className="hidden shrink-0 items-center gap-0.5 sm:flex" title="Pinned apps">
             {pinnedApps.length === 0 ? (
-              <span className="px-1 text-[10px] font-medium uppercase tracking-wide text-slate-400">Pins</span>
+              <span className="px-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Pins</span>
             ) : (
               pinnedApps.map((app) => {
                 const active = pathname === app.href || pathname.startsWith(`${app.href}/`);
@@ -204,8 +204,8 @@ export function ShellTaskbar() {
                     }}
                     className={`flex h-10 w-10 items-center justify-center rounded-md border transition-colors ${
                       active
-                        ? "border-impilo-400 bg-impilo-50 text-impilo-800 dark:border-impilo-600 dark:bg-impilo-950/40"
-                        : "border-transparent hover:bg-slate-100 dark:hover:bg-slate-900"
+                        ? "border-impilo-400 bg-primary-soft text-impilo-800 dark:border-impilo-600 dark:bg-impilo-950/40"
+                        : "border-transparent hover:bg-primary-soft dark:hover:bg-primary-soft"
                     }`}
                   >
                     <ShellIcon name={app.icon} className="h-5 w-5" />
@@ -215,10 +215,10 @@ export function ShellTaskbar() {
             )}
           </div>
 
-          <div className="mx-0.5 hidden h-8 w-px shrink-0 bg-slate-200 md:block dark:bg-slate-700" />
+          <div className="mx-0.5 hidden h-8 w-px shrink-0 bg-border md:block dark:bg-slate-700" />
 
           <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto py-1">
-            <LayoutGrid className="mx-0.5 hidden h-4 w-4 shrink-0 text-slate-400 sm:mx-1 sm:block" aria-hidden />
+            <LayoutGrid className="mx-0.5 hidden h-4 w-4 shrink-0 text-muted-foreground sm:mx-1 sm:block" aria-hidden />
             {openOrdered.map((task) => {
               const active =
                 (task.id === activeTaskId && task.status === "open") ||
@@ -241,10 +241,10 @@ export function ShellTaskbar() {
                   }}
                   className={`group flex max-w-[200px] shrink-0 items-center gap-1 rounded-lg border px-2 py-1 text-left text-xs transition-colors ${
                     active
-                      ? "border-impilo-500 bg-impilo-600 text-white dark:border-impilo-400"
+                      ? "border-impilo-500 bg-primary-hover text-white dark:border-impilo-400"
                       : task.status === "minimized"
-                        ? "border-dashed border-slate-300 bg-slate-50 text-slate-500 dark:border-slate-600 dark:bg-slate-900"
-                        : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900"
+                        ? "border-dashed border-border bg-background text-muted-foreground dark:border-border dark:bg-neutral-900"
+                        : "border-border bg-card hover:border-border dark:border-border dark:bg-neutral-900"
                   }`}
                 >
                   <span className="truncate font-medium">{task.title}</span>
@@ -272,29 +272,29 @@ export function ShellTaskbar() {
             })}
           </div>
 
-          <div className="ml-auto flex shrink-0 items-center gap-1 border-l border-slate-200 pl-1 dark:border-slate-700 sm:gap-2 sm:pl-2">
+          <div className="ml-auto flex shrink-0 items-center gap-1 border-l border-border pl-1 dark:border-border sm:gap-2 sm:pl-2">
             <Link
               href="/home/notifications"
-              className="hidden items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100 sm:inline-flex dark:text-slate-300 dark:hover:bg-slate-900"
+              className="hidden items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-primary-soft sm:inline-flex dark:text-muted-foreground dark:hover:bg-primary-soft"
               title="Notifications"
             >
               Alerts
             </Link>
-            <span className="flex items-center rounded-lg border border-slate-200 bg-white/80 px-0.5 py-0.5 shadow-sm dark:border-slate-700 dark:bg-slate-900/80">
+            <span className="flex items-center rounded-lg border border-border bg-card/80 px-0.5 py-0.5 shadow-sm dark:border-border dark:bg-neutral-900/80">
               <ShellNotificationTray />
             </span>
             <Link
               href="/home/profile"
-              className="inline-flex h-11 items-center gap-1 rounded-lg border border-transparent px-2 hover:bg-slate-100 dark:hover:bg-slate-900"
+              className="inline-flex h-11 items-center gap-1 rounded-lg border border-transparent px-2 hover:bg-primary-soft dark:hover:bg-primary-soft"
               title="Profile and settings"
               aria-label="Profile"
             >
-              <UserCircle className="h-6 w-6 text-slate-600 dark:text-slate-300" />
-              <span className="hidden text-xs font-medium text-slate-700 lg:inline dark:text-slate-200">Profile</span>
+              <UserCircle className="h-6 w-6 text-muted-foreground dark:text-muted-foreground" />
+              <span className="hidden text-xs font-medium text-foreground lg:inline dark:text-foreground">Profile</span>
             </Link>
             <button
               type="button"
-              className="hidden rounded-md px-1.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400 hover:text-slate-600 xl:block dark:hover:text-slate-300"
+              className="hidden rounded-md px-1.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground hover:text-muted-foreground xl:block dark:hover:text-muted-foreground"
               title="Pin Home and File manager to the taskbar"
               onClick={() => {
                 const home = findShellAppByCode("home");

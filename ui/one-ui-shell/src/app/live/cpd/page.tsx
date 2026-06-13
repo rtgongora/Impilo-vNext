@@ -16,8 +16,8 @@ function CpdAttendanceRow({ eventId, title }: { eventId: string; title: string }
   if (isLoading) return null;
   if (!attendance?.eligibleForCpd) return null;
   return (
-    <li className="rounded-lg border border-gray-200 bg-white p-3 text-sm">
-      <p className="font-medium text-gray-900">{title}</p>
+    <li className="rounded-lg border border-border bg-card p-3 text-sm">
+      <p className="font-medium text-foreground">{title}</p>
       <p>Live minutes: {attendance.liveWatchMinutes}</p>
       <p>Total watch: {attendance.totalWatchMinutes}</p>
       <p>Status: {attendance.completionStatus}</p>
@@ -43,7 +43,7 @@ export default function LiveCpdPage() {
         subtitle="CPD-eligible attendance from Impilo Live — council acceptance remains in Varapi"
         icon={<GraduationCap className="h-6 w-6" />}
       >
-        <div className="mb-4 rounded-lg border border-indigo-200 bg-indigo-50 p-3 text-sm text-indigo-900">
+        <div className="mb-4 rounded-lg border border-info/25 bg-info-soft p-3 text-sm text-primary-hover">
           <p className="font-semibold">Council handoff</p>
           <p className="mt-1">
             Live CPD evidence complements Impilo Fundo. Submit packages via Provider Council Self-Service.
@@ -54,13 +54,13 @@ export default function LiveCpdPage() {
                 ? `/registry/provider-council/self-service?providerId=${encodeURIComponent(providerId)}`
                 : "/registry/provider-council/self-service"
             }
-            className="mt-2 inline-block rounded border border-indigo-300 bg-white px-3 py-1.5 text-xs font-medium text-indigo-900"
+            className="mt-2 inline-block rounded border border-indigo-300 bg-card px-3 py-1.5 text-xs font-medium text-primary-hover"
           >
             Open council self-service
           </Link>
         </div>
 
-        <p className="text-sm text-gray-600 mb-3">
+        <p className="text-sm text-muted-foreground mb-3">
           {registrations.length} registrations · {eligibleEvents.length} CPD-eligible ended events
         </p>
 
@@ -69,7 +69,7 @@ export default function LiveCpdPage() {
             <CpdAttendanceRow key={event.id} eventId={event.id} title={event.title} />
           ))}
           {eligibleEvents.length === 0 ? (
-            <li className="text-sm text-gray-500">No CPD-eligible live events yet.</li>
+            <li className="text-sm text-muted-foreground">No CPD-eligible live events yet.</li>
           ) : null}
         </ul>
       </PageShell>

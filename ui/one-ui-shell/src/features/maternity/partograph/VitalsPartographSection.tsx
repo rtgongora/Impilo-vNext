@@ -153,7 +153,7 @@ export function VitalsPartographSection({
   }
 
   return (
-    <div className="mt-4 rounded-xl border border-fuchsia-200/80 bg-gradient-to-b from-fuchsia-50/40 to-white p-4">
+    <div className="mt-4 rounded-xl border border-border/80 bg-gradient-to-b from-fuchsia-50/40 to-card p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-sm font-semibold text-fuchsia-950">Clinical partograph session</h3>
         <div className="flex flex-wrap gap-2">
@@ -174,7 +174,7 @@ export function VitalsPartographSection({
               <button
                 type="button"
                 onClick={() => setShowPointForm((v) => !v)}
-                className="rounded-lg border border-fuchsia-300 bg-white px-3 py-1.5 text-xs font-medium text-fuchsia-900 hover:bg-fuchsia-50"
+                className="rounded-lg border border-fuchsia-300 bg-card px-3 py-1.5 text-xs font-medium text-fuchsia-900 hover:bg-neutral-100"
               >
                 {showPointForm ? "Hide observation form" : "Record observation"}
               </button>
@@ -182,7 +182,7 @@ export function VitalsPartographSection({
                 type="button"
                 onClick={() => void handleCloseSession()}
                 disabled={closeSession.isPending}
-                className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-800 hover:bg-gray-50 disabled:opacity-50"
+                className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-background disabled:opacity-50"
               >
                 Close session
               </button>
@@ -190,15 +190,15 @@ export function VitalsPartographSection({
           )}
         </div>
       </div>
-      <p className="mt-1 text-xs text-gray-600">
+      <p className="mt-1 text-xs text-muted-foreground">
         Live graph from{" "}
-        <code className="rounded bg-gray-100 px-1">/internal/v1/maternity/partograph/sessions</code>. Active session is
-        resolved with <code className="rounded bg-gray-100 px-1">GET …/sessions/active</code>
+        <code className="rounded bg-neutral-100 px-1">/internal/v1/maternity/partograph/sessions</code>. Active session is
+        resolved with <code className="rounded bg-neutral-100 px-1">GET …/sessions/active</code>
         {hasActiveEncounter ? " (scoped to this encounter when one is active)." : " (patient-wide when no encounter is in scope)."}
       </p>
 
       {activeQuery.isError && (
-        <div className="mt-2 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+        <div className="mt-2 flex items-start gap-2 rounded-lg border border-warning/35 bg-warning-soft px-3 py-2 text-sm text-warning-foreground">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
           <div>
             <p className="font-medium">Could not load partograph session</p>
@@ -210,14 +210,14 @@ export function VitalsPartographSection({
       )}
 
       {activeQuery.isLoading && (
-        <div className="mt-3 flex items-center gap-2 text-sm text-gray-500">
+        <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
           Loading partograph…
         </div>
       )}
 
       {!activeQuery.isLoading && !session && (
-        <p className="mt-3 text-sm text-gray-600">
+        <p className="mt-3 text-sm text-muted-foreground">
           No active partograph session for this patient
           {hasActiveEncounter ? " on this encounter" : ""}. {isClinical ? "Start a session to plot observations over time." : null}
         </p>
@@ -225,8 +225,8 @@ export function VitalsPartographSection({
 
       {session && (
         <div className="mt-3 space-y-2">
-          <p className="text-xs text-gray-700">
-            Session <code className="rounded bg-gray-100 px-1">{String(session.id)}</code>
+          <p className="text-xs text-foreground">
+            Session <code className="rounded bg-neutral-100 px-1">{String(session.id)}</code>
             {session.started_at ? (
               <>
                 {" "}
@@ -237,7 +237,7 @@ export function VitalsPartographSection({
             {session.summary?.point_count != null ? ` · ${session.summary.point_count} point(s)` : null}
           </p>
           {Array.isArray(session.summary?.latest_alert_flags) && session.summary!.latest_alert_flags!.length > 0 ? (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-900">
+            <div className="rounded-lg border border-danger/28 bg-danger-soft px-3 py-2 text-xs font-medium text-red-900">
               Latest alerts: {session.summary!.latest_alert_flags!.join(", ")}
             </div>
           ) : null}
@@ -245,87 +245,87 @@ export function VitalsPartographSection({
           <PartographLabourPlot startedAt={session.started_at} points={points} className="mt-2" />
 
           {showPointForm && session.status === "ACTIVE" && isClinical && (
-            <form onSubmit={handleAddPoint} className="mt-3 space-y-3 rounded-lg border border-gray-100 bg-gray-50/90 p-4">
-              <p className="text-xs font-medium text-gray-700">Add plotted observation (POST …/points)</p>
+            <form onSubmit={handleAddPoint} className="mt-3 space-y-3 rounded-lg border border-border bg-background/90 p-4">
+              <p className="text-xs font-medium text-foreground">Add plotted observation (POST …/points)</p>
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <label className="text-xs font-medium text-gray-600">
+                <label className="text-xs font-medium text-muted-foreground">
                   Fetal heart bpm
                   <input
                     value={pgFhr}
                     onChange={(e) => setPgFhr(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                   />
                 </label>
-                <label className="text-xs font-medium text-gray-600">
+                <label className="text-xs font-medium text-muted-foreground">
                   Contractions / 10 min
                   <input
                     value={pgCtxFreq}
                     onChange={(e) => setPgCtxFreq(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                   />
                 </label>
-                <label className="text-xs font-medium text-gray-600">
+                <label className="text-xs font-medium text-muted-foreground">
                   Duration sec
                   <input
                     value={pgCtxDur}
                     onChange={(e) => setPgCtxDur(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                   />
                 </label>
-                <label className="text-xs font-medium text-gray-600">
+                <label className="text-xs font-medium text-muted-foreground">
                   Cervical dilation cm
                   <input
                     value={pgCx}
                     onChange={(e) => setPgCx(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                   />
                 </label>
-                <label className="text-xs font-medium text-gray-600">
+                <label className="text-xs font-medium text-muted-foreground">
                   Descent fifths
                   <input
                     value={pgDescent}
                     onChange={(e) => setPgDescent(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                   />
                 </label>
-                <label className="text-xs font-medium text-gray-600">
+                <label className="text-xs font-medium text-muted-foreground">
                   Maternal pulse
                   <input
                     value={pgPulse}
                     onChange={(e) => setPgPulse(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                   />
                 </label>
-                <label className="text-xs font-medium text-gray-600">
+                <label className="text-xs font-medium text-muted-foreground">
                   Systolic BP
                   <input
                     value={pgSys}
                     onChange={(e) => setPgSys(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                   />
                 </label>
-                <label className="text-xs font-medium text-gray-600">
+                <label className="text-xs font-medium text-muted-foreground">
                   Diastolic BP
                   <input
                     value={pgDia}
                     onChange={(e) => setPgDia(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                   />
                 </label>
-                <label className="text-xs font-medium text-gray-600">
+                <label className="text-xs font-medium text-muted-foreground">
                   Temperature °C
                   <input
                     value={pgTemp}
                     onChange={(e) => setPgTemp(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                   />
                 </label>
-                <label className="text-xs font-medium text-gray-600">
+                <label className="text-xs font-medium text-muted-foreground">
                   Liquor
                   <select
                     value={pgLiquor}
                     onChange={(e) => setPgLiquor(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                   >
                     <option value="CLEAR">Clear</option>
                     <option value="MECONIUM">Meconium</option>
@@ -333,12 +333,12 @@ export function VitalsPartographSection({
                     <option value="ABSENT">Absent / drained</option>
                   </select>
                 </label>
-                <label className="text-xs font-medium text-gray-600">
+                <label className="text-xs font-medium text-muted-foreground">
                   Moulding
                   <select
                     value={pgMould}
                     onChange={(e) => setPgMould(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                   >
                     <option value="NONE">None</option>
                     <option value="+">+</option>
@@ -346,12 +346,12 @@ export function VitalsPartographSection({
                     <option value="+++">+++</option>
                   </select>
                 </label>
-                <label className="text-xs font-medium text-gray-600">
+                <label className="text-xs font-medium text-muted-foreground">
                   Caput
                   <select
                     value={pgCaput}
                     onChange={(e) => setPgCaput(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                   >
                     <option value="NONE">None</option>
                     <option value="+">+</option>
@@ -359,54 +359,54 @@ export function VitalsPartographSection({
                     <option value="+++">+++</option>
                   </select>
                 </label>
-                <label className="text-xs font-medium text-gray-600">
+                <label className="text-xs font-medium text-muted-foreground">
                   Oxytocin mIU/min
                   <input
                     value={pgOxy}
                     onChange={(e) => setPgOxy(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                   />
                 </label>
-                <label className="text-xs font-medium text-gray-600">
+                <label className="text-xs font-medium text-muted-foreground">
                   Urine volume ml
                   <input
                     value={pgUrineMl}
                     onChange={(e) => setPgUrineMl(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                   />
                 </label>
-                <label className="text-xs font-medium text-gray-600">
+                <label className="text-xs font-medium text-muted-foreground">
                   Urine protein
                   <input
                     value={pgUrineProt}
                     onChange={(e) => setPgUrineProt(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                   />
                 </label>
-                <label className="text-xs font-medium text-gray-600">
+                <label className="text-xs font-medium text-muted-foreground">
                   Urine acetone
                   <input
                     value={pgUrineAce}
                     onChange={(e) => setPgUrineAce(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                   />
                 </label>
-                <label className="text-xs font-medium text-gray-600">
+                <label className="text-xs font-medium text-muted-foreground">
                   Maternal condition
                   <input
                     value={pgMatCond}
                     onChange={(e) => setPgMatCond(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                   />
                 </label>
               </div>
-              <label className="block text-xs font-medium text-gray-600">
+              <label className="block text-xs font-medium text-muted-foreground">
                 Notes
                 <textarea
                   value={pgNotes}
                   onChange={(e) => setPgNotes(e.target.value)}
                   rows={2}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                 />
               </label>
               <button

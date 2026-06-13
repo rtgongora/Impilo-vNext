@@ -26,14 +26,14 @@ export default function FundoStudioNewCoursePage() {
 
   return (
     <FundoStudioWorkspace title="New Studio Course" subtitle="Create a draft course first, then enrich with blocks, assessments, surveys and media.">
-      <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-4">
-        <label className="block text-sm text-gray-700">
+      <div className="space-y-3 rounded-lg border border-border bg-card p-4">
+        <label className="block text-sm text-foreground">
           Course title
-          <input value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm" />
+          <input value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1 w-full rounded border border-border px-3 py-2 text-sm" />
         </label>
-        <label className="block text-sm text-gray-700">
+        <label className="block text-sm text-foreground">
           Description
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm" rows={4} />
+          <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="mt-1 w-full rounded border border-border px-3 py-2 text-sm" rows={4} />
         </label>
         <button
           type="button"

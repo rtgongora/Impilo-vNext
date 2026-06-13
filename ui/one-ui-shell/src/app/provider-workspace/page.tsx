@@ -130,49 +130,49 @@ export default function ProviderWorkspacePage() {
       >
         <div className="space-y-4">
           {showAdminGovernance ? (
-            <div className="rounded-xl border border-indigo-200 bg-indigo-50/80 px-4 py-3 text-sm text-indigo-950">
+            <div className="rounded-xl border border-info/25 bg-info-soft/80 px-4 py-3 text-sm text-primary-hover">
               <p className="font-medium">Administration & Governance</p>
-              <p className="mt-1 text-indigo-900">
+              <p className="mt-1 text-primary-hover">
                 Organisation-scoped onboarding, user management and access review — filtered by your Session Experience Contract.
               </p>
               <Link
                 href="/work/administration-governance"
-                className="mt-2 inline-flex text-sm font-semibold text-indigo-700 hover:text-indigo-900"
+                className="mt-2 inline-flex text-sm font-semibold text-primary-hover hover:text-primary-hover"
               >
                 Open Administration & Governance →
               </Link>
             </div>
           ) : null}
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+          <div className="rounded-xl border border-success/25 bg-success-soft p-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Worklist-first entry</p>
-                <h2 className="mt-1 text-base font-semibold text-emerald-900">
+                <p className="text-xs font-semibold uppercase tracking-wide text-primary-hover">Worklist-first entry</p>
+                <h2 className="mt-1 text-base font-semibold text-primary-hover">
                   Start from composed clinical inbox, then open other routes
                 </h2>
-                <p className="mt-1 text-sm text-emerald-800">
+                <p className="mt-1 text-sm text-primary-hover">
                   Existing queue, results, telemedicine, and tools routes remain accessible from this screen.
                 </p>
               </div>
-              <div className="text-right text-sm text-emerald-900">
+              <div className="text-right text-sm text-primary-hover">
                 <p className="font-semibold">{worklistSummary?.total ?? 0} total items</p>
                 <p>{worklistSummary?.urgent ?? 0} urgent · {worklistSummary?.overdue ?? 0} overdue</p>
               </div>
             </div>
             <div className="mt-3 grid gap-2 md:grid-cols-2">
               {(worklistItems.length > 0 ? worklistItems.slice(0, 6) : []).map((item) => (
-                <div key={String(item.id)} className="rounded-lg border border-emerald-200 bg-white px-3 py-2">
-                  <p className="text-sm font-medium text-slate-900">{String(item.title ?? "Clinical action")}</p>
-                  <p className="text-xs text-slate-500">
+                <div key={String(item.id)} className="rounded-lg border border-success/25 bg-card px-3 py-2">
+                  <p className="text-sm font-medium text-foreground">{String(item.title ?? "Clinical action")}</p>
+                  <p className="text-xs text-muted-foreground">
                     {String(item.kind ?? "ITEM")} · {String(item.status ?? "PENDING")} · {String(item.priority ?? "MEDIUM")}
                   </p>
-                  <Link href={typeof item.href === "string" && item.href ? item.href : "/clinical"} className="mt-1 inline-block text-xs font-medium text-emerald-700 hover:text-emerald-900">
+                  <Link href={typeof item.href === "string" && item.href ? item.href : "/clinical"} className="mt-1 inline-block text-xs font-medium text-primary-hover hover:text-primary-hover">
                     Open item →
                   </Link>
                 </div>
               ))}
               {worklistItems.length === 0 ? (
-                <div className="rounded-lg border border-emerald-200 bg-white px-3 py-3 text-sm text-slate-600 md:col-span-2">
+                <div className="rounded-lg border border-success/25 bg-card px-3 py-3 text-sm text-muted-foreground md:col-span-2">
                   {worklistQ.isLoading
                     ? "Loading composed clinical worklist..."
                     : "No composed worklist items in this facility context."}
@@ -180,13 +180,13 @@ export default function ProviderWorkspacePage() {
               ) : null}
             </div>
             <div className="mt-3 flex flex-wrap gap-2 text-xs">
-              <Link href="/learning" className="rounded-md border border-emerald-300 bg-white px-2.5 py-1.5 text-emerald-800 hover:bg-emerald-100">Impilo Fundo</Link>
-              <Link href="/queue" className="rounded-md border border-emerald-300 bg-white px-2.5 py-1.5 text-emerald-800 hover:bg-emerald-100">Queue</Link>
-              <Link href="/queue/search" className="rounded-md border border-emerald-300 bg-white px-2.5 py-1.5 text-emerald-800 hover:bg-emerald-100">Patient Charts</Link>
-              <Link href="/telemedicine" className="rounded-md border border-emerald-300 bg-white px-2.5 py-1.5 text-emerald-800 hover:bg-emerald-100">Telemedicine</Link>
-              <Link href="/clinical-tools" className="rounded-md border border-emerald-300 bg-white px-2.5 py-1.5 text-emerald-800 hover:bg-emerald-100">Clinical Tools</Link>
-              <Link href="/operations/workflows" className="rounded-md border border-emerald-300 bg-white px-2.5 py-1.5 text-emerald-800 hover:bg-emerald-100">Workflows</Link>
-              <Link href="/operations/dispatch" className="rounded-md border border-emerald-300 bg-white px-2.5 py-1.5 text-emerald-800 hover:bg-emerald-100">Dispatch</Link>
+              <Link href="/learning" className="rounded-md border border-emerald-300 bg-card px-2.5 py-1.5 text-primary-hover hover:bg-emerald-100">Impilo Fundo</Link>
+              <Link href="/queue" className="rounded-md border border-emerald-300 bg-card px-2.5 py-1.5 text-primary-hover hover:bg-emerald-100">Queue</Link>
+              <Link href="/queue/search" className="rounded-md border border-emerald-300 bg-card px-2.5 py-1.5 text-primary-hover hover:bg-emerald-100">Patient Charts</Link>
+              <Link href="/telemedicine" className="rounded-md border border-emerald-300 bg-card px-2.5 py-1.5 text-primary-hover hover:bg-emerald-100">Telemedicine</Link>
+              <Link href="/clinical-tools" className="rounded-md border border-emerald-300 bg-card px-2.5 py-1.5 text-primary-hover hover:bg-emerald-100">Clinical Tools</Link>
+              <Link href="/operations/workflows" className="rounded-md border border-emerald-300 bg-card px-2.5 py-1.5 text-primary-hover hover:bg-emerald-100">Workflows</Link>
+              <Link href="/operations/dispatch" className="rounded-md border border-emerald-300 bg-card px-2.5 py-1.5 text-primary-hover hover:bg-emerald-100">Dispatch</Link>
             </div>
           </div>
           <div className="rounded-xl border border-cyan-200 bg-cyan-50 p-3 text-sm text-cyan-900">
@@ -204,10 +204,10 @@ export default function ProviderWorkspacePage() {
               emptyLabel="No provider workflow events available."
               controls={
                 <div className="grid gap-2 sm:grid-cols-2">
-                  <label className="text-xs text-slate-600">
+                  <label className="text-xs text-muted-foreground">
                     Workflow status
                     <select
-                      className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"
+                      className="mt-1 w-full rounded-md border border-border bg-card px-2 py-1 text-sm"
                       value={workflowStatus}
                       onChange={(event) => setFilter({ pWfStatus: event.target.value })}
                     >
@@ -218,10 +218,10 @@ export default function ProviderWorkspacePage() {
                       ))}
                     </select>
                   </label>
-                  <label className="text-xs text-slate-600">
+                  <label className="text-xs text-muted-foreground">
                     Workflow type
                     <select
-                      className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"
+                      className="mt-1 w-full rounded-md border border-border bg-card px-2 py-1 text-sm"
                       value={workflowType}
                       onChange={(event) => setFilter({ pWfType: event.target.value })}
                     >
@@ -255,10 +255,10 @@ export default function ProviderWorkspacePage() {
               detail="Backed by /internal/v1/dispatch/tasks for provider handoff and delivery operations."
               emptyLabel="No provider dispatch events available."
               controls={
-                <label className="text-xs text-slate-600">
+                <label className="text-xs text-muted-foreground">
                   Dispatch status
                   <select
-                    className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"
+                    className="mt-1 w-full rounded-md border border-border bg-card px-2 py-1 text-sm"
                     value={dispatchStatus}
                     onChange={(event) => setFilter({ pDpStatus: event.target.value })}
                   >
@@ -282,7 +282,7 @@ export default function ProviderWorkspacePage() {
               rowLinkLabel="Open dispatch ops"
             />
           </div>
-          <div className="rounded-xl border border-fuchsia-200 bg-fuchsia-50 p-3 text-sm text-fuchsia-900">
+          <div className="rounded-xl border border-border bg-neutral-100 p-3 text-sm text-fuchsia-900">
             <div className="flex items-center gap-2">
               <FeatureMaturityBadge
                 status={transactions.length > 0 ? "live" : isError ? "partial" : "connected"}

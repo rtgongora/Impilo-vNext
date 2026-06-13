@@ -40,13 +40,13 @@ export function RegistryPlaneContextBar({ preferStore = false }: RegistryPlaneCo
   const subLabel = subtype ? SUBTYPE_LABEL[subtype] : null;
 
   return (
-    <div className="mb-4 rounded-xl border border-amber-300/90 bg-gradient-to-r from-amber-50 to-amber-100/40 px-4 py-3 text-sm text-amber-950 shadow-sm">
+    <div className="mb-4 rounded-xl border border-amber-300/90 bg-gradient-to-r from-amber-50 to-amber-100/40 px-4 py-3 text-sm text-warning-foreground shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-start gap-2">
-          <Shield className="mt-0.5 h-4 w-4 shrink-0 text-amber-800" aria-hidden />
+          <Shield className="mt-0.5 h-4 w-4 shrink-0 text-warning-foreground" aria-hidden />
           <div>
-            <p className="font-semibold text-amber-950">{modeDef.label}</p>
-            <p className="text-xs text-amber-900/85">
+            <p className="font-semibold text-warning-foreground">{modeDef.label}</p>
+            <p className="text-xs text-warning-foreground/85">
               {subLabel ? (
                 <>
                   Active sub-plane: <span className="font-medium">{subLabel}</span>. Actions may be audited under
@@ -63,7 +63,7 @@ export function RegistryPlaneContextBar({ preferStore = false }: RegistryPlaneCo
         </div>
         <Link
           href="/registry-admin"
-          className="shrink-0 rounded-lg border border-amber-400/80 bg-white/80 px-3 py-1.5 text-xs font-medium text-amber-950 hover:bg-white"
+          className="shrink-0 rounded-lg border border-amber-400/80 bg-card/80 px-3 py-1.5 text-xs font-medium text-warning-foreground hover:bg-card"
         >
           Registry admin home
         </Link>

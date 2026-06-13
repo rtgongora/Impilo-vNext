@@ -52,15 +52,15 @@ export default function AssessmentAttemptPage() {
     <AppLayout>
       <PageShell title="Assessment attempt" subtitle={`Objective questions: ${objectiveCount} • non-objective answers remain pending/manual.`}>
         {attemptLimit > 0 ? (
-          <p className="mb-3 text-xs text-gray-500">Maximum attempts allowed: {attemptLimit}</p>
+          <p className="mb-3 text-xs text-muted-foreground">Maximum attempts allowed: {attemptLimit}</p>
         ) : null}
         <div className="space-y-3">
           {questions.map((q) => (
-            <div key={String(q.id)} className="rounded border border-gray-200 bg-white p-3">
-              <p className="text-sm font-medium text-gray-900">{String(q.prompt)}</p>
+            <div key={String(q.id)} className="rounded border border-border bg-card p-3">
+              <p className="text-sm font-medium text-foreground">{String(q.prompt)}</p>
               {String(q.type) === "TRUE_FALSE" ? (
                 <select
-                  className="mt-2 w-full rounded border border-gray-300 px-2 py-1 text-sm"
+                  className="mt-2 w-full rounded border border-border px-2 py-1 text-sm"
                   onChange={(e) => setAnswers((prev) => ({ ...prev, [String(q.id)]: e.target.value }))}
                   defaultValue=""
                 >
@@ -70,7 +70,7 @@ export default function AssessmentAttemptPage() {
                 </select>
               ) : String(q.type) === "MULTIPLE_CHOICE" ? (
                 <select
-                  className="mt-2 w-full rounded border border-gray-300 px-2 py-1 text-sm"
+                  className="mt-2 w-full rounded border border-border px-2 py-1 text-sm"
                   onChange={(e) => setAnswers((prev) => ({ ...prev, [String(q.id)]: e.target.value }))}
                   defaultValue=""
                 >
@@ -81,7 +81,7 @@ export default function AssessmentAttemptPage() {
                 </select>
               ) : (
                 <textarea
-                  className="mt-2 w-full rounded border border-gray-300 px-2 py-1 text-sm"
+                  className="mt-2 w-full rounded border border-border px-2 py-1 text-sm"
                   placeholder="Response (manual review)"
                   onChange={(e) => setAnswers((prev) => ({ ...prev, [String(q.id)]: e.target.value }))}
                 />
@@ -91,7 +91,7 @@ export default function AssessmentAttemptPage() {
         </div>
         <button
           onClick={submit}
-          className="mt-4 rounded bg-teal-700 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+          className="mt-4 rounded bg-primary px-3 py-1.5 text-sm text-white disabled:opacity-50"
           disabled={submitMutation.isPending}
           data-testid="fundo-assessment-submit"
         >

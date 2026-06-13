@@ -53,12 +53,12 @@ export function SiteRegistryGeoMapPanel() {
   );
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-4">
+    <section className="rounded-xl border border-border bg-card p-4">
       <div className="mb-3 flex items-center gap-2">
         <MapPin className="h-4 w-4 text-rose-600" />
         <div>
-          <h3 className="text-sm font-semibold text-slate-900">Public health site map</h3>
-          <p className="text-xs text-slate-500">
+          <h3 className="text-sm font-semibold text-foreground">Public health site map</h3>
+          <p className="text-xs text-muted-foreground">
             {sitesQ.isLoading || enrichLoading
               ? "Indawo sites on Ndila · loading…"
               : `Indawo sites on Ndila · ${ndilaMarkers.length} on map (${exact} exact${approximate ? `, ${approximate} approx` : ""}) / ${sitesQ.data?.length ?? 0} listed`}
@@ -77,15 +77,15 @@ export function SiteRegistryGeoMapPanel() {
       />
 
       {markers.length === 0 ? (
-        <p className="mt-2 text-xs text-slate-500">
+        <p className="mt-2 text-xs text-muted-foreground">
           Sites without coordinates — add geo on site profile or rely on district-level approximation.
         </p>
       ) : (
         <ul className="mt-3 max-h-48 space-y-2 overflow-y-auto text-xs">
           {markers.map((marker) => (
-            <li key={marker.id} className="flex justify-between gap-2 rounded-lg bg-slate-50 px-2 py-1.5">
-              <span className="font-medium text-slate-800">{marker.label}</span>
-              <span className="text-slate-500">
+            <li key={marker.id} className="flex justify-between gap-2 rounded-lg bg-background px-2 py-1.5">
+              <span className="font-medium text-foreground">{marker.label}</span>
+              <span className="text-muted-foreground">
                 {marker.latitude != null && marker.longitude != null
                   ? `${marker.latitude.toFixed(3)}, ${marker.longitude.toFixed(3)}`
                   : (marker.status ?? "no coordinates")}

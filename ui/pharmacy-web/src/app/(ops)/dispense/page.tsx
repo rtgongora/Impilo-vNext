@@ -356,17 +356,17 @@ function DispensePageContent() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-red-800">
           {error}
         </div>
       )}
 
       {successMessage && (
-        <div className="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-sm text-emerald-800">
+        <div className="mb-4 p-3 rounded-lg bg-success-soft border border-success/25 text-sm text-primary-hover">
           {successMessage}
           <button
             onClick={() => setSuccessMessage(null)}
-            className="ml-2 text-emerald-600 hover:text-emerald-800 font-medium"
+            className="ml-2 text-primary hover:text-primary-hover font-medium"
           >
             Dismiss
           </button>
@@ -559,7 +559,7 @@ function DispensePageContent() {
             </div>
             <div>
               <span className="text-xs text-neutral-500 block">Claimed</span>
-              <span className={order.pickupProof.claimed ? "text-emerald-700 font-medium" : "text-neutral-500"}>
+              <span className={order.pickupProof.claimed ? "text-primary-hover font-medium" : "text-neutral-500"}>
                 {order.pickupProof.claimed
                   ? `Yes (${new Date(order.pickupProof.claimedAt!).toLocaleString()})`
                   : "No"}
@@ -662,7 +662,7 @@ function DispensePageContent() {
                     </div>
                   )}
                   {item.fefoSuggestion && (
-                    <div className="text-xs text-emerald-600 mt-0.5">
+                    <div className="text-xs text-primary mt-0.5">
                       FEFO: Batch {item.fefoSuggestion.batchNumber} (exp {item.fefoSuggestion.expiryDate},
                       {" "}{item.fefoSuggestion.quantityAvailable} avail)
                     </div>
@@ -761,8 +761,8 @@ function DispensePageContent() {
                           onClick={() => setSelectedSubstitution(opt)}
                           className={`text-xs font-medium ${
                             selectedSubstitution?.drugCode === opt.drugCode
-                              ? "text-emerald-700"
-                              : "text-indigo-600 hover:text-indigo-800"
+                              ? "text-primary-hover"
+                              : "text-indigo-600 hover:text-primary-hover"
                           }`}
                         >
                           {selectedSubstitution?.drugCode === opt.drugCode ? "Selected" : "Select"}

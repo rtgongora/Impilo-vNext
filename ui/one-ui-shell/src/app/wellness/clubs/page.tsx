@@ -35,7 +35,7 @@ export default function ClubsPage() {
       location: String(row.location ?? "Facility community"),
       nextEvent: String(row.nextEvent ?? "TBD"),
       joined: Boolean(row.joined ?? false) || joinedLocal.has(String(row.clubId ?? row.club_id ?? row.id ?? idx)),
-      color: idx % 3 === 0 ? "bg-amber-500" : idx % 3 === 1 ? "bg-emerald-500" : "bg-impilo-500",
+      color: idx % 3 === 0 ? "bg-amber-500" : idx % 3 === 1 ? "bg-emerald-500" : "bg-primary",
     })) satisfies Club[];
   }, [clubsQ.data, joinedLocal]);
 
@@ -70,7 +70,7 @@ export default function ClubsPage() {
         {/* My Clubs */}
         {myClubs.length > 0 && (
           <div className="mb-6">
-            <h2 className="font-semibold text-gray-800 mb-3">My Clubs</h2>
+            <h2 className="font-semibold text-foreground mb-3">My Clubs</h2>
             <div className="flex gap-3 overflow-x-auto pb-2">
               {myClubs.map((c) => (
                 <div key={c.id} className="flex-shrink-0 w-56 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white p-4 shadow-lg">
@@ -89,12 +89,12 @@ export default function ClubsPage() {
         {/* Search & filter */}
         <div className="flex flex-col sm:flex-row gap-3 mb-5">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search clubs..." className="w-full rounded-xl border border-gray-200 pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search clubs..." className="w-full rounded-xl border border-border pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
           </div>
           <div className="flex gap-2 flex-wrap">
             {TYPES.map((t) => (
-              <button key={t} onClick={() => setFilter(t)} className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${filter === t ? "bg-impilo-500 text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>{t}</button>
+              <button key={t} onClick={() => setFilter(t)} className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${filter === t ? "bg-primary text-white shadow-sm" : "bg-neutral-100 text-muted-foreground hover:bg-neutral-100"}`}>{t}</button>
             ))}
           </div>
         </div>
@@ -102,32 +102,32 @@ export default function ClubsPage() {
         {/* Club cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((c) => (
-            <div key={c.id} className="rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+            <div key={c.id} className="rounded-xl border border-border bg-card shadow-sm hover:shadow-md transition-shadow overflow-hidden">
               <div className={`h-2 ${c.color}`} />
               <div className="p-4">
                 <div className="flex items-start justify-between mb-2">
                   <div>
-                    <h3 className="font-semibold text-gray-900">{c.name}</h3>
-                    <span className="text-xs font-medium text-gray-500">{c.type}</span>
+                    <h3 className="font-semibold text-foreground">{c.name}</h3>
+                    <span className="text-xs font-medium text-muted-foreground">{c.type}</span>
                   </div>
                   <span className={`h-8 w-8 rounded-full ${c.color} flex items-center justify-center text-xs font-bold text-white`}>{c.type[0]}</span>
                 </div>
-                <div className="space-y-1.5 text-sm text-gray-600 mb-3">
-                  <div className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5 text-gray-400" />{c.location}</div>
-                  <div className="flex items-center gap-2"><Calendar className="h-3.5 w-3.5 text-gray-400" />Next: {c.nextEvent}</div>
-                  <div className="flex items-center gap-2"><Users2 className="h-3.5 w-3.5 text-gray-400" />{c.members} members</div>
+                <div className="space-y-1.5 text-sm text-muted-foreground mb-3">
+                  <div className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5 text-muted-foreground" />{c.location}</div>
+                  <div className="flex items-center gap-2"><Calendar className="h-3.5 w-3.5 text-muted-foreground" />Next: {c.nextEvent}</div>
+                  <div className="flex items-center gap-2"><Users2 className="h-3.5 w-3.5 text-muted-foreground" />{c.members} members</div>
                 </div>
                 <button
                   data-testid={c.joined ? undefined : "wellness-club-join"}
                   onClick={() => void toggle(c)}
-                  className={`w-full rounded-lg py-2 text-sm font-medium transition-colors flex items-center justify-center gap-1 ${c.joined ? "bg-gray-100 text-gray-600 hover:bg-gray-200" : "bg-impilo-500 text-white hover:bg-impilo-600"}`}
+                  className={`w-full rounded-lg py-2 text-sm font-medium transition-colors flex items-center justify-center gap-1 ${c.joined ? "bg-neutral-100 text-muted-foreground hover:bg-neutral-100" : "bg-primary text-white hover:bg-primary-hover"}`}
                 >
                   {c.joined ? "Leave Club" : "Join Club"}<ChevronRight className="h-4 w-4" />
                 </button>
               </div>
             </div>
           ))}
-          {filtered.length === 0 && <p className="col-span-full text-center text-gray-400 py-8">No clubs match your search</p>}
+          {filtered.length === 0 && <p className="col-span-full text-center text-muted-foreground py-8">No clubs match your search</p>}
         </div>
       </PageShell>
     </AppLayout>

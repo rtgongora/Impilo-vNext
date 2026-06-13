@@ -22,9 +22,9 @@ interface AssetRow {
 }
 
 const STATUS_STYLES: Record<AssetStatus, string> = {
-  IN_SERVICE: "bg-emerald-100 text-emerald-900",
-  MAINTENANCE: "bg-amber-100 text-amber-900",
-  RETIRED: "bg-slate-200 text-slate-700",
+  IN_SERVICE: "bg-emerald-100 text-primary-hover",
+  MAINTENANCE: "bg-amber-100 text-warning-foreground",
+  RETIRED: "bg-border text-foreground",
 };
 
 function uid() {
@@ -103,7 +103,7 @@ export default function AssetsPage() {
       >
         <SupplyPlaneContextBar />
         <div className="mb-4">
-          <Link href="/inventory" className="text-sm font-medium text-slate-600 hover:text-slate-900">
+          <Link href="/inventory" className="text-sm font-medium text-muted-foreground hover:text-foreground">
             ← Inventory dashboard
           </Link>
         </div>
@@ -115,64 +115,64 @@ export default function AssetsPage() {
             { label: "Maintenance", value: summary.maint },
             { label: "Retired", value: summary.retired },
           ].map(({ label, value }) => (
-            <div key={label} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">{value}</p>
+            <div key={label} className="rounded-xl border border-border bg-card p-4 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+              <p className="mt-2 text-2xl font-bold text-foreground">{value}</p>
             </div>
           ))}
         </div>
 
         <section className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,360px)_1fr]">
-          <form onSubmit={register} className="h-fit rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Register asset</div>
-            <p className="mt-2 text-sm text-slate-600">
+          <form onSubmit={register} className="h-fit rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Register asset</div>
+            <p className="mt-2 text-sm text-muted-foreground">
               Client-side registry until an operations assets API is available. Data clears on full page reload.
             </p>
             <div className="mt-4 space-y-3">
               <label className="block text-sm">
-                <span className="mb-1 block font-medium text-slate-700">Asset tag</span>
-                <input value={tag} onChange={(e) => setTag(e.target.value)} required className="w-full rounded-lg border border-slate-300 px-3 py-2" placeholder="AST-00042" />
+                <span className="mb-1 block font-medium text-foreground">Asset tag</span>
+                <input value={tag} onChange={(e) => setTag(e.target.value)} required className="w-full rounded-lg border border-border px-3 py-2" placeholder="AST-00042" />
               </label>
               <label className="block text-sm">
-                <span className="mb-1 block font-medium text-slate-700">Name</span>
-                <input value={name} onChange={(e) => setName(e.target.value)} required className="w-full rounded-lg border border-slate-300 px-3 py-2" placeholder="Patient monitor" />
+                <span className="mb-1 block font-medium text-foreground">Name</span>
+                <input value={name} onChange={(e) => setName(e.target.value)} required className="w-full rounded-lg border border-border px-3 py-2" placeholder="Patient monitor" />
               </label>
               <label className="block text-sm">
-                <span className="mb-1 block font-medium text-slate-700">Type</span>
-                <input value={type} onChange={(e) => setType(e.target.value)} className="w-full rounded-lg border border-slate-300 px-3 py-2" />
+                <span className="mb-1 block font-medium text-foreground">Type</span>
+                <input value={type} onChange={(e) => setType(e.target.value)} className="w-full rounded-lg border border-border px-3 py-2" />
               </label>
               <label className="block text-sm">
-                <span className="mb-1 block font-medium text-slate-700">Location</span>
+                <span className="mb-1 block font-medium text-foreground">Location</span>
                 <input
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                  className="w-full rounded-lg border border-border px-3 py-2"
                   placeholder={facility ? `Default: ${facility.name}` : "Building / ward / room"}
                 />
               </label>
               <label className="block text-sm">
-                <span className="mb-1 block font-medium text-slate-700">Assigned to</span>
-                <input value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} className="w-full rounded-lg border border-slate-300 px-3 py-2" placeholder="Team or person" />
+                <span className="mb-1 block font-medium text-foreground">Assigned to</span>
+                <input value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} className="w-full rounded-lg border border-border px-3 py-2" placeholder="Team or person" />
               </label>
             </div>
-            <button type="submit" className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white">
+            <button type="submit" className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white">
               <Plus className="h-4 w-4" />
               Register asset
             </button>
           </form>
 
-          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="flex flex-col gap-3 border-b border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="rounded-2xl border border-border bg-card shadow-sm">
+            <div className="flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="relative min-w-[200px] flex-1">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search tag, name, type, location, assignee…"
-                  className="w-full rounded-lg border border-slate-300 py-2 pl-9 pr-3 text-sm"
+                  className="w-full rounded-lg border border-border py-2 pl-9 pr-3 text-sm"
                 />
               </div>
-              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as "" | AssetStatus)} className="rounded-lg border border-slate-300 px-3 py-2 text-sm">
+              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as "" | AssetStatus)} className="rounded-lg border border-border px-3 py-2 text-sm">
                 <option value="">All statuses</option>
                 <option value="IN_SERVICE">IN_SERVICE</option>
                 <option value="MAINTENANCE">MAINTENANCE</option>
@@ -181,14 +181,14 @@ export default function AssetsPage() {
             </div>
 
             {filtered.length === 0 ? (
-              <div className="flex flex-col items-center justify-center gap-2 p-12 text-center text-sm text-slate-500">
-                <Package className="h-10 w-10 text-slate-300" />
+              <div className="flex flex-col items-center justify-center gap-2 p-12 text-center text-sm text-muted-foreground">
+                <Package className="h-10 w-10 text-muted-foreground" />
                 <p>No assets match the current filters. Register an asset to begin.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[900px] text-sm">
-                  <thead className="bg-slate-50 text-left text-slate-600">
+                  <thead className="bg-background text-left text-muted-foreground">
                     <tr>
                       <th className="px-3 py-2 font-medium">Tag</th>
                       <th className="px-3 py-2 font-medium">Name</th>
@@ -201,22 +201,22 @@ export default function AssetsPage() {
                   </thead>
                   <tbody>
                     {filtered.map((a) => (
-                      <tr key={a.id} className="border-t border-slate-100">
-                        <td className="px-3 py-2 font-mono text-xs text-slate-800">{a.tag}</td>
-                        <td className="px-3 py-2 font-medium text-slate-900">{a.name}</td>
-                        <td className="px-3 py-2 text-slate-600">{a.type}</td>
-                        <td className="px-3 py-2 text-slate-600">{a.location}</td>
+                      <tr key={a.id} className="border-t border-border">
+                        <td className="px-3 py-2 font-mono text-xs text-foreground">{a.tag}</td>
+                        <td className="px-3 py-2 font-medium text-foreground">{a.name}</td>
+                        <td className="px-3 py-2 text-muted-foreground">{a.type}</td>
+                        <td className="px-3 py-2 text-muted-foreground">{a.location}</td>
                         <td className="px-3 py-2">
                           <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_STYLES[a.status]}`}>{a.status}</span>
                         </td>
-                        <td className="px-3 py-2 text-slate-600">{a.assignedTo}</td>
+                        <td className="px-3 py-2 text-muted-foreground">{a.assignedTo}</td>
                         <td className="px-3 py-2 text-right">
                           <div className="inline-flex flex-wrap justify-end gap-1">
                             <button
                               type="button"
                               disabled={a.status === "IN_SERVICE"}
                               onClick={() => setStatus(a.id, "IN_SERVICE")}
-                              className="rounded border border-slate-200 px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-40"
+                              className="rounded border border-border px-2 py-1 text-xs font-medium text-foreground hover:bg-background disabled:opacity-40"
                             >
                               In service
                             </button>
@@ -224,7 +224,7 @@ export default function AssetsPage() {
                               type="button"
                               disabled={a.status === "MAINTENANCE"}
                               onClick={() => setStatus(a.id, "MAINTENANCE")}
-                              className="inline-flex items-center gap-1 rounded border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-950 hover:bg-amber-100 disabled:opacity-40"
+                              className="inline-flex items-center gap-1 rounded border border-warning/35 bg-warning-soft px-2 py-1 text-xs font-medium text-warning-foreground hover:bg-amber-100 disabled:opacity-40"
                             >
                               <Wrench className="h-3 w-3" />
                               Maintain
@@ -233,7 +233,7 @@ export default function AssetsPage() {
                               type="button"
                               disabled={a.status === "RETIRED"}
                               onClick={() => setStatus(a.id, "RETIRED")}
-                              className="rounded border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-40"
+                              className="rounded border border-border px-2 py-1 text-xs font-medium text-foreground hover:bg-neutral-100 disabled:opacity-40"
                             >
                               Retire
                             </button>

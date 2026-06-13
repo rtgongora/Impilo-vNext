@@ -10,7 +10,7 @@ export function TelemedicineRtcHealthPanel() {
   if (isLoading) {
     return (
       <section
-        className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600"
+        className="rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground"
         data-testid="telemedicine-rtc-health-panel"
       >
         <div className="flex items-center gap-2">
@@ -24,7 +24,7 @@ export function TelemedicineRtcHealthPanel() {
   if (isError || !health) {
     return (
       <section
-        className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+        className="rounded-xl border border-warning/35 bg-warning-soft px-4 py-3 text-sm text-warning-foreground"
         data-testid="telemedicine-rtc-health-panel"
       >
         <div className="flex items-start gap-2">
@@ -44,15 +44,15 @@ export function TelemedicineRtcHealthPanel() {
     <section
       className={`rounded-xl border px-4 py-3 text-sm ${
         productionReady
-          ? "border-emerald-200 bg-emerald-50/70 text-emerald-950"
-          : "border-amber-200 bg-amber-50/70 text-amber-950"
+          ? "border-success/25 bg-success-soft/70 text-emerald-950"
+          : "border-warning/35 bg-warning-soft/70 text-warning-foreground"
       }`}
       data-testid="telemedicine-rtc-health-panel"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-2">
           {productionReady ? (
-            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
           ) : (
             <Radio className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
           )}
@@ -65,7 +65,7 @@ export function TelemedicineRtcHealthPanel() {
               {health.serverUrl ? (
                 <>
                   {" "}
-                  · server <code className="rounded bg-white/60 px-1">{health.serverUrl}</code>
+                  · server <code className="rounded bg-card/60 px-1">{health.serverUrl}</code>
                 </>
               ) : null}
             </p>
@@ -83,14 +83,14 @@ export function TelemedicineRtcHealthPanel() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2 text-[10px] font-medium uppercase tracking-wide">
-          <span className="rounded-full bg-white/70 px-2 py-0.5">
+          <span className="rounded-full bg-card/70 px-2 py-0.5">
             livekit {health.livekitEnabled ? "on" : "off"}
           </span>
-          <span className="rounded-full bg-white/70 px-2 py-0.5">
+          <span className="rounded-full bg-card/70 px-2 py-0.5">
             configured {health.livekitConfigured ? "yes" : "no"}
           </span>
           {typeof health.activeSessions === "number" ? (
-            <span className="rounded-full bg-white/70 px-2 py-0.5">
+            <span className="rounded-full bg-card/70 px-2 py-0.5">
               sessions {health.activeSessions}
             </span>
           ) : null}

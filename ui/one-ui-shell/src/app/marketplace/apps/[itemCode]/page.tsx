@@ -49,37 +49,37 @@ export default function CapabilityDetailPage() {
         <div className="space-y-6">
           <Link
             href="/marketplace/apps"
-            className="inline-flex items-center gap-1 text-sm text-impilo-700 hover:underline"
+            className="inline-flex items-center gap-1 text-sm text-primary-hover hover:underline"
           >
             <ChevronLeft className="h-4 w-4" /> Back to marketplace
           </Link>
 
           {capabilityQuery.isLoading ? (
-            <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500">
+            <div className="flex items-center gap-2 rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" /> Loading capability…
             </div>
           ) : capabilityQuery.isError || !item ? (
-            <div className="flex items-start gap-2 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+            <div className="flex items-start gap-2 rounded-2xl border border-warning/35 bg-warning-soft p-4 text-sm text-warning-foreground">
               <AlertTriangle className="mt-0.5 h-4 w-4" />
               Couldn’t load this capability. It may have been deprecated or you may not have access.
             </div>
           ) : (
             <>
-              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <div className="text-[11px] font-semibold uppercase tracking-wider text-impilo-700">
+                    <div className="text-[11px] font-semibold uppercase tracking-wider text-primary-hover">
                       {item.type} · {item.category}
                     </div>
-                    <h2 className="mt-1 text-xl font-semibold text-slate-900">{item.name}</h2>
-                    <p className="mt-1 max-w-3xl text-sm text-slate-600">{item.description}</p>
+                    <h2 className="mt-1 text-xl font-semibold text-foreground">{item.name}</h2>
+                    <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{item.description}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1">
                     <ApprovalBadge value={item.approvalStatus} />
-                    <span className="text-xs text-slate-500">v{item.version}</span>
+                    <span className="text-xs text-muted-foreground">v{item.version}</span>
                   </div>
                 </div>
-                <div className="mt-4 grid gap-3 text-sm text-slate-600 md:grid-cols-2">
+                <div className="mt-4 grid gap-3 text-sm text-muted-foreground md:grid-cols-2">
                   <Detail label="Publisher" value={item.publisherName} />
                   <Detail label="Security" value={item.securityClassification} />
                   <Detail label="Data protection" value={item.dataProtectionClassification} />
@@ -93,7 +93,7 @@ export default function CapabilityDetailPage() {
                     href={item.documentationUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-impilo-700 hover:underline"
+                    className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary-hover hover:underline"
                   >
                     <BookOpen className="h-4 w-4" /> Documentation
                   </a>
@@ -107,19 +107,19 @@ export default function CapabilityDetailPage() {
                 <Permissions title="Data categories"   items={item.requiredDataCategories} icon={Tag} />
               </section>
 
-              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <h3 className="text-base font-semibold text-slate-900">Request activation</h3>
-                <p className="mt-1 text-sm text-slate-600">
+              <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                <h3 className="text-base font-semibold text-foreground">Request activation</h3>
+                <p className="mt-1 text-sm text-muted-foreground">
                   Activation is governed. A reviewer will validate scope, data access, and clinical safety before
                   installing this capability for your tenant/facility.
                 </p>
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
                   <label className="text-sm">
-                    <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Purpose of use</span>
+                    <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Purpose of use</span>
                     <select
                       value={purpose}
                       onChange={(e) => setPurpose(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
+                      className="mt-1 w-full rounded-lg border border-border px-3 py-2"
                     >
                       <option value="TREATMENT">Treatment</option>
                       <option value="OPERATIONS">Operations</option>
@@ -130,22 +130,22 @@ export default function CapabilityDetailPage() {
                     </select>
                   </label>
                   <label className="text-sm">
-                    <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Facility (optional)</span>
+                    <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Facility (optional)</span>
                     <input
                       value={facilityId}
                       onChange={(e) => setFacilityId(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
+                      className="mt-1 w-full rounded-lg border border-border px-3 py-2"
                       placeholder="e.g. fac-mpilo-001"
                     />
                   </label>
                 </div>
                 <label className="mt-3 block text-sm">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Justification</span>
+                  <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Justification</span>
                   <textarea
                     value={justification}
                     onChange={(e) => setJustification(e.target.value)}
                     rows={4}
-                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
+                    className="mt-1 w-full rounded-lg border border-border px-3 py-2"
                     placeholder="Why does your facility / programme need this capability?"
                   />
                 </label>
@@ -154,13 +154,13 @@ export default function CapabilityDetailPage() {
                     type="button"
                     disabled={!justification.trim() || requestActivation.isPending}
                     onClick={handleRequest}
-                    className="inline-flex items-center gap-2 rounded-xl bg-impilo-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60 hover:bg-impilo-700"
+                    className="inline-flex items-center gap-2 rounded-xl bg-primary-hover px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60 hover:bg-impilo-700"
                   >
                     {requestActivation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                     Submit activation request
                   </button>
                   {success ? (
-                    <div className="inline-flex items-center gap-1 text-sm text-emerald-700">
+                    <div className="inline-flex items-center gap-1 text-sm text-primary-hover">
                       <CheckCircle2 className="h-4 w-4" /> {success}
                     </div>
                   ) : null}
@@ -176,9 +176,9 @@ export default function CapabilityDetailPage() {
 
 function Detail({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
-      <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">{label}</div>
-      <div className="mt-0.5 text-sm font-medium text-slate-800">{value || "—"}</div>
+    <div className="rounded-lg border border-border bg-background px-3 py-2">
+      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="mt-0.5 text-sm font-medium text-foreground">{value || "—"}</div>
     </div>
   );
 }
@@ -193,18 +193,18 @@ function Permissions({
   icon: React.ComponentType<{ className?: string }>;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-        <Icon className="h-4 w-4 text-impilo-600" /> {title}
+    <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+      <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+        <Icon className="h-4 w-4 text-primary" /> {title}
       </div>
       {items.length === 0 ? (
-        <p className="mt-2 text-xs text-slate-500">None declared.</p>
+        <p className="mt-2 text-xs text-muted-foreground">None declared.</p>
       ) : (
         <ul className="mt-2 flex flex-wrap gap-1">
           {items.map((s) => (
             <li
               key={s}
-              className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-700"
+              className="rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] text-foreground"
             >
               {s}
             </li>
@@ -217,15 +217,15 @@ function Permissions({
 
 function ApprovalBadge({ value }: { value: string }) {
   const tone: Record<string, string> = {
-    APPROVED: "bg-emerald-50 text-emerald-700",
-    PENDING_REVIEW: "bg-amber-50 text-amber-700",
-    REJECTED: "bg-rose-50 text-rose-700",
-    DEPRECATED: "bg-slate-100 text-slate-500",
-    SUSPENDED: "bg-rose-50 text-rose-700",
+    APPROVED: "bg-success-soft text-primary-hover",
+    PENDING_REVIEW: "bg-warning-soft text-warning-foreground",
+    REJECTED: "bg-danger-soft text-danger",
+    DEPRECATED: "bg-neutral-100 text-muted-foreground",
+    SUSPENDED: "bg-danger-soft text-danger",
   };
   return (
     <span
-      className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tone[value] ?? "bg-slate-100 text-slate-700"}`}
+      className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tone[value] ?? "bg-neutral-100 text-foreground"}`}
     >
       {value}
     </span>

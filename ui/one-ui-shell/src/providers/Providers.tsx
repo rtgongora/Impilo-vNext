@@ -84,7 +84,7 @@ function StoreHydrator({ children }: { children: ReactNode }) {
   if (!hydrated) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <div className="text-gray-400 text-sm">Loading...</div>
+        <div className="text-muted-foreground text-sm">Loading...</div>
       </div>
     );
   }

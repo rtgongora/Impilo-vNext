@@ -14,12 +14,12 @@ export function CrvsUbomiOrchestrationRail() {
 
   return (
     <section
-      className="mb-4 rounded-2xl border border-rose-200 bg-rose-50/80 p-4"
+      className="mb-4 rounded-2xl border border-danger/28 bg-danger-soft/80 p-4"
       data-testid="crvs-ubomi-orchestration-rail"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="flex items-center gap-2 text-sm font-semibold text-rose-900">
+          <p className="flex items-center gap-2 text-sm font-semibold text-danger">
             <Baby className="h-4 w-4" />
             UBOMI civil registration orchestration
           </p>
@@ -30,7 +30,7 @@ export function CrvsUbomiOrchestrationRail() {
                 ? "UBOMI service reachable · births and deaths wired through BFF"
                 : "UBOMI service unavailable — governed fail-close"}
           </p>
-          <p className="mt-1 text-xs text-rose-700" data-testid="ubomi-crvs-kpi-strip">
+          <p className="mt-1 text-xs text-danger" data-testid="ubomi-crvs-kpi-strip">
             {birthsQ.isLoading || deathsQ.isLoading
               ? "Loading vital event queues…"
               : `${birthRows.length} birth notification(s) · ${deathRows.length} death notification(s)`}
@@ -39,21 +39,21 @@ export function CrvsUbomiOrchestrationRail() {
         <div className="flex flex-wrap gap-2 text-xs">
           <Link
             href="/ubomi"
-            className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-white px-2.5 py-1.5 font-medium text-rose-900 hover:border-rose-300"
+            className="inline-flex items-center gap-1 rounded-lg border border-danger/28 bg-card px-2.5 py-1.5 font-medium text-danger hover:border-rose-300"
           >
             <Skull className="h-3.5 w-3.5" />
             CRVS console
           </Link>
           <Link
             href="/registry"
-            className="rounded-lg border border-rose-200 bg-white px-2.5 py-1.5 font-medium text-rose-900 hover:border-rose-300"
+            className="rounded-lg border border-danger/28 bg-card px-2.5 py-1.5 font-medium text-danger hover:border-rose-300"
           >
             Registry hub
           </Link>
         </div>
       </div>
       {(birthsQ.isLoading || deathsQ.isLoading) && (
-        <div className="mt-2 flex items-center gap-2 text-xs text-rose-700">
+        <div className="mt-2 flex items-center gap-2 text-xs text-danger">
           <Loader2 className="h-3.5 w-3.5 animate-spin" />
           Binding web CRVS → citizen mobile verification path…
         </div>

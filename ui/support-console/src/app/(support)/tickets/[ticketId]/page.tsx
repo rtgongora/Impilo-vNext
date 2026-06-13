@@ -185,7 +185,7 @@ export default function TicketDetailPage() {
         {/* Main content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Ticket info */}
-          <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6">
+          <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6">
             <div className="flex items-start justify-between mb-4">
               <h1 className="text-xl font-semibold text-neutral-900">{ticket.title}</h1>
               <div className="flex items-center gap-2">
@@ -206,7 +206,7 @@ export default function TicketDetailPage() {
           </div>
 
           {/* Comments section */}
-          <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6">
+          <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6">
             <h2 className="text-lg font-semibold text-neutral-900 mb-4">
               Comments ({comments.length})
             </h2>
@@ -245,7 +245,7 @@ export default function TicketDetailPage() {
           </div>
 
           {/* Messages / conversation thread */}
-          <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6">
+          <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6">
             <h2 className="text-lg font-semibold text-neutral-900 mb-4">
               Conversation ({messages.length})
             </h2>
@@ -261,7 +261,7 @@ export default function TicketDetailPage() {
                       ? "bg-brand-primary/5 border border-brand-primary/10 ml-8"
                       : m.senderType === "SYSTEM"
                       ? "bg-neutral-50 border border-neutral-100 text-neutral-500 italic"
-                      : "bg-white border border-neutral-200 mr-8"
+                      : "bg-card border border-neutral-200 mr-8"
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-1">
@@ -301,7 +301,7 @@ export default function TicketDetailPage() {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Metadata */}
-          <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-5">
+          <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-5">
             <h3 className="text-sm font-semibold text-neutral-900 mb-3">Details</h3>
             <dl className="space-y-2.5 text-sm">
               <div className="flex justify-between">
@@ -354,7 +354,7 @@ export default function TicketDetailPage() {
           </div>
 
           {/* Status transition */}
-          <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-5">
+          <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-5">
             <h3 className="text-sm font-semibold text-neutral-900 mb-3">Update Status</h3>
             {(ticket.status === "IN_PROGRESS" || ticket.status === "WAITING") && (
               <div className="mb-3">
@@ -387,7 +387,7 @@ export default function TicketDetailPage() {
           </div>
 
           {/* Assignment */}
-          <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-5">
+          <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-5">
             <h3 className="text-sm font-semibold text-neutral-900 mb-3">Assign / Reassign</h3>
             <form onSubmit={handleAssign} className="flex gap-2">
               <input
@@ -420,7 +420,7 @@ export default function TicketDetailPage() {
           </div>
 
           {/* Escalation */}
-          <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-5">
+          <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-5">
             <h3 className="text-sm font-semibold text-neutral-900 mb-3">Escalation</h3>
             <p className="text-sm text-neutral-600 mb-2">
               Current level: <span className="font-semibold">{ticket.escalationLevel}</span>
@@ -443,7 +443,7 @@ export default function TicketDetailPage() {
           </div>
 
           {/* Diagnostics linkage */}
-          <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-5">
+          <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-5">
             <h3 className="text-sm font-semibold text-neutral-900 mb-3">Diagnostics</h3>
             {ticket.correlationId ? (
               <div className="space-y-2">

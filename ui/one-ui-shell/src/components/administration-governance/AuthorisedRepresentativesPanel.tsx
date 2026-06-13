@@ -69,16 +69,16 @@ export function AuthorisedRepresentativesPanel() {
   }
 
   return (
-    <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <h3 className="text-base font-semibold text-slate-900">Authorised Representatives</h3>
-      <p className="text-sm text-slate-600">
+    <section className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
+      <h3 className="text-base font-semibold text-foreground">Authorised Representatives</h3>
+      <p className="text-sm text-muted-foreground">
         Organisation-scoped delegates who may upload authoritative data. Invitations remain staged until identity confirmation — spreadsheet rows never auto-activate users.
       </p>
       <div className="grid gap-3 md:grid-cols-2">
         <input className="rounded-lg border px-3 py-2 text-sm" placeholder="User ID / email" value={form.userId} onChange={(e) => setForm((prev) => ({ ...prev, userId: e.target.value }))} />
         <input className="rounded-lg border px-3 py-2 text-sm" placeholder="Role template" value={form.roleTemplateId} onChange={(e) => setForm((prev) => ({ ...prev, roleTemplateId: e.target.value }))} />
       </div>
-      <button type="button" className="rounded-lg bg-indigo-700 px-4 py-2 text-sm text-white" onClick={() => void handleInvite()}>
+      <button type="button" className="rounded-lg bg-primary px-4 py-2 text-sm text-white" onClick={() => void handleInvite()}>
         Invite authorised representative
       </button>
       <ul className="space-y-3 text-sm">
@@ -86,11 +86,11 @@ export function AuthorisedRepresentativesPanel() {
           const invitation = normalizeInvitationView(item.invitation as Record<string, unknown> | undefined);
           const repId = String(item.id);
           return (
-            <li key={repId} className="rounded-lg border border-slate-100 px-3 py-3">
+            <li key={repId} className="rounded-lg border border-border px-3 py-3">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="font-medium text-slate-900">{String(item.userId)}</p>
-                  <p className="text-xs text-slate-600">
+                  <p className="font-medium text-foreground">{String(item.userId)}</p>
+                  <p className="text-xs text-muted-foreground">
                     {String(item.roleTemplateId ?? item.representativeType)} · Representative status: {String(item.status)}
                   </p>
                 </div>
@@ -117,7 +117,7 @@ export function AuthorisedRepresentativesPanel() {
         })}
       </ul>
       {auditTrail ? (
-        <pre className="overflow-auto rounded-lg bg-slate-50 p-3 text-xs">{JSON.stringify(auditTrail, null, 2)}</pre>
+        <pre className="overflow-auto rounded-lg bg-background p-3 text-xs">{JSON.stringify(auditTrail, null, 2)}</pre>
       ) : null}
       {result ? <GovernanceActionResult result={result} /> : null}
     </section>

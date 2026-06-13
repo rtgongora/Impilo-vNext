@@ -196,14 +196,14 @@ export default function BookServiceWizardPage() {
       <AppLayout>
         <PageShell title="Booking submitted">
           <div className="max-w-lg mx-auto text-center py-12">
-            <CheckCircle2 className="w-14 h-14 text-impilo-500 mx-auto mb-4" />
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">Booking request submitted</h2>
-            <p className="text-sm text-gray-500 mb-6">
+            <CheckCircle2 className="w-14 h-14 text-primary mx-auto mb-4" />
+            <h2 className="text-lg font-semibold text-foreground mb-2">Booking request submitted</h2>
+            <p className="text-sm text-muted-foreground mb-6">
               Your booking is pending facility review. You will receive an appointment once confirmed.
             </p>
             <Link
               href={`/home/bookings/${submittedId}`}
-              className="inline-flex rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white hover:bg-impilo-600"
+              className="inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
             >
               View booking details
             </Link>
@@ -216,7 +216,7 @@ export default function BookServiceWizardPage() {
   return (
     <AppLayout>
       <PageShell title="Book a service" subtitle="Request access to care — bookings become appointments when confirmed">
-        <Link href="/home/bookings" className="mb-4 inline-flex text-sm text-gray-500 hover:text-gray-700">
+        <Link href="/home/bookings" className="mb-4 inline-flex text-sm text-muted-foreground hover:text-foreground">
           ← My Bookings
         </Link>
 
@@ -228,10 +228,10 @@ export default function BookServiceWizardPage() {
               onClick={() => i <= stepIndex && setStep(s.id)}
               className={`rounded-full px-3 py-1 text-xs font-medium ${
                 s.id === step
-                  ? "bg-impilo-500 text-white"
+                  ? "bg-primary text-white"
                   : i < stepIndex
-                    ? "bg-impilo-100 text-impilo-700"
-                    : "bg-gray-100 text-gray-500"
+                    ? "bg-primary-soft text-primary-hover"
+                    : "bg-neutral-100 text-muted-foreground"
               }`}
             >
               {s.label}
@@ -239,10 +239,10 @@ export default function BookServiceWizardPage() {
           ))}
         </nav>
 
-        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm space-y-4 max-w-2xl">
+        <div className="rounded-xl border border-border bg-card p-5 shadow-sm space-y-4 max-w-2xl">
           {step === "target" && (
             <>
-              <h2 className="text-sm font-semibold text-gray-900">Who or what are you booking?</h2>
+              <h2 className="text-sm font-semibold text-foreground">Who or what are you booking?</h2>
               <div className="grid gap-2 sm:grid-cols-2">
                 {TARGET_TYPES.map((t) => {
                   const Icon = t.icon;
@@ -259,11 +259,11 @@ export default function BookServiceWizardPage() {
                       }}
                       className={`flex items-center gap-3 rounded-lg border p-3 text-left text-sm transition-colors ${
                         targetType === t.id
-                          ? "border-impilo-500 bg-impilo-50"
-                          : "border-gray-200 hover:border-impilo-300"
+                          ? "border-impilo-500 bg-primary-soft"
+                          : "border-border hover:border-impilo-300"
                       }`}
                     >
-                      <Icon className="h-5 w-5 text-impilo-500 shrink-0" />
+                      <Icon className="h-5 w-5 text-primary shrink-0" />
                       {t.label}
                     </button>
                   );
@@ -274,22 +274,22 @@ export default function BookServiceWizardPage() {
 
           {step === "facility" && (
             <>
-              <h2 className="text-sm font-semibold text-gray-900">Choose a facility</h2>
+              <h2 className="text-sm font-semibold text-foreground">Choose a facility</h2>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <input
                   type="text"
                   value={facilitySearch}
                   onChange={(e) => handleFacilitySearchChange(e.target.value)}
                   onFocus={() => setShowFacilityDropdown(true)}
                   placeholder="Search clinics and hospitals…"
-                  className="w-full rounded-lg border border-gray-300 py-2.5 pl-10 pr-3 text-sm"
+                  className="w-full rounded-lg border border-border py-2.5 pl-10 pr-3 text-sm"
                 />
               </div>
               {showFacilityDropdown && !selectedFacility && (
-                <div className="max-h-48 overflow-y-auto rounded-lg border border-gray-200">
+                <div className="max-h-48 overflow-y-auto rounded-lg border border-border">
                   {facilitiesLoading ? (
-                    <p className="px-3 py-3 text-xs text-gray-500">Searching…</p>
+                    <p className="px-3 py-3 text-xs text-muted-foreground">Searching…</p>
                   ) : (
                     facilities.map((f) => (
                       <button
@@ -302,7 +302,7 @@ export default function BookServiceWizardPage() {
                           setShowFacilityDropdown(false);
                           setStep("datetime");
                         }}
-                        className="block w-full px-3 py-2 text-left text-sm hover:bg-impilo-50"
+                        className="block w-full px-3 py-2 text-left text-sm hover:bg-primary-soft"
                       >
                         {f.attributes.name}
                       </button>
@@ -315,10 +315,10 @@ export default function BookServiceWizardPage() {
 
           {step === "datetime" && selectedFacility && (
             <>
-              <h2 className="text-sm font-semibold text-gray-900">Preferred date & time</h2>
+              <h2 className="text-sm font-semibold text-foreground">Preferred date & time</h2>
               {routingOptions.length > 0 && !targetRef && (
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-600">Select target</label>
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Select target</label>
                   <select
                     value={targetRef}
                     onChange={(e) => {
@@ -326,7 +326,7 @@ export default function BookServiceWizardPage() {
                       setTargetRef(e.target.value);
                       setTargetLabel(opt?.label ?? "");
                     }}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                   >
                     <option value="">Choose…</option>
                     {routingOptions.map((o) => (
@@ -342,7 +342,7 @@ export default function BookServiceWizardPage() {
                 type="date"
                 value={preferredDate}
                 onChange={(e) => setPreferredDate(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm"
               />
               {preferredDate && targetRef && availabilitySlots.length > 0 ? (
                 <div className="grid grid-cols-4 gap-2">
@@ -354,9 +354,9 @@ export default function BookServiceWizardPage() {
                       onClick={() => setPreferredTime(slot.time)}
                       className={`rounded-lg border px-2 py-1.5 text-xs ${
                         preferredTime === slot.time
-                          ? "border-impilo-500 bg-impilo-500 text-white"
+                          ? "border-impilo-500 bg-primary text-white"
                           : slot.available
-                            ? "border-gray-200"
+                            ? "border-border"
                             : "opacity-40 line-through"
                       }`}
                     >
@@ -368,19 +368,19 @@ export default function BookServiceWizardPage() {
                 <select
                   value={preferredTime}
                   onChange={(e) => setPreferredTime(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                 >
                   {FALLBACK_TIMES.map((t) => (
                     <option key={t} value={t}>{t}</option>
                   ))}
                 </select>
               )}
-              {availabilityLoading && <Loader2 className="h-4 w-4 animate-spin text-gray-400" />}
+              {availabilityLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
               <button
                 type="button"
                 disabled={!preferredDate || !targetRef}
                 onClick={() => setStep("details")}
-                className="w-full rounded-lg bg-impilo-500 py-2.5 text-sm font-medium text-white disabled:opacity-50"
+                className="w-full rounded-lg bg-primary py-2.5 text-sm font-medium text-white disabled:opacity-50"
               >
                 Continue
               </button>
@@ -389,11 +389,11 @@ export default function BookServiceWizardPage() {
 
           {step === "details" && (
             <>
-              <h2 className="text-sm font-semibold text-gray-900">Visit details</h2>
+              <h2 className="text-sm font-semibold text-foreground">Visit details</h2>
               <select
                 value={bookingType}
                 onChange={(e) => setBookingType(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm"
               >
                 {BOOKING_TYPES.map((t) => (
                   <option key={t.value} value={t.value}>{t.label}</option>
@@ -402,7 +402,7 @@ export default function BookServiceWizardPage() {
               <select
                 value={channel}
                 onChange={(e) => setChannel(e.target.value as BookingChannel)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm"
               >
                 {CHANNELS.map((c) => (
                   <option key={c.value} value={c.value}>{c.label}</option>
@@ -413,12 +413,12 @@ export default function BookServiceWizardPage() {
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="Reason for booking (optional)"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm"
               />
               <button
                 type="button"
                 onClick={() => setStep("mvumo")}
-                className="w-full rounded-lg bg-impilo-500 py-2.5 text-sm font-medium text-white"
+                className="w-full rounded-lg bg-primary py-2.5 text-sm font-medium text-white"
               >
                 Continue to consent
               </button>
@@ -427,25 +427,25 @@ export default function BookServiceWizardPage() {
 
           {step === "mvumo" && (
             <>
-              <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                <Shield className="h-4 w-4 text-impilo-500" />
+              <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <Shield className="h-4 w-4 text-primary" />
                 Mvumo consent & authorisation
               </h2>
-              <p className="text-xs text-gray-600">
+              <p className="text-xs text-muted-foreground">
                 Some bookings require digital consent, agreement, or authorisation before the facility can confirm your visit.
               </p>
               <button
                 type="button"
                 onClick={() => void handleRequestMvumo()}
                 disabled={requestMvumo.isPending || mvumoRequested}
-                className="w-full rounded-lg border border-impilo-300 py-2.5 text-sm font-medium text-impilo-700 hover:bg-impilo-50 disabled:opacity-50"
+                className="w-full rounded-lg border border-impilo-300 py-2.5 text-sm font-medium text-primary-hover hover:bg-primary-soft disabled:opacity-50"
               >
                 {mvumoRequested ? "Consent requested" : "Request Mvumo consent"}
               </button>
               <button
                 type="button"
                 onClick={() => setStep("payment")}
-                className="w-full rounded-lg bg-impilo-500 py-2.5 text-sm font-medium text-white"
+                className="w-full rounded-lg bg-primary py-2.5 text-sm font-medium text-white"
               >
                 Continue
               </button>
@@ -454,14 +454,14 @@ export default function BookServiceWizardPage() {
 
           {step === "payment" && (
             <>
-              <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                <Wallet className="h-4 w-4 text-impilo-500" />
+              <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <Wallet className="h-4 w-4 text-primary" />
                 Payment acknowledgement
               </h2>
-              <p className="text-xs text-gray-600">
+              <p className="text-xs text-muted-foreground">
                 Acknowledge that fees, exemptions, or programme coverage may apply before your booking is confirmed.
               </p>
-              <label className="flex items-start gap-2 text-sm text-gray-700">
+              <label className="flex items-start gap-2 text-sm text-foreground">
                 <input
                   type="checkbox"
                   checked={paymentAcknowledged}
@@ -474,7 +474,7 @@ export default function BookServiceWizardPage() {
                 type="button"
                 disabled={!paymentAcknowledged}
                 onClick={() => setStep("review")}
-                className="w-full rounded-lg bg-impilo-500 py-2.5 text-sm font-medium text-white disabled:opacity-50"
+                className="w-full rounded-lg bg-primary py-2.5 text-sm font-medium text-white disabled:opacity-50"
               >
                 Review & submit
               </button>
@@ -483,12 +483,12 @@ export default function BookServiceWizardPage() {
 
           {step === "review" && (
             <>
-              <h2 className="text-sm font-semibold text-gray-900">Review your booking</h2>
-              <dl className="space-y-2 text-sm text-gray-700">
-                <div><dt className="text-xs text-gray-500">Facility</dt><dd>{selectedFacility?.attributes.name}</dd></div>
-                <div><dt className="text-xs text-gray-500">Target</dt><dd>{targetLabel || targetRef}</dd></div>
-                <div><dt className="text-xs text-gray-500">When</dt><dd>{preferredDate} {preferredTime}</dd></div>
-                <div><dt className="text-xs text-gray-500">Channel</dt><dd>{channel}</dd></div>
+              <h2 className="text-sm font-semibold text-foreground">Review your booking</h2>
+              <dl className="space-y-2 text-sm text-foreground">
+                <div><dt className="text-xs text-muted-foreground">Facility</dt><dd>{selectedFacility?.attributes.name}</dd></div>
+                <div><dt className="text-xs text-muted-foreground">Target</dt><dd>{targetLabel || targetRef}</dd></div>
+                <div><dt className="text-xs text-muted-foreground">When</dt><dd>{preferredDate} {preferredTime}</dd></div>
+                <div><dt className="text-xs text-muted-foreground">Channel</dt><dd>{channel}</dd></div>
               </dl>
               {createBooking.isError && (
                 <p className="text-xs text-red-600">Could not submit booking. Please try again.</p>
@@ -497,7 +497,7 @@ export default function BookServiceWizardPage() {
                 type="button"
                 onClick={() => void handleSubmit()}
                 disabled={createBooking.isPending}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-impilo-500 py-2.5 text-sm font-medium text-white disabled:opacity-50"
+                className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-medium text-white disabled:opacity-50"
               >
                 {createBooking.isPending ? (
                   <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</>
@@ -513,7 +513,7 @@ export default function BookServiceWizardPage() {
           <button
             type="button"
             onClick={() => setStep(STEPS[Math.max(0, stepIndex - 1)].id)}
-            className="mt-4 text-sm text-gray-500 hover:text-gray-700"
+            className="mt-4 text-sm text-muted-foreground hover:text-foreground"
           >
             ← Back
           </button>

@@ -73,7 +73,7 @@ export default function PharmacyStockPage() {
         <div className="mb-4">
           <Link
             href={withHandoff("/pharmacy")}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to pharmacy
@@ -82,18 +82,18 @@ export default function PharmacyStockPage() {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading stock data...</span>
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading stock data...</span>
           </div>
         ) : error ? (
-          <div className="bg-red-50 rounded-lg border border-red-200 p-6 text-center">
+          <div className="bg-danger-soft rounded-lg border border-danger/28 p-6 text-center">
             <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-2" />
             <p className="text-red-600 text-sm">Failed to load stock data</p>
           </div>
         ) : items.length === 0 ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <Package className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-400 text-sm">No stock items found</p>
+          <div className="bg-card rounded-lg border border-border p-12 text-center">
+            <Package className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground text-sm">No stock items found</p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -130,55 +130,55 @@ export default function PharmacyStockPage() {
               ]}
             />
 
-            <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+            <div className="rounded-3xl border border-border bg-background/70 p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
                 Stock loop status
               </p>
-              <p className="mt-2 text-sm text-slate-800">
+              <p className="mt-2 text-sm text-foreground">
                 {source === "discharge"
                   ? "This stock view was reached from encounter outcome, so the loop here is confirming medication availability without losing the linked encounter or chart."
                   : "This workspace monitors broader inventory, but stock checks should still connect cleanly back to prescriptions, dispense, and the source encounter when context exists."}
               </p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Review supply risks here, then move back to prescriptions, dispense, the encounter, or the chart when the medication handoff needs a clinical or operational decision.
               </p>
             </div>
 
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="bg-card rounded-lg border border-border overflow-hidden">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b bg-gray-50">
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Medication</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Current Stock</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Reorder Level</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Unit</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Last Restocked</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
+                  <tr className="border-b bg-background">
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Medication</th>
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Current Stock</th>
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Reorder Level</th>
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Unit</th>
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Last Restocked</th>
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {items.map((item) => {
                     const isLow = item.attributes.currentStock <= item.attributes.reorderLevel;
                     return (
-                      <tr key={item.id} className="border-b last:border-b-0 hover:bg-gray-50">
-                        <td className="px-4 py-3 font-medium text-gray-900">
+                      <tr key={item.id} className="border-b last:border-b-0 hover:bg-background">
+                        <td className="px-4 py-3 font-medium text-foreground">
                           {item.attributes.medicationName}
                         </td>
-                        <td className="px-4 py-3 text-gray-600">
+                        <td className="px-4 py-3 text-muted-foreground">
                           <span className={isLow ? "text-red-600 font-medium" : ""}>
                             {item.attributes.currentStock}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-gray-600">{item.attributes.reorderLevel}</td>
-                        <td className="px-4 py-3 text-gray-600">{item.attributes.unit}</td>
-                        <td className="px-4 py-3 text-gray-600">
+                        <td className="px-4 py-3 text-muted-foreground">{item.attributes.reorderLevel}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{item.attributes.unit}</td>
+                        <td className="px-4 py-3 text-muted-foreground">
                           {item.attributes.lastRestocked
                             ? new Date(item.attributes.lastRestocked).toLocaleDateString()
                             : "\u2014"}
                         </td>
                         <td className="px-4 py-3">
                           {isLow ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full font-medium bg-red-100 text-red-700">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full font-medium bg-red-100 text-danger">
                               <AlertCircle className="w-3 h-3" /> Low Stock
                             </span>
                           ) : (

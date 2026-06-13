@@ -212,20 +212,20 @@ export default function CollaborationAccessPage() {
   return (
     <div className="mx-auto max-w-lg space-y-6 p-6">
       <div>
-        <h1 className="text-xl font-semibold text-gray-900">Collaboration access</h1>
-        <p className="mt-1 text-sm text-gray-600">
+        <h1 className="text-xl font-semibold text-foreground">Collaboration access</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           You are entering through a patient-mediated share. You must verify the one-time code and provide
           professional council registration details. Access is limited by policy and expires automatically.
         </p>
         {tenantId ? (
-          <p className="mt-2 text-xs text-gray-500">
+          <p className="mt-2 text-xs text-muted-foreground">
             Tenant context: <span className="font-mono">{tenantId}</span> (from share validation).
           </p>
         ) : null}
       </div>
 
       {step === "otp" ? (
-        <form onSubmit={handleOtp} className="space-y-3 rounded border border-gray-200 bg-white p-4">
+        <form onSubmit={handleOtp} className="space-y-3 rounded border border-border bg-card p-4">
           <label className="block text-sm font-medium">
             Share token
             <input
@@ -253,8 +253,8 @@ export default function CollaborationAccessPage() {
       ) : null}
 
       {step === "stepUp" ? (
-        <form onSubmit={handleStepUp} className="space-y-3 rounded border border-amber-200 bg-amber-50 p-4">
-          <p className="text-sm text-amber-950">
+        <form onSubmit={handleStepUp} className="space-y-3 rounded border border-warning/35 bg-warning-soft p-4">
+          <p className="text-sm text-warning-foreground">
             This share scope requires an additional step-up code (MVP: use the code configured on the server, default{" "}
             <span className="font-mono">000000</span> via <span className="font-mono">VITO_PATIENT_SHARE_STEP_UP_CODE</span>
             ).
@@ -278,8 +278,8 @@ export default function CollaborationAccessPage() {
       ) : null}
 
       {step === "identity" ? (
-        <form onSubmit={handleIdentity} className="space-y-3 rounded border border-gray-200 bg-white p-4">
-          <p className="text-sm text-gray-700">Session established. Provide your professional identity.</p>
+        <form onSubmit={handleIdentity} className="space-y-3 rounded border border-border bg-card p-4">
+          <p className="text-sm text-foreground">Session established. Provide your professional identity.</p>
           <label className="block text-sm font-medium">
             Council
             <select
@@ -300,7 +300,7 @@ export default function CollaborationAccessPage() {
             </select>
           </label>
           {councils.find((c) => String(c.id) === councilId)?.registrationNumberPattern ? (
-            <p className="text-xs text-gray-600">
+            <p className="text-xs text-muted-foreground">
               Expected format (regex):{" "}
               <span className="font-mono break-all">
                 {councils.find((c) => String(c.id) === councilId)?.registrationNumberPattern}
@@ -350,12 +350,12 @@ export default function CollaborationAccessPage() {
       ) : null}
 
       {step === "workspace" && workspace ? (
-        <div className="space-y-4 rounded border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
+        <div className="space-y-4 rounded border border-success/25 bg-success-soft p-4 text-sm text-emerald-950">
           <p className="font-medium">Workspace active (provisional / governed)</p>
           <p>Grant: {String(workspace.grantId)} — scope: {String(workspace.scopeType)}</p>
           <p>Trust: {String(workspace.trustLevel)} — temp provider ID: {String(workspace.temporaryProviderPublicId ?? "—")}</p>
           <p className="text-xs">Write-capable flag from server: {String(workspace.writeCapable)}</p>
-          <p className="text-xs text-emerald-900">
+          <p className="text-xs text-primary-hover">
             ADD_NOTE contributions are mirrored to PCT clinical notes when PCT accepts the service call (configure{" "}
             <span className="font-mono">VITO_TO_PCT_BEARER_TOKEN</span> if PCT returns 401).
           </p>
@@ -378,7 +378,7 @@ export default function CollaborationAccessPage() {
         </div>
       ) : null}
 
-      {error ? <p className="text-sm text-red-700">{error}</p> : null}
+      {error ? <p className="text-sm text-danger">{error}</p> : null}
     </div>
   );
 }

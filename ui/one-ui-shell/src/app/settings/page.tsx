@@ -18,7 +18,7 @@ const SETTINGS_SECTIONS = [
     description: "Manage your profile, email, and contact information",
     href: "/settings/account",
     icon: User,
-    color: "bg-impilo-100 text-impilo-500",
+    color: "bg-primary-soft text-primary",
   },
   {
     title: "Security",
@@ -76,7 +76,7 @@ export default function SettingsPage() {
               <Link
                 key={section.href}
                 href={withPlane(section.href)}
-                className="bg-white rounded-lg border border-gray-200 p-5 hover:border-impilo-200 hover:shadow-md transition-all group"
+                className="bg-card rounded-lg border border-border p-5 hover:border-primary/25 hover:shadow-md transition-all group"
               >
                 <div className="flex items-start gap-3">
                   <div
@@ -85,10 +85,10 @@ export default function SettingsPage() {
                     <Icon className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-medium text-gray-900 text-sm group-hover:text-impilo-500 transition-colors">
+                    <h3 className="font-medium text-foreground text-sm group-hover:text-primary transition-colors">
                       {section.title}
                     </h3>
-                    <p className="text-xs text-gray-500 mt-0.5">{section.description}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{section.description}</p>
                   </div>
                 </div>
               </Link>

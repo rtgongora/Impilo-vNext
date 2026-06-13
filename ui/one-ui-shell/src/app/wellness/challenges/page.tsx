@@ -89,25 +89,25 @@ export default function ChallengesPage() {
         icon={<Trophy className="h-6 w-6" />}
       >
         {!patientId && (
-          <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 mb-4">
+          <p className="text-sm text-warning-foreground bg-warning-soft border border-warning/35 rounded-lg px-4 py-3 mb-4">
             Sign in with your Health ID to join challenges.
           </p>
         )}
 
         {challengesQ.isLoading && (
-          <div className="flex items-center gap-2 text-gray-600 py-8">
+          <div className="flex items-center gap-2 text-muted-foreground py-8">
             <Loader2 className="h-5 w-5 animate-spin" /> Loading challenges…
           </div>
         )}
 
         {challengesQ.isError && (
-          <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+          <p className="text-sm text-danger bg-danger-soft border border-danger/28 rounded-lg px-4 py-3">
             {challengesQ.error instanceof Error ? challengesQ.error.message : "Could not load challenges."}
           </p>
         )}
 
         {!challengesQ.isLoading && !challengesQ.isError && challenges.length === 0 && (
-          <p className="text-sm text-gray-600 py-6">No active challenges in the directory yet. Check back soon.</p>
+          <p className="text-sm text-muted-foreground py-6">No active challenges in the directory yet. Check back soon.</p>
         )}
 
         {!challengesQ.isLoading && !challengesQ.isError && challenges.length > 0 && (
@@ -116,28 +116,28 @@ export default function ChallengesPage() {
               const g = gradientForId(c.id);
               const joined = joinedLocal.has(c.id);
               return (
-                <div key={c.id} className="rounded-xl overflow-hidden shadow-sm border border-gray-200 bg-white flex flex-col">
+                <div key={c.id} className="rounded-xl overflow-hidden shadow-sm border border-border bg-card flex flex-col">
                   <div className={`bg-gradient-to-r ${g} p-4 text-white`}>
                     <h3 className="font-bold">{c.title}</h3>
                     {c.description && <p className="text-xs text-white/85 mt-1 line-clamp-3">{c.description}</p>}
                   </div>
                   <div className="p-4 flex-1 flex flex-col">
-                    <p className="text-xs text-gray-500 mb-2">
+                    <p className="text-xs text-muted-foreground mb-2">
                       Target: {c.targetValue} {c.targetUnit} · {c.challengeType} · {c.participantCount} participants
                     </p>
-                    <p className="text-xs text-gray-400 mb-3">
+                    <p className="text-xs text-muted-foreground mb-3">
                       {c.startDate?.slice(0, 10)} → {c.endDate?.slice(0, 10)}
                     </p>
                     <div className="mt-auto">
                       {joined ? (
-                        <span className="text-sm font-medium text-emerald-600">Joined</span>
+                        <span className="text-sm font-medium text-primary">Joined</span>
                       ) : (
                         <button
                           type="button"
                           data-testid="wellness-challenge-join"
                           disabled={!patientId || joiningId !== null}
                           onClick={() => onJoin(c.id)}
-                          className="inline-flex items-center gap-2 rounded-lg bg-impilo-500 text-white px-4 py-2 text-sm font-medium hover:bg-impilo-600 disabled:opacity-50"
+                          className="inline-flex items-center gap-2 rounded-lg bg-primary text-white px-4 py-2 text-sm font-medium hover:bg-primary-hover disabled:opacity-50"
                         >
                           {joiningId === c.id && <Loader2 className="h-4 w-4 animate-spin" />}
                           Join challenge
@@ -152,7 +152,7 @@ export default function ChallengesPage() {
         )}
 
         {!challengesQ.isLoading && !challengesQ.isError && challenges.length > 0 && (
-          <p className="text-xs text-gray-400 mt-6 flex items-center gap-1">
+          <p className="text-xs text-muted-foreground mt-6 flex items-center gap-1">
             <Target className="h-3.5 w-3.5" />
             Progress tracking for challenges may be extended in a later slice; enrollment is live on Simba.
           </p>

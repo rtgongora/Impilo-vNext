@@ -26,13 +26,13 @@ export default function NhumeDispatcherPage() {
         icon={<Navigation className="h-6 w-6" />}
       >
         {isPending && (
-          <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center text-gray-500">
+          <div className="rounded-2xl border border-border bg-card p-10 text-center text-muted-foreground">
             <Loader2 className="inline-block h-5 w-5 animate-spin text-teal-500 mr-2" />
             Loading dispatcher console…
           </div>
         )}
         {isError && (
-          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+          <div className="rounded-2xl border border-danger/28 bg-danger-soft p-4 text-sm text-rose-800">
             Dispatcher console could not be loaded.
           </div>
         )}
@@ -57,10 +57,10 @@ export default function NhumeDispatcherPage() {
 
 function PendingQueue({ rows }: { rows: Array<Record<string, unknown>> }) {
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white">
-      <div className="border-b border-gray-100 px-5 py-4 flex items-center gap-2">
+    <div className="rounded-2xl border border-border bg-card">
+      <div className="border-b border-border px-5 py-4 flex items-center gap-2">
         <Clock className="h-5 w-5 text-teal-600" />
-        <h3 className="font-semibold text-gray-900">Pending queue</h3>
+        <h3 className="font-semibold text-foreground">Pending queue</h3>
       </div>
       {rows.length === 0 ? (
         <Empty text="No pending deliveries — dispatch is clear." />
@@ -72,7 +72,7 @@ function PendingQueue({ rows }: { rows: Array<Record<string, unknown>> }) {
                 <Link href={`/nhume/deliveries/${d.delivery_id}`} className="font-medium text-teal-700 hover:text-teal-900">
                   {String(d.reference ?? d.delivery_id)}
                 </Link>
-                <div className="text-xs text-gray-500 mt-1">
+                <div className="text-xs text-muted-foreground mt-1">
                   {String(d.delivery_type ?? "—")} · {String(d.origin_label ?? "?")} → {String(d.destination_label ?? "?")}
                 </div>
               </div>
@@ -90,10 +90,10 @@ function PendingQueue({ rows }: { rows: Array<Record<string, unknown>> }) {
 
 function Suggestions({ rows }: { rows: Array<Record<string, unknown>> }) {
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white">
-      <div className="border-b border-gray-100 px-5 py-4 flex items-center gap-2">
+    <div className="rounded-2xl border border-border bg-card">
+      <div className="border-b border-border px-5 py-4 flex items-center gap-2">
         <Wand2 className="h-5 w-5 text-amber-600" />
-        <h3 className="font-semibold text-gray-900">Suggested assignments</h3>
+        <h3 className="font-semibold text-foreground">Suggested assignments</h3>
       </div>
       {rows.length === 0 ? (
         <Empty text="No suggested assignments at the moment." />
@@ -115,11 +115,11 @@ function SuggestionRow({ s }: { s: Record<string, unknown> }) {
         <Link href={`/nhume/deliveries/${id}`} className="font-medium text-teal-700 hover:text-teal-900">
           {String(s.reference ?? id)}
         </Link>
-        <div className="text-xs text-gray-500 mt-1">
+        <div className="text-xs text-muted-foreground mt-1">
           courier {String(s.suggested_courier_id ?? "—")} · asset {String(s.suggested_asset_id ?? "—")}
           {typeof s.score === "number" && <> · score {(s.score as number).toFixed(2)}</>}
         </div>
-        {s.rationale ? <div className="text-xs text-gray-600 italic mt-1">{String(s.rationale)}</div> : null}
+        {s.rationale ? <div className="text-xs text-muted-foreground italic mt-1">{String(s.rationale)}</div> : null}
       </div>
       <button
         disabled={!s.suggested_courier_id || assign.isPending}
@@ -130,7 +130,7 @@ function SuggestionRow({ s }: { s: Record<string, unknown> }) {
             reason: "dispatcher accepted suggestion",
           })
         }
-        className="rounded-xl bg-teal-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50"
+        className="rounded-xl bg-teal-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-primary disabled:opacity-50"
       >
         Accept
       </button>
@@ -150,10 +150,10 @@ function AvailabilityList({
   kind: "couriers" | "fleet";
 }) {
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white">
-      <div className="border-b border-gray-100 px-5 py-4 flex items-center gap-2">
+    <div className="rounded-2xl border border-border bg-card">
+      <div className="border-b border-border px-5 py-4 flex items-center gap-2">
         {icon}
-        <h3 className="font-semibold text-gray-900">{title}</h3>
+        <h3 className="font-semibold text-foreground">{title}</h3>
       </div>
       {rows.length === 0 ? (
         <Empty text={`No ${title.toLowerCase()} on duty.`} />
@@ -166,7 +166,7 @@ function AvailabilityList({
             return (
               <li key={idx} className="px-5 py-3 flex items-center justify-between text-sm">
                 <Link href={`/nhume/${kind}/${id}`} className="text-teal-700 hover:text-teal-900 font-medium">{label}</Link>
-                <span className="text-xs text-gray-500">{detail}</span>
+                <span className="text-xs text-muted-foreground">{detail}</span>
               </li>
             );
           })}
@@ -178,10 +178,10 @@ function AvailabilityList({
 
 function SlaBreaches({ rows }: { rows: Array<Record<string, unknown>> }) {
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white">
-      <div className="border-b border-gray-100 px-5 py-4 flex items-center gap-2">
+    <div className="rounded-2xl border border-border bg-card">
+      <div className="border-b border-border px-5 py-4 flex items-center gap-2">
         <AlertTriangle className="h-5 w-5 text-amber-600" />
-        <h3 className="font-semibold text-gray-900">SLA breaches</h3>
+        <h3 className="font-semibold text-foreground">SLA breaches</h3>
       </div>
       {rows.length === 0 ? (
         <Empty text="No SLA breaches recorded." />
@@ -189,12 +189,12 @@ function SlaBreaches({ rows }: { rows: Array<Record<string, unknown>> }) {
         <ul className="divide-y divide-gray-100">
           {rows.map((d, idx) => (
             <li key={idx} className="px-5 py-3 flex items-center justify-between">
-              <Link href={`/nhume/deliveries/${d.delivery_id}`} className="font-medium text-rose-700 hover:text-rose-900">
+              <Link href={`/nhume/deliveries/${d.delivery_id}`} className="font-medium text-danger hover:text-danger">
                 {String(d.reference ?? d.delivery_id)}
               </Link>
               <div className="flex items-center gap-2">
                 <NhumeStatusChip status={String(d.status ?? "")} />
-                <span className="text-xs text-rose-700">
+                <span className="text-xs text-danger">
                   due {d.sla_due_at ? new Date(String(d.sla_due_at)).toLocaleTimeString() : ""}
                 </span>
               </div>
@@ -208,10 +208,10 @@ function SlaBreaches({ rows }: { rows: Array<Record<string, unknown>> }) {
 
 function ActiveRoutes({ rows }: { rows: Array<Record<string, unknown>> }) {
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white">
-      <div className="border-b border-gray-100 px-5 py-4 flex items-center gap-2">
+    <div className="rounded-2xl border border-border bg-card">
+      <div className="border-b border-border px-5 py-4 flex items-center gap-2">
         <Navigation className="h-5 w-5 text-teal-600" />
-        <h3 className="font-semibold text-gray-900">Active routes</h3>
+        <h3 className="font-semibold text-foreground">Active routes</h3>
       </div>
       {rows.length === 0 ? (
         <Empty text="No active multi-stop routes." />
@@ -229,5 +229,5 @@ function ActiveRoutes({ rows }: { rows: Array<Record<string, unknown>> }) {
 }
 
 function Empty({ text }: { text: string }) {
-  return <div className="px-5 py-8 text-center text-sm text-gray-500">{text}</div>;
+  return <div className="px-5 py-8 text-center text-sm text-muted-foreground">{text}</div>;
 }

@@ -30,15 +30,15 @@ import { apiClient } from "@/lib/api-client";
 import { COORDINATION_COPY } from "@/lib/consult-workflows";
 
 const PRIORITY_LABELS: Record<string, { label: string; className: string }> = {
-  EMERGENCY: { label: "Emergency", className: "bg-red-100 text-red-700" },
+  EMERGENCY: { label: "Emergency", className: "bg-red-100 text-danger" },
   URGENT: { label: "Urgent", className: "bg-orange-100 text-orange-700" },
-  NORMAL: { label: "Normal", className: "bg-impilo-100 text-impilo-600" },
-  LOW: { label: "Low", className: "bg-gray-100 text-gray-600" },
+  NORMAL: { label: "Normal", className: "bg-primary-soft text-primary" },
+  LOW: { label: "Low", className: "bg-neutral-100 text-muted-foreground" },
   // Numeric fallbacks for backward compat
-  "1": { label: "Emergency", className: "bg-red-100 text-red-700" },
+  "1": { label: "Emergency", className: "bg-red-100 text-danger" },
   "2": { label: "Urgent", className: "bg-orange-100 text-orange-700" },
-  "3": { label: "Normal", className: "bg-impilo-100 text-impilo-600" },
-  "4": { label: "Low", className: "bg-gray-100 text-gray-600" },
+  "3": { label: "Normal", className: "bg-primary-soft text-primary" },
+  "4": { label: "Low", className: "bg-neutral-100 text-muted-foreground" },
 };
 
 const TRIAGE_CATEGORY_STYLES: Record<string, string> = {
@@ -46,20 +46,20 @@ const TRIAGE_CATEGORY_STYLES: Record<string, string> = {
   ORANGE: "bg-orange-500 text-white",
   YELLOW: "bg-yellow-400 text-black",
   GREEN: "bg-green-500 text-white",
-  BLUE: "bg-impilo-500 text-white",
+  BLUE: "bg-primary text-white",
 };
 
 const STATUS_STYLES: Record<string, string> = {
   WAITING: "bg-yellow-100 text-yellow-700",
-  CALLED: "bg-impilo-100 text-impilo-600",
+  CALLED: "bg-primary-soft text-primary",
   IN_PROGRESS: "bg-green-100 text-green-700",
   IN_SERVICE: "bg-green-100 text-green-700",
   SEEN: "bg-green-100 text-green-700",
-  COMPLETED: "bg-gray-100 text-gray-600",
-  PAUSED: "bg-amber-100 text-amber-700",
+  COMPLETED: "bg-neutral-100 text-muted-foreground",
+  PAUSED: "bg-amber-100 text-warning-foreground",
   NO_SHOW: "bg-red-100 text-red-600",
   TRANSFERRED: "bg-purple-100 text-purple-600",
-  CANCELLED: "bg-gray-100 text-gray-400",
+  CANCELLED: "bg-neutral-100 text-muted-foreground",
 };
 
 export default function QueuePage() {
@@ -128,7 +128,7 @@ export default function QueuePage() {
         <button
           onClick={() => handleCall(entry.id, entry.attributes.patientId)}
           disabled={callPatient.isPending}
-          className="rounded-xl bg-impilo-500 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-impilo-600 disabled:opacity-50"
+          className="rounded-xl bg-primary px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-50"
         >
           {COORDINATION_COPY.startEncounterHandoff}
         </button>
@@ -169,14 +169,14 @@ export default function QueuePage() {
       >
         {facility && (
           <div className="mb-5 grid gap-3 lg:grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,1fr))]">
-            <div className="rounded-3xl border border-slate-200 bg-[linear-gradient(135deg,#fffaf0_0%,#ffffff_55%,#eff6ff_100%)] p-5 shadow-sm">
+            <div className="rounded-3xl border border-border bg-[linear-gradient(135deg,#fffaf0_0%,#ffffff_55%,#eff6ff_100%)] p-5 shadow-sm">
               <div className="flex items-start gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100 text-warning-foreground">
                   <ArrowRightLeft className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-slate-900">{COORDINATION_COPY.coordinationWorkboard}</p>
-                  <p className="mt-1 text-sm text-slate-600">
+                  <p className="text-sm font-semibold text-foreground">{COORDINATION_COPY.coordinationWorkboard}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
                     The queue now mirrors the same workflow language as referrals and chart handoff:
                     call the next patient, move the handoff into chart, then track pauses and exceptions
                     without losing the thread.
@@ -184,7 +184,7 @@ export default function QueuePage() {
                   <div className="mt-3 flex flex-wrap gap-2">
                     <Link
                       href="/queue/incoming-referrals"
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800"
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
                     >
                       <ArrowRightLeft className="h-4 w-4" />
                       Incoming Referrals
@@ -192,7 +192,7 @@ export default function QueuePage() {
                     {isQueueManager && (
                       <Link
                         href="/queue/walk-in"
-                        className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-background"
                       >
                         <UserPlus className="h-4 w-4" />
                         Walk-in Registration
@@ -202,49 +202,49 @@ export default function QueuePage() {
                 </div>
               </div>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Ready now</p>
-              <p className="mt-2 text-2xl font-semibold text-amber-700">{stats.waiting ?? waitingEntries.length}</p>
-              <p className="mt-1 text-xs text-slate-500">Patients ready to be called from the waiting flow.</p>
+            <div className="rounded-3xl border border-border bg-card p-4 shadow-sm">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Ready now</p>
+              <p className="mt-2 text-2xl font-semibold text-warning-foreground">{stats.waiting ?? waitingEntries.length}</p>
+              <p className="mt-1 text-xs text-muted-foreground">Patients ready to be called from the waiting flow.</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">In handoff</p>
-              <p className="mt-2 text-2xl font-semibold text-impilo-600">{(stats.called ?? 0) + (stats.inService ?? 0)}</p>
-              <p className="mt-1 text-xs text-slate-500">Patients already called or actively in service.</p>
+            <div className="rounded-3xl border border-border bg-card p-4 shadow-sm">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">In handoff</p>
+              <p className="mt-2 text-2xl font-semibold text-primary">{(stats.called ?? 0) + (stats.inService ?? 0)}</p>
+              <p className="mt-1 text-xs text-muted-foreground">Patients already called or actively in service.</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Completed</p>
+            <div className="rounded-3xl border border-border bg-card p-4 shadow-sm">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Completed</p>
               <p className="mt-2 text-2xl font-semibold text-green-700">{stats.completed ?? 0}</p>
-              <p className="mt-1 text-xs text-slate-500">Finished visits kept visible for operational pacing.</p>
+              <p className="mt-1 text-xs text-muted-foreground">Finished visits kept visible for operational pacing.</p>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Avg wait</p>
-              <p className="mt-2 text-2xl font-semibold text-purple-700">
+            <div className="rounded-3xl border border-border bg-card p-4 shadow-sm">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Avg wait</p>
+              <p className="mt-2 text-2xl font-semibold text-warning-foreground">
                 {stats.avgWaitSeconds ? Math.round((stats.avgWaitSeconds) / 60) : 0}m
               </p>
-              <p className="mt-1 text-xs text-slate-500">Current pacing signal across the live queue board.</p>
+              <p className="mt-1 text-xs text-muted-foreground">Current pacing signal across the live queue board.</p>
             </div>
           </div>
         )}
 
-        <div className="mb-4 flex items-center gap-2 text-sm text-gray-500">
+        <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
           <Users className="w-4 h-4" />
           <span>{entries.length} patient{entries.length !== 1 ? "s" : ""} in queue</span>
         </div>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading queue...</span>
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading queue...</span>
           </div>
         ) : entries.length === 0 ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <Users className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-400 text-sm">No patients in queue</p>
+          <div className="bg-card rounded-lg border border-border p-12 text-center">
+            <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground text-sm">No patients in queue</p>
             {isQueueManager && (
             <Link
               href="/queue/walk-in"
-              className="mt-3 inline-block text-sm text-impilo-500 hover:text-impilo-700"
+              className="mt-3 inline-block text-sm text-primary hover:text-primary-hover"
             >
               Register a walk-in patient
             </Link>
@@ -259,7 +259,7 @@ export default function QueuePage() {
                   title: COORDINATION_COPY.needsActionNow,
                   description: "Patients currently waiting for first contact from the queue team.",
                   icon: PlayCircle,
-                  iconClassName: "bg-amber-100 text-amber-700",
+                  iconClassName: "bg-amber-100 text-warning-foreground",
                   entries: waitingEntries,
                 },
                 {
@@ -267,7 +267,7 @@ export default function QueuePage() {
                   title: COORDINATION_COPY.trackingInProgress,
                   description: "Patients already called or actively moving through chart and service handoff.",
                   icon: ClipboardCheck,
-                  iconClassName: "bg-impilo-100 text-impilo-600",
+                  iconClassName: "bg-primary-soft text-primary",
                   entries: inHandoffEntries,
                 },
                 {
@@ -275,24 +275,24 @@ export default function QueuePage() {
                   title: COORDINATION_COPY.needsAttention,
                   description: "Paused visits, no-shows, and other exceptions that need queue communication.",
                   icon: PauseCircle,
-                  iconClassName: "bg-rose-100 text-rose-700",
+                  iconClassName: "bg-rose-100 text-danger",
                   entries: exceptionEntries,
                 },
               ].map((lane) => (
-                <div key={lane.key} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div key={lane.key} className="rounded-3xl border border-border bg-card p-5 shadow-sm">
                   <div className="flex items-start gap-3">
                     <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${lane.iconClassName}`}>
                       <lane.icon className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-slate-900">{lane.title}</p>
-                      <p className="mt-1 text-sm text-slate-600">{lane.description}</p>
+                      <p className="text-sm font-semibold text-foreground">{lane.title}</p>
+                      <p className="mt-1 text-sm text-muted-foreground">{lane.description}</p>
                     </div>
                   </div>
 
                   <div className="mt-4 space-y-3">
                     {lane.entries.length === 0 ? (
-                      <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-500">
+                      <div className="rounded-2xl border border-dashed border-border bg-background px-4 py-6 text-sm text-muted-foreground">
                         No patients in this workflow lane right now.
                       </div>
                     ) : (
@@ -300,7 +300,7 @@ export default function QueuePage() {
                         const priorityKey = String(entry.attributes.priority);
                         const priority = PRIORITY_LABELS[priorityKey] ?? {
                           label: priorityKey,
-                          className: "bg-gray-100 text-gray-600",
+                          className: "bg-neutral-100 text-muted-foreground",
                         };
                         const triageCat =
                           (entry.attributes as Record<string, unknown>).triage_category as string ??
@@ -310,18 +310,18 @@ export default function QueuePage() {
                           entry.attributes.patientId;
 
                         return (
-                          <div key={entry.id} className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+                          <div key={entry.id} className="rounded-2xl border border-border bg-background/80 p-4">
                             <div className="flex flex-wrap items-start justify-between gap-2">
                               <div>
-                                <p className="text-sm font-semibold text-slate-900">{patientName}</p>
-                                <p className="mt-1 text-xs text-slate-500">
+                                <p className="text-sm font-semibold text-foreground">{patientName}</p>
+                                <p className="mt-1 text-xs text-muted-foreground">
                                   Queued {new Date(entry.attributes.queuedAt).toLocaleTimeString()}
                                 </p>
                               </div>
                               <div className="flex flex-wrap gap-2 text-xs">
                                 {triageCat ? (
                                   <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full font-bold ${
-                                    TRIAGE_CATEGORY_STYLES[triageCat] ?? "bg-slate-200 text-slate-700"
+                                    TRIAGE_CATEGORY_STYLES[triageCat] ?? "bg-border text-foreground"
                                   }`}>
                                     {triageCat.charAt(0)}
                                   </span>
@@ -330,7 +330,7 @@ export default function QueuePage() {
                                   {priority.label}
                                 </span>
                                 <span className={`rounded-full px-2.5 py-1 font-medium ${
-                                  STATUS_STYLES[entry.attributes.status] ?? "bg-gray-100 text-gray-600"
+                                  STATUS_STYLES[entry.attributes.status] ?? "bg-neutral-100 text-muted-foreground"
                                 }`}>
                                   {entry.attributes.status}
                                 </span>
@@ -343,7 +343,7 @@ export default function QueuePage() {
                                 <button
                                   onClick={() => markNoShow.mutate(entry.id)}
                                   disabled={markNoShow.isPending}
-                                  className="rounded-xl border border-rose-200 bg-white px-3 py-2 text-xs font-medium text-rose-600 transition-colors hover:bg-rose-50 disabled:opacity-50"
+                                  className="rounded-xl border border-danger/28 bg-card px-3 py-2 text-xs font-medium text-rose-600 transition-colors hover:bg-danger-soft disabled:opacity-50"
                                 >
                                   Mark No-show
                                 </button>
@@ -358,10 +358,10 @@ export default function QueuePage() {
               ))}
             </div>
 
-            <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-              <div className="border-b border-slate-200 bg-slate-50/80 px-4 py-3">
-                <p className="text-sm font-semibold text-slate-900">Full queue board</p>
-                <p className="mt-1 text-sm text-slate-600">
+            <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
+              <div className="border-b border-border bg-background/80 px-4 py-3">
+                <p className="text-sm font-semibold text-foreground">Full queue board</p>
+                <p className="mt-1 text-sm text-muted-foreground">
                   Detailed operational view for auditing status, timing, and direct queue actions
                   across every patient in the facility flow.
                 </p>
@@ -369,13 +369,13 @@ export default function QueuePage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-gray-50">
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Patient</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Triage</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Priority</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Arrival</th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">Actions</th>
+                <tr className="border-b bg-background">
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Patient</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Triage</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Priority</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Arrival</th>
+                  <th className="text-right px-4 py-3 font-medium text-muted-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -383,17 +383,17 @@ export default function QueuePage() {
                   const priorityKey = String(entry.attributes.priority);
                   const priority = PRIORITY_LABELS[priorityKey] ?? {
                     label: priorityKey,
-                    className: "bg-gray-100 text-gray-600",
+                    className: "bg-neutral-100 text-muted-foreground",
                   };
                   const statusStyle =
-                    STATUS_STYLES[entry.attributes.status] ?? "bg-gray-100 text-gray-600";
+                    STATUS_STYLES[entry.attributes.status] ?? "bg-neutral-100 text-muted-foreground";
                   const triageCat = (entry.attributes as Record<string, unknown>).triage_category as string
                     ?? (entry.attributes as Record<string, unknown>).triageCategory as string;
                   const triageStyle = triageCat ? TRIAGE_CATEGORY_STYLES[triageCat] ?? "" : "";
 
                   return (
-                    <tr key={entry.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3 font-medium text-gray-900">
+                    <tr key={entry.id} className="hover:bg-background transition-colors">
+                      <td className="px-4 py-3 font-medium text-foreground">
                         {(entry.attributes as Record<string, unknown>).patientName as string ??
                           entry.attributes.patientId}
                       </td>
@@ -403,7 +403,7 @@ export default function QueuePage() {
                             {triageCat.charAt(0)}
                           </span>
                         ) : (
-                          <span className="text-xs text-gray-400">—</span>
+                          <span className="text-xs text-muted-foreground">—</span>
                         )}
                       </td>
                       <td className="px-4 py-3">
@@ -423,7 +423,7 @@ export default function QueuePage() {
                           {entry.attributes.status}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-gray-500">
+                      <td className="px-4 py-3 text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <Clock className="w-3 h-3" />
                           {new Date(entry.attributes.queuedAt).toLocaleTimeString()}
@@ -436,7 +436,7 @@ export default function QueuePage() {
                               handleCall(entry.id, entry.attributes.patientId)
                             }
                             disabled={callPatient.isPending}
-                            className="px-3 py-1.5 bg-impilo-500 text-white text-xs font-medium rounded-md hover:bg-impilo-600 disabled:opacity-50 transition-colors"
+                            className="px-3 py-1.5 bg-primary text-white text-xs font-medium rounded-md hover:bg-primary-hover disabled:opacity-50 transition-colors"
                           >
                             Call
                           </button>
@@ -453,7 +453,7 @@ export default function QueuePage() {
                           <button
                             onClick={() => markNoShow.mutate(entry.id)}
                             disabled={markNoShow.isPending}
-                            className="ml-1 px-2 py-1.5 text-red-600 hover:bg-red-50 text-xs font-medium rounded-md transition-colors"
+                            className="ml-1 px-2 py-1.5 text-red-600 hover:bg-danger-soft text-xs font-medium rounded-md transition-colors"
                             title="Mark as no-show"
                           >
                             <XCircle className="w-3.5 h-3.5" />
@@ -463,7 +463,7 @@ export default function QueuePage() {
                           <button
                             onClick={() => pauseEntry.mutate(entry.id)}
                             disabled={pauseEntry.isPending}
-                            className="ml-1 px-2 py-1.5 text-amber-600 hover:bg-amber-50 text-xs font-medium rounded-md transition-colors"
+                            className="ml-1 px-2 py-1.5 text-amber-600 hover:bg-warning-soft text-xs font-medium rounded-md transition-colors"
                             title="Pause service"
                           >
                             Pause

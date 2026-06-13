@@ -28,14 +28,14 @@ export default function LiveCertificatesPage() {
         subtitle="Issue attendance and CPD certificates from completed live events"
         icon={<Award className="h-6 w-6" />}
       >
-        <section className="mb-8 rounded-2xl border border-gray-200 bg-white p-4">
-          <h2 className="text-sm font-semibold text-gray-900 mb-2">Verify certificate</h2>
+        <section className="mb-8 rounded-2xl border border-border bg-card p-4">
+          <h2 className="text-sm font-semibold text-foreground mb-2">Verify certificate</h2>
           <div className="flex flex-wrap gap-2">
             <input
               value={verifyCode}
               onChange={(e) => setVerifyCode(e.target.value)}
               placeholder="Verification code"
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm min-w-[220px]"
+              className="rounded-lg border border-border px-3 py-2 text-sm min-w-[220px]"
             />
             <button
               type="button"
@@ -45,22 +45,22 @@ export default function LiveCertificatesPage() {
               Verify
             </button>
           </div>
-          {verifyResult ? <p className="mt-2 text-sm text-gray-700">{verifyResult}</p> : null}
+          {verifyResult ? <p className="mt-2 text-sm text-foreground">{verifyResult}</p> : null}
         </section>
 
         <section>
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3">
             Issue from ended events
           </h2>
           <ul className="space-y-2">
             {endedEvents.map((event) => (
               <li
                 key={event.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-gray-200 bg-white p-3 text-sm"
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-card p-3 text-sm"
               >
                 <div>
-                  <p className="font-medium text-gray-900">{event.title}</p>
-                  <p className="text-xs text-gray-500">{event.eventType}</p>
+                  <p className="font-medium text-foreground">{event.title}</p>
+                  <p className="text-xs text-muted-foreground">{event.eventType}</p>
                 </div>
                 <div className="flex gap-2">
                   <button
@@ -69,7 +69,7 @@ export default function LiveCertificatesPage() {
                       issue.mutate({ eventId: event.id, participantId, type: "attendance" })
                     }
                     disabled={issue.isPending}
-                    className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs"
+                    className="rounded-lg border border-border px-3 py-1.5 text-xs"
                   >
                     Attendance cert
                   </button>
@@ -89,7 +89,7 @@ export default function LiveCertificatesPage() {
               </li>
             ))}
             {endedEvents.length === 0 ? (
-              <li className="text-sm text-gray-500">No ended events available for certificate issuance.</li>
+              <li className="text-sm text-muted-foreground">No ended events available for certificate issuance.</li>
             ) : null}
           </ul>
         </section>

@@ -14,14 +14,14 @@ export default function CertificateDetailPage() {
   return (
     <AppLayout>
       <PageShell title="Certificate detail" subtitle="Tamper-evident metadata digest — not a PKI-signed credential. Council CPD credit is accepted in Varapi.">
-        <div className="rounded border border-gray-200 bg-white p-4 text-sm" data-testid="fundo-certificate-detail">
+        <div className="rounded border border-border bg-card p-4 text-sm" data-testid="fundo-certificate-detail">
           <p>Certificate number: {String(cert.certificateNumber ?? "-")}</p>
           <p>Title: {String(cert.title ?? "-")}</p>
           <p>Status: {String(cert.status ?? "-")}</p>
           <p>Issued at: {String(cert.issuedAt ?? "-")}</p>
           <p>CPD eligible: {String(cert.cpdEligible ?? false)}</p>
           <p>CPD points (evidence): {String(cert.cpdPoints ?? "-")}</p>
-          <p className="mt-3 break-all font-mono text-xs text-gray-600" data-testid="fundo-certificate-digest">
+          <p className="mt-3 break-all font-mono text-xs text-muted-foreground" data-testid="fundo-certificate-digest">
             Verification digest: {String(cert.verificationDigest ?? "pending issuance")}
           </p>
         </div>

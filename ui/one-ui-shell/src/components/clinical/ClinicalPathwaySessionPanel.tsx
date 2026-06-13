@@ -153,10 +153,10 @@ export function ClinicalPathwaySessionPanel({ patientId, encounterId, compact }:
       {!sessionId ? (
         <div className="space-y-2">
           {loadingList ? (
-            <p className="text-xs text-gray-500">Loading pathways…</p>
+            <p className="text-xs text-muted-foreground">Loading pathways…</p>
           ) : (
             <select
-              className="w-full rounded border border-impilo-200 bg-white px-2 py-1.5 text-sm"
+              className="w-full rounded border border-primary/25 bg-card px-2 py-1.5 text-sm"
               value={pathwayId}
               onChange={(e) => setPathwayId(e.target.value)}
             >
@@ -172,7 +172,7 @@ export function ClinicalPathwaySessionPanel({ patientId, encounterId, compact }:
             type="button"
             disabled={!pathwayId || start.isPending}
             onClick={handleStart}
-            className="inline-flex items-center gap-2 rounded-md bg-impilo-600 px-3 py-1.5 text-sm text-white hover:bg-impilo-700 disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-md bg-primary-hover px-3 py-1.5 text-sm text-white hover:bg-impilo-700 disabled:opacity-50"
           >
             {start.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             Start session
@@ -183,7 +183,7 @@ export function ClinicalPathwaySessionPanel({ patientId, encounterId, compact }:
         </div>
       ) : (
         <div className="space-y-2">
-          <p className="text-[10px] text-gray-500 font-mono break-all">Session {sessionId}</p>
+          <p className="text-[10px] text-muted-foreground font-mono break-all">Session {sessionId}</p>
           {completed ? (
             <div className="rounded border border-green-200 bg-green-50/80 p-3 text-sm text-green-900">
               {summary ?? "Pathway complete."}
@@ -191,19 +191,19 @@ export function ClinicalPathwaySessionPanel({ patientId, encounterId, compact }:
           ) : (
             <>
               {stepType ? (
-                <span className="text-[10px] uppercase tracking-wide text-gray-500">{stepType}</span>
+                <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{stepType}</span>
               ) : null}
-              <p className="text-sm text-gray-800">{prompt || "Follow the clinical step."}</p>
+              <p className="text-sm text-foreground">{prompt || "Follow the clinical step."}</p>
               {fields.length === 0 ? (
-                <p className="text-xs text-gray-500">No fields for this step — continue to record completion.</p>
+                <p className="text-xs text-muted-foreground">No fields for this step — continue to record completion.</p>
               ) : (
                 <div className="space-y-2">
                   {fields.map((f) => (
                     <div key={f.name}>
-                      <label className="block text-[10px] font-medium text-gray-600 mb-0.5">{f.name}</label>
+                      <label className="block text-[10px] font-medium text-muted-foreground mb-0.5">{f.name}</label>
                       {f.type === "boolean" ? (
                         <select
-                          className="w-full rounded border border-gray-200 bg-white px-2 py-1 text-sm"
+                          className="w-full rounded border border-border bg-card px-2 py-1 text-sm"
                           value={answers[f.name] ?? ""}
                           onChange={(e) => setAnswers((a) => ({ ...a, [f.name]: e.target.value }))}
                         >
@@ -213,7 +213,7 @@ export function ClinicalPathwaySessionPanel({ patientId, encounterId, compact }:
                         </select>
                       ) : f.type === "enum" && f.values && f.values.length > 0 ? (
                         <select
-                          className="w-full rounded border border-gray-200 bg-white px-2 py-1 text-sm"
+                          className="w-full rounded border border-border bg-card px-2 py-1 text-sm"
                           value={answers[f.name] ?? ""}
                           onChange={(e) => setAnswers((a) => ({ ...a, [f.name]: e.target.value }))}
                         >
@@ -226,7 +226,7 @@ export function ClinicalPathwaySessionPanel({ patientId, encounterId, compact }:
                         </select>
                       ) : (
                         <input
-                          className="w-full rounded border border-gray-200 bg-white px-2 py-1 text-sm"
+                          className="w-full rounded border border-border bg-card px-2 py-1 text-sm"
                           value={answers[f.name] ?? ""}
                           onChange={(e) => setAnswers((a) => ({ ...a, [f.name]: e.target.value }))}
                           placeholder={f.type === "number" ? "Number" : "Text"}
@@ -240,7 +240,7 @@ export function ClinicalPathwaySessionPanel({ patientId, encounterId, compact }:
                 type="button"
                 disabled={advance.isPending}
                 onClick={handleAdvance}
-                className="inline-flex items-center gap-2 rounded-md bg-impilo-500 px-3 py-1.5 text-sm text-white hover:bg-impilo-600 disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-1.5 text-sm text-white hover:bg-primary-hover disabled:opacity-50"
               >
                 {advance.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 Submit step
@@ -252,7 +252,7 @@ export function ClinicalPathwaySessionPanel({ patientId, encounterId, compact }:
           )}
           <button
             type="button"
-            className="text-xs text-gray-500 underline hover:text-gray-700"
+            className="text-xs text-muted-foreground underline hover:text-foreground"
             onClick={() => {
               setSessionId(null);
               setPrompt("");
@@ -267,7 +267,7 @@ export function ClinicalPathwaySessionPanel({ patientId, encounterId, compact }:
           </button>
         </div>
       )}
-      <p className="text-[10px] text-gray-400">Tenant: {readTenantId()}</p>
+      <p className="text-[10px] text-muted-foreground">Tenant: {readTenantId()}</p>
     </div>
   );
 }

@@ -67,11 +67,11 @@ const clinicalTools: ClinicalTool[] = [
 ];
 
 const categoryConfig: Record<string, { label: string; color: string; icon: typeof Pill }> = {
-  drugs: { label: "Drugs", color: "bg-impilo-50 text-impilo-600", icon: Pill },
-  conditions: { label: "Diseases & Conditions", color: "bg-emerald-50 text-emerald-700", icon: Stethoscope },
-  interactions: { label: "Interaction Checker", color: "bg-amber-50 text-amber-700", icon: ArrowLeftRight },
-  calculators: { label: "Calculators", color: "bg-purple-50 text-purple-700", icon: Calculator },
-  formulary: { label: "Formulary", color: "bg-rose-50 text-rose-700", icon: ClipboardList },
+  drugs: { label: "Drugs", color: "bg-primary-soft text-primary", icon: Pill },
+  conditions: { label: "Diseases & Conditions", color: "bg-success-soft text-primary-hover", icon: Stethoscope },
+  interactions: { label: "Interaction Checker", color: "bg-warning-soft text-warning-foreground", icon: ArrowLeftRight },
+  calculators: { label: "Calculators", color: "bg-warning-soft text-warning-foreground", icon: Calculator },
+  formulary: { label: "Formulary", color: "bg-danger-soft text-danger", icon: ClipboardList },
 };
 
 // ── Component ─────────────────────────────────────────────
@@ -110,8 +110,8 @@ export function ClinicalToolsMenu({ complexity = "comprehensive" }: ClinicalTool
       {/* Trigger button */}
       <button
         className={cn(
-          "h-8 gap-1.5 text-xs px-2 rounded flex items-center hover:bg-gray-100",
-          open && "bg-impilo-50 text-impilo-500",
+          "h-8 gap-1.5 text-xs px-2 rounded flex items-center hover:bg-neutral-100",
+          open && "bg-primary-soft text-primary",
         )}
         onClick={() => setOpen(!open)}
       >
@@ -123,24 +123,24 @@ export function ClinicalToolsMenu({ complexity = "comprehensive" }: ClinicalTool
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute left-0 top-full z-50 mt-1 w-80 rounded-lg border border-gray-200 bg-white shadow-lg">
+          <div className="absolute left-0 top-full z-50 mt-1 w-80 rounded-lg border border-border bg-card shadow-lg">
             <div className="p-3 pb-2">
               <h3 className="font-semibold text-sm">Clinical Tools</h3>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 Drug references, calculators & formulary
               </p>
             </div>
 
             {guidance && (
               <div className="px-3 pb-2 space-y-1">
-                <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">National guidance</p>
+                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">National guidance</p>
                 <button
                   type="button"
                   onClick={() => {
                     guidance.openDock("pathways");
                     setOpen(false);
                   }}
-                  className="flex w-full items-center gap-2 rounded-md border border-impilo-100 bg-impilo-50/50 px-2 py-2 text-left text-xs text-impilo-800 hover:bg-impilo-50"
+                  className="flex w-full items-center gap-2 rounded-md border border-primary/20 bg-primary-soft/50 px-2 py-2 text-left text-xs text-impilo-800 hover:bg-primary-soft"
                 >
                   <BookOpen className="h-3.5 w-3.5 shrink-0" />
                   <span>Pathways &amp; structured flows</span>
@@ -151,7 +151,7 @@ export function ClinicalToolsMenu({ complexity = "comprehensive" }: ClinicalTool
                     guidance.openDock("prescribing");
                     setOpen(false);
                   }}
-                  className="flex w-full items-center gap-2 rounded-md border border-emerald-100 bg-emerald-50/50 px-2 py-2 text-left text-xs text-emerald-900 hover:bg-emerald-50"
+                  className="flex w-full items-center gap-2 rounded-md border border-emerald-100 bg-success-soft/50 px-2 py-2 text-left text-xs text-primary-hover hover:bg-success-soft"
                 >
                   <Pill className="h-3.5 w-3.5 shrink-0" />
                   <span>EDLIZ prescribing check</span>
@@ -161,17 +161,17 @@ export function ClinicalToolsMenu({ complexity = "comprehensive" }: ClinicalTool
 
             <div className="px-3 pb-2">
               <div className="relative">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                 <input
                   placeholder="Search tools..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-8 w-full pl-8 text-sm rounded-md border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                  className="h-8 w-full pl-8 text-sm rounded-md border border-border bg-card focus:outline-none focus:ring-2 focus:ring-primary/40"
                 />
               </div>
             </div>
 
-            <div className="border-t border-gray-100" />
+            <div className="border-t border-border" />
 
             <div className="max-h-[400px] overflow-y-auto">
               {Object.entries(grouped).map(([category, items]) => {
@@ -179,23 +179,23 @@ export function ClinicalToolsMenu({ complexity = "comprehensive" }: ClinicalTool
                 const config = categoryConfig[category];
                 return (
                   <div key={category} className="p-2">
-                    <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider px-2 mb-1">
+                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-2 mb-1">
                       {config.label}
                     </p>
                     {items.map((tool) => (
                       <button
                         key={tool.id}
                         onClick={() => openTool(tool.id)}
-                        className="w-full flex items-center gap-3 px-2 py-2 rounded-md hover:bg-gray-50 transition-colors text-left"
+                        className="w-full flex items-center gap-3 px-2 py-2 rounded-md hover:bg-background transition-colors text-left"
                       >
-                        <div className="h-7 w-7 rounded-md bg-impilo-50 flex items-center justify-center shrink-0">
-                          <tool.icon className="h-3.5 w-3.5 text-impilo-500" />
+                        <div className="h-7 w-7 rounded-md bg-primary-soft flex items-center justify-center shrink-0">
+                          <tool.icon className="h-3.5 w-3.5 text-primary" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="text-xs font-medium leading-tight">{tool.label}</p>
-                          <p className="text-[11px] text-gray-500 leading-snug">{tool.description}</p>
+                          <p className="text-[11px] text-muted-foreground leading-snug">{tool.description}</p>
                         </div>
-                        <ChevronRight className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+                        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                       </button>
                     ))}
                   </div>
@@ -203,7 +203,7 @@ export function ClinicalToolsMenu({ complexity = "comprehensive" }: ClinicalTool
               })}
               {filtered.length === 0 && (
                 <div className="p-6 text-center">
-                  <p className="text-sm text-gray-500">No tools found</p>
+                  <p className="text-sm text-muted-foreground">No tools found</p>
                 </div>
               )}
             </div>

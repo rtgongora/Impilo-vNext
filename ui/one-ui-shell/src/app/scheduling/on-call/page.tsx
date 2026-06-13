@@ -58,8 +58,8 @@ function dayShortLabel(ymd: string): string {
 }
 
 const SPECIALTY_COLORS: Record<string, string> = {
-  "Internal Medicine": "bg-impilo-100 text-impilo-600",
-  Surgery: "bg-red-100 text-red-700",
+  "Internal Medicine": "bg-primary-soft text-primary",
+  Surgery: "bg-red-100 text-danger",
   Paediatrics: "bg-green-100 text-green-700",
   Obstetrics: "bg-pink-100 text-pink-700",
 };
@@ -153,7 +153,7 @@ export default function OnCallPage() {
           <div className="mb-4">
             <Link
               href="/organization-admin/staffing?from=organization-admin"
-              className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+              className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="h-4 w-4" /> Back to staffing hub
             </Link>
@@ -162,38 +162,38 @@ export default function OnCallPage() {
         <FacilityWorkClusterRibbon shiftExpected={false} />
 
         {!facility?.id ? (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <div className="rounded-lg border border-warning/35 bg-warning-soft px-4 py-3 text-sm text-warning-foreground">
             Select a facility to load on-call assignments.
           </div>
         ) : null}
 
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-lg">
+          <div className="flex items-center gap-1 bg-card border border-border rounded-lg">
             <button
               type="button"
               onClick={() => setWeekOffset((p) => p - 1)}
-              className="p-2 hover:bg-gray-50 rounded-l-lg transition-colors"
+              className="p-2 hover:bg-background rounded-l-lg transition-colors"
             >
-              <ChevronLeft className="w-4 h-4 text-gray-600" />
+              <ChevronLeft className="w-4 h-4 text-muted-foreground" />
             </button>
-            <span className="px-3 text-xs font-medium text-gray-700">{weekLabel}</span>
+            <span className="px-3 text-xs font-medium text-foreground">{weekLabel}</span>
             <button
               type="button"
               onClick={() => setWeekOffset((p) => p + 1)}
-              className="p-2 hover:bg-gray-50 rounded-r-lg transition-colors"
+              className="p-2 hover:bg-background rounded-r-lg transition-colors"
             >
-              <ChevronRight className="w-4 h-4 text-gray-600" />
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
             </button>
           </div>
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading on-call schedule...</span>
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading on-call schedule...</span>
           </div>
         ) : weekError ? (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <div className="rounded-lg border border-danger/28 bg-danger-soft px-4 py-3 text-sm text-red-800">
             Could not load on-call data. Ensure the BFF is running and migration V29 is applied.
           </div>
         ) : (
@@ -201,21 +201,21 @@ export default function OnCallPage() {
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div className="flex items-center gap-2">
                 <Phone className="w-5 h-5 text-green-600" />
-                <h2 className="text-lg font-semibold text-gray-900">On-Call Schedule</h2>
+                <h2 className="text-lg font-semibold text-foreground">On-Call Schedule</h2>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
-                <div className="flex border border-gray-300 rounded-lg overflow-hidden">
+                <div className="flex border border-border rounded-lg overflow-hidden">
                   <button
                     type="button"
                     onClick={() => setViewMode("calendar")}
-                    className={`px-3 py-1.5 text-xs ${viewMode === "calendar" ? "bg-impilo-500 text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}
+                    className={`px-3 py-1.5 text-xs ${viewMode === "calendar" ? "bg-primary text-white" : "bg-card text-muted-foreground hover:bg-background"}`}
                   >
                     Calendar
                   </button>
                   <button
                     type="button"
                     onClick={() => setViewMode("list")}
-                    className={`px-3 py-1.5 text-xs ${viewMode === "list" ? "bg-impilo-500 text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}
+                    className={`px-3 py-1.5 text-xs ${viewMode === "list" ? "bg-primary text-white" : "bg-card text-muted-foreground hover:bg-background"}`}
                   >
                     List
                   </button>
@@ -223,7 +223,7 @@ export default function OnCallPage() {
                 <button
                   type="button"
                   onClick={() => setShowSwapForm((v) => !v)}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover transition-colors"
                 >
                   <ArrowRightLeft className="w-4 h-4" /> Request Swap
                 </button>
@@ -231,47 +231,47 @@ export default function OnCallPage() {
             </div>
 
             {showSwapForm && facility?.id ? (
-              <div className="rounded-lg border border-gray-200 bg-white p-4 space-y-3 text-sm">
-                <h3 className="font-medium text-gray-900">New swap request</h3>
+              <div className="rounded-lg border border-border bg-card p-4 space-y-3 text-sm">
+                <h3 className="font-medium text-foreground">New swap request</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <label className="block">
-                    <span className="text-xs text-gray-600">Requestor</span>
+                    <span className="text-xs text-muted-foreground">Requestor</span>
                     <input
-                      className="mt-1 w-full border border-gray-300 rounded-md px-2 py-1.5"
+                      className="mt-1 w-full border border-border rounded-md px-2 py-1.5"
                       value={swapForm.requestor_name}
                       onChange={(e) => setSwapForm((f) => ({ ...f, requestor_name: e.target.value }))}
                     />
                   </label>
                   <label className="block">
-                    <span className="text-xs text-gray-600">Requestee</span>
+                    <span className="text-xs text-muted-foreground">Requestee</span>
                     <input
-                      className="mt-1 w-full border border-gray-300 rounded-md px-2 py-1.5"
+                      className="mt-1 w-full border border-border rounded-md px-2 py-1.5"
                       value={swapForm.requestee_name}
                       onChange={(e) => setSwapForm((f) => ({ ...f, requestee_name: e.target.value }))}
                     />
                   </label>
                   <label className="block">
-                    <span className="text-xs text-gray-600">Original on-call date</span>
+                    <span className="text-xs text-muted-foreground">Original on-call date</span>
                     <input
                       type="date"
-                      className="mt-1 w-full border border-gray-300 rounded-md px-2 py-1.5"
+                      className="mt-1 w-full border border-border rounded-md px-2 py-1.5"
                       value={swapForm.original_date}
                       onChange={(e) => setSwapForm((f) => ({ ...f, original_date: e.target.value }))}
                     />
                   </label>
                   <label className="block">
-                    <span className="text-xs text-gray-600">Swap to date</span>
+                    <span className="text-xs text-muted-foreground">Swap to date</span>
                     <input
                       type="date"
-                      className="mt-1 w-full border border-gray-300 rounded-md px-2 py-1.5"
+                      className="mt-1 w-full border border-border rounded-md px-2 py-1.5"
                       value={swapForm.swap_date}
                       onChange={(e) => setSwapForm((f) => ({ ...f, swap_date: e.target.value }))}
                     />
                   </label>
                   <label className="block sm:col-span-2">
-                    <span className="text-xs text-gray-600">Specialty (optional)</span>
+                    <span className="text-xs text-muted-foreground">Specialty (optional)</span>
                     <input
-                      className="mt-1 w-full border border-gray-300 rounded-md px-2 py-1.5"
+                      className="mt-1 w-full border border-border rounded-md px-2 py-1.5"
                       value={swapForm.specialty}
                       onChange={(e) => setSwapForm((f) => ({ ...f, specialty: e.target.value }))}
                     />
@@ -281,7 +281,7 @@ export default function OnCallPage() {
                   <button
                     type="button"
                     onClick={() => setShowSwapForm(false)}
-                    className="px-3 py-1.5 text-xs border border-gray-200 rounded-md hover:bg-gray-50"
+                    className="px-3 py-1.5 text-xs border border-border rounded-md hover:bg-background"
                   >
                     Cancel
                   </button>
@@ -289,7 +289,7 @@ export default function OnCallPage() {
                     type="button"
                     disabled={createSwap.isPending}
                     onClick={() => void submitSwapRequest()}
-                    className="px-3 py-1.5 text-xs bg-impilo-500 text-white rounded-md hover:bg-impilo-600 disabled:opacity-50"
+                    className="px-3 py-1.5 text-xs bg-primary text-white rounded-md hover:bg-primary-hover disabled:opacity-50"
                   >
                     {createSwap.isPending ? "Submitting…" : "Submit request"}
                   </button>
@@ -298,18 +298,18 @@ export default function OnCallPage() {
             ) : null}
 
             {pendingSwaps.length > 0 && (
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <div className="bg-warning-soft border border-warning/35 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <ArrowRightLeft className="w-4 h-4 text-amber-600" />
-                  <h3 className="text-sm font-medium text-amber-800">
+                  <h3 className="text-sm font-medium text-warning-foreground">
                     {pendingSwaps.length} Pending Swap Request{pendingSwaps.length > 1 ? "s" : ""}
                   </h3>
                 </div>
                 {pendingSwaps.map((sw) => {
                   const a = sw.attributes;
                   return (
-                    <div key={sw.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 bg-white rounded-lg p-3 mt-2">
-                      <div className="text-xs text-gray-600">
+                    <div key={sw.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 bg-card rounded-lg p-3 mt-2">
+                      <div className="text-xs text-muted-foreground">
                         <span className="font-medium">{a.requestor_name}</span> wants to swap{" "}
                         <span className="font-medium">{a.original_date}</span> with{" "}
                         <span className="font-medium">{a.requestee_name}</span> on{" "}
@@ -334,7 +334,7 @@ export default function OnCallPage() {
                             facility?.id &&
                             patchSwap.mutate({ id: sw.id, facilityId: facility.id, status: "DECLINED" })
                           }
-                          className="px-2.5 py-1 text-xs text-red-600 border border-red-200 rounded hover:bg-red-50 transition-colors disabled:opacity-50"
+                          className="px-2.5 py-1 text-xs text-red-600 border border-danger/28 rounded hover:bg-danger-soft transition-colors disabled:opacity-50"
                         >
                           Decline
                         </button>
@@ -348,7 +348,7 @@ export default function OnCallPage() {
             {viewMode === "calendar" && (
               <div className="flex items-center gap-2 overflow-x-auto pb-2">
                 {dates.length === 0 ? (
-                  <p className="text-sm text-gray-500">No assignment dates in this week.</p>
+                  <p className="text-sm text-muted-foreground">No assignment dates in this week.</p>
                 ) : (
                   dates.map((date) => {
                     const isSelected = date === selectedDate;
@@ -358,12 +358,12 @@ export default function OnCallPage() {
                         type="button"
                         onClick={() => setSelectedDate(date)}
                         className={`flex flex-col items-center px-4 py-2 rounded-lg border transition-colors shrink-0 ${
-                          isSelected ? "border-impilo-200 bg-impilo-50 text-impilo-600" : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                          isSelected ? "border-primary/25 bg-primary-soft text-primary" : "border-border bg-card text-muted-foreground hover:bg-background"
                         }`}
                       >
                         <span className="text-xs font-medium">{dayShortLabel(date)}</span>
                         <span className="text-sm font-bold">{date.slice(8)}</span>
-                        <span className="text-[10px] text-gray-400">
+                        <span className="text-[10px] text-muted-foreground">
                           {date.slice(5, 7)}/{date.slice(0, 4)}
                         </span>
                       </button>
@@ -375,9 +375,9 @@ export default function OnCallPage() {
 
             {viewMode === "calendar" &&
               (todaySchedule.length === 0 ? (
-                <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-                  <Phone className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-400 text-sm">No on-call assignments for this date</p>
+                <div className="bg-card rounded-lg border border-border p-12 text-center">
+                  <Phone className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-muted-foreground text-sm">No on-call assignments for this date</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -386,24 +386,24 @@ export default function OnCallPage() {
               ))}
 
             {viewMode === "list" && (
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                <div className="px-5 py-4 border-b border-gray-200">
-                  <h3 className="font-medium text-gray-900">All assignments this week</h3>
+              <div className="bg-card rounded-lg border border-border overflow-hidden">
+                <div className="px-5 py-4 border-b border-border">
+                  <h3 className="font-medium text-foreground">All assignments this week</h3>
                 </div>
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-gray-200 bg-gray-50">
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Date</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Specialty</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Primary</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Backup</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Shift</th>
+                    <tr className="border-b border-border bg-background">
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Date</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Specialty</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Primary</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Backup</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Shift</th>
                     </tr>
                   </thead>
                   <tbody>
                     {schedule.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                        <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
                           No rows for this week.
                         </td>
                       </tr>
@@ -414,12 +414,12 @@ export default function OnCallPage() {
                         .map((oc) => {
                           const o = oc.attributes;
                           return (
-                            <tr key={oc.id} className="border-b border-gray-100 hover:bg-gray-50">
-                              <td className="px-4 py-3 text-gray-800">{o.assignment_date}</td>
-                              <td className="px-4 py-3 text-gray-900">{o.specialty}</td>
-                              <td className="px-4 py-3 text-gray-800">{o.primary_staff_name}</td>
-                              <td className="px-4 py-3 text-gray-700">{o.backup_staff_name}</td>
-                              <td className="px-4 py-3 text-gray-600">{toShiftLabel(o.shift_kind)}</td>
+                            <tr key={oc.id} className="border-b border-border hover:bg-background">
+                              <td className="px-4 py-3 text-foreground">{o.assignment_date}</td>
+                              <td className="px-4 py-3 text-foreground">{o.specialty}</td>
+                              <td className="px-4 py-3 text-foreground">{o.primary_staff_name}</td>
+                              <td className="px-4 py-3 text-foreground">{o.backup_staff_name}</td>
+                              <td className="px-4 py-3 text-muted-foreground">{toShiftLabel(o.shift_kind)}</td>
                             </tr>
                           );
                         })
@@ -429,25 +429,25 @@ export default function OnCallPage() {
               </div>
             )}
 
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-              <div className="px-5 py-4 border-b border-gray-200 flex items-center gap-2">
-                <ArrowRightLeft className="w-4 h-4 text-gray-500" />
-                <h3 className="font-medium text-gray-900">Swap Requests</h3>
+            <div className="bg-card rounded-lg border border-border overflow-hidden">
+              <div className="px-5 py-4 border-b border-border flex items-center gap-2">
+                <ArrowRightLeft className="w-4 h-4 text-muted-foreground" />
+                <h3 className="font-medium text-foreground">Swap Requests</h3>
               </div>
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-gray-200 bg-gray-50">
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Requestor</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Original Date</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Swap With</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Swap Date</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
+                  <tr className="border-b border-border bg-background">
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Requestor</th>
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Original Date</th>
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Swap With</th>
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Swap Date</th>
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {swaps.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                      <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
                         No swap requests yet.
                       </td>
                     </tr>
@@ -456,19 +456,19 @@ export default function OnCallPage() {
                       const a = sw.attributes;
                       const ui = mapUiSwapStatus(a.status);
                       return (
-                        <tr key={sw.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                          <td className="px-4 py-3 text-gray-900">{a.requestor_name}</td>
-                          <td className="px-4 py-3 text-gray-700">{a.original_date}</td>
-                          <td className="px-4 py-3 text-gray-900">{a.requestee_name}</td>
-                          <td className="px-4 py-3 text-gray-700">{a.swap_date}</td>
+                        <tr key={sw.id} className="border-b border-border hover:bg-background transition-colors">
+                          <td className="px-4 py-3 text-foreground">{a.requestor_name}</td>
+                          <td className="px-4 py-3 text-foreground">{a.original_date}</td>
+                          <td className="px-4 py-3 text-foreground">{a.requestee_name}</td>
+                          <td className="px-4 py-3 text-foreground">{a.swap_date}</td>
                           <td className="px-4 py-3">
                             <span
                               className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                                 ui === "Approved"
                                   ? "bg-green-100 text-green-700"
                                   : ui === "Pending"
-                                    ? "bg-amber-100 text-amber-700"
-                                    : "bg-red-100 text-red-700"
+                                    ? "bg-amber-100 text-warning-foreground"
+                                    : "bg-red-100 text-danger"
                               }`}
                             >
                               {ui}
@@ -493,58 +493,58 @@ function renderAssignmentCard(oc: OnCallAssignmentResource) {
   const primaryPhone = o.primary_phone ?? "";
   const backupPhone = o.backup_phone ?? "";
   return (
-    <div key={oc.id} className="bg-white rounded-lg border border-gray-200 p-5">
+    <div key={oc.id} className="bg-card rounded-lg border border-border p-5">
       <div className="flex items-center justify-between mb-4">
         <span
-          className={`px-2.5 py-1 rounded-full text-xs font-medium ${SPECIALTY_COLORS[o.specialty] || "bg-gray-100 text-gray-700"}`}
+          className={`px-2.5 py-1 rounded-full text-xs font-medium ${SPECIALTY_COLORS[o.specialty] || "bg-neutral-100 text-foreground"}`}
         >
           {o.specialty}
         </span>
-        <span className="text-xs text-gray-400 flex items-center gap-1">
+        <span className="text-xs text-muted-foreground flex items-center gap-1">
           <Clock className="w-3 h-3" /> {toShiftLabel(o.shift_kind)}
         </span>
       </div>
       <div className="mb-3">
-        <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wide mb-1">Primary</p>
+        <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">Primary</p>
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-impilo-100 text-impilo-600 flex items-center justify-center text-xs font-semibold">
+            <div className="w-8 h-8 rounded-full bg-primary-soft text-primary flex items-center justify-center text-xs font-semibold">
               {o.primary_staff_name
                 .split(" ")
                 .map((w) => w[0])
                 .slice(0, 2)
                 .join("")}
             </div>
-            <span className="text-sm font-medium text-gray-900">{o.primary_staff_name}</span>
+            <span className="text-sm font-medium text-foreground">{o.primary_staff_name}</span>
           </div>
           {primaryPhone ? (
-            <a href={`tel:${primaryPhone}`} className="inline-flex items-center gap-1 text-xs text-impilo-500 hover:text-impilo-600">
+            <a href={`tel:${primaryPhone}`} className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary">
               <Phone className="w-3 h-3" /> {primaryPhone}
             </a>
           ) : (
-            <span className="text-xs text-gray-400">No phone on file</span>
+            <span className="text-xs text-muted-foreground">No phone on file</span>
           )}
         </div>
       </div>
-      <div className="pt-3 border-t border-gray-100">
-        <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wide mb-1">Backup / Escalation</p>
+      <div className="pt-3 border-t border-border">
+        <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">Backup / Escalation</p>
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center text-xs font-semibold">
+            <div className="w-8 h-8 rounded-full bg-neutral-100 text-muted-foreground flex items-center justify-center text-xs font-semibold">
               {o.backup_staff_name
                 .split(" ")
                 .map((w) => w[0])
                 .slice(0, 2)
                 .join("")}
             </div>
-            <span className="text-sm text-gray-700">{o.backup_staff_name}</span>
+            <span className="text-sm text-foreground">{o.backup_staff_name}</span>
           </div>
           {backupPhone ? (
-            <a href={`tel:${backupPhone}`} className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-impilo-500">
+            <a href={`tel:${backupPhone}`} className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary">
               <Phone className="w-3 h-3" /> {backupPhone}
             </a>
           ) : (
-            <span className="text-xs text-gray-400">No phone on file</span>
+            <span className="text-xs text-muted-foreground">No phone on file</span>
           )}
         </div>
       </div>

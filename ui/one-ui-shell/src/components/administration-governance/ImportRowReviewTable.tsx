@@ -31,13 +31,13 @@ function rowEmail(row: ImportRowReviewItem): string {
 
 export function ImportRowReviewTable({ rows, onResend, onRevoke }: ImportRowReviewTableProps) {
   if (!rows.length) {
-    return <p className="text-sm text-slate-600">No staged import rows yet. Upload and approve a batch to review invitation status.</p>;
+    return <p className="text-sm text-muted-foreground">No staged import rows yet. Upload and approve a batch to review invitation status.</p>;
   }
 
   return (
     <div className="overflow-auto rounded-lg border">
       <table className="min-w-full text-sm">
-        <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-600">
+        <thead className="bg-background text-left text-xs uppercase tracking-wide text-muted-foreground">
           <tr>
             <th className="px-3 py-2">Row</th>
             <th className="px-3 py-2">Email</th>

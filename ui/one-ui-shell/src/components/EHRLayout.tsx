@@ -111,7 +111,7 @@ export function EHRLayout({ children }: { children: ReactNode }) {
   return (
     <ClinicalWorkflowProvider value={programmeWorkflow}>
       <ClinicalGuidanceProvider>
-        <div className="flex flex-col h-screen bg-gray-50">
+        <div className="flex flex-col h-screen bg-background">
           <TopBar />
           <ClinicalSupportStrip />
           <OperationalContextStrip />
@@ -125,7 +125,7 @@ export function EHRLayout({ children }: { children: ReactNode }) {
               <EncounterMenu />
               <button
                 onClick={togglePosition}
-                className="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors z-10"
+                className="absolute top-2 right-2 p-1 text-muted-foreground hover:text-muted-foreground hover:bg-neutral-100 rounded transition-colors z-10"
                 title={menuRight ? "Move menu to left" : "Move menu to right"}
               >
                 {menuRight ? <PanelLeft className="w-3.5 h-3.5" /> : <PanelRight className="w-3.5 h-3.5" />}

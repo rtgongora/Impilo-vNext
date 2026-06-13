@@ -214,7 +214,7 @@ export default function FinanceCostaPage() {
         <div className="mb-4">
           <Link
             href={withHandoff("/finance")}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to finance
@@ -260,38 +260,38 @@ export default function FinanceCostaPage() {
 
           <div className="grid gap-4 md:grid-cols-2">
             {/* ── Tariff libraries ─────────────────────────────────── */}
-            <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-warning-foreground">
                   <BookOpen className="h-5 w-5" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-sm font-semibold text-slate-900">Tariff libraries</h2>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <h2 className="text-sm font-semibold text-foreground">Tariff libraries</h2>
+                  <p className="mt-1 text-xs text-muted-foreground">
                     Operational and reference COSTA tariff lists. Operational lists are billable; reference lists are
                     for mapping and comparison only.
                   </p>
                   {tariffsQ.isLoading ? (
-                    <p className="mt-3 flex items-center gap-2 text-xs text-slate-500">
+                    <p className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
                       <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading tariff library…
                     </p>
                   ) : tariffsQ.isError ? (
-                    <p className="mt-3 flex items-center gap-2 text-xs text-red-700">
+                    <p className="mt-3 flex items-center gap-2 text-xs text-danger">
                       <AlertCircle className="h-3.5 w-3.5" /> Could not load tariff library from COSTA.
                     </p>
                   ) : tariffLists.length === 0 ? (
-                    <p className="mt-3 text-xs text-slate-500">
+                    <p className="mt-3 text-xs text-muted-foreground">
                       No tariff lists returned. Run COSTA migrations and verify the BFF can reach costing-engine.
                     </p>
                   ) : (
-                    <p className="mt-3 text-xs text-slate-700">
+                    <p className="mt-3 text-xs text-foreground">
                       <span className="font-medium">{operationalCount}</span> operational ·{" "}
                       <span className="font-medium">{referenceCount}</span> reference
                     </p>
                   )}
                   <Link
                     href={withHandoff("/finance/tariffs")}
-                    className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-indigo-700 hover:text-indigo-900"
+                    className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary-hover hover:text-primary-hover"
                   >
                     Open tariff library →
                   </Link>
@@ -300,31 +300,31 @@ export default function FinanceCostaPage() {
             </section>
 
             {/* ── Cost estimates ────────────────────────────────────── */}
-            <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-primary-hover">
                   <Scale className="h-5 w-5" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-sm font-semibold text-slate-900">Cost estimates</h2>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <h2 className="text-sm font-semibold text-foreground">Cost estimates</h2>
+                  <p className="mt-1 text-xs text-muted-foreground">
                     COSTA produces patient-facing estimates from an operational tariff list, exemption context, and
                     payer coverage. Estimates feed invoices and MusheX payment intents.
                   </p>
-                  <p className="mt-3 text-xs text-slate-700">
+                  <p className="mt-3 text-xs text-foreground">
                     Pick an operational tariff list in the tariff library, then run an estimate before issuing a
                     charge sheet or invoice.
                   </p>
                   <div className="mt-3 flex flex-wrap gap-3 text-xs">
                     <Link
                       href={withHandoff("/finance/tariffs")}
-                      className="font-medium text-indigo-700 hover:text-indigo-900"
+                      className="font-medium text-primary-hover hover:text-primary-hover"
                     >
                       Tariff library →
                     </Link>
                     <Link
                       href={withHandoff("/finance/billing")}
-                      className="font-medium text-indigo-700 hover:text-indigo-900"
+                      className="font-medium text-primary-hover hover:text-primary-hover"
                     >
                       Issue invoice →
                     </Link>
@@ -334,38 +334,38 @@ export default function FinanceCostaPage() {
             </section>
 
             {/* ── Charge sheets / cost events ────────────────────────── */}
-            <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-impilo-100 text-impilo-500">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
                   <FileText className="h-5 w-5" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-sm font-semibold text-slate-900">Charge sheets</h2>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <h2 className="text-sm font-semibold text-foreground">Charge sheets</h2>
+                  <p className="mt-1 text-xs text-muted-foreground">
                     Captured cost events at point of care. COSTA exposes these per encounter or patient CPID; the
                     billing workspace turns them into invoice lines.
                   </p>
                   {!encounterId && !patientCpid ? (
-                    <p className="mt-3 text-xs text-slate-500">
+                    <p className="mt-3 text-xs text-muted-foreground">
                       Open this page with an encounter or patient CPID to view captured cost events.
                     </p>
                   ) : costEventsQ.isLoading || costEventsQ.isFetching ? (
-                    <p className="mt-3 flex items-center gap-2 text-xs text-slate-500">
+                    <p className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
                       <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading cost events…
                     </p>
                   ) : costEventsQ.isError ? (
-                    <p className="mt-3 flex items-center gap-2 text-xs text-red-700">
+                    <p className="mt-3 flex items-center gap-2 text-xs text-danger">
                       <AlertCircle className="h-3.5 w-3.5" /> Could not load cost events from COSTA.
                     </p>
                   ) : (
-                    <p className="mt-3 text-xs text-slate-700">
+                    <p className="mt-3 text-xs text-foreground">
                       <span className="font-medium">{costEvents.length}</span> captured cost event{costEvents.length === 1 ? "" : "s"}
                       {encounterId ? <> for encounter <span className="font-mono">{encounterId}</span></> : null}
                     </p>
                   )}
                   <Link
                     href={withHandoff("/finance/billing")}
-                    className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-indigo-700 hover:text-indigo-900"
+                    className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary-hover hover:text-primary-hover"
                   >
                     Open billing workspace →
                   </Link>
@@ -374,31 +374,31 @@ export default function FinanceCostaPage() {
             </section>
 
             {/* ── Service access decisions ───────────────────────────── */}
-            <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-purple-100 text-purple-700">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-purple-100 text-warning-foreground">
                   <ClipboardCheck className="h-5 w-5" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-sm font-semibold text-slate-900">Service access decisions</h2>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <h2 className="text-sm font-semibold text-foreground">Service access decisions</h2>
+                  <p className="mt-1 text-xs text-muted-foreground">
                     COSTA records access decisions (granted, deferred, exempt) per encounter. They drive whether a
                     service proceeds to charge sheet and payer claim.
                   </p>
                   {!encounterId ? (
-                    <p className="mt-3 text-xs text-slate-500">
+                    <p className="mt-3 text-xs text-muted-foreground">
                       Open this page with an encounter to view its service-access decisions.
                     </p>
                   ) : decisionsQ.isLoading ? (
-                    <p className="mt-3 flex items-center gap-2 text-xs text-slate-500">
+                    <p className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
                       <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading decisions…
                     </p>
                   ) : decisionsQ.isError ? (
-                    <p className="mt-3 flex items-center gap-2 text-xs text-red-700">
+                    <p className="mt-3 flex items-center gap-2 text-xs text-danger">
                       <AlertCircle className="h-3.5 w-3.5" /> Could not load service-access decisions from COSTA.
                     </p>
                   ) : (
-                    <p className="mt-3 text-xs text-slate-700">
+                    <p className="mt-3 text-xs text-foreground">
                       <span className="font-medium">{decisions.length}</span> decision{decisions.length === 1 ? "" : "s"} recorded for
                       encounter <span className="font-mono">{encounterId}</span>
                     </p>
@@ -406,7 +406,7 @@ export default function FinanceCostaPage() {
                   <div className="mt-3 flex flex-wrap gap-3 text-xs">
                     <Link
                       href={withHandoff("/finance/claims")}
-                      className="font-medium text-indigo-700 hover:text-indigo-900"
+                      className="font-medium text-primary-hover hover:text-primary-hover"
                     >
                       Open claims handoff →
                     </Link>
@@ -415,7 +415,7 @@ export default function FinanceCostaPage() {
                         href={`/finance/costa/encounter/${encodeURIComponent(encounterId)}${
                           handoffParams.toString() ? `?${handoffParams.toString()}` : ""
                         }`}
-                        className="font-medium text-indigo-700 hover:text-indigo-900"
+                        className="font-medium text-primary-hover hover:text-primary-hover"
                       >
                         View timeline →
                       </Link>
@@ -426,30 +426,30 @@ export default function FinanceCostaPage() {
             </section>
 
             {/* ── Subsidies / exemptions ─────────────────────────────── */}
-            <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-warning-foreground">
                   <HandCoins className="h-5 w-5" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-sm font-semibold text-slate-900">Subsidies & exemptions</h2>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <h2 className="text-sm font-semibold text-foreground">Subsidies & exemptions</h2>
+                  <p className="mt-1 text-xs text-muted-foreground">
                     Read-only subsidy and write-off rows derived from COSTA billing lifecycle, scoped by encounter.
                   </p>
                   {!encounterId ? (
-                    <p className="mt-3 text-xs text-slate-500">
+                    <p className="mt-3 text-xs text-muted-foreground">
                       Open this page with an encounter to view subsidy allocations and exemptions for that episode.
                     </p>
                   ) : subsidiesQ.isLoading ? (
-                    <p className="mt-3 flex items-center gap-2 text-xs text-slate-500">
+                    <p className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
                       <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading subsidy rows…
                     </p>
                   ) : subsidiesQ.isError ? (
-                    <p className="mt-3 flex items-center gap-2 text-xs text-red-700">
+                    <p className="mt-3 flex items-center gap-2 text-xs text-danger">
                       <AlertCircle className="h-3.5 w-3.5" /> Could not load subsidy rows from COSTA.
                     </p>
                   ) : (
-                    <p className="mt-3 text-xs text-slate-700">
+                    <p className="mt-3 text-xs text-foreground">
                       <span className="font-medium">{subsidies.length}</span> subsidy row{subsidies.length === 1 ? "" : "s"} for
                       encounter <span className="font-mono">{encounterId}</span>
                     </p>
@@ -459,7 +459,7 @@ export default function FinanceCostaPage() {
                       href={`/finance/costa/encounter/${encodeURIComponent(encounterId)}${
                         handoffParams.toString() ? `?${handoffParams.toString()}` : ""
                       }`}
-                      className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-indigo-700 hover:text-indigo-900"
+                      className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary-hover hover:text-primary-hover"
                     >
                       View subsidy timeline rows →
                     </Link>
@@ -470,14 +470,14 @@ export default function FinanceCostaPage() {
           </div>
 
           {/* ── Invoice / payment handoff (MusheX) ──────────────────── */}
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
             <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-primary-hover">
                 <CreditCard className="h-5 w-5" />
               </div>
               <div className="flex-1">
-                <h2 className="text-sm font-semibold text-slate-900">Invoice & payment handoff (MusheX)</h2>
-                <p className="mt-1 text-xs text-slate-500">
+                <h2 className="text-sm font-semibold text-foreground">Invoice & payment handoff (MusheX)</h2>
+                <p className="mt-1 text-xs text-muted-foreground">
                   COSTA hands billable charge sheets to MusheX, which orchestrates the payment intent. Open a
                   surface below to inspect or act on handoff state.
                 </p>
@@ -486,10 +486,10 @@ export default function FinanceCostaPage() {
                     <Link
                       key={item.href}
                       href={withHandoff(item.href)}
-                      className="rounded-lg border border-slate-200 bg-slate-50/60 px-3 py-2 text-xs hover:border-indigo-300 hover:bg-white transition-colors"
+                      className="rounded-lg border border-border bg-background/60 px-3 py-2 text-xs hover:border-indigo-300 hover:bg-card transition-colors"
                     >
-                      <div className="font-medium text-slate-900">{item.label}</div>
-                      <div className="text-slate-500 mt-0.5">{item.description}</div>
+                      <div className="font-medium text-foreground">{item.label}</div>
+                      <div className="text-muted-foreground mt-0.5">{item.description}</div>
                     </Link>
                   ))}
                 </div>
@@ -498,9 +498,9 @@ export default function FinanceCostaPage() {
           </section>
 
           {/* ── Related finance surfaces ────────────────────────────── */}
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">Related finance surfaces</h2>
-            <p className="mt-1 text-xs text-slate-500">
+          <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
+            <h2 className="text-sm font-semibold text-foreground">Related finance surfaces</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
               Other enterprise-plane finance-domain routes that depend on, or feed back into, COSTA.
             </p>
             <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -508,42 +508,42 @@ export default function FinanceCostaPage() {
                 <Link
                   key={item.href}
                   href={withHandoff(item.href)}
-                  className="rounded-lg border border-slate-200 bg-slate-50/60 px-3 py-2 text-xs hover:border-indigo-300 hover:bg-white transition-colors"
+                  className="rounded-lg border border-border bg-background/60 px-3 py-2 text-xs hover:border-indigo-300 hover:bg-card transition-colors"
                 >
-                  <div className="font-medium text-slate-900">{item.label}</div>
-                  <div className="text-slate-500 mt-0.5">{item.description}</div>
+                  <div className="font-medium text-foreground">{item.label}</div>
+                  <div className="text-muted-foreground mt-0.5">{item.description}</div>
                 </Link>
               ))}
             </div>
           </section>
 
-          <section className="rounded-xl border border-amber-200 bg-amber-50/40 p-5 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">Controlled actions</h2>
-            <p className="mt-1 text-xs text-slate-600">
+          <section className="rounded-xl border border-warning/35 bg-warning-soft/40 p-5 shadow-sm">
+            <h2 className="text-sm font-semibold text-foreground">Controlled actions</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
               Phase 5 completion: explicit-confirmation write triggers for existing COSTA endpoints.
             </p>
             <div className="mt-4 grid gap-4 lg:grid-cols-2">
-              <div className="rounded-lg border border-slate-200 bg-white p-4">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <div className="rounded-lg border border-border bg-card p-4">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Register service-access decision
                 </h3>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-muted-foreground">
                   POST <code>/internal/v1/finance/service-access-decisions</code>
                 </p>
                 <textarea
                   aria-label="Service-access decision JSON"
-                  className="mt-2 min-h-[140px] w-full rounded-lg border border-slate-200 p-2 font-mono text-xs"
+                  className="mt-2 min-h-[140px] w-full rounded-lg border border-border p-2 font-mono text-xs"
                   value={decisionJson}
                   onChange={(e) => setDecisionJson(e.target.value)}
                 />
                 <input
                   type="text"
                   placeholder="Reason for this write (required)"
-                  className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-xs"
+                  className="mt-2 w-full rounded-lg border border-border px-3 py-2 text-xs"
                   value={decisionReason}
                   onChange={(e) => setDecisionReason(e.target.value)}
                 />
-                <label className="mt-2 flex items-center gap-2 text-xs text-slate-700">
+                <label className="mt-2 flex items-center gap-2 text-xs text-foreground">
                   <input
                     type="checkbox"
                     checked={decisionConfirmed}
@@ -551,7 +551,7 @@ export default function FinanceCostaPage() {
                   />
                   I confirm this is an intentional operational write.
                 </label>
-                {decisionErr ? <p className="mt-2 text-xs text-red-700">{decisionErr}</p> : null}
+                {decisionErr ? <p className="mt-2 text-xs text-danger">{decisionErr}</p> : null}
                 <button
                   type="button"
                   disabled={registerDecisionM.isPending || !decisionConfirmed || !decisionReason.trim()}
@@ -582,27 +582,27 @@ export default function FinanceCostaPage() {
                 ) : null}
               </div>
 
-              <div className="rounded-lg border border-slate-200 bg-white p-4">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <div className="rounded-lg border border-border bg-card p-4">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Issue invoice from estimate
                 </h3>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-muted-foreground">
                   POST <code>/internal/v1/finance/costa-intel/invoices/from-cost-estimate</code>
                 </p>
                 <textarea
                   aria-label="Invoice-from-estimate JSON"
-                  className="mt-2 min-h-[140px] w-full rounded-lg border border-slate-200 p-2 font-mono text-xs"
+                  className="mt-2 min-h-[140px] w-full rounded-lg border border-border p-2 font-mono text-xs"
                   value={invoiceJson}
                   onChange={(e) => setInvoiceJson(e.target.value)}
                 />
                 <input
                   type="text"
                   placeholder="Reason for this write (required)"
-                  className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-xs"
+                  className="mt-2 w-full rounded-lg border border-border px-3 py-2 text-xs"
                   value={invoiceReason}
                   onChange={(e) => setInvoiceReason(e.target.value)}
                 />
-                <label className="mt-2 flex items-center gap-2 text-xs text-slate-700">
+                <label className="mt-2 flex items-center gap-2 text-xs text-foreground">
                   <input
                     type="checkbox"
                     checked={invoiceConfirmed}
@@ -610,7 +610,7 @@ export default function FinanceCostaPage() {
                   />
                   I confirm this is an intentional operational write.
                 </label>
-                {invoiceErr ? <p className="mt-2 text-xs text-red-700">{invoiceErr}</p> : null}
+                {invoiceErr ? <p className="mt-2 text-xs text-danger">{invoiceErr}</p> : null}
                 <button
                   type="button"
                   disabled={issueInvoiceM.isPending || !invoiceConfirmed || !invoiceReason.trim()}

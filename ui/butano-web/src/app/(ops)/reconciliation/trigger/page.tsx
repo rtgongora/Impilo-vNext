@@ -65,7 +65,7 @@ export default function TriggerReconciliationPage() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6 space-y-4">
+      <form onSubmit={handleSubmit} className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6 space-y-4">
         <div>
           <label htmlFor="oldCpid" className="block text-sm font-medium text-neutral-700 mb-1">
             Old CPID (O-CPID)

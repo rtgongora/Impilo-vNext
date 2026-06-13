@@ -11,14 +11,14 @@ type FeatureMaturity =
   | "blocked";
 
 const STYLE_MAP: Record<FeatureMaturity, string> = {
-  live: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  connected: "border-blue-200 bg-blue-50 text-blue-700",
-  partial: "border-amber-200 bg-amber-50 text-amber-700",
-  fixture: "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700",
-  prototype: "border-purple-200 bg-purple-50 text-purple-700",
-  not_wired: "border-rose-200 bg-rose-50 text-rose-700",
-  requires_backend: "border-slate-200 bg-slate-50 text-slate-700",
-  blocked: "border-slate-300 bg-slate-100 text-slate-800",
+  live: "border-success/25 bg-success-soft text-primary-hover",
+  connected: "border-info/25 bg-info-soft text-primary-hover",
+  partial: "border-warning/35 bg-warning-soft text-warning-foreground",
+  fixture: "border-border bg-neutral-100 text-muted-foreground",
+  prototype: "border-warning/35 bg-warning-soft text-warning-foreground",
+  not_wired: "border-border bg-neutral-100 text-muted-foreground",
+  requires_backend: "border-warning/35 bg-warning-soft text-warning-foreground",
+  blocked: "border-danger/28 bg-danger-soft text-danger",
 };
 
 const LABEL_MAP: Record<FeatureMaturity, string> = {

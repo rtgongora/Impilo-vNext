@@ -74,20 +74,20 @@ export default function BookingRequestsPage() {
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <Link
             href="/scheduling"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" /> Scheduling
           </Link>
           <div className="flex gap-2">
             <Link
               href="/scheduling/today"
-              className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+              className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-background"
             >
               Today&apos;s appointments
             </Link>
             <Link
               href="/scheduling/bookings/config"
-              className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+              className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-background"
             >
               Booking config
             </Link>
@@ -101,7 +101,7 @@ export default function BookingRequestsPage() {
               type="button"
               onClick={() => setFilter(f)}
               className={`rounded-full px-3 py-1 text-xs font-medium ${
-                filter === f ? "bg-impilo-500 text-white" : "bg-gray-100 text-gray-600"
+                filter === f ? "bg-primary text-white" : "bg-neutral-100 text-muted-foreground"
               }`}
             >
               {f === "inbox" ? "Needs action" : "All bookings"}
@@ -110,41 +110,41 @@ export default function BookingRequestsPage() {
         </div>
 
         {!facility?.id ? (
-          <p className="text-sm text-gray-500">Select a facility to view booking requests.</p>
+          <p className="text-sm text-muted-foreground">Select a facility to view booking requests.</p>
         ) : isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : visible.length === 0 ? (
-          <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
-            <ClipboardList className="mx-auto mb-3 h-10 w-10 text-gray-300" />
-            <p className="text-sm text-gray-500">No booking requests in this view.</p>
+          <div className="rounded-lg border border-border bg-card p-12 text-center">
+            <ClipboardList className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">No booking requests in this view.</p>
           </div>
         ) : (
           <div className="space-y-3">
             {visible.map((booking) => {
               const statusStyle =
                 BOOKING_STATUS_STYLES[booking.bookingStatus.toUpperCase()] ??
-                "bg-gray-100 text-gray-600";
+                "bg-neutral-100 text-muted-foreground";
               return (
                 <div
                   key={booking.id}
-                  className="rounded-lg border border-gray-200 bg-white p-5"
+                  className="rounded-lg border border-border bg-card p-5"
                   data-testid={`booking-request-${booking.id}`}
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-sm font-semibold text-gray-900">
+                        <h3 className="text-sm font-semibold text-foreground">
                           {booking.serviceName ?? booking.bookingType}
                         </h3>
                         <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusStyle}`}>
                           {booking.bookingStatus.replace(/_/g, " ")}
                         </span>
                       </div>
-                      <p className="mt-1 text-xs text-gray-600">{formatWhen(booking.preferredStartTime)}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{formatWhen(booking.preferredStartTime)}</p>
                       {booking.reasonForBooking && (
-                        <p className="mt-1 text-xs text-gray-500">{booking.reasonForBooking}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">{booking.reasonForBooking}</p>
                       )}
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -157,7 +157,7 @@ export default function BookingRequestsPage() {
                           })
                         }
                         disabled={triage.isPending}
-                        className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                        className="rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-background"
                       >
                         Triage
                       </button>
@@ -170,7 +170,7 @@ export default function BookingRequestsPage() {
                           })
                         }
                         disabled={requestMvumo.isPending}
-                        className="inline-flex items-center gap-1 rounded-lg border border-purple-200 px-2.5 py-1.5 text-xs font-medium text-purple-700 hover:bg-purple-50"
+                        className="inline-flex items-center gap-1 rounded-lg border border-warning/35 px-2.5 py-1.5 text-xs font-medium text-warning-foreground hover:bg-warning-soft"
                       >
                         <Shield className="h-3 w-3" />
                         Mvumo
@@ -188,7 +188,7 @@ export default function BookingRequestsPage() {
                         type="button"
                         onClick={() => convert.mutate(booking.id)}
                         disabled={convert.isPending}
-                        className="rounded-lg bg-impilo-500 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-impilo-600"
+                        className="rounded-lg bg-primary px-2.5 py-1.5 text-xs font-medium text-white hover:bg-primary-hover"
                       >
                         Convert
                       </button>
@@ -196,7 +196,7 @@ export default function BookingRequestsPage() {
                         type="button"
                         onClick={() => reject.mutate({ id: booking.id })}
                         disabled={reject.isPending}
-                        className="inline-flex items-center gap-1 rounded-lg border border-rose-200 px-2.5 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50"
+                        className="inline-flex items-center gap-1 rounded-lg border border-danger/28 px-2.5 py-1.5 text-xs font-medium text-rose-600 hover:bg-danger-soft"
                       >
                         <XCircle className="h-3 w-3" />
                         Reject

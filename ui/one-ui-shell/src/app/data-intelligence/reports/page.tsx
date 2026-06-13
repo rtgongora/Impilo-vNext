@@ -35,7 +35,7 @@ export default function DataReportsHubPage() {
           <Link
             key={item.href}
             href={item.href}
-            className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-800 hover:border-impilo-200 hover:bg-impilo-50"
+            className="rounded-xl border border-border px-4 py-3 text-sm font-medium text-foreground hover:border-primary/25 hover:bg-primary-soft"
           >
             {item.label}
           </Link>

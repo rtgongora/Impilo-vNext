@@ -12,7 +12,7 @@ import { EmergencyProvisionalIntakePanel } from "@/components/registry/Emergency
 import { GuardianAssistedIntakePanel } from "@/components/registry/GuardianAssistedIntakePanel";
 
 const inputClass =
-  "w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500";
+  "w-full rounded-xl border border-border px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500";
 
 export default function NewClientRegistrationPage() {
   const router = useRouter();
@@ -82,7 +82,7 @@ export default function NewClientRegistrationPage() {
         <div className="mb-4">
           <Link
             href="/registry/clients"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 transition-colors hover:text-gray-700"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to client registry
@@ -97,10 +97,10 @@ export default function NewClientRegistrationPage() {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl border border-gray-200 bg-white p-6">
+        <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl border border-border bg-card p-6">
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                 Registration type
               </label>
               <select
@@ -118,7 +118,7 @@ export default function NewClientRegistrationPage() {
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                 Initiated channel
               </label>
               <select
@@ -138,23 +138,23 @@ export default function NewClientRegistrationPage() {
 
           <div className="grid gap-4 md:grid-cols-3">
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">First name</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">First name</label>
               <input value={form.firstName} onChange={(event) => setForm((current) => ({ ...current, firstName: event.target.value }))} className={inputClass} />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">Middle name</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Middle name</label>
               <input value={form.middleName} onChange={(event) => setForm((current) => ({ ...current, middleName: event.target.value }))} className={inputClass} />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">Last name</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Last name</label>
               <input value={form.lastName} onChange={(event) => setForm((current) => ({ ...current, lastName: event.target.value }))} className={inputClass} />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">Date of birth</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Date of birth</label>
               <input type="date" value={form.dateOfBirth} onChange={(event) => setForm((current) => ({ ...current, dateOfBirth: event.target.value }))} className={inputClass} />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">Sex / gender</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Sex / gender</label>
               <select value={form.sex} onChange={(event) => setForm((current) => ({ ...current, sex: event.target.value }))} className={inputClass}>
                 <option value="FEMALE">Female</option>
                 <option value="MALE">Male</option>
@@ -165,67 +165,67 @@ export default function NewClientRegistrationPage() {
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">Phone</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Phone</label>
               <input value={form.phone} onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))} className={inputClass} />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">Email</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Email</label>
               <input type="email" value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} className={inputClass} />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">National ID reference</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">National ID reference</label>
               <input value={form.nationalIdReference} onChange={(event) => setForm((current) => ({ ...current, nationalIdReference: event.target.value }))} className={inputClass} />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">Passport reference</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Passport reference</label>
               <input value={form.passportReference} onChange={(event) => setForm((current) => ({ ...current, passportReference: event.target.value }))} className={inputClass} />
             </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-3">
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">Facility ID</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Facility ID</label>
               <input value={form.linkedFacilityId} onChange={(event) => setForm((current) => ({ ...current, linkedFacilityId: event.target.value }))} className={inputClass} />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">Provider ID</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Provider ID</label>
               <input value={form.linkedProviderId} onChange={(event) => setForm((current) => ({ ...current, linkedProviderId: event.target.value }))} className={inputClass} />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">Service context</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Service context</label>
               <input value={form.linkedServiceContextId} onChange={(event) => setForm((current) => ({ ...current, linkedServiceContextId: event.target.value }))} className={inputClass} />
             </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-3">
             <div className="md:col-span-2">
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">Address line</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Address line</label>
               <input value={form.addressLine1} onChange={(event) => setForm((current) => ({ ...current, addressLine1: event.target.value }))} className={inputClass} />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">City</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">City</label>
               <input value={form.city} onChange={(event) => setForm((current) => ({ ...current, city: event.target.value }))} className={inputClass} />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">District</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">District</label>
               <input value={form.district} onChange={(event) => setForm((current) => ({ ...current, district: event.target.value }))} className={inputClass} />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">Province</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Province</label>
               <input value={form.province} onChange={(event) => setForm((current) => ({ ...current, province: event.target.value }))} className={inputClass} />
             </div>
             <div className="md:col-span-3">
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">Notes</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Notes</label>
               <textarea value={form.notes} onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))} rows={3} className={inputClass} />
             </div>
           </div>
 
-          <label className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+          <label className="flex items-center gap-3 rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground">
             <input
               type="checkbox"
               checked={form.issueProvisionalIdentifier}
               onChange={(event) => setForm((current) => ({ ...current, issueProvisionalIdentifier: event.target.checked }))}
-              className="h-4 w-4 rounded border-gray-300 text-slate-900 focus:ring-slate-500"
+              className="h-4 w-4 rounded border-border text-foreground focus:ring-slate-500"
             />
             Issue a provisional identifier immediately so the client can move through care workflows while identity stewardship continues.
           </label>
@@ -234,7 +234,7 @@ export default function NewClientRegistrationPage() {
             <button
               type="submit"
               disabled={mutation.isPending}
-              className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-700 disabled:opacity-70"
+              className="inline-flex items-center gap-2 rounded-xl bg-neutral-900 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-700 disabled:opacity-70"
             >
               {mutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               Create registration

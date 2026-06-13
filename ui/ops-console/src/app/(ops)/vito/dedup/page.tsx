@@ -129,7 +129,7 @@ export default function DedupCaseReviewPage() {
             onClick={() => { setActiveStatus(tab.key); setSelectedCase(null); }}
             className={`px-4 py-2 text-sm font-medium rounded-[8px] transition-colors ${
               activeStatus === tab.key
-                ? "bg-white text-neutral-900 shadow-subtle"
+                ? "bg-card text-neutral-900 shadow-subtle"
                 : "text-neutral-500 hover:text-neutral-900"
             }`}
           >
@@ -140,7 +140,7 @@ export default function DedupCaseReviewPage() {
 
       {/* Detail view */}
       {selectedCase && (
-        <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6 mb-4">
+        <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6 mb-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-base font-semibold text-neutral-900">
               Case #{selectedCase.id} — Score Breakdown
@@ -213,7 +213,7 @@ export default function DedupCaseReviewPage() {
       )}
 
       {/* Cases table */}
-      <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 overflow-hidden">
+      <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-neutral-100 bg-neutral-50">

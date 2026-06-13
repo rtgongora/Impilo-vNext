@@ -59,19 +59,19 @@ export default function SiteRegistryProfilePage({ params }: { params: { siteId: 
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <Link href="/public-health/site-registry" className="inline-flex items-center gap-2 text-sm text-impilo-600 hover:underline">
+          <Link href="/public-health/site-registry" className="inline-flex items-center gap-2 text-sm text-primary hover:underline">
             <ArrowLeft className="h-4 w-4" />
             Site registry
           </Link>
-          <div className="mt-1 text-sm text-gray-600">
+          <div className="mt-1 text-sm text-muted-foreground">
             <span className="font-mono text-xs">{siteId}</span>
-            {profile?.site.siteCode ? <span className="ml-2 text-xs text-gray-500">· Code: {profile.site.siteCode}</span> : null}
+            {profile?.site.siteCode ? <span className="ml-2 text-xs text-muted-foreground">· Code: {profile.site.siteCode}</span> : null}
           </div>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => profileQ.refetch()}
-            className="inline-flex items-center gap-2 rounded-md border bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            className="inline-flex items-center gap-2 rounded-md border bg-card px-3 py-2 text-sm text-foreground hover:bg-background"
           >
             <RefreshCw className="h-4 w-4" />
             Refresh
@@ -80,41 +80,41 @@ export default function SiteRegistryProfilePage({ params }: { params: { siteId: 
       </div>
 
       {profileQ.isLoading ? (
-        <div className="rounded-lg border bg-white p-6 text-sm text-gray-600">
+        <div className="rounded-lg border bg-card p-6 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <Loader2 className="h-4 w-4 animate-spin" />
             Loading site profile…
           </div>
         </div>
       ) : profileQ.isError || !profile ? (
-        <div className="rounded-lg border bg-white p-6 text-sm text-red-600">Failed to load site profile.</div>
+        <div className="rounded-lg border bg-card p-6 text-sm text-red-600">Failed to load site profile.</div>
       ) : (
         <>
           <div className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-lg border bg-white p-4">
-              <div className="text-xs font-medium uppercase text-gray-500">Regulatory status</div>
-              <div className="mt-1 text-sm font-semibold text-gray-900">{profile.site.regulatoryStatus || "—"}</div>
-              <div className="mt-2 text-xs text-gray-500">Lifecycle: {profile.site.lifecycleStatus || "—"}</div>
-              <div className="mt-1 text-xs text-gray-500">Active: {profile.site.activeFlag ? "Yes" : "No"}</div>
+            <div className="rounded-lg border bg-card p-4">
+              <div className="text-xs font-medium uppercase text-muted-foreground">Regulatory status</div>
+              <div className="mt-1 text-sm font-semibold text-foreground">{profile.site.regulatoryStatus || "—"}</div>
+              <div className="mt-2 text-xs text-muted-foreground">Lifecycle: {profile.site.lifecycleStatus || "—"}</div>
+              <div className="mt-1 text-xs text-muted-foreground">Active: {profile.site.activeFlag ? "Yes" : "No"}</div>
             </div>
-            <div className="rounded-lg border bg-white p-4">
-              <div className="text-xs font-medium uppercase text-gray-500">Category</div>
-              <div className="mt-1 text-sm font-semibold text-gray-900">{profile.site.siteCategory || "—"}</div>
-              <div className="mt-2 text-xs text-gray-500">Risk: {profile.site.riskClass || "—"}</div>
+            <div className="rounded-lg border bg-card p-4">
+              <div className="text-xs font-medium uppercase text-muted-foreground">Category</div>
+              <div className="mt-1 text-sm font-semibold text-foreground">{profile.site.siteCategory || "—"}</div>
+              <div className="mt-2 text-xs text-muted-foreground">Risk: {profile.site.riskClass || "—"}</div>
             </div>
-            <div className="rounded-lg border bg-white p-4">
-              <div className="text-xs font-medium uppercase text-gray-500">Jurisdiction</div>
-              <div className="mt-1 text-sm font-semibold text-gray-900">{profile.site.province || "—"}</div>
-              <div className="mt-2 text-xs text-gray-500">
+            <div className="rounded-lg border bg-card p-4">
+              <div className="text-xs font-medium uppercase text-muted-foreground">Jurisdiction</div>
+              <div className="mt-1 text-sm font-semibold text-foreground">{profile.site.province || "—"}</div>
+              <div className="mt-2 text-xs text-muted-foreground">
                 {profile.site.district || "—"}
                 {profile.site.ward ? ` · ${profile.site.ward}` : ""}
               </div>
             </div>
           </div>
 
-          <div className="rounded-lg border bg-white p-4">
-            <div className="text-sm font-medium text-gray-900">Site coordinates</div>
-            <p className="mt-1 text-xs text-gray-500">
+          <div className="rounded-lg border bg-card p-4">
+            <div className="text-sm font-medium text-foreground">Site coordinates</div>
+            <p className="mt-1 text-xs text-muted-foreground">
               Capture or update the regulated site location for public-health maps and field routing.
             </p>
             <div className="mt-3">
@@ -142,7 +142,7 @@ export default function SiteRegistryProfilePage({ params }: { params: { siteId: 
                   geocodeQuality: "MANUAL",
                 });
               }}
-              className="mt-3 inline-flex items-center gap-2 rounded-md bg-impilo-600 px-3 py-2 text-sm font-medium text-white hover:bg-impilo-700 disabled:opacity-50"
+              className="mt-3 inline-flex items-center gap-2 rounded-md bg-primary-hover px-3 py-2 text-sm font-medium text-white hover:bg-impilo-700 disabled:opacity-50"
             >
               {updateLocation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               Save location
@@ -150,13 +150,13 @@ export default function SiteRegistryProfilePage({ params }: { params: { siteId: 
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">
-            <div className="rounded-lg border bg-white">
+            <div className="rounded-lg border bg-card">
               <div className="flex items-center justify-between border-b px-4 py-3">
-                <div className="text-sm font-medium text-gray-900">Schedule inspection</div>
+                <div className="text-sm font-medium text-foreground">Schedule inspection</div>
               </div>
               <div className="space-y-3 p-4">
                 <div className="grid grid-cols-2 gap-3">
-                  <label className="text-xs text-gray-600">
+                  <label className="text-xs text-muted-foreground">
                     Type
                     <select
                       value={inspectionType}
@@ -170,7 +170,7 @@ export default function SiteRegistryProfilePage({ params }: { params: { siteId: 
                       ))}
                     </select>
                   </label>
-                  <label className="text-xs text-gray-600">
+                  <label className="text-xs text-muted-foreground">
                     Scheduled date
                     <input
                       type="date"
@@ -180,7 +180,7 @@ export default function SiteRegistryProfilePage({ params }: { params: { siteId: 
                     />
                   </label>
                 </div>
-                <label className="text-xs text-gray-600">
+                <label className="text-xs text-muted-foreground">
                   Checklist template code (optional)
                   <input
                     value={templateCode}
@@ -200,7 +200,7 @@ export default function SiteRegistryProfilePage({ params }: { params: { siteId: 
                       inspectorRefs: [],
                     })
                   }
-                  className="inline-flex items-center gap-2 rounded-md bg-impilo-600 px-3 py-2 text-sm font-medium text-white hover:bg-impilo-700 disabled:opacity-50"
+                  className="inline-flex items-center gap-2 rounded-md bg-primary-hover px-3 py-2 text-sm font-medium text-white hover:bg-impilo-700 disabled:opacity-50"
                 >
                   <Plus className="h-4 w-4" />
                   Schedule
@@ -211,9 +211,9 @@ export default function SiteRegistryProfilePage({ params }: { params: { siteId: 
               </div>
             </div>
 
-            <div className="rounded-lg border bg-white">
+            <div className="rounded-lg border bg-card">
               <div className="flex items-center justify-between border-b px-4 py-3">
-                <div className="text-sm font-medium text-gray-900">Licensing</div>
+                <div className="text-sm font-medium text-foreground">Licensing</div>
               </div>
               <div className="space-y-3 p-4">
                 <button
@@ -226,29 +226,29 @@ export default function SiteRegistryProfilePage({ params }: { params: { siteId: 
                       expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().slice(0, 10),
                     })
                   }
-                  className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-black disabled:opacity-50"
+                  className="inline-flex items-center gap-2 rounded-md bg-neutral-900 px-3 py-2 text-sm font-medium text-white hover:bg-black disabled:opacity-50"
                 >
                   Issue licence (1 year)
                 </button>
                 <button
                   disabled={createRenewal.isPending}
                   onClick={() => createRenewal.mutate({ siteId, applicantName: "Applicant" })}
-                  className="inline-flex items-center gap-2 rounded-md border bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                  className="inline-flex items-center gap-2 rounded-md border bg-card px-3 py-2 text-sm text-foreground hover:bg-background disabled:opacity-50"
                 >
                   Create renewal application
                 </button>
                 {issueLicence.isError ? <div className="text-xs text-red-600">Failed to issue licence.</div> : null}
                 {createRenewal.isError ? <div className="text-xs text-red-600">Failed to create renewal.</div> : null}
-                <div className="mt-2 text-xs text-gray-500">
+                <div className="mt-2 text-xs text-muted-foreground">
                   Licences: {licences.length} · Inspections: {inspections.length} · Actions: {actions.length}
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="rounded-lg border bg-white">
+          <div className="rounded-lg border bg-card">
             <div className="border-b px-4 py-3">
-              <div className="text-sm font-medium text-gray-900">Compliance actions</div>
+              <div className="text-sm font-medium text-foreground">Compliance actions</div>
             </div>
             <div className="divide-y">
               {actions.map((a) => {
@@ -256,8 +256,8 @@ export default function SiteRegistryProfilePage({ params }: { params: { siteId: 
                 return (
                   <div key={actionId} className="flex flex-col gap-2 px-4 py-3 md:flex-row md:items-center md:justify-between">
                     <div>
-                      <div className="text-sm font-medium text-gray-900">{String(a.actionType || "ACTION")}</div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-sm font-medium text-foreground">{String(a.actionType || "ACTION")}</div>
+                      <div className="text-xs text-muted-foreground">
                         Status: {String(a.status || "—")} · Due: {String(a.dueDate || "—")}
                       </div>
                     </div>
@@ -265,7 +265,7 @@ export default function SiteRegistryProfilePage({ params }: { params: { siteId: 
                       <button
                         disabled={updateAction.isPending || !actionId}
                         onClick={() => updateAction.mutate({ actionId, body: { status: "COMPLETED", completionNotes: "Completed" } })}
-                        className="rounded-md border bg-white px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                        className="rounded-md border bg-card px-3 py-2 text-xs text-foreground hover:bg-background disabled:opacity-50"
                       >
                         Mark completed
                       </button>
@@ -273,21 +273,21 @@ export default function SiteRegistryProfilePage({ params }: { params: { siteId: 
                   </div>
                 );
               })}
-              {actions.length === 0 ? <div className="px-4 py-6 text-sm text-gray-500">No compliance actions.</div> : null}
+              {actions.length === 0 ? <div className="px-4 py-6 text-sm text-muted-foreground">No compliance actions.</div> : null}
             </div>
           </div>
 
-          <div className="rounded-lg border bg-white">
+          <div className="rounded-lg border bg-card">
             <div className="flex items-center justify-between border-b px-4 py-3">
-              <div className="text-sm font-medium text-gray-900">Documents</div>
+              <div className="text-sm font-medium text-foreground">Documents</div>
             </div>
             <div className="space-y-3 p-4">
               <div className="grid gap-3 md:grid-cols-3">
-                <label className="text-xs text-gray-600">
+                <label className="text-xs text-muted-foreground">
                   Type
                   <input value={docType} onChange={(e) => setDocType(e.target.value)} className="mt-1 w-full rounded-md border px-2 py-2 text-sm" />
                 </label>
-                <label className="text-xs text-gray-600 md:col-span-2">
+                <label className="text-xs text-muted-foreground md:col-span-2">
                   Notes
                   <input value={docNotes} onChange={(e) => setDocNotes(e.target.value)} className="mt-1 w-full rounded-md border px-2 py-2 text-sm" />
                 </label>
@@ -296,7 +296,7 @@ export default function SiteRegistryProfilePage({ params }: { params: { siteId: 
               <button
                 disabled={!docFile || uploadDoc.isPending}
                 onClick={() => docFile && uploadDoc.mutate({ file: docFile, siteId, documentType: docType, notes: docNotes })}
-                className="inline-flex items-center gap-2 rounded-md bg-impilo-600 px-3 py-2 text-sm font-medium text-white hover:bg-impilo-700 disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-md bg-primary-hover px-3 py-2 text-sm font-medium text-white hover:bg-impilo-700 disabled:opacity-50"
               >
                 Upload document
               </button>
@@ -310,15 +310,15 @@ export default function SiteRegistryProfilePage({ params }: { params: { siteId: 
                 return (
                   <div key={documentId} className="flex flex-col gap-2 px-4 py-3 md:flex-row md:items-center md:justify-between">
                     <div>
-                      <div className="text-sm font-medium text-gray-900">{String(row.documentType ?? "DOC")}</div>
-                      <div className="text-xs text-gray-500">State: {state}</div>
-                      <div className="text-[11px] text-gray-400 font-mono">{String(row.fileReference ?? "")}</div>
+                      <div className="text-sm font-medium text-foreground">{String(row.documentType ?? "DOC")}</div>
+                      <div className="text-xs text-muted-foreground">State: {state}</div>
+                      <div className="text-[11px] text-muted-foreground font-mono">{String(row.fileReference ?? "")}</div>
                     </div>
                     <div className="flex items-center gap-2">
                       <button
                         disabled={verifyDoc.isPending || !documentId}
                         onClick={() => verifyDoc.mutate({ documentId, verificationState: "VERIFIED", notes: "Verified" })}
-                        className="rounded-md border bg-white px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                        className="rounded-md border bg-card px-3 py-2 text-xs text-foreground hover:bg-background disabled:opacity-50"
                       >
                         Mark verified
                       </button>
@@ -326,13 +326,13 @@ export default function SiteRegistryProfilePage({ params }: { params: { siteId: 
                   </div>
                 );
               })}
-              {documents.length === 0 ? <div className="px-4 py-6 text-sm text-gray-500">No documents.</div> : null}
+              {documents.length === 0 ? <div className="px-4 py-6 text-sm text-muted-foreground">No documents.</div> : null}
             </div>
           </div>
 
-          <div className="rounded-lg border bg-white">
+          <div className="rounded-lg border bg-card">
             <div className="flex items-center justify-between border-b px-4 py-3">
-              <div className="text-sm font-medium text-gray-900">Assignments</div>
+              <div className="text-sm font-medium text-foreground">Assignments</div>
               <button
                 disabled={createAssignment.isPending}
                 onClick={() =>
@@ -344,7 +344,7 @@ export default function SiteRegistryProfilePage({ params }: { params: { siteId: 
                     notes: "Auto-assigned from UI",
                   })
                 }
-                className="rounded-md border bg-white px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                className="rounded-md border bg-card px-3 py-2 text-xs text-foreground hover:bg-background disabled:opacity-50"
               >
                 Create assignment
               </button>
@@ -354,30 +354,30 @@ export default function SiteRegistryProfilePage({ params }: { params: { siteId: 
                 const row = a as Record<string, unknown>;
                 return (
                 <div key={String(row.assignmentId ?? "")} className="px-4 py-3">
-                  <div className="text-sm font-medium text-gray-900">{String(row.assignmentType ?? "ASSIGNMENT")}</div>
-                  <div className="text-xs text-gray-500">
+                  <div className="text-sm font-medium text-foreground">{String(row.assignmentType ?? "ASSIGNMENT")}</div>
+                  <div className="text-xs text-muted-foreground">
                     Status: {String(row.status ?? "—")} · Role: {String(row.assignedRole ?? "—")} · Assignee:{" "}
                     {String(row.assignedToRef ?? "—")}
                   </div>
                 </div>
               );
               })}
-              {assignments.length === 0 ? <div className="px-4 py-6 text-sm text-gray-500">No assignments.</div> : null}
+              {assignments.length === 0 ? <div className="px-4 py-6 text-sm text-muted-foreground">No assignments.</div> : null}
             </div>
           </div>
 
-          <div className="rounded-lg border bg-white">
+          <div className="rounded-lg border bg-card">
             <div className="flex items-center justify-between border-b px-4 py-3">
-              <div className="text-sm font-medium text-gray-900">Enforcement</div>
+              <div className="text-sm font-medium text-foreground">Enforcement</div>
               <button
                 disabled={openCase.isPending}
                 onClick={() => openCase.mutate({ siteId, triggerType: "COMPLAINT", recommendation: "Investigate", authorityRoute: "EHO" })}
-                className="rounded-md border bg-white px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                className="rounded-md border bg-card px-3 py-2 text-xs text-foreground hover:bg-background disabled:opacity-50"
               >
                 Open enforcement case
               </button>
             </div>
-            <div className="px-4 py-6 text-sm text-gray-500">
+            <div className="px-4 py-6 text-sm text-muted-foreground">
               Foundation support only: cases can be opened and linked refs can be added later.
             </div>
           </div>

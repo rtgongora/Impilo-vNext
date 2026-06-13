@@ -14,7 +14,7 @@ const ORDER_TYPES: OrderType[] = ["LAB", "IMAGING", "PHARMACY", "REFERRAL", "PRO
 const ADAPTER_MODE_LABEL: Record<AdapterMode, { label: string; badge: string; desc: string }> = {
   INTERNAL: {
     label: "Internal",
-    badge: "badge bg-emerald-100 text-emerald-800",
+    badge: "badge bg-emerald-100 text-primary-hover",
     desc: "All orders fulfilled within Impilo",
   },
   ADAPTER: {
@@ -170,17 +170,17 @@ export default function CapabilitiesPage() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-red-800">
           {error}
         </div>
       )}
 
       {successMessage && (
-        <div className="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-sm text-emerald-800">
+        <div className="mb-4 p-3 rounded-lg bg-success-soft border border-success/25 text-sm text-primary-hover">
           {successMessage}
           <button
             onClick={() => setSuccessMessage(null)}
-            className="ml-2 text-emerald-600 hover:text-emerald-800 font-medium"
+            className="ml-2 text-primary hover:text-primary-hover font-medium"
           >
             Dismiss
           </button>
@@ -241,8 +241,8 @@ export default function CapabilitiesPage() {
                     onClick={() => toggleOrderType(type)}
                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
                       selected
-                        ? "bg-indigo-50 text-indigo-700 border-indigo-300"
-                        : "bg-white text-neutral-600 border-neutral-300 hover:bg-neutral-50"
+                        ? "bg-info-soft text-primary-hover border-indigo-300"
+                        : "bg-card text-neutral-600 border-neutral-300 hover:bg-neutral-50"
                     }`}
                   >
                     {type.charAt(0) + type.slice(1).toLowerCase()}
@@ -323,7 +323,7 @@ export default function CapabilitiesPage() {
                     {ADAPTER_MODE_LABEL[cap.adapterMode].label}
                   </span>
                   {cap.active ? (
-                    <span className="badge bg-emerald-100 text-emerald-800">Active</span>
+                    <span className="badge bg-emerald-100 text-primary-hover">Active</span>
                   ) : (
                     <span className="badge bg-neutral-100 text-neutral-500">Inactive</span>
                   )}
@@ -331,7 +331,7 @@ export default function CapabilitiesPage() {
 
                 <div className="flex flex-wrap gap-1.5 mt-3">
                   {cap.supportedOrderTypes.map((type) => (
-                    <span key={type} className="badge bg-indigo-100 text-indigo-800">
+                    <span key={type} className="badge bg-indigo-100 text-primary-hover">
                       {type}
                     </span>
                   ))}
@@ -359,7 +359,7 @@ export default function CapabilitiesPage() {
 
               <button
                 onClick={() => handleEdit(cap)}
-                className="text-xs text-indigo-600 hover:text-indigo-800 font-medium ml-4"
+                className="text-xs text-indigo-600 hover:text-primary-hover font-medium ml-4"
               >
                 Edit
               </button>

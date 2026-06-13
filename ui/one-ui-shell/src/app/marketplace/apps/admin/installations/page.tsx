@@ -36,11 +36,11 @@ export default function InstallationsAdminPage() {
         subtitle="Manage activation lifecycle, facility coverage, and suspension of Health OS marketplace capabilities."
       >
         <div className="space-y-5">
-          <Link href="/marketplace/apps" className="inline-flex items-center gap-1 text-sm text-impilo-700 hover:underline">
+          <Link href="/marketplace/apps" className="inline-flex items-center gap-1 text-sm text-primary-hover hover:underline">
             <ChevronLeft className="h-4 w-4" /> Back to marketplace
           </Link>
 
-          <section className="flex flex-wrap items-center gap-2 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+          <section className="flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-card p-3 shadow-sm">
             {LIFECYCLE_FILTERS.map((s) => (
               <button
                 key={s}
@@ -48,8 +48,8 @@ export default function InstallationsAdminPage() {
                 onClick={() => setLifecycle(s)}
                 className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
                   lifecycle === s
-                    ? "bg-impilo-600 text-white"
-                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                    ? "bg-primary-hover text-white"
+                    : "bg-neutral-100 text-foreground hover:bg-primary-soft"
                 }`}
               >
                 {s}
@@ -57,9 +57,9 @@ export default function InstallationsAdminPage() {
             ))}
           </section>
 
-          <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
             <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <thead className="bg-background text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 <tr>
                   <th className="px-4 py-2">Installation</th>
                   <th className="px-4 py-2">Capability</th>
@@ -72,30 +72,30 @@ export default function InstallationsAdminPage() {
               <tbody className="divide-y divide-slate-100">
                 {installationsQuery.isLoading ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-6 text-center text-slate-500">
+                    <td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">
                       <Loader2 className="mx-auto h-4 w-4 animate-spin" />
                     </td>
                   </tr>
                 ) : list.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-6 text-center text-slate-500">
+                    <td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">
                       No installations match the current filter.
                     </td>
                   </tr>
                 ) : (
                   list.map((inst) => (
                     <tr key={inst.id}>
-                      <td className="px-4 py-3 font-mono text-xs text-slate-600">
+                      <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
                         <div>{inst.id.slice(0, 8)}</div>
-                        <div className="text-[10px] text-slate-400">{inst.tenantId}</div>
+                        <div className="text-[10px] text-muted-foreground">{inst.tenantId}</div>
                       </td>
-                      <td className="px-4 py-3 text-xs text-slate-700">
+                      <td className="px-4 py-3 text-xs text-foreground">
                         <div>{inst.itemId}</div>
-                        <div className="text-[10px] text-slate-500">v{inst.itemVersion}</div>
+                        <div className="text-[10px] text-muted-foreground">v{inst.itemVersion}</div>
                       </td>
-                      <td className="px-4 py-3 text-xs text-slate-700">
+                      <td className="px-4 py-3 text-xs text-foreground">
                         <div>{inst.facilityIds.length === 0 ? "All facilities" : `${inst.facilityIds.length} facilities`}</div>
-                        <div className="text-[10px] text-slate-500">
+                        <div className="text-[10px] text-muted-foreground">
                           {inst.rolesEnabled.length > 0 ? inst.rolesEnabled.join(", ") : "All roles"}
                         </div>
                       </td>
@@ -124,7 +124,7 @@ export default function InstallationsAdminPage() {
                                 setReasonById((m) => ({ ...m, [inst.id]: e.target.value }))
                               }
                               placeholder="Reason"
-                              className="w-32 rounded-lg border border-slate-200 px-2 py-1 text-xs"
+                              className="w-32 rounded-lg border border-border px-2 py-1 text-xs"
                             />
                             <button
                               type="button"
@@ -153,13 +153,13 @@ export default function InstallationsAdminPage() {
 
 function LifecycleBadge({ value }: { value: Installation["lifecycle"] }) {
   const tone: Record<string, string> = {
-    INSTALLED: "bg-blue-50 text-blue-700",
-    ACTIVE: "bg-emerald-50 text-emerald-700",
-    SUSPENDED: "bg-amber-50 text-amber-700",
-    DEPRECATED: "bg-slate-100 text-slate-500",
+    INSTALLED: "bg-info-soft text-primary-hover",
+    ACTIVE: "bg-success-soft text-primary-hover",
+    SUSPENDED: "bg-warning-soft text-warning-foreground",
+    DEPRECATED: "bg-neutral-100 text-muted-foreground",
   };
   return (
-    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tone[value] ?? "bg-slate-100 text-slate-700"}`}>
+    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tone[value] ?? "bg-neutral-100 text-foreground"}`}>
       {value}
     </span>
   );
@@ -167,12 +167,12 @@ function LifecycleBadge({ value }: { value: Installation["lifecycle"] }) {
 
 function HealthBadge({ value }: { value: string }) {
   const tone: Record<string, string> = {
-    HEALTHY: "bg-emerald-50 text-emerald-700",
-    DEGRADED: "bg-amber-50 text-amber-700",
-    UNAVAILABLE: "bg-rose-50 text-rose-700",
+    HEALTHY: "bg-success-soft text-primary-hover",
+    DEGRADED: "bg-warning-soft text-warning-foreground",
+    UNAVAILABLE: "bg-danger-soft text-danger",
   };
   return (
-    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tone[value] ?? "bg-slate-100 text-slate-700"}`}>
+    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tone[value] ?? "bg-neutral-100 text-foreground"}`}>
       {value}
     </span>
   );

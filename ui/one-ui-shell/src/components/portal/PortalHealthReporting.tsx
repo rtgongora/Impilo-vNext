@@ -94,7 +94,7 @@ const REPORT_CATEGORIES: ReportCategory[] = [
     icon: Megaphone,
     description:
       "Issues with health facilities, providers, or public health services",
-    color: "text-impilo-500",
+    color: "text-primary",
   },
 ];
 
@@ -119,13 +119,13 @@ export function PortalHealthReporting() {
   return (
     <div className="space-y-4">
       {/* Report a Concern Card */}
-      <div className="border rounded-lg bg-white">
+      <div className="border rounded-lg bg-card">
         <div className="px-5 py-4 border-b">
           <h3 className="text-base font-semibold flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-amber-500" />
             Report a Health Concern
           </h3>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Help keep your community safe. Reports are reviewed by local public
             health officers and you&apos;ll be notified of progress.
           </p>
@@ -143,15 +143,15 @@ export function PortalHealthReporting() {
                       setSelectedCategory(cat.value);
                       setShowForm(true);
                     }}
-                    className="p-4 border rounded-lg text-left hover:border-impilo-400 hover:bg-impilo-50/50 transition-all"
+                    className="p-4 border rounded-lg text-left hover:border-impilo-400 hover:bg-primary-soft/50 transition-all"
                   >
                     <div className="flex items-center gap-3 mb-2">
-                      <div className="p-2 rounded-lg bg-gray-100">
+                      <div className="p-2 rounded-lg bg-neutral-100">
                         <Icon className={`h-5 w-5 ${cat.color}`} />
                       </div>
                       <span className="font-semibold text-sm">{cat.label}</span>
                     </div>
-                    <p className="text-xs text-gray-500">{cat.description}</p>
+                    <p className="text-xs text-muted-foreground">{cat.description}</p>
                   </button>
                 );
               })}
@@ -163,7 +163,7 @@ export function PortalHealthReporting() {
               <h3 className="text-lg font-bold">
                 Report Submitted Successfully
               </h3>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted-foreground">
                 Your report has been received and assigned to a public health
                 officer. You&apos;ll receive updates on progress.
               </p>
@@ -172,11 +172,11 @@ export function PortalHealthReporting() {
             /* Report form */
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs border rounded px-2 py-0.5 capitalize text-gray-600 border-gray-200">
+                <span className="text-xs border rounded px-2 py-0.5 capitalize text-muted-foreground border-border">
                   {selectedCategory?.replace(/_/g, " ")}
                 </span>
                 <button
-                  className="text-xs text-impilo-500 hover:underline"
+                  className="text-xs text-primary hover:underline"
                   onClick={() => {
                     setShowForm(false);
                     setSelectedCategory(null);
@@ -188,50 +188,50 @@ export function PortalHealthReporting() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-foreground mb-1">
                     What are you reporting?
                   </label>
                   <input
                     type="text"
                     placeholder="Brief title, e.g. 'Dirty water from borehole'"
-                    className="w-full h-9 px-3 text-sm border rounded-md border-gray-300 focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                    className="w-full h-9 px-3 text-sm border rounded-md border-border focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-foreground mb-1">
                     Location
                   </label>
                   <div className="flex gap-2">
                     <input
                       type="text"
                       placeholder="Area, address, or landmark"
-                      className="flex-1 h-9 px-3 text-sm border rounded-md border-gray-300 focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                      className="flex-1 h-9 px-3 text-sm border rounded-md border-border focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                     />
-                    <button className="h-9 w-9 flex items-center justify-center border rounded-md border-gray-300 hover:bg-gray-50">
-                      <MapPin className="h-4 w-4 text-gray-500" />
+                    <button className="h-9 w-9 flex items-center justify-center border rounded-md border-border hover:bg-background">
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
                     </button>
                   </div>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-foreground mb-1">
                   Describe the situation
                 </label>
                 <textarea
                   placeholder="Provide as much detail as possible: What did you see? When did it start? How many people are affected?"
-                  className="w-full min-h-[100px] px-3 py-2 text-sm border rounded-md border-gray-300 focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                  className="w-full min-h-[100px] px-3 py-2 text-sm border rounded-md border-border focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                 />
               </div>
 
               {/* Disease-specific fields */}
               {selectedCategory === "disease" && (
-                <div className="grid grid-cols-2 gap-3 p-3 border rounded-lg bg-red-50/50">
+                <div className="grid grid-cols-2 gap-3 p-3 border rounded-lg bg-danger-soft/50">
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                    <label className="block text-xs font-medium text-foreground mb-1">
                       How many people affected?
                     </label>
-                    <select className="w-full h-8 px-2 text-xs border rounded-md border-gray-300 bg-white">
+                    <select className="w-full h-8 px-2 text-xs border rounded-md border-border bg-card">
                       <option value="">Select</option>
                       <option value="1">Just me / 1 person</option>
                       <option value="2-5">2-5 people</option>
@@ -241,10 +241,10 @@ export function PortalHealthReporting() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                    <label className="block text-xs font-medium text-foreground mb-1">
                       Main symptoms observed
                     </label>
-                    <select className="w-full h-8 px-2 text-xs border rounded-md border-gray-300 bg-white">
+                    <select className="w-full h-8 px-2 text-xs border rounded-md border-border bg-card">
                       <option value="">Select</option>
                       <option value="diarrhoea">Diarrhoea / Vomiting</option>
                       <option value="fever">Fever / Body Aches</option>
@@ -259,7 +259,7 @@ export function PortalHealthReporting() {
               )}
 
               <div>
-                <label className="block text-xs text-gray-500 mb-1">
+                <label className="block text-xs text-muted-foreground mb-1">
                   You can also attach photos (optional)
                 </label>
                 <input
@@ -270,7 +270,7 @@ export function PortalHealthReporting() {
                 />
               </div>
 
-              <div className="flex items-center gap-2 p-3 border rounded-lg bg-gray-50 text-xs text-gray-500">
+              <div className="flex items-center gap-2 p-3 border rounded-lg bg-background text-xs text-muted-foreground">
                 <CheckCircle className="h-4 w-4 text-green-500 shrink-0" />
                 Your identity is protected. Only authorized public health
                 officers can view your contact details.
@@ -278,13 +278,13 @@ export function PortalHealthReporting() {
 
               <div className="flex gap-2">
                 <button
-                  className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-white bg-impilo-500 rounded-md hover:bg-impilo-600 transition-colors"
+                  className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-hover transition-colors"
                   onClick={handleSubmit}
                 >
                   <Send className="h-4 w-4" /> Submit Report
                 </button>
                 <button
-                  className="px-4 py-2 text-sm font-medium text-gray-700 border rounded-md hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-foreground border rounded-md hover:bg-background transition-colors"
                   onClick={() => {
                     setShowForm(false);
                     setSelectedCategory(null);
@@ -299,10 +299,10 @@ export function PortalHealthReporting() {
       </div>
 
       {/* My Reports */}
-      <div className="border rounded-lg bg-white">
+      <div className="border rounded-lg bg-card">
         <div className="px-5 py-3 border-b">
           <h4 className="text-sm font-semibold">My Reports</h4>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-muted-foreground">
             Track the status of your submitted health concerns
           </p>
         </div>
@@ -315,11 +315,11 @@ export function PortalHealthReporting() {
               <div>
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-sm">{r.type}</span>
-                  <span className="text-xs border rounded px-1.5 py-0.5 capitalize text-gray-500 border-gray-200">
+                  <span className="text-xs border rounded px-1.5 py-0.5 capitalize text-muted-foreground border-border">
                     {r.category}
                   </span>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
                   <MapPin className="h-3 w-3" /> {r.location}
                   <span>&bull;</span>
                   <span>Submitted {r.submitted}</span>
@@ -331,8 +331,8 @@ export function PortalHealthReporting() {
                     r.status === "resolved"
                       ? "bg-green-50 text-green-700"
                       : r.status === "responded"
-                        ? "bg-impilo-50 text-impilo-600"
-                        : "bg-amber-50 text-amber-700"
+                        ? "bg-primary-soft text-primary"
+                        : "bg-warning-soft text-warning-foreground"
                   }`}
                 >
                   {r.status === "investigating" && (
@@ -343,7 +343,7 @@ export function PortalHealthReporting() {
                   )}
                   {r.status}
                 </span>
-                <button className="text-xs text-impilo-500 hover:underline">
+                <button className="text-xs text-primary hover:underline">
                   Details
                 </button>
               </div>

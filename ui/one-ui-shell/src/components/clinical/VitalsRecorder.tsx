@@ -203,8 +203,8 @@ export function VitalsRecorder({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       {/* Record New Vitals */}
-      <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
-        <div className="px-4 py-3 border-b border-gray-200">
+      <div className="rounded-lg border border-border bg-card shadow-sm">
+        <div className="px-4 py-3 border-b border-border">
           <h3 className="text-lg font-semibold flex items-center gap-2">
             <Activity className="h-5 w-5" />
             Record Vital Signs
@@ -217,7 +217,7 @@ export function VitalsRecorder({
               <div>
                 <label
                   htmlFor="temperature"
-                  className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1"
+                  className="block text-sm font-medium text-foreground mb-1 flex items-center gap-1"
                 >
                   <Thermometer className="h-3 w-3" />
                   Temperature (&deg;C)
@@ -229,7 +229,7 @@ export function VitalsRecorder({
                   value={formData.temperature}
                   onChange={(e) => handleChange("temperature", e.target.value)}
                   placeholder="36.5"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                  className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                 />
               </div>
 
@@ -237,7 +237,7 @@ export function VitalsRecorder({
               <div>
                 <label
                   htmlFor="pulse_rate"
-                  className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1"
+                  className="block text-sm font-medium text-foreground mb-1 flex items-center gap-1"
                 >
                   <Heart className="h-3 w-3" />
                   Pulse Rate (bpm)
@@ -248,7 +248,7 @@ export function VitalsRecorder({
                   value={formData.pulse_rate}
                   onChange={(e) => handleChange("pulse_rate", e.target.value)}
                   placeholder="72"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                  className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                 />
               </div>
 
@@ -256,7 +256,7 @@ export function VitalsRecorder({
               <div>
                 <label
                   htmlFor="respiratory_rate"
-                  className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1"
+                  className="block text-sm font-medium text-foreground mb-1 flex items-center gap-1"
                 >
                   <Wind className="h-3 w-3" />
                   Respiratory Rate
@@ -267,7 +267,7 @@ export function VitalsRecorder({
                   value={formData.respiratory_rate}
                   onChange={(e) => handleChange("respiratory_rate", e.target.value)}
                   placeholder="16"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                  className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                 />
               </div>
 
@@ -275,7 +275,7 @@ export function VitalsRecorder({
               <div>
                 <label
                   htmlFor="oxygen_saturation"
-                  className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1"
+                  className="block text-sm font-medium text-foreground mb-1 flex items-center gap-1"
                 >
                   <Droplets className="h-3 w-3" />
                   SpO2 (%)
@@ -286,13 +286,13 @@ export function VitalsRecorder({
                   value={formData.oxygen_saturation}
                   onChange={(e) => handleChange("oxygen_saturation", e.target.value)}
                   placeholder="98"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                  className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                 />
               </div>
 
               {/* Blood Pressure */}
               <div className="col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-foreground mb-1">
                   Blood Pressure (mmHg)
                 </label>
                 <div className="flex gap-2 items-center">
@@ -301,19 +301,19 @@ export function VitalsRecorder({
                     value={formData.blood_pressure_systolic}
                     onChange={(e) => handleChange("blood_pressure_systolic", e.target.value)}
                     placeholder="120"
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                    className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                   />
-                  <span className="text-gray-500 font-medium">/</span>
+                  <span className="text-muted-foreground font-medium">/</span>
                   <input
                     type="number"
                     value={formData.blood_pressure_diastolic}
                     onChange={(e) => handleChange("blood_pressure_diastolic", e.target.value)}
                     placeholder="80"
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                    className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                   />
                 </div>
                 {map && (
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     MAP: <span className="font-medium">{map} mmHg</span>
                   </p>
                 )}
@@ -321,7 +321,7 @@ export function VitalsRecorder({
 
               {/* Pain Score */}
               <div>
-                <label htmlFor="pain_score" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="pain_score" className="block text-sm font-medium text-foreground mb-1">
                   Pain Score (0-10)
                 </label>
                 <input
@@ -332,13 +332,13 @@ export function VitalsRecorder({
                   value={formData.pain_score}
                   onChange={(e) => handleChange("pain_score", e.target.value)}
                   placeholder="0"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                  className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                 />
               </div>
 
               {/* GCS */}
               <div>
-                <label htmlFor="gcs" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="gcs" className="block text-sm font-medium text-foreground mb-1">
                   GCS (3-15)
                 </label>
                 <input
@@ -349,13 +349,13 @@ export function VitalsRecorder({
                   value={formData.gcs}
                   onChange={(e) => handleChange("gcs", e.target.value)}
                   placeholder="15"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                  className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                 />
               </div>
 
               {/* Blood Glucose */}
               <div>
-                <label htmlFor="blood_glucose" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="blood_glucose" className="block text-sm font-medium text-foreground mb-1">
                   Blood Glucose (mmol/L)
                 </label>
                 <input
@@ -365,13 +365,13 @@ export function VitalsRecorder({
                   value={formData.blood_glucose}
                   onChange={(e) => handleChange("blood_glucose", e.target.value)}
                   placeholder="5.5"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                  className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                 />
               </div>
 
               {/* Weight */}
               <div>
-                <label htmlFor="weight" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="weight" className="block text-sm font-medium text-foreground mb-1">
                   Weight (kg)
                 </label>
                 <input
@@ -381,13 +381,13 @@ export function VitalsRecorder({
                   value={formData.weight}
                   onChange={(e) => handleChange("weight", e.target.value)}
                   placeholder="70"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                  className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                 />
               </div>
 
               {/* Height */}
               <div>
-                <label htmlFor="height" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="height" className="block text-sm font-medium text-foreground mb-1">
                   Height (cm)
                 </label>
                 <input
@@ -397,14 +397,14 @@ export function VitalsRecorder({
                   value={formData.height}
                   onChange={(e) => handleChange("height", e.target.value)}
                   placeholder="170"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                  className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                 />
               </div>
 
               {/* Auto-calculated BMI */}
               {bmi && (
                 <div className="col-span-2">
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     BMI: <span className="font-medium">{bmi} kg/m&sup2;</span>
                     {parseFloat(bmi) < 18.5 && (
                       <span className="ml-2 text-yellow-600">(Underweight)</span>
@@ -424,7 +424,7 @@ export function VitalsRecorder({
 
               {/* Notes */}
               <div className="col-span-2">
-                <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="notes" className="block text-sm font-medium text-foreground mb-1">
                   Notes
                 </label>
                 <textarea
@@ -433,7 +433,7 @@ export function VitalsRecorder({
                   onChange={(e) => handleChange("notes", e.target.value)}
                   placeholder="Additional observations..."
                   rows={2}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400 resize-none"
+                  className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400 resize-none"
                 />
               </div>
             </div>
@@ -445,8 +445,8 @@ export function VitalsRecorder({
                 className={`inline-flex items-center px-4 py-2 rounded-md text-sm font-medium text-white ${
                   saving
                     ? "bg-impilo-400 cursor-not-allowed"
-                    : "bg-impilo-500 hover:bg-impilo-600"
-                } focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:ring-offset-2 transition-colors`}
+                    : "bg-primary hover:bg-primary-hover"
+                } focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 transition-colors`}
               >
                 {saving ? (
                   <>
@@ -466,16 +466,16 @@ export function VitalsRecorder({
       </div>
 
       {/* Vitals History */}
-      <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
-        <div className="px-4 py-3 border-b border-gray-200">
+      <div className="rounded-lg border border-border bg-card shadow-sm">
+        <div className="px-4 py-3 border-b border-border">
           <h3 className="text-lg font-semibold">Vitals History</h3>
         </div>
         <div className="overflow-y-auto max-h-[500px]">
           <div className="p-4 space-y-3">
             {vitalsLoading ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-5 w-5 animate-spin text-impilo-500" />
-                <span className="ml-2 text-sm text-gray-500">Loading vitals...</span>
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                <span className="ml-2 text-sm text-muted-foreground">Loading vitals...</span>
               </div>
             ) : vitalsError ? (
               <div className="flex items-center justify-center py-8 text-red-600">
@@ -483,7 +483,7 @@ export function VitalsRecorder({
                 <span className="text-sm">Failed to load vitals history.</span>
               </div>
             ) : vitalsHistory.length === 0 ? (
-              <p className="text-sm text-gray-500 text-center py-4">
+              <p className="text-sm text-muted-foreground text-center py-4">
                 No vital signs recorded for this encounter
               </p>
             ) : (
@@ -512,64 +512,64 @@ export function VitalsRecorder({
                     key={vital.id}
                     className={`p-3 rounded-lg border ${
                       hasCritical
-                        ? "border-red-300 bg-red-50"
+                        ? "border-red-300 bg-danger-soft"
                         : hasAbnormal
                         ? "border-yellow-300 bg-yellow-50"
-                        : "border-gray-200 bg-white"
+                        : "border-border bg-card"
                     }`}
                   >
-                    <div className="text-xs text-gray-500 mb-2">
+                    <div className="text-xs text-muted-foreground mb-2">
                       {formatDateTime(vital.recorded_at)}
                     </div>
                     <div className="grid grid-cols-3 gap-2 text-sm">
                       {vital.temperature !== null && (
                         <div className={statusColors[tempStatus || "normal"]}>
-                          <span className="text-gray-500">Temp:</span> {vital.temperature}&deg;C
+                          <span className="text-muted-foreground">Temp:</span> {vital.temperature}&deg;C
                         </div>
                       )}
                       {vital.pulse_rate !== null && (
                         <div className={statusColors[hrStatus || "normal"]}>
-                          <span className="text-gray-500">HR:</span> {vital.pulse_rate}
+                          <span className="text-muted-foreground">HR:</span> {vital.pulse_rate}
                         </div>
                       )}
                       {vital.respiratory_rate !== null && (
                         <div className={statusColors[rrStatus || "normal"]}>
-                          <span className="text-gray-500">RR:</span> {vital.respiratory_rate}
+                          <span className="text-muted-foreground">RR:</span> {vital.respiratory_rate}
                         </div>
                       )}
                       {vital.blood_pressure_systolic !== null &&
                         vital.blood_pressure_diastolic !== null && (
                           <div className={statusColors[bpStatus || "normal"]}>
-                            <span className="text-gray-500">BP:</span>{" "}
+                            <span className="text-muted-foreground">BP:</span>{" "}
                             {vital.blood_pressure_systolic}/{vital.blood_pressure_diastolic}
                             {historyMAP && (
-                              <span className="text-gray-400 text-xs ml-1">(MAP {historyMAP})</span>
+                              <span className="text-muted-foreground text-xs ml-1">(MAP {historyMAP})</span>
                             )}
                           </div>
                         )}
                       {vital.oxygen_saturation !== null && (
                         <div className={statusColors[spo2Status || "normal"]}>
-                          <span className="text-gray-500">SpO2:</span> {vital.oxygen_saturation}%
+                          <span className="text-muted-foreground">SpO2:</span> {vital.oxygen_saturation}%
                         </div>
                       )}
                       {vital.blood_glucose !== null && (
                         <div className={statusColors[glucoseStatus || "normal"]}>
-                          <span className="text-gray-500">Gluc:</span> {vital.blood_glucose}
+                          <span className="text-muted-foreground">Gluc:</span> {vital.blood_glucose}
                         </div>
                       )}
                       {vital.pain_score !== null && (
                         <div className={statusColors[painStatus || "normal"]}>
-                          <span className="text-gray-500">Pain:</span> {vital.pain_score}/10
+                          <span className="text-muted-foreground">Pain:</span> {vital.pain_score}/10
                         </div>
                       )}
                       {vital.gcs !== null && (
                         <div className={statusColors[gcsStatus || "normal"]}>
-                          <span className="text-gray-500">GCS:</span> {vital.gcs}/15
+                          <span className="text-muted-foreground">GCS:</span> {vital.gcs}/15
                         </div>
                       )}
                       {historyBMI && (
-                        <div className="text-gray-600">
-                          <span className="text-gray-500">BMI:</span> {historyBMI}
+                        <div className="text-muted-foreground">
+                          <span className="text-muted-foreground">BMI:</span> {historyBMI}
                         </div>
                       )}
                     </div>

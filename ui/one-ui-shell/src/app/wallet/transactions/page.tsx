@@ -79,17 +79,17 @@ function channelBadge(channel: string) {
   const ch = channel.toUpperCase();
   if (ch === "MOBILE_MONEY") return "bg-yellow-100 text-yellow-800";
   if (ch === "CARD" || ch === "POS") return "bg-purple-100 text-purple-800";
-  if (ch === "BANK_TRANSFER") return "bg-impilo-100 text-impilo-700";
-  if (ch === "CASH") return "bg-emerald-100 text-emerald-800";
-  return "bg-gray-100 text-gray-700";
+  if (ch === "BANK_TRANSFER") return "bg-primary-soft text-primary-hover";
+  if (ch === "CASH") return "bg-emerald-100 text-primary-hover";
+  return "bg-neutral-100 text-foreground";
 }
 
 function statusBadge(status: string) {
   const s = status.toUpperCase();
   if (s === "COMPLETED" || s === "SUCCESS") return "bg-green-100 text-green-800";
-  if (s === "PENDING") return "bg-amber-100 text-amber-800";
+  if (s === "PENDING") return "bg-amber-100 text-warning-foreground";
   if (s === "FAILED" || s === "REVERSED") return "bg-red-100 text-red-800";
-  return "bg-gray-100 text-gray-700";
+  return "bg-neutral-100 text-foreground";
 }
 
 const CHANNELS = ["", "MOBILE_MONEY", "BANK_TRANSFER", "CARD", "POS", "CASH", "USSD"] as const;
@@ -175,26 +175,26 @@ export default function TransactionHistoryPage() {
         <div className="mb-4">
           <Link
             href="/wallet"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" /> Back to wallet
           </Link>
         </div>
 
         {!cpid && (
-          <p className="text-sm text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+          <p className="text-sm text-warning-foreground bg-warning-soft border border-amber-100 rounded-lg px-3 py-2">
             Sign in to view your transaction history.
           </p>
         )}
 
         {cpid && walletQ.isLoading && (
-          <div className="flex items-center gap-2 text-gray-600 text-sm py-8">
+          <div className="flex items-center gap-2 text-muted-foreground text-sm py-8">
             <Loader2 className="h-5 w-5 animate-spin" /> Loading wallet...
           </div>
         )}
 
         {cpid && !walletQ.isLoading && !walletId && (
-          <p className="text-sm text-red-700 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+          <p className="text-sm text-danger bg-danger-soft border border-red-100 rounded-lg px-3 py-2">
             No wallet found.
           </p>
         )}
@@ -206,49 +206,49 @@ export default function TransactionHistoryPage() {
               <button
                 type="button"
                 onClick={() => setShowFilters(!showFilters)}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-background"
               >
                 <Filter className="h-4 w-4" /> {showFilters ? "Hide filters" : "Filters"}
               </button>
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-muted-foreground">
                 {totalElements > 0 && `${totalElements} total transactions`}
               </div>
             </div>
 
             {/* Filters */}
             {showFilters && (
-              <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+              <div className="rounded-lg border border-border bg-background p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Date from</label>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">Date from</label>
                   <input
                     type="date"
-                    className="w-full rounded-lg border border-gray-300 px-2 py-2 text-sm"
+                    className="w-full rounded-lg border border-border px-2 py-2 text-sm"
                     value={filterDateFrom}
                     onChange={(e) => setFilterDateFrom(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Date to</label>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">Date to</label>
                   <input
                     type="date"
-                    className="w-full rounded-lg border border-gray-300 px-2 py-2 text-sm"
+                    className="w-full rounded-lg border border-border px-2 py-2 text-sm"
                     value={filterDateTo}
                     onChange={(e) => setFilterDateTo(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Transaction type</label>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">Transaction type</label>
                   <input
-                    className="w-full rounded-lg border border-gray-300 px-2 py-2 text-sm"
+                    className="w-full rounded-lg border border-border px-2 py-2 text-sm"
                     placeholder="e.g. TRANSFER"
                     value={filterTxnType}
                     onChange={(e) => setFilterTxnType(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Channel</label>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">Channel</label>
                   <select
-                    className="w-full rounded-lg border border-gray-300 px-2 py-2 text-sm"
+                    className="w-full rounded-lg border border-border px-2 py-2 text-sm"
                     value={filterChannel}
                     onChange={(e) => setFilterChannel(e.target.value)}
                   >
@@ -258,9 +258,9 @@ export default function TransactionHistoryPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Direction</label>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">Direction</label>
                   <select
-                    className="w-full rounded-lg border border-gray-300 px-2 py-2 text-sm"
+                    className="w-full rounded-lg border border-border px-2 py-2 text-sm"
                     value={filterDirection}
                     onChange={(e) => setFilterDirection(e.target.value)}
                   >
@@ -273,19 +273,19 @@ export default function TransactionHistoryPage() {
             )}
 
             {/* Transactions table */}
-            <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+            <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
                 {txQ.isLoading && (
-                  <div className="p-6 flex items-center gap-2 text-gray-600 text-sm">
+                  <div className="p-6 flex items-center gap-2 text-muted-foreground text-sm">
                     <Loader2 className="h-4 w-4 animate-spin" /> Loading transactions...
                   </div>
                 )}
                 {!txQ.isLoading && txQ.isError && (
-                  <p className="p-4 text-sm text-red-700">Could not load transactions.</p>
+                  <p className="p-4 text-sm text-danger">Could not load transactions.</p>
                 )}
                 {!txQ.isLoading && !txQ.isError && (
                   <table className="min-w-full text-sm">
-                    <thead className="bg-gray-50 text-left text-xs text-gray-500 uppercase tracking-wide">
+                    <thead className="bg-background text-left text-xs text-muted-foreground uppercase tracking-wide">
                       <tr>
                         <th className="px-4 py-2">Date</th>
                         <th className="px-4 py-2">Description</th>
@@ -301,7 +301,7 @@ export default function TransactionHistoryPage() {
                     <tbody className="divide-y divide-gray-100">
                       {txRows.length === 0 && (
                         <tr>
-                          <td colSpan={9} className="px-4 py-6 text-center text-gray-500">
+                          <td colSpan={9} className="px-4 py-6 text-center text-muted-foreground">
                             {allRows.length > 0 ? "No transactions match the current filters." : "No transactions yet."}
                           </td>
                         </tr>
@@ -319,26 +319,26 @@ export default function TransactionHistoryPage() {
                           readStr(row, "counterpartyRef", "counterparty_ref");
 
                         return (
-                          <tr key={readStr(row, "txnId", "txn_id", "transactionId", "transaction_id") || String(i)} className="hover:bg-gray-50/80">
-                            <td className="px-4 py-2 whitespace-nowrap text-gray-700">
+                          <tr key={readStr(row, "txnId", "txn_id", "transactionId", "transaction_id") || String(i)} className="hover:bg-background/80">
+                            <td className="px-4 py-2 whitespace-nowrap text-foreground">
                               {readStr(row, "createdAt", "created_at", "txnDate", "txn_date").slice(0, 16).replace("T", " ")}
                             </td>
-                            <td className="px-4 py-2 text-gray-800 max-w-xs truncate">
+                            <td className="px-4 py-2 text-foreground max-w-xs truncate">
                               {readStr(row, "description") || readStr(row, "txnType", "txn_type")}
                             </td>
-                            <td className="px-4 py-2 text-gray-700 text-xs">
+                            <td className="px-4 py-2 text-foreground text-xs">
                               {counterparty || "--"}
                             </td>
-                            <td className={`px-4 py-2 text-right tabular-nums font-medium ${isCredit ? "text-emerald-700" : "text-red-700"}`}>
+                            <td className={`px-4 py-2 text-right tabular-nums font-medium ${isCredit ? "text-primary-hover" : "text-danger"}`}>
                               {isCredit ? "+" : "-"}{formatMoney(amount, currency)}
                             </td>
-                            <td className="px-4 py-2 text-right tabular-nums text-gray-500">
+                            <td className="px-4 py-2 text-right tabular-nums text-muted-foreground">
                               {fee > 0 ? formatMoney(fee, currency) : "--"}
                             </td>
-                            <td className="px-4 py-2 text-right tabular-nums text-gray-800">
+                            <td className="px-4 py-2 text-right tabular-nums text-foreground">
                               {fee > 0 ? formatMoney(net, currency) : "--"}
                             </td>
-                            <td className="px-4 py-2 text-right tabular-nums font-medium text-gray-900">
+                            <td className="px-4 py-2 text-right tabular-nums font-medium text-foreground">
                               {formatMoney(balAfter, currency)}
                             </td>
                             <td className="px-4 py-2">
@@ -364,7 +364,7 @@ export default function TransactionHistoryPage() {
 
             {/* Pagination */}
             <div className="flex items-center justify-between">
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-muted-foreground">
                 Page {page + 1} of {totalPages}
               </div>
               <div className="flex gap-2">
@@ -372,7 +372,7 @@ export default function TransactionHistoryPage() {
                   type="button"
                   onClick={() => setPage((p) => Math.max(0, p - 1))}
                   disabled={page === 0}
-                  className="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+                  className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-1.5 text-sm text-foreground hover:bg-background disabled:opacity-40"
                 >
                   <ChevronLeft className="h-4 w-4" /> Previous
                 </button>
@@ -380,7 +380,7 @@ export default function TransactionHistoryPage() {
                   type="button"
                   onClick={() => setPage((p) => p + 1)}
                   disabled={page + 1 >= totalPages}
-                  className="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+                  className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-1.5 text-sm text-foreground hover:bg-background disabled:opacity-40"
                 >
                   Next <ChevronRight className="h-4 w-4" />
                 </button>

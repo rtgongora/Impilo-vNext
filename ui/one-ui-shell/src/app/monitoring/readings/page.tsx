@@ -13,10 +13,10 @@ import { useAuthStore } from "@/hooks/useAuthStore";
 import { useMonitoringReadings } from "@/hooks/queries/useCitizenMonitoring";
 
 const METRIC_LABELS: Record<string, { label: string; unit: string; color: string }> = {
-  BLOOD_PRESSURE: { label: "Blood Pressure", unit: "mmHg", color: "bg-red-50 border-red-200" },
-  BLOOD_GLUCOSE: { label: "Blood Glucose", unit: "mmol/L", color: "bg-amber-50 border-amber-200" },
+  BLOOD_PRESSURE: { label: "Blood Pressure", unit: "mmHg", color: "bg-danger-soft border-danger/28" },
+  BLOOD_GLUCOSE: { label: "Blood Glucose", unit: "mmol/L", color: "bg-warning-soft border-warning/35" },
   HEART_RATE: { label: "Heart Rate", unit: "bpm", color: "bg-pink-50 border-pink-200" },
-  OXYGEN_SATURATION: { label: "Oxygen Saturation", unit: "%", color: "bg-impilo-50 border-impilo-200" },
+  OXYGEN_SATURATION: { label: "Oxygen Saturation", unit: "%", color: "bg-primary-soft border-primary/25" },
   WEIGHT: { label: "Weight", unit: "kg", color: "bg-green-50 border-green-200" },
   TEMPERATURE: { label: "Temperature", unit: "°C", color: "bg-orange-50 border-orange-200" },
 };
@@ -55,25 +55,25 @@ export default function ReadingsPage() {
       >
         <div className="space-y-6">
           {!patientId && (
-            <p className="text-sm text-gray-500">Sign in to view your vitals history.</p>
+            <p className="text-sm text-muted-foreground">Sign in to view your vitals history.</p>
           )}
 
           {patientId && isLoading && (
-            <div className="flex items-center gap-2 text-sm text-gray-500">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
               Loading readings…
             </div>
           )}
 
           {patientId && isError && (
-            <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            <div className="flex items-center gap-2 rounded-xl border border-danger/28 bg-danger-soft px-3 py-2 text-sm text-danger">
               <AlertTriangle className="h-4 w-4 flex-shrink-0" />
               {error instanceof Error ? error.message : "Could not load readings."}
             </div>
           )}
 
           {patientId && !isLoading && !isError && readings.length === 0 && (
-            <p className="text-sm text-gray-500 italic">
+            <p className="text-sm text-muted-foreground italic">
               No vitals logged yet. Readings appear here when you log them in wellness or sync from Health Connect.
             </p>
           )}
@@ -86,20 +86,20 @@ export default function ReadingsPage() {
                 const history = grouped[key]!.slice(0, 5);
                 return (
                   <div key={key} className={`rounded-lg border p-5 ${meta.color}`}>
-                    <h3 className="font-semibold text-gray-900 mb-1">{meta.label}</h3>
-                    <p className="text-2xl font-bold text-gray-900">
+                    <h3 className="font-semibold text-foreground mb-1">{meta.label}</h3>
+                    <p className="text-2xl font-bold text-foreground">
                       {latest.value}
-                      <span className="text-sm font-normal text-gray-500 ml-1">{latest.unit || meta.unit}</span>
+                      <span className="text-sm font-normal text-muted-foreground ml-1">{latest.unit || meta.unit}</span>
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       Latest · {fmtWhen(latest.measuredAt)} · {fmtSource(latest.source)}
                     </p>
                     {history.length > 1 && (
-                      <ul className="mt-3 space-y-1 border-t border-gray-200/60 pt-2">
+                      <ul className="mt-3 space-y-1 border-t border-border/60 pt-2">
                         {history.slice(1).map((r) => (
-                          <li key={r.id} className="text-xs text-gray-600 flex justify-between gap-2">
+                          <li key={r.id} className="text-xs text-muted-foreground flex justify-between gap-2">
                             <span>{r.value} {r.unit || meta.unit}</span>
-                            <span className="text-gray-400">{fmtWhen(r.measuredAt)}</span>
+                            <span className="text-muted-foreground">{fmtWhen(r.measuredAt)}</span>
                           </li>
                         ))}
                       </ul>

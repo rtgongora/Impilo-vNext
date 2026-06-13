@@ -128,7 +128,7 @@ export function ZimbabweLocationCascader({
 
   if (countryAlpha2 !== "ZW") {
     return (
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-muted-foreground">
         Zimbabwe administrative pickers are shown when country is Zimbabwe (ZW).
       </p>
     );
@@ -137,11 +137,11 @@ export function ZimbabweLocationCascader({
   const provinces = listZimbabweProvinces();
 
   return (
-    <div className="space-y-3 rounded-lg border border-dashed border-impilo-200 bg-impilo-50/40 p-3">
+    <div className="space-y-3 rounded-lg border border-dashed border-primary/25 bg-primary-soft/40 p-3">
       <p className="text-xs font-medium text-impilo-900">Zimbabwe location (COD-AB–aligned hierarchy)</p>
-      {geoErr ? <p className="text-xs text-amber-800">{geoErr}</p> : null}
+      {geoErr ? <p className="text-xs text-warning-foreground">{geoErr}</p> : null}
       <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1">Province (Admin 1)</label>
+        <label className="block text-xs font-medium text-muted-foreground mb-1">Province (Admin 1)</label>
         <select
           disabled={disabled}
           value={provinceCode}
@@ -151,7 +151,7 @@ export function ZimbabweLocationCascader({
             onWard("");
             onLocalityId("");
           }}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+          className="w-full px-3 py-2 border border-border rounded-lg text-sm"
         >
           <option value="">Select province…</option>
           {provinces.map((p) => (
@@ -162,7 +162,7 @@ export function ZimbabweLocationCascader({
         </select>
       </div>
       <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1">District (Admin 2)</label>
+        <label className="block text-xs font-medium text-muted-foreground mb-1">District (Admin 2)</label>
         <select
           disabled={disabled || !provinceCode}
           value={districtCode}
@@ -171,7 +171,7 @@ export function ZimbabweLocationCascader({
             onWard("");
             onLocalityId("");
           }}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+          className="w-full px-3 py-2 border border-border rounded-lg text-sm"
         >
           <option value="">{districts.length ? "Select district…" : "No districts loaded — run COD-AB import"}</option>
           {districts.map((d) => (
@@ -182,12 +182,12 @@ export function ZimbabweLocationCascader({
         </select>
       </div>
       <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1">Ward (Admin 3)</label>
+        <label className="block text-xs font-medium text-muted-foreground mb-1">Ward (Admin 3)</label>
         <select
           disabled={disabled || !districtCode}
           value={wardCode}
           onChange={(e) => onWard(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+          className="w-full px-3 py-2 border border-border rounded-lg text-sm"
         >
           <option value="">{wards.length ? "Select ward…" : "No wards loaded — run COD-AB import"}</option>
           {wards.map((w) => (
@@ -198,24 +198,24 @@ export function ZimbabweLocationCascader({
         </select>
       </div>
       <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1">Locality (Tuso gazetteer)</label>
+        <label className="block text-xs font-medium text-muted-foreground mb-1">Locality (Tuso gazetteer)</label>
         <div className="flex gap-2">
           <input
             type="text"
             disabled={disabled || !districtCode}
             placeholder="Type 2+ characters to search approved localities"
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="flex-1 px-3 py-2 border border-border rounded-lg text-sm"
             onChange={(e) => void searchLocalities(e.target.value)}
           />
         </div>
         {localityHits.length > 0 ? (
-          <ul className="mt-1 max-h-28 overflow-y-auto rounded border border-gray-200 bg-white text-xs">
+          <ul className="mt-1 max-h-28 overflow-y-auto rounded border border-border bg-card text-xs">
             {localityHits.map((h) => (
               <li key={h.id}>
                 <button
                   type="button"
                   disabled={disabled}
-                  className="w-full text-left px-2 py-1 hover:bg-impilo-50"
+                  className="w-full text-left px-2 py-1 hover:bg-primary-soft"
                   onClick={() => {
                     onLocalityId(h.id);
                     onLocalityFreeText(h.name);
@@ -227,28 +227,28 @@ export function ZimbabweLocationCascader({
             ))}
           </ul>
         ) : null}
-        <p className="mt-1 text-[11px] text-gray-500">Selected ID: {localityGazetteerId || "—"}</p>
+        <p className="mt-1 text-[11px] text-muted-foreground">Selected ID: {localityGazetteerId || "—"}</p>
       </div>
       <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1">Propose new locality (governed)</label>
+        <label className="block text-xs font-medium text-muted-foreground mb-1">Propose new locality (governed)</label>
         <input
           type="text"
           disabled={disabled}
           value={localityFreeText}
           onChange={(e) => onLocalityFreeText(e.target.value)}
           placeholder="If not in gazetteer — propose for terminology review"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+          className="w-full px-3 py-2 border border-border rounded-lg text-sm"
         />
         <div className="mt-1 flex flex-wrap items-center gap-2">
           <button
             type="button"
             disabled={disabled || proposalBusy}
             onClick={() => void submitProposal()}
-            className="text-xs px-2 py-1 rounded border border-gray-300 bg-white hover:bg-gray-50"
+            className="text-xs px-2 py-1 rounded border border-border bg-card hover:bg-background"
           >
             {proposalBusy ? "Submitting…" : "Submit proposal"}
           </button>
-          {proposalMsg ? <span className="text-[11px] text-gray-600">{proposalMsg}</span> : null}
+          {proposalMsg ? <span className="text-[11px] text-muted-foreground">{proposalMsg}</span> : null}
         </div>
       </div>
     </div>

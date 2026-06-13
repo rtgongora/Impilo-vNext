@@ -95,9 +95,9 @@ const generateContextualGuidance = (): CDSGuidanceItem[] => [
 
 const severityConfig = {
   critical: {
-    bg: "bg-red-50",
-    border: "border-red-200",
-    text: "text-red-700",
+    bg: "bg-danger-soft",
+    border: "border-danger/28",
+    text: "text-danger",
     icon: AlertTriangle,
     pulse: true,
   },
@@ -109,16 +109,16 @@ const severityConfig = {
     pulse: false,
   },
   moderate: {
-    bg: "bg-amber-50",
-    border: "border-amber-200",
-    text: "text-amber-700",
+    bg: "bg-warning-soft",
+    border: "border-warning/35",
+    text: "text-warning-foreground",
     icon: Sparkles,
     pulse: false,
   },
   info: {
-    bg: "bg-impilo-50",
-    border: "border-impilo-200",
-    text: "text-impilo-600",
+    bg: "bg-primary-soft",
+    border: "border-primary/25",
+    text: "text-primary",
     icon: Lightbulb,
     pulse: false,
   },
@@ -257,7 +257,7 @@ export function ActiveCDSBanner({ hasActivePatient = true }: ActiveCDSBannerProp
 
         <div className="flex-1 min-w-0 flex items-center gap-2">
           <span className="text-xs font-semibold shrink-0">{current.title}</span>
-          <span className="text-xs text-gray-500 truncate">{current.message}</span>
+          <span className="text-xs text-muted-foreground truncate">{current.message}</span>
         </div>
 
         {current.actionLabel && (
@@ -277,11 +277,11 @@ export function ActiveCDSBanner({ hasActivePatient = true }: ActiveCDSBannerProp
 
         <div className="flex items-center gap-1 shrink-0">
           {isLoadingAI && (
-            <Loader2 className="h-3 w-3 animate-spin text-gray-400" />
+            <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
           )}
 
           {activeItems.length > 1 && (
-            <span className="text-[10px] text-gray-400">
+            <span className="text-[10px] text-muted-foreground">
               {(currentIndex % activeItems.length) + 1}/{activeItems.length}
             </span>
           )}
@@ -298,7 +298,7 @@ export function ActiveCDSBanner({ hasActivePatient = true }: ActiveCDSBannerProp
 
           <ChevronDown
             className={cn(
-              "h-3.5 w-3.5 text-gray-400 transition-transform",
+              "h-3.5 w-3.5 text-muted-foreground transition-transform",
               expanded && "rotate-180",
             )}
           />
@@ -308,13 +308,13 @@ export function ActiveCDSBanner({ hasActivePatient = true }: ActiveCDSBannerProp
       {/* Expanded view -- all items */}
       {expanded && (
         <div className="overflow-hidden">
-          <div className="px-3 pb-2 space-y-1.5 border-t border-gray-200/30">
+          <div className="px-3 pb-2 space-y-1.5 border-t border-border/30">
             {/* AI insight banner */}
             {aiInsight && (
-              <div className="flex items-start gap-2 px-2 py-1.5 mt-1.5 rounded bg-impilo-50 border border-impilo-100">
-                <Sparkles className="h-3.5 w-3.5 text-impilo-500 mt-0.5 shrink-0" />
-                <p className="text-[11px] text-gray-500 leading-relaxed">
-                  <span className="font-medium text-gray-900">
+              <div className="flex items-start gap-2 px-2 py-1.5 mt-1.5 rounded bg-primary-soft border border-primary/20">
+                <Sparkles className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  <span className="font-medium text-foreground">
                     AI Clinical Pearls:{" "}
                   </span>
                   {aiInsight}
@@ -343,11 +343,11 @@ export function ActiveCDSBanner({ hasActivePatient = true }: ActiveCDSBannerProp
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-semibold">{item.title}</span>
-                      <span className="text-[9px] text-gray-400">
+                      <span className="text-[9px] text-muted-foreground">
                         {item.source}
                       </span>
                     </div>
-                    <p className="text-[11px] text-gray-500 leading-relaxed mt-0.5">
+                    <p className="text-[11px] text-muted-foreground leading-relaxed mt-0.5">
                       {item.message}
                     </p>
                   </div>
@@ -375,7 +375,7 @@ export function ActiveCDSBanner({ hasActivePatient = true }: ActiveCDSBannerProp
 
             <div className="flex justify-end pt-1">
               <button
-                className="h-6 text-[10px] text-gray-400 px-2 rounded hover:bg-black/5"
+                className="h-6 text-[10px] text-muted-foreground px-2 rounded hover:bg-black/5"
                 onClick={dismissAll}
               >
                 Dismiss All

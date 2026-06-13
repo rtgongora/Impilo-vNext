@@ -65,8 +65,8 @@ export function CadreHistoryForm({ config, onSave }: CadreHistoryFormProps) {
 function SelectField({ label, value, onChange, options }: { label: string; value: string; onChange: (v: string) => void; options: string[] }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{label}</label>
-      <select value={value} onChange={e => onChange(e.target.value)} className="w-full h-10 px-3 text-sm rounded-md border border-gray-300 bg-white focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400">
+      <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{label}</label>
+      <select value={value} onChange={e => onChange(e.target.value)} className="w-full h-10 px-3 text-sm rounded-md border border-border bg-card focus:ring-2 focus:ring-primary/40 focus:border-impilo-400">
         <option value="">Select...</option>
         {options.map(o => <option key={o} value={o}>{o}</option>)}
       </select>
@@ -77,10 +77,10 @@ function SelectField({ label, value, onChange, options }: { label: string; value
 function NumberInput({ label, value, onChange, unit }: { label: string; value: string; onChange: (v: string) => void; unit?: string }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{label}</label>
+      <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{label}</label>
       <div className="flex items-center gap-2">
-        <input type="number" value={value} onChange={e => onChange(e.target.value)} className="w-full h-10 px-3 text-sm rounded-md border border-gray-300 bg-white tabular-nums focus:ring-2 focus:ring-impilo-400" />
-        {unit && <span className="text-xs text-gray-500 shrink-0">{unit}</span>}
+        <input type="number" value={value} onChange={e => onChange(e.target.value)} className="w-full h-10 px-3 text-sm rounded-md border border-border bg-card tabular-nums focus:ring-2 focus:ring-primary/40" />
+        {unit && <span className="text-xs text-muted-foreground shrink-0">{unit}</span>}
       </div>
     </div>
   );
@@ -89,14 +89,14 @@ function NumberInput({ label, value, onChange, unit }: { label: string; value: s
 function CheckGroup({ title, items, checked, onToggle }: { title: string; items: string[]; checked: string[]; onToggle: (item: string) => void }) {
   return (
     <div className="space-y-2">
-      {title && <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{title}</label>}
+      {title && <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{title}</label>}
       <div className="grid grid-cols-2 gap-1.5">
         {items.map(item => {
           const isChecked = checked.includes(item);
           return (
             <button key={item} type="button" onClick={() => onToggle(item)}
-              className={`flex items-center gap-2 p-2.5 rounded-lg text-left text-sm transition-all ${isChecked ? "bg-impilo-50 border border-impilo-200 font-medium" : "bg-gray-50 border border-transparent hover:bg-gray-100"}`}>
-              <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${isChecked ? "border-impilo-400 bg-impilo-500 text-white" : "border-gray-300"}`}>
+              className={`flex items-center gap-2 p-2.5 rounded-lg text-left text-sm transition-all ${isChecked ? "bg-primary-soft border border-primary/25 font-medium" : "bg-background border border-transparent hover:bg-neutral-100"}`}>
+              <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${isChecked ? "border-impilo-400 bg-primary text-white" : "border-border"}`}>
                 {isChecked && <CheckCircle2 className="w-3 h-3" />}
               </div>
               {item}
@@ -124,44 +124,44 @@ function CHWHistoryScreen({ config, onSave }: { config: CadreFormConfig; onSave?
 
   return (
     <div className="space-y-4">
-      <div className="bg-impilo-50 border border-impilo-200 rounded-lg p-4 flex items-center gap-3">
-        <ShieldAlert className="w-6 h-6 text-impilo-500 shrink-0" />
-        <div><p className="font-semibold text-base text-impilo-800">Community Health Worker Screening</p><p className="text-sm text-impilo-600">{config.labels.guidanceText}</p></div>
+      <div className="bg-primary-soft border border-primary/25 rounded-lg p-4 flex items-center gap-3">
+        <ShieldAlert className="w-6 h-6 text-primary shrink-0" />
+        <div><p className="font-semibold text-base text-impilo-800">Community Health Worker Screening</p><p className="text-sm text-primary">{config.labels.guidanceText}</p></div>
       </div>
-      <div className={`bg-white rounded-lg border ${hasDangerSigns ? "border-red-300" : ""} p-4`}>
-        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2 mb-3">
+      <div className={`bg-card rounded-lg border ${hasDangerSigns ? "border-red-300" : ""} p-4`}>
+        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2 mb-3">
           <AlertTriangle className={`w-6 h-6 ${hasDangerSigns ? "text-red-600" : "text-amber-500"}`} /> Danger Signs
-          {hasDangerSigns && <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded text-sm font-bold ml-2">{checkedSigns.length} PRESENT</span>}
+          {hasDangerSigns && <span className="px-2 py-0.5 bg-red-100 text-danger rounded text-sm font-bold ml-2">{checkedSigns.length} PRESENT</span>}
         </h3>
         <div className="space-y-2">
           {dangerSigns.map(sign => (
-            <button key={sign} type="button" onClick={() => toggleSign(sign)} className={`w-full flex items-center gap-3 p-3.5 rounded-lg text-left text-base font-medium transition-all ${checkedSigns.includes(sign) ? "bg-red-50 border-2 border-red-400 text-red-800" : "bg-gray-50 border-2 border-transparent hover:bg-gray-100"}`}>
-              <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center shrink-0 ${checkedSigns.includes(sign) ? "border-red-500 bg-red-500 text-white" : "border-gray-300"}`}>{checkedSigns.includes(sign) && <CheckCircle2 className="w-4 h-4" />}</div>
+            <button key={sign} type="button" onClick={() => toggleSign(sign)} className={`w-full flex items-center gap-3 p-3.5 rounded-lg text-left text-base font-medium transition-all ${checkedSigns.includes(sign) ? "bg-danger-soft border-2 border-red-400 text-red-800" : "bg-background border-2 border-transparent hover:bg-neutral-100"}`}>
+              <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center shrink-0 ${checkedSigns.includes(sign) ? "border-red-500 bg-red-500 text-white" : "border-border"}`}>{checkedSigns.includes(sign) && <CheckCircle2 className="w-4 h-4" />}</div>
               {sign}
             </button>
           ))}
         </div>
       </div>
-      <div className="bg-white rounded-lg border p-4">
-        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2 mb-3"><ClipboardCheck className="w-6 h-6" /> Symptom Checklist</h3>
+      <div className="bg-card rounded-lg border p-4">
+        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2 mb-3"><ClipboardCheck className="w-6 h-6" /> Symptom Checklist</h3>
         <div className="grid grid-cols-2 gap-2">
           {SYMPTOM_CHECKLIST.map(s => (
-            <button key={s} type="button" onClick={() => toggleSymptom(s)} className={`flex items-center gap-2 p-3 rounded-lg text-left text-sm font-medium transition-all ${symptoms.includes(s) ? "bg-impilo-50 border-2 border-impilo-200" : "bg-gray-50 border-2 border-transparent hover:bg-gray-100"}`}>
-              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 ${symptoms.includes(s) ? "border-impilo-400 bg-impilo-500 text-white" : "border-gray-300"}`}>{symptoms.includes(s) && <CheckCircle2 className="w-3 h-3" />}</div>
+            <button key={s} type="button" onClick={() => toggleSymptom(s)} className={`flex items-center gap-2 p-3 rounded-lg text-left text-sm font-medium transition-all ${symptoms.includes(s) ? "bg-primary-soft border-2 border-primary/25" : "bg-background border-2 border-transparent hover:bg-neutral-100"}`}>
+              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 ${symptoms.includes(s) ? "border-impilo-400 bg-primary text-white" : "border-border"}`}>{symptoms.includes(s) && <CheckCircle2 className="w-3 h-3" />}</div>
               {s}
             </button>
           ))}
         </div>
       </div>
-      <div className="bg-white rounded-lg border-2 border-impilo-200 p-4">
+      <div className="bg-card rounded-lg border-2 border-primary/25 p-4">
         <h3 className="text-lg font-semibold mb-3">Decision</h3>
         <div className="grid grid-cols-2 gap-4">
-          <button type="button" onClick={() => setDecision("refer")} className={`h-20 rounded-lg text-lg font-bold flex flex-col items-center justify-center gap-1 transition-all ${decision === "refer" ? "bg-red-600 text-white" : "border-2 border-gray-200 text-gray-600 hover:bg-gray-50"}`}><ArrowRight className="w-7 h-7" /> REFER</button>
-          <button type="button" onClick={() => setDecision("reassure")} className={`h-20 rounded-lg text-lg font-bold flex flex-col items-center justify-center gap-1 transition-all ${decision === "reassure" ? "bg-green-600 text-white" : "border-2 border-gray-200 text-gray-600 hover:bg-gray-50"}`}><CheckCircle2 className="w-7 h-7" /> REASSURE</button>
+          <button type="button" onClick={() => setDecision("refer")} className={`h-20 rounded-lg text-lg font-bold flex flex-col items-center justify-center gap-1 transition-all ${decision === "refer" ? "bg-red-600 text-white" : "border-2 border-border text-muted-foreground hover:bg-background"}`}><ArrowRight className="w-7 h-7" /> REFER</button>
+          <button type="button" onClick={() => setDecision("reassure")} className={`h-20 rounded-lg text-lg font-bold flex flex-col items-center justify-center gap-1 transition-all ${decision === "reassure" ? "bg-green-600 text-white" : "border-2 border-border text-muted-foreground hover:bg-background"}`}><CheckCircle2 className="w-7 h-7" /> REASSURE</button>
         </div>
-        {hasDangerSigns && decision !== "refer" && <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-red-800 text-sm font-semibold flex items-center gap-2"><AlertTriangle className="w-5 h-5" /> Danger signs present — referral strongly recommended</div>}
+        {hasDangerSigns && decision !== "refer" && <div className="mt-3 p-3 bg-danger-soft border border-danger/28 rounded-lg text-red-800 text-sm font-semibold flex items-center gap-2"><AlertTriangle className="w-5 h-5" /> Danger signs present — referral strongly recommended</div>}
       </div>
-      <button type="button" onClick={() => onSave?.({ checkedSigns, symptoms, decision })} className="w-full h-14 bg-impilo-500 text-white text-lg font-bold rounded-lg hover:bg-impilo-600">{config.labels.saveLabel}</button>
+      <button type="button" onClick={() => onSave?.({ checkedSigns, symptoms, decision })} className="w-full h-14 bg-primary text-white text-lg font-bold rounded-lg hover:bg-primary-hover">{config.labels.saveLabel}</button>
     </div>
   );
 }
@@ -180,28 +180,28 @@ function NursingHistoryForm({ config, onSave }: { config: CadreFormConfig; onSav
 
   return (
     <div className="space-y-4">
-      <div className="bg-impilo-50 border border-impilo-200 rounded-lg p-4 flex items-center gap-3">
-        <Stethoscope className="w-6 h-6 text-impilo-500 shrink-0" />
-        <div><p className="font-semibold text-base text-impilo-800">Nursing Assessment</p><p className="text-sm text-impilo-600">{config.labels.guidanceText}</p></div>
+      <div className="bg-primary-soft border border-primary/25 rounded-lg p-4 flex items-center gap-3">
+        <Stethoscope className="w-6 h-6 text-primary shrink-0" />
+        <div><p className="font-semibold text-base text-impilo-800">Nursing Assessment</p><p className="text-sm text-primary">{config.labels.guidanceText}</p></div>
       </div>
 
       {/* Presenting Complaint */}
-      <div className="bg-white rounded-lg border p-4 space-y-3">
-        <h3 className="text-base font-semibold text-gray-900">Presenting Complaint</h3>
+      <div className="bg-card rounded-lg border p-4 space-y-3">
+        <h3 className="text-base font-semibold text-foreground">Presenting Complaint</h3>
         <SelectField label="Main Complaint" value={formData.chief_complaint || ""} onChange={v => update("chief_complaint", v)} options={["Fever", "Cough", "Diarrhoea", "Abdominal pain", "Chest pain", "Headache", "Difficulty breathing", "Injury / trauma", "Skin problem", "Pregnancy-related", "Labour pains", "Post-delivery complaint", "Other"]} />
         <SelectField label="Duration" value={formData.duration || ""} onChange={v => update("duration", v)} options={["<24 hours", "1-3 days", "4-7 days", "1-2 weeks", "2-4 weeks", ">1 month"]} />
         <SelectField label="Severity" value={formData.severity || ""} onChange={v => update("severity", v)} options={["Mild — able to perform daily activities", "Moderate — limited daily activities", "Severe — unable to perform daily activities"]} />
       </div>
 
       {/* Danger Signs */}
-      <div className="bg-white rounded-lg border p-4">
-        <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-3"><AlertTriangle className="w-5 h-5 text-amber-500" /> Danger Sign Screen</h3>
+      <div className="bg-card rounded-lg border p-4">
+        <h3 className="text-base font-semibold text-foreground flex items-center gap-2 mb-3"><AlertTriangle className="w-5 h-5 text-amber-500" /> Danger Sign Screen</h3>
         <CheckGroup title="" items={dangerSigns} checked={checkedItems.danger_signs || []} onToggle={item => toggleCheck("danger_signs", item)} />
       </div>
 
       {/* Focused History */}
-      <div className="bg-white rounded-lg border p-4 space-y-3">
-        <h3 className="text-base font-semibold text-gray-900">Focused History</h3>
+      <div className="bg-card rounded-lg border p-4 space-y-3">
+        <h3 className="text-base font-semibold text-foreground">Focused History</h3>
         <CheckGroup title="Known Conditions" items={["Hypertension", "Diabetes", "HIV", "TB", "Asthma/COPD", "Heart disease", "Epilepsy", "Mental health condition", "Cancer", "None known"]} checked={checkedItems.pmh || []} onToggle={item => toggleCheck("pmh", item)} />
         <SelectField label="Currently on Medication" value={formData.on_meds || ""} onChange={v => update("on_meds", v)} options={["Yes — compliant", "Yes — not compliant", "No", "Unknown"]} />
         <SelectField label="Known Allergies" value={formData.allergies || ""} onChange={v => update("allergies", v)} options={["NKDA", "Penicillin", "Sulfa drugs", "NSAIDs", "Other — specify"]} />
@@ -209,13 +209,13 @@ function NursingHistoryForm({ config, onSave }: { config: CadreFormConfig; onSav
 
       {/* ANC-specific obstetric screen */}
       {config.history.showObsGyn && (
-        <div className="bg-white rounded-lg border p-4 space-y-3">
-          <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2"><Baby className="w-5 h-5" /> Obstetric Quick Screen</h3>
+        <div className="bg-card rounded-lg border p-4 space-y-3">
+          <h3 className="text-base font-semibold text-foreground flex items-center gap-2"><Baby className="w-5 h-5" /> Obstetric Quick Screen</h3>
           <div className="grid grid-cols-4 gap-3">
             {["Gravida", "Para", "Miscarriages", "Living Children"].map(label => (
               <div key={label} className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-500">{label}</label>
-                <input type="number" min={0} max={20} value={formData[label.toLowerCase()] || ""} onChange={e => update(label.toLowerCase(), e.target.value)} className="w-full h-10 px-3 text-center text-lg font-bold rounded-md border border-gray-300 bg-white" />
+                <label className="text-xs font-bold text-muted-foreground">{label}</label>
+                <input type="number" min={0} max={20} value={formData[label.toLowerCase()] || ""} onChange={e => update(label.toLowerCase(), e.target.value)} className="w-full h-10 px-3 text-center text-lg font-bold rounded-md border border-border bg-card" />
               </div>
             ))}
           </div>
@@ -226,15 +226,15 @@ function NursingHistoryForm({ config, onSave }: { config: CadreFormConfig; onSav
 
       {/* Social screen */}
       {config.history.showSocialHistory && (
-        <div className="bg-white rounded-lg border p-4 space-y-3">
-          <h3 className="text-base font-semibold text-gray-900">Social Screen</h3>
+        <div className="bg-card rounded-lg border p-4 space-y-3">
+          <h3 className="text-base font-semibold text-foreground">Social Screen</h3>
           <SelectField label="Smoking" value={formData.smoking || ""} onChange={v => update("smoking", v)} options={["Never", "Current", "Ex-smoker"]} />
           <SelectField label="Alcohol" value={formData.alcohol || ""} onChange={v => update("alcohol", v)} options={["None", "Social", "Heavy", "Dependent"]} />
           <SelectField label="Support System" value={formData.support || ""} onChange={v => update("support", v)} options={["Good support", "Limited support", "No support / isolated"]} />
         </div>
       )}
 
-      <button type="button" onClick={() => onSave?.({ formData, checkedItems })} className="w-full h-12 bg-impilo-500 text-white text-base font-semibold rounded-lg hover:bg-impilo-600 flex items-center justify-center gap-2"><CheckCircle2 className="w-5 h-5" /> {config.labels.saveLabel}</button>
+      <button type="button" onClick={() => onSave?.({ formData, checkedItems })} className="w-full h-12 bg-primary text-white text-base font-semibold rounded-lg hover:bg-primary-hover flex items-center justify-center gap-2"><CheckCircle2 className="w-5 h-5" /> {config.labels.saveLabel}</button>
     </div>
   );
 }
@@ -278,10 +278,10 @@ function DoctorHistoryForm({ config, onSave }: { config: CadreFormConfig; onSave
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">ICD-10 / SNOMED CT coded</span>
-          <span className="px-2 py-0.5 rounded text-xs font-medium bg-impilo-100 text-impilo-600">{savedEntries.length} entries saved</span>
+          <span className="px-2 py-0.5 rounded text-xs font-medium bg-neutral-100 text-muted-foreground">ICD-10 / SNOMED CT coded</span>
+          <span className="px-2 py-0.5 rounded text-xs font-medium bg-primary-soft text-primary">{savedEntries.length} entries saved</span>
         </div>
-        <button type="button" onClick={() => setIsAddingEntry(!isAddingEntry)} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 ${isAddingEntry ? "bg-gray-100 text-gray-600" : "bg-impilo-500 text-white"}`}>
+        <button type="button" onClick={() => setIsAddingEntry(!isAddingEntry)} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 ${isAddingEntry ? "bg-neutral-100 text-muted-foreground" : "bg-primary text-white"}`}>
           {isAddingEntry ? <><X className="w-4 h-4" /> Close</> : <><Plus className="w-4 h-4" /> New History Entry</>}
         </button>
       </div>
@@ -297,10 +297,10 @@ function DoctorHistoryForm({ config, onSave }: { config: CadreFormConfig; onSave
                 <button key={s.id} type="button" onClick={() => setActiveSection(s.id)}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors ${
                     activeSection === s.id
-                      ? "bg-impilo-500 text-white"
+                      ? "bg-primary text-white"
                       : saved
                         ? "bg-green-100 text-green-700 border border-green-300"
-                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        : "bg-neutral-100 text-muted-foreground hover:bg-neutral-100"
                   }`}>
                   {saved ? <CheckCircle2 className="w-4 h-4" /> : <Icon className="w-4 h-4" />} {s.label}
                 </button>
@@ -310,10 +310,10 @@ function DoctorHistoryForm({ config, onSave }: { config: CadreFormConfig; onSave
 
           {/* HPI — SOCRATES */}
           {activeSection === "hpi" && (
-            <div className="bg-white rounded-lg border p-4">
+            <div className="bg-card rounded-lg border p-4">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-base font-semibold text-gray-900">History of Present Illness</h3>
-                <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-500">SOCRATES Format</span>
+                <h3 className="text-base font-semibold text-foreground">History of Present Illness</h3>
+                <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-neutral-100 text-muted-foreground">SOCRATES Format</span>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <SelectField label="Site" value={formData.hpi_site || ""} onChange={v => update("hpi_site", v)}
@@ -335,7 +335,7 @@ function DoctorHistoryForm({ config, onSave }: { config: CadreFormConfig; onSave
 
                 {/* Associated Symptoms — 4-column pill toggle grid */}
                 <div className="col-span-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Associated Symptoms</label>
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Associated Symptoms</label>
                   <div className="grid grid-cols-4 gap-1.5 mt-1.5">
                     {["Nausea", "Vomiting", "Fever", "Chills", "Sweating", "Weight loss",
                       "Anorexia", "Fatigue", "Dyspnoea", "Palpitations", "Dizziness", "Syncope",
@@ -345,8 +345,8 @@ function DoctorHistoryForm({ config, onSave }: { config: CadreFormConfig; onSave
                         <button key={s} type="button" onClick={() => toggleCheck("associated", s)}
                           className={`p-2 rounded text-xs font-medium transition-all ${
                             active
-                              ? "bg-impilo-50 border border-impilo-200 text-impilo-600"
-                              : "bg-gray-50 border border-transparent hover:bg-gray-100 text-gray-600"
+                              ? "bg-primary-soft border border-primary/25 text-primary"
+                              : "bg-background border border-transparent hover:bg-neutral-100 text-muted-foreground"
                           }`}>
                           {s}
                         </button>
@@ -364,7 +364,7 @@ function DoctorHistoryForm({ config, onSave }: { config: CadreFormConfig; onSave
               </div>
               <div className="flex justify-end mt-4">
                 <button type="button" onClick={saveSection}
-                  className="px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 flex items-center gap-2">
+                  className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4" /> Save HPI
                 </button>
               </div>
@@ -373,45 +373,45 @@ function DoctorHistoryForm({ config, onSave }: { config: CadreFormConfig; onSave
 
           {/* PMH — ICD-10 Coded */}
           {activeSection === "pmh" && (
-            <div className="bg-white rounded-lg border p-4 space-y-3">
-              <div className="flex items-center justify-between"><h3 className="text-base font-semibold text-gray-900">Past Medical History</h3><span className="px-2 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-500">ICD-10</span></div>
-              <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /><input type="text" placeholder="Search ICD-10 conditions..." value={conditionSearch} onChange={e => setConditionSearch(e.target.value)} className="w-full h-10 pl-10 pr-3 text-sm rounded-md border border-gray-300 bg-white" /></div>
+            <div className="bg-card rounded-lg border p-4 space-y-3">
+              <div className="flex items-center justify-between"><h3 className="text-base font-semibold text-foreground">Past Medical History</h3><span className="px-2 py-0.5 rounded text-[10px] font-medium bg-neutral-100 text-muted-foreground">ICD-10</span></div>
+              <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /><input type="text" placeholder="Search ICD-10 conditions..." value={conditionSearch} onChange={e => setConditionSearch(e.target.value)} className="w-full h-10 pl-10 pr-3 text-sm rounded-md border border-border bg-card" /></div>
               {selectedConditions.length > 0 && <div className="flex flex-wrap gap-2">{selectedConditions.map(c => (
-                <span key={c.code} className="inline-flex items-center gap-1 px-2 py-1 bg-impilo-100 text-impilo-600 rounded text-xs font-medium"><span className="font-mono text-[10px]">{c.code}</span> {c.display}<button type="button" onClick={() => setSelectedConditions(prev => prev.filter(x => x.code !== c.code))} className="ml-1 hover:bg-impilo-200 rounded-full p-0.5"><X className="w-3 h-3" /></button></span>
+                <span key={c.code} className="inline-flex items-center gap-1 px-2 py-1 bg-primary-soft text-primary rounded text-xs font-medium"><span className="font-mono text-[10px]">{c.code}</span> {c.display}<button type="button" onClick={() => setSelectedConditions(prev => prev.filter(x => x.code !== c.code))} className="ml-1 hover:bg-impilo-200 rounded-full p-0.5"><X className="w-3 h-3" /></button></span>
               ))}</div>}
               <div className="max-h-64 overflow-y-auto space-y-1">{filteredConditions.map(c => {
                 const selected = selectedConditions.some(s => s.code === c.code);
-                return <button key={c.code} type="button" onClick={() => selected ? setSelectedConditions(prev => prev.filter(x => x.code !== c.code)) : setSelectedConditions(prev => [...prev, c])} className={`w-full flex items-center justify-between p-2.5 rounded-lg text-left text-sm transition-all ${selected ? "bg-impilo-50 border border-impilo-200" : "hover:bg-gray-50"}`}><span className="font-medium">{c.display}</span><span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-gray-100 text-gray-500">{c.code}</span></button>;
+                return <button key={c.code} type="button" onClick={() => selected ? setSelectedConditions(prev => prev.filter(x => x.code !== c.code)) : setSelectedConditions(prev => [...prev, c])} className={`w-full flex items-center justify-between p-2.5 rounded-lg text-left text-sm transition-all ${selected ? "bg-primary-soft border border-primary/25" : "hover:bg-background"}`}><span className="font-medium">{c.display}</span><span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-neutral-100 text-muted-foreground">{c.code}</span></button>;
               })}</div>
               {selectedConditions.length > 0 && <div className="space-y-2 pt-2 border-t">{selectedConditions.map(c => (
                 <div key={c.code} className="flex items-center gap-3"><span className="text-sm font-medium flex-1">{c.display}</span>
-                  <select className="h-8 px-2 text-xs rounded border border-gray-300 bg-white" onChange={e => update(`pmh_status_${c.code}`, e.target.value)}><option value="active">Active</option><option value="resolved">Resolved</option><option value="in_remission">In Remission</option></select>
-                  <input type="number" placeholder="Year Dx" min={1950} max={2026} className="w-24 h-8 px-2 text-xs rounded border border-gray-300 bg-white" onChange={e => update(`pmh_year_${c.code}`, e.target.value)} />
+                  <select className="h-8 px-2 text-xs rounded border border-border bg-card" onChange={e => update(`pmh_status_${c.code}`, e.target.value)}><option value="active">Active</option><option value="resolved">Resolved</option><option value="in_remission">In Remission</option></select>
+                  <input type="number" placeholder="Year Dx" min={1950} max={2026} className="w-24 h-8 px-2 text-xs rounded border border-border bg-card" onChange={e => update(`pmh_year_${c.code}`, e.target.value)} />
                 </div>
               ))}</div>}
-              <div className="flex justify-end"><button type="button" onClick={saveSection} className="px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Save PMH</button></div>
+              <div className="flex justify-end"><button type="button" onClick={saveSection} className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Save PMH</button></div>
             </div>
           )}
 
           {/* Surgical History */}
           {activeSection === "psh" && (
-            <div className="bg-white rounded-lg border p-4 space-y-3">
-              <h3 className="text-base font-semibold text-gray-900">Past Surgical History</h3>
+            <div className="bg-card rounded-lg border p-4 space-y-3">
+              <h3 className="text-base font-semibold text-foreground">Past Surgical History</h3>
               {[1, 2, 3].map(i => (
-                <div key={i} className="grid grid-cols-3 gap-3 p-3 bg-gray-50 rounded-lg">
+                <div key={i} className="grid grid-cols-3 gap-3 p-3 bg-background rounded-lg">
                   <SelectField label={`Procedure ${i}`} value={formData[`psh_proc_${i}`] || ""} onChange={v => update(`psh_proc_${i}`, v)} options={["", "Appendicectomy", "Cholecystectomy", "Caesarean Section", "Hernia Repair", "Hysterectomy", "CABG", "Valve Replacement", "Joint Replacement", "Fracture Fixation", "Laparotomy", "Thoracotomy", "Craniotomy", "Other"]} />
                   <NumberInput label="Year" value={formData[`psh_year_${i}`] || ""} onChange={v => update(`psh_year_${i}`, v)} />
                   <SelectField label="Complications" value={formData[`psh_comp_${i}`] || ""} onChange={v => update(`psh_comp_${i}`, v)} options={["None", "Infection", "Bleeding", "DVT/PE", "Anaesthetic complication", "Other"]} />
                 </div>
               ))}
-              <div className="flex justify-end"><button type="button" onClick={saveSection} className="px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Save Surgical Hx</button></div>
+              <div className="flex justify-end"><button type="button" onClick={saveSection} className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Save Surgical Hx</button></div>
             </div>
           )}
 
           {/* Family History */}
           {activeSection === "fhx" && (
-            <div className="bg-white rounded-lg border p-4 space-y-3">
-              <h3 className="text-base font-semibold text-gray-900">Family History</h3>
+            <div className="bg-card rounded-lg border p-4 space-y-3">
+              <h3 className="text-base font-semibold text-foreground">Family History</h3>
               {[
                 { condition: "Hypertension", field: "fhx_htn" }, { condition: "Diabetes Mellitus", field: "fhx_dm" },
                 { condition: "Ischaemic Heart Disease", field: "fhx_ihd" }, { condition: "Stroke / CVA", field: "fhx_cva" },
@@ -419,21 +419,21 @@ function DoctorHistoryForm({ config, onSave }: { config: CadreFormConfig; onSave
                 { condition: "Mental Health Disorder", field: "fhx_psych" }, { condition: "Tuberculosis", field: "fhx_tb" },
                 { condition: "Sickle Cell / Thalassaemia", field: "fhx_haem" },
               ].map(item => (
-                <div key={item.field} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <span className="text-sm font-medium text-gray-700">{item.condition}</span>
+                <div key={item.field} className="flex items-center justify-between p-3 bg-background rounded-lg">
+                  <span className="text-sm font-medium text-foreground">{item.condition}</span>
                   <div className="flex gap-1.5">{["None", "Father", "Mother", "Sibling", "Multiple"].map(rel => (
-                    <button key={rel} type="button" onClick={() => update(item.field, rel)} className={`px-3 py-1.5 rounded text-xs font-medium transition-all ${formData[item.field] === rel ? "bg-impilo-500 text-white" : "bg-gray-200 text-gray-600 hover:bg-gray-300"}`}>{rel}</button>
+                    <button key={rel} type="button" onClick={() => update(item.field, rel)} className={`px-3 py-1.5 rounded text-xs font-medium transition-all ${formData[item.field] === rel ? "bg-primary text-white" : "bg-neutral-100 text-muted-foreground hover:bg-gray-300"}`}>{rel}</button>
                   ))}</div>
                 </div>
               ))}
-              <div className="flex justify-end"><button type="button" onClick={saveSection} className="px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Save Family Hx</button></div>
+              <div className="flex justify-end"><button type="button" onClick={saveSection} className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Save Family Hx</button></div>
             </div>
           )}
 
           {/* Social History */}
           {activeSection === "shx" && (
-            <div className="bg-white rounded-lg border p-4 space-y-3">
-              <h3 className="text-base font-semibold text-gray-900">Social History</h3>
+            <div className="bg-card rounded-lg border p-4 space-y-3">
+              <h3 className="text-base font-semibold text-foreground">Social History</h3>
               <SelectField label="Occupation" value={formData.shx_occupation || ""} onChange={v => update("shx_occupation", v)} options={["Employed", "Unemployed", "Student", "Retired", "Self-employed", "Homemaker"]} />
               <SelectField label="Smoking Status" value={formData.shx_smoking || ""} onChange={v => update("shx_smoking", v)} options={["Never smoked", "Current smoker", "Ex-smoker (<1yr)", "Ex-smoker (>1yr)"]} />
               {formData.shx_smoking?.includes("smoker") && <NumberInput label="Pack-Years" value={formData.shx_pack_years || ""} onChange={v => update("shx_pack_years", v)} />}
@@ -442,64 +442,64 @@ function DoctorHistoryForm({ config, onSave }: { config: CadreFormConfig; onSave
               <SelectField label="Exercise" value={formData.shx_exercise || ""} onChange={v => update("shx_exercise", v)} options={["Sedentary", "Light (1-2x/wk)", "Moderate (3-4x/wk)", "Active (5+/wk)"]} />
               <SelectField label="Diet" value={formData.shx_diet || ""} onChange={v => update("shx_diet", v)} options={["Balanced", "Vegetarian", "Vegan", "High salt/fat", "Restricted — medical"]} />
               <SelectField label="Living Situation" value={formData.shx_living || ""} onChange={v => update("shx_living", v)} options={["Lives alone", "With spouse/partner", "With family", "Assisted living", "Homeless", "Institution"]} />
-              <div className="flex justify-end"><button type="button" onClick={saveSection} className="px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Save Social Hx</button></div>
+              <div className="flex justify-end"><button type="button" onClick={saveSection} className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Save Social Hx</button></div>
             </div>
           )}
 
           {/* Obs/Gyn */}
           {activeSection === "obgyn" && (
-            <div className="bg-white rounded-lg border p-4 space-y-4">
-              <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2"><Baby className="w-5 h-5" /> Obstetric & Gynaecological History</h3>
+            <div className="bg-card rounded-lg border p-4 space-y-4">
+              <h3 className="text-base font-semibold text-foreground flex items-center gap-2"><Baby className="w-5 h-5" /> Obstetric & Gynaecological History</h3>
               <div className="grid grid-cols-4 gap-3">{[{ label: "Gravida", field: "obs_gravida" }, { label: "Para", field: "obs_para" }, { label: "Abortions", field: "obs_abortions" }, { label: "Living Children", field: "obs_living" }].map(item => (
-                <div key={item.field} className="space-y-1.5"><label className="text-xs font-bold text-gray-500 uppercase">{item.label}</label><input type="number" min={0} max={20} value={formData[item.field] || ""} onChange={e => update(item.field, e.target.value)} className="w-full h-12 px-3 text-center text-2xl font-bold rounded-md border border-gray-300 bg-white" /></div>
+                <div key={item.field} className="space-y-1.5"><label className="text-xs font-bold text-muted-foreground uppercase">{item.label}</label><input type="number" min={0} max={20} value={formData[item.field] || ""} onChange={e => update(item.field, e.target.value)} className="w-full h-12 px-3 text-center text-2xl font-bold rounded-md border border-border bg-card" /></div>
               ))}</div>
               <SelectField label="Menarche Age" value={formData.obs_menarche || ""} onChange={v => update("obs_menarche", v)} options={Array.from({ length: 10 }, (_, i) => `${i + 9} years`)} />
               <SelectField label="Menstrual Cycle" value={formData.obs_cycle || ""} onChange={v => update("obs_cycle", v)} options={["Regular (28±7 days)", "Irregular", "Amenorrhoea", "Post-menopausal", "On contraception"]} />
               <SelectField label="Contraception" value={formData.obs_contraception || ""} onChange={v => update("obs_contraception", v)} options={["None", "OCP", "Injectable", "IUD/IUS", "Implant", "Condom", "Sterilised", "Natural methods"]} />
               <SelectField label="Last Cervical Screening" value={formData.obs_pap || ""} onChange={v => update("obs_pap", v)} options={["Within 1 year", "1-3 years ago", "3-5 years ago", ">5 years / Never", "Unknown"]} />
-              <div className="flex justify-end"><button type="button" onClick={saveSection} className="px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Save Obs/Gyn</button></div>
+              <div className="flex justify-end"><button type="button" onClick={saveSection} className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Save Obs/Gyn</button></div>
             </div>
           )}
 
           {/* Drug History */}
           {activeSection === "drugs" && (
-            <div className="bg-white rounded-lg border p-4 space-y-3">
-              <div className="flex items-center justify-between"><h3 className="text-base font-semibold text-gray-900 flex items-center gap-2"><Pill className="w-5 h-5" /> Current Medications</h3><span className="px-2 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-500">ATC coded</span></div>
+            <div className="bg-card rounded-lg border p-4 space-y-3">
+              <div className="flex items-center justify-between"><h3 className="text-base font-semibold text-foreground flex items-center gap-2"><Pill className="w-5 h-5" /> Current Medications</h3><span className="px-2 py-0.5 rounded text-[10px] font-medium bg-neutral-100 text-muted-foreground">ATC coded</span></div>
               {[1, 2, 3, 4, 5].map(i => (
-                <div key={i} className="grid grid-cols-4 gap-2 p-2.5 bg-gray-50 rounded-lg">
-                  <div className="col-span-1 space-y-1"><label className="text-[10px] font-bold text-gray-500 uppercase">Medication</label><input type="text" placeholder={`Drug ${i}`} value={formData[`drug_name_${i}`] || ""} onChange={e => update(`drug_name_${i}`, e.target.value)} className="w-full h-9 px-2 text-sm rounded border border-gray-300 bg-white" /></div>
-                  <div className="space-y-1"><label className="text-[10px] font-bold text-gray-500 uppercase">Dose</label><input type="text" placeholder="e.g. 500mg" value={formData[`drug_dose_${i}`] || ""} onChange={e => update(`drug_dose_${i}`, e.target.value)} className="w-full h-9 px-2 text-sm rounded border border-gray-300 bg-white" /></div>
-                  <div className="space-y-1"><label className="text-[10px] font-bold text-gray-500 uppercase">Route</label><select value={formData[`drug_route_${i}`] || ""} onChange={e => update(`drug_route_${i}`, e.target.value)} className="w-full h-9 px-2 text-xs rounded border border-gray-300 bg-white"><option value="">—</option><option>PO</option><option>IV</option><option>IM</option><option>SC</option><option>INH</option><option>TOP</option><option>PR</option><option>SL</option></select></div>
-                  <div className="space-y-1"><label className="text-[10px] font-bold text-gray-500 uppercase">Frequency</label><select value={formData[`drug_freq_${i}`] || ""} onChange={e => update(`drug_freq_${i}`, e.target.value)} className="w-full h-9 px-2 text-xs rounded border border-gray-300 bg-white"><option value="">—</option><option>OD</option><option>BD</option><option>TDS</option><option>QDS</option><option>PRN</option><option>Nocte</option><option>Stat</option><option>Weekly</option></select></div>
+                <div key={i} className="grid grid-cols-4 gap-2 p-2.5 bg-background rounded-lg">
+                  <div className="col-span-1 space-y-1"><label className="text-[10px] font-bold text-muted-foreground uppercase">Medication</label><input type="text" placeholder={`Drug ${i}`} value={formData[`drug_name_${i}`] || ""} onChange={e => update(`drug_name_${i}`, e.target.value)} className="w-full h-9 px-2 text-sm rounded border border-border bg-card" /></div>
+                  <div className="space-y-1"><label className="text-[10px] font-bold text-muted-foreground uppercase">Dose</label><input type="text" placeholder="e.g. 500mg" value={formData[`drug_dose_${i}`] || ""} onChange={e => update(`drug_dose_${i}`, e.target.value)} className="w-full h-9 px-2 text-sm rounded border border-border bg-card" /></div>
+                  <div className="space-y-1"><label className="text-[10px] font-bold text-muted-foreground uppercase">Route</label><select value={formData[`drug_route_${i}`] || ""} onChange={e => update(`drug_route_${i}`, e.target.value)} className="w-full h-9 px-2 text-xs rounded border border-border bg-card"><option value="">—</option><option>PO</option><option>IV</option><option>IM</option><option>SC</option><option>INH</option><option>TOP</option><option>PR</option><option>SL</option></select></div>
+                  <div className="space-y-1"><label className="text-[10px] font-bold text-muted-foreground uppercase">Frequency</label><select value={formData[`drug_freq_${i}`] || ""} onChange={e => update(`drug_freq_${i}`, e.target.value)} className="w-full h-9 px-2 text-xs rounded border border-border bg-card"><option value="">—</option><option>OD</option><option>BD</option><option>TDS</option><option>QDS</option><option>PRN</option><option>Nocte</option><option>Stat</option><option>Weekly</option></select></div>
                 </div>
               ))}
-              <div className="flex justify-end"><button type="button" onClick={saveSection} className="px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Save Medications</button></div>
+              <div className="flex justify-end"><button type="button" onClick={saveSection} className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Save Medications</button></div>
             </div>
           )}
 
           {/* Allergies */}
           {activeSection === "allergies" && (
-            <div className="bg-white rounded-lg border border-amber-200 p-4 space-y-3">
-              <h3 className="text-base font-semibold text-amber-700 flex items-center gap-2"><AlertTriangle className="w-5 h-5" /> Allergies & Adverse Reactions</h3>
+            <div className="bg-card rounded-lg border border-warning/35 p-4 space-y-3">
+              <h3 className="text-base font-semibold text-warning-foreground flex items-center gap-2"><AlertTriangle className="w-5 h-5" /> Allergies & Adverse Reactions</h3>
               <div className="flex gap-3 mb-2">{["NKDA", "Unable to assess", "Has allergies"].map(opt => (
-                <button key={opt} type="button" onClick={() => update("allergy_status", opt)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${formData.allergy_status === opt ? opt === "Has allergies" ? "bg-amber-100 border-2 border-amber-400 text-amber-800" : "bg-impilo-50 border-2 border-impilo-200 text-impilo-600" : "bg-gray-100 border-2 border-transparent hover:bg-gray-200 text-gray-600"}`}>{opt}</button>
+                <button key={opt} type="button" onClick={() => update("allergy_status", opt)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${formData.allergy_status === opt ? opt === "Has allergies" ? "bg-amber-100 border-2 border-amber-400 text-warning-foreground" : "bg-primary-soft border-2 border-primary/25 text-primary" : "bg-neutral-100 border-2 border-transparent hover:bg-neutral-100 text-muted-foreground"}`}>{opt}</button>
               ))}</div>
               {formData.allergy_status === "Has allergies" && [1, 2, 3].map(i => (
-                <div key={i} className="grid grid-cols-4 gap-2 p-3 bg-amber-50 border border-amber-100 rounded-lg">
-                  <div className="space-y-1"><label className="text-[10px] font-bold text-gray-500 uppercase">Allergen</label><input type="text" placeholder="e.g. Penicillin" value={formData[`allergen_${i}`] || ""} onChange={e => update(`allergen_${i}`, e.target.value)} className="w-full h-9 px-2 text-sm rounded border border-gray-300 bg-white" /></div>
-                  <div className="space-y-1"><label className="text-[10px] font-bold text-gray-500 uppercase">Type</label><select value={formData[`allergen_type_${i}`] || ""} onChange={e => update(`allergen_type_${i}`, e.target.value)} className="w-full h-9 px-2 text-xs rounded border border-gray-300 bg-white"><option value="">—</option><option>Drug</option><option>Food</option><option>Environmental</option><option>Latex</option><option>Other</option></select></div>
-                  <div className="space-y-1"><label className="text-[10px] font-bold text-gray-500 uppercase">Reaction</label><select value={formData[`allergen_reaction_${i}`] || ""} onChange={e => update(`allergen_reaction_${i}`, e.target.value)} className="w-full h-9 px-2 text-xs rounded border border-gray-300 bg-white"><option value="">—</option><option>Rash</option><option>Urticaria</option><option>Anaphylaxis</option><option>Angioedema</option><option>GI upset</option><option>Bronchospasm</option><option>Other</option></select></div>
-                  <div className="space-y-1"><label className="text-[10px] font-bold text-gray-500 uppercase">Severity</label><select value={formData[`allergen_sev_${i}`] || ""} onChange={e => update(`allergen_sev_${i}`, e.target.value)} className="w-full h-9 px-2 text-xs rounded border border-gray-300 bg-white"><option value="">—</option><option>Mild</option><option>Moderate</option><option>Severe</option><option>Life-threatening</option></select></div>
+                <div key={i} className="grid grid-cols-4 gap-2 p-3 bg-warning-soft border border-amber-100 rounded-lg">
+                  <div className="space-y-1"><label className="text-[10px] font-bold text-muted-foreground uppercase">Allergen</label><input type="text" placeholder="e.g. Penicillin" value={formData[`allergen_${i}`] || ""} onChange={e => update(`allergen_${i}`, e.target.value)} className="w-full h-9 px-2 text-sm rounded border border-border bg-card" /></div>
+                  <div className="space-y-1"><label className="text-[10px] font-bold text-muted-foreground uppercase">Type</label><select value={formData[`allergen_type_${i}`] || ""} onChange={e => update(`allergen_type_${i}`, e.target.value)} className="w-full h-9 px-2 text-xs rounded border border-border bg-card"><option value="">—</option><option>Drug</option><option>Food</option><option>Environmental</option><option>Latex</option><option>Other</option></select></div>
+                  <div className="space-y-1"><label className="text-[10px] font-bold text-muted-foreground uppercase">Reaction</label><select value={formData[`allergen_reaction_${i}`] || ""} onChange={e => update(`allergen_reaction_${i}`, e.target.value)} className="w-full h-9 px-2 text-xs rounded border border-border bg-card"><option value="">—</option><option>Rash</option><option>Urticaria</option><option>Anaphylaxis</option><option>Angioedema</option><option>GI upset</option><option>Bronchospasm</option><option>Other</option></select></div>
+                  <div className="space-y-1"><label className="text-[10px] font-bold text-muted-foreground uppercase">Severity</label><select value={formData[`allergen_sev_${i}`] || ""} onChange={e => update(`allergen_sev_${i}`, e.target.value)} className="w-full h-9 px-2 text-xs rounded border border-border bg-card"><option value="">—</option><option>Mild</option><option>Moderate</option><option>Severe</option><option>Life-threatening</option></select></div>
                 </div>
               ))}
-              <div className="flex justify-end"><button type="button" onClick={saveSection} className="px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Save Allergies</button></div>
+              <div className="flex justify-end"><button type="button" onClick={saveSection} className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Save Allergies</button></div>
             </div>
           )}
 
           {/* Review of Systems */}
           {activeSection === "ros" && (
-            <div className="bg-white rounded-lg border p-4 space-y-4">
-              <h3 className="text-base font-semibold text-gray-900">Review of Systems</h3>
+            <div className="bg-card rounded-lg border p-4 space-y-4">
+              <h3 className="text-base font-semibold text-foreground">Review of Systems</h3>
               {[
                 { title: "General", items: ["Fever", "Weight loss", "Fatigue", "Night sweats", "Appetite change"] },
                 { title: "HEENT", items: ["Headache", "Vision changes", "Hearing loss", "Sore throat", "Nasal congestion"] },
@@ -513,16 +513,16 @@ function DoctorHistoryForm({ config, onSave }: { config: CadreFormConfig; onSave
                 { title: "Skin", items: ["Rash", "Pruritus", "Lesions", "Colour changes"] },
               ].map(system => (
                 <div key={system.title} className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{system.title}</label>
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{system.title}</label>
                   <div className="flex flex-wrap gap-1.5">
                     {system.items.map(item => {
                       const checked = (checkedItems[`ros_${system.title}`] || []).includes(item);
-                      return <button key={item} type="button" onClick={() => toggleCheck(`ros_${system.title}`, item)} className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${checked ? "bg-amber-100 border border-amber-300 text-amber-800" : "bg-gray-100 border border-transparent text-gray-600 hover:bg-gray-200"}`}>{checked && "⚠ "}{item}</button>;
+                      return <button key={item} type="button" onClick={() => toggleCheck(`ros_${system.title}`, item)} className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${checked ? "bg-amber-100 border border-amber-300 text-warning-foreground" : "bg-neutral-100 border border-transparent text-muted-foreground hover:bg-neutral-100"}`}>{checked && "⚠ "}{item}</button>;
                     })}
                   </div>
                 </div>
               ))}
-              <div className="flex justify-end"><button type="button" onClick={saveSection} className="px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Save ROS</button></div>
+              <div className="flex justify-end"><button type="button" onClick={saveSection} className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Save ROS</button></div>
             </div>
           )}
         </>
@@ -531,16 +531,16 @@ function DoctorHistoryForm({ config, onSave }: { config: CadreFormConfig; onSave
       {/* Saved Entries Summary */}
       {savedEntries.length > 0 && (
         <div className="space-y-4">
-          <div className="bg-white rounded-lg border p-4">
-            <h3 className="text-base font-semibold text-gray-900 mb-3">Documented History</h3>
+          <div className="bg-card rounded-lg border p-4">
+            <h3 className="text-base font-semibold text-foreground mb-3">Documented History</h3>
             <div className="space-y-2">{savedEntries.map((entry, i) => (
               <div key={i} className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
                 <div className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-green-600" /><span className="text-sm font-medium capitalize">{entry.section.replace(/_/g, " ")}</span></div>
-                <span className="text-xs text-gray-500">{entry.time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                <span className="text-xs text-muted-foreground">{entry.time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
               </div>
             ))}</div>
           </div>
-          <button type="button" onClick={() => onSave?.({ entries: savedEntries, isComplete: true })} className="w-full h-14 bg-impilo-500 text-white text-lg font-bold rounded-lg hover:bg-impilo-600 flex items-center justify-center gap-2">
+          <button type="button" onClick={() => onSave?.({ entries: savedEntries, isComplete: true })} className="w-full h-14 bg-primary text-white text-lg font-bold rounded-lg hover:bg-primary-hover flex items-center justify-center gap-2">
             <CheckCircle2 className="w-6 h-6" /> {config.labels.saveLabel}
           </button>
         </div>

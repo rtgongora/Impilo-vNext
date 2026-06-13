@@ -44,11 +44,11 @@ type DispositionType = "" | "DISCHARGE" | "ADMIT" | "TRANSFER" | "REFER" | "DEAT
 
 const DISPOSITION_OPTIONS = [
   { id: "DISCHARGE" as const, label: "Discharge", icon: Home, description: "Patient ready for discharge home", color: "text-green-600", bg: "bg-green-50 border-green-200" },
-  { id: "ADMIT" as const, label: "Admit", icon: Building, description: "Admit to inpatient ward", color: "text-impilo-500", bg: "bg-impilo-50 border-impilo-200" },
-  { id: "TRANSFER" as const, label: "Transfer", icon: Ambulance, description: "Transfer to another facility", color: "text-amber-600", bg: "bg-amber-50 border-amber-200" },
-  { id: "REFER" as const, label: "Refer", icon: Send, description: "Refer for specialist care", color: "text-indigo-600", bg: "bg-indigo-50 border-indigo-200" },
-  { id: "DEATH" as const, label: "Death", icon: Heart, description: "Record patient death", color: "text-red-600", bg: "bg-red-50 border-red-200" },
-  { id: "LAMA" as const, label: "LAMA", icon: UserX, description: "Left against medical advice", color: "text-gray-600", bg: "bg-gray-50 border-gray-200" },
+  { id: "ADMIT" as const, label: "Admit", icon: Building, description: "Admit to inpatient ward", color: "text-primary", bg: "bg-primary-soft border-primary/25" },
+  { id: "TRANSFER" as const, label: "Transfer", icon: Ambulance, description: "Transfer to another facility", color: "text-amber-600", bg: "bg-warning-soft border-warning/35" },
+  { id: "REFER" as const, label: "Refer", icon: Send, description: "Refer for specialist care", color: "text-indigo-600", bg: "bg-info-soft border-info/25" },
+  { id: "DEATH" as const, label: "Death", icon: Heart, description: "Record patient death", color: "text-red-600", bg: "bg-danger-soft border-danger/28" },
+  { id: "LAMA" as const, label: "LAMA", icon: UserX, description: "Left against medical advice", color: "text-muted-foreground", bg: "bg-background border-border" },
 ];
 
 // Map UI disposition to the BFF discharge_type API values
@@ -155,37 +155,37 @@ export default function VisitOutcomePage() {
       <PageShell title="Visit Outcome">
 
         {!isClinical ? (
-          <div className="bg-white rounded-lg border border-red-200 p-12 text-center">
+          <div className="bg-card rounded-lg border border-danger/28 p-12 text-center">
             <AlertCircle className="w-10 h-10 text-red-300 mx-auto mb-3" />
             <p className="text-red-600 text-sm font-medium">Access Denied</p>
-            <p className="text-gray-500 text-xs mt-1">Only clinical staff can perform discharge operations.</p>
+            <p className="text-muted-foreground text-xs mt-1">Only clinical staff can perform discharge operations.</p>
           </div>
         ) : isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>
         ) : !targetEncounter ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <AlertCircle className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-400 text-sm">No active encounter found</p>
+          <div className="bg-card rounded-lg border border-border p-12 text-center">
+            <AlertCircle className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground text-sm">No active encounter found</p>
           </div>
         ) : submitted ? (
           /* Post-completion */
-          <div className="bg-white rounded-lg border border-green-200 p-8 text-center">
+          <div className="bg-card rounded-lg border border-green-200 p-8 text-center">
             <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-3" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">Encounter Completed</h3>
-            <p className="text-sm text-gray-500 mb-4">
+            <h3 className="text-lg font-semibold text-foreground mb-1">Encounter Completed</h3>
+            <p className="text-sm text-muted-foreground mb-4">
               Visit outcome ({DISPOSITION_OPTIONS.find(d => d.id === disposition)?.label}) has been recorded.
             </p>
             {billId && (
-              <div className="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200">
-                <p className="text-sm text-emerald-700 flex items-center justify-center gap-2">
+              <div className="mb-4 p-3 rounded-lg bg-success-soft border border-success/25">
+                <p className="text-sm text-primary-hover flex items-center justify-center gap-2">
                   <Receipt className="w-4 h-4" />
                   A billing draft has been created for this encounter.
                 </p>
                 <Link
                   href={`/finance/billing/${billId}?patientId=${patientId}&encounterId=${targetEncounter.id}&source=discharge`}
-                  className="inline-flex items-center gap-1 mt-2 px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-100 rounded-lg hover:bg-emerald-200 transition-colors"
+                  className="inline-flex items-center gap-1 mt-2 px-3 py-1.5 text-xs font-medium text-primary-hover bg-emerald-100 rounded-lg hover:bg-emerald-200 transition-colors"
                 >
                   <Receipt className="w-3 h-3" />
                   View Bill
@@ -195,7 +195,7 @@ export default function VisitOutcomePage() {
             <div className="flex justify-center gap-3">
               <button
                 onClick={() => router.push("/queue")}
-                className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                className="px-4 py-2 bg-neutral-100 text-foreground text-sm font-medium rounded-lg hover:bg-neutral-100 transition-colors"
               >
                 Back to Queue
               </button>
@@ -209,7 +209,7 @@ export default function VisitOutcomePage() {
               )}
               <button
                 onClick={() => router.push(`/ehr/${patientId}`)}
-                className="px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 transition-colors"
+                className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover transition-colors"
               >
                 Patient Chart
               </button>
@@ -258,24 +258,24 @@ export default function VisitOutcomePage() {
               ]}
             />
 
-            <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+            <div className="rounded-3xl border border-border bg-background/70 p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
                 Outcome loop status
               </p>
-              <p className="mt-2 text-sm text-slate-800">
+              <p className="mt-2 text-sm text-foreground">
                 {disposition
                   ? `${selectedDispositionLabel} is selected, so the next move is to finish the supporting details here and then complete the encounter without switching to another page.`
                   : "The encounter is in scope, but the closure loop is still open until you choose a disposition and capture the supporting detail below."}
               </p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Use Encounter for the live clinical workspace, Notes for narrative closure, Orders for unfinished downstream work, and Chart for cross-surface continuity after completion.
               </p>
             </div>
             {/* Disposition Selection — Lovable-aligned visual grid */}
-            <div className="bg-white rounded-lg border border-gray-200 p-5">
+            <div className="bg-card rounded-lg border border-border p-5">
               <div className="flex items-center gap-2 mb-4">
-                <CheckCircle2 className="w-5 h-5 text-impilo-500" />
-                <h3 className="font-medium text-gray-900">Visit Disposition</h3>
+                <CheckCircle2 className="w-5 h-5 text-primary" />
+                <h3 className="font-medium text-foreground">Visit Disposition</h3>
               </div>
               <div className="grid grid-cols-3 gap-3">
                 {DISPOSITION_OPTIONS.map((opt) => {
@@ -287,18 +287,18 @@ export default function VisitOutcomePage() {
                       onClick={() => setDisposition(opt.id)}
                       className={`flex flex-col items-center gap-2 p-4 border-2 rounded-lg transition-all ${
                         selected
-                          ? `border-impilo-400 bg-impilo-50`
-                          : "border-gray-200 hover:bg-gray-50"
+                          ? `border-impilo-400 bg-primary-soft`
+                          : "border-border hover:bg-background"
                       }`}
                     >
                       <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                        selected ? "bg-blue-100" : "bg-gray-100"
+                        selected ? "bg-blue-100" : "bg-neutral-100"
                       }`}>
                         <Icon className={`w-6 h-6 ${opt.color}`} />
                       </div>
                       <div className="text-center">
-                        <div className="font-medium text-sm text-gray-900">{opt.label}</div>
-                        <div className="text-[10px] text-gray-500">{opt.description}</div>
+                        <div className="font-medium text-sm text-foreground">{opt.label}</div>
+                        <div className="text-[10px] text-muted-foreground">{opt.description}</div>
                       </div>
                     </button>
                   );
@@ -308,10 +308,10 @@ export default function VisitOutcomePage() {
 
             {/* Disposition-specific form */}
             {disposition && (
-              <div className="bg-white rounded-lg border border-gray-200 p-5">
+              <div className="bg-card rounded-lg border border-border p-5">
                 <div className="flex items-center gap-2 mb-4">
                   <FileSignature className="w-5 h-5 text-indigo-500" />
-                  <h3 className="font-medium text-gray-900">
+                  <h3 className="font-medium text-foreground">
                     {DISPOSITION_OPTIONS.find(d => d.id === disposition)?.label} Details
                   </h3>
                 </div>
@@ -321,18 +321,18 @@ export default function VisitOutcomePage() {
                   {disposition === "ADMIT" && (
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Admitting Ward</label>
+                        <label className="block text-xs font-medium text-muted-foreground mb-1">Admitting Ward</label>
                         <input type="text" value={admitWard} onChange={(e) => setAdmitWard(e.target.value)}
                           placeholder="e.g. Medical Ward 1, ICU, Maternity"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
+                          className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Priority</label>
+                        <label className="block text-xs font-medium text-muted-foreground mb-1">Priority</label>
                         <div className="flex gap-2 mt-1">
                           {["Routine", "Urgent", "Emergency"].map((p) => (
                             <button key={p} onClick={() => setAdmitPriority(p)}
                               className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
-                                admitPriority === p ? "bg-impilo-100 text-impilo-600 border-impilo-200" : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                                admitPriority === p ? "bg-primary-soft text-primary border-primary/25" : "bg-card text-muted-foreground border-border hover:bg-background"
                               }`}>{p}</button>
                           ))}
                         </div>
@@ -342,22 +342,22 @@ export default function VisitOutcomePage() {
 
                   {disposition === "TRANSFER" && (
                     <>
-                      <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2">
+                      <div className="p-3 bg-warning-soft border border-warning/35 rounded-lg flex items-center gap-2">
                         <AlertTriangle className="w-4 h-4 text-amber-600" />
-                        <span className="text-sm text-amber-700">Ensure receiving facility has confirmed acceptance</span>
+                        <span className="text-sm text-warning-foreground">Ensure receiving facility has confirmed acceptance</span>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">Receiving Facility</label>
+                          <label className="block text-xs font-medium text-muted-foreground mb-1">Receiving Facility</label>
                           <input type="text" value={transferFacility} onChange={(e) => setTransferFacility(e.target.value)}
                             placeholder="Facility name"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
+                            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">Reason for Transfer</label>
+                          <label className="block text-xs font-medium text-muted-foreground mb-1">Reason for Transfer</label>
                           <input type="text" value={transferReason} onChange={(e) => setTransferReason(e.target.value)}
                             placeholder="Why is the patient being transferred?"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
+                            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
                         </div>
                       </div>
                     </>
@@ -365,35 +365,35 @@ export default function VisitOutcomePage() {
 
                   {disposition === "REFER" && (
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Referral Destination</label>
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">Referral Destination</label>
                       <input type="text" value={referDestination} onChange={(e) => setReferDestination(e.target.value)}
                         placeholder="e.g. Cardiology Clinic, Diabetes Clinic"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
+                        className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
                     </div>
                   )}
 
                   {disposition === "DEATH" && (
                     <>
-                      <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
+                      <div className="p-3 bg-danger-soft border border-danger/28 rounded-lg flex items-center gap-2">
                         <AlertCircle className="w-4 h-4 text-red-600" />
-                        <span className="text-sm text-red-700">This action records a patient death</span>
+                        <span className="text-sm text-danger">This action records a patient death</span>
                       </div>
                       <div className="grid grid-cols-3 gap-4">
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">Date of Death</label>
+                          <label className="block text-xs font-medium text-muted-foreground mb-1">Date of Death</label>
                           <input type="date" value={deathDate} onChange={(e) => setDeathDate(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
+                            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">Time of Death</label>
+                          <label className="block text-xs font-medium text-muted-foreground mb-1">Time of Death</label>
                           <input type="time" value={deathTime} onChange={(e) => setDeathTime(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
+                            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">Primary Cause</label>
+                          <label className="block text-xs font-medium text-muted-foreground mb-1">Primary Cause</label>
                           <input type="text" value={deathCause} onChange={(e) => setDeathCause(e.target.value)}
                             placeholder="Immediate cause of death"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
+                            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
                         </div>
                       </div>
                     </>
@@ -401,55 +401,55 @@ export default function VisitOutcomePage() {
 
                   {disposition === "LAMA" && (
                     <>
-                      <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2">
+                      <div className="p-3 bg-warning-soft border border-warning/35 rounded-lg flex items-center gap-2">
                         <AlertTriangle className="w-4 h-4 text-amber-600" />
-                        <span className="text-sm text-amber-700">Document all attempts to counsel the patient</span>
+                        <span className="text-sm text-warning-foreground">Document all attempts to counsel the patient</span>
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Circumstances</label>
+                        <label className="block text-xs font-medium text-muted-foreground mb-1">Circumstances</label>
                         <textarea value={lamaCircumstances} onChange={(e) => setLamaCircumstances(e.target.value)}
                           rows={2} placeholder="Describe the circumstances..."
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 resize-none" />
+                          className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none" />
                       </div>
                     </>
                   )}
 
                   {/* Common fields — always shown for all dispositions */}
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Diagnosis</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Diagnosis</label>
                     <textarea value={diagnosis} onChange={(e) => setDiagnosis(e.target.value)}
                       rows={2} placeholder="Primary and secondary diagnoses..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 resize-none" />
+                      className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Treatment Summary</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Treatment Summary</label>
                     <textarea value={treatmentSummary} onChange={(e) => setTreatmentSummary(e.target.value)}
                       rows={2} placeholder="Summary of treatments and procedures..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 resize-none" />
+                      className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none" />
                   </div>
                   {(disposition === "DISCHARGE" || disposition === "REFER") && (
                     <>
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Follow-up Instructions</label>
+                        <label className="block text-xs font-medium text-muted-foreground mb-1">Follow-up Instructions</label>
                         <textarea value={followUp} onChange={(e) => setFollowUp(e.target.value)}
                           rows={2} placeholder="Follow-up appointments, return criteria..."
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 resize-none" />
+                          className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none" />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Medications at Discharge</label>
+                        <label className="block text-xs font-medium text-muted-foreground mb-1">Medications at Discharge</label>
                         <textarea value={medications} onChange={(e) => setMedications(e.target.value)}
                           rows={2} placeholder="Medications with dosages..."
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 resize-none" />
+                          className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none" />
                       </div>
                     </>
                   )}
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">
                       {disposition === "LAMA" ? "Additional Notes" : "Patient Instructions"}
                     </label>
                     <textarea value={instructions} onChange={(e) => setInstructions(e.target.value)}
                       rows={2} placeholder={disposition === "LAMA" ? "Additional documentation..." : "Instructions for the patient..."}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 resize-none" />
+                      className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none" />
                   </div>
                 </div>
 
@@ -458,14 +458,14 @@ export default function VisitOutcomePage() {
                 <div className="flex justify-end gap-3 mt-5">
                   <button
                     onClick={() => setDisposition("")}
-                    className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                    className="px-4 py-2 bg-neutral-100 text-foreground text-sm font-medium rounded-lg hover:bg-neutral-100 transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleComplete}
                     disabled={submitting}
-                    className="px-5 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-50 flex items-center gap-2 transition-colors"
+                    className="px-5 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover disabled:opacity-50 flex items-center gap-2 transition-colors"
                   >
                     {submitting ? (
                       <><Loader2 className="w-4 h-4 animate-spin" /> Completing...</>

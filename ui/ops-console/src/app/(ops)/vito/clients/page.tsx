@@ -66,7 +66,7 @@ export default function ClientSearchPage() {
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Enter name, Impilo ID, or Health ID (min 2 characters)..."
-          className="flex-1 px-4 py-2.5 text-sm border border-neutral-200 rounded-[8px] bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary placeholder:text-neutral-400"
+          className="flex-1 px-4 py-2.5 text-sm border border-neutral-200 rounded-[8px] bg-card focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary placeholder:text-neutral-400"
         />
         <button
           onClick={handleSearch}
@@ -78,7 +78,7 @@ export default function ClientSearchPage() {
       </div>
 
       {/* Results table */}
-      <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 overflow-hidden">
+      <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-neutral-100 bg-neutral-50">
@@ -136,7 +136,7 @@ export default function ClientSearchPage() {
                       <td colSpan={5} className="px-4 py-3">
                         <div className="flex items-center gap-2 text-xs">
                           <span className="text-neutral-500">Health ID:</span>
-                          <span className="font-mono text-neutral-900 bg-white px-2 py-1 rounded border border-neutral-200">
+                          <span className="font-mono text-neutral-900 bg-card px-2 py-1 rounded border border-neutral-200">
                             {client.healthId}
                           </span>
                         </div>

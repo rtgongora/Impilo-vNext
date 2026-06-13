@@ -18,8 +18,8 @@ export default function CitizenHubPage() {
       {/* Health OS §10–§11: Progressive identity assurance — guided journey */}
       <IdentityAssuranceBanner />
 
-      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-xs text-gray-700">
-        <p className="font-medium text-gray-900 mb-1">Life-context hub</p>
+      <div className="rounded-lg border border-border bg-background p-4 text-xs text-foreground">
+        <p className="font-medium text-foreground mb-1">Life-context hub</p>
         <p>
           Citizen routes are auth-guarded; verify and claim are public. Sidebar/spotlight entries follow the route registry
           maintained by integration.
@@ -31,17 +31,17 @@ export default function CitizenHubPage() {
           <li key={l.href}>
             <Link
               href={l.href}
-              className="block rounded-lg border border-gray-200 bg-white p-4 hover:border-impilo-200 hover:shadow-sm transition-all"
+              className="block rounded-lg border border-border bg-card p-4 hover:border-primary/25 hover:shadow-sm transition-all"
             >
-              <span className="font-medium text-gray-900">{l.label}</span>
-              <p className="text-xs text-gray-500 mt-1">{l.note}</p>
+              <span className="font-medium text-foreground">{l.label}</span>
+              <p className="text-xs text-muted-foreground mt-1">{l.note}</p>
             </Link>
           </li>
         ))}
       </ul>
 
-      <div className="rounded-lg border border-dashed border-gray-300 p-4 text-xs text-gray-600">
-        <p className="font-medium text-gray-800 mb-1">Experience self-service parity</p>
+      <div className="rounded-lg border border-dashed border-border p-4 text-xs text-muted-foreground">
+        <p className="font-medium text-foreground mb-1">Experience self-service parity</p>
         <p>
           The former self-service flows now live in the Experience shell: verification at{" "}
           <code className="text-[10px]">/verify/credential</code>, claim at{" "}

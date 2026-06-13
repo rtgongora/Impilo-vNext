@@ -73,16 +73,16 @@ export default function FunctionalStatusPage() {
       <PageShell title="Functional Status" subtitle="ADL and IADL assessments with standardized scoring">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading assessments...</span>
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading assessments...</span>
           </div>
         ) : isError ? (
           <div className="flex flex-col items-center justify-center gap-3 py-16">
-            <p className="text-sm text-gray-600">Unable to load functional assessments for this patient.</p>
+            <p className="text-sm text-muted-foreground">Unable to load functional assessments for this patient.</p>
             <button
               type="button"
               onClick={() => void refetch()}
-              className="rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white hover:bg-impilo-600"
+              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
             >
               Retry
             </button>
@@ -125,14 +125,14 @@ export default function FunctionalStatusPage() {
               ]}
             />
 
-            <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Functional continuity</p>
-              <p className="mt-2 text-sm text-slate-800">
+            <div className="rounded-3xl border border-border bg-background/70 p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Functional continuity</p>
+              <p className="mt-2 text-sm text-foreground">
                 {assistanceFlags > 0
                   ? `${assistanceFlags} current activity area${assistanceFlags === 1 ? " is" : "s are"} below full independence, so this review should feed directly into the care plan, social support, and documented next actions.`
                   : "Current function is stable; the continuity need is keeping that status visible when plans or discharge-related steps are updated elsewhere."}
               </p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Use Care Plans for intervention ownership, Social History for environmental barriers, and Notes for the clinical handoff.
               </p>
             </div>
@@ -140,9 +140,9 @@ export default function FunctionalStatusPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Activity className="h-5 w-5 text-orange-600" />
-                <h2 className="text-lg font-semibold text-gray-900">Functional Status</h2>
+                <h2 className="text-lg font-semibold text-foreground">Functional Status</h2>
               </div>
-              <button className="rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600">
+              <button className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover">
                 New Assessment
               </button>
             </div>
@@ -152,17 +152,17 @@ export default function FunctionalStatusPage() {
                 <button
                   key={assessment.id}
                   onClick={() => setActiveTab(assessment.type)}
-                  className={`rounded-lg border bg-white p-4 text-left transition-all ${activeTab === assessment.type ? "border-impilo-200 ring-2 ring-blue-100" : "border-gray-200 hover:border-gray-300"}`}
+                  className={`rounded-lg border bg-card p-4 text-left transition-all ${activeTab === assessment.type ? "border-primary/25 ring-2 ring-blue-100" : "border-border hover:border-border"}`}
                 >
-                  <p className="text-xs font-medium uppercase tracking-wide text-gray-500">{TAB_LABELS[assessment.type]}</p>
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{TAB_LABELS[assessment.type]}</p>
                   <div className="mt-1 flex items-baseline gap-1">
                     <span className={`text-2xl font-bold ${scoreColor(assessment.totalScore, assessment.maxScore)}`}>{assessment.totalScore}</span>
-                    <span className="text-sm text-gray-400">/ {assessment.maxScore}</span>
+                    <span className="text-sm text-muted-foreground">/ {assessment.maxScore}</span>
                   </div>
-                  <div className="mt-2 h-2 w-full rounded-full bg-gray-200">
+                  <div className="mt-2 h-2 w-full rounded-full bg-neutral-100">
                     <div className={`h-2 rounded-full ${barColor(assessment.totalScore, assessment.maxScore)}`} style={{ width: `${(assessment.totalScore / assessment.maxScore) * 100}%` }} />
                   </div>
-                                    <p className="mt-1 text-[10px] text-gray-400">
+                                    <p className="mt-1 text-[10px] text-muted-foreground">
                     {assessment.date} · {assessment.assessor}
                   </p>
                 </button>
@@ -170,18 +170,18 @@ export default function FunctionalStatusPage() {
             </div>
 
             {current && (
-              <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-                <div className="border-b border-gray-200 px-5 py-4">
-                  <h3 className="font-medium text-gray-900">{TAB_LABELS[current.type]}</h3>
-                  <p className="mt-1 text-xs text-gray-500">{current.interpretation}</p>
+              <div className="overflow-hidden rounded-lg border border-border bg-card">
+                <div className="border-b border-border px-5 py-4">
+                  <h3 className="font-medium text-foreground">{TAB_LABELS[current.type]}</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">{current.interpretation}</p>
                 </div>
                 <div className="p-5">
                   <div className="space-y-3">
                     {current.activities.map((activity) => (
                       <div key={activity.activity} className="flex items-center gap-4">
-                        <span className="w-40 shrink-0 text-sm text-gray-700">{activity.activity}</span>
+                        <span className="w-40 shrink-0 text-sm text-foreground">{activity.activity}</span>
                         <div className="flex-1">
-                          <div className="relative h-4 w-full rounded-full bg-gray-100">
+                          <div className="relative h-4 w-full rounded-full bg-neutral-100">
                             <div className={`h-4 rounded-full ${barColor(activity.score, activity.maxScore)}`} style={{ width: `${(activity.score / activity.maxScore) * 100}%` }} />
                           </div>
                         </div>
@@ -194,26 +194,26 @@ export default function FunctionalStatusPage() {
               </div>
             )}
 
-            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-              <div className="flex items-center gap-2 border-b border-gray-200 px-5 py-4">
-                <TrendingUp className="h-4 w-4 text-gray-500" />
-                <h3 className="font-medium text-gray-900">Score Trend</h3>
+            <div className="overflow-hidden rounded-lg border border-border bg-card">
+              <div className="flex items-center gap-2 border-b border-border px-5 py-4">
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                <h3 className="font-medium text-foreground">Score Trend</h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-gray-200 bg-gray-50">
-                      <th className="px-4 py-3 text-left font-medium text-gray-600">Date</th>
-                      <th className="px-4 py-3 text-left font-medium text-gray-600">Barthel (/100)</th>
-                      <th className="px-4 py-3 text-left font-medium text-gray-600">Katz (/6)</th>
-                      <th className="px-4 py-3 text-left font-medium text-gray-600">Lawton (/8)</th>
+                    <tr className="border-b border-border bg-background">
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Date</th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Barthel (/100)</th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Katz (/6)</th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Lawton (/8)</th>
                     </tr>
                   </thead>
                   <tbody>
                     {trendHistory.map((history, index) => (
-                      <tr key={history.date} className="border-b border-gray-100 transition-colors hover:bg-gray-50">
-                        <td className="flex items-center gap-1.5 px-4 py-3 text-gray-900">
-                          <Calendar className="h-3.5 w-3.5 text-gray-400" />
+                      <tr key={history.date} className="border-b border-border transition-colors hover:bg-background">
+                        <td className="flex items-center gap-1.5 px-4 py-3 text-foreground">
+                          <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
                           {history.date}
                         </td>
                         <td className={`px-4 py-3 font-medium ${scoreColor(history.barthel, 100)}`}>

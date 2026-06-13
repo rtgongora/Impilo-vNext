@@ -91,47 +91,47 @@ export default function ConsentPage() {
   // ── Kiosk mode: extra-large, high-contrast layout ──────────────
   if (isKiosk) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center p-6">
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
         <div className="w-full max-w-2xl">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Impilo</h1>
-            <p className="text-base text-gray-500 mt-1">Health Operating System</p>
+            <h1 className="text-3xl font-bold text-foreground">Impilo</h1>
+            <p className="text-base text-muted-foreground mt-1">Health Operating System</p>
           </div>
 
-          <div className="border-2 border-gray-200 rounded-2xl p-8 sm:p-12">
+          <div className="border-2 border-border rounded-2xl p-8 sm:p-12">
             <div className="text-center mb-8">
-              <Shield className="w-16 h-16 text-blue-600 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900">
+              <Shield className="w-16 h-16 text-primary mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-foreground">
                 Privacy &amp; Terms Consent
               </h2>
-              <p className="text-base text-gray-600 mt-2 max-w-md mx-auto">
+              <p className="text-base text-muted-foreground mt-2 max-w-md mx-auto">
                 Before using this terminal, please accept the Impilo Privacy
                 Policy and Terms of Use.
               </p>
             </div>
 
             <div className="space-y-4 mb-8">
-              <label className="flex items-center gap-4 cursor-pointer p-4 border-2 border-gray-200 rounded-xl hover:border-blue-300 transition-colors">
+              <label className="flex items-center gap-4 cursor-pointer p-4 border-2 border-border rounded-xl hover:border-blue-300 transition-colors">
                 <input
                   type="checkbox"
                   checked={privacyChecked}
                   onChange={(e) => setPrivacyChecked(e.target.checked)}
-                  className="w-7 h-7 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="w-7 h-7 rounded border-border text-primary focus:ring-blue-500"
                 />
-                <span className="text-lg text-gray-800">
-                  I accept the <span className="font-semibold text-blue-600">Privacy Policy</span>
+                <span className="text-lg text-foreground">
+                  I accept the <span className="font-semibold text-primary">Privacy Policy</span>
                 </span>
               </label>
 
-              <label className="flex items-center gap-4 cursor-pointer p-4 border-2 border-gray-200 rounded-xl hover:border-blue-300 transition-colors">
+              <label className="flex items-center gap-4 cursor-pointer p-4 border-2 border-border rounded-xl hover:border-blue-300 transition-colors">
                 <input
                   type="checkbox"
                   checked={termsChecked}
                   onChange={(e) => setTermsChecked(e.target.checked)}
-                  className="w-7 h-7 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="w-7 h-7 rounded border-border text-primary focus:ring-blue-500"
                 />
-                <span className="text-lg text-gray-800">
-                  I accept the <span className="font-semibold text-blue-600">Terms of Use</span>
+                <span className="text-lg text-foreground">
+                  I accept the <span className="font-semibold text-primary">Terms of Use</span>
                 </span>
               </label>
             </div>
@@ -145,7 +145,7 @@ export default function ConsentPage() {
               {submitting ? "Processing..." : "Accept and Continue"}
             </button>
 
-            <p className="mt-6 text-center text-sm text-gray-400">
+            <p className="mt-6 text-center text-sm text-muted-foreground">
               Policy version: {CURRENT_CONSENT_VERSION}
             </p>
           </div>
@@ -156,23 +156,23 @@ export default function ConsentPage() {
 
   // ── Standard layout (smartphone, tablet, desktop) ──────────────
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-lg">
         {/* Header */}
         <div className="text-center mb-6">
-          <h1 className="text-xl font-bold text-gray-900">Impilo</h1>
-          <p className="text-xs text-gray-500 mt-1">Health Operating System</p>
+          <h1 className="text-xl font-bold text-foreground">Impilo</h1>
+          <p className="text-xs text-muted-foreground mt-1">Health Operating System</p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 sm:p-8">
+        <div className="bg-card rounded-xl shadow-lg border border-border p-6 sm:p-8">
           <div className="text-center mb-6">
-            <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-3">
-              <Shield className="w-6 h-6 text-blue-600" />
+            <div className="w-12 h-12 rounded-full bg-info-soft flex items-center justify-center mx-auto mb-3">
+              <Shield className="w-6 h-6 text-primary" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-lg font-semibold text-foreground">
               Review Our Policies
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Please review and accept the Privacy Policy and Terms of Use to continue
               using Impilo.
             </p>
@@ -180,20 +180,20 @@ export default function ConsentPage() {
 
           {/* Policy cards */}
           <div className="space-y-3 mb-6">
-            <div className="border border-gray-200 rounded-lg p-4">
+            <div className="border border-border rounded-lg p-4">
               <div className="flex items-start gap-3">
-                <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center shrink-0 mt-0.5">
-                  <Shield className="w-4 h-4 text-blue-600" />
+                <div className="w-9 h-9 rounded-lg bg-info-soft flex items-center justify-center shrink-0 mt-0.5">
+                  <Shield className="w-4 h-4 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-medium text-gray-900">Privacy Policy</h3>
-                  <p className="text-xs text-gray-500 mt-0.5">
+                  <h3 className="text-sm font-medium text-foreground">Privacy Policy</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     How we collect, use, and protect your personal data and health information.
                   </p>
                   <Link
                     href="/privacy"
                     target="_blank"
-                    className="inline-block mt-2 text-xs text-blue-600 hover:text-blue-800 font-medium"
+                    className="inline-block mt-2 text-xs text-primary hover:text-blue-800 font-medium"
                   >
                     Read Privacy Policy
                   </Link>
@@ -201,20 +201,20 @@ export default function ConsentPage() {
               </div>
             </div>
 
-            <div className="border border-gray-200 rounded-lg p-4">
+            <div className="border border-border rounded-lg p-4">
               <div className="flex items-start gap-3">
-                <div className="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0 mt-0.5">
+                <div className="w-9 h-9 rounded-lg bg-info-soft flex items-center justify-center shrink-0 mt-0.5">
                   <FileText className="w-4 h-4 text-indigo-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-medium text-gray-900">Terms of Use</h3>
-                  <p className="text-xs text-gray-500 mt-0.5">
+                  <h3 className="text-sm font-medium text-foreground">Terms of Use</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     The rules governing your use of the Impilo platform and services.
                   </p>
                   <Link
                     href="/terms"
                     target="_blank"
-                    className="inline-block mt-2 text-xs text-blue-600 hover:text-blue-800 font-medium"
+                    className="inline-block mt-2 text-xs text-primary hover:text-blue-800 font-medium"
                   >
                     Read Terms of Use
                   </Link>
@@ -225,31 +225,31 @@ export default function ConsentPage() {
 
           {/* Checkboxes — large touch targets for mobile */}
           <div className="space-y-3 mb-6">
-            <label className="flex items-center gap-3 cursor-pointer p-2 -mx-2 rounded-lg hover:bg-gray-50 transition-colors">
+            <label className="flex items-center gap-3 cursor-pointer p-2 -mx-2 rounded-lg hover:bg-background transition-colors">
               <input
                 type="checkbox"
                 checked={privacyChecked}
                 onChange={(e) => setPrivacyChecked(e.target.checked)}
-                className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 shrink-0"
+                className="w-5 h-5 rounded border-border text-primary focus:ring-blue-500 shrink-0"
               />
-              <span className="text-sm text-gray-700">
+              <span className="text-sm text-foreground">
                 I have read and accept the{" "}
-                <Link href="/privacy" target="_blank" className="text-blue-600 hover:text-blue-800 underline">
+                <Link href="/privacy" target="_blank" className="text-primary hover:text-blue-800 underline">
                   Privacy Policy
                 </Link>
               </span>
             </label>
 
-            <label className="flex items-center gap-3 cursor-pointer p-2 -mx-2 rounded-lg hover:bg-gray-50 transition-colors">
+            <label className="flex items-center gap-3 cursor-pointer p-2 -mx-2 rounded-lg hover:bg-background transition-colors">
               <input
                 type="checkbox"
                 checked={termsChecked}
                 onChange={(e) => setTermsChecked(e.target.checked)}
-                className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 shrink-0"
+                className="w-5 h-5 rounded border-border text-primary focus:ring-blue-500 shrink-0"
               />
-              <span className="text-sm text-gray-700">
+              <span className="text-sm text-foreground">
                 I have read and accept the{" "}
-                <Link href="/terms" target="_blank" className="text-blue-600 hover:text-blue-800 underline">
+                <Link href="/terms" target="_blank" className="text-primary hover:text-blue-800 underline">
                   Terms of Use
                 </Link>
               </span>
@@ -269,21 +269,21 @@ export default function ConsentPage() {
 
             <button
               onClick={handleDecline}
-              className="w-full min-h-[48px] py-2.5 text-sm text-gray-500 hover:text-gray-700 flex items-center justify-center gap-2 transition-colors"
+              className="w-full min-h-[48px] py-2.5 text-sm text-muted-foreground hover:text-foreground flex items-center justify-center gap-2 transition-colors"
             >
               <LogOut className="w-4 h-4" />
               Decline and Sign Out
             </button>
           </div>
 
-          <p className="mt-4 text-center text-xs text-gray-400">
+          <p className="mt-4 text-center text-xs text-muted-foreground">
             Policy version: {CURRENT_CONSENT_VERSION}
           </p>
         </div>
 
         {/* Signed in as */}
         {user && (
-          <p className="mt-4 text-center text-xs text-gray-400">
+          <p className="mt-4 text-center text-xs text-muted-foreground">
             Signed in as {user.email}
           </p>
         )}

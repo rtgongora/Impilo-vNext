@@ -86,14 +86,14 @@ export function PayerOpsReviewsTable({
                 <button
                   type="button"
                   disabled={pendingReviewId === row.id}
-                  className="rounded border border-red-200 px-2 py-1 text-xs text-red-800 disabled:opacity-50"
+                  className="rounded border border-danger/28 px-2 py-1 text-xs text-red-800 disabled:opacity-50"
                   onClick={() => onReject?.(row.id)}
                 >
                   Reject
                 </button>
               </div>
             ) : (
-              <span className="text-xs text-slate-400">—</span>
+              <span className="text-xs text-muted-foreground">—</span>
             ),
         },
       ]}

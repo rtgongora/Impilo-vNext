@@ -89,7 +89,7 @@ export default function AuditEventViewerPage() {
             id="aggregate-filter"
             value={aggregateTypeFilter}
             onChange={(e) => setAggregateTypeFilter(e.target.value)}
-            className="px-3 py-2 text-sm border border-neutral-200 rounded-[8px] bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary"
+            className="px-3 py-2 text-sm border border-neutral-200 rounded-[8px] bg-card focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary"
           >
             <option value="ALL">All Types</option>
             {aggregateTypes.map((type) => (
@@ -110,7 +110,7 @@ export default function AuditEventViewerPage() {
             }`}
           >
             <span
-              className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${
+              className={`inline-block h-4 w-4 rounded-full bg-card transition-transform ${
                 autoRefresh ? "translate-x-6" : "translate-x-1"
               }`}
             />
@@ -131,7 +131,7 @@ export default function AuditEventViewerPage() {
       </div>
 
       {/* Events table */}
-      <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 overflow-hidden">
+      <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-neutral-100 bg-neutral-50">
@@ -198,7 +198,7 @@ export default function AuditEventViewerPage() {
                               </span>
                             )}
                           </div>
-                          <pre className="font-mono bg-white p-3 rounded-[8px] border border-neutral-200 overflow-x-auto max-h-64 overflow-y-auto whitespace-pre-wrap">
+                          <pre className="font-mono bg-card p-3 rounded-[8px] border border-neutral-200 overflow-x-auto max-h-64 overflow-y-auto whitespace-pre-wrap">
                             {formatPayload(event.payload)}
                           </pre>
                         </div>

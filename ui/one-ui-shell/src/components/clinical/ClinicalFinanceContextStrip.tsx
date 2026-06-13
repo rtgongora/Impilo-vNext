@@ -14,18 +14,18 @@ export function ClinicalFinanceContextStrip({ patientId }: { patientId: string }
   return (
     <div
       data-patient-scope={patientId}
-      className="flex flex-wrap items-center gap-2 rounded-lg border border-emerald-100 bg-emerald-50/60 px-3 py-2 text-xs text-emerald-950"
+      className="flex flex-wrap items-center gap-2 rounded-lg border border-emerald-100 bg-success-soft/60 px-3 py-2 text-xs text-emerald-950"
     >
-      <Wallet className="h-3.5 w-3.5 shrink-0 text-emerald-700" />
+      <Wallet className="h-3.5 w-3.5 shrink-0 text-primary-hover" />
       <span className="font-medium">Coverage &amp; finance</span>
-      <span className="text-emerald-800/90">COSTA / MusheX consoles stay on dedicated finance routes — no simulated balances here.</span>
-      <Link href="/coverage" className="font-semibold text-emerald-800 underline-offset-2 hover:underline">
+      <span className="text-primary-hover/90">COSTA / MusheX consoles stay on dedicated finance routes — no simulated balances here.</span>
+      <Link href="/coverage" className="font-semibold text-primary-hover underline-offset-2 hover:underline">
         Coverage workspace
       </Link>
       {(isFinance || isAdmin) && (
         <>
-          <span className="text-emerald-700/70">·</span>
-          <Link href="/finance/workspace" className="font-semibold text-emerald-800 underline-offset-2 hover:underline">
+          <span className="text-primary-hover/70">·</span>
+          <Link href="/finance/workspace" className="font-semibold text-primary-hover underline-offset-2 hover:underline">
             COSTA / MusheX hub
           </Link>
         </>

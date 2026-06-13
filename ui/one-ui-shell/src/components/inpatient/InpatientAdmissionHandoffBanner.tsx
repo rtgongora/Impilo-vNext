@@ -29,7 +29,7 @@ export function InpatientAdmissionHandoffBanner({
 
   return (
     <div
-      className="mb-4 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-950"
+      className="mb-4 rounded-xl border border-info/25 bg-info-soft px-4 py-3 text-sm text-primary-hover"
       data-testid="inpatient-admission-handoff-banner"
     >
       <div className="flex flex-wrap items-start gap-3">
@@ -38,23 +38,23 @@ export function InpatientAdmissionHandoffBanner({
           <p className="font-medium">
             {source === "outpatient-discharge" ? "Outpatient admit handoff" : "Inpatient admission context"}
           </p>
-          <p className="text-xs text-indigo-900/80">
+          <p className="text-xs text-primary-hover/80">
             Continue ward allocation with active admission correlation
             {encounterId ? ` for encounter ${encounterId}` : ""}
             {transactionId ? ` (transaction ${transactionId})` : ""}.
           </p>
           <div className="flex flex-wrap gap-3 pt-1">
-            <Link href={bedsHref} className="inline-flex items-center gap-1 text-xs font-medium text-indigo-700 hover:underline">
+            <Link href={bedsHref} className="inline-flex items-center gap-1 text-xs font-medium text-primary-hover hover:underline">
               <ArrowRightLeft className="h-3.5 w-3.5" />
               Allocate bed & create admission
             </Link>
-            <Link href={wardBoardHref} className="text-xs font-medium text-indigo-700 hover:underline">
+            <Link href={wardBoardHref} className="text-xs font-medium text-primary-hover hover:underline">
               Open ward board
             </Link>
             {patientId ? (
               <Link
                 href={`/ehr/${patientId}/encounter/${encounterId ?? ""}`}
-                className="text-xs font-medium text-indigo-700 hover:underline"
+                className="text-xs font-medium text-primary-hover hover:underline"
               >
                 Return to encounter
               </Link>

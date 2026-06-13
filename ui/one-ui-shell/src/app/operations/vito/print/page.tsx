@@ -82,39 +82,39 @@ export default function VitoPrintPage() {
           <div className="flex flex-wrap gap-3">
             <Link
               href="/operations/vito"
-              className="text-sm text-gray-600 hover:text-gray-900 underline-offset-2 hover:underline"
+              className="text-sm text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
             >
               ← Identity operations
             </Link>
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
+            <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
               <div className="flex items-center gap-2">
-                <Printer className="h-4 w-4 text-impilo-600" />
-                <h2 className="text-sm font-semibold text-gray-900">Card print job</h2>
+                <Printer className="h-4 w-4 text-primary" />
+                <h2 className="text-sm font-semibold text-foreground">Card print job</h2>
               </div>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted-foreground">
                 Submit a card to the print queue. The card must already exist in the registry before printing.
               </p>
               <form onSubmit={handleSubmitPrint} className="space-y-3">
-                <label className="text-xs text-gray-500 flex flex-col gap-1">
+                <label className="text-xs text-muted-foreground flex flex-col gap-1">
                   Card ID
                   <input
                     type="number"
                     min={1}
-                    className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                    className="rounded-lg border border-border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                     placeholder="e.g. 1042"
                     value={cardId}
                     onChange={(e) => setCardId(e.target.value)}
                     required
                   />
                 </label>
-                <label className="text-xs text-gray-500 flex flex-col gap-1">
+                <label className="text-xs text-muted-foreground flex flex-col gap-1">
                   Template (optional)
                   <input
                     type="text"
-                    className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                    className="rounded-lg border border-border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                     placeholder="e.g. STANDARD_V2"
                     value={template}
                     onChange={(e) => setTemplate(e.target.value)}
@@ -123,69 +123,69 @@ export default function VitoPrintPage() {
                 <button
                   type="submit"
                   disabled={submitPrintJob.isPending || !cardId}
-                  className="w-full rounded-xl bg-impilo-600 px-4 py-2 text-sm font-medium text-white hover:bg-impilo-700 disabled:opacity-50"
+                  className="w-full rounded-xl bg-primary-hover px-4 py-2 text-sm font-medium text-white hover:bg-impilo-700 disabled:opacity-50"
                 >
                   {submitPrintJob.isPending ? "Submitting…" : "Submit print job"}
                 </button>
                 {submitPrintJob.isError && (
-                  <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 border border-red-100">
+                  <p className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger border border-red-100">
                     Failed to submit print job. Please try again.
                   </p>
                 )}
                 {printResult && (
-                  <div className="rounded-lg bg-emerald-50 border border-emerald-100 px-3 py-2 space-y-1">
-                    <p className="text-sm font-medium text-emerald-800">Job submitted</p>
-                    <p className="text-xs text-emerald-700">Card: {printResult.cardNumber}</p>
-                    <p className="text-xs text-emerald-700">Status: {printResult.status}</p>
-                    <p className="text-xs text-emerald-700">{printResult.message}</p>
+                  <div className="rounded-lg bg-success-soft border border-emerald-100 px-3 py-2 space-y-1">
+                    <p className="text-sm font-medium text-primary-hover">Job submitted</p>
+                    <p className="text-xs text-primary-hover">Card: {printResult.cardNumber}</p>
+                    <p className="text-xs text-primary-hover">Status: {printResult.status}</p>
+                    <p className="text-xs text-primary-hover">{printResult.message}</p>
                   </div>
                 )}
               </form>
             </div>
 
-            <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
+            <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
               <div className="flex items-center gap-2">
                 <FileText className="h-4 w-4 text-sky-600" />
-                <h2 className="text-sm font-semibold text-gray-900">Emergency capsule slip</h2>
+                <h2 className="text-sm font-semibold text-foreground">Emergency capsule slip</h2>
               </div>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted-foreground">
                 Generate a PDF emergency capsule containing critical health identifiers and clinical flags. Opens in a new tab.
               </p>
               <div className="space-y-3">
-                <label className="text-xs text-gray-500 flex flex-col gap-1">
+                <label className="text-xs text-muted-foreground flex flex-col gap-1">
                   Health ID
                   <input
                     type="text"
-                    className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+                    className="rounded-lg border border-border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
                     placeholder="e.g. ZW-0001-2024-XXXXXX"
                     value={capsuleHealthId}
                     onChange={(e) => setCapsuleHealthId(e.target.value)}
                   />
                 </label>
-                <label className="text-xs text-gray-500 flex flex-col gap-1">
+                <label className="text-xs text-muted-foreground flex flex-col gap-1">
                   Payer indicator (optional)
                   <input
                     type="text"
-                    className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+                    className="rounded-lg border border-border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
                     placeholder="e.g. NHIF"
                     value={capsulePayerIndicator}
                     onChange={(e) => setCapsulePayerIndicator(e.target.value)}
                   />
                 </label>
                 <div className="flex flex-wrap gap-4">
-                  <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                  <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
                     <input
                       type="checkbox"
-                      className="rounded border-gray-300"
+                      className="rounded border-border"
                       checked={capsuleHasAllergies}
                       onChange={(e) => setCapsuleHasAllergies(e.target.checked)}
                     />
                     Has allergies
                   </label>
-                  <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                  <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
                     <input
                       type="checkbox"
-                      className="rounded border-gray-300"
+                      className="rounded border-border"
                       checked={capsuleHasMajorConditions}
                       onChange={(e) => setCapsuleHasMajorConditions(e.target.checked)}
                     />
@@ -205,60 +205,60 @@ export default function VitoPrintPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
+          <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
             <div className="flex items-center gap-2">
               <FileText className="h-4 w-4 text-amber-600" />
-              <h2 className="text-sm font-semibold text-gray-900">Card pickup authorisation slip</h2>
+              <h2 className="text-sm font-semibold text-foreground">Card pickup authorisation slip</h2>
             </div>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               Generate a PDF pickup authorisation slip for a delegate collecting a card on behalf of a client. Opens in a new tab.
             </p>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              <label className="text-xs text-gray-500 flex flex-col gap-1">
+              <label className="text-xs text-muted-foreground flex flex-col gap-1">
                 Pickup token
                 <input
                   type="text"
-                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                  className="rounded-lg border border-border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
                   placeholder="Pickup token"
                   value={pickupToken}
                   onChange={(e) => setPickupToken(e.target.value)}
                 />
               </label>
-              <label className="text-xs text-gray-500 flex flex-col gap-1">
+              <label className="text-xs text-muted-foreground flex flex-col gap-1">
                 OTP
                 <input
                   type="text"
-                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                  className="rounded-lg border border-border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
                   placeholder="One-time PIN"
                   value={pickupOtp}
                   onChange={(e) => setPickupOtp(e.target.value)}
                 />
               </label>
-              <label className="text-xs text-gray-500 flex flex-col gap-1">
+              <label className="text-xs text-muted-foreground flex flex-col gap-1">
                 Delegate name
                 <input
                   type="text"
-                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                  className="rounded-lg border border-border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
                   placeholder="Full name of delegate"
                   value={pickupDelegateName}
                   onChange={(e) => setPickupDelegateName(e.target.value)}
                 />
               </label>
-              <label className="text-xs text-gray-500 flex flex-col gap-1">
+              <label className="text-xs text-muted-foreground flex flex-col gap-1">
                 Facility name
                 <input
                   type="text"
-                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                  className="rounded-lg border border-border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
                   placeholder="Issuing facility"
                   value={pickupFacilityName}
                   onChange={(e) => setPickupFacilityName(e.target.value)}
                 />
               </label>
-              <label className="text-xs text-gray-500 flex flex-col gap-1 sm:col-span-2 lg:col-span-1">
+              <label className="text-xs text-muted-foreground flex flex-col gap-1 sm:col-span-2 lg:col-span-1">
                 Expires at (ISO 8601)
                 <input
                   type="datetime-local"
-                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                  className="rounded-lg border border-border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
                   value={pickupExpiresAt}
                   onChange={(e) => setPickupExpiresAt(e.target.value)}
                 />

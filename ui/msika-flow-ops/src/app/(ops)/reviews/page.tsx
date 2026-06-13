@@ -79,7 +79,7 @@ export default function ReviewsPage() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-red-800">
           {error}
         </div>
       )}
@@ -140,7 +140,7 @@ export default function ReviewsPage() {
                     <button
                       onClick={() => handleApprove(review.id)}
                       disabled={actionLoading}
-                      className="text-xs text-emerald-600 hover:text-emerald-800 font-medium"
+                      className="text-xs text-primary hover:text-primary-hover font-medium"
                     >
                       Approve
                     </button>

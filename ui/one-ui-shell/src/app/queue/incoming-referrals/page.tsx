@@ -62,15 +62,15 @@ interface IncomingReferral {
 }
 
 const URGENCY_BADGE: Record<string, string> = {
-  ROUTINE: "bg-impilo-100 text-impilo-600",
+  ROUTINE: "bg-primary-soft text-primary",
   URGENT: "bg-orange-100 text-orange-700",
-  EMERGENCY: "bg-red-100 text-red-700",
+  EMERGENCY: "bg-red-100 text-danger",
 };
 
 const STATUS_BADGE: Record<string, string> = {
   PENDING: "bg-yellow-100 text-yellow-700",
-  ACCEPTED: "bg-impilo-100 text-impilo-600",
-  RESPONDED: "bg-purple-100 text-purple-700",
+  ACCEPTED: "bg-primary-soft text-primary",
+  RESPONDED: "bg-purple-100 text-warning-foreground",
   COMPLETED: "bg-green-100 text-green-700",
 };
 
@@ -196,7 +196,7 @@ export default function IncomingReferralsPage() {
         <div className="mb-4">
           <Link
             href="/queue"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 transition-colors hover:text-gray-700"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to queue
@@ -204,37 +204,37 @@ export default function IncomingReferralsPage() {
         </div>
 
         {!facility ? (
-          <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
-            <AlertCircle className="mx-auto mb-3 h-10 w-10 text-gray-300" />
-            <p className="text-sm text-gray-500">Please select a facility first</p>
+          <div className="rounded-lg border border-border bg-card p-12 text-center">
+            <AlertCircle className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">Please select a facility first</p>
             <Link
               href="/facility"
-              className="mt-2 inline-block text-sm text-impilo-500 hover:text-impilo-700"
+              className="mt-2 inline-block text-sm text-primary hover:text-primary-hover"
             >
               Select Facility
             </Link>
           </div>
         ) : isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading incoming referrals...</span>
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading incoming referrals...</span>
           </div>
         ) : referrals.length === 0 ? (
-          <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
-            <ArrowDownLeft className="mx-auto mb-3 h-10 w-10 text-gray-300" />
-            <p className="text-sm text-gray-500">No incoming referrals</p>
+          <div className="rounded-lg border border-border bg-card p-12 text-center">
+            <ArrowDownLeft className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">No incoming referrals</p>
           </div>
         ) : (
           <div className="space-y-5">
             <div className="grid gap-3 lg:grid-cols-[minmax(0,1.5fr)_repeat(3,minmax(0,1fr))]">
-              <div className="rounded-3xl border border-slate-200 bg-[linear-gradient(135deg,#fffaf0_0%,#ffffff_55%,#eff6ff_100%)] p-5 shadow-sm">
+              <div className="rounded-3xl border border-border bg-[linear-gradient(135deg,#fffaf0_0%,#ffffff_55%,#eff6ff_100%)] p-5 shadow-sm">
                 <div className="flex items-start gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100 text-warning-foreground">
                     <ArrowRightLeft className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">Receiving facility orchestration</p>
-                    <p className="mt-1 text-sm text-slate-600">
+                    <p className="text-sm font-semibold text-foreground">Receiving facility orchestration</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
                       This worklist now mirrors the in-chart referral flow: accept the handoff, return specialist guidance, then let the referring team close the loop inside the patient consults workspace.
                     </p>
                   </div>
@@ -245,14 +245,14 @@ export default function IncomingReferralsPage() {
                 { label: COORDINATION_COPY.trackingInProgress, value: acceptedReferrals.length, tone: "blue" },
                 { label: COORDINATION_COPY.responseReturned, value: respondedReferrals.length, tone: "purple" },
               ].map((card) => (
-                <div key={card.label} className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">{card.label}</p>
+                <div key={card.label} className="rounded-3xl border border-border bg-card p-4 shadow-sm">
+                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">{card.label}</p>
                   <p className={`mt-2 text-2xl font-semibold ${
                     card.tone === "amber"
-                      ? "text-amber-700"
+                      ? "text-warning-foreground"
                       : card.tone === "blue"
-                        ? "text-impilo-600"
-                        : "text-purple-700"
+                        ? "text-primary"
+                        : "text-warning-foreground"
                   }`}>{card.value}</p>
                 </div>
               ))}
@@ -260,20 +260,20 @@ export default function IncomingReferralsPage() {
 
             {sections.map((section) => (
               <div key={section.key} className="space-y-3">
-                <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3">
+                <div className="rounded-2xl border border-border bg-background/80 px-4 py-3">
                   <div className="flex items-center justify-between gap-3">
-                    <h3 className="text-sm font-semibold text-slate-900">{section.title}</h3>
-                    <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600">
+                    <h3 className="text-sm font-semibold text-foreground">{section.title}</h3>
+                    <span className="rounded-full bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
                       {section.referrals.length}
                     </span>
                   </div>
-                  <p className="mt-1 text-sm text-slate-600">{section.description}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{section.description}</p>
                 </div>
 
                 {section.referrals.map((referral) => {
               const attrs = referral.attributes;
-              const urgencyStyle = URGENCY_BADGE[attrs.urgency] ?? "bg-gray-100 text-gray-600";
-              const statusStyle = STATUS_BADGE[attrs.status] ?? "bg-gray-100 text-gray-600";
+              const urgencyStyle = URGENCY_BADGE[attrs.urgency] ?? "bg-neutral-100 text-muted-foreground";
+              const statusStyle = STATUS_BADGE[attrs.status] ?? "bg-neutral-100 text-muted-foreground";
               const isActionable = attrs.status === "PENDING" || attrs.status === "ACCEPTED";
               const coordinationMeta = parseConsultationCoordinationMeta(attrs.response_notes);
               const stageCopy = getReferralStageCopy(attrs.status, true);
@@ -286,11 +286,11 @@ export default function IncomingReferralsPage() {
               const patientTeleconsultHref = `/ehr/${attrs.patient_id}/consults?tab=teleconsults`;
 
               return (
-                <div key={referral.id} className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                <div key={referral.id} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
                       <div className="mb-1 flex items-center gap-2">
-                        <h3 className="text-sm font-semibold text-gray-900">{attrs.specialty}</h3>
+                        <h3 className="text-sm font-semibold text-foreground">{attrs.specialty}</h3>
                         <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${urgencyStyle}`}>
                           {attrs.urgency}
                         </span>
@@ -301,50 +301,50 @@ export default function IncomingReferralsPage() {
 
                       <div className={`mb-3 rounded-2xl border px-3 py-3 ${
                         stageCopy.tone === "amber"
-                          ? "border-amber-200 bg-amber-50"
+                          ? "border-warning/35 bg-warning-soft"
                           : stageCopy.tone === "blue"
-                            ? "border-impilo-200 bg-impilo-50"
+                            ? "border-primary/25 bg-primary-soft"
                             : stageCopy.tone === "purple"
-                              ? "border-purple-200 bg-purple-50"
-                              : "border-emerald-200 bg-emerald-50"
+                              ? "border-warning/35 bg-warning-soft"
+                              : "border-success/25 bg-success-soft"
                       }`}>
-                        <p className="text-sm font-semibold text-slate-900">{stageCopy.title}</p>
-                        <p className="mt-1 text-sm text-slate-600">{stageCopy.detail}</p>
+                        <p className="text-sm font-semibold text-foreground">{stageCopy.title}</p>
+                        <p className="mt-1 text-sm text-muted-foreground">{stageCopy.detail}</p>
                       </div>
 
-                      <p className="mb-1 text-sm text-gray-700">
+                      <p className="mb-1 text-sm text-foreground">
                         <span className="font-medium">From:</span> {attrs.referred_by_name}
                         {attrs.referred_to_facility && (
-                          <span className="text-gray-500"> at {attrs.referred_to_facility}</span>
+                          <span className="text-muted-foreground"> at {attrs.referred_to_facility}</span>
                         )}
                       </p>
 
-                      <p className="text-sm text-gray-600">{attrs.reason}</p>
+                      <p className="text-sm text-muted-foreground">{attrs.reason}</p>
 
                       {attrs.clinical_summary && (
-                        <p className="mt-1 line-clamp-2 text-xs text-gray-500">
+                        <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
                           {attrs.clinical_summary}
                         </p>
                       )}
 
-                      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                        <span className="rounded-full bg-slate-100 px-2.5 py-1 font-medium text-slate-700">
+                      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                        <span className="rounded-full bg-neutral-100 px-2.5 py-1 font-medium text-foreground">
                           Destination: {getReferralFacilityName(referral)}
                         </span>
                         {coordinationMeta.responseSentFromTeleconsult && (
-                          <span className="rounded-full bg-purple-100 px-2.5 py-1 font-medium text-purple-700">
+                          <span className="rounded-full bg-purple-100 px-2.5 py-1 font-medium text-warning-foreground">
                             {COORDINATION_COPY.returnedFromTeleconsult}
                           </span>
                         )}
                       </div>
 
-                      <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-400">
+                      <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
                           {new Date(attrs.created_at).toLocaleString()}
                         </span>
                         {attrs.accepted_at && (
-                          <span className="text-impilo-500">Accepted {new Date(attrs.accepted_at).toLocaleString()}</span>
+                          <span className="text-primary">Accepted {new Date(attrs.accepted_at).toLocaleString()}</span>
                         )}
                         {attrs.responded_at && (
                           <span className="text-purple-600">Responded {new Date(attrs.responded_at).toLocaleString()}</span>
@@ -352,7 +352,7 @@ export default function IncomingReferralsPage() {
                         {attrs.patient_id && (
                           <Link
                             href={`/ehr/${attrs.patient_id}`}
-                            className="flex items-center gap-1 text-impilo-500 hover:text-impilo-700"
+                            className="flex items-center gap-1 text-primary hover:text-primary-hover"
                           >
                             <User className="h-3 w-3" />
                             View Patient
@@ -361,11 +361,11 @@ export default function IncomingReferralsPage() {
                       </div>
 
                       {attrs.response_notes && (
-                        <div className="mt-3 rounded-lg border border-purple-200 bg-purple-50 p-3">
+                        <div className="mt-3 rounded-lg border border-warning/35 bg-warning-soft p-3">
                           <div className="flex flex-wrap items-center gap-2">
-                            <p className="text-xs font-medium text-purple-700">Response:</p>
+                            <p className="text-xs font-medium text-warning-foreground">Response:</p>
                             {coordinationMeta.nextWorkspaceAction && (
-                              <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-medium text-purple-700">
+                              <span className="rounded-full bg-card px-2 py-0.5 text-[11px] font-medium text-warning-foreground">
                                 {coordinationMeta.nextWorkspaceAction}
                               </span>
                             )}
@@ -407,7 +407,7 @@ export default function IncomingReferralsPage() {
                         </Link>
                         <Link
                           href={patientConsultsHref}
-                          className="flex items-center justify-center gap-1 rounded-lg border border-slate-200 px-4 py-2 text-center text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                          className="flex items-center justify-center gap-1 rounded-lg border border-border px-4 py-2 text-center text-xs font-medium text-muted-foreground transition-colors hover:bg-background"
                         >
                           <ClipboardCheck className="h-3 w-3" />
                           Patient Consults
@@ -417,8 +417,8 @@ export default function IncomingReferralsPage() {
                   </div>
 
                   {activeAction?.id === referral.id && (
-                    <div className="mt-4 rounded-2xl border border-gray-200 bg-gray-50 p-4">
-                      <h4 className="mb-3 text-sm font-medium text-gray-900">
+                    <div className="mt-4 rounded-2xl border border-border bg-background p-4">
+                      <h4 className="mb-3 text-sm font-medium text-foreground">
                         {activeAction.type === "accept" ? "Receive Referral Handoff" : "Respond to Referral"}
                       </h4>
                       <div className="space-y-3">
@@ -426,18 +426,18 @@ export default function IncomingReferralsPage() {
                           <>
                             <div className="grid gap-3 md:grid-cols-2">
                               <div>
-                                <label className="mb-1 block text-xs font-medium text-gray-600">
+                                <label className="mb-1 block text-xs font-medium text-muted-foreground">
                                   Planned review time
                                 </label>
                                 <input
                                   value={scheduledAt}
                                   onChange={(event) => setScheduledAt(event.target.value)}
                                   type="datetime-local"
-                                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                  className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
                                 />
                               </div>
                               <div>
-                                <label className="mb-1 block text-xs font-medium text-gray-600">
+                                <label className="mb-1 block text-xs font-medium text-muted-foreground">
                                   Receiving note
                                 </label>
                                 <textarea
@@ -445,18 +445,18 @@ export default function IncomingReferralsPage() {
                                   onChange={(event) => setHandoffNote(event.target.value)}
                                   rows={3}
                                   placeholder="Triage note, expected specialist, or preparation steps..."
-                                  className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                  className="w-full resize-none rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
                                 />
                               </div>
                             </div>
-                            <div className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                            <div className="rounded-lg bg-warning-soft px-3 py-2 text-xs text-warning-foreground">
                               Accepting here updates the receiving facility context while preserving the loop closure for the referring team in Consults.
                             </div>
                           </>
                         ) : (
                           <>
                             <div>
-                              <label className="mb-1 block text-xs font-medium text-gray-600">
+                              <label className="mb-1 block text-xs font-medium text-muted-foreground">
                                 Response Notes
                               </label>
                               <textarea
@@ -465,17 +465,17 @@ export default function IncomingReferralsPage() {
                                 rows={3}
                                 required
                                 placeholder="Assessment findings, recommendations, treatment provided..."
-                                className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                className="w-full resize-none rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                               />
                             </div>
                             <div>
-                              <label className="mb-1 block text-xs font-medium text-gray-600">
+                              <label className="mb-1 block text-xs font-medium text-muted-foreground">
                                 Outcome
                               </label>
                               <select
                                 value={responseOutcome}
                                 onChange={(event) => setResponseOutcome(event.target.value)}
-                                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                               >
                                 <option value="">Select outcome...</option>
                                 <option value="TREATED">Treated - Patient managed</option>
@@ -491,7 +491,7 @@ export default function IncomingReferralsPage() {
                           <button
                             type="button"
                             onClick={resetActionState}
-                            className="flex-1 rounded-lg bg-gray-100 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200"
+                            className="flex-1 rounded-lg bg-neutral-100 py-2 text-sm font-medium text-foreground transition-colors hover:bg-neutral-100"
                           >
                             Cancel
                           </button>

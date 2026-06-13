@@ -70,20 +70,20 @@ export default function ProviderContractsAdminPage() {
         <div className="mb-4">
           <Link
             href="/coverage"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" /> Back to coverage operations
           </Link>
         </div>
 
-        <div className="flex gap-1 mb-6 border-b border-gray-200">
+        <div className="flex gap-1 mb-6 border-b border-border">
           <button
             type="button"
             onClick={() => setTab("contracts")}
             className={`flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
               tab === "contracts"
                 ? "border-violet-600 text-violet-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
+                : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
             <Briefcase className="h-4 w-4" /> Provider contracts
@@ -94,7 +94,7 @@ export default function ProviderContractsAdminPage() {
             className={`flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
               tab === "networks"
                 ? "border-violet-600 text-violet-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
+                : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
             <Network className="h-4 w-4" /> Provider networks
@@ -159,7 +159,7 @@ function ContractsTab() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-base font-semibold text-gray-900">Contracts</h2>
+        <h2 className="text-base font-semibold text-foreground">Contracts</h2>
         <button
           type="button"
           onClick={() => setShowForm(!showForm)}
@@ -169,11 +169,11 @@ function ContractsTab() {
         </button>
       </div>
 
-      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="rounded-lg border border-border bg-background p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
+          <label className="block text-xs font-medium text-muted-foreground mb-1">Status</label>
           <select
-            className="w-full rounded-lg border border-gray-300 px-2 py-2 text-sm"
+            className="w-full rounded-lg border border-border px-2 py-2 text-sm"
             value={draft.status ?? ""}
             onChange={(e) => setDraft({ ...draft, status: e.target.value || undefined })}
           >
@@ -183,18 +183,18 @@ function ContractsTab() {
           </select>
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Provider ID</label>
+          <label className="block text-xs font-medium text-muted-foreground mb-1">Provider ID</label>
           <input
-            className="w-full rounded-lg border border-gray-300 px-2 py-2 text-sm"
+            className="w-full rounded-lg border border-border px-2 py-2 text-sm"
             value={draft.provider_id ?? ""}
             onChange={(e) => setDraft({ ...draft, provider_id: e.target.value || undefined })}
             placeholder="Filter"
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Payer ID</label>
+          <label className="block text-xs font-medium text-muted-foreground mb-1">Payer ID</label>
           <input
-            className="w-full rounded-lg border border-gray-300 px-2 py-2 text-sm"
+            className="w-full rounded-lg border border-border px-2 py-2 text-sm"
             value={draft.payer_id ?? ""}
             onChange={(e) => setDraft({ ...draft, payer_id: e.target.value || undefined })}
             placeholder="Filter"
@@ -204,7 +204,7 @@ function ContractsTab() {
           <button
             type="button"
             onClick={() => setApplied({ ...draft })}
-            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-100"
+            className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-neutral-100"
           >
             Apply filters
           </button>
@@ -213,28 +213,28 @@ function ContractsTab() {
 
       {showForm && (
         <div className="rounded-xl border border-violet-200 bg-violet-50/40 p-4 space-y-3">
-          <h3 className="text-sm font-semibold text-gray-900">New contract</h3>
+          <h3 className="text-sm font-semibold text-foreground">New contract</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <input
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="rounded-lg border border-border px-3 py-2 text-sm"
               placeholder="Provider ID *"
               value={form.providerId}
               onChange={(e) => setForm({ ...form, providerId: e.target.value })}
             />
             <input
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="rounded-lg border border-border px-3 py-2 text-sm"
               placeholder="Payer ID *"
               value={form.payerId}
               onChange={(e) => setForm({ ...form, payerId: e.target.value })}
             />
             <input
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="rounded-lg border border-border px-3 py-2 text-sm"
               placeholder="Plan code"
               value={form.planCode}
               onChange={(e) => setForm({ ...form, planCode: e.target.value })}
             />
             <select
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="rounded-lg border border-border px-3 py-2 text-sm"
               value={form.contractType}
               onChange={(e) => setForm({ ...form, contractType: e.target.value })}
             >
@@ -245,20 +245,20 @@ function ContractsTab() {
               ))}
             </select>
             <input
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="rounded-lg border border-border px-3 py-2 text-sm"
               placeholder="Reimbursement mode"
               value={form.reimbursementMode}
               onChange={(e) => setForm({ ...form, reimbursementMode: e.target.value })}
             />
             <input
               type="date"
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="rounded-lg border border-border px-3 py-2 text-sm"
               value={form.effectiveFrom}
               onChange={(e) => setForm({ ...form, effectiveFrom: e.target.value })}
             />
             <input
               type="date"
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="rounded-lg border border-border px-3 py-2 text-sm"
               value={form.effectiveTo}
               onChange={(e) => setForm({ ...form, effectiveTo: e.target.value })}
             />
@@ -267,7 +267,7 @@ function ContractsTab() {
             <button
               type="button"
               onClick={() => setShowForm(false)}
-              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm"
+              className="rounded-lg border border-border bg-card px-4 py-2 text-sm"
             >
               Cancel
             </button>
@@ -285,21 +285,21 @@ function ContractsTab() {
       )}
 
       {q.isLoading && (
-        <div className="flex items-center gap-2 text-sm text-gray-600 py-8">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground py-8">
           <Loader2 className="h-5 w-5 animate-spin" /> Loading contracts…
         </div>
       )}
       {q.isError && (
-        <p className="text-sm text-red-700 bg-red-50 border border-red-100 rounded-lg px-3 py-2">Could not load contracts.</p>
+        <p className="text-sm text-danger bg-danger-soft border border-red-100 rounded-lg px-3 py-2">Could not load contracts.</p>
       )}
       {!q.isLoading && !q.isError && rows.length === 0 && (
-        <p className="text-sm text-gray-500">No contracts match the current filters.</p>
+        <p className="text-sm text-muted-foreground">No contracts match the current filters.</p>
       )}
       {!q.isLoading && !q.isError && rows.length > 0 && (
-        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-sm">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b bg-gray-50 text-left text-gray-600">
+              <tr className="border-b bg-background text-left text-muted-foreground">
                 <th className="px-3 py-2">Provider</th>
                 <th className="px-3 py-2">Payer</th>
                 <th className="px-3 py-2">Type</th>
@@ -320,7 +320,7 @@ function ContractsTab() {
                     <td className="px-3 py-2 font-mono text-xs">{readStr(row, "payerId", "payer_id") || "—"}</td>
                     <td className="px-3 py-2">{readStr(row, "contractType", "contract_type") || "—"}</td>
                     <td className="px-3 py-2">{readStr(row, "reimbursementMode", "reimbursement_mode") || "—"}</td>
-                    <td className="px-3 py-2 whitespace-nowrap text-gray-600">
+                    <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">
                       {readStr(row, "effectiveFrom", "effective_from")} → {readStr(row, "effectiveTo", "effective_to") || "—"}
                     </td>
                     <td className="px-3 py-2">
@@ -338,7 +338,7 @@ function ContractsTab() {
                           type="button"
                           disabled={!id || suspend.isPending}
                           onClick={() => id && suspend.mutate({ id })}
-                          className="inline-flex items-center gap-1 text-xs font-medium text-amber-800 hover:text-amber-950 disabled:opacity-40"
+                          className="inline-flex items-center gap-1 text-xs font-medium text-warning-foreground hover:text-warning-foreground disabled:opacity-40"
                         >
                           Suspend
                         </button>
@@ -413,7 +413,7 @@ function NetworksTab() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-base font-semibold text-gray-900">Networks</h2>
+        <h2 className="text-base font-semibold text-foreground">Networks</h2>
         <button
           type="button"
           onClick={() => setShowForm(!showForm)}
@@ -423,20 +423,20 @@ function NetworksTab() {
         </button>
       </div>
 
-      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="rounded-lg border border-border bg-background p-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Payer ID</label>
+          <label className="block text-xs font-medium text-muted-foreground mb-1">Payer ID</label>
           <input
-            className="w-full rounded-lg border border-gray-300 px-2 py-2 text-sm"
+            className="w-full rounded-lg border border-border px-2 py-2 text-sm"
             value={draft.payer_id ?? ""}
             onChange={(e) => setDraft({ ...draft, payer_id: e.target.value || undefined })}
             placeholder="Filter"
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
+          <label className="block text-xs font-medium text-muted-foreground mb-1">Status</label>
           <select
-            className="w-full rounded-lg border border-gray-300 px-2 py-2 text-sm"
+            className="w-full rounded-lg border border-border px-2 py-2 text-sm"
             value={draft.status ?? ""}
             onChange={(e) => setDraft({ ...draft, status: e.target.value || undefined })}
           >
@@ -449,7 +449,7 @@ function NetworksTab() {
           <button
             type="button"
             onClick={() => setApplied({ ...draft })}
-            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-100"
+            className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-neutral-100"
           >
             Apply filters
           </button>
@@ -458,22 +458,22 @@ function NetworksTab() {
 
       {showForm && (
         <div className="rounded-xl border border-violet-200 bg-violet-50/40 p-4 space-y-3">
-          <h3 className="text-sm font-semibold text-gray-900">New network</h3>
+          <h3 className="text-sm font-semibold text-foreground">New network</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <input
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="rounded-lg border border-border px-3 py-2 text-sm"
               placeholder="Network name *"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
             />
             <input
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="rounded-lg border border-border px-3 py-2 text-sm"
               placeholder="Payer ID *"
               value={form.payerId}
               onChange={(e) => setForm({ ...form, payerId: e.target.value })}
             />
             <select
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="rounded-lg border border-border px-3 py-2 text-sm"
               value={form.networkType}
               onChange={(e) => setForm({ ...form, networkType: e.target.value })}
             >
@@ -485,7 +485,7 @@ function NetworksTab() {
             </select>
           </div>
           <div className="flex gap-2">
-            <button type="button" onClick={() => setShowForm(false)} className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm">
+            <button type="button" onClick={() => setShowForm(false)} className="rounded-lg border border-border bg-card px-4 py-2 text-sm">
               Cancel
             </button>
             <button
@@ -502,15 +502,15 @@ function NetworksTab() {
       )}
 
       {q.isLoading && (
-        <div className="flex items-center gap-2 text-sm text-gray-600 py-8">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground py-8">
           <Loader2 className="h-5 w-5 animate-spin" /> Loading networks…
         </div>
       )}
       {q.isError && (
-        <p className="text-sm text-red-700 bg-red-50 border border-red-100 rounded-lg px-3 py-2">Could not load networks.</p>
+        <p className="text-sm text-danger bg-danger-soft border border-red-100 rounded-lg px-3 py-2">Could not load networks.</p>
       )}
       {!q.isLoading && !q.isError && rows.length === 0 && (
-        <p className="text-sm text-gray-500">No networks match the current filters.</p>
+        <p className="text-sm text-muted-foreground">No networks match the current filters.</p>
       )}
       {!q.isLoading && !q.isError && rows.length > 0 && (
         <div className="space-y-2">
@@ -520,19 +520,19 @@ function NetworksTab() {
             const st = readStr(row, "status") || "ACTIVE";
             const count = Number(row.memberCount ?? row.member_count ?? 0);
             return (
-              <div key={nid || i} className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-                <div className="flex flex-wrap items-center gap-3 px-4 py-3 border-b border-gray-100 bg-slate-50/80">
+              <div key={nid || i} className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+                <div className="flex flex-wrap items-center gap-3 px-4 py-3 border-b border-border bg-background/80">
                   <button
                     type="button"
                     onClick={() => setExpandedId(expanded ? null : nid || null)}
-                    className="p-1 rounded hover:bg-gray-200 text-gray-600"
+                    className="p-1 rounded hover:bg-neutral-100 text-muted-foreground"
                     aria-expanded={expanded}
                   >
                     {expanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
                   </button>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-gray-900">{readStr(row, "name") || "—"}</p>
-                    <p className="text-xs text-gray-500 font-mono">
+                    <p className="text-sm font-semibold text-foreground">{readStr(row, "name") || "—"}</p>
+                    <p className="text-xs text-muted-foreground font-mono">
                       {readStr(row, "payerId", "payer_id")} · {readStr(row, "networkType", "network_type") || "—"}
                     </p>
                   </div>
@@ -543,7 +543,7 @@ function NetworksTab() {
                   >
                     {st}
                   </span>
-                  <span className="text-xs text-gray-600 whitespace-nowrap">{count} members</span>
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">{count} members</span>
                   <button
                     type="button"
                     onClick={() => setAddForNetwork(addForNetwork === nid ? null : nid)}
@@ -555,13 +555,13 @@ function NetworksTab() {
                 {addForNetwork === nid && (
                   <div className="px-4 py-3 bg-violet-50/50 border-b border-violet-100 flex flex-wrap gap-2 items-end">
                     <input
-                      className="flex-1 min-w-[140px] rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      className="flex-1 min-w-[140px] rounded-lg border border-border px-3 py-2 text-sm"
                       placeholder="Provider ID *"
                       value={addForm.providerId}
                       onChange={(e) => setAddForm({ ...addForm, providerId: e.target.value })}
                     />
                     <input
-                      className="flex-1 min-w-[180px] rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      className="flex-1 min-w-[180px] rounded-lg border border-border px-3 py-2 text-sm"
                       placeholder="Contract UUID (optional)"
                       value={addForm.contractId}
                       onChange={(e) => setAddForm({ ...addForm, contractId: e.target.value })}
@@ -579,18 +579,18 @@ function NetworksTab() {
                 {expanded && nid && (
                   <div className="p-4">
                     {membersQ.isLoading && (
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Loader2 className="h-4 w-4 animate-spin" /> Loading members…
                       </div>
                     )}
                     {membersQ.isError && <p className="text-xs text-red-600">Could not load network members.</p>}
                     {!membersQ.isLoading && !membersQ.isError && memberRows.length === 0 && (
-                      <p className="text-sm text-gray-500">No providers in this network yet.</p>
+                      <p className="text-sm text-muted-foreground">No providers in this network yet.</p>
                     )}
                     {!membersQ.isLoading && memberRows.length > 0 && (
                       <table className="w-full text-sm">
                         <thead>
-                          <tr className="border-b text-left text-gray-600">
+                          <tr className="border-b text-left text-muted-foreground">
                             <th className="pb-2 pr-2">Provider</th>
                             <th className="pb-2 pr-2">Contract</th>
                             <th className="pb-2 pr-2">Joined</th>
@@ -606,7 +606,7 @@ function NetworksTab() {
                                 <td className="py-2 pr-2 font-mono text-xs">
                                   {readStr(m, "contractId", "contract_id") || "—"}
                                 </td>
-                                <td className="py-2 pr-2 text-gray-600 text-xs whitespace-nowrap">
+                                <td className="py-2 pr-2 text-muted-foreground text-xs whitespace-nowrap">
                                   {readStr(m, "joinedAt", "joined_at")
                                     ? new Date(readStr(m, "joinedAt", "joined_at")).toLocaleString()
                                     : "—"}
@@ -616,7 +616,7 @@ function NetworksTab() {
                                     type="button"
                                     disabled={removeMember.isPending}
                                     onClick={() => nid && pid && removeMember.mutate({ networkId: nid, providerId: pid })}
-                                    className="inline-flex items-center gap-1 text-xs font-medium text-red-700 hover:text-red-900"
+                                    className="inline-flex items-center gap-1 text-xs font-medium text-danger hover:text-red-900"
                                   >
                                     <UserMinus className="h-3 w-3" /> Remove
                                   </button>

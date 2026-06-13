@@ -15,9 +15,9 @@ import { useCreateProcedureEpisode } from "@/hooks/queries/useProcedureEpisode";
 
 const STATUS_STYLES: Record<string, string> = {
   Completed: "bg-green-100 text-green-700",
-  Scheduled: "bg-impilo-100 text-impilo-600",
-  Cancelled: "bg-red-100 text-red-700",
-  "In Progress": "bg-amber-100 text-amber-700",
+  Scheduled: "bg-primary-soft text-primary",
+  Cancelled: "bg-red-100 text-danger",
+  "In Progress": "bg-amber-100 text-warning-foreground",
 };
 
 const PROCEDURE_TYPES = ["All", "General Surgery", "Endoscopy", "Orthopaedic", "Ophthalmology", "Radiology", "ENT"];
@@ -57,16 +57,16 @@ export default function ProceduresPage() {
       <PageShell title="Procedures" subtitle="Past and scheduled procedure history">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading procedures...</span>
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading procedures...</span>
           </div>
         ) : isError ? (
           <div className="flex flex-col items-center justify-center gap-3 py-16">
-            <p className="text-sm text-gray-600">Unable to load procedures for this patient.</p>
+            <p className="text-sm text-muted-foreground">Unable to load procedures for this patient.</p>
             <button
               type="button"
               onClick={() => void refetch()}
-              className="rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white hover:bg-impilo-600"
+              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
             >
               Retry
             </button>
@@ -109,14 +109,14 @@ export default function ProceduresPage() {
               ]}
             />
 
-            <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Procedure continuity</p>
-              <p className="mt-2 text-sm text-slate-800">
+            <div className="rounded-3xl border border-border bg-background/70 p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Procedure continuity</p>
+              <p className="mt-2 text-sm text-foreground">
                 {scheduledCount > 0
                   ? `${scheduledCount} procedure${scheduledCount === 1 ? " is" : "s are"} still scheduled, so this workspace should stay linked to documents, notes, and plans until preparation and follow-up are complete.`
                   : "No pending procedures are visible; the continuity need is keeping the outcome and facility history accessible when plans or notes reference prior interventions."}
               </p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Use Documents for source reports, Care Plans for follow-through tasks, and Notes for peri-procedural communication or outcome documentation.
               </p>
             </div>
@@ -124,8 +124,8 @@ export default function ProceduresPage() {
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div className="flex items-center gap-2">
                 <Scissors className="h-5 w-5 text-purple-600" />
-                <h2 className="text-lg font-semibold text-gray-900">Procedure History</h2>
-                <span className="text-sm text-gray-500">({filtered.length})</span>
+                <h2 className="text-lg font-semibold text-foreground">Procedure History</h2>
+                <span className="text-sm text-muted-foreground">({filtered.length})</span>
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -140,7 +140,7 @@ export default function ProceduresPage() {
                       if (data?.id) router.push(`/ehr/${patientId}/procedures/${data.id}`);
                     },
                   })}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-impilo-500 px-3 py-2 text-sm font-medium text-white hover:bg-impilo-600"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white hover:bg-primary-hover"
                 >
                   <Plus className="h-4 w-4" />
                   New procedure case
@@ -148,7 +148,7 @@ export default function ProceduresPage() {
                 <button
                   type="button"
                   onClick={() => setShowFilters((prev) => !prev)}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-background"
                 >
                   <Filter className="h-4 w-4" />
                   Filters
@@ -157,63 +157,63 @@ export default function ProceduresPage() {
             </div>
 
             {showFilters && (
-              <div className="rounded-lg border border-gray-200 bg-white p-4">
+              <div className="rounded-lg border border-border bg-card p-4">
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-600">Procedure Type</label>
-                    <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400">
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Procedure Type</label>
+                    <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40">
                       {PROCEDURE_TYPES.map((type) => <option key={type} value={type}>{type}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-600">From Date</label>
-                    <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">From Date</label>
+                    <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-600">To Date</label>
-                    <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">To Date</label>
+                    <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
                   </div>
                 </div>
               </div>
             )}
 
             {filtered.length === 0 ? (
-              <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
-                <Scissors className="mx-auto mb-3 h-10 w-10 text-gray-300" />
-                <p className="text-sm text-gray-400">No procedures found</p>
+              <div className="rounded-lg border border-border bg-card p-12 text-center">
+                <Scissors className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">No procedures found</p>
               </div>
             ) : (
-              <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+              <div className="overflow-hidden rounded-lg border border-border bg-card">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-gray-200 bg-gray-50">
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">Date</th>
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">Procedure</th>
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">Type</th>
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">Surgeon</th>
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">Facility</th>
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">Status</th>
+                      <tr className="border-b border-border bg-background">
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">Date</th>
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">Procedure</th>
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">Type</th>
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">Surgeon</th>
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">Facility</th>
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filtered.map((procedure) => (
-                        <tr key={procedure.id} className="border-b border-gray-100 transition-colors hover:bg-gray-50">
-                          <td className="flex items-center gap-1.5 px-4 py-3 text-gray-900">
-                            <Calendar className="h-3.5 w-3.5 text-gray-400" />
+                        <tr key={procedure.id} className="border-b border-border transition-colors hover:bg-background">
+                          <td className="flex items-center gap-1.5 px-4 py-3 text-foreground">
+                            <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
                             {procedure.date}
                           </td>
                           <td className="px-4 py-3">
-                            <Link href={`/ehr/${patientId}/procedures/${procedure.id}`} className="font-medium text-impilo-600 hover:underline">
+                            <Link href={`/ehr/${patientId}/procedures/${procedure.id}`} className="font-medium text-primary hover:underline">
                               {procedure.name}
                             </Link>
-                            <div className="text-xs text-gray-500">{procedure.notes}</div>
+                            <div className="text-xs text-muted-foreground">{procedure.notes}</div>
                           </td>
-                          <td className="px-4 py-3 text-gray-700">{procedure.type}</td>
-                          <td className="px-4 py-3 text-gray-700">{procedure.surgeon}</td>
-                          <td className="px-4 py-3 text-gray-700">{procedure.facility}</td>
+                          <td className="px-4 py-3 text-foreground">{procedure.type}</td>
+                          <td className="px-4 py-3 text-foreground">{procedure.surgeon}</td>
+                          <td className="px-4 py-3 text-foreground">{procedure.facility}</td>
                           <td className="px-4 py-3">
-                            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[procedure.status] ?? "bg-gray-100 text-gray-600"}`}>{procedure.status}</span>
+                            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[procedure.status] ?? "bg-neutral-100 text-muted-foreground"}`}>{procedure.status}</span>
                           </td>
                         </tr>
                       ))}

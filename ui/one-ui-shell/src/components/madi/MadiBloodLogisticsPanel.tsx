@@ -104,21 +104,21 @@ export function MadiBloodLogisticsPanel() {
         <div className="flex flex-wrap gap-2 text-xs">
           <Link
             href="/nhume/deliveries/new"
-            className="inline-flex items-center gap-1 rounded-lg border border-teal-200 bg-white px-2.5 py-1.5 font-medium text-teal-900 hover:border-teal-300"
+            className="inline-flex items-center gap-1 rounded-lg border border-teal-200 bg-card px-2.5 py-1.5 font-medium text-teal-900 hover:border-teal-300"
           >
             <Package className="h-3.5 w-3.5" />
             New BLOOD_PRODUCT dispatch
           </Link>
           <Link
             href="/madi/blood-bank/stock"
-            className="rounded-lg border border-teal-200 bg-white px-2.5 py-1.5 font-medium text-teal-900 hover:border-teal-300"
+            className="rounded-lg border border-teal-200 bg-card px-2.5 py-1.5 font-medium text-teal-900 hover:border-teal-300"
           >
             <Droplets className="inline h-3.5 w-3.5 mr-1" />
             Blood stock
           </Link>
           <Link
             href="/nhume/deliveries"
-            className="rounded-lg border border-teal-200 bg-white px-2.5 py-1.5 font-medium text-teal-900 hover:border-teal-300"
+            className="rounded-lg border border-teal-200 bg-card px-2.5 py-1.5 font-medium text-teal-900 hover:border-teal-300"
           >
             Track deliveries
           </Link>
@@ -137,7 +137,7 @@ export function MadiBloodLogisticsPanel() {
           {bloodRows.slice(0, 6).map((row) => (
             <li
               key={readLabel(row)}
-              className="flex items-center justify-between gap-2 rounded-lg border border-teal-100 bg-white px-2.5 py-2"
+              className="flex items-center justify-between gap-2 rounded-lg border border-teal-100 bg-card px-2.5 py-2"
             >
               <span className="font-medium text-teal-900">{readLabel(row)}</span>
               <span className="text-teal-700">{readStatus(row)}</span>

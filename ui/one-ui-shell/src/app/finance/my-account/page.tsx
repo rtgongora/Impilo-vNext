@@ -158,7 +158,7 @@ export default function MyHealthcareAccountPage() {
         <div className="mb-6">
           <Link
             href="/home"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to home
@@ -166,7 +166,7 @@ export default function MyHealthcareAccountPage() {
         </div>
 
         {!cpid && (
-          <p className="text-sm text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+          <p className="text-sm text-warning-foreground bg-warning-soft border border-amber-100 rounded-lg px-3 py-2">
             Sign in to view your financial account.
           </p>
         )}
@@ -174,48 +174,48 @@ export default function MyHealthcareAccountPage() {
         {cpid && (
           <div className="space-y-8">
             {/* Summary */}
-            <section className="rounded-xl border border-gray-200 bg-white shadow-sm p-5">
-              <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2 mb-4">
-                <PiggyBank className="h-4 w-4 text-emerald-600" />
+            <section className="rounded-xl border border-border bg-card shadow-sm p-5">
+              <h2 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-4">
+                <PiggyBank className="h-4 w-4 text-primary" />
                 Account summary
               </h2>
               {accountQ.isLoading && (
-                <div className="flex items-center gap-2 text-gray-600 text-sm">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm">
                   <Loader2 className="h-4 w-4 animate-spin" /> Loading…
                 </div>
               )}
               {accountQ.isError && (
-                <p className="text-sm text-red-700">Could not load account summary.</p>
+                <p className="text-sm text-danger">Could not load account summary.</p>
               )}
               {!accountQ.isLoading && !accountQ.isError && (
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
-                  <div className="rounded-lg bg-gray-50 p-3">
-                    <div className="text-gray-500 text-xs">Total billed</div>
-                    <div className="font-semibold text-gray-900">
+                  <div className="rounded-lg bg-background p-3">
+                    <div className="text-muted-foreground text-xs">Total billed</div>
+                    <div className="font-semibold text-foreground">
                       {formatMoney(readNum(summary, "totalBilled", "total_billed"), currency)}
                     </div>
                   </div>
-                  <div className="rounded-lg bg-gray-50 p-3">
-                    <div className="text-gray-500 text-xs">You paid</div>
-                    <div className="font-semibold text-gray-900">
+                  <div className="rounded-lg bg-background p-3">
+                    <div className="text-muted-foreground text-xs">You paid</div>
+                    <div className="font-semibold text-foreground">
                       {formatMoney(readNum(summary, "totalPaid", "total_paid"), currency)}
                     </div>
                   </div>
-                  <div className="rounded-lg bg-gray-50 p-3">
-                    <div className="text-gray-500 text-xs">Insurer covered</div>
-                    <div className="font-semibold text-gray-900">
+                  <div className="rounded-lg bg-background p-3">
+                    <div className="text-muted-foreground text-xs">Insurer covered</div>
+                    <div className="font-semibold text-foreground">
                       {formatMoney(readNum(summary, "totalInsurer", "total_insurer"), currency)}
                     </div>
                   </div>
-                  <div className="rounded-lg bg-amber-50 p-3 border border-amber-100">
-                    <div className="text-amber-800 text-xs">Outstanding</div>
-                    <div className="font-semibold text-amber-950">
+                  <div className="rounded-lg bg-warning-soft p-3 border border-amber-100">
+                    <div className="text-warning-foreground text-xs">Outstanding</div>
+                    <div className="font-semibold text-warning-foreground">
                       {formatMoney(readNum(summary, "totalOutstanding", "total_outstanding"), currency)}
                     </div>
                   </div>
-                  <div className="rounded-lg bg-gray-50 p-3">
-                    <div className="text-gray-500 text-xs">Write-offs</div>
-                    <div className="font-semibold text-gray-900">
+                  <div className="rounded-lg bg-background p-3">
+                    <div className="text-muted-foreground text-xs">Write-offs</div>
+                    <div className="font-semibold text-foreground">
                       {formatMoney(readNum(summary, "totalWriteoff", "total_writeoff"), currency)}
                     </div>
                   </div>
@@ -224,23 +224,23 @@ export default function MyHealthcareAccountPage() {
             </section>
 
             {/* Transactions */}
-            <section className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-              <div className="border-b border-gray-100 px-4 py-3 bg-slate-50/80 flex items-center gap-2">
-                <Receipt className="h-4 w-4 text-slate-600" />
-                <h2 className="text-sm font-semibold text-gray-900">Transaction history</h2>
+            <section className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+              <div className="border-b border-border px-4 py-3 bg-background/80 flex items-center gap-2">
+                <Receipt className="h-4 w-4 text-muted-foreground" />
+                <h2 className="text-sm font-semibold text-foreground">Transaction history</h2>
               </div>
               <div className="overflow-x-auto">
                 {txQ.isLoading && (
-                  <div className="p-6 flex items-center gap-2 text-gray-600 text-sm">
+                  <div className="p-6 flex items-center gap-2 text-muted-foreground text-sm">
                     <Loader2 className="h-4 w-4 animate-spin" /> Loading…
                   </div>
                 )}
                 {!txQ.isLoading && txQ.isError && (
-                  <p className="p-4 text-sm text-red-700">Could not load transactions.</p>
+                  <p className="p-4 text-sm text-danger">Could not load transactions.</p>
                 )}
                 {!txQ.isLoading && !txQ.isError && (
                   <table className="min-w-full text-sm">
-                    <thead className="bg-gray-50 text-left text-xs text-gray-500 uppercase tracking-wide">
+                    <thead className="bg-background text-left text-xs text-muted-foreground uppercase tracking-wide">
                       <tr>
                         <th className="px-4 py-2">Date</th>
                         <th className="px-4 py-2">Description</th>
@@ -252,28 +252,28 @@ export default function MyHealthcareAccountPage() {
                     <tbody className="divide-y divide-gray-100">
                       {txRows.length === 0 && (
                         <tr>
-                          <td colSpan={5} className="px-4 py-6 text-center text-gray-500">
+                          <td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">
                             No transactions yet.
                           </td>
                         </tr>
                       )}
                       {txRows.map((row, i) => (
-                        <tr key={readStr(row, "txnId", "txn_id") || String(i)} className="hover:bg-gray-50/80">
-                          <td className="px-4 py-2 whitespace-nowrap text-gray-700">
+                        <tr key={readStr(row, "txnId", "txn_id") || String(i)} className="hover:bg-background/80">
+                          <td className="px-4 py-2 whitespace-nowrap text-foreground">
                             {readStr(row, "txnDate", "txn_date").slice(0, 16).replace("T", " ")}
                           </td>
-                          <td className="px-4 py-2 text-gray-800 max-w-xs truncate">
+                          <td className="px-4 py-2 text-foreground max-w-xs truncate">
                             {readStr(row, "description")}
                           </td>
                           <td className="px-4 py-2">
-                            <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
+                            <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-foreground">
                               {readStr(row, "txnType", "txn_type")}
                             </span>
                           </td>
                           <td className="px-4 py-2 text-right tabular-nums">
                             {formatMoney(readNum(row, "patientAmount", "patient_amount"), currency)}
                           </td>
-                          <td className="px-4 py-2 text-right tabular-nums font-medium text-gray-900">
+                          <td className="px-4 py-2 text-right tabular-nums font-medium text-foreground">
                             {formatMoney(readNum(row, "runningBalance", "running_balance"), currency)}
                           </td>
                         </tr>
@@ -285,31 +285,31 @@ export default function MyHealthcareAccountPage() {
             </section>
 
             {/* Outstanding */}
-            <section className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-              <div className="border-b border-gray-100 px-4 py-3 bg-rose-50/60 flex items-center gap-2">
-                <CreditCard className="h-4 w-4 text-rose-700" />
-                <h2 className="text-sm font-semibold text-gray-900">Outstanding bills</h2>
+            <section className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+              <div className="border-b border-border px-4 py-3 bg-danger-soft/60 flex items-center gap-2">
+                <CreditCard className="h-4 w-4 text-danger" />
+                <h2 className="text-sm font-semibold text-foreground">Outstanding bills</h2>
               </div>
               <div className="p-4 space-y-3">
                 {outQ.isLoading && (
-                  <div className="flex items-center gap-2 text-gray-600 text-sm">
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm">
                     <Loader2 className="h-4 w-4 animate-spin" /> Loading…
                   </div>
                 )}
                 {!outQ.isLoading && outstanding.length === 0 && (
-                  <p className="text-sm text-gray-600">No outstanding patient balances.</p>
+                  <p className="text-sm text-muted-foreground">No outstanding patient balances.</p>
                 )}
                 {outstanding.map((row, i) => (
                   <div
                     key={readStr(row, "billId", "bill_id") || String(i)}
-                    className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gray-100 bg-gray-50/50 px-3 py-2"
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-background/50 px-3 py-2"
                   >
                     <div>
-                      <div className="text-xs text-gray-500">Bill</div>
-                      <div className="font-mono text-sm text-gray-900">
+                      <div className="text-xs text-muted-foreground">Bill</div>
+                      <div className="font-mono text-sm text-foreground">
                         {readStr(row, "billId", "bill_id")}
                       </div>
-                      <div className="text-xs text-gray-500 mt-1">
+                      <div className="text-xs text-muted-foreground mt-1">
                         Balance due:{" "}
                         <span className="font-semibold text-rose-800">
                           {formatMoney(readNum(row, "balanceDue", "balance_due"), currency)}
@@ -330,36 +330,36 @@ export default function MyHealthcareAccountPage() {
             </section>
 
             {/* Payment plans */}
-            <section className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-              <div className="border-b border-gray-100 px-4 py-3 bg-indigo-50/60 flex flex-wrap items-center justify-between gap-2">
+            <section className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+              <div className="border-b border-border px-4 py-3 bg-info-soft/60 flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <Wallet className="h-4 w-4 text-indigo-700" />
-                  <h2 className="text-sm font-semibold text-gray-900">Payment plans</h2>
+                  <Wallet className="h-4 w-4 text-primary-hover" />
+                  <h2 className="text-sm font-semibold text-foreground">Payment plans</h2>
                 </div>
                 <button
                   type="button"
                   onClick={() => setPlanFormOpen((v) => !v)}
-                  className="text-xs font-medium text-indigo-700 hover:underline"
+                  className="text-xs font-medium text-primary-hover hover:underline"
                 >
                   {planFormOpen ? "Close form" : "New plan"}
                 </button>
               </div>
               <div className="p-4 space-y-4">
                 {planFormOpen && (
-                  <div className="rounded-lg border border-indigo-100 bg-indigo-50/30 p-3 space-y-2 text-sm">
+                  <div className="rounded-lg border border-indigo-100 bg-info-soft/30 p-3 space-y-2 text-sm">
                     <div className="grid grid-cols-2 gap-2">
                       <label className="block">
-                        <span className="text-xs text-gray-600">Total amount</span>
+                        <span className="text-xs text-muted-foreground">Total amount</span>
                         <input
-                          className="mt-0.5 w-full rounded border border-gray-200 px-2 py-1"
+                          className="mt-0.5 w-full rounded border border-border px-2 py-1"
                           value={planForm.totalAmount}
                           onChange={(e) => setPlanForm((f) => ({ ...f, totalAmount: e.target.value }))}
                         />
                       </label>
                       <label className="block">
-                        <span className="text-xs text-gray-600">Installment</span>
+                        <span className="text-xs text-muted-foreground">Installment</span>
                         <input
-                          className="mt-0.5 w-full rounded border border-gray-200 px-2 py-1"
+                          className="mt-0.5 w-full rounded border border-border px-2 py-1"
                           value={planForm.installmentAmount}
                           onChange={(e) => setPlanForm((f) => ({ ...f, installmentAmount: e.target.value }))}
                         />
@@ -367,17 +367,17 @@ export default function MyHealthcareAccountPage() {
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <label className="block">
-                        <span className="text-xs text-gray-600"># Installments</span>
+                        <span className="text-xs text-muted-foreground"># Installments</span>
                         <input
-                          className="mt-0.5 w-full rounded border border-gray-200 px-2 py-1"
+                          className="mt-0.5 w-full rounded border border-border px-2 py-1"
                           value={planForm.installmentsTotal}
                           onChange={(e) => setPlanForm((f) => ({ ...f, installmentsTotal: e.target.value }))}
                         />
                       </label>
                       <label className="block">
-                        <span className="text-xs text-gray-600">Frequency</span>
+                        <span className="text-xs text-muted-foreground">Frequency</span>
                         <select
-                          className="mt-0.5 w-full rounded border border-gray-200 px-2 py-1"
+                          className="mt-0.5 w-full rounded border border-border px-2 py-1"
                           value={planForm.frequency}
                           onChange={(e) => setPlanForm((f) => ({ ...f, frequency: e.target.value }))}
                         >
@@ -391,19 +391,19 @@ export default function MyHealthcareAccountPage() {
                       type="button"
                       onClick={submitPlan}
                       disabled={createPlan.isPending}
-                      className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                      className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-primary disabled:opacity-50"
                     >
                       Create plan
                     </button>
                   </div>
                 )}
                 {plansQ.isLoading && (
-                  <div className="flex items-center gap-2 text-gray-600 text-sm">
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm">
                     <Loader2 className="h-4 w-4 animate-spin" /> Loading…
                   </div>
                 )}
                 {!plansQ.isLoading && plans.length === 0 && (
-                  <p className="text-sm text-gray-600">No payment plans.</p>
+                  <p className="text-sm text-muted-foreground">No payment plans.</p>
                 )}
                 {plans.map((pl, i) => {
                   const total = readNum(pl, "totalAmount", "total_amount");
@@ -412,14 +412,14 @@ export default function MyHealthcareAccountPage() {
                   const planId = readStr(pl, "planId", "plan_id");
                   const status = readStr(pl, "status");
                   return (
-                    <div key={planId || String(i)} className="rounded-lg border border-gray-100 p-3">
+                    <div key={planId || String(i)} className="rounded-lg border border-border p-3">
                       <div className="flex justify-between text-sm">
-                        <span className="font-medium text-gray-900">{status}</span>
-                        <span className="text-gray-600 tabular-nums">
+                        <span className="font-medium text-foreground">{status}</span>
+                        <span className="text-muted-foreground tabular-nums">
                           {formatMoney(paid, currency)} / {formatMoney(total, currency)}
                         </span>
                       </div>
-                      <div className="mt-2 h-2 w-full rounded-full bg-gray-100 overflow-hidden">
+                      <div className="mt-2 h-2 w-full rounded-full bg-neutral-100 overflow-hidden">
                         <div
                           className="h-full rounded-full bg-indigo-500 transition-all"
                           style={{ width: `${pct}%` }}
@@ -430,7 +430,7 @@ export default function MyHealthcareAccountPage() {
                           type="button"
                           onClick={() => payInstallment.mutate({ planId })}
                           disabled={payInstallment.isPending}
-                          className="mt-2 text-xs font-medium text-indigo-700 hover:underline disabled:opacity-50"
+                          className="mt-2 text-xs font-medium text-primary-hover hover:underline disabled:opacity-50"
                         >
                           Record installment
                         </button>
@@ -442,10 +442,10 @@ export default function MyHealthcareAccountPage() {
             </section>
 
             {/* Documents */}
-            <section className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-              <div className="border-b border-gray-100 px-4 py-3 bg-teal-50/60 flex items-center gap-2">
+            <section className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+              <div className="border-b border-border px-4 py-3 bg-teal-50/60 flex items-center gap-2">
                 <FileText className="h-4 w-4 text-teal-700" />
-                <h2 className="text-sm font-semibold text-gray-900">Documents</h2>
+                <h2 className="text-sm font-semibold text-foreground">Documents</h2>
               </div>
               <div className="p-4 space-y-3">
                 <div className="flex flex-wrap gap-2">
@@ -460,25 +460,25 @@ export default function MyHealthcareAccountPage() {
                       type="button"
                       onClick={() => runGenerate(type)}
                       disabled={genDoc.isPending}
-                      className="rounded-lg border border-teal-200 bg-white px-2 py-1 text-xs font-medium text-teal-800 hover:bg-teal-50 disabled:opacity-50"
+                      className="rounded-lg border border-teal-200 bg-card px-2 py-1 text-xs font-medium text-teal-800 hover:bg-teal-50 disabled:opacity-50"
                     >
                       Generate {label}
                     </button>
                   ))}
                 </div>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   For invoices and receipts tied to a specific bill or payment, generate from finance operations
                   or use subject_ref of that bill/payment id with the API.
                 </p>
                 {docsQ.isLoading && (
-                  <div className="flex items-center gap-2 text-gray-600 text-sm">
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm">
                     <Loader2 className="h-4 w-4 animate-spin" /> Loading…
                   </div>
                 )}
                 {!docsQ.isLoading && docs.length === 0 && (
-                  <p className="text-sm text-gray-600">No documents stored yet.</p>
+                  <p className="text-sm text-muted-foreground">No documents stored yet.</p>
                 )}
-                <ul className="divide-y divide-gray-100 border border-gray-100 rounded-lg">
+                <ul className="divide-y divide-gray-100 border border-border rounded-lg">
                   {docs.map((d, i) => {
                     const id = readStr(d, "docId", "doc_id");
                     const dtype = readStr(d, "docType", "doc_type");
@@ -486,8 +486,8 @@ export default function MyHealthcareAccountPage() {
                     return (
                       <li key={id || String(i)} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
                         <div>
-                          <div className="text-sm font-medium text-gray-900">{title}</div>
-                          <div className="text-xs text-gray-500">{dtype}</div>
+                          <div className="text-sm font-medium text-foreground">{title}</div>
+                          <div className="text-xs text-muted-foreground">{dtype}</div>
                         </div>
                         <button
                           type="button"
@@ -501,8 +501,8 @@ export default function MyHealthcareAccountPage() {
                   })}
                 </ul>
                 {viewDocId && (
-                  <div className="rounded-lg border border-gray-200 bg-gray-900 p-3 text-xs text-green-100 font-mono overflow-auto max-h-64">
-                    <div className="flex justify-between mb-2 text-gray-400">
+                  <div className="rounded-lg border border-border bg-neutral-900 p-3 text-xs text-green-100 font-mono overflow-auto max-h-64">
+                    <div className="flex justify-between mb-2 text-muted-foreground">
                       <span>Document {viewDocId}</span>
                       <button type="button" onClick={() => setViewDocId(null)} className="hover:text-white">
                         Close

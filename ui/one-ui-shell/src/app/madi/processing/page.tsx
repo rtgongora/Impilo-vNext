@@ -37,10 +37,10 @@ export default function ProcessingPage() {
     <AppLayout>
       <PageShell title="Blood Processing" subtitle="Receive, test, quarantine and prepare components" icon={<FlaskConical className="h-6 w-6" />}>
         <div className="space-y-6">
-          <section className="rounded-2xl border border-gray-200 bg-white p-5 space-y-3">
-            <h2 className="text-sm font-semibold text-gray-900">Receive unit</h2>
+          <section className="rounded-2xl border border-border bg-card p-5 space-y-3">
+            <h2 className="text-sm font-semibold text-foreground">Receive unit</h2>
             <div className="flex gap-2">
-              <input value={unitId} onChange={(e) => setUnitId(e.target.value)} placeholder="Unit UUID" className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm font-mono" />
+              <input value={unitId} onChange={(e) => setUnitId(e.target.value)} placeholder="Unit UUID" className="flex-1 rounded-xl border border-border px-3 py-2 text-sm font-mono" />
               <button
                 type="button"
                 onClick={() => receive.mutate({ unit_id: unitId }, {
@@ -55,32 +55,32 @@ export default function ProcessingPage() {
                 {receive.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Receive"}
               </button>
             </div>
-            {batchId && <p className="text-xs text-gray-500">Active batch: {batchId}</p>}
+            {batchId && <p className="text-xs text-muted-foreground">Active batch: {batchId}</p>}
           </section>
 
           {batchId && (
-            <section className="rounded-2xl border border-gray-200 bg-white p-5 flex flex-wrap gap-2">
-              <button type="button" onClick={() => quarantine.mutate({ reason: "Pending test results" })} disabled={quarantine.isPending} className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-sm">Quarantine</button>
+            <section className="rounded-2xl border border-border bg-card p-5 flex flex-wrap gap-2">
+              <button type="button" onClick={() => quarantine.mutate({ reason: "Pending test results" })} disabled={quarantine.isPending} className="rounded-xl border border-amber-300 bg-warning-soft px-3 py-2 text-sm">Quarantine</button>
               <button type="button" onClick={() => release.mutate({})} disabled={release.isPending} className="rounded-xl bg-green-600 px-3 py-2 text-sm text-white">Release</button>
             </section>
           )}
 
-          <section className="rounded-2xl border border-gray-200 bg-white p-5 space-y-3">
-            <h2 className="text-sm font-semibold text-gray-900">Prepare component</h2>
+          <section className="rounded-2xl border border-border bg-card p-5 space-y-3">
+            <h2 className="text-sm font-semibold text-foreground">Prepare component</h2>
             <div className="flex flex-wrap gap-3">
-              <select value={jurisdiction} onChange={(e) => setJurisdiction(e.target.value as (typeof JURISDICTIONS)[number])} className="rounded-xl border border-gray-300 px-3 py-2 text-sm bg-white">
+              <select value={jurisdiction} onChange={(e) => setJurisdiction(e.target.value as (typeof JURISDICTIONS)[number])} className="rounded-xl border border-border px-3 py-2 text-sm bg-card">
                 {JURISDICTIONS.map((j) => <option key={j} value={j}>{j} jurisdiction</option>)}
               </select>
-              <span className="text-xs text-gray-500 self-center">
+              <span className="text-xs text-muted-foreground self-center">
                 Release train: {ziboPins.data?.releaseTrain ?? artifact.releaseTrain}
               </span>
             </div>
-            <select value={componentType} onChange={(e) => setComponentType(e.target.value)} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm bg-white">
+            <select value={componentType} onChange={(e) => setComponentType(e.target.value)} className="w-full rounded-xl border border-border px-3 py-2 text-sm bg-card">
               {(["WHOLE_BLOOD", "RED_CELLS", "PLATELETS", "PLASMA", "CRYOPRECIPITATE"] as ComponentType[]).map((c) => (
                 <option key={c} value={c}>{MADI_COMPONENT_ZIBO_ARTIFACTS[c].label}</option>
               ))}
             </select>
-            <p className="text-xs text-gray-600">
+            <p className="text-xs text-muted-foreground">
               ZIBO catalogue ({jurisdiction}, v{artifact.pinnedVersion}):{" "}
               <Link
                 href={ziboTerminologyHref(componentType as ComponentType, jurisdiction)}
@@ -97,7 +97,7 @@ export default function ProcessingPage() {
               type="button"
               onClick={() => prepare.mutate({ unit_id: unitId, component_type: componentType, volume_ml: 250 })}
               disabled={!unitId || prepare.isPending}
-              className="rounded-xl bg-gray-800 px-3 py-2 text-sm text-white disabled:opacity-50"
+              className="rounded-xl bg-primary-hover px-3 py-2 text-sm text-white disabled:opacity-50"
             >
               Prepare component
             </button>

@@ -126,10 +126,10 @@ export default function RxTransactionJourneyPage() {
         <FeatureMaturityBadge status="partial" detail="Live BFF probes on Rx · pay · dispatch · Ndila" />
       </div>
       <div
-        className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700"
+        className="mb-4 rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground"
         data-testid="rx-live-path-probes"
       >
-        <span className="font-semibold text-slate-900">Live path probes: </span>
+        <span className="font-semibold text-foreground">Live path probes: </span>
         {live.labels.rx} · {live.labels.pay} · {live.labels.dispatch} · {live.labels.ndila}
       </div>
       <JourneyStepper

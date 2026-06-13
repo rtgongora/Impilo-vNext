@@ -57,13 +57,13 @@ export function EncounterPanel({ encounter }: { encounter: Encounter }) {
         <h3 className="font-semibold">
           {encounter.encounterType} Encounter
         </h3>
-        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+        <span className="text-xs bg-blue-100 text-primary-hover px-2 py-0.5 rounded-full">
           {encounter.status}
         </span>
       </div>
 
       <div>
-        <label className="text-xs text-gray-500 block mb-1">Chief Complaint</label>
+        <label className="text-xs text-muted-foreground block mb-1">Chief Complaint</label>
         <input
           value={chiefComplaint}
           onChange={(e) => setChiefComplaint(e.target.value)}
@@ -80,7 +80,7 @@ export function EncounterPanel({ encounter }: { encounter: Encounter }) {
             className={`px-3 py-1.5 text-sm ${
               activeTab === tab.key
                 ? "border-b-2 border-impilo-primary text-impilo-primary font-medium"
-                : "text-gray-500"
+                : "text-muted-foreground"
             }`}
           >
             {tab.label}
@@ -106,7 +106,7 @@ export function EncounterPanel({ encounter }: { encounter: Encounter }) {
             Add Note
           </button>
           {encounter.notes.map((note, i) => (
-            <div key={i} className="bg-gray-50 p-2 rounded text-sm">
+            <div key={i} className="bg-background p-2 rounded text-sm">
               {note}
             </div>
           ))}
@@ -153,7 +153,7 @@ function VitalsForm({ onAdd, existing }: { onAdd: (v: VitalSign) => void; existi
         <button onClick={submit} className="px-3 py-1 bg-impilo-secondary text-white text-sm rounded">Add</button>
       </div>
       {existing.map((v, i) => (
-        <div key={i} className="text-sm flex justify-between bg-gray-50 p-2 rounded">
+        <div key={i} className="text-sm flex justify-between bg-background p-2 rounded">
           <span className="font-medium">{v.type}</span>
           <span>{v.value} {v.unit}</span>
         </div>
@@ -186,10 +186,10 @@ function DiagnosisForm({ onAdd, existing }: { onAdd: (d: Diagnosis) => void; exi
         <button onClick={submit} className="px-3 py-1 bg-impilo-secondary text-white text-sm rounded">Add</button>
       </div>
       {existing.map((d, i) => (
-        <div key={i} className="text-sm bg-gray-50 p-2 rounded">
-          <span className="font-mono text-xs bg-gray-200 px-1 rounded mr-2">{d.code}</span>
+        <div key={i} className="text-sm bg-background p-2 rounded">
+          <span className="font-mono text-xs bg-neutral-100 px-1 rounded mr-2">{d.code}</span>
           <span>{d.display}</span>
-          <span className="ml-2 text-xs text-gray-400">({d.type})</span>
+          <span className="ml-2 text-xs text-muted-foreground">({d.type})</span>
         </div>
       ))}
     </div>
@@ -218,9 +218,9 @@ function PrescriptionForm({ onAdd, existing }: { onAdd: (r: Prescription) => voi
       </div>
       <button onClick={submit} className="px-3 py-1 bg-impilo-secondary text-white text-sm rounded">Add Prescription</button>
       {existing.map((r, i) => (
-        <div key={i} className="text-sm bg-gray-50 p-2 rounded">
+        <div key={i} className="text-sm bg-background p-2 rounded">
           <div className="font-medium">{r.medication}</div>
-          <div className="text-gray-500">{r.dosage} — {r.frequency} for {r.duration}</div>
+          <div className="text-muted-foreground">{r.dosage} — {r.frequency} for {r.duration}</div>
         </div>
       ))}
     </div>

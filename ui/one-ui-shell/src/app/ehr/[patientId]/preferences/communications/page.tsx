@@ -51,48 +51,48 @@ export default function CommunicationPreferencesPage() {
       <div className="space-y-4 max-w-3xl">
         <Link
           href={`/ehr/${patientId}/summary#consent-preferences`}
-          className="text-sm text-impilo-600 hover:underline"
+          className="text-sm text-primary hover:underline"
         >
           Back to Consent, Preferences &amp; Directives
         </Link>
 
         {q.isLoading && (
-          <div className="flex items-center gap-2 text-slate-600">
+          <div className="flex items-center gap-2 text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
             Loading preferences…
           </div>
         )}
 
         {q.isError && (
-          <p className="text-sm text-red-700">
+          <p className="text-sm text-danger">
             Could not load preferences. If Mvumo is down, the summary will still list consent context only.
           </p>
         )}
 
         {data && (
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
             <div className="mb-2 flex items-center gap-2">
-              <MessageCircle className="h-4 w-4 text-slate-500" />
-              <span className="text-sm font-medium text-slate-900">Current bundle</span>
+              <MessageCircle className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">Current bundle</span>
             </div>
             {data.exists === false ? (
-              <p className="text-sm text-slate-600">No versioned profile stored yet. Saving from intake, portal, or an assisted update will create revision 1.</p>
+              <p className="text-sm text-muted-foreground">No versioned profile stored yet. Saving from intake, portal, or an assisted update will create revision 1.</p>
             ) : (
-              <ul className="space-y-1 text-sm text-slate-800">
+              <ul className="space-y-1 text-sm text-foreground">
                 <li>
-                  <span className="text-slate-500">Lifecycle: </span>
+                  <span className="text-muted-foreground">Lifecycle: </span>
                   {data.lifecycleState ?? "—"}
                 </li>
                 <li>
-                  <span className="text-slate-500">Bundle version: </span>
+                  <span className="text-muted-foreground">Bundle version: </span>
                   {data.bundleVersion ?? "—"}
                 </li>
                 <li>
-                  <span className="text-slate-500">Revision: </span>
+                  <span className="text-muted-foreground">Revision: </span>
                   <code className="text-xs">{data.revisionId ?? "—"}</code>
                 </li>
                 <li className="pt-2">
-                  <span className="text-slate-500">Payload (structured JSON):</span>
+                  <span className="text-muted-foreground">Payload (structured JSON):</span>
                   <JsonApiDataTable data={data.payload ?? {}} columns={GENERIC_RECORD_COLUMNS} emptyTitle="No preference fields" />
                 </li>
               </ul>

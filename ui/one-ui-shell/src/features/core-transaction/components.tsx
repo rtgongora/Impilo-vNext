@@ -143,29 +143,29 @@ export function TransactionContextPanel({ transaction }: { transaction: CoreTran
     "Transaction Context",
     <div className="space-y-1.5 text-xs">
       <p>
-        <span className="font-semibold text-slate-700">Type/State:</span> {transaction.transaction.type} /{" "}
+        <span className="font-semibold text-foreground">Type/State:</span> {transaction.transaction.type} /{" "}
         {transaction.transaction.currentState}
       </p>
       <p>
-        <span className="font-semibold text-slate-700">Journeys:</span> {transaction.journeys.person.currentStage} |{" "}
+        <span className="font-semibold text-foreground">Journeys:</span> {transaction.journeys.person.currentStage} |{" "}
         {transaction.journeys.provider.currentStage} | {transaction.journeys.platform.currentStage}
       </p>
       <p>
-        <span className="font-semibold text-slate-700">Trust:</span> {transaction.trustContext.accessStatus} (
+        <span className="font-semibold text-foreground">Trust:</span> {transaction.trustContext.accessStatus} (
         {transaction.trustContext.consentStatus})
       </p>
       <p>
-        <span className="font-semibold text-slate-700">Payment/Access:</span> {transaction.financialContext.paymentStatus}
+        <span className="font-semibold text-foreground">Payment/Access:</span> {transaction.financialContext.paymentStatus}
       </p>
       <p>
-        <span className="font-semibold text-slate-700">Sync:</span> {transaction.offlineSyncStatus}
+        <span className="font-semibold text-foreground">Sync:</span> {transaction.offlineSyncStatus}
       </p>
       <p>
-        <span className="font-semibold text-slate-700">Blockers:</span>{" "}
+        <span className="font-semibold text-foreground">Blockers:</span>{" "}
         {transaction.failureModes.length ? transaction.failureModes.join(", ") : "none"}
       </p>
       <p>
-        <span className="font-semibold text-slate-700">Source of truth:</span> Experience BFF composition only; sovereign
+        <span className="font-semibold text-foreground">Source of truth:</span> Experience BFF composition only; sovereign
         services remain authoritative.
       </p>
     </div>,
@@ -296,10 +296,10 @@ export function NompiloHandoffActionPanel({ transaction }: { transaction: CoreTr
     <div className="space-y-2">
       {hasOptions ? (
         <>
-          <label className="block text-xs text-slate-600">
+          <label className="block text-xs text-muted-foreground">
             Handoff destination
             <select
-              className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"
+              className="mt-1 w-full rounded-md border border-border bg-card px-2 py-1 text-sm"
               value={selectedOptionId}
               onChange={(event) => setSelectedOptionId(event.target.value)}
             >
@@ -312,7 +312,7 @@ export function NompiloHandoffActionPanel({ transaction }: { transaction: CoreTr
           </label>
           <button
             type="button"
-            className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            className="rounded-md border border-border bg-card px-2 py-1 text-xs font-medium text-foreground hover:bg-background disabled:opacity-50"
             onClick={() => {
               void requestHandoff();
             }}
@@ -322,12 +322,12 @@ export function NompiloHandoffActionPanel({ transaction }: { transaction: CoreTr
           </button>
         </>
       ) : (
-        <p className="text-xs text-slate-600">
+        <p className="text-xs text-muted-foreground">
           No governed handoff options are currently available for this transaction context.
         </p>
       )}
       {feedback ? (
-        <p className={feedback.tone === "success" ? "text-xs text-emerald-700" : "text-xs text-rose-700"}>
+        <p className={feedback.tone === "success" ? "text-xs text-primary-hover" : "text-xs text-danger"}>
           {feedback.text}
         </p>
       ) : null}
@@ -376,10 +376,10 @@ export function NompiloCommandActionPanel({ transaction }: { transaction: CoreTr
   return panel(
     "Nompilo Command Action",
     <div className="space-y-2">
-      <label className="block text-xs text-slate-600">
+      <label className="block text-xs text-muted-foreground">
         Command query
         <textarea
-          className="mt-1 h-20 w-full rounded-md border border-slate-300 bg-white p-2 text-sm"
+          className="mt-1 h-20 w-full rounded-md border border-border bg-card p-2 text-sm"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Summarize blockers and suggest next trusted actions."
@@ -387,7 +387,7 @@ export function NompiloCommandActionPanel({ transaction }: { transaction: CoreTr
       </label>
       <button
         type="button"
-        className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+        className="rounded-md border border-border bg-card px-2 py-1 text-xs font-medium text-foreground hover:bg-background disabled:opacity-50"
         onClick={() => {
           void submitCommand();
         }}
@@ -396,7 +396,7 @@ export function NompiloCommandActionPanel({ transaction }: { transaction: CoreTr
         {isSubmitting ? "Submitting command..." : "Run Nompilo command"}
       </button>
       {feedback ? (
-        <p className={feedback.tone === "success" ? "text-xs text-emerald-700" : "text-xs text-rose-700"}>
+        <p className={feedback.tone === "success" ? "text-xs text-primary-hover" : "text-xs text-danger"}>
           {feedback.text}
         </p>
       ) : null}
@@ -558,13 +558,13 @@ export function CoreTransactionShell({
   if (status === "loading") return <p className="text-sm text-[color:var(--text-secondary)]">Loading core transaction...</p>;
   if (status === "empty") return <p className="text-sm text-[color:var(--text-secondary)]">No transaction selected yet.</p>;
   if (status === "error") return <p className="text-sm text-[color:var(--danger)]">Unable to load transaction. Retry or contact support.</p>;
-  if (status === "permission-denied") return <p className="text-sm text-amber-700">You do not have permission for this transaction context.</p>;
+  if (status === "permission-denied") return <p className="text-sm text-warning-foreground">You do not have permission for this transaction context.</p>;
   if (!transaction) return null;
   if (transaction.offlineSyncStatus === "SYNC_PENDING") {
     return (
       <div className="space-y-4">
         <CoreTransactionDoctrineBanner />
-        <p className="text-sm text-amber-700">
+        <p className="text-sm text-warning-foreground">
           Offline capture detected. This transaction is pending sync and remains auditable.
         </p>
         <FailureModePanel transaction={transaction} />

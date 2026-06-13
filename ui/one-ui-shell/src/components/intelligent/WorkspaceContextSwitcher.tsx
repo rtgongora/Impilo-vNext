@@ -149,7 +149,7 @@ export function WorkspaceContextSwitcher() {
 
       {/* Context info bar */}
       {currentZone.id === "WORK" && facility.facility?.name && (
-        <div className="absolute top-full left-0 mt-1 flex items-center gap-1.5 text-[10px] text-gray-500 whitespace-nowrap">
+        <div className="absolute top-full left-0 mt-1 flex items-center gap-1.5 text-[10px] text-muted-foreground whitespace-nowrap">
           <Building2 className="h-3 w-3" />
           <span>{facility.facility.name}</span>
           {shift.shift?.id && (
@@ -166,10 +166,10 @@ export function WorkspaceContextSwitcher() {
       {isOpen && (
         <>
           <div className="fixed inset-0 z-30" onClick={() => setIsOpen(false)} />
-          <div className="absolute top-full left-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-40 overflow-hidden">
-            <div className="p-3 bg-gray-50 border-b">
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Switch Context</p>
-              <p className="text-[10px] text-gray-400 mt-0.5">
+          <div className="absolute top-full left-0 mt-2 w-80 bg-card rounded-xl shadow-2xl border border-border z-40 overflow-hidden">
+            <div className="p-3 bg-background border-b">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Switch Context</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
                 One person, many roles — switch between your execution contexts
               </p>
             </div>
@@ -187,13 +187,13 @@ export function WorkspaceContextSwitcher() {
                     className={`w-full flex items-start gap-3 p-3 rounded-lg transition-all ${
                       isActive
                         ? "bg-gradient-to-r " + zone.gradient + " text-white shadow-md"
-                        : "hover:bg-gray-50 text-gray-700"
+                        : "hover:bg-background text-foreground"
                     }`}
                   >
                     <div className={`flex-shrink-0 p-2 rounded-lg ${
-                      isActive ? "bg-white/20" : "bg-gray-100"
+                      isActive ? "bg-card/20" : "bg-neutral-100"
                     }`}>
-                      <Icon className={`h-5 w-5 ${isActive ? "text-white" : "text-gray-600"}`} />
+                      <Icon className={`h-5 w-5 ${isActive ? "text-white" : "text-muted-foreground"}`} />
                     </div>
                     <div className="flex-1 text-left">
                       <div className="flex items-center gap-2">
@@ -202,16 +202,16 @@ export function WorkspaceContextSwitcher() {
                         </span>
                         {isActive && <Check className="h-3.5 w-3.5" />}
                         {needsShift && (
-                          <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">
+                          <span className="text-[10px] bg-amber-100 text-warning-foreground px-1.5 py-0.5 rounded-full">
                             Needs shift
                           </span>
                         )}
                       </div>
-                      <p className={`text-xs mt-0.5 ${isActive ? "text-white/80" : "text-gray-500"}`}>
+                      <p className={`text-xs mt-0.5 ${isActive ? "text-white/80" : "text-muted-foreground"}`}>
                         {zone.description}
                       </p>
                       <div className={`flex items-center gap-1 mt-1 text-[10px] ${
-                        isActive ? "text-white/60" : "text-gray-400"
+                        isActive ? "text-white/60" : "text-muted-foreground"
                       }`}>
                         {zone.frictionLevel === "MINIMAL" ? (
                           <><Unlock className="h-3 w-3" /> Low friction</>
@@ -228,8 +228,8 @@ export function WorkspaceContextSwitcher() {
             </div>
 
             {/* Quick info */}
-            <div className="p-3 bg-gray-50 border-t">
-              <div className="flex items-center gap-2 text-[10px] text-gray-400">
+            <div className="p-3 bg-background border-t">
+              <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
                 <Users className="h-3 w-3" />
                 <span>
                   Signed in as {auth.user?.displayName ?? "User"} ·{" "}

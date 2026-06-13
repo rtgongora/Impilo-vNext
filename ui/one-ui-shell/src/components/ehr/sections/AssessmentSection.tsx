@@ -152,7 +152,7 @@ function TriagePanel({
 }) {
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12 text-gray-400">
+      <div className="flex items-center justify-center py-12 text-muted-foreground">
         <Loader2 className="h-6 w-6 animate-spin mr-2" />
         <span className="text-sm">Loading triage data...</span>
       </div>
@@ -161,7 +161,7 @@ function TriagePanel({
 
   if (!triage) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+      <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
         <AlertTriangle className="h-6 w-6 mb-2" />
         <p className="text-sm">No triage data available for this encounter</p>
       </div>
@@ -187,17 +187,17 @@ function TriagePanel({
             </div>
             <div>
               <div className="text-lg font-semibold">{color.label}</div>
-              <div className="text-sm text-gray-500">
+              <div className="text-sm text-muted-foreground">
                 Triaged at {triageTime} by {triage.triagedBy}
               </div>
             </div>
           </div>
           <div className="text-right">
-            <span className="inline-flex items-center gap-1 text-xs border rounded px-2 py-0.5 text-gray-600 border-gray-200 mb-1">
+            <span className="inline-flex items-center gap-1 text-xs border rounded px-2 py-0.5 text-muted-foreground border-border mb-1">
               <Ambulance className="w-3 h-3" />
               {(triage.arrivalMode ?? "unknown").replace("-", " ")}
             </span>
-            <div className="text-xs text-gray-500">Arrived: {arrivalTime}</div>
+            <div className="text-xs text-muted-foreground">Arrived: {arrivalTime}</div>
           </div>
         </div>
       </div>
@@ -208,9 +208,9 @@ function TriagePanel({
           <h3 className="text-base font-semibold">Chief Complaint</h3>
         </div>
         <div className="p-4">
-          <p className="text-gray-900">{triage.chiefComplaint}</p>
+          <p className="text-foreground">{triage.chiefComplaint}</p>
           {triage.notes && (
-            <p className="text-sm text-gray-500 mt-2">{triage.notes}</p>
+            <p className="text-sm text-muted-foreground mt-2">{triage.notes}</p>
           )}
         </div>
       </div>
@@ -227,8 +227,8 @@ function TriagePanel({
                 key={sign.id}
                 className={`flex items-center gap-2 p-2 rounded-lg ${
                   sign.present
-                    ? "bg-red-50 border border-red-200"
-                    : "bg-gray-50"
+                    ? "bg-danger-soft border border-danger/28"
+                    : "bg-background"
                 }`}
               >
                 {sign.present ? (
@@ -259,10 +259,10 @@ function TriagePanel({
             ].map((v, i) => {
               const Icon = v.icon;
               return (
-                <div key={i} className="text-center p-3 bg-gray-50 rounded-lg">
-                  <Icon className="w-5 h-5 mx-auto text-gray-400 mb-1" />
+                <div key={i} className="text-center p-3 bg-background rounded-lg">
+                  <Icon className="w-5 h-5 mx-auto text-muted-foreground mb-1" />
                   <div className="text-xl font-semibold">{v.value}</div>
-                  <div className="text-xs text-gray-500">{v.unit}</div>
+                  <div className="text-xs text-muted-foreground">{v.unit}</div>
                 </div>
               );
             })}
@@ -282,7 +282,7 @@ function HistoryPanel({
 }) {
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12 text-gray-400">
+      <div className="flex items-center justify-center py-12 text-muted-foreground">
         <Loader2 className="h-6 w-6 animate-spin mr-2" />
         <span className="text-sm">Loading history...</span>
       </div>
@@ -291,7 +291,7 @@ function HistoryPanel({
 
   if (!history) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+      <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
         <FileText className="h-6 w-6 mb-2" />
         <p className="text-sm">No history data available for this encounter</p>
       </div>
@@ -307,13 +307,13 @@ function HistoryPanel({
             <FileText className="w-5 h-5" />
             Presenting Complaint
           </h3>
-          <span className="text-[10px] border rounded px-1.5 py-0.5 text-gray-500 border-gray-200">
+          <span className="text-[10px] border rounded px-1.5 py-0.5 text-muted-foreground border-border">
             ICD-10 coded
           </span>
         </div>
         <div className="p-4">
           <p className="font-medium text-sm">{history.presentingComplaint}</p>
-          <span className="inline-block mt-2 text-xs bg-gray-100 text-gray-700 rounded px-2 py-0.5">
+          <span className="inline-block mt-2 text-xs bg-neutral-100 text-foreground rounded px-2 py-0.5">
             {history.presentingComplaintCode ? history.presentingComplaintCode : "Code unavailable"}
           </span>
         </div>
@@ -323,7 +323,7 @@ function HistoryPanel({
       <div className="border rounded-lg">
         <div className="px-4 py-3 border-b flex items-center justify-between">
           <h3 className="text-base font-semibold">History of Present Illness</h3>
-          <span className="text-[10px] border rounded px-1.5 py-0.5 text-gray-500 border-gray-200">
+          <span className="text-[10px] border rounded px-1.5 py-0.5 text-muted-foreground border-border">
             SOCRATES
           </span>
         </div>
@@ -339,8 +339,8 @@ function HistoryPanel({
               { label: "Exacerbating", value: history.hpi?.exacerbating ?? "--" },
               { label: "Severity", value: history.hpi?.severity ?? "--" },
             ].map((item) => (
-              <div key={item.label} className="p-2.5 bg-gray-50 rounded-lg">
-                <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+              <div key={item.label} className="p-2.5 bg-background rounded-lg">
+                <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                   {item.label}
                 </div>
                 <div className="text-sm font-medium mt-0.5">{item.value}</div>
@@ -357,7 +357,7 @@ function HistoryPanel({
             <Stethoscope className="w-5 h-5" />
             Past Medical History
           </h3>
-          <span className="text-[10px] border rounded px-1.5 py-0.5 text-gray-500 border-gray-200">
+          <span className="text-[10px] border rounded px-1.5 py-0.5 text-muted-foreground border-border">
             ICD-10 / SNOMED CT
           </span>
         </div>
@@ -365,14 +365,14 @@ function HistoryPanel({
           {(history.pastMedicalHistory ?? []).map((condition) => (
             <div
               key={condition.id}
-              className="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg"
+              className="flex items-center justify-between p-2.5 bg-background rounded-lg"
             >
               <div className="flex items-center gap-2">
                 <span
                   className={`text-xs font-medium rounded px-2 py-0.5 ${
                     condition.status === "active"
-                      ? "bg-impilo-500 text-white"
-                      : "bg-gray-200 text-gray-600"
+                      ? "bg-primary text-white"
+                      : "bg-neutral-100 text-muted-foreground"
                   }`}
                 >
                   {condition.status}
@@ -380,10 +380,10 @@ function HistoryPanel({
                 <span className="font-medium text-sm">{condition.condition}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono border rounded px-1.5 py-0.5 text-gray-500 border-gray-200">
+                <span className="text-[10px] font-mono border rounded px-1.5 py-0.5 text-muted-foreground border-border">
                   {condition.icdCode}
                 </span>
-                <span className="text-xs text-gray-500">{condition.diagnosed}</span>
+                <span className="text-xs text-muted-foreground">{condition.diagnosed}</span>
               </div>
             </div>
           ))}
@@ -399,10 +399,10 @@ function HistoryPanel({
           {(history.pastSurgicalHistory ?? []).map((surgery) => (
             <div
               key={surgery.id}
-              className="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg"
+              className="flex items-center justify-between p-2.5 bg-background rounded-lg"
             >
               <span className="text-sm font-medium">{surgery.procedure}</span>
-              <span className="text-xs text-gray-500">{surgery.date}</span>
+              <span className="text-xs text-muted-foreground">{surgery.date}</span>
             </div>
           ))}
         </div>
@@ -415,7 +415,7 @@ function HistoryPanel({
             <Pill className="w-5 h-5" />
             Current Medications
           </h3>
-          <span className="text-[10px] border rounded px-1.5 py-0.5 text-gray-500 border-gray-200">
+          <span className="text-[10px] border rounded px-1.5 py-0.5 text-muted-foreground border-border">
             SNOMED CT / ATC
           </span>
         </div>
@@ -423,13 +423,13 @@ function HistoryPanel({
           {(history.medications ?? []).map((drug) => (
             <div
               key={drug.id}
-              className="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg"
+              className="flex items-center justify-between p-2.5 bg-background rounded-lg"
             >
               <div>
                 <span className="font-medium text-sm">{drug.medication}</span>
-                <span className="text-gray-500 text-sm ml-2">{drug.dose}</span>
+                <span className="text-muted-foreground text-sm ml-2">{drug.dose}</span>
               </div>
-              <span className="text-sm text-gray-500">{drug.frequency}</span>
+              <span className="text-sm text-muted-foreground">{drug.frequency}</span>
             </div>
           ))}
         </div>
@@ -437,7 +437,7 @@ function HistoryPanel({
 
       {/* Allergies */}
       <div className="border-2 border-amber-300 rounded-lg">
-        <div className="px-4 py-3 border-b border-amber-200">
+        <div className="px-4 py-3 border-b border-warning/35">
           <h3 className="text-base font-semibold flex items-center gap-2 text-amber-600">
             <AlertTriangle className="w-5 h-5" />
             Allergies
@@ -449,8 +449,8 @@ function HistoryPanel({
               key={allergy.id}
               className={`p-3 rounded-lg ${
                 allergy.severity === "life_threatening"
-                  ? "bg-red-50 border border-red-200"
-                  : "bg-amber-50 border border-amber-200"
+                  ? "bg-danger-soft border border-danger/28"
+                  : "bg-warning-soft border border-warning/35"
               }`}
             >
               <div className="flex items-center justify-between">
@@ -459,13 +459,13 @@ function HistoryPanel({
                   className={`text-xs font-medium rounded px-2 py-0.5 ${
                     allergy.severity === "life_threatening"
                       ? "bg-red-600 text-white"
-                      : "border border-gray-300 text-gray-600"
+                      : "border border-border text-muted-foreground"
                   }`}
                 >
                   {allergy.severity.replace("_", " ")}
                 </span>
               </div>
-              <p className="text-sm text-gray-500 mt-1">{allergy.reaction}</p>
+              <p className="text-sm text-muted-foreground mt-1">{allergy.reaction}</p>
             </div>
           ))}
         </div>
@@ -486,8 +486,8 @@ function HistoryPanel({
               { label: "Smoking", value: history.socialHistory?.smokingStatus ?? "--" },
               { label: "Alcohol", value: history.socialHistory?.alcoholUse ?? "--" },
             ].map((item) => (
-              <div key={item.label} className="p-3 bg-gray-50 rounded-lg">
-                <div className="text-xs text-gray-500 mb-1">{item.label}</div>
+              <div key={item.label} className="p-3 bg-background rounded-lg">
+                <div className="text-xs text-muted-foreground mb-1">{item.label}</div>
                 <div className="font-medium text-sm capitalize">{item.value}</div>
               </div>
             ))}
@@ -562,13 +562,13 @@ export function ExaminationPanel() {
     options: string[];
   }) => (
     <div className="space-y-1">
-      <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+      <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
         {label}
       </label>
       <select
         value={findings[fieldKey]}
         onChange={(e) => updateFinding(fieldKey, e.target.value)}
-        className="w-full h-9 px-2 text-sm rounded-md border border-gray-300 bg-white focus:ring-1 focus:ring-impilo-400"
+        className="w-full h-9 px-2 text-sm rounded-md border border-border bg-card focus:ring-1 focus:ring-primary/40"
       >
         {options.map((o) => (
           <option key={o} value={o}>
@@ -589,7 +589,7 @@ export function ExaminationPanel() {
     unit?: string;
   }) => (
     <div className="space-y-1">
-      <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+      <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
         {label}
       </label>
       <div className="flex items-center gap-2">
@@ -597,10 +597,10 @@ export function ExaminationPanel() {
           type="number"
           value={findings[fieldKey]}
           onChange={(e) => updateFinding(fieldKey, e.target.value)}
-          className="w-full h-9 px-2 text-sm rounded-md border border-gray-300 bg-white focus:ring-1 focus:ring-impilo-400 tabular-nums"
+          className="w-full h-9 px-2 text-sm rounded-md border border-border bg-card focus:ring-1 focus:ring-primary/40 tabular-nums"
         />
         {unit && (
-          <span className="text-xs text-gray-500 shrink-0">{unit}</span>
+          <span className="text-xs text-muted-foreground shrink-0">{unit}</span>
         )}
       </div>
     </div>
@@ -620,7 +620,7 @@ export function ExaminationPanel() {
             <User className="w-5 h-5" />
             General Examination
           </h3>
-          <span className="text-[10px] border rounded px-1.5 py-0.5 text-gray-500 border-gray-200">
+          <span className="text-[10px] border rounded px-1.5 py-0.5 text-muted-foreground border-border">
             SNOMED CT coded
           </span>
         </div>
@@ -720,15 +720,15 @@ export function ExaminationPanel() {
           {/* GCS */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Glasgow Coma Scale
               </span>
               <span
                 className={`text-sm font-bold rounded px-2 py-0.5 ${
                   gcsTotal >= 13
-                    ? "bg-impilo-500 text-white"
+                    ? "bg-primary text-white"
                     : gcsTotal >= 9
-                      ? "bg-gray-200 text-gray-700"
+                      ? "bg-neutral-100 text-foreground"
                       : "bg-red-600 text-white"
                 }`}
               >
@@ -754,7 +754,7 @@ export function ExaminationPanel() {
       </div>
 
       <div className="flex justify-end gap-2">
-        <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-impilo-500 rounded-md hover:bg-impilo-600 transition-colors">
+        <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-hover transition-colors">
           <CheckCircle2 className="w-4 h-4" />
           Save Examination
         </button>
@@ -817,13 +817,13 @@ export function AssessmentSection() {
     <div className="space-y-4">
       {/* Cadre Context Badges */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600 capitalize">{cadreConfig.cadre} &middot; {cadreConfig.complexity}</span>
-        <span className="px-2 py-0.5 rounded text-xs font-medium bg-impilo-100 text-impilo-600 capitalize">{cadreConfig.visitType} visit</span>
-        <span className={`px-2 py-0.5 rounded text-xs font-medium capitalize ${cadreConfig.acuity === "red" ? "bg-red-100 text-red-700" : cadreConfig.acuity === "orange" ? "bg-amber-100 text-amber-700" : cadreConfig.acuity === "yellow" ? "bg-yellow-100 text-yellow-700" : "bg-green-100 text-green-700"}`}>{cadreConfig.acuity} acuity</span>
+        <span className="px-2 py-0.5 rounded text-xs font-medium bg-neutral-100 text-muted-foreground capitalize">{cadreConfig.cadre} &middot; {cadreConfig.complexity}</span>
+        <span className="px-2 py-0.5 rounded text-xs font-medium bg-primary-soft text-primary capitalize">{cadreConfig.visitType} visit</span>
+        <span className={`px-2 py-0.5 rounded text-xs font-medium capitalize ${cadreConfig.acuity === "red" ? "bg-red-100 text-danger" : cadreConfig.acuity === "orange" ? "bg-amber-100 text-warning-foreground" : cadreConfig.acuity === "yellow" ? "bg-yellow-100 text-yellow-700" : "bg-green-100 text-green-700"}`}>{cadreConfig.acuity} acuity</span>
       </div>
 
       {/* Tab bar */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-border">
         <nav className="flex gap-1">
           {visibleTabs.map((tab) => {
             const Icon = tab.icon;
@@ -833,8 +833,8 @@ export function AssessmentSection() {
                 onClick={() => setActiveTab(tab.key)}
                 className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === tab.key
-                    ? "border-impilo-500 text-impilo-500"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
+                    ? "border-impilo-500 text-primary"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -857,7 +857,7 @@ export function AssessmentSection() {
       {activeTab === "cadre-exam" && <CadreExamForm config={cadreConfig} />}
       {activeTab === "history" && <HistoryPanel history={history} isLoading={historyLoading} />}
       {activeTab === "examination" && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+        <div className="rounded-lg border border-warning/35 bg-warning-soft p-4 text-sm text-warning-foreground">
           Full structured examination capture is not yet wired to a production backend API.
           This prototype tab is intentionally disabled in production mode.
         </div>

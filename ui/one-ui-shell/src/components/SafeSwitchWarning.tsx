@@ -41,18 +41,18 @@ export function SafeSwitchWarning({
       {/* Backdrop */}
       <button
         type="button"
-        className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-card/60 backdrop-blur-sm"
         onClick={onCancel}
         aria-label="Close warning"
       />
 
       {/* Dialog */}
-      <div className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+      <div className="relative z-10 w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl">
         {/* Close button */}
         <button
           type="button"
           onClick={onCancel}
-          className="absolute right-4 top-4 rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+          className="absolute right-4 top-4 rounded-lg p-1 text-muted-foreground transition hover:bg-neutral-100 hover:text-muted-foreground"
           aria-label="Close"
         >
           <X className="h-4 w-4" />
@@ -64,25 +64,25 @@ export function SafeSwitchWarning({
         </div>
 
         {/* Title */}
-        <h2 className="text-lg font-semibold text-slate-900">Unsaved Work</h2>
+        <h2 className="text-lg font-semibold text-foreground">Unsaved Work</h2>
 
         {/* Description */}
-        <p className="mt-2 text-sm leading-6 text-slate-600">
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">
           You have an active work session at{" "}
-          <span className="font-medium text-slate-900">{facilityName}</span>.
+          <span className="font-medium text-foreground">{facilityName}</span>.
           {workspaceName ? (
             <>
-              {" "}Workspace: <span className="font-medium text-slate-900">{workspaceName}</span>.
+              {" "}Workspace: <span className="font-medium text-foreground">{workspaceName}</span>.
             </>
           ) : null}
         </p>
 
         {/* Consequences */}
-        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
-          <p className="text-sm font-medium text-amber-800">
+        <div className="mt-4 rounded-xl border border-warning/35 bg-warning-soft p-4">
+          <p className="text-sm font-medium text-warning-foreground">
             Switching context will:
           </p>
-          <ul className="mt-2 space-y-1 text-sm text-amber-700">
+          <ul className="mt-2 space-y-1 text-sm text-warning-foreground">
             <li className="flex items-start gap-2">
               <span className="mt-0.5 block h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
               End your current shift
@@ -97,7 +97,7 @@ export function SafeSwitchWarning({
           </ul>
         </div>
 
-        <p className="mt-4 text-sm text-slate-500">
+        <p className="mt-4 text-sm text-muted-foreground">
           Make sure all work is saved before continuing.
         </p>
 
@@ -106,7 +106,7 @@ export function SafeSwitchWarning({
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            className="rounded-xl border border-border px-4 py-2.5 text-sm font-medium text-foreground transition hover:bg-background"
           >
             Cancel
           </button>

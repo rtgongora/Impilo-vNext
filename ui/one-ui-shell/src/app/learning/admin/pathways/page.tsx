@@ -14,8 +14,8 @@ export default function AdminPathwaysPage() {
         <Link href="/learning/admin/pathways/new" className="text-sm text-teal-700 hover:underline">New pathway</Link>
         <ul className="mt-3 space-y-2">
           {items.map((p) => (
-            <li key={String(p.id)} className="rounded border border-gray-200 bg-white p-3 text-sm">
-              <p className="font-medium text-gray-900">{String(p.title ?? p.code)}</p>
+            <li key={String(p.id)} className="rounded border border-border bg-card p-3 text-sm">
+              <p className="font-medium text-foreground">{String(p.title ?? p.code)}</p>
               <Link href={`/learning/admin/pathways/${String(p.id)}/edit`} className="text-teal-700 hover:underline">Edit</Link>
             </li>
           ))}

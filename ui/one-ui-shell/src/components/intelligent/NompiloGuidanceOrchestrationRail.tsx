@@ -15,7 +15,7 @@ export function NompiloGuidanceOrchestrationRail() {
 
   return (
     <section
-      className="mb-6 rounded-2xl border border-violet-200 bg-gradient-to-r from-violet-50 to-white p-4"
+      className="mb-6 rounded-2xl border border-violet-200 bg-gradient-to-r from-violet-50 to-card p-4"
       data-testid="nompilo-guidance-orchestration-rail"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -36,19 +36,19 @@ export function NompiloGuidanceOrchestrationRail() {
         </Link>
       </div>
       <div className="mt-3 flex flex-wrap gap-3 text-xs">
-        <span className="inline-flex items-center gap-1 rounded-full bg-white/80 px-2.5 py-1 text-violet-900">
+        <span className="inline-flex items-center gap-1 rounded-full bg-card/80 px-2.5 py-1 text-violet-900">
           <Bell className="h-3.5 w-3.5" />
           {isLoading ? "Loading reminders…" : `${activeReminders} active reminder(s)`}
         </span>
         <Link
           href="/guidance/reminders"
-          className="inline-flex items-center gap-1 rounded-full border border-violet-200 bg-white px-2.5 py-1 text-violet-900 hover:border-violet-300"
+          className="inline-flex items-center gap-1 rounded-full border border-violet-200 bg-card px-2.5 py-1 text-violet-900 hover:border-violet-300"
         >
           Reminders
         </Link>
         <Link
           href="/guidance/education"
-          className="inline-flex items-center gap-1 rounded-full border border-violet-200 bg-white px-2.5 py-1 text-violet-900 hover:border-violet-300"
+          className="inline-flex items-center gap-1 rounded-full border border-violet-200 bg-card px-2.5 py-1 text-violet-900 hover:border-violet-300"
         >
           <BookOpen className="h-3.5 w-3.5" />
           Education

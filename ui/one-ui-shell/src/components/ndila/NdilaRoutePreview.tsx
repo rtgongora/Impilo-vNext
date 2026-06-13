@@ -54,36 +54,36 @@ export function NdilaRoutePreview({
   }, [origin.latitude, origin.longitude, destination.latitude, destination.longitude, mode, optimizeFor]);
 
   return (
-    <div className="rounded-lg border border-gray-200 p-3 bg-white">
+    <div className="rounded-lg border border-border p-3 bg-card">
       <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2 text-sm text-gray-900">
+        <div className="flex items-center gap-2 text-sm text-foreground">
           <Navigation className="h-4 w-4 text-indigo-600" />
           <span className="font-medium">Route preview</span>
         </div>
-        <span className="text-[10px] text-gray-500">{mode} · {optimizeFor}</span>
+        <span className="text-[10px] text-muted-foreground">{mode} · {optimizeFor}</span>
       </div>
       {loading ? (
-        <div className="flex items-center gap-2 text-xs text-gray-500">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Loader2 className="h-3.5 w-3.5 animate-spin" /> Computing route via Ndila…
         </div>
       ) : error ? (
         <p className="text-xs text-red-600">{error}</p>
       ) : route ? (
-        <div className="space-y-1 text-xs text-gray-800">
+        <div className="space-y-1 text-xs text-foreground">
           <div className="flex gap-4 tabular-nums">
             {showDistance && (
-              <span><span className="text-gray-500">Distance</span>{" "}<span className="font-semibold">{formatDistance(route.distanceMeters)}</span></span>
+              <span><span className="text-muted-foreground">Distance</span>{" "}<span className="font-semibold">{formatDistance(route.distanceMeters)}</span></span>
             )}
             {showEta && (
-              <span><span className="text-gray-500">ETA</span>{" "}<span className="font-semibold">{formatDuration(route.durationSeconds)}</span></span>
+              <span><span className="text-muted-foreground">ETA</span>{" "}<span className="font-semibold">{formatDuration(route.durationSeconds)}</span></span>
             )}
           </div>
-          <div className="text-[10px] text-gray-500">
+          <div className="text-[10px] text-muted-foreground">
             provider {route.provider ?? "—"}{route.fallbackUsed ? " · fallback" : ""}{route.servedFromCache ? " · cache" : ""}
             {route.confidence !== undefined ? ` · confidence ${(route.confidence * 100).toFixed(0)}%` : ""}
           </div>
           {route.warnings?.length ? (
-            <ul className="mt-1 text-[10px] text-amber-700">
+            <ul className="mt-1 text-[10px] text-warning-foreground">
               {route.warnings.map((w, i) => <li key={i}>⚠ {w}</li>)}
             </ul>
           ) : null}

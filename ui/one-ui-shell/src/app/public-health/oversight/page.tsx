@@ -82,7 +82,7 @@ export default function PublicHealthOversightPage() {
         icon={<Globe2 className="h-6 w-6" />}
       >
         <div className="mb-4">
-          <Link href="/public-health" className="text-sm text-amber-700 hover:underline">
+          <Link href="/public-health" className="text-sm text-warning-foreground hover:underline">
             ← Public health operations
           </Link>
         </div>
@@ -93,18 +93,18 @@ export default function PublicHealthOversightPage() {
               {Object.entries(opsHomeQ.data.kpis)
                 .slice(0, 4)
                 .map(([label, value]) => (
-                  <div key={label} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                    <p className="text-xs uppercase tracking-wide text-slate-500">{label.replace(/_/g, " ")}</p>
-                    <p className="mt-2 text-2xl font-semibold text-slate-900">{value}</p>
+                  <div key={label} className="rounded-xl border border-border bg-card p-4 shadow-sm">
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">{label.replace(/_/g, " ")}</p>
+                    <p className="mt-2 text-2xl font-semibold text-foreground">{value}</p>
                   </div>
                 ))}
             </section>
           ) : null}
 
-          <section className="rounded-xl border border-slate-200 bg-white p-4">
-            <h2 className="text-sm font-semibold text-slate-900">Jurisdiction drill-down</h2>
+          <section className="rounded-xl border border-border bg-card p-4">
+            <h2 className="text-sm font-semibold text-foreground">Jurisdiction drill-down</h2>
             <div className="mt-3 flex flex-wrap gap-3">
-              <label className="text-xs text-slate-600">
+              <label className="text-xs text-muted-foreground">
                 Province
                 <select
                   value={province}
@@ -112,7 +112,7 @@ export default function PublicHealthOversightPage() {
                     setProvince(e.target.value);
                     setDistrict("");
                   }}
-                  className="mt-1 block rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm min-w-[160px]"
+                  className="mt-1 block rounded-lg border border-border bg-card px-3 py-2 text-sm min-w-[160px]"
                 >
                   <option value="">All provinces</option>
                   {provinces.map((p) => (
@@ -122,12 +122,12 @@ export default function PublicHealthOversightPage() {
                   ))}
                 </select>
               </label>
-              <label className="text-xs text-slate-600">
+              <label className="text-xs text-muted-foreground">
                 District
                 <select
                   value={district}
                   onChange={(e) => setDistrict(e.target.value)}
-                  className="mt-1 block rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm min-w-[160px]"
+                  className="mt-1 block rounded-lg border border-border bg-card px-3 py-2 text-sm min-w-[160px]"
                   disabled={!province.trim() && districts.length === 0}
                 >
                   <option value="">All districts</option>
@@ -139,17 +139,17 @@ export default function PublicHealthOversightPage() {
                 </select>
               </label>
             </div>
-            <p className="mt-2 text-xs text-slate-500">
+            <p className="mt-2 text-xs text-muted-foreground">
               {sitesQ.isLoading
                 ? "Loading Indawo sites…"
                 : `${sitesQ.data?.length ?? 0} site(s) · ${ndilaMarkers.length} with coordinates`}
             </p>
           </section>
 
-          <section className="rounded-xl border border-slate-200 bg-white p-4">
+          <section className="rounded-xl border border-border bg-card p-4">
             <div className="mb-3 flex items-center gap-2">
               <MapPin className="h-4 w-4 text-rose-600" />
-              <h2 className="text-sm font-semibold text-slate-900">Ndila oversight map</h2>
+              <h2 className="text-sm font-semibold text-foreground">Ndila oversight map</h2>
             </div>
             <NdilaMap
               center={center}
@@ -160,40 +160,40 @@ export default function PublicHealthOversightPage() {
               layers={["public-health-sites"]}
               fitToMarkers={ndilaMarkers.length > 0}
             />
-            <p className="mt-2 text-xs text-slate-500">
+            <p className="mt-2 text-xs text-muted-foreground">
               Sites from <code className="text-[10px]">useSiteRegistry</code>
               {province.trim() ? ` · province ${province}` : ""}
               {district.trim() ? ` · district ${district}` : ""}
             </p>
           </section>
 
-          <section className="rounded-xl border border-amber-200 bg-amber-50/50 p-4">
+          <section className="rounded-xl border border-warning/35 bg-warning-soft/50 p-4">
             <div className="flex items-center gap-2">
-              <ClipboardList className="h-4 w-4 text-amber-800" />
-              <h2 className="text-sm font-semibold text-amber-950">Field ops task queue</h2>
+              <ClipboardList className="h-4 w-4 text-warning-foreground" />
+              <h2 className="text-sm font-semibold text-warning-foreground">Field ops task queue</h2>
             </div>
-            <p className="mt-1 text-xs text-amber-900">
+            <p className="mt-1 text-xs text-warning-foreground">
               GET <code className="text-[10px]">/internal/v1/public-health/field-tasks</code> ·{" "}
               {openTasks.length} open task(s)
             </p>
             {fieldTasksQ.isLoading ? (
-              <p className="mt-3 flex items-center gap-2 text-sm text-amber-900">
+              <p className="mt-3 flex items-center gap-2 text-sm text-warning-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" /> Loading field tasks…
               </p>
             ) : fieldTasksQ.isError ? (
-              <p className="mt-3 text-sm text-red-700">Could not load field operations tasks.</p>
+              <p className="mt-3 text-sm text-danger">Could not load field operations tasks.</p>
             ) : openTasks.length === 0 ? (
-              <p className="mt-3 text-sm text-amber-900">No open field tasks in the queue.</p>
+              <p className="mt-3 text-sm text-warning-foreground">No open field tasks in the queue.</p>
             ) : (
               <ul className="mt-3 space-y-2">
                 {openTasks.slice(0, 12).map((task) => (
                   <li
                     key={task.id}
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-100 bg-white px-3 py-2 text-xs"
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-100 bg-card px-3 py-2 text-xs"
                   >
                     <div>
-                      <p className="font-medium text-slate-900">{task.title}</p>
-                      <p className="text-slate-500">
+                      <p className="font-medium text-foreground">{task.title}</p>
+                      <p className="text-muted-foreground">
                         {task.taskType} · {task.status} · {task.assignedTo}
                       </p>
                     </div>
@@ -213,7 +213,7 @@ export default function PublicHealthOversightPage() {
                 ))}
               </ul>
             )}
-            <Link href="/public-health?tab=field" className="mt-3 inline-block text-xs font-medium text-amber-800 underline">
+            <Link href="/public-health?tab=field" className="mt-3 inline-block text-xs font-medium text-warning-foreground underline">
               Full field operations workspace →
             </Link>
           </section>

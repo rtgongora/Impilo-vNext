@@ -8,8 +8,8 @@ interface LiveDataSourceBadgeProps {
 }
 
 const LABELS: Record<DataSource, { text: string; classes: string }> = {
-  live: { text: "Live data", classes: "bg-emerald-100 text-emerald-800 border-emerald-200" },
-  demo: { text: "Demo data", classes: "bg-amber-100 text-amber-800 border-amber-200" },
+  live: { text: "Live data", classes: "bg-emerald-100 text-primary-hover border-success/25" },
+  demo: { text: "Demo data", classes: "bg-amber-100 text-warning-foreground border-warning/35" },
   mixed: { text: "Live + demo", classes: "bg-sky-100 text-sky-800 border-sky-200" },
 };
 

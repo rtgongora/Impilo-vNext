@@ -26,11 +26,11 @@ export default function NhumePoliciesPage() {
         icon={<ScrollText className="h-6 w-6" />}
       >
         {isPending ? (
-          <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center text-gray-500">
+          <div className="rounded-2xl border border-border bg-card p-10 text-center text-muted-foreground">
             <Loader2 className="inline-block h-5 w-5 animate-spin text-teal-500 mr-2" /> Loading…
           </div>
         ) : rows.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-12 text-center text-gray-600">
+          <div className="rounded-2xl border border-dashed border-border bg-background p-12 text-center text-muted-foreground">
             No delivery policies configured.
           </div>
         ) : (
@@ -38,19 +38,19 @@ export default function NhumePoliciesPage() {
             {rows.map((p, idx) => {
               const r = p as Record<string, unknown>;
               return (
-                <div key={idx} className="rounded-2xl border border-gray-200 bg-white p-5">
+                <div key={idx} className="rounded-2xl border border-border bg-card p-5">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-semibold text-gray-900">{String(r.display_name ?? r.policy_id ?? "policy")}</h3>
-                      <p className="text-xs text-gray-500 mt-0.5">{String(r.delivery_type ?? "")}</p>
+                      <h3 className="font-semibold text-foreground">{String(r.display_name ?? r.policy_id ?? "policy")}</h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">{String(r.delivery_type ?? "")}</p>
                     </div>
                     {r.active ? (
-                      <span className="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 text-[11px]">Active</span>
+                      <span className="inline-flex items-center rounded-full bg-success-soft text-primary-hover border border-success/25 px-2 py-0.5 text-[11px]">Active</span>
                     ) : (
-                      <span className="inline-flex items-center rounded-full bg-gray-100 text-gray-700 border border-gray-200 px-2 py-0.5 text-[11px]">Inactive</span>
+                      <span className="inline-flex items-center rounded-full bg-neutral-100 text-foreground border border-border px-2 py-0.5 text-[11px]">Inactive</span>
                     )}
                   </div>
-                  <p className="mt-2 text-sm text-gray-700">{String(r.description ?? "")}</p>
+                  <p className="mt-2 text-sm text-foreground">{String(r.description ?? "")}</p>
                   <dl className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 text-xs">
                     <Pair label="Approval" value={r.requires_approval ? "required" : "not required"} />
                     <Pair label="Payment" value={r.requires_payment ? "required" : "not required"} />
@@ -79,8 +79,8 @@ export default function NhumePoliciesPage() {
 function Pair({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="uppercase tracking-wide text-gray-500">{label}</dt>
-      <dd className="font-medium text-gray-900">{value}</dd>
+      <dt className="uppercase tracking-wide text-muted-foreground">{label}</dt>
+      <dd className="font-medium text-foreground">{value}</dd>
     </div>
   );
 }
@@ -88,14 +88,14 @@ function Pair({ label, value }: { label: string; value: string }) {
 function Block({ label, raw }: { label: string; raw: unknown }) {
   const list = Array.isArray(raw) ? raw : typeof raw === "string" ? safeParseArray(raw) : [];
   return (
-    <div className="rounded-xl border border-gray-100 bg-gray-50 p-3">
-      <div className="text-[11px] uppercase tracking-wide text-gray-500 mb-1">{label}</div>
+    <div className="rounded-xl border border-border bg-background p-3">
+      <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">{label}</div>
       {list.length === 0 ? (
-        <span className="text-gray-500">—</span>
+        <span className="text-muted-foreground">—</span>
       ) : (
         <div className="flex flex-wrap gap-1">
           {list.map((v, idx) => (
-            <span key={idx} className="inline-flex items-center rounded-full bg-white border border-gray-200 px-2 py-0.5 text-[11px] text-gray-800">
+            <span key={idx} className="inline-flex items-center rounded-full bg-card border border-border px-2 py-0.5 text-[11px] text-foreground">
               {String(v)}
             </span>
           ))}

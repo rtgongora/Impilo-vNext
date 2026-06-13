@@ -8,5 +8,5 @@
 import { type ReactNode } from "react";
 
 export function MinimalLayout({ children }: { children: ReactNode }) {
-  return <div className="min-h-screen bg-white">{children}</div>;
+  return <div className="min-h-screen bg-background">{children}</div>;
 }

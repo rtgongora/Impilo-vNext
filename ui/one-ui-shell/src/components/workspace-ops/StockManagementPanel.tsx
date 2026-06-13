@@ -63,20 +63,20 @@ const TRANSFERS = [
 function getStatusBadge(status: string) {
   const map: Record<string, { label: string; classes: string }> = {
     ok: { label: 'In Stock', classes: 'bg-green-100 text-green-700' },
-    low: { label: 'Low Stock', classes: 'bg-amber-100 text-amber-700' },
-    out: { label: 'Out of Stock', classes: 'bg-red-100 text-red-700' },
+    low: { label: 'Low Stock', classes: 'bg-amber-100 text-warning-foreground' },
+    out: { label: 'Out of Stock', classes: 'bg-red-100 text-danger' },
     expiring: { label: 'Expiring Soon', classes: 'bg-orange-100 text-orange-700' },
-    draft: { label: 'Draft', classes: 'bg-gray-100 text-gray-600' },
-    pending_approval: { label: 'Pending Approval', classes: 'bg-amber-100 text-amber-700' },
+    draft: { label: 'Draft', classes: 'bg-neutral-100 text-muted-foreground' },
+    pending_approval: { label: 'Pending Approval', classes: 'bg-amber-100 text-warning-foreground' },
     approved: { label: 'Approved', classes: 'bg-green-100 text-green-700' },
-    shipped: { label: 'Shipped', classes: 'bg-impilo-100 text-impilo-600' },
+    shipped: { label: 'Shipped', classes: 'bg-primary-soft text-primary' },
     delivered: { label: 'Delivered', classes: 'bg-green-100 text-green-700' },
-    in_transit: { label: 'In Transit', classes: 'bg-impilo-100 text-impilo-600' },
+    in_transit: { label: 'In Transit', classes: 'bg-primary-soft text-primary' },
     arrived: { label: 'Arrived', classes: 'bg-green-100 text-green-700' },
-    pending: { label: 'Pending', classes: 'bg-amber-100 text-amber-700' },
+    pending: { label: 'Pending', classes: 'bg-amber-100 text-warning-foreground' },
     completed: { label: 'Completed', classes: 'bg-green-100 text-green-700' },
   };
-  const cfg = map[status] || { label: status, classes: 'bg-gray-100 text-gray-600' };
+  const cfg = map[status] || { label: status, classes: 'bg-neutral-100 text-muted-foreground' };
   return <span className={`px-2 py-0.5 rounded text-xs font-medium ${cfg.classes}`}>{cfg.label}</span>;
 }
 
@@ -153,48 +153,48 @@ export function StockManagementPanel({ facilityId }: StockManagementPanelProps) 
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <LiveDataSourceBadge source={dataSource} />
-        <label className="inline-flex items-center gap-2 text-xs text-gray-600">
+        <label className="inline-flex items-center gap-2 text-xs text-muted-foreground">
           <input
             type="checkbox"
             checked={preferLive}
             onChange={(e) => setPreferLive(e.target.checked)}
-            className="rounded border-gray-300"
+            className="rounded border-border"
           />
           Prefer live inventory data
         </label>
         {preferLive && onHandQ.isLoading ? (
-          <span className="inline-flex items-center gap-1 text-xs text-gray-500">
+          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
             <Loader2 className="h-3 w-3 animate-spin" /> Loading on-hand…
           </span>
         ) : null}
       </div>
       {preferLive && stockoutsQ.data ? (
-        <p className="text-[11px] text-amber-800 bg-amber-50 border border-amber-100 rounded px-2 py-1">
+        <p className="text-[11px] text-warning-foreground bg-warning-soft border border-amber-100 rounded px-2 py-1">
           Stockout probe armed for facility {facilityId ?? '—'}
         </p>
       ) : null}
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-white border border-gray-200 rounded-lg pt-3 pb-2 px-3">
-          <div className="flex items-center gap-2"><Package className="h-4 w-4 text-impilo-400" /><span className="text-xs text-gray-500">Total Items</span></div>
+        <div className="bg-card border border-border rounded-lg pt-3 pb-2 px-3">
+          <div className="flex items-center gap-2"><Package className="h-4 w-4 text-impilo-400" /><span className="text-xs text-muted-foreground">Total Items</span></div>
           <p className="text-lg font-bold">{displayInventory.length}</p>
         </div>
-        <div className={`bg-white border rounded-lg pt-3 pb-2 px-3 ${lowStockCount > 0 ? 'border-amber-300' : 'border-gray-200'}`}>
-          <div className="flex items-center gap-2"><TrendingDown className="h-4 w-4 text-amber-500" /><span className="text-xs text-gray-500">Low/Out</span></div>
+        <div className={`bg-card border rounded-lg pt-3 pb-2 px-3 ${lowStockCount > 0 ? 'border-amber-300' : 'border-border'}`}>
+          <div className="flex items-center gap-2"><TrendingDown className="h-4 w-4 text-amber-500" /><span className="text-xs text-muted-foreground">Low/Out</span></div>
           <p className="text-lg font-bold text-amber-600">{lowStockCount}</p>
         </div>
-        <div className="bg-white border border-gray-200 rounded-lg pt-3 pb-2 px-3">
-          <div className="flex items-center gap-2"><ShoppingCart className="h-4 w-4 text-green-500" /><span className="text-xs text-gray-500">Open Orders</span></div>
+        <div className="bg-card border border-border rounded-lg pt-3 pb-2 px-3">
+          <div className="flex items-center gap-2"><ShoppingCart className="h-4 w-4 text-green-500" /><span className="text-xs text-muted-foreground">Open Orders</span></div>
           <p className="text-lg font-bold">{PURCHASE_ORDERS.filter(po => !['delivered', 'cancelled'].includes(po.status)).length}</p>
         </div>
-        <div className={`bg-white border rounded-lg pt-3 pb-2 px-3 ${expiringCount > 0 ? 'border-red-300' : 'border-gray-200'}`}>
-          <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-red-500" /><span className="text-xs text-gray-500">Expiring Soon</span></div>
+        <div className={`bg-card border rounded-lg pt-3 pb-2 px-3 ${expiringCount > 0 ? 'border-red-300' : 'border-border'}`}>
+          <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-red-500" /><span className="text-xs text-muted-foreground">Expiring Soon</span></div>
           <p className="text-lg font-bold text-red-600">{expiringCount}</p>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-gray-200">
+      <div className="flex gap-1 border-b border-border">
         {tabs.map(tab => {
           const Icon = tab.icon;
           return (
@@ -202,13 +202,13 @@ export function StockManagementPanel({ facilityId }: StockManagementPanelProps) 
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
               className={`inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
-                activeTab === tab.key ? 'border-impilo-500 text-impilo-500' : 'border-transparent text-gray-500 hover:text-gray-700'
+                activeTab === tab.key ? 'border-impilo-500 text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
               }`}
             >
               <Icon className="h-3.5 w-3.5" />
               {tab.label}
               {tab.badge && (
-                <span className="ml-1 px-1.5 py-0.5 rounded-full bg-red-100 text-red-700 text-[10px] font-medium">{tab.badge}</span>
+                <span className="ml-1 px-1.5 py-0.5 rounded-full bg-red-100 text-danger text-[10px] font-medium">{tab.badge}</span>
               )}
             </button>
           );
@@ -220,10 +220,10 @@ export function StockManagementPanel({ facilityId }: StockManagementPanelProps) 
         <div>
           <div className="flex items-center gap-2 mb-3">
             <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <input
                 placeholder="Search items..."
-                className="w-full pl-9 pr-3 h-9 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                className="w-full pl-9 pr-3 h-9 text-sm border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
               />
@@ -231,7 +231,7 @@ export function StockManagementPanel({ facilityId }: StockManagementPanelProps) 
             <select
               value={categoryFilter}
               onChange={e => setCategoryFilter(e.target.value)}
-              className="h-9 border border-gray-200 rounded-md px-3 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+              className="h-9 border border-border rounded-md px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
             >
               <option value="all">All Categories</option>
               <option value="Medication">Medication</option>
@@ -241,28 +241,28 @@ export function StockManagementPanel({ facilityId }: StockManagementPanelProps) 
             </select>
             <button
               onClick={() => setNewOrderOpen(true)}
-              className="inline-flex items-center gap-1 px-3 h-9 text-sm bg-impilo-500 text-white rounded-md hover:bg-impilo-600"
+              className="inline-flex items-center gap-1 px-3 h-9 text-sm bg-primary text-white rounded-md hover:bg-primary-hover"
             >
               <Plus className="h-3.5 w-3.5" />New Order
             </button>
           </div>
           <div className="space-y-1 max-h-[400px] overflow-auto">
             {filteredItems.map(item => (
-              <div key={item.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+              <div key={item.id} className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-background transition-colors">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className={`h-8 w-8 rounded-lg flex items-center justify-center text-xs font-bold ${
-                    item.status === 'out' ? 'bg-red-100 text-red-600' : item.status === 'low' ? 'bg-amber-100 text-amber-600' : 'bg-impilo-100 text-impilo-500'
+                    item.status === 'out' ? 'bg-red-100 text-red-600' : item.status === 'low' ? 'bg-amber-100 text-amber-600' : 'bg-primary-soft text-primary'
                   }`}>
                     {item.code.split('-')[0]}
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{item.name}</p>
-                    <p className="text-xs text-gray-500">{item.code} &middot; {item.location}</p>
+                    <p className="text-xs text-muted-foreground">{item.code} &middot; {item.location}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-4 shrink-0">
                   <div className="text-right">
-                    <p className="text-sm font-semibold">{item.onHand} <span className="text-xs font-normal text-gray-500">{item.unit}</span></p>
+                    <p className="text-sm font-semibold">{item.onHand} <span className="text-xs font-normal text-muted-foreground">{item.unit}</span></p>
                     {item.onHand <= item.reorderLevel && <p className="text-[10px] text-amber-600">Reorder at {item.reorderLevel}</p>}
                   </div>
                   {getStatusBadge(item.status)}
@@ -277,30 +277,30 @@ export function StockManagementPanel({ facilityId }: StockManagementPanelProps) 
       {activeTab === 'orders' && (
         <div>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-sm text-gray-500">{PURCHASE_ORDERS.length} orders</p>
+            <p className="text-sm text-muted-foreground">{PURCHASE_ORDERS.length} orders</p>
             <button
               onClick={() => setNewOrderOpen(true)}
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-impilo-500 text-white rounded-md hover:bg-impilo-600"
+              className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-primary text-white rounded-md hover:bg-primary-hover"
             >
               <Plus className="h-3.5 w-3.5" />Create Order
             </button>
           </div>
           <div className="space-y-2 max-h-[400px] overflow-auto">
             {PURCHASE_ORDERS.map(po => (
-              <div key={po.id} className="bg-white border border-gray-200 rounded-lg py-3 px-4 hover:bg-gray-50 cursor-pointer">
+              <div key={po.id} className="bg-card border border-border rounded-lg py-3 px-4 hover:bg-background cursor-pointer">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-semibold">{po.id}</p>
-                      {po.priority === 'urgent' && <span className="px-2 py-0.5 rounded bg-red-100 text-red-700 text-[10px] font-medium">Urgent</span>}
+                      {po.priority === 'urgent' && <span className="px-2 py-0.5 rounded bg-red-100 text-danger text-[10px] font-medium">Urgent</span>}
                     </div>
-                    <p className="text-xs text-gray-500">{po.supplier} &middot; {po.items} items &middot; {po.total}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{po.date}</p>
+                    <p className="text-xs text-muted-foreground">{po.supplier} &middot; {po.items} items &middot; {po.total}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{po.date}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     {getStatusBadge(po.status)}
                     {po.status === 'pending_approval' && (
-                      <button className="px-2 py-1 text-xs border border-gray-200 rounded hover:bg-gray-100">Approve</button>
+                      <button className="px-2 py-1 text-xs border border-border rounded hover:bg-neutral-100">Approve</button>
                     )}
                   </div>
                 </div>
@@ -313,20 +313,20 @@ export function StockManagementPanel({ facilityId }: StockManagementPanelProps) 
       {/* Receiving Tab */}
       {activeTab === 'receiving' && (
         <div>
-          <p className="text-sm text-gray-500 mb-3">{PENDING_RECEIPTS.length} pending deliveries</p>
+          <p className="text-sm text-muted-foreground mb-3">{PENDING_RECEIPTS.length} pending deliveries</p>
           <div className="space-y-2">
             {PENDING_RECEIPTS.map(grn => (
-              <div key={grn.id} className="bg-white border border-gray-200 rounded-lg py-3 px-4">
+              <div key={grn.id} className="bg-card border border-border rounded-lg py-3 px-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-semibold">{grn.id}</p>
-                    <p className="text-xs text-gray-500">PO: {grn.poNumber} &middot; {grn.supplier} &middot; {grn.items} items</p>
-                    <p className="text-xs text-gray-500">Expected: {grn.expectedDate}</p>
+                    <p className="text-xs text-muted-foreground">PO: {grn.poNumber} &middot; {grn.supplier} &middot; {grn.items} items</p>
+                    <p className="text-xs text-muted-foreground">Expected: {grn.expectedDate}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     {getStatusBadge(grn.status)}
                     {grn.status === 'arrived' && (
-                      <button className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-impilo-500 text-white rounded hover:bg-impilo-600">
+                      <button className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-primary text-white rounded hover:bg-primary-hover">
                         <ClipboardCheck className="h-3 w-3" />Receive
                       </button>
                     )}
@@ -335,7 +335,7 @@ export function StockManagementPanel({ facilityId }: StockManagementPanelProps) 
               </div>
             ))}
             {PENDING_RECEIPTS.length === 0 && (
-              <div className="text-center py-8 text-gray-400 text-sm">No pending deliveries</div>
+              <div className="text-center py-8 text-muted-foreground text-sm">No pending deliveries</div>
             )}
           </div>
         </div>
@@ -345,24 +345,24 @@ export function StockManagementPanel({ facilityId }: StockManagementPanelProps) 
       {activeTab === 'transfers' && (
         <div>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-sm text-gray-500">{TRANSFERS.length} transfers</p>
-            <button className="inline-flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-200 rounded-md hover:bg-gray-50">
+            <p className="text-sm text-muted-foreground">{TRANSFERS.length} transfers</p>
+            <button className="inline-flex items-center gap-1 px-3 py-1.5 text-sm border border-border rounded-md hover:bg-background">
               <ArrowRightLeft className="h-3.5 w-3.5" />Request Transfer
             </button>
           </div>
           <div className="space-y-2">
             {TRANSFERS.map(t => (
-              <div key={t.id} className="bg-white border border-gray-200 rounded-lg py-3 px-4">
+              <div key={t.id} className="bg-card border border-border rounded-lg py-3 px-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-semibold">{t.id}</p>
-                    <p className="text-xs text-gray-500">{t.from} &rarr; {t.to} &middot; {t.items} items</p>
-                    <p className="text-xs text-gray-500">By {t.requestedBy} &middot; {t.date}</p>
+                    <p className="text-xs text-muted-foreground">{t.from} &rarr; {t.to} &middot; {t.items} items</p>
+                    <p className="text-xs text-muted-foreground">By {t.requestedBy} &middot; {t.date}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     {getStatusBadge(t.status)}
                     {t.status === 'pending' && (
-                      <button className="px-2 py-1 text-xs border border-gray-200 rounded hover:bg-gray-100">Approve</button>
+                      <button className="px-2 py-1 text-xs border border-border rounded hover:bg-neutral-100">Approve</button>
                     )}
                   </div>
                 </div>
@@ -378,7 +378,7 @@ export function StockManagementPanel({ facilityId }: StockManagementPanelProps) 
           {displayInventory.filter(i => i.status !== 'ok').map(item => (
             <div
               key={item.id}
-              className={`bg-white border-l-4 border rounded-lg py-3 px-4 ${
+              className={`bg-card border-l-4 border rounded-lg py-3 px-4 ${
                 item.status === 'out' ? 'border-l-red-500' : item.status === 'low' ? 'border-l-amber-500' : 'border-l-orange-400'
               }`}
             >
@@ -388,11 +388,11 @@ export function StockManagementPanel({ facilityId }: StockManagementPanelProps) 
                     {item.status === 'out' ? <XCircle className="h-4 w-4 text-red-500" /> : item.status === 'expiring' ? <Clock className="h-4 w-4 text-orange-500" /> : <AlertTriangle className="h-4 w-4 text-amber-500" />}
                     <p className="text-sm font-medium">{item.name}</p>
                   </div>
-                  <p className="text-xs text-gray-500 ml-6">
+                  <p className="text-xs text-muted-foreground ml-6">
                     {item.status === 'out' ? 'Out of stock - immediate reorder required' : item.status === 'low' ? `${item.onHand} ${item.unit} remaining (reorder level: ${item.reorderLevel})` : `Expires ${item.expiry}`}
                   </p>
                 </div>
-                <button className="inline-flex items-center gap-1 px-2 py-1 text-xs border border-gray-200 rounded hover:bg-gray-100">
+                <button className="inline-flex items-center gap-1 px-2 py-1 text-xs border border-border rounded hover:bg-neutral-100">
                   <ShoppingCart className="h-3 w-3" />Reorder
                 </button>
               </div>
@@ -405,17 +405,17 @@ export function StockManagementPanel({ facilityId }: StockManagementPanelProps) 
       {newOrderOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/30" onClick={() => setNewOrderOpen(false)} />
-          <div className="relative bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
+          <div className="relative bg-card rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Create Purchase Order</h3>
-              <button onClick={() => setNewOrderOpen(false)} className="p-1 rounded hover:bg-gray-100">
-                <X className="h-5 w-5 text-gray-500" />
+              <button onClick={() => setNewOrderOpen(false)} className="p-1 rounded hover:bg-neutral-100">
+                <X className="h-5 w-5 text-muted-foreground" />
               </button>
             </div>
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Supplier</label>
-                <select className="w-full h-9 border border-gray-200 rounded-md px-3 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400">
+                <label className="block text-xs font-medium text-foreground mb-1">Supplier</label>
+                <select className="w-full h-9 border border-border rounded-md px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40">
                   <option value="">Select supplier</option>
                   <option value="medsupply">MedSupply SA</option>
                   <option value="pharma">PharmaWholesale</option>
@@ -423,26 +423,26 @@ export function StockManagementPanel({ facilityId }: StockManagementPanelProps) 
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Priority</label>
-                <select className="w-full h-9 border border-gray-200 rounded-md px-3 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400">
+                <label className="block text-xs font-medium text-foreground mb-1">Priority</label>
+                <select className="w-full h-9 border border-border rounded-md px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40">
                   <option value="normal">Normal</option>
                   <option value="urgent">Urgent</option>
                   <option value="emergency">Emergency</option>
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Notes</label>
+                <label className="block text-xs font-medium text-foreground mb-1">Notes</label>
                 <textarea
                   placeholder="Order notes..."
-                  className="w-full h-20 border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                  className="w-full h-20 border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                 />
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <button onClick={() => setNewOrderOpen(false)} className="px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
+              <button onClick={() => setNewOrderOpen(false)} className="px-4 py-2 text-sm border border-border rounded-lg hover:bg-background">
                 Cancel
               </button>
-              <button onClick={() => setNewOrderOpen(false)} className="px-4 py-2 text-sm bg-impilo-500 text-white rounded-lg hover:bg-impilo-600">
+              <button onClick={() => setNewOrderOpen(false)} className="px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary-hover">
                 Create Order
               </button>
             </div>

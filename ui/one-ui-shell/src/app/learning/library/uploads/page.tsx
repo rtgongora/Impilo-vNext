@@ -48,19 +48,19 @@ export default function LearningLibraryUploadsPage() {
     <AppLayout>
       <PageShell title="Library Uploads" subtitle="Register governed learning assets by format — metadata and HTTPS reference URL.">
         <FundoContentFormatsGuide />
-        <div className="rounded border border-gray-200 bg-white p-4" data-testid="fundo-library-upload-form">
+        <div className="rounded border border-border bg-card p-4" data-testid="fundo-library-upload-form">
           <div className="grid gap-2 md:grid-cols-2">
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Resource title (e.g. IPC refresher SOP 2026)"
-              className="rounded border border-gray-300 px-3 py-2 text-sm"
+              className="rounded border border-border px-3 py-2 text-sm"
               data-testid="fundo-upload-title"
             />
             <select
               value={resourceType}
               onChange={(e) => setResourceType(e.target.value)}
-              className="rounded border border-gray-300 px-3 py-2 text-sm"
+              className="rounded border border-border px-3 py-2 text-sm"
               data-testid="fundo-upload-type"
             >
               {["PDF", "WORD", "POWERPOINT", "IMAGE", "VIDEO", "AUDIO", "SOP", "JOB_AID", "LINK"].map((t) => (
@@ -71,11 +71,11 @@ export default function LearningLibraryUploadsPage() {
               value={contentRef}
               onChange={(e) => setContentRef(e.target.value)}
               placeholder="HTTPS content URL (document store, video, or external link)"
-              className="md:col-span-2 rounded border border-gray-300 px-3 py-2 text-sm"
+              className="md:col-span-2 rounded border border-border px-3 py-2 text-sm"
               data-testid="fundo-upload-content-ref"
             />
           </div>
-          <p className="mt-2 text-xs text-gray-500">
+          <p className="mt-2 text-xs text-muted-foreground">
             Suggested lesson type: <span className="font-mono">{RESOURCE_TO_LESSON[resourceType] ?? "DOCUMENT"}</span>
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -87,12 +87,12 @@ export default function LearningLibraryUploadsPage() {
             >
               Save draft metadata
             </button>
-            <Link href="/learning/admin/courses" className="rounded border border-gray-300 px-3 py-2 text-sm text-gray-700">
+            <Link href="/learning/admin/courses" className="rounded border border-border px-3 py-2 text-sm text-foreground">
               Bind in course authoring
             </Link>
           </div>
           {saved ? (
-            <p className="mt-2 text-sm text-emerald-700" data-testid="fundo-upload-success">
+            <p className="mt-2 text-sm text-primary-hover" data-testid="fundo-upload-success">
               Draft saved — bind this asset to a lesson in course authoring.
             </p>
           ) : null}

@@ -36,18 +36,18 @@ export function UtilityStrip() {
   const activeCDSAlerts = cdsData?.data?.count ?? 0;
 
   return (
-    <div className="h-9 min-h-[2.25rem] shrink-0 bg-white border-b border-gray-200 flex items-center justify-between px-3 z-50">
+    <div className="h-9 min-h-[2.25rem] shrink-0 bg-card border-b border-border flex items-center justify-between px-3 z-50">
       {/* Left: Logo + Facility */}
       <div className="flex items-center gap-3">
         <ImpiloBrandLogo variant="full" size={20} />
-        <div className="h-4 w-px bg-gray-200" />
+        <div className="h-4 w-px bg-neutral-100" />
         {facility ? (
-          <span className="flex items-center gap-1.5 text-xs text-gray-600">
+          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Building2 className="h-3.5 w-3.5" />
             {facility.name}
           </span>
         ) : (
-          <span className="text-xs text-gray-400">No facility</span>
+          <span className="text-xs text-muted-foreground">No facility</span>
         )}
       </div>
 
@@ -59,7 +59,7 @@ export function UtilityStrip() {
         {/* Active CDS Alerts */}
         {activeCDSAlerts > 0 && (
           <button
-            className="relative flex items-center gap-1 px-2 py-1 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md hover:bg-amber-100 transition-colors"
+            className="relative flex items-center gap-1 px-2 py-1 text-xs text-warning-foreground bg-warning-soft border border-warning/35 rounded-md hover:bg-amber-100 transition-colors"
             title="Active CDS alerts"
           >
             <Activity className="h-3.5 w-3.5" />
@@ -69,7 +69,7 @@ export function UtilityStrip() {
 
         {/* Notifications */}
         <button
-          className="relative p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+          className="relative p-1.5 text-muted-foreground hover:text-foreground hover:bg-neutral-100 rounded-md transition-colors"
           title="Notifications"
         >
           <Bell className="h-3.5 w-3.5" />
@@ -81,7 +81,7 @@ export function UtilityStrip() {
         {/* Help */}
         <Link
           href="/help"
-          className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+          className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-neutral-100 rounded-md transition-colors"
           title="Help"
         >
           <HelpCircle className="h-3.5 w-3.5" />
@@ -94,10 +94,10 @@ export function UtilityStrip() {
           </span>
         )}
 
-        <div className="h-4 w-px bg-gray-200" />
+        <div className="h-4 w-px bg-neutral-100" />
 
         {/* User */}
-        <span className="flex items-center gap-1.5 text-xs text-gray-600">
+        <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <User className="h-3.5 w-3.5" />
           {user?.displayName || user?.email || "Unknown"}
         </span>

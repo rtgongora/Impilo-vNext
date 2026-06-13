@@ -72,10 +72,10 @@ export function ImagingOrderCorrelatePanel({ patientId, orderId }: ImagingOrderC
         <ScanLine className="mt-0.5 h-4 w-4 text-sky-700" aria-hidden />
         <div className="flex-1 space-y-2">
           <p className="text-sm font-medium text-sky-950">
-            Correlate imaging order <code className="rounded bg-white/80 px-1">{orderId}</code> to PACS study
+            Correlate imaging order <code className="rounded bg-card/80 px-1">{orderId}</code> to PACS study
           </p>
           <p className="text-xs text-sky-900/80">
-            Posts to <code className="rounded bg-white/80 px-1">POST /internal/v1/imaging/studies/{"{id}"}/correlate</code>{" "}
+            Posts to <code className="rounded bg-card/80 px-1">POST /internal/v1/imaging/studies/{"{id}"}/correlate</code>{" "}
             with the OROS order anchor, then launch the viewer for result review.
           </p>
           {isLoading ? (
@@ -94,7 +94,7 @@ export function ImagingOrderCorrelatePanel({ patientId, orderId }: ImagingOrderC
                 <select
                   value={selectedStudyId}
                   onChange={(e) => setSelectedStudyId(e.target.value)}
-                  className="mt-1 block min-w-[220px] rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm"
+                  className="mt-1 block min-w-[220px] rounded-lg border border-sky-200 bg-card px-3 py-2 text-sm"
                 >
                   <option value="">Select study…</option>
                   {studies.map((study) => {
@@ -127,8 +127,8 @@ export function ImagingOrderCorrelatePanel({ patientId, orderId }: ImagingOrderC
               ) : null}
             </div>
           )}
-          {error ? <p className="text-xs text-red-700">{error}</p> : null}
-          {success ? <p className="text-xs text-emerald-800">{success}</p> : null}
+          {error ? <p className="text-xs text-danger">{error}</p> : null}
+          {success ? <p className="text-xs text-primary-hover">{success}</p> : null}
         </div>
       </div>
     </section>

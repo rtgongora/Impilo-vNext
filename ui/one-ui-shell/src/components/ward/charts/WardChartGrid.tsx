@@ -148,9 +148,9 @@ export function WardChartGrid({ chart, patientId, persistToApi = false }: WardCh
     <div className="space-y-4">
       {/* Add Entry toggle */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-900">{chart.name}</h3>
+        <h3 className="text-lg font-semibold text-foreground">{chart.name}</h3>
         <button onClick={() => setShowForm((v) => !v)}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800 transition-colors">
+          className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-hover transition-colors">
           <Plus className="h-4 w-4" /> {showForm ? "Cancel" : "Add Entry"}
         </button>
       </div>
@@ -161,22 +161,22 @@ export function WardChartGrid({ chart, patientId, persistToApi = false }: WardCh
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {chart.columns.map((col) => (
               <label key={col.code} className="block text-sm">
-                <span className="font-medium text-slate-700">{col.name}{col.unit ? ` (${col.unit})` : ""}</span>
+                <span className="font-medium text-foreground">{col.name}{col.unit ? ` (${col.unit})` : ""}</span>
                 {col.inputType === "number" && (
                   <input type="number" value={newEntry[col.code] as number} onChange={(e) => handleFieldChange(col.code, Number(e.target.value))}
-                    className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400" />
+                    className="mt-1 block w-full rounded-lg border border-border px-3 py-1.5 text-sm focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400" />
                 )}
                 {col.inputType === "text" && (
                   <input type="text" value={newEntry[col.code] as string} onChange={(e) => handleFieldChange(col.code, e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400" />
+                    className="mt-1 block w-full rounded-lg border border-border px-3 py-1.5 text-sm focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400" />
                 )}
                 {col.inputType === "time" && (
                   <input type="time" value={newEntry[col.code] as string} onChange={(e) => handleFieldChange(col.code, e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400" />
+                    className="mt-1 block w-full rounded-lg border border-border px-3 py-1.5 text-sm focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400" />
                 )}
                 {col.inputType === "select" && (
                   <select value={newEntry[col.code] as string} onChange={(e) => handleFieldChange(col.code, e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400">
+                    className="mt-1 block w-full rounded-lg border border-border px-3 py-1.5 text-sm focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400">
                     <option value="">Select...</option>
                     {col.options?.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
                   </select>
@@ -184,8 +184,8 @@ export function WardChartGrid({ chart, patientId, persistToApi = false }: WardCh
                 {col.inputType === "boolean" && (
                   <div className="mt-2 flex items-center gap-2">
                     <input type="checkbox" checked={!!newEntry[col.code]} onChange={(e) => handleFieldChange(col.code, e.target.checked)}
-                      className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-400" />
-                    <span className="text-xs text-slate-600">{newEntry[col.code] ? "Yes" : "No"}</span>
+                      className="h-4 w-4 rounded border-border text-sky-600 focus:ring-sky-400" />
+                    <span className="text-xs text-muted-foreground">{newEntry[col.code] ? "Yes" : "No"}</span>
                   </div>
                 )}
               </label>
@@ -201,28 +201,28 @@ export function WardChartGrid({ chart, patientId, persistToApi = false }: WardCh
       )}
 
       {/* Data table */}
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-sm">
         {rows.length === 0 ? (
-          <div className="p-8 text-center text-sm text-slate-500">No entries recorded yet. Click &quot;Add Entry&quot; to begin charting.</div>
+          <div className="p-8 text-center text-sm text-muted-foreground">No entries recorded yet. Click &quot;Add Entry&quot; to begin charting.</div>
         ) : (
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-left text-slate-600">
+            <thead className="bg-background text-left text-muted-foreground">
               <tr>
                 {chart.columns.map((col) => (
                   <th key={col.code} className="whitespace-nowrap px-3 py-2.5 font-medium">
-                    {col.name}{col.unit ? <span className="ml-1 text-xs text-slate-400">({col.unit})</span> : null}
+                    {col.name}{col.unit ? <span className="ml-1 text-xs text-muted-foreground">({col.unit})</span> : null}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {rows.map((row, idx) => (
-                <tr key={idx} className="border-t border-slate-100">
+                <tr key={idx} className="border-t border-border">
                   {chart.columns.map((col) => {
                     const val = row[col.code];
                     const breaching = isBreaching(col, val);
                     return (
-                      <td key={col.code} className={`whitespace-nowrap px-3 py-2 ${breaching ? "bg-red-50 font-semibold text-red-700" : "text-slate-700"}`}>
+                      <td key={col.code} className={`whitespace-nowrap px-3 py-2 ${breaching ? "bg-danger-soft font-semibold text-danger" : "text-foreground"}`}>
                         {breaching && <AlertTriangle className="mr-1 inline h-3.5 w-3.5 text-red-500" />}
                         {typeof val === "boolean" ? (val ? "Yes" : "No") : String(val ?? "")}
                       </td>
@@ -237,7 +237,7 @@ export function WardChartGrid({ chart, patientId, persistToApi = false }: WardCh
 
       {/* Summary row */}
       {rows.length > 0 && (
-        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
+        <div className="rounded-xl border border-border bg-background px-4 py-3 text-sm font-medium text-foreground">
           {summary}
         </div>
       )}

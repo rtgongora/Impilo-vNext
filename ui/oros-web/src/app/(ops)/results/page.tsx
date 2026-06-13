@@ -9,12 +9,12 @@ import {
 } from "@/lib/orosApi";
 
 const INTERPRETATION_COLORS: Record<Interpretation, string> = {
-  NORMAL: "text-emerald-700 bg-emerald-50",
+  NORMAL: "text-primary-hover bg-success-soft",
   ABNORMAL: "text-yellow-700 bg-yellow-50",
   HIGH: "text-orange-700 bg-orange-50",
-  LOW: "text-blue-700 bg-blue-50",
-  CRITICAL_HIGH: "text-red-700 bg-red-50 font-bold",
-  CRITICAL_LOW: "text-red-700 bg-red-50 font-bold",
+  LOW: "text-primary-hover bg-info-soft",
+  CRITICAL_HIGH: "text-danger bg-danger-soft font-bold",
+  CRITICAL_LOW: "text-danger bg-danger-soft font-bold",
 };
 
 export default function ResultsPage() {
@@ -107,17 +107,17 @@ export default function ResultsPage() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-red-800">
           {error}
         </div>
       )}
 
       {successMessage && (
-        <div className="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-sm text-emerald-800">
+        <div className="mb-4 p-3 rounded-lg bg-success-soft border border-success/25 text-sm text-primary-hover">
           {successMessage}
           <button
             onClick={() => setSuccessMessage(null)}
-            className="ml-2 text-emerald-600 hover:text-emerald-800 font-medium"
+            className="ml-2 text-primary hover:text-primary-hover font-medium"
           >
             Dismiss
           </button>
@@ -170,7 +170,7 @@ export default function ResultsPage() {
                 </button>
               )}
               {unacknowledgedCount === 0 && results.length > 0 && (
-                <span className="badge bg-emerald-100 text-emerald-800">
+                <span className="badge bg-emerald-100 text-primary-hover">
                   All Acknowledged
                 </span>
               )}
@@ -201,7 +201,7 @@ export default function ResultsPage() {
                 <tr
                   key={result.id}
                   className={`hover:bg-neutral-50 transition-colors ${
-                    result.isCritical ? "bg-red-50/50" : ""
+                    result.isCritical ? "bg-danger-soft/50" : ""
                   }`}
                 >
                   <td className="px-4 py-3">
@@ -245,7 +245,7 @@ export default function ResultsPage() {
                   </td>
                   <td className="px-4 py-3">
                     {result.acknowledged ? (
-                      <span className="badge bg-emerald-100 text-emerald-800">ACK</span>
+                      <span className="badge bg-emerald-100 text-primary-hover">ACK</span>
                     ) : (
                       <span className="badge bg-yellow-100 text-yellow-800">Pending</span>
                     )}

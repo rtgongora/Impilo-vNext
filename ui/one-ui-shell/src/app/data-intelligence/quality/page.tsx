@@ -24,18 +24,18 @@ export default function DataQualityPage() {
       tabs={DATA_TABS}
     >
       <TrustContextBanner purposeOfUse="DATA_QUALITY_REVIEW" />
-      <div className="rounded-xl border border-slate-200 p-6">
+      <div className="rounded-xl border border-border p-6">
         <div className="mb-4 flex items-center gap-2">
           <FeatureMaturityBadge status="partial" detail="Registry heuristics via intelligence BFF" />
         </div>
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-muted-foreground">
           Use Health Intelligence data-quality hints for registry completeness heuristics, or open facility reports for operational completeness views.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
-          <Link href="/intelligence" className="rounded-lg bg-impilo-500 px-3 py-2 text-sm text-white">
+          <Link href="/intelligence" className="rounded-lg bg-primary px-3 py-2 text-sm text-white">
             Data quality hints (Nompilo)
           </Link>
-          <Link href="/reports/facility" className="rounded-lg border px-3 py-2 text-sm hover:bg-slate-50">
+          <Link href="/reports/facility" className="rounded-lg border px-3 py-2 text-sm hover:bg-background">
             Facility reports
           </Link>
         </div>

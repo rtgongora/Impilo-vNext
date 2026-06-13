@@ -17,11 +17,11 @@ interface NhumeRecordPanelProps {
 /** Renders nhume-service records as labelled rows (no debug JSON dumps). */
 export function NhumeRecordPanel({ record, fields }: NhumeRecordPanelProps) {
   return (
-    <dl className="mt-4 divide-y divide-gray-100 rounded-xl border border-gray-100">
+    <dl className="mt-4 divide-y divide-gray-100 rounded-xl border border-border">
       {fields.map(({ key, label }) => (
         <div key={key} className="flex justify-between gap-4 px-3 py-2.5 text-sm">
-          <dt className="text-gray-500">{label}</dt>
-          <dd className="max-w-[60%] text-right font-medium text-gray-900">{readField(record, key)}</dd>
+          <dt className="text-muted-foreground">{label}</dt>
+          <dd className="max-w-[60%] text-right font-medium text-foreground">{readField(record, key)}</dd>
         </div>
       ))}
     </dl>

@@ -25,27 +25,27 @@ export default function LiveEventAnalyticsPage() {
           <Link href={`/live/event/${eventId}`} className="text-sm text-violet-700 hover:underline">
             ← Event details
           </Link>
-          <Link href="/live/manage" className="text-sm text-gray-600 hover:underline">
+          <Link href="/live/manage" className="text-sm text-muted-foreground hover:underline">
             Management console
           </Link>
         </div>
 
         <LiveAnalyticsPanel eventId={eventId} />
 
-        <section className="mt-6 rounded-2xl border border-gray-200 bg-white p-5">
-          <h3 className="font-semibold text-gray-900 mb-3">Attendance roll-up</h3>
+        <section className="mt-6 rounded-2xl border border-border bg-card p-5">
+          <h3 className="font-semibold text-foreground mb-3">Attendance roll-up</h3>
           <ul className="space-y-2 text-sm">
             {attendance.map((row) => (
-              <li key={row.id} className="flex flex-wrap justify-between gap-2 rounded-lg bg-gray-50 px-3 py-2">
-                <span className="text-gray-700">{row.participantId}</span>
-                <span className="text-gray-500">
+              <li key={row.id} className="flex flex-wrap justify-between gap-2 rounded-lg bg-background px-3 py-2">
+                <span className="text-foreground">{row.participantId}</span>
+                <span className="text-muted-foreground">
                   {row.totalWatchMinutes} min · {row.completionStatus}
                   {row.eligibleForCpd ? " · CPD eligible" : ""}
                 </span>
               </li>
             ))}
             {attendance.length === 0 ? (
-              <li className="text-gray-500">No attendance records yet.</li>
+              <li className="text-muted-foreground">No attendance records yet.</li>
             ) : null}
           </ul>
         </section>

@@ -29,8 +29,8 @@ export default function LiveAdminPage() {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-6">
-          <section className="rounded-2xl border border-gray-200 bg-white p-5">
-            <h2 className="font-semibold text-gray-900 flex items-center gap-2">
+          <section className="rounded-2xl border border-border bg-card p-5">
+            <h2 className="font-semibold text-foreground flex items-center gap-2">
               <Radio className="h-4 w-4 text-red-600" /> Live now
             </h2>
             <div className="mt-4">
@@ -38,8 +38,8 @@ export default function LiveAdminPage() {
             </div>
           </section>
 
-          <section className="rounded-2xl border border-gray-200 bg-white p-5">
-            <h2 className="font-semibold text-gray-900 flex items-center gap-2">
+          <section className="rounded-2xl border border-border bg-card p-5">
+            <h2 className="font-semibold text-foreground flex items-center gap-2">
               <Calendar className="h-4 w-4" /> Upcoming
             </h2>
             <div className="mt-4">
@@ -48,25 +48,25 @@ export default function LiveAdminPage() {
           </section>
         </div>
 
-        <section className="mt-6 rounded-2xl border border-gray-200 bg-white p-5">
-          <h2 className="font-semibold text-gray-900 flex items-center gap-2 mb-4">
+        <section className="mt-6 rounded-2xl border border-border bg-card p-5">
+          <h2 className="font-semibold text-foreground flex items-center gap-2 mb-4">
             <BarChart3 className="h-4 w-4" /> Operations
           </h2>
           <div className="flex flex-wrap gap-3 text-sm">
-            <Link href="/live/manage" className="rounded-lg border px-3 py-2 hover:bg-gray-50">
+            <Link href="/live/manage" className="rounded-lg border px-3 py-2 hover:bg-background">
               Event management & moderation
             </Link>
-            <Link href="/live/create" className="rounded-lg border px-3 py-2 hover:bg-gray-50">
+            <Link href="/live/create" className="rounded-lg border px-3 py-2 hover:bg-background">
               Create event
             </Link>
-            <Link href="/live/replays" className="rounded-lg border px-3 py-2 hover:bg-gray-50">
+            <Link href="/live/replays" className="rounded-lg border px-3 py-2 hover:bg-background">
               Replay library
             </Link>
-            <Link href="/live/cpd" className="rounded-lg border px-3 py-2 hover:bg-gray-50">
+            <Link href="/live/cpd" className="rounded-lg border px-3 py-2 hover:bg-background">
               CPD & certificates
             </Link>
           </div>
-          <p className="mt-4 text-xs text-gray-500">
+          <p className="mt-4 text-xs text-muted-foreground">
             Impilo Live is the governed live engagement layer of the Impilo Health OS — clinical sessions,
             professional meetings, CPD webinars, public health broadcasts, hybrid events and emergency
             briefings through one secure, role-aware service.
@@ -90,10 +90,10 @@ function StatCard({
 }) {
   return (
     <div
-      className={`rounded-xl border p-4 ${highlight ? "border-red-200 bg-red-50" : "border-gray-200 bg-white"}`}
+      className={`rounded-xl border p-4 ${highlight ? "border-danger/28 bg-danger-soft" : "border-border bg-card"}`}
     >
-      <div className="flex items-center gap-2 text-gray-600 text-sm">{icon}{label}</div>
-      <p className="mt-2 text-2xl font-semibold text-gray-900">{value}</p>
+      <div className="flex items-center gap-2 text-muted-foreground text-sm">{icon}{label}</div>
+      <p className="mt-2 text-2xl font-semibold text-foreground">{value}</p>
     </div>
   );
 }

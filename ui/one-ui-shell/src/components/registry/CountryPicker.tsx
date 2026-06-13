@@ -32,7 +32,7 @@ export function CountryPicker({ value, onChange, deploy, id, disabled, className
         disabled={disabled}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={className ?? "w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"}
+        className={className ?? "w-full px-3 py-2 border border-border rounded-lg text-sm"}
       >
         <option value="">Select country…</option>
         <optgroup label="Zimbabwe (primary)">
@@ -66,7 +66,7 @@ export function CountryPicker({ value, onChange, deploy, id, disabled, className
       disabled={disabled}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className={className ?? "w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"}
+      className={className ?? "w-full px-3 py-2 border border-border rounded-lg text-sm"}
     >
       <option value="">Select country…</option>
       <optgroup label="Countries (A–Z)">

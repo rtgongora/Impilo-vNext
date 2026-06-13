@@ -55,17 +55,17 @@ function readNum(r: Record<string, unknown>, ...keys: string[]) {
 }
 
 const STATUS_BADGE: Record<string, string> = {
-  APPROVED: "bg-emerald-100 text-emerald-800",
-  PENDING: "bg-amber-100 text-amber-800",
-  DRAFT: "bg-slate-100 text-slate-700",
-  WITHDRAWN: "bg-gray-200 text-gray-600",
+  APPROVED: "bg-emerald-100 text-primary-hover",
+  PENDING: "bg-amber-100 text-warning-foreground",
+  DRAFT: "bg-neutral-100 text-foreground",
+  WITHDRAWN: "bg-neutral-100 text-muted-foreground",
   REJECTED: "bg-red-100 text-red-800",
 };
 
 const SEVERITY_BADGE: Record<string, string> = {
   HIGH: "bg-red-100 text-red-800",
-  MEDIUM: "bg-amber-100 text-amber-800",
-  LOW: "bg-impilo-100 text-impilo-700",
+  MEDIUM: "bg-amber-100 text-warning-foreground",
+  LOW: "bg-primary-soft text-primary-hover",
 };
 
 export default function AiModelRegistryPage() {
@@ -125,18 +125,18 @@ export default function AiModelRegistryPage() {
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <Link
             href="/access"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
             Access &amp; governance
           </Link>
-          <span className="text-gray-300">|</span>
+          <span className="text-muted-foreground">|</span>
           <Link href="/guidance" className="text-sm text-cyan-700 hover:underline">
             Clinical guidance hub
           </Link>
         </div>
 
-        <div className="flex gap-1 mb-6 border-b border-gray-200 overflow-x-auto">
+        <div className="flex gap-1 mb-6 border-b border-border overflow-x-auto">
           {tabs.map((t) => {
             const Icon = t.icon;
             return (
@@ -147,7 +147,7 @@ export default function AiModelRegistryPage() {
                 className={`flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                   tab === t.id
                     ? "border-cyan-600 text-cyan-700"
-                    : "border-transparent text-gray-500 hover:text-gray-800"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <Icon className="h-4 w-4" />
@@ -160,7 +160,7 @@ export default function AiModelRegistryPage() {
         {tab === "models" && (
           <div className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm text-gray-600">Registered models and approval posture.</p>
+              <p className="text-sm text-muted-foreground">Registered models and approval posture.</p>
               <button
                 type="button"
                 onClick={() => setShowRegister((s) => !s)}
@@ -175,18 +175,18 @@ export default function AiModelRegistryPage() {
               <div className="rounded-xl border-2 border-cyan-200 bg-cyan-50/40 p-4 space-y-3 text-sm">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label className="block">
-                    <span className="text-xs font-medium text-gray-600">Name</span>
+                    <span className="text-xs font-medium text-muted-foreground">Name</span>
                     <input
-                      className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2"
+                      className="mt-1 w-full rounded-lg border border-border px-3 py-2"
                       value={regForm.name}
                       onChange={(e) => setRegForm((f) => ({ ...f, name: e.target.value }))}
                       placeholder="e.g. edliz-triage-v2"
                     />
                   </label>
                   <label className="block">
-                    <span className="text-xs font-medium text-gray-600">Type</span>
+                    <span className="text-xs font-medium text-muted-foreground">Type</span>
                     <select
-                      className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2"
+                      className="mt-1 w-full rounded-lg border border-border px-3 py-2"
                       value={regForm.type}
                       onChange={(e) => setRegForm((f) => ({ ...f, type: e.target.value }))}
                     >
@@ -198,18 +198,18 @@ export default function AiModelRegistryPage() {
                   </label>
                 </div>
                 <label className="block">
-                  <span className="text-xs font-medium text-gray-600">Owner</span>
+                  <span className="text-xs font-medium text-muted-foreground">Owner</span>
                   <input
-                    className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2"
+                    className="mt-1 w-full rounded-lg border border-border px-3 py-2"
                     value={regForm.owner}
                     onChange={(e) => setRegForm((f) => ({ ...f, owner: e.target.value }))}
                     placeholder="Team or actor id"
                   />
                 </label>
                 <label className="block">
-                  <span className="text-xs font-medium text-gray-600">Description</span>
+                  <span className="text-xs font-medium text-muted-foreground">Description</span>
                   <textarea
-                    className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2"
+                    className="mt-1 w-full rounded-lg border border-border px-3 py-2"
                     rows={2}
                     value={regForm.description}
                     onChange={(e) => setRegForm((f) => ({ ...f, description: e.target.value }))}
@@ -220,7 +220,7 @@ export default function AiModelRegistryPage() {
                   <button
                     type="button"
                     onClick={() => setShowRegister(false)}
-                    className="rounded-lg px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100"
+                    className="rounded-lg px-3 py-1.5 text-sm text-muted-foreground hover:bg-neutral-100"
                   >
                     Cancel
                   </button>
@@ -234,27 +234,27 @@ export default function AiModelRegistryPage() {
                   </button>
                 </div>
                 {registerM.isError && (
-                  <p className="text-xs text-red-700">
+                  <p className="text-xs text-danger">
                     Registration failed — AI registry route is unavailable or rejected the request.
                   </p>
                 )}
               </div>
             )}
 
-            <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
               {modelsQ.isLoading && (
-                <div className="flex items-center justify-center gap-2 py-16 text-gray-500">
+                <div className="flex items-center justify-center gap-2 py-16 text-muted-foreground">
                   <Loader2 className="h-5 w-5 animate-spin" /> Loading models…
                 </div>
               )}
               {modelsQ.isError && (
-                <p className="p-6 text-sm text-red-700">
+                <p className="p-6 text-sm text-danger">
                   Could not load models from the AI registry BFF route.
                 </p>
               )}
               {!modelsQ.isLoading && !modelsQ.isError && (
                 <table className="min-w-full text-sm">
-                  <thead className="border-b border-gray-100 bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <thead className="border-b border-border bg-background text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     <tr>
                       <th className="px-4 py-3">Name</th>
                       <th className="px-4 py-3">Type</th>
@@ -267,7 +267,7 @@ export default function AiModelRegistryPage() {
                   <tbody className="divide-y divide-gray-100">
                     {models.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="px-4 py-10 text-center text-gray-500">
+                        <td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">
                           No models registered yet.
                         </td>
                       </tr>
@@ -277,7 +277,7 @@ export default function AiModelRegistryPage() {
                       const status = readStr(row, "status", "approvalStatus").toUpperCase() || "DRAFT";
                       const versions = readNum(row, "versionsCount", "versionCount", "versions");
                       return (
-                        <tr key={id} className="hover:bg-gray-50/80">
+                        <tr key={id} className="hover:bg-background/80">
                           <td className="px-4 py-3">
                             <Link
                               href={`/ai-governance/models/${encodeURIComponent(id)}`}
@@ -286,23 +286,23 @@ export default function AiModelRegistryPage() {
                               {readStr(row, "name", "modelName")}
                             </Link>
                           </td>
-                          <td className="px-4 py-3 text-gray-700">{readStr(row, "type", "modelType")}</td>
+                          <td className="px-4 py-3 text-foreground">{readStr(row, "type", "modelType")}</td>
                           <td className="px-4 py-3">
                             <span
-                              className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_BADGE[status] ?? "bg-gray-100 text-gray-700"}`}
+                              className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_BADGE[status] ?? "bg-neutral-100 text-foreground"}`}
                             >
                               {status || "—"}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-gray-600">{readStr(row, "owner", "ownerId")}</td>
-                          <td className="px-4 py-3 text-right tabular-nums text-gray-800">{versions || "—"}</td>
+                          <td className="px-4 py-3 text-muted-foreground">{readStr(row, "owner", "ownerId")}</td>
+                          <td className="px-4 py-3 text-right tabular-nums text-foreground">{versions || "—"}</td>
                           <td className="px-4 py-3 text-right">
                             <div className="flex justify-end gap-2">
                               <button
                                 type="button"
                                 disabled={approveM.isPending}
                                 onClick={() => approveM.mutate(id)}
-                                className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 hover:bg-emerald-100 disabled:opacity-50"
+                                className="rounded-md border border-success/25 bg-success-soft px-2 py-1 text-xs font-medium text-primary-hover hover:bg-emerald-100 disabled:opacity-50"
                               >
                                 Approve
                               </button>
@@ -310,7 +310,7 @@ export default function AiModelRegistryPage() {
                                 type="button"
                                 disabled={withdrawM.isPending}
                                 onClick={() => withdrawM.mutate(id)}
-                                className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                                className="rounded-md border border-border bg-card px-2 py-1 text-xs font-medium text-foreground hover:bg-background disabled:opacity-50"
                               >
                                 Withdraw
                               </button>
@@ -327,20 +327,20 @@ export default function AiModelRegistryPage() {
         )}
 
         {tab === "inference" && (
-          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
             {infQ.isLoading && (
-              <div className="flex items-center justify-center gap-2 py-16 text-gray-500">
+              <div className="flex items-center justify-center gap-2 py-16 text-muted-foreground">
                 <Loader2 className="h-5 w-5 animate-spin" /> Loading inference log…
               </div>
             )}
             {infQ.isError && (
-              <p className="p-6 text-sm text-red-700">
+              <p className="p-6 text-sm text-danger">
                 Could not load inference records from the AI registry BFF route.
               </p>
             )}
             {!infQ.isLoading && !infQ.isError && (
               <table className="min-w-full text-sm">
-                <thead className="border-b border-gray-100 bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                <thead className="border-b border-border bg-background text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3">Model</th>
                     <th className="px-4 py-3">Version</th>
@@ -354,31 +354,31 @@ export default function AiModelRegistryPage() {
                 <tbody className="divide-y divide-gray-100">
                   {inferences.length === 0 && (
                     <tr>
-                      <td colSpan={7} className="px-4 py-10 text-center text-gray-500">
+                      <td colSpan={7} className="px-4 py-10 text-center text-muted-foreground">
                         No inference records.
                       </td>
                     </tr>
                   )}
                   {inferences.map((row, i) => (
-                    <tr key={readStr(row, "id", "recordId") || String(i)} className="hover:bg-gray-50/80">
-                      <td className="px-4 py-3 font-medium text-gray-900">
+                    <tr key={readStr(row, "id", "recordId") || String(i)} className="hover:bg-background/80">
+                      <td className="px-4 py-3 font-medium text-foreground">
                         {readStr(row, "model", "modelName", "modelId")}
                       </td>
-                      <td className="px-4 py-3 text-gray-700">{readStr(row, "version", "modelVersion")}</td>
+                      <td className="px-4 py-3 text-foreground">{readStr(row, "version", "modelVersion")}</td>
                       <td className="px-4 py-3">
-                        <span className="rounded bg-indigo-50 px-2 py-0.5 text-xs font-mono text-indigo-800">
+                        <span className="rounded bg-info-soft px-2 py-0.5 text-xs font-mono text-primary-hover">
                           {readStr(row, "safetyClass", "class", "riskClass") || "—"}
                         </span>
                       </td>
-                      <td className="px-4 py-3 font-mono text-xs text-gray-600">
+                      <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
                         {readStr(row, "workflowRef", "workflow_ref", "workflowId")}
                       </td>
-                      <td className="px-4 py-3 truncate max-w-[140px] text-gray-700">
+                      <td className="px-4 py-3 truncate max-w-[140px] text-foreground">
                         {readStr(row, "subject", "subjectRef", "patientRef")}
                       </td>
                       <td className="px-4 py-3 text-right tabular-nums">{readNum(row, "score", "confidence")}</td>
                       <td className="px-4 py-3">
-                        <span className="text-xs text-gray-700">
+                        <span className="text-xs text-foreground">
                           {readStr(row, "humanReviewStatus", "reviewStatus", "human_review")}
                         </span>
                       </td>
@@ -391,20 +391,20 @@ export default function AiModelRegistryPage() {
         )}
 
         {tab === "drift" && (
-          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
             {driftQ.isLoading && (
-              <div className="flex items-center justify-center gap-2 py-16 text-gray-500">
+              <div className="flex items-center justify-center gap-2 py-16 text-muted-foreground">
                 <Loader2 className="h-5 w-5 animate-spin" /> Loading drift events…
               </div>
             )}
             {driftQ.isError && (
-              <p className="p-6 text-sm text-red-700">
+              <p className="p-6 text-sm text-danger">
                 Could not load drift events from the AI registry BFF route.
               </p>
             )}
             {!driftQ.isLoading && !driftQ.isError && (
               <table className="min-w-full text-sm">
-                <thead className="border-b border-gray-100 bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                <thead className="border-b border-border bg-background text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3">Model</th>
                     <th className="px-4 py-3">Metric</th>
@@ -416,7 +416,7 @@ export default function AiModelRegistryPage() {
                 <tbody className="divide-y divide-gray-100">
                   {drifts.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="px-4 py-10 text-center text-gray-500">
+                      <td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">
                         No drift alerts.
                       </td>
                     </tr>
@@ -426,21 +426,21 @@ export default function AiModelRegistryPage() {
                     const val = readStr(row, "value", "metricValue");
                     const thr = readStr(row, "threshold", "thresholdValue");
                     return (
-                      <tr key={readStr(row, "id", "eventId") || String(i)} className="hover:bg-gray-50/80">
+                      <tr key={readStr(row, "id", "eventId") || String(i)} className="hover:bg-background/80">
                         <td className="px-4 py-3 font-medium">{readStr(row, "model", "modelName", "modelId")}</td>
-                        <td className="px-4 py-3 text-gray-700">{readStr(row, "metric", "metricName")}</td>
-                        <td className="px-4 py-3 font-mono text-xs text-gray-800">
+                        <td className="px-4 py-3 text-foreground">{readStr(row, "metric", "metricName")}</td>
+                        <td className="px-4 py-3 font-mono text-xs text-foreground">
                           {val || "—"}
                           {thr ? ` / ${thr}` : ""}
                         </td>
                         <td className="px-4 py-3">
                           <span
-                            className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${SEVERITY_BADGE[sev] ?? "bg-gray-100 text-gray-700"}`}
+                            className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${SEVERITY_BADGE[sev] ?? "bg-neutral-100 text-foreground"}`}
                           >
                             {sev}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-gray-600 text-xs">
+                        <td className="px-4 py-3 text-muted-foreground text-xs">
                           {readStr(row, "detectedAt", "detected_at", "createdAt")}
                         </td>
                       </tr>
@@ -452,14 +452,14 @@ export default function AiModelRegistryPage() {
           </div>
         )}
 
-        <div className="mt-8 rounded-lg border border-dashed border-gray-200 bg-gray-50/80 p-4 text-xs text-gray-600">
-          <p className="flex items-center gap-2 font-medium text-gray-800">
+        <div className="mt-8 rounded-lg border border-dashed border-border bg-background/80 p-4 text-xs text-muted-foreground">
+          <p className="flex items-center gap-2 font-medium text-foreground">
             <Activity className="h-4 w-4" />
             Dataset &amp; policy governance
           </p>
           <p className="mt-1">
             For governed datasets, ABAC rules, and policy publication, use the existing data-governance flows or extend
-            the BFF under <code className="rounded bg-white px-1">/internal/v1/ai-governance/*</code> alongside this model
+            the BFF under <code className="rounded bg-card px-1">/internal/v1/ai-governance/*</code> alongside this model
             registry.
           </p>
         </div>

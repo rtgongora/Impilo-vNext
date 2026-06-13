@@ -52,7 +52,7 @@ const SPECIALTY_CONFIGS: Record<string, SpecialtyConfig> = {
   },
   surgery: {
     label: "Surgery", description: "Surgical assessment and planning",
-    icon: Scissors, color: "bg-impilo-100 text-impilo-500",
+    icon: Scissors, color: "bg-primary-soft text-primary",
     tools: [
       { label: "Pre-op Checklist", description: "Surgical safety checklist", icon: ClipboardList },
       { label: "Anaesthesia Assessment", description: "ASA classification", icon: Thermometer },
@@ -109,7 +109,7 @@ const SPECIALTY_CONFIGS: Record<string, SpecialtyConfig> = {
 
 const DEFAULT_CONFIG: SpecialtyConfig = {
   label: "General", description: "General clinical workspace",
-  icon: Stethoscope, color: "bg-gray-100 text-gray-600",
+  icon: Stethoscope, color: "bg-neutral-100 text-muted-foreground",
   tools: [
     { label: "Clinical Notes", description: "SOAP documentation", icon: FileText },
     { label: "Orders", description: "Lab and imaging orders", icon: ClipboardList },
@@ -129,29 +129,29 @@ export default function SpecialtyWorkspacePage() {
     <EHRLayout>
       <div className="space-y-6">
         <div className="flex items-center gap-3">
-          <Link href={`/ehr/${patientId}`} className="text-gray-400 hover:text-gray-600">
+          <Link href={`/ehr/${patientId}`} className="text-muted-foreground hover:text-muted-foreground">
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${config.color}`}>
             <SpecIcon className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">{config.label} Workspace</h2>
-            <p className="text-sm text-gray-500">{config.description}</p>
+            <h2 className="text-lg font-semibold text-foreground">{config.label} Workspace</h2>
+            <p className="text-sm text-muted-foreground">{config.description}</p>
           </div>
         </div>
 
         {/* Specialty Tools */}
-        <div className="bg-white rounded-lg border border-gray-200 p-5">
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">Specialty Tools</h3>
+        <div className="bg-card rounded-lg border border-border p-5">
+          <h3 className="text-sm font-semibold text-foreground mb-3">Specialty Tools</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {config.tools.map((tool) => {
               const ToolIcon = tool.icon;
               return (
-                <div key={tool.label} className="bg-gray-50 rounded-lg border border-gray-200 p-4 hover:border-impilo-200 transition-colors cursor-pointer">
-                  <ToolIcon className="w-5 h-5 text-gray-400 mb-2" />
-                  <p className="text-sm font-medium text-gray-900">{tool.label}</p>
-                  <p className="text-xs text-gray-500">{tool.description}</p>
+                <div key={tool.label} className="bg-background rounded-lg border border-border p-4 hover:border-primary/25 transition-colors cursor-pointer">
+                  <ToolIcon className="w-5 h-5 text-muted-foreground mb-2" />
+                  <p className="text-sm font-medium text-foreground">{tool.label}</p>
+                  <p className="text-xs text-muted-foreground">{tool.description}</p>
                 </div>
               );
             })}
@@ -159,25 +159,25 @@ export default function SpecialtyWorkspacePage() {
         </div>
 
         {/* Assessments */}
-        <div className="bg-white rounded-lg border border-gray-200 p-5">
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">Assessments</h3>
+        <div className="bg-card rounded-lg border border-border p-5">
+          <h3 className="text-sm font-semibold text-foreground mb-3">Assessments</h3>
           <div className="space-y-2">
             {config.assessments.map((assessment) => (
-              <div key={assessment} className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg">
-                <ClipboardList className="w-4 h-4 text-gray-400" />
-                <span className="text-sm text-gray-700">{assessment}</span>
+              <div key={assessment} className="flex items-center gap-2 px-3 py-2 bg-background rounded-lg">
+                <ClipboardList className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm text-foreground">{assessment}</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* Order Sets */}
-        <div className="bg-white rounded-lg border border-gray-200 p-5">
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">Quick Order Sets</h3>
+        <div className="bg-card rounded-lg border border-border p-5">
+          <h3 className="text-sm font-semibold text-foreground mb-3">Quick Order Sets</h3>
           <div className="flex flex-wrap gap-2">
             {config.orderSets.map((orderSet) => (
               <button key={orderSet}
-                className="px-3 py-1.5 text-xs font-medium bg-impilo-50 text-impilo-600 rounded-lg hover:bg-impilo-100 transition-colors">
+                className="px-3 py-1.5 text-xs font-medium bg-primary-soft text-primary rounded-lg hover:bg-primary-soft transition-colors">
                 {orderSet}
               </button>
             ))}

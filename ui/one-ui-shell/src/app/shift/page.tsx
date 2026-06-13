@@ -51,38 +51,38 @@ export default function ShiftPage() {
         subtitle="You are about to start a work session"
       >
         <div className="max-w-lg mx-auto">
-          <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
-            <h3 className="font-medium text-gray-900">Session Details</h3>
-            <p className="text-sm text-gray-500">
+          <div className="bg-card rounded-lg border border-border p-6 space-y-4">
+            <h3 className="font-medium text-foreground">Session Details</h3>
+            <p className="text-sm text-muted-foreground">
               Review your work session details below and confirm to begin.
             </p>
 
             <div className="space-y-3">
-              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                <Building2 className="w-5 h-5 text-impilo-500 shrink-0" />
+              <div className="flex items-center gap-3 p-3 bg-background rounded-lg">
+                <Building2 className="w-5 h-5 text-primary shrink-0" />
                 <div>
-                  <p className="text-xs text-gray-500">Facility</p>
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-xs text-muted-foreground">Facility</p>
+                  <p className="text-sm font-medium text-foreground">
                     {facility?.name ?? "Not selected"}
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                <LayoutGrid className="w-5 h-5 text-impilo-500 shrink-0" />
+              <div className="flex items-center gap-3 p-3 bg-background rounded-lg">
+                <LayoutGrid className="w-5 h-5 text-primary shrink-0" />
                 <div>
-                  <p className="text-xs text-gray-500">Workspace</p>
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-xs text-muted-foreground">Workspace</p>
+                  <p className="text-sm font-medium text-foreground">
                     {workspace?.name ?? "Not selected"}
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                <Clock className="w-5 h-5 text-impilo-500 shrink-0" />
+              <div className="flex items-center gap-3 p-3 bg-background rounded-lg">
+                <Clock className="w-5 h-5 text-primary shrink-0" />
                 <div>
-                  <p className="text-xs text-gray-500">Session Start</p>
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-xs text-muted-foreground">Session Start</p>
+                  <p className="text-sm font-medium text-foreground">
                     {new Date().toLocaleString()}
                   </p>
                 </div>
@@ -90,9 +90,9 @@ export default function ShiftPage() {
             </div>
 
             {startShiftMutation.isError && (
-              <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-center gap-2 p-3 bg-danger-soft border border-danger/28 rounded-lg">
                 <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
-                <p className="text-sm text-red-700">
+                <p className="text-sm text-danger">
                   Failed to start shift. Please try again.
                 </p>
               </div>
@@ -101,7 +101,7 @@ export default function ShiftPage() {
             <button
               onClick={handleStartShift}
               disabled={startShiftMutation.isPending || !facility || !workspace}
-              className="w-full py-2.5 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+              className="w-full py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
             >
               {startShiftMutation.isPending ? (
                 <>

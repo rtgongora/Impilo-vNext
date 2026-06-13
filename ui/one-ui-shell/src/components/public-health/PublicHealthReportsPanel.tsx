@@ -43,9 +43,9 @@ export function PublicHealthReportsPanel() {
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-5 space-y-4">
+    <div className="bg-card rounded-lg border border-border p-5 space-y-4">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
           <FileText className="h-4 w-4 text-sky-600" /> Intelligence briefs
         </h3>
         <button
@@ -57,25 +57,25 @@ export function PublicHealthReportsPanel() {
           {generateM.isPending ? "Generating…" : "Generate draft"}
         </button>
       </div>
-      <p className="text-[10px] text-gray-500">
+      <p className="text-[10px] text-muted-foreground">
         Drafts are built deterministically from the operations-home aggregate until Nompilo LLM integration is enabled.
       </p>
       {briefsQ.isPending ? (
-        <div className="flex items-center gap-2 text-sm text-gray-500 py-4">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
           <Loader2 className="h-4 w-4 animate-spin" /> Loading briefs…
         </div>
       ) : briefs.length === 0 ? (
-        <p className="text-xs text-gray-500">No briefs yet. Generate a draft to review and publish.</p>
+        <p className="text-xs text-muted-foreground">No briefs yet. Generate a draft to review and publish.</p>
       ) : (
         <div className="space-y-3">
           {briefs.slice(0, 5).map((b) => (
-            <div key={b.id} className="border border-gray-200 rounded-lg p-3">
+            <div key={b.id} className="border border-border rounded-lg p-3">
               <div className="flex items-center justify-between gap-2 mb-2">
-                <p className="text-sm font-medium text-gray-900">{b.title}</p>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">{b.status}</span>
+                <p className="text-sm font-medium text-foreground">{b.title}</p>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-neutral-100 text-foreground">{b.status}</span>
               </div>
               {b.summaryMarkdown && (
-                <pre className="text-[10px] text-gray-600 whitespace-pre-wrap font-sans max-h-24 overflow-y-auto">
+                <pre className="text-[10px] text-muted-foreground whitespace-pre-wrap font-sans max-h-24 overflow-y-auto">
                   {b.summaryMarkdown}
                 </pre>
               )}
@@ -94,7 +94,7 @@ export function PublicHealthReportsPanel() {
                   type="button"
                   disabled={evaluateExportM.isPending}
                   onClick={() => evaluateExportM.mutate({ briefId: b.id, format: "PDF" })}
-                  className="text-[10px] text-emerald-700 hover:underline disabled:opacity-50"
+                  className="text-[10px] text-primary-hover hover:underline disabled:opacity-50"
                 >
                   Check PDF export governance
                 </button>
@@ -102,7 +102,7 @@ export function PublicHealthReportsPanel() {
                   type="button"
                   disabled={evaluateExportM.isPending}
                   onClick={() => evaluateExportM.mutate({ briefId: b.id, format: "CSV" })}
-                  className="text-[10px] text-emerald-700 hover:underline disabled:opacity-50"
+                  className="text-[10px] text-primary-hover hover:underline disabled:opacity-50"
                 >
                   Check CSV export governance
                 </button>

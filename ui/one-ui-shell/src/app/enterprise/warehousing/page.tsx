@@ -23,21 +23,21 @@ function MetricCard(props: {
 }) {
   const border =
     props.tone === "amber"
-      ? "border-amber-200 bg-amber-50"
+      ? "border-warning/35 bg-warning-soft"
       : props.tone === "rose"
-        ? "border-rose-200 bg-rose-50"
-        : "border-slate-200 bg-white";
+        ? "border-danger/28 bg-danger-soft"
+        : "border-border bg-card";
   const Icon = props.icon;
   return (
     <div className={`rounded-2xl border p-4 shadow-sm ${border}`}>
-      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         <Icon className="h-4 w-4" aria-hidden />
         {props.title}
       </div>
-      <div className="mt-2 text-3xl font-semibold text-slate-900">
+      <div className="mt-2 text-3xl font-semibold text-foreground">
         {props.loading ? "…" : props.value}
       </div>
-      <p className="mt-1 text-sm text-slate-600">{props.hint}</p>
+      <p className="mt-1 text-sm text-muted-foreground">{props.hint}</p>
     </div>
   );
 }
@@ -71,14 +71,14 @@ export default function EnterpriseWarehousingPage() {
         </div>
 
         {!facilityId ? (
-          <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          <div className="flex items-start gap-2 rounded-xl border border-warning/35 bg-warning-soft p-4 text-sm text-warning-foreground">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
             <div>
               <p className="font-medium">Facility context required</p>
-              <p className="mt-1 text-amber-800/90">
+              <p className="mt-1 text-warning-foreground/90">
                 Choose a facility to load warehouse-relevant inventory intelligence.
               </p>
-              <Link href="/facility" className="mt-2 inline-block text-sm font-semibold text-amber-950 underline">
+              <Link href="/facility" className="mt-2 inline-block text-sm font-semibold text-warning-foreground underline">
                 Select facility
               </Link>
             </div>
@@ -111,34 +111,34 @@ export default function EnterpriseWarehousingPage() {
           />
         </section>
 
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-sm font-semibold text-slate-900">Recent stock movements</h2>
-              <p className="mt-1 text-xs text-slate-500">
+              <h2 className="text-sm font-semibold text-foreground">Recent stock movements</h2>
+              <p className="mt-1 text-xs text-muted-foreground">
                 Distribution trail from{" "}
                 <code className="text-[10px]">GET /internal/v1/inventory/movements</code>
               </p>
             </div>
-            <Link href="/inventory/movements" className="text-sm font-semibold text-impilo-600 underline">
+            <Link href="/inventory/movements" className="text-sm font-semibold text-primary underline">
               Full movements
             </Link>
           </div>
 
           {!facilityId ? (
-            <p className="mt-4 text-sm text-slate-500">Select a facility to load movements.</p>
+            <p className="mt-4 text-sm text-muted-foreground">Select a facility to load movements.</p>
           ) : movementsQ.isLoading ? (
-            <p className="mt-4 flex items-center gap-2 text-sm text-slate-500">
+            <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" /> Loading movements…
             </p>
           ) : movementsQ.isError ? (
-            <p className="mt-4 text-sm text-red-700">Could not load inventory movements from the BFF.</p>
+            <p className="mt-4 text-sm text-danger">Could not load inventory movements from the BFF.</p>
           ) : recentMovements.length === 0 ? (
-            <p className="mt-4 text-sm text-slate-500">No stock movements recorded for this facility yet.</p>
+            <p className="mt-4 text-sm text-muted-foreground">No stock movements recorded for this facility yet.</p>
           ) : (
-            <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200">
+            <div className="mt-4 overflow-x-auto rounded-lg border border-border">
               <table className="w-full text-xs">
-                <thead className="bg-slate-50 text-slate-600">
+                <thead className="bg-background text-muted-foreground">
                   <tr>
                     <th className="px-3 py-2 text-left font-medium">Moved at</th>
                     <th className="px-3 py-2 text-left font-medium">Item</th>
@@ -149,12 +149,12 @@ export default function EnterpriseWarehousingPage() {
                 <tbody className="divide-y divide-slate-100">
                   {recentMovements.map((m) => (
                     <tr key={m.id}>
-                      <td className="px-3 py-2 text-slate-500">{m.movedAt || "—"}</td>
-                      <td className="px-3 py-2 text-slate-900">{m.itemName}</td>
-                      <td className="px-3 py-2 text-slate-600">
+                      <td className="px-3 py-2 text-muted-foreground">{m.movedAt || "—"}</td>
+                      <td className="px-3 py-2 text-foreground">{m.itemName}</td>
+                      <td className="px-3 py-2 text-muted-foreground">
                         {m.fromLocation} → {m.toLocation}
                       </td>
-                      <td className="px-3 py-2 text-right text-slate-900">{m.quantity}</td>
+                      <td className="px-3 py-2 text-right text-foreground">{m.quantity}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -163,21 +163,21 @@ export default function EnterpriseWarehousingPage() {
           )}
         </section>
 
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-sm text-slate-700">
-          <p className="font-medium text-slate-900">What is intentionally not fabricated</p>
+        <div className="rounded-2xl border border-border bg-background p-6 text-sm text-foreground">
+          <p className="font-medium text-foreground">What is intentionally not fabricated</p>
           <p className="mt-2">
             Dispatch lists, proof-of-delivery, and warehouse master data from{" "}
             <strong>integration-hub-service</strong> are not exposed on a single BFF read yet. Use procurement
             GRN and vendor fulfilment flows until those APIs land.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
-            <Link href="/erp/procurement" className="text-sm font-semibold text-impilo-600 underline">
+            <Link href="/erp/procurement" className="text-sm font-semibold text-primary underline">
               Procurement / GRN
             </Link>
-            <Link href="/marketplace/vendor" className="text-sm font-semibold text-impilo-600 underline">
+            <Link href="/marketplace/vendor" className="text-sm font-semibold text-primary underline">
               Vendor fulfilment
             </Link>
-            <Link href="/inventory/requisitions" className="text-sm font-semibold text-impilo-600 underline">
+            <Link href="/inventory/requisitions" className="text-sm font-semibold text-primary underline">
               Requisitions
             </Link>
           </div>

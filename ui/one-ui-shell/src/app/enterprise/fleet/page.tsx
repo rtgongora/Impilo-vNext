@@ -39,9 +39,9 @@ export default function EnterpriseFleetPage() {
             { label: "Delivered", value: (dashboard.data?.data as { delivered?: number } | undefined)?.delivered ?? "-" },
             { label: "Active fleet", value: (dashboard.data?.data as { active_fleet_assets?: number } | undefined)?.active_fleet_assets ?? "-" },
           ].map((metric) => (
-            <div key={metric.label} className="rounded-xl border border-slate-200 bg-white p-3">
-              <p className="text-xs uppercase tracking-wide text-slate-500">{metric.label}</p>
-              <p className="mt-1 text-xl font-semibold text-slate-900">{String(metric.value)}</p>
+            <div key={metric.label} className="rounded-xl border border-border bg-card p-3">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">{metric.label}</p>
+              <p className="mt-1 text-xl font-semibold text-foreground">{String(metric.value)}</p>
             </div>
           ))}
         </section>
@@ -53,8 +53,8 @@ export default function EnterpriseFleetPage() {
           <ListCard title="Missions" rows={(missions.data?.data as { items?: Array<Record<string, unknown>> } | undefined)?.items ?? []} />
         </section>
 
-        <section className="rounded-xl border border-slate-200 bg-white p-4">
-          <h3 className="text-sm font-semibold text-slate-900">Recent tracking events</h3>
+        <section className="rounded-xl border border-border bg-card p-4">
+          <h3 className="text-sm font-semibold text-foreground">Recent tracking events</h3>
           <div className="mt-2 space-y-2">
             <JsonApiDataTable
               data={recentTracking}
@@ -70,8 +70,8 @@ export default function EnterpriseFleetPage() {
 
 function ListCard({ title, rows }: { title: string; rows: Array<Record<string, unknown>> }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
-      <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+    <div className="rounded-xl border border-border bg-card p-4">
+      <h3 className="text-sm font-semibold text-foreground">{title}</h3>
       <div className="mt-2 space-y-2">
         <JsonApiDataTable data={rows.slice(0, 10)} columns={DISPATCH_ENTITY_COLUMNS} emptyTitle="No records" />
       </div>

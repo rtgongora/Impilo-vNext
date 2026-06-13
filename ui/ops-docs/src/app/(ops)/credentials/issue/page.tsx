@@ -115,7 +115,7 @@ export default function IssueCredentialPage() {
           </div>
 
           {result && (
-            <div className={`p-3 rounded-lg text-sm ${result.success ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"}`}>
+            <div className={`p-3 rounded-lg text-sm ${result.success ? "bg-green-50 text-green-800" : "bg-danger-soft text-red-800"}`}>
               {result.message}
             </div>
           )}

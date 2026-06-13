@@ -37,21 +37,21 @@ function ChecklistSection({
 }) {
   const [expanded, setExpanded] = useState(true);
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden">
+    <div className="border border-border rounded-lg overflow-hidden">
       <button onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center gap-2 px-3 py-2 bg-gray-50 text-left text-sm font-medium text-gray-700 hover:bg-gray-100">
-        <Icon className="w-4 h-4 text-gray-500" />
+        className="w-full flex items-center gap-2 px-3 py-2 bg-background text-left text-sm font-medium text-foreground hover:bg-neutral-100">
+        <Icon className="w-4 h-4 text-muted-foreground" />
         <span className="flex-1">{title}</span>
-        <span className="text-xs text-gray-400">{checked.size}/{items.length}</span>
-        <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${expanded ? "rotate-180" : ""}`} />
+        <span className="text-xs text-muted-foreground">{checked.size}/{items.length}</span>
+        <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`} />
       </button>
       {expanded && (
         <div className="p-2 grid grid-cols-2 gap-1">
           {items.map((item) => (
-            <label key={item.id} className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-gray-50 cursor-pointer text-sm">
+            <label key={item.id} className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-background cursor-pointer text-sm">
               <input type="checkbox" checked={checked.has(item.id)} onChange={() => onToggle(item.id)}
-                className="rounded border-gray-300 text-impilo-500 focus:ring-impilo-400" />
-              <span className={checked.has(item.id) ? "text-gray-900" : "text-gray-600"}>{item.label}</span>
+                className="rounded border-border text-primary focus:ring-primary/40" />
+              <span className={checked.has(item.id) ? "text-foreground" : "text-muted-foreground"}>{item.label}</span>
             </label>
           ))}
         </div>
@@ -66,9 +66,9 @@ function DropdownField({ label, value, onChange, options, placeholder }: {
 }) {
   return (
     <label className="block">
-      <span className="text-xs font-medium text-gray-600">{label}</span>
+      <span className="text-xs font-medium text-muted-foreground">{label}</span>
       <select value={value} onChange={(e) => onChange(e.target.value)}
-        className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+        className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm">
         <option value="">{placeholder || "Select..."}</option>
         {options.map((o) => <option key={o} value={o}>{o}</option>)}
       </select>
@@ -130,23 +130,23 @@ export function DoctorEncounterForm({ onDataChange }: { onDataChange: (data: Rec
 
   return (
     <div className="space-y-4">
-      <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-        <Stethoscope className="w-4 h-4 text-impilo-500" /> Clinician Encounter Form
+      <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+        <Stethoscope className="w-4 h-4 text-primary" /> Clinician Encounter Form
       </h3>
 
       {/* Chief Complaint */}
       <label className="block">
-        <span className="text-xs font-medium text-gray-600">Chief complaint *</span>
+        <span className="text-xs font-medium text-muted-foreground">Chief complaint *</span>
         <input value={chiefComplaint} onChange={(e) => setChiefComplaint(e.target.value)}
-          className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+          className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
           placeholder="Main reason for visit in patient's own words..." />
       </label>
 
       {/* HPI */}
       <label className="block">
-        <span className="text-xs font-medium text-gray-600">History of presenting illness</span>
+        <span className="text-xs font-medium text-muted-foreground">History of presenting illness</span>
         <textarea value={hpi} onChange={(e) => setHpi(e.target.value)} rows={3}
-          className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+          className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
           placeholder="Onset, duration, severity, associated symptoms, aggravating/relieving factors..." />
       </label>
 
@@ -163,9 +163,9 @@ export function DoctorEncounterForm({ onDataChange }: { onDataChange: (data: Rec
       {/* Clinical Impression */}
       <div className="grid grid-cols-2 gap-3">
         <label className="block">
-          <span className="text-xs font-medium text-gray-600">Clinical impression / diagnosis *</span>
+          <span className="text-xs font-medium text-muted-foreground">Clinical impression / diagnosis *</span>
           <input value={clinicalImpression} onChange={(e) => setClinicalImpression(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
             placeholder="Working diagnosis..." />
         </label>
         <DropdownField label="Severity" value={severity} onChange={setSeverity}
@@ -173,25 +173,25 @@ export function DoctorEncounterForm({ onDataChange }: { onDataChange: (data: Rec
       </div>
 
       <label className="block">
-        <span className="text-xs font-medium text-gray-600">Differential diagnoses</span>
+        <span className="text-xs font-medium text-muted-foreground">Differential diagnoses</span>
         <input value={differentials} onChange={(e) => setDifferentials(e.target.value)}
-          className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+          className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
           placeholder="Comma-separated alternatives..." />
       </label>
 
       {/* Management Plan — structured */}
-      <div className="border border-impilo-200 rounded-lg p-3 bg-impilo-50/30 space-y-3">
-        <h4 className="text-xs font-semibold text-impilo-700 uppercase">Management Plan</h4>
+      <div className="border border-primary/25 rounded-lg p-3 bg-primary-soft/30 space-y-3">
+        <h4 className="text-xs font-semibold text-primary-hover uppercase">Management Plan</h4>
         <label className="block">
-          <span className="text-xs font-medium text-gray-600">Medications to prescribe</span>
+          <span className="text-xs font-medium text-muted-foreground">Medications to prescribe</span>
           <textarea value={planMedications} onChange={(e) => setPlanMedications(e.target.value)} rows={2}
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
             placeholder="Drug, dose, frequency, duration (one per line)..." />
         </label>
         <label className="block">
-          <span className="text-xs font-medium text-gray-600">Investigations to order</span>
+          <span className="text-xs font-medium text-muted-foreground">Investigations to order</span>
           <textarea value={planInvestigations} onChange={(e) => setPlanInvestigations(e.target.value)} rows={2}
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
             placeholder="FBC, U&E, LFTs, X-ray chest PA (one per line)..." />
         </label>
         <div className="grid grid-cols-2 gap-3">
@@ -204,9 +204,9 @@ export function DoctorEncounterForm({ onDataChange }: { onDataChange: (data: Rec
 
       {/* Additional notes — free text fallback */}
       <label className="block">
-        <span className="text-xs font-medium text-gray-600">Additional notes (optional)</span>
+        <span className="text-xs font-medium text-muted-foreground">Additional notes (optional)</span>
         <textarea value={additionalNotes} onChange={(e) => setAdditionalNotes(e.target.value)} rows={2}
-          className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-500"
+          className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm text-muted-foreground"
           placeholder="Any other observations..." />
       </label>
     </div>
@@ -256,7 +256,7 @@ export function NurseEncounterForm({ onDataChange }: { onDataChange: (data: Reco
 
   return (
     <div className="space-y-4">
-      <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+      <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
         <Heart className="w-4 h-4 text-pink-500" /> Nursing Assessment & Care
       </h3>
 
@@ -276,9 +276,9 @@ export function NurseEncounterForm({ onDataChange }: { onDataChange: (data: Reco
         onToggle={(id) => toggle(interventionsChecked, setInterventionsChecked, id)} />
 
       <label className="block">
-        <span className="text-xs font-medium text-gray-600">Handover / shift notes</span>
+        <span className="text-xs font-medium text-muted-foreground">Handover / shift notes</span>
         <textarea value={handoverNotes} onChange={(e) => setHandoverNotes(e.target.value)} rows={3}
-          className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+          className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
           placeholder="Key points for the next shift..." />
       </label>
     </div>
@@ -314,7 +314,7 @@ export function PharmacistEncounterForm({ onDataChange }: { onDataChange: (data:
 
   return (
     <div className="space-y-4">
-      <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+      <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
         <Pill className="w-4 h-4 text-green-500" /> Pharmacist Verification & Counselling
       </h3>
 
@@ -327,17 +327,17 @@ export function PharmacistEncounterForm({ onDataChange }: { onDataChange: (data:
 
       {interventionType && interventionType !== "None" && (
         <label className="block">
-          <span className="text-xs font-medium text-gray-600">Intervention details</span>
+          <span className="text-xs font-medium text-muted-foreground">Intervention details</span>
           <textarea value={clinicalIntervention} onChange={(e) => setClinicalIntervention(e.target.value)} rows={2}
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
             placeholder="Describe the intervention and outcome..." />
         </label>
       )}
 
       <label className="block">
-        <span className="text-xs font-medium text-gray-600">Substitution notes</span>
+        <span className="text-xs font-medium text-muted-foreground">Substitution notes</span>
         <input value={substitution} onChange={(e) => setSubstitution(e.target.value)}
-          className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+          className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
           placeholder="If generic/therapeutic substitution was made..." />
       </label>
     </div>
@@ -379,25 +379,25 @@ export function MidwifeEncounterForm({ onDataChange }: { onDataChange: (data: Re
 
   return (
     <div className="space-y-4">
-      <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+      <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
         <Baby className="w-4 h-4 text-pink-500" /> Antenatal / Midwifery Assessment
       </h3>
 
       <div className="grid grid-cols-3 gap-3">
         <label className="block">
-          <span className="text-xs font-medium text-gray-600">Gestational age (weeks)</span>
+          <span className="text-xs font-medium text-muted-foreground">Gestational age (weeks)</span>
           <input type="number" value={gestationalAge} onChange={(e) => setGestationalAge(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="e.g. 28" />
+            className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" placeholder="e.g. 28" />
         </label>
         <label className="block">
-          <span className="text-xs font-medium text-gray-600">Gravida</span>
+          <span className="text-xs font-medium text-muted-foreground">Gravida</span>
           <input type="number" value={gravida} onChange={(e) => setGravida(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="G" />
+            className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" placeholder="G" />
         </label>
         <label className="block">
-          <span className="text-xs font-medium text-gray-600">Para</span>
+          <span className="text-xs font-medium text-muted-foreground">Para</span>
           <input type="number" value={para} onChange={(e) => setPara(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="P" />
+            className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" placeholder="P" />
         </label>
       </div>
 

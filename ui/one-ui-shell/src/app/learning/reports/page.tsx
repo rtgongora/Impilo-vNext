@@ -19,9 +19,9 @@ export default function LearningReportsHomePage() {
             ["In progress", overview.inProgress],
             ["Completed", overview.completed],
           ].map(([label, value]) => (
-            <div key={String(label)} className="rounded border border-gray-200 bg-white p-3">
-              <p className="text-xs text-gray-500">{String(label)}</p>
-              <p className="text-xl font-semibold text-gray-900">{String(value ?? 0)}</p>
+            <div key={String(label)} className="rounded border border-border bg-card p-3">
+              <p className="text-xs text-muted-foreground">{String(label)}</p>
+              <p className="text-xl font-semibold text-foreground">{String(value ?? 0)}</p>
             </div>
           ))}
         </div>
@@ -32,7 +32,7 @@ export default function LearningReportsHomePage() {
             ["/learning/reports/overdue", "Overdue learning"],
             ["/learning/reports/assessments", "Assessment performance"],
           ].map(([href, label]) => (
-            <Link key={String(href)} href={String(href)} className="rounded border border-gray-300 px-3 py-1.5 text-gray-700">
+            <Link key={String(href)} href={String(href)} className="rounded border border-border px-3 py-1.5 text-foreground">
               {String(label)}
             </Link>
           ))}

@@ -14,11 +14,11 @@ import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { apiClient } from "@/lib/api-client";
 
 const SERVICE_TYPE_STYLES: Record<string, string> = {
-  OPD: "bg-impilo-100 text-impilo-600",
-  EMERGENCY: "bg-red-100 text-red-700",
+  OPD: "bg-primary-soft text-primary",
+  EMERGENCY: "bg-red-100 text-danger",
   PHARMACY: "bg-green-100 text-green-700",
-  LABORATORY: "bg-amber-100 text-amber-700",
-  GENERAL: "bg-gray-100 text-gray-600",
+  LABORATORY: "bg-amber-100 text-warning-foreground",
+  GENERAL: "bg-neutral-100 text-muted-foreground",
 };
 
 export default function AdminQueuesPage() {
@@ -36,19 +36,19 @@ export default function AdminQueuesPage() {
     <AppLayout>
       <PageShell title="Queue Configuration" subtitle="Service types, SLA targets, and operating hours">
         <div className="mb-4">
-          <Link href="/admin" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
+          <Link href="/admin" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-4 h-4" /> Back to Admin
           </Link>
         </div>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>
         ) : definitions.length === 0 ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <Settings className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-400 text-sm">No queue definitions configured.</p>
+          <div className="bg-card rounded-lg border border-border p-12 text-center">
+            <Settings className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground text-sm">No queue definitions configured.</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -56,21 +56,21 @@ export default function AdminQueuesPage() {
               const a = def.attributes;
               const serviceStyle = SERVICE_TYPE_STYLES[(a.serviceType as string)] ?? SERVICE_TYPE_STYLES.GENERAL;
               return (
-                <div key={def.id} className="bg-white rounded-lg border border-gray-200 p-5">
+                <div key={def.id} className="bg-card rounded-lg border border-border p-5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <Users className="w-5 h-5 text-gray-400" />
+                      <Users className="w-5 h-5 text-muted-foreground" />
                       <div>
-                        <p className="text-sm font-medium text-gray-900">{a.name as string}</p>
+                        <p className="text-sm font-medium text-foreground">{a.name as string}</p>
                         <div className="flex items-center gap-2 mt-1">
                           <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${serviceStyle}`}>
                             {a.serviceType as string}
                           </span>
-                          <span className="text-xs text-gray-500">Type: {a.queueType as string}</span>
+                          <span className="text-xs text-muted-foreground">Type: {a.queueType as string}</span>
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <Clock className="w-3 h-3" />
                         <span>SLA: {a.slaTargetMinutes as number}min</span>

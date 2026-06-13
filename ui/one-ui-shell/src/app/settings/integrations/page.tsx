@@ -45,8 +45,8 @@ function useIntegrations() {
 
 const STATUS_STYLES: Record<string, string> = {
   CONNECTED: "bg-green-100 text-green-700",
-  DISCONNECTED: "bg-gray-100 text-gray-600",
-  ERROR: "bg-red-100 text-red-700",
+  DISCONNECTED: "bg-neutral-100 text-muted-foreground",
+  ERROR: "bg-red-100 text-danger",
 };
 
 const STATUS_ICONS: Record<string, typeof CheckCircle> = {
@@ -78,7 +78,7 @@ export default function IntegrationsPage() {
         <div className="mb-4">
           <Link
             href="/settings"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to settings
@@ -86,25 +86,25 @@ export default function IntegrationsPage() {
         </div>
 
         {error ? (
-          <div className="bg-white rounded-lg border border-red-200 p-12 text-center">
+          <div className="bg-card rounded-lg border border-danger/28 p-12 text-center">
             <AlertCircle className="w-10 h-10 text-red-300 mx-auto mb-3" />
             <p className="text-red-600 text-sm">Failed to load integrations</p>
           </div>
         ) : isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading integrations...</span>
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading integrations...</span>
           </div>
         ) : integrations.length === 0 ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <Plug className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-400 text-sm">No integrations configured</p>
+          <div className="bg-card rounded-lg border border-border p-12 text-center">
+            <Plug className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground text-sm">No integrations configured</p>
           </div>
         ) : (
           <div className="space-y-4 max-w-3xl">
             {integrations.map((integration) => {
               const statusStyle =
-                STATUS_STYLES[integration.attributes.status] ?? "bg-gray-100 text-gray-600";
+                STATUS_STYLES[integration.attributes.status] ?? "bg-neutral-100 text-muted-foreground";
               const StatusIcon =
                 STATUS_ICONS[integration.attributes.status] ?? AlertCircle;
               const isConnected = integration.attributes.status === "CONNECTED";
@@ -112,18 +112,18 @@ export default function IntegrationsPage() {
               return (
                 <div
                   key={integration.id}
-                  className="bg-white rounded-lg border border-gray-200 p-5"
+                  className="bg-card rounded-lg border border-border p-5"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-lg bg-gray-100 text-gray-500 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-lg bg-neutral-100 text-muted-foreground flex items-center justify-center">
                         <Plug className="w-5 h-5" />
                       </div>
                       <div>
-                        <h3 className="text-sm font-medium text-gray-900">
+                        <h3 className="text-sm font-medium text-foreground">
                           {integration.attributes.name}
                         </h3>
-                        <p className="text-xs text-gray-500 mt-0.5">
+                        <p className="text-xs text-muted-foreground mt-0.5">
                           {integration.attributes.description}
                         </p>
                         <div className="flex items-center gap-2 mt-1.5">
@@ -134,12 +134,12 @@ export default function IntegrationsPage() {
                             {integration.attributes.status}
                           </span>
                           {isConnected && integration.attributes.connectedAt && (
-                            <span className="text-xs text-gray-400">
+                            <span className="text-xs text-muted-foreground">
                               Connected{" "}
                               {new Date(integration.attributes.connectedAt).toLocaleDateString()}
                             </span>
                           )}
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs text-muted-foreground">
                             {integration.attributes.provider}
                           </span>
                         </div>
@@ -149,7 +149,7 @@ export default function IntegrationsPage() {
                       <button
                         onClick={() => disconnectIntegration.mutate(integration.id)}
                         disabled={disconnectIntegration.isPending}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-danger bg-danger-soft rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50"
                       >
                         <Unplug className="w-3.5 h-3.5" />
                         Disconnect

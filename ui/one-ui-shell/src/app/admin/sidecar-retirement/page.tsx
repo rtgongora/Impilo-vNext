@@ -17,10 +17,10 @@ const STATUS_ORDER: SidecarRetirementStatus[] = [
 ];
 
 const STATUS_STYLES: Record<SidecarRetirementStatus, string> = {
-  "absorbed into Experience": "border-emerald-200 bg-emerald-50 text-emerald-900",
+  "absorbed into Experience": "border-success/25 bg-success-soft text-primary-hover",
   "partially absorbed into Experience": "border-cyan-200 bg-cyan-50 text-cyan-950",
-  "retired sidecar path": "border-slate-200 bg-slate-50 text-slate-900",
-  "blocked by missing backend contract": "border-amber-200 bg-amber-50 text-amber-950",
+  "retired sidecar path": "border-border bg-background text-foreground",
+  "blocked by missing backend contract": "border-warning/35 bg-warning-soft text-warning-foreground",
 };
 
 export default function SidecarRetirementPage() {
@@ -34,24 +34,24 @@ export default function SidecarRetirementPage() {
           <div className="flex flex-wrap items-center gap-3">
             <Link
               href="/admin/integration-status"
-              className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+              className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
             >
               <ArrowLeft className="h-4 w-4" />
               Integration status
             </Link>
             <Link
               href="/finance/commerce-integrations"
-              className="inline-flex items-center gap-1 text-sm text-impilo-600 hover:text-impilo-700"
+              className="inline-flex items-center gap-1 text-sm text-primary hover:text-primary-hover"
             >
               Commerce & payer stack
             </Link>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-700 shadow-sm">
+          <div className="rounded-2xl border border-border bg-card p-5 text-sm text-foreground shadow-sm">
             <div className="flex items-start gap-3">
-              <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-slate-500" />
+              <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
               <div>
-                <p className="font-semibold text-slate-900">Acceptance rule</p>
+                <p className="font-semibold text-foreground">Acceptance rule</p>
                 <p className="mt-1">
                   Impilo delivers one sign-in and one Experience layer. A sidecar is only retired when the operator can
                   complete the same real task in Experience or the ledger explicitly records the backend contract still
@@ -79,26 +79,26 @@ export default function SidecarRetirementPage() {
                   </p>
                 </div>
 
-                <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div className="overflow-x-auto rounded-2xl border border-border bg-card shadow-sm">
                   <table className="w-full text-sm">
-                    <thead className="bg-slate-50 text-left">
+                    <thead className="bg-background text-left">
                       <tr>
-                        <th className="px-4 py-3 font-medium text-slate-700">Capability</th>
-                        <th className="px-4 py-3 font-medium text-slate-700">Old UI path</th>
-                        <th className="px-4 py-3 font-medium text-slate-700">Experience path</th>
-                        <th className="px-4 py-3 font-medium text-slate-700">Contract blocker</th>
+                        <th className="px-4 py-3 font-medium text-foreground">Capability</th>
+                        <th className="px-4 py-3 font-medium text-foreground">Old UI path</th>
+                        <th className="px-4 py-3 font-medium text-foreground">Experience path</th>
+                        <th className="px-4 py-3 font-medium text-foreground">Contract blocker</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {entries.map((entry) => (
                         <tr key={`${entry.oldUiPath}-${entry.capability}`}>
                           <td className="px-4 py-3 align-top">
-                            <p className="font-medium text-slate-900">{entry.capability}</p>
-                            <p className="mt-1 text-xs text-slate-500">{entry.notes}</p>
+                            <p className="font-medium text-foreground">{entry.capability}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">{entry.notes}</p>
                           </td>
-                          <td className="px-4 py-3 align-top font-mono text-xs text-slate-600">{entry.oldUiPath}</td>
-                          <td className="px-4 py-3 align-top font-mono text-xs text-slate-600">{entry.newExperiencePath}</td>
-                          <td className="px-4 py-3 align-top text-xs text-slate-600">
+                          <td className="px-4 py-3 align-top font-mono text-xs text-muted-foreground">{entry.oldUiPath}</td>
+                          <td className="px-4 py-3 align-top font-mono text-xs text-muted-foreground">{entry.newExperiencePath}</td>
+                          <td className="px-4 py-3 align-top text-xs text-muted-foreground">
                             {entry.blockerContract ?? "None - Experience route is real and accepted."}
                           </td>
                         </tr>

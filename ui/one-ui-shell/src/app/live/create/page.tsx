@@ -60,31 +60,31 @@ export default function LiveCreatePage() {
         icon={<CalendarPlus className="h-6 w-6" />}
       >
         <div className="grid lg:grid-cols-3 gap-6">
-          <form onSubmit={handleSubmit} className="lg:col-span-2 space-y-4 rounded-2xl border border-gray-200 bg-white p-5">
+          <form onSubmit={handleSubmit} className="lg:col-span-2 space-y-4 rounded-2xl border border-border bg-card p-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+              <label className="block text-sm font-medium text-foreground mb-1">Title</label>
               <input
                 required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <label className="block text-sm font-medium text-foreground mb-1">Description</label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm min-h-[80px]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm min-h-[80px]"
               />
             </div>
             <div className="grid sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Impilo Live mode</label>
+                <label className="block text-sm font-medium text-foreground mb-1">Impilo Live mode</label>
                 <select
                   value={mode}
                   onChange={(e) => setMode(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                 >
                   {[
                     "PROFESSIONAL_MEETING",
@@ -100,11 +100,11 @@ export default function LiveCreatePage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Owning service</label>
+                <label className="block text-sm font-medium text-foreground mb-1">Owning service</label>
                 <select
                   value={owningService}
                   onChange={(e) => setOwningService(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                 >
                   {[
                     "STANDALONE_IMPILO_LIVE",
@@ -121,11 +121,11 @@ export default function LiveCreatePage() {
             </div>
             <div className="grid sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Event type</label>
+                <label className="block text-sm font-medium text-foreground mb-1">Event type</label>
                 <select
                   value={eventType}
                   onChange={(e) => setEventType(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                 >
                   {["WEBINAR", "BROADCAST", "TRAINING", "TOWN_HALL", "COMMUNITY_TALK"].map((t) => (
                     <option key={t} value={t}>
@@ -135,11 +135,11 @@ export default function LiveCreatePage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Audience context</label>
+                <label className="block text-sm font-medium text-foreground mb-1">Audience context</label>
                 <select
                   value={contextType}
                   onChange={(e) => setContextType(e.target.value as typeof contextType)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                 >
                   <option value="PROFESSIONAL">Professional</option>
                   <option value="CITIZEN">Citizen</option>
@@ -149,33 +149,33 @@ export default function LiveCreatePage() {
             </div>
             <div className="grid sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Start</label>
+                <label className="block text-sm font-medium text-foreground mb-1">Start</label>
                 <input
                   type="datetime-local"
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">End</label>
+                <label className="block text-sm font-medium text-foreground mb-1">End</label>
                 <input
                   type="datetime-local"
                   value={endTime}
                   onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                 />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Agenda</label>
+              <label className="block text-sm font-medium text-foreground mb-1">Agenda</label>
               <textarea
                 value={agenda}
                 onChange={(e) => setAgenda(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm min-h-[72px]"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm min-h-[72px]"
               />
             </div>
-            <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+            <label className="inline-flex items-center gap-2 text-sm text-foreground">
               <input
                 type="checkbox"
                 checked={cpdEnabled}
@@ -185,14 +185,14 @@ export default function LiveCreatePage() {
             </label>
             {cpdEnabled ? (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">CPD points</label>
+                <label className="block text-sm font-medium text-foreground mb-1">CPD points</label>
                 <input
                   type="number"
                   min="0"
                   step="0.5"
                   value={cpdPoints}
                   onChange={(e) => setCpdPoints(e.target.value)}
-                  className="w-32 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  className="w-32 rounded-lg border border-border px-3 py-2 text-sm"
                 />
               </div>
             ) : null}

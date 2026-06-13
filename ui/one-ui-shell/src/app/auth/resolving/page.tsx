@@ -130,16 +130,16 @@ export default function ResolvingPage() {
   }, [isError, hasNavigated, navigate]);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-gray-50 to-white px-6">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-gray-50 to-card px-6">
       <div className="flex flex-col items-center max-w-sm w-full">
         <ImpiloBrandLogo variant="hero" />
 
-        <h1 className="mt-8 text-lg font-semibold text-gray-900">
+        <h1 className="mt-8 text-lg font-semibold text-foreground">
           Preparing your experience...
         </h1>
 
         <div className="mt-6">
-          <Loader2 className="h-8 w-8 text-impilo-500 animate-spin" />
+          <Loader2 className="h-8 w-8 text-primary animate-spin" />
         </div>
 
         <div className="mt-8 w-full space-y-3">
@@ -151,18 +151,18 @@ export default function ResolvingPage() {
               {step.status === "done" ? (
                 <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
               ) : step.status === "active" ? (
-                <Loader2 className="h-4 w-4 text-impilo-500 animate-spin shrink-0" />
+                <Loader2 className="h-4 w-4 text-primary animate-spin shrink-0" />
               ) : (
-                <div className="h-4 w-4 rounded-full border-2 border-gray-200 shrink-0" />
+                <div className="h-4 w-4 rounded-full border-2 border-border shrink-0" />
               )}
               <span
                 className={[
                   "text-sm transition-colors",
                   step.status === "done"
-                    ? "text-gray-900 font-medium"
+                    ? "text-foreground font-medium"
                     : step.status === "active"
-                      ? "text-gray-700"
-                      : "text-gray-400",
+                      ? "text-foreground"
+                      : "text-muted-foreground",
                 ].join(" ")}
               >
                 {step.label}
@@ -172,14 +172,14 @@ export default function ResolvingPage() {
         </div>
 
         {showProfessionalNotice && (
-          <div className="mt-6 w-full rounded-xl border border-impilo-200 bg-impilo-50 p-4 animate-in fade-in duration-300">
+          <div className="mt-6 w-full rounded-xl border border-primary/25 bg-primary-soft p-4 animate-in fade-in duration-300">
             <div className="flex items-start gap-3">
-              <Stethoscope className="h-5 w-5 text-impilo-600 shrink-0 mt-0.5" />
+              <Stethoscope className="h-5 w-5 text-primary shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-semibold text-impilo-800">
                   Professional capability detected
                 </p>
-                <p className="mt-1 text-xs text-impilo-600 leading-relaxed">
+                <p className="mt-1 text-xs text-primary leading-relaxed">
                   {linkedAttrs?.providerId
                     ? `Provider ID linked: ${linkedAttrs.providerId}`
                     : "Staff profile linked"}
@@ -191,7 +191,7 @@ export default function ResolvingPage() {
         )}
 
         {user && (
-          <p className="mt-6 text-xs text-gray-400">
+          <p className="mt-6 text-xs text-muted-foreground">
             Welcome back, {user.displayName || user.email}
           </p>
         )}

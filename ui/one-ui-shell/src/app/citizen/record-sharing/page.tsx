@@ -14,11 +14,11 @@ const STATUS_COLOURS: Record<string, string> = {
   ACTIVE: "bg-green-100 text-green-800",
   PENDING: "bg-yellow-100 text-yellow-800",
   REVOKED: "bg-red-100 text-red-800",
-  EXPIRED: "bg-gray-100 text-gray-600",
+  EXPIRED: "bg-neutral-100 text-muted-foreground",
 };
 
 function StatusBadge({ status }: { status: string }) {
-  const cls = STATUS_COLOURS[status] ?? "bg-gray-100 text-gray-600";
+  const cls = STATUS_COLOURS[status] ?? "bg-neutral-100 text-muted-foreground";
   return (
     <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${cls}`}>{status}</span>
   );
@@ -29,27 +29,27 @@ function ContributionsPanel({ healthId, shareId, onClose }: { healthId: string; 
   const contributions = data?.data ?? [];
 
   return (
-    <div className="mt-3 rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm">
+    <div className="mt-3 rounded-lg border border-blue-100 bg-info-soft p-4 text-sm">
       <div className="mb-2 flex items-center justify-between">
         <span className="font-medium text-blue-900">Contributions for share {shareId}</span>
-        <button type="button" onClick={onClose} className="text-xs text-blue-700 underline">
+        <button type="button" onClick={onClose} className="text-xs text-primary-hover underline">
           Close
         </button>
       </div>
       {isLoading ? (
-        <p className="text-blue-700">Loading…</p>
+        <p className="text-primary-hover">Loading…</p>
       ) : isError ? (
-        <p className="text-red-700">Failed to load contributions.</p>
+        <p className="text-danger">Failed to load contributions.</p>
       ) : contributions.length === 0 ? (
-        <p className="text-gray-600">No contributions yet.</p>
+        <p className="text-muted-foreground">No contributions yet.</p>
       ) : (
         <ul className="divide-y divide-blue-100">
           {contributions.map((c) => (
             <li key={c.id} className="py-2">
               <span className="font-medium">{c.contributorName}</span>
-              <span className="ml-2 text-gray-600">{c.type}</span>
-              <p className="mt-0.5 text-xs text-gray-500">{c.contentSummary}</p>
-              <p className="mt-0.5 text-xs text-gray-400">{c.timestamp}</p>
+              <span className="ml-2 text-muted-foreground">{c.type}</span>
+              <p className="mt-0.5 text-xs text-muted-foreground">{c.contentSummary}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">{c.timestamp}</p>
             </li>
           ))}
         </ul>
@@ -72,20 +72,20 @@ function ShareCard({
   const [showContributions, setShowContributions] = useState(false);
 
   return (
-    <li className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+    <li className="rounded-lg border border-border bg-card p-4 shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="font-medium text-gray-900 text-sm">#{share.id}</span>
+            <span className="font-medium text-foreground text-sm">#{share.id}</span>
             <StatusBadge status={share.status} />
           </div>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             <span className="font-medium">Purpose:</span> {share.purpose}
           </p>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             <span className="font-medium">Recipient:</span> {share.recipientName}
           </p>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-muted-foreground">
             Created: {share.createdAt} · Expires: {share.expiresAt}
           </p>
         </div>
@@ -103,7 +103,7 @@ function ShareCard({
           <button
             type="button"
             onClick={() => setShowContributions((v) => !v)}
-            className="rounded bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-200"
+            className="rounded bg-neutral-100 px-3 py-1 text-xs font-medium text-foreground hover:bg-neutral-100"
           >
             {showContributions ? "Hide" : "Contributions"}
           </button>
@@ -139,7 +139,7 @@ export default function CitizenRecordSharingPage() {
 
   if (!healthId) {
     return (
-      <div className="max-w-xl p-6 text-sm text-gray-700">
+      <div className="max-w-xl p-6 text-sm text-foreground">
         Sign in with a profile that has a Health ID to manage record sharing.
       </div>
     );
@@ -176,8 +176,8 @@ export default function CitizenRecordSharingPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-8 p-6">
       <div>
-        <h1 className="text-xl font-semibold text-gray-900">Share my record</h1>
-        <p className="mt-1 text-sm text-gray-600">
+        <h1 className="text-xl font-semibold text-foreground">Share my record</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Grant a governed, time-bound share of your health record to a provider or facility. Access is
           revocable and policy-controlled.
         </p>
@@ -186,14 +186,14 @@ export default function CitizenRecordSharingPage() {
       {/* Create share form */}
       <form
         onSubmit={handleCreate}
-        className="space-y-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
+        className="space-y-4 rounded-lg border border-border bg-card p-4 shadow-sm"
       >
-        <h2 className="text-base font-medium text-gray-900">Create a share</h2>
+        <h2 className="text-base font-medium text-foreground">Create a share</h2>
 
-        <label className="block text-sm font-medium text-gray-800">
+        <label className="block text-sm font-medium text-foreground">
           Scope / purpose
           <select
-            className="mt-1 w-full rounded border border-gray-300 px-2 py-1 text-sm"
+            className="mt-1 w-full rounded border border-border px-2 py-1 text-sm"
             value={purpose}
             onChange={(e) => setPurpose(e.target.value)}
           >
@@ -204,29 +204,29 @@ export default function CitizenRecordSharingPage() {
           </select>
         </label>
 
-        <label className="block text-sm font-medium text-gray-800">
+        <label className="block text-sm font-medium text-foreground">
           Recipient ID
           <input
             type="text"
             required
-            className="mt-1 w-full rounded border border-gray-300 px-2 py-1 text-sm"
+            className="mt-1 w-full rounded border border-border px-2 py-1 text-sm"
             value={recipientId}
             onChange={(e) => setRecipientId(e.target.value)}
             placeholder="Provider or facility ID"
           />
         </label>
 
-        <label className="block text-sm font-medium text-gray-800">
+        <label className="block text-sm font-medium text-foreground">
           Expires at (optional)
           <input
             type="datetime-local"
-            className="mt-1 w-full rounded border border-gray-300 px-2 py-1 text-sm"
+            className="mt-1 w-full rounded border border-border px-2 py-1 text-sm"
             value={expiresAt}
             onChange={(e) => setExpiresAt(e.target.value)}
           />
         </label>
 
-        {formError ? <p className="text-sm text-red-700">{formError}</p> : null}
+        {formError ? <p className="text-sm text-danger">{formError}</p> : null}
 
         <button
           type="submit"
@@ -238,7 +238,7 @@ export default function CitizenRecordSharingPage() {
       </form>
 
       {createSuccess ? (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
+        <div className="rounded-lg border border-success/25 bg-success-soft p-4 text-sm text-emerald-950">
           <p className="font-medium">Share created. Copy these values — OTP is not stored.</p>
           {Object.entries(createSuccess).map(([k, v]) => (
             <p key={k} className="mt-1 break-all">
@@ -248,7 +248,7 @@ export default function CitizenRecordSharingPage() {
           <button
             type="button"
             onClick={() => setCreateSuccess(null)}
-            className="mt-2 text-xs text-emerald-700 underline"
+            className="mt-2 text-xs text-primary-hover underline"
           >
             Dismiss
           </button>
@@ -258,22 +258,22 @@ export default function CitizenRecordSharingPage() {
       {/* Shares list */}
       <div>
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-medium text-gray-900">My shares</h2>
+          <h2 className="text-lg font-medium text-foreground">My shares</h2>
           <button
             type="button"
             onClick={() => void refetch()}
-            className="text-sm text-blue-700 underline"
+            className="text-sm text-primary-hover underline"
           >
             Refresh
           </button>
         </div>
 
         {isLoading ? (
-          <p className="text-sm text-gray-600">Loading…</p>
+          <p className="text-sm text-muted-foreground">Loading…</p>
         ) : isError ? (
-          <p className="text-sm text-red-700">Failed to load shares.</p>
+          <p className="text-sm text-danger">Failed to load shares.</p>
         ) : shares.length === 0 ? (
-          <p className="text-sm text-gray-600 rounded-lg border border-gray-200 bg-white p-4">
+          <p className="text-sm text-muted-foreground rounded-lg border border-border bg-card p-4">
             No shares yet.
           </p>
         ) : (

@@ -63,7 +63,7 @@ export function OrganizationPlaneContextBar({ preferStore = false }: Organizatio
         </div>
         <Link
           href="/organization-admin"
-          className="shrink-0 rounded-lg border border-violet-400/80 bg-white/80 px-3 py-1.5 text-xs font-medium text-violet-950 hover:bg-white"
+          className="shrink-0 rounded-lg border border-violet-400/80 bg-card/80 px-3 py-1.5 text-xs font-medium text-violet-950 hover:bg-card"
         >
           Org admin home
         </Link>

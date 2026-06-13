@@ -101,20 +101,20 @@ export function PatientJourneyContextPanel({
 
   if (variant === "compact") {
     return (
-      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700">
-        <Route className="h-3.5 w-3.5 shrink-0 text-impilo-500" />
-        <span className="font-semibold text-slate-800">Journey</span>
-        <span className="text-slate-500">
+      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs text-foreground">
+        <Route className="h-3.5 w-3.5 shrink-0 text-primary" />
+        <span className="font-semibold text-foreground">Journey</span>
+        <span className="text-muted-foreground">
           {facility?.name ?? "Facility"}
           {workspace?.name ? ` · ${workspace.name}` : ""}
         </span>
         {queueWait && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-800">
+          <span className="inline-flex items-center gap-1 rounded-full bg-warning-soft px-2 py-0.5 text-[10px] font-medium text-warning-foreground">
             <Clock className="h-3 w-3" />
             Queue {queueWait}
           </span>
         )}
-        <Link href={nextAction.href} className="ml-auto inline-flex items-center gap-1 font-medium text-impilo-600 hover:text-impilo-800">
+        <Link href={nextAction.href} className="ml-auto inline-flex items-center gap-1 font-medium text-primary hover:text-impilo-800">
           {nextAction.label}
           <ArrowRight className="h-3 w-3" />
         </Link>
@@ -123,17 +123,17 @@ export function PatientJourneyContextPanel({
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white via-slate-50/80 to-impilo-50/40 p-5 shadow-sm">
+    <section className="rounded-2xl border border-border bg-gradient-to-br from-white via-slate-50/80 to-impilo-50/40 p-5 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Patient journey context</p>
-          <h2 className="mt-1 text-base font-semibold text-slate-900">Operational picture (PCT-aligned)</h2>
-          <p className="mt-1 max-w-2xl text-xs text-slate-600">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Patient journey context</p>
+          <h2 className="mt-1 text-base font-semibold text-foreground">Operational picture (PCT-aligned)</h2>
+          <p className="mt-1 max-w-2xl text-xs text-muted-foreground">
             Queue, encounter, referral, telemedicine, admission, and lab data are read from the Experience BFF. When PCT is online, the same
             patient identifiers underpin journey lifecycle upstream.
           </p>
         </div>
-        <div className="text-right text-[11px] text-slate-500">
+        <div className="text-right text-[11px] text-muted-foreground">
           <div className="inline-flex items-center gap-1">
             <MapPin className="h-3.5 w-3.5" />
             {facility?.name ?? "No facility selected"}
@@ -144,56 +144,56 @@ export function PatientJourneyContextPanel({
       </div>
 
       {!hasAnySignal ? (
-        <p className="mt-4 rounded-lg border border-dashed border-slate-200 bg-white/80 px-3 py-3 text-sm text-slate-600">
+        <p className="mt-4 rounded-lg border border-dashed border-border bg-card/80 px-3 py-3 text-sm text-muted-foreground">
           No active queue row, open encounter, referrals, teleconsults, admission, or outstanding lab work surfaced for this patient in the
           current facility context. This is an honest empty state — not a simulated journey.
         </p>
       ) : (
         <dl className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="rounded-xl border border-white/70 bg-white/90 p-3">
-            <dt className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+          <div className="rounded-xl border border-white/70 bg-card/90 p-3">
+            <dt className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
               <Activity className="h-3.5 w-3.5" />
               Encounter
             </dt>
-            <dd className="mt-1 text-sm text-slate-900">
+            <dd className="mt-1 text-sm text-foreground">
               {activeEncounter ? (
                 <>
                   <span className="font-medium">{activeEncounter.attributes.encounterType}</span>{" "}
-                  <span className="text-slate-500">({activeEncounter.attributes.status})</span>
+                  <span className="text-muted-foreground">({activeEncounter.attributes.status})</span>
                   <div className="mt-2">
                     <Link
                       href={`/ehr/${patientId}/encounter/${activeEncounter.id}`}
-                      className="text-xs font-medium text-impilo-600 hover:text-impilo-800"
+                      className="text-xs font-medium text-primary hover:text-impilo-800"
                     >
                       Open encounter workspace
                     </Link>
                   </div>
                 </>
               ) : (
-                <span className="text-slate-500">No active encounter</span>
+                <span className="text-muted-foreground">No active encounter</span>
               )}
             </dd>
           </div>
 
-          <div className="rounded-xl border border-white/70 bg-white/90 p-3">
-            <dt className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+          <div className="rounded-xl border border-white/70 bg-card/90 p-3">
+            <dt className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
               <Clock className="h-3.5 w-3.5" />
               Queue / SLA
             </dt>
-            <dd className="mt-1 text-sm text-slate-900">
+            <dd className="mt-1 text-sm text-foreground">
               {queueRows.length === 0 ? (
-                <span className="text-slate-500">Not on facility queue</span>
+                <span className="text-muted-foreground">Not on facility queue</span>
               ) : (
                 <>
                   {queueRows.map((q) => (
-                    <div key={q.id} className="text-xs text-slate-700">
+                    <div key={q.id} className="text-xs text-foreground">
                       <span className="font-medium">{q.attributes.status}</span>
                       {getQueueQueuedAt(q) ? (
-                        <span className="text-slate-500"> · waiting {formatQueueWaitTime(getQueueQueuedAt(q))}</span>
+                        <span className="text-muted-foreground"> · waiting {formatQueueWaitTime(getQueueQueuedAt(q))}</span>
                       ) : null}
                     </div>
                   ))}
-                  <Link href="/queue" className="mt-2 inline-block text-xs font-medium text-impilo-600 hover:text-impilo-800">
+                  <Link href="/queue" className="mt-2 inline-block text-xs font-medium text-primary hover:text-impilo-800">
                     Open queue board
                   </Link>
                 </>
@@ -201,19 +201,19 @@ export function PatientJourneyContextPanel({
             </dd>
           </div>
 
-          <div className="rounded-xl border border-white/70 bg-white/90 p-3">
-            <dt className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+          <div className="rounded-xl border border-white/70 bg-card/90 p-3">
+            <dt className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
               <Users className="h-3.5 w-3.5" />
               Referrals / tasks
             </dt>
-            <dd className="mt-1 text-sm text-slate-900">
+            <dd className="mt-1 text-sm text-foreground">
               {openReferrals.length === 0 ? (
-                <span className="text-slate-500">No open referrals</span>
+                <span className="text-muted-foreground">No open referrals</span>
               ) : (
                 <>
                   <span className="font-medium">{openReferrals.length}</span> open
                   <div className="mt-2">
-                    <Link href={`/ehr/${patientId}/consults`} className="text-xs font-medium text-impilo-600 hover:text-impilo-800">
+                    <Link href={`/ehr/${patientId}/consults`} className="text-xs font-medium text-primary hover:text-impilo-800">
                       Consults &amp; referrals
                     </Link>
                   </div>
@@ -222,19 +222,19 @@ export function PatientJourneyContextPanel({
             </dd>
           </div>
 
-          <div className="rounded-xl border border-white/70 bg-white/90 p-3">
-            <dt className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+          <div className="rounded-xl border border-white/70 bg-card/90 p-3">
+            <dt className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
               <Video className="h-3.5 w-3.5" />
               Telemedicine
             </dt>
-            <dd className="mt-1 text-sm text-slate-900">
+            <dd className="mt-1 text-sm text-foreground">
               {openTele.length === 0 ? (
-                <span className="text-slate-500">No scheduled or live sessions</span>
+                <span className="text-muted-foreground">No scheduled or live sessions</span>
               ) : (
                 <>
                   <span className="font-medium">{openTele.length}</span> active / scheduled
                   <div className="mt-2">
-                    <Link href={`/telemedicine?patientId=${encodeURIComponent(patientId)}`} className="text-xs font-medium text-impilo-600 hover:text-impilo-800">
+                    <Link href={`/telemedicine?patientId=${encodeURIComponent(patientId)}`} className="text-xs font-medium text-primary hover:text-impilo-800">
                       Telemedicine hub
                     </Link>
                   </div>
@@ -243,30 +243,30 @@ export function PatientJourneyContextPanel({
             </dd>
           </div>
 
-          <div className="rounded-xl border border-white/70 bg-white/90 p-3">
-            <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Admission</dt>
-            <dd className="mt-1 text-sm text-slate-900">
+          <div className="rounded-xl border border-white/70 bg-card/90 p-3">
+            <dt className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Admission</dt>
+            <dd className="mt-1 text-sm text-foreground">
               {activeAdmission ? (
                 <>
                   <span className="font-medium">Admitted</span>
                   <div className="mt-2">
-                    <Link href={`/beds?patientId=${patientId}`} className="text-xs font-medium text-impilo-600 hover:text-impilo-800">
+                    <Link href={`/beds?patientId=${patientId}`} className="text-xs font-medium text-primary hover:text-impilo-800">
                       Beds / ward view
                     </Link>
                   </div>
                 </>
               ) : (
-                <span className="text-slate-500">No active admission</span>
+                <span className="text-muted-foreground">No active admission</span>
               )}
             </dd>
           </div>
 
-          <div className="rounded-xl border border-white/70 bg-white/90 p-3">
-            <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">OROS labs (chart)</dt>
-            <dd className="mt-1 text-sm text-slate-900">
+          <div className="rounded-xl border border-white/70 bg-card/90 p-3">
+            <dt className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">OROS labs (chart)</dt>
+            <dd className="mt-1 text-sm text-foreground">
               <span className="font-medium">{pendingLabs.length}</span> orders in-flight or awaiting review
               <div className="mt-2">
-                <Link href={`/ehr/${patientId}/orders`} className="text-xs font-medium text-impilo-600 hover:text-impilo-800">
+                <Link href={`/ehr/${patientId}/orders`} className="text-xs font-medium text-primary hover:text-impilo-800">
                   Orders &amp; results
                 </Link>
               </div>
@@ -275,11 +275,11 @@ export function PatientJourneyContextPanel({
         </dl>
       )}
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-impilo-100 bg-impilo-50/60 px-3 py-2">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-primary/20 bg-primary-soft/60 px-3 py-2">
         <p className="text-xs text-impilo-900">
           <span className="font-semibold">Next:</span> {nextAction.label}
         </p>
-        <Link href={nextAction.href} className="inline-flex items-center gap-1 rounded-lg bg-impilo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-impilo-700">
+        <Link href={nextAction.href} className="inline-flex items-center gap-1 rounded-lg bg-primary-hover px-3 py-1.5 text-xs font-medium text-white hover:bg-impilo-700">
           Go
           <ArrowRight className="h-3.5 w-3.5" />
         </Link>

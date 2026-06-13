@@ -31,9 +31,9 @@ export function DomainCollectionTable<T>({
 }: DomainCollectionTableProps<T>) {
   if (error) {
     return (
-      <div className="rounded-lg border border-red-200 bg-red-50/60 p-6 text-center">
+      <div className="rounded-lg border border-danger/28 bg-danger-soft/60 p-6 text-center">
         <AlertCircle className="mx-auto mb-2 h-8 w-8 text-red-300" />
-        <p className="text-sm text-red-700">Failed to load data</p>
+        <p className="text-sm text-danger">Failed to load data</p>
         <p className="mt-1 text-xs text-red-600/80">{error.message}</p>
       </div>
     );
@@ -42,25 +42,25 @@ export function DomainCollectionTable<T>({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
-        <span className="ml-2 text-sm text-gray-500">Loading…</span>
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        <span className="ml-2 text-sm text-muted-foreground">Loading…</span>
       </div>
     );
   }
 
   if (rows.length === 0) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-white p-8 text-center">
-        <p className="text-sm text-gray-600">{emptyTitle}</p>
-        {emptyHint ? <p className="mt-1 text-xs text-gray-400">{emptyHint}</p> : null}
+      <div className="rounded-lg border border-border bg-card p-8 text-center">
+        <p className="text-sm text-muted-foreground">{emptyTitle}</p>
+        {emptyHint ? <p className="mt-1 text-xs text-muted-foreground">{emptyHint}</p> : null}
       </div>
     );
   }
 
   return (
-    <div className="overflow-auto rounded-lg border border-gray-200 bg-white">
+    <div className="overflow-auto rounded-lg border border-border bg-card">
       <table className="min-w-full text-left text-sm">
-        <thead className="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+        <thead className="border-b border-border bg-background text-xs uppercase tracking-wide text-muted-foreground">
           <tr>
             {columns.map((col) => (
               <th key={col.key} className={`px-3 py-2 font-semibold ${col.className ?? ""}`}>
@@ -71,9 +71,9 @@ export function DomainCollectionTable<T>({
         </thead>
         <tbody className="divide-y divide-gray-100">
           {rows.map((row, index) => (
-            <tr key={rowKey(row, index)} className="hover:bg-gray-50/80">
+            <tr key={rowKey(row, index)} className="hover:bg-background/80">
               {columns.map((col) => (
-                <td key={col.key} className={`px-3 py-2.5 text-gray-800 ${col.className ?? ""}`}>
+                <td key={col.key} className={`px-3 py-2.5 text-foreground ${col.className ?? ""}`}>
                   {col.render(row)}
                 </td>
               ))}

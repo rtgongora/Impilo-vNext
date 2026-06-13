@@ -38,7 +38,7 @@ export function TelemedicineCareChainRail() {
     >
       <div className="mb-3 flex items-center gap-2">
         <ClipboardList className="h-4 w-4 text-cyan-700" />
-        <h3 className="text-sm font-semibold text-slate-900">Telehealth care chain</h3>
+        <h3 className="text-sm font-semibold text-foreground">Telehealth care chain</h3>
       </div>
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         {LINKS.map((link) => {
@@ -48,13 +48,13 @@ export function TelemedicineCareChainRail() {
               key={link.href}
               href={link.href}
               data-testid={`telemedicine-care-chain-${link.href.replace(/\//g, "-").replace(/^-/, "")}`}
-              className="rounded-lg border border-cyan-100 bg-white px-3 py-2 transition-colors hover:border-cyan-300 hover:bg-cyan-50/80"
+              className="rounded-lg border border-cyan-100 bg-card px-3 py-2 transition-colors hover:border-cyan-300 hover:bg-cyan-50/80"
             >
-              <div className="flex items-center gap-2 text-sm font-medium text-slate-900">
+              <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                 <Icon className="h-3.5 w-3.5 text-cyan-600" />
                 {link.label}
               </div>
-              <p className="mt-1 text-xs text-slate-600">{link.description}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{link.description}</p>
             </Link>
           );
         })}

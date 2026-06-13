@@ -136,7 +136,7 @@ export function PartographLabourPlot({ startedAt, points, className }: Partograp
         role="img"
         aria-label={ariaLabel}
         viewBox={`0 0 ${VB_W} ${VB_H}`}
-        className="h-auto w-full max-w-4xl text-gray-800"
+        className="h-auto w-full max-w-4xl text-foreground"
       >
         <title>{ariaLabel}</title>
         <rect x="0" y="0" width={VB_W} height={VB_H} fill="#fafafa" rx="6" />

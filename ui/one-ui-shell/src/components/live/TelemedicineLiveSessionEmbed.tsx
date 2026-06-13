@@ -24,7 +24,7 @@ export function TelemedicineLiveSessionEmbed({
 
   if (!liveEventId || !joinPath) {
     return (
-      <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+      <div className="rounded-lg border border-warning/35 bg-warning-soft p-4 text-sm text-warning-foreground">
         <p className="font-medium flex items-center gap-2">
           <Stethoscope className="h-4 w-4" /> Clinical video via Impilo Live
         </p>
@@ -37,7 +37,7 @@ export function TelemedicineLiveSessionEmbed({
   }
 
   return (
-    <div className="rounded-lg border border-blue-200 bg-blue-50/60 p-4">
+    <div className="rounded-lg border border-info/25 bg-info-soft/60 p-4">
       <div className="flex items-start gap-3">
         <div className="rounded-lg bg-blue-100 p-2 text-blue-800">
           <Shield className="h-5 w-5" />
@@ -46,11 +46,11 @@ export function TelemedicineLiveSessionEmbed({
           <p className="text-xs font-semibold uppercase tracking-wide text-blue-800">
             Telemedicine · Impilo Live
           </p>
-          <p className="mt-1 text-sm text-gray-800">
+          <p className="mt-1 text-sm text-foreground">
             Governed clinical session with consent-aware access. Documentation and orders remain in
             this telemedicine encounter.
           </p>
-          <p className="mt-2 flex items-center gap-1 text-xs text-gray-600">
+          <p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
             Consent: {consentGranted ? "confirmed" : "required before join"}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -62,7 +62,7 @@ export function TelemedicineLiveSessionEmbed({
                 <Video className="h-4 w-4" /> Join clinical session
               </Link>
             ) : (
-              <span className="inline-flex items-center rounded-lg bg-gray-200 px-3 py-1.5 text-sm text-gray-600">
+              <span className="inline-flex items-center rounded-lg bg-neutral-100 px-3 py-1.5 text-sm text-muted-foreground">
                 Confirm consent to join
               </span>
             )}

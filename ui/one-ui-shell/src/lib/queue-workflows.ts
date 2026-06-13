@@ -4,15 +4,15 @@ import { usePrivacyDisplayStore } from "@/hooks/usePrivacyDisplayStore";
 import { maskName, maskDob, displayCpid } from "@/lib/pii-mask";
 
 export const QUEUE_PRIORITY_STYLES: Record<string, { label: string; className: string }> = {
-  EMERGENCY: { label: "Emergency", className: "bg-red-100 text-red-700" },
+  EMERGENCY: { label: "Emergency", className: "bg-red-100 text-danger" },
   URGENT: { label: "Urgent", className: "bg-orange-100 text-orange-700" },
-  NORMAL: { label: "Standard", className: "bg-amber-100 text-amber-700" },
+  NORMAL: { label: "Standard", className: "bg-amber-100 text-warning-foreground" },
   LOW: { label: "Low", className: "bg-green-100 text-green-700" },
-  "1": { label: "Emergency", className: "bg-red-100 text-red-700" },
+  "1": { label: "Emergency", className: "bg-red-100 text-danger" },
   "2": { label: "Urgent", className: "bg-orange-100 text-orange-700" },
-  "3": { label: "Standard", className: "bg-amber-100 text-amber-700" },
+  "3": { label: "Standard", className: "bg-amber-100 text-warning-foreground" },
   "4": { label: "Non-urgent", className: "bg-green-100 text-green-700" },
-  "5": { label: "Routine", className: "bg-slate-100 text-slate-700" },
+  "5": { label: "Routine", className: "bg-neutral-100 text-foreground" },
 };
 
 export const QUEUE_TRIAGE_STYLES: Record<string, string> = {
@@ -20,21 +20,21 @@ export const QUEUE_TRIAGE_STYLES: Record<string, string> = {
   ORANGE: "bg-orange-500 text-white",
   YELLOW: "bg-yellow-400 text-black",
   GREEN: "bg-green-500 text-white",
-  BLUE: "bg-impilo-500 text-white",
+  BLUE: "bg-primary text-white",
 };
 
 export const QUEUE_STATUS_STYLES: Record<string, string> = {
   WAITING: "bg-yellow-100 text-yellow-700",
-  CALLED: "bg-impilo-100 text-impilo-600",
+  CALLED: "bg-primary-soft text-primary",
   IN_PROGRESS: "bg-green-100 text-green-700",
   IN_SERVICE: "bg-green-100 text-green-700",
   SEEN: "bg-green-100 text-green-700",
-  COMPLETED: "bg-slate-100 text-slate-600",
-  PAUSED: "bg-amber-100 text-amber-700",
-  NO_SHOW: "bg-red-100 text-red-700",
-  TRANSFERRED: "bg-purple-100 text-purple-700",
-  CANCELLED: "bg-slate-100 text-slate-500",
-  SCHEDULED: "bg-impilo-100 text-impilo-600",
+  COMPLETED: "bg-neutral-100 text-muted-foreground",
+  PAUSED: "bg-amber-100 text-warning-foreground",
+  NO_SHOW: "bg-red-100 text-danger",
+  TRANSFERRED: "bg-purple-100 text-warning-foreground",
+  CANCELLED: "bg-neutral-100 text-muted-foreground",
+  SCHEDULED: "bg-primary-soft text-primary",
   CONFIRMED: "bg-green-100 text-green-700",
 };
 
@@ -104,7 +104,7 @@ export function getQueuePriorityMeta(priority: unknown) {
   const key = String(priority ?? "");
   return QUEUE_PRIORITY_STYLES[key] ?? {
     label: key || "Unassigned",
-    className: "bg-slate-100 text-slate-700",
+    className: "bg-neutral-100 text-foreground",
   };
 }
 

@@ -44,7 +44,7 @@ export default function NhumeMapPage() {
           <div>
             <strong>Map provider:</strong> {map.data?.provider ?? "Ndila"}
             {map.data?.simulated && (
-              <span className="ml-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[11px] text-amber-800">
+              <span className="ml-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[11px] text-warning-foreground">
                 Simulation
               </span>
             )}
@@ -55,14 +55,14 @@ export default function NhumeMapPage() {
         </div>
 
         <div className="flex flex-wrap gap-3 mb-4 items-center">
-          <Filter className="h-4 w-4 text-gray-500" />
+          <Filter className="h-4 w-4 text-muted-foreground" />
           <Toggle label="Vehicles" checked={showVehicles} onChange={setShowVehicles} />
           <Toggle label="Active deliveries" checked={showDeliveries} onChange={setShowDeliveries} />
           <Toggle label="Dispatch zones" checked={showZones} onChange={setShowZones} />
         </div>
 
         {(fleet.isPending || deliveries.isPending) && (
-          <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center text-gray-500">
+          <div className="rounded-2xl border border-border bg-card p-10 text-center text-muted-foreground">
             <Loader2 className="inline-block h-5 w-5 animate-spin text-teal-500 mr-2" />
             Loading fleet & deliveries…
           </div>
@@ -85,7 +85,7 @@ export default function NhumeMapPage() {
           </>
         )}
 
-        <p className="mt-4 text-xs text-gray-500">
+        <p className="mt-4 text-xs text-muted-foreground">
           Interactive MapLibre canvas with governed Ndila tiles. Configure a non-mock tile provider in ndila-service for
           sovereign raster layers; lists below remain for low-connectivity dispatch.
         </p>
@@ -105,10 +105,10 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
 
 function Card({ title, rows, kind }: { title: string; rows: Array<Record<string, unknown>>; kind: "asset" | "delivery" | "zone" }) {
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white">
-      <div className="border-b border-gray-100 px-5 py-3"><h3 className="font-semibold text-gray-900">{title}</h3></div>
+    <div className="rounded-2xl border border-border bg-card">
+      <div className="border-b border-border px-5 py-3"><h3 className="font-semibold text-foreground">{title}</h3></div>
       {rows.length === 0 ? (
-        <div className="px-5 py-6 text-sm text-gray-500 text-center">No data.</div>
+        <div className="px-5 py-6 text-sm text-muted-foreground text-center">No data.</div>
       ) : (
         <ul className="divide-y divide-gray-100">
           {rows.slice(0, 20).map((r, idx) => (
@@ -127,9 +127,9 @@ function Card({ title, rows, kind }: { title: string; rows: Array<Record<string,
                 </div>
               )}
               {kind === "zone" && (
-                <span className="text-gray-800">{String(r.name ?? r.code ?? "zone")}</span>
+                <span className="text-foreground">{String(r.name ?? r.code ?? "zone")}</span>
               )}
-              <div className="text-xs text-gray-500 mt-1">
+              <div className="text-xs text-muted-foreground mt-1">
                 {kind === "asset" && r.vehicle_type ? `Type ${String(r.vehicle_type)}` : null}
                 {kind === "delivery" && r.destination_label ? `→ ${String(r.destination_label)}` : null}
                 {kind === "zone" && r.jurisdiction_ref ? `Jurisdiction ${String(r.jurisdiction_ref)}` : null}

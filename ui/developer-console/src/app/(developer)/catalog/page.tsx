@@ -108,7 +108,7 @@ export default function CatalogPage() {
 
       {/* API Endpoints */}
       {tab === "api" && (
-        <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6">
+        <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6">
           <div className="space-y-2">
             {endpoints.map((ep, i) => (
               <div key={i} className="flex items-center gap-3 py-2.5 px-3 rounded-lg hover:bg-neutral-50 transition-colors">
@@ -125,7 +125,7 @@ export default function CatalogPage() {
 
       {/* Event Catalog */}
       {tab === "events" && (
-        <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6">
+        <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6">
           {schemas.length === 0 ? (
             <p className="text-sm text-neutral-500 py-4 text-center">No event schemas registered yet</p>
           ) : (
@@ -158,7 +158,7 @@ export default function CatalogPage() {
       {/* Schema Registry */}
       {tab === "schemas" && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6">
+          <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6">
             <h3 className="text-sm font-semibold text-neutral-900 mb-3">Subjects</h3>
             {schemas.length === 0 ? (
               <p className="text-sm text-neutral-500 py-4 text-center">No schemas registered</p>
@@ -181,7 +181,7 @@ export default function CatalogPage() {
               </div>
             )}
           </div>
-          <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6">
+          <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6">
             <h3 className="text-sm font-semibold text-neutral-900 mb-3">Version History</h3>
             {!subjectDetail ? (
               <p className="text-sm text-neutral-500 py-4 text-center">Select a subject to view versions</p>

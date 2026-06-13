@@ -20,7 +20,7 @@ export default function CitizenLayout({
   return (
     <div className="min-h-screen flex flex-col">
       {/* Top navigation bar */}
-      <header className="bg-white border-b border-neutral-200 sticky top-0 z-10">
+      <header className="bg-card border-b border-neutral-200 sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-14">
             {/* Brand */}
@@ -43,7 +43,7 @@ export default function CitizenLayout({
                       px-3 py-2 rounded-lg text-sm font-medium transition-colors
                       ${
                         isActive
-                          ? "bg-blue-50 text-blue-700"
+                          ? "bg-info-soft text-primary-hover"
                           : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100"
                       }
                     `}

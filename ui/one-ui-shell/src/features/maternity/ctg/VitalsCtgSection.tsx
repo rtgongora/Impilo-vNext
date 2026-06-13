@@ -149,7 +149,7 @@ export function VitalsCtgSection({
   }
 
   return (
-    <div className="mt-5 rounded-xl border border-violet-200/90 bg-gradient-to-b from-violet-50/50 to-white p-4">
+    <div className="mt-5 rounded-xl border border-violet-200/90 bg-gradient-to-b from-violet-50/50 to-card p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-sm font-semibold text-violet-950">Fetal monitoring (CTG)</h3>
         <div className="flex flex-wrap gap-2">
@@ -170,14 +170,14 @@ export function VitalsCtgSection({
               <button
                 type="button"
                 onClick={() => setShowChunkForm((v) => !v)}
-                className="rounded-lg border border-violet-300 bg-white px-3 py-1.5 text-xs font-medium text-violet-900 hover:bg-violet-50"
+                className="rounded-lg border border-violet-300 bg-card px-3 py-1.5 text-xs font-medium text-violet-900 hover:bg-violet-50"
               >
                 {showChunkForm ? "Hide chunk ingest" : "Ingest trace chunk"}
               </button>
               <button
                 type="button"
                 onClick={() => setShowAnnotForm((v) => !v)}
-                className="rounded-lg border border-violet-300 bg-white px-3 py-1.5 text-xs font-medium text-violet-900 hover:bg-violet-50"
+                className="rounded-lg border border-violet-300 bg-card px-3 py-1.5 text-xs font-medium text-violet-900 hover:bg-violet-50"
               >
                 {showAnnotForm ? "Hide annotation" : "Add annotation"}
               </button>
@@ -185,30 +185,30 @@ export function VitalsCtgSection({
           )}
         </div>
       </div>
-      <p className="mt-1 text-xs text-gray-600">
-        <span className="font-medium text-gray-800">HTTP polling only</span> — session every {CTG_SESSION_POLL_MS / 1000}s,
-        trace chunks every {CTG_CHUNKS_POLL_MS / 1000}s (<code className="rounded bg-gray-100 px-1">GET …/sessions/active</code>{" "}
-        and <code className="rounded bg-gray-100 px-1">GET …/chunks</code>). This is not a websocket or device live stream.
+      <p className="mt-1 text-xs text-muted-foreground">
+        <span className="font-medium text-foreground">HTTP polling only</span> — session every {CTG_SESSION_POLL_MS / 1000}s,
+        trace chunks every {CTG_CHUNKS_POLL_MS / 1000}s (<code className="rounded bg-neutral-100 px-1">GET …/sessions/active</code>{" "}
+        and <code className="rounded bg-neutral-100 px-1">GET …/chunks</code>). This is not a websocket or device live stream.
       </p>
-      <p className="mt-1 text-xs text-gray-500">
-        APIs: <code className="rounded bg-gray-100 px-1">/internal/v1/maternity/ctg/sessions</code> (create),{" "}
-        <code className="rounded bg-gray-100 px-1">…/chunks</code>, <code className="rounded bg-gray-100 px-1">…/annotations</code>.
+      <p className="mt-1 text-xs text-muted-foreground">
+        APIs: <code className="rounded bg-neutral-100 px-1">/internal/v1/maternity/ctg/sessions</code> (create),{" "}
+        <code className="rounded bg-neutral-100 px-1">…/chunks</code>, <code className="rounded bg-neutral-100 px-1">…/annotations</code>.
       </p>
 
       {isClinical && !session && (
-        <label className="mt-2 block text-xs text-gray-600">
+        <label className="mt-2 block text-xs text-muted-foreground">
           Device ID (optional)
           <input
             value={deviceId}
             onChange={(e) => setDeviceId(e.target.value)}
-            className="mt-1 block w-full max-w-md rounded-lg border border-gray-300 px-3 py-1.5 text-sm"
+            className="mt-1 block w-full max-w-md rounded-lg border border-border px-3 py-1.5 text-sm"
             placeholder="Monitor / bed identifier"
           />
         </label>
       )}
 
       {activeQuery.isError && (
-        <div className="mt-2 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+        <div className="mt-2 flex items-start gap-2 rounded-lg border border-warning/35 bg-warning-soft px-3 py-2 text-sm text-warning-foreground">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
           <div>
             <p className="font-medium">Could not load CTG session</p>
@@ -220,14 +220,14 @@ export function VitalsCtgSection({
       )}
 
       {activeQuery.isLoading && (
-        <div className="mt-3 flex items-center gap-2 text-sm text-gray-500">
+        <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
           Loading CTG session…
         </div>
       )}
 
       {!activeQuery.isLoading && !session && (
-        <p className="mt-3 text-sm text-gray-600">
+        <p className="mt-3 text-sm text-muted-foreground">
           No active CTG session
           {hasActiveEncounter ? " for this encounter" : ""}. {isClinical ? "Start a session to capture trace chunks." : null}
         </p>
@@ -235,32 +235,32 @@ export function VitalsCtgSection({
 
       {session && (
         <div className="mt-3 space-y-2">
-          <p className="text-xs text-gray-700">
-            Session <code className="rounded bg-gray-100 px-1">{sessionId}</code>
+          <p className="text-xs text-foreground">
+            Session <code className="rounded bg-neutral-100 px-1">{sessionId}</code>
             {session.started_at ? <> · started {new Date(String(session.started_at)).toLocaleString()}</> : null}
             {session.device_id ? (
               <>
                 {" "}
-                · device <code className="rounded bg-gray-100 px-1">{String(session.device_id)}</code>
+                · device <code className="rounded bg-neutral-100 px-1">{String(session.device_id)}</code>
               </>
             ) : null}
             {session.summary?.chunk_count != null ? ` · ${session.summary.chunk_count} chunk(s)` : null}
           </p>
           {Array.isArray(session.summary?.active_channels) && session.summary!.active_channels!.length > 0 ? (
-            <p className="text-xs text-gray-600">
+            <p className="text-xs text-muted-foreground">
               Active channels: {session.summary!.active_channels!.join(", ")}
             </p>
           ) : null}
 
           {chunksQuery.isError && (
-            <p className="text-xs text-amber-800">Could not load trace chunks — strips may be stale.</p>
+            <p className="text-xs text-warning-foreground">Could not load trace chunks — strips may be stale.</p>
           )}
 
           <CtgTracePlot fhr={fhr} toco={toco} maternalHr={matHr} annotationMarks={annotationMarks} className="mt-2" />
 
           {session.annotations && session.annotations.length > 0 ? (
-            <div className="mt-2 rounded-lg border border-gray-100 bg-gray-50/80 p-2 text-xs text-gray-700">
-              <p className="font-semibold text-gray-800">Annotations</p>
+            <div className="mt-2 rounded-lg border border-border bg-background/80 p-2 text-xs text-foreground">
+              <p className="font-semibold text-foreground">Annotations</p>
               <ul className="mt-1 list-inside list-disc space-y-0.5">
                 {session.annotations.map((a) => (
                   <li key={String(a.id ?? `${a.recorded_at}-${a.category}`)}>
@@ -274,46 +274,46 @@ export function VitalsCtgSection({
           ) : null}
 
           {showChunkForm && isActive && isClinical && (
-            <form onSubmit={handleAddChunk} className="mt-3 space-y-2 rounded-lg border border-gray-100 bg-white p-3">
-              <p className="text-xs font-medium text-gray-800">Ingest chunk (POST …/chunks)</p>
+            <form onSubmit={handleAddChunk} className="mt-3 space-y-2 rounded-lg border border-border bg-card p-3">
+              <p className="text-xs font-medium text-foreground">Ingest chunk (POST …/chunks)</p>
               <div className="flex flex-wrap gap-3">
-                <label className="text-xs text-gray-600">
+                <label className="text-xs text-muted-foreground">
                   Channel
                   <select
                     value={chunkChannel}
                     onChange={(e) => setChunkChannel(e.target.value)}
-                    className="mt-1 block rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
+                    className="mt-1 block rounded-lg border border-border px-2 py-1.5 text-sm"
                   >
                     <option value="FHR">FHR</option>
                     <option value="TOCO">TOCO</option>
                     <option value="MATERNAL_HR">MATERNAL_HR</option>
                   </select>
                 </label>
-                <label className="text-xs text-gray-600">
+                <label className="text-xs text-muted-foreground">
                   Sample rate (Hz)
                   <input
                     value={chunkHz}
                     onChange={(e) => setChunkHz(e.target.value)}
-                    className="mt-1 block w-24 rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
+                    className="mt-1 block w-24 rounded-lg border border-border px-2 py-1.5 text-sm"
                   />
                 </label>
               </div>
-              <label className="block text-xs text-gray-600">
+              <label className="block text-xs text-muted-foreground">
                 Samples (whitespace-separated decimals, one per sample)
                 <textarea
                   value={chunkSamples}
                   onChange={(e) => setChunkSamples(e.target.value)}
                   rows={3}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-2 py-1.5 font-mono text-xs"
+                  className="mt-1 block w-full rounded-lg border border-border px-2 py-1.5 font-mono text-xs"
                   placeholder="e.g. 132 134 138 142 …"
                 />
               </label>
-              <label className="block text-xs text-gray-600">
+              <label className="block text-xs text-muted-foreground">
                 Notes (optional)
                 <input
                   value={chunkNotes}
                   onChange={(e) => setChunkNotes(e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
+                  className="mt-1 block w-full rounded-lg border border-border px-2 py-1.5 text-sm"
                 />
               </label>
               <button
@@ -328,33 +328,33 @@ export function VitalsCtgSection({
           )}
 
           {showAnnotForm && isActive && isClinical && (
-            <form onSubmit={handleAddAnnotation} className="mt-2 space-y-2 rounded-lg border border-gray-100 bg-white p-3">
-              <p className="text-xs font-medium text-gray-800">Annotation (POST …/annotations)</p>
-              <label className="block text-xs text-gray-600">
+            <form onSubmit={handleAddAnnotation} className="mt-2 space-y-2 rounded-lg border border-border bg-card p-3">
+              <p className="text-xs font-medium text-foreground">Annotation (POST …/annotations)</p>
+              <label className="block text-xs text-muted-foreground">
                 Category
                 <input
                   value={annotCategory}
                   onChange={(e) => setAnnotCategory(e.target.value)}
-                  className="mt-1 block w-full max-w-md rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
+                  className="mt-1 block w-full max-w-md rounded-lg border border-border px-2 py-1.5 text-sm"
                   required
                 />
               </label>
-              <label className="block text-xs text-gray-600">
+              <label className="block text-xs text-muted-foreground">
                 Sample offset (seconds on trace, optional)
                 <input
                   value={annotOffset}
                   onChange={(e) => setAnnotOffset(e.target.value)}
-                  className="mt-1 block w-full max-w-md rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
+                  className="mt-1 block w-full max-w-md rounded-lg border border-border px-2 py-1.5 text-sm"
                   placeholder="e.g. 120.5"
                 />
               </label>
-              <label className="block text-xs text-gray-600">
+              <label className="block text-xs text-muted-foreground">
                 Notes
                 <textarea
                   value={annotNotes}
                   onChange={(e) => setAnnotNotes(e.target.value)}
                   rows={2}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
+                  className="mt-1 block w-full rounded-lg border border-border px-2 py-1.5 text-sm"
                 />
               </label>
               <button

@@ -65,19 +65,19 @@ export default function IdStatusPage() {
     return (
       <AuthLayout>
         <div className="text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-impilo-50">
-            <Shield className="h-7 w-7 text-impilo-500" />
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-soft">
+            <Shield className="h-7 w-7 text-primary" />
           </div>
 
-          <h2 className="mt-4 text-xl font-semibold text-gray-900">
+          <h2 className="mt-4 text-xl font-semibold text-foreground">
             Basic Account
           </h2>
-          <p className="mt-2 text-sm text-gray-500 leading-relaxed">
+          <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
             You can access wellness, communities, and marketplace features.
           </p>
 
-          <div className="mt-6 rounded-xl border border-gray-200 bg-gray-50 p-4 text-left">
-            <p className="text-sm text-gray-700 leading-relaxed">
+          <div className="mt-6 rounded-xl border border-border bg-background p-4 text-left">
+            <p className="text-sm text-foreground leading-relaxed">
               To unlock full health services, visit a registered facility or
               request verification online.
             </p>
@@ -90,7 +90,7 @@ export default function IdStatusPage() {
           <div className="mt-6 space-y-3">
             <Link
               href="/citizen/health-id/request"
-              className="w-full flex items-center justify-center gap-2 py-3 border-2 border-impilo-500 text-impilo-600 text-sm font-medium rounded-lg hover:bg-impilo-50 transition-colors"
+              className="w-full flex items-center justify-center gap-2 py-3 border-2 border-impilo-500 text-primary text-sm font-medium rounded-lg hover:bg-primary-soft transition-colors"
             >
               Request Full Verification
               <ArrowRight className="w-4 h-4" />
@@ -98,7 +98,7 @@ export default function IdStatusPage() {
             <button
               type="button"
               onClick={handleContinue}
-              className="w-full py-3 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 transition-colors flex items-center justify-center gap-2"
+              className="w-full py-3 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover transition-colors flex items-center justify-center gap-2"
             >
               Continue to Impilo
               <ChevronRight className="w-4 h-4" />
@@ -114,34 +114,34 @@ export default function IdStatusPage() {
     return (
       <AuthLayout>
         <div className="text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-warning-soft">
             <Clock className="h-7 w-7 text-amber-600" />
           </div>
 
-          <h2 className="mt-4 text-xl font-semibold text-gray-900">
+          <h2 className="mt-4 text-xl font-semibold text-foreground">
             Temporary Health Access
           </h2>
 
-          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-left space-y-2">
+          <div className="mt-4 rounded-xl border border-warning/35 bg-warning-soft p-4 text-left space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                 Provisional Health ID
               </span>
-              <span className="text-sm font-mono font-semibold text-amber-700">
+              <span className="text-sm font-mono font-semibold text-warning-foreground">
                 {tmpHealthId}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                 Valid until
               </span>
-              <span className="text-sm font-medium text-amber-700">
+              <span className="text-sm font-medium text-warning-foreground">
                 {tmpExpiry}
               </span>
             </div>
           </div>
 
-          <p className="mt-4 text-sm text-gray-500 leading-relaxed">
+          <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
             Visit a facility to complete verification and receive your permanent
             Health ID.
           </p>
@@ -149,7 +149,7 @@ export default function IdStatusPage() {
           <div className="mt-6 space-y-3">
             <Link
               href="/discover?type=facility"
-              className="w-full flex items-center justify-center gap-2 py-3 border-2 border-amber-500 text-amber-700 text-sm font-medium rounded-lg hover:bg-amber-50 transition-colors"
+              className="w-full flex items-center justify-center gap-2 py-3 border-2 border-amber-500 text-warning-foreground text-sm font-medium rounded-lg hover:bg-warning-soft transition-colors"
             >
               <MapPin className="w-4 h-4" />
               Find a Facility
@@ -158,7 +158,7 @@ export default function IdStatusPage() {
             <button
               type="button"
               onClick={handleContinue}
-              className="w-full py-3 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 transition-colors flex items-center justify-center gap-2"
+              className="w-full py-3 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover transition-colors flex items-center justify-center gap-2"
             >
               Continue to Impilo
               <ChevronRight className="w-4 h-4" />
@@ -173,20 +173,20 @@ export default function IdStatusPage() {
   return (
     <AuthLayout>
       <div className="text-center">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50">
-          <CheckCircle2 className="h-7 w-7 text-emerald-600" />
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-success-soft">
+          <CheckCircle2 className="h-7 w-7 text-primary" />
         </div>
 
-        <h2 className="mt-4 text-xl font-semibold text-gray-900">
+        <h2 className="mt-4 text-xl font-semibold text-foreground">
           Fully Verified Account
         </h2>
-        <p className="mt-2 text-sm text-gray-500 leading-relaxed">
+        <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
           Your Health ID is verified. You have full access to all Impilo health
           services, records, and facilities.
         </p>
 
-        <div className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-left">
-          <p className="text-sm text-emerald-800 font-medium">
+        <div className="mt-6 rounded-xl border border-success/25 bg-success-soft p-4 text-left">
+          <p className="text-sm text-primary-hover font-medium">
             All health services are available to you, including consultations,
             prescriptions, health records, and facility access.
           </p>
@@ -196,7 +196,7 @@ export default function IdStatusPage() {
           <button
             type="button"
             onClick={handleContinue}
-            className="w-full py-3 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 transition-colors flex items-center justify-center gap-2"
+            className="w-full py-3 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover transition-colors flex items-center justify-center gap-2"
           >
             Continue to Impilo
             <ChevronRight className="w-4 h-4" />

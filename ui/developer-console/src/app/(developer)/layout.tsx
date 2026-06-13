@@ -71,7 +71,7 @@ export default function DeveloperLayout({
   return (
     <div className="min-h-screen flex">
       {/* Sidebar */}
-      <aside className="w-60 bg-white border-r border-neutral-200 flex flex-col sticky top-0 h-screen">
+      <aside className="w-60 bg-card border-r border-neutral-200 flex flex-col sticky top-0 h-screen">
         <div className="p-4 border-b border-neutral-100">
           <Link href="/dashboard" className="text-lg font-semibold text-brand-primary tracking-tight">
             Developer Console

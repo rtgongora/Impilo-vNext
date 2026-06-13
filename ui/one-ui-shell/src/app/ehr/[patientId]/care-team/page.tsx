@@ -41,13 +41,13 @@ export default function CareTeamPage() {
       <PageShell title="Care Team" subtitle="Assigned providers and care team management">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading care team...</span>
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading care team...</span>
           </div>
         ) : isError ? (
           <div className="flex flex-col items-center justify-center gap-3 py-16">
             <AlertCircle className="h-6 w-6 text-red-400" />
-            <p className="text-sm text-gray-600">Unable to load care team.</p>
+            <p className="text-sm text-muted-foreground">Unable to load care team.</p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -58,7 +58,7 @@ export default function CareTeamPage() {
               </div>
             )}
             {addMember.isError && (
-              <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+              <div className="flex items-center gap-2 rounded-lg border border-danger/28 bg-danger-soft p-3 text-sm text-red-800">
                 <AlertCircle className="h-4 w-4 text-red-600" />
                 Failed to add team member. Please try again.
               </div>
@@ -99,30 +99,30 @@ export default function CareTeamPage() {
               ]}
             />
 
-            <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Team continuity</p>
-              <p className="mt-2 text-sm text-slate-800">
+            <div className="rounded-3xl border border-border bg-background/70 p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Team continuity</p>
+              <p className="mt-2 text-sm text-foreground">
                 {externalMembers > 0
                   ? `${externalMembers} active team member${externalMembers === 1 ? " works" : "s work"} outside the current facility, so ownership and communication need to stay explicit when the plan or consult loop moves.`
                   : "The team is locally aligned; the next continuity step is making sure plans and notes still show who owns the next action."}
               </p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Use Care Plans to assign work, Notes to communicate handoffs, and Summary to keep the patient-facing team picture coherent across surfaces.
               </p>
             </div>
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-impilo-500" />
-                <h2 className="text-lg font-semibold text-gray-900">Care Team</h2>
-                <span className="text-xs text-gray-400">{activeMembers.length} active members</span>
+                <Users className="h-5 w-5 text-primary" />
+                <h2 className="text-lg font-semibold text-foreground">Care Team</h2>
+                <span className="text-xs text-muted-foreground">{activeMembers.length} active members</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="overflow-hidden rounded-lg border border-gray-300">
-                  <button onClick={() => setViewMode("grid")} className={`px-3 py-1.5 text-xs ${viewMode === "grid" ? "bg-impilo-500 text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}>Grid</button>
-                  <button onClick={() => setViewMode("list")} className={`px-3 py-1.5 text-xs ${viewMode === "list" ? "bg-impilo-500 text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}>List</button>
+                <div className="overflow-hidden rounded-lg border border-border">
+                  <button onClick={() => setViewMode("grid")} className={`px-3 py-1.5 text-xs ${viewMode === "grid" ? "bg-primary text-white" : "bg-card text-muted-foreground hover:bg-background"}`}>Grid</button>
+                  <button onClick={() => setViewMode("list")} className={`px-3 py-1.5 text-xs ${viewMode === "list" ? "bg-primary text-white" : "bg-card text-muted-foreground hover:bg-background"}`}>List</button>
                 </div>
-                <button type="button" onClick={() => setShowForm(true)} className="inline-flex items-center gap-1.5 rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600">
+                <button type="button" onClick={() => setShowForm(true)} className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover">
                   <Plus className="h-4 w-4" />
                   Add Member
                 </button>
@@ -130,19 +130,19 @@ export default function CareTeamPage() {
             </div>
 
             {showForm && (
-              <div className="rounded-lg border border-gray-200 bg-white p-5">
+              <div className="rounded-lg border border-border bg-card p-5">
                 <div className="mb-4 flex items-center justify-between">
-                  <h3 className="font-medium text-gray-900">Add Team Member</h3>
-                  <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600"><X className="h-4 w-4" /></button>
+                  <h3 className="font-medium text-foreground">Add Team Member</h3>
+                  <button onClick={() => setShowForm(false)} className="text-muted-foreground hover:text-muted-foreground"><X className="h-4 w-4" /></button>
                 </div>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-600">Provider Name</label>
-                    <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" placeholder="Search providers..." />
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Provider Name</label>
+                    <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" placeholder="Search providers..." />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-600">Role</label>
-                    <select value={newRole} onChange={(e) => setNewRole(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400">
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Role</label>
+                    <select value={newRole} onChange={(e) => setNewRole(e.target.value)} className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40">
                       <option value="">Select role...</option>
                       <option>Primary Physician</option>
                       <option>Specialist</option>
@@ -154,8 +154,8 @@ export default function CareTeamPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-600">Specialty</label>
-                    <input type="text" value={newSpecialty} onChange={(e) => setNewSpecialty(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" placeholder="e.g., Cardiology" />
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Specialty</label>
+                    <input type="text" value={newSpecialty} onChange={(e) => setNewSpecialty(e.target.value)} className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" placeholder="e.g., Cardiology" />
                   </div>
                 </div>
                 <div className="flex items-center gap-3 pt-4">
@@ -177,65 +177,65 @@ export default function CareTeamPage() {
                         },
                       );
                     }}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600 disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-50"
                   >
                     {addMember.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                     Add to Team
                   </button>
-                  <button onClick={() => setShowForm(false)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">Cancel</button>
+                  <button onClick={() => setShowForm(false)} className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-background">Cancel</button>
                 </div>
               </div>
             )}
 
             {members.length === 0 ? (
-              <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
-                <Users className="mx-auto mb-3 h-10 w-10 text-gray-300" />
-                <p className="text-sm text-gray-400">No care team members assigned</p>
+              <div className="rounded-lg border border-border bg-card p-12 text-center">
+                <Users className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">No care team members assigned</p>
               </div>
             ) : viewMode === "grid" ? (
               <>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {activeMembers.map((member) => (
-                    <div key={member.id} className="rounded-lg border border-gray-200 bg-white p-5 transition-colors hover:border-impilo-200">
+                    <div key={member.id} className="rounded-lg border border-border bg-card p-5 transition-colors hover:border-primary/25">
                       <div className="mb-3 flex items-start justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-impilo-100 text-sm font-semibold text-impilo-600">
+                          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary-soft text-sm font-semibold text-primary">
                             {member.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
                           </div>
                           <div>
-                            <h3 className="flex items-center gap-1 text-sm font-medium text-gray-900">
+                            <h3 className="flex items-center gap-1 text-sm font-medium text-foreground">
                               {member.name}
                             </h3>
-                            <p className="text-xs text-impilo-500">{member.role}</p>
+                            <p className="text-xs text-primary">{member.role}</p>
                           </div>
                         </div>
                         <button
                           type="button"
                           onClick={() => removeMember.mutate({ memberId: member.id, patientId })}
                           disabled={removeMember.isPending}
-                          className="p-1 text-gray-400 transition-colors hover:text-red-500 disabled:opacity-50"
+                          className="p-1 text-muted-foreground transition-colors hover:text-red-500 disabled:opacity-50"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>
-                      <p className="mb-2 text-xs text-gray-500">{member.specialty}</p>
-                      <p className="text-xs text-gray-400">Assigned {member.assignedAt ? member.assignedAt.slice(0, 10) : "—"}</p>
+                      <p className="mb-2 text-xs text-muted-foreground">{member.specialty}</p>
+                      <p className="text-xs text-muted-foreground">Assigned {member.assignedAt ? member.assignedAt.slice(0, 10) : "—"}</p>
                     </div>
                   ))}
                 </div>
                 {inactiveMembers.length > 0 && (
                   <div>
-                    <h3 className="mb-3 text-sm font-medium text-gray-500">Inactive Members</h3>
+                    <h3 className="mb-3 text-sm font-medium text-muted-foreground">Inactive Members</h3>
                     <div className="grid grid-cols-1 gap-4 opacity-60 md:grid-cols-2 lg:grid-cols-3">
                       {inactiveMembers.map((member) => (
-                        <div key={member.id} className="rounded-lg border border-gray-200 bg-white p-5">
+                        <div key={member.id} className="rounded-lg border border-border bg-card p-5">
                           <div className="mb-2 flex items-center gap-3">
-                            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-500">
+                            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-neutral-100 text-sm font-semibold text-muted-foreground">
                               {member.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
                             </div>
                             <div>
-                              <h3 className="text-sm font-medium text-gray-700">{member.name}</h3>
-                              <p className="text-xs text-gray-500">{member.role} &middot; {member.specialty}</p>
+                              <h3 className="text-sm font-medium text-foreground">{member.name}</h3>
+                              <p className="text-xs text-muted-foreground">{member.role} &middot; {member.specialty}</p>
                             </div>
                           </div>
                         </div>
@@ -245,31 +245,31 @@ export default function CareTeamPage() {
                 )}
               </>
             ) : (
-              <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+              <div className="overflow-hidden rounded-lg border border-border bg-card">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-gray-200 bg-gray-50">
-                      <th className="px-4 py-3 text-left font-medium text-gray-600">Name</th>
-                      <th className="px-4 py-3 text-left font-medium text-gray-600">Role</th>
-                      <th className="px-4 py-3 text-left font-medium text-gray-600">Specialty</th>
-                      <th className="px-4 py-3 text-left font-medium text-gray-600">Assigned</th>
-                      <th className="px-4 py-3 text-left font-medium text-gray-600">Status</th>
-                      <th className="px-4 py-3 text-left font-medium text-gray-600"></th>
+                    <tr className="border-b border-border bg-background">
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Name</th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Role</th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Specialty</th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Assigned</th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground"></th>
                     </tr>
                   </thead>
                   <tbody>
                     {members.map((member) => (
-                      <tr key={member.id} className="border-b border-gray-100 transition-colors hover:bg-gray-50">
-                        <td className="px-4 py-3 text-gray-900">{member.name}</td>
-                        <td className="px-4 py-3 text-gray-700">{member.role}</td>
-                        <td className="px-4 py-3 text-gray-700">{member.specialty}</td>
-                        <td className="px-4 py-3 text-gray-500">{member.assignedAt ? member.assignedAt.slice(0, 10) : "—"}</td>
-                        <td className="px-4 py-3 text-xs text-gray-500">—</td>
+                      <tr key={member.id} className="border-b border-border transition-colors hover:bg-background">
+                        <td className="px-4 py-3 text-foreground">{member.name}</td>
+                        <td className="px-4 py-3 text-foreground">{member.role}</td>
+                        <td className="px-4 py-3 text-foreground">{member.specialty}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{member.assignedAt ? member.assignedAt.slice(0, 10) : "—"}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground">—</td>
                         <td className="px-4 py-3">
-                          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${member.status === "active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>{member.status}</span>
+                          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${member.status === "active" ? "bg-green-100 text-green-700" : "bg-neutral-100 text-muted-foreground"}`}>{member.status}</span>
                         </td>
                         <td className="px-4 py-3">
-                          <button type="button" onClick={() => removeMember.mutate({ memberId: member.id, patientId })} disabled={removeMember.isPending} className="p-1 text-gray-400 hover:text-red-500 disabled:opacity-50">
+                          <button type="button" onClick={() => removeMember.mutate({ memberId: member.id, patientId })} disabled={removeMember.isPending} className="p-1 text-muted-foreground hover:text-red-500 disabled:opacity-50">
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         </td>

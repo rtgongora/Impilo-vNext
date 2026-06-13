@@ -221,21 +221,21 @@ export function ShellSearchPalette() {
         aria-label="Close search"
         onClick={() => setSearchOpen(false)}
       />
-      <div className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-950">
-        <div className="flex items-center gap-2 border-b border-slate-100 px-3 py-2 dark:border-slate-800">
-          <Search className="h-5 w-5 shrink-0 text-slate-400" />
+      <div className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-border bg-card shadow-2xl dark:border-border dark:bg-card">
+        <div className="flex items-center gap-2 border-b border-border px-3 py-2 dark:border-border">
+          <Search className="h-5 w-5 shrink-0 text-muted-foreground" />
           <input
             ref={inputRef}
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search apps, tasks, recents, platform index…"
-            className="min-w-0 flex-1 border-0 bg-transparent py-2 text-base text-slate-900 outline-none placeholder:text-slate-400 dark:text-slate-100"
+            className="min-w-0 flex-1 border-0 bg-transparent py-2 text-base text-foreground outline-none placeholder:text-muted-foreground dark:text-foreground"
           />
-          {loading || fusionLoading ? <Loader2 className="h-5 w-5 animate-spin text-impilo-500" /> : null}
+          {loading || fusionLoading ? <Loader2 className="h-5 w-5 animate-spin text-primary" /> : null}
           <button
             type="button"
-            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900"
+            className="rounded-lg p-2 text-muted-foreground hover:bg-primary-soft dark:hover:bg-primary-soft"
             onClick={() => setSearchOpen(false)}
             aria-label="Close"
           >
@@ -246,7 +246,7 @@ export function ShellSearchPalette() {
         <div className="max-h-[60vh] overflow-y-auto px-2 py-2 text-sm">
           {commands.length > 0 ? (
             <section className="mb-3">
-              <h3 className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+              <h3 className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                 Quick actions
               </h3>
               <ul>
@@ -255,13 +255,13 @@ export function ShellSearchPalette() {
                     <button
                       type="button"
                       onClick={() => runCommand(cmd)}
-                      className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-900"
+                      className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left hover:bg-background dark:hover:bg-primary-soft"
                     >
                       <Hash className="h-4 w-4 text-violet-500" />
                       <span>
-                        <span className="font-medium text-slate-800 dark:text-slate-100">{cmd.label}</span>
+                        <span className="font-medium text-foreground dark:text-foreground">{cmd.label}</span>
                         {cmd.description ? (
-                          <span className="block text-xs text-slate-500">{cmd.description}</span>
+                          <span className="block text-xs text-muted-foreground">{cmd.description}</span>
                         ) : null}
                       </span>
                     </button>
@@ -273,7 +273,7 @@ export function ShellSearchPalette() {
 
           {apps.length > 0 ? (
             <section className="mb-3">
-              <h3 className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Apps</h3>
+              <h3 className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Apps</h3>
               <ul>
                 {apps.map((app) => (
                   <li key={app.appCode}>
@@ -283,12 +283,12 @@ export function ShellSearchPalette() {
                         useShellStore.getState().launchApp(app, (href) => router.push(href));
                         setSearchOpen(false);
                       }}
-                      className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-900"
+                      className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left hover:bg-background dark:hover:bg-primary-soft"
                     >
                       <ShellAppIcon icon={app.icon} serviceSlug={app.serviceSlug} name={app.name} size="compact" />
                       <span>
-                        <span className="font-medium text-slate-800 dark:text-slate-100">{app.name}</span>
-                        <span className="block text-xs text-slate-500">{app.description}</span>
+                        <span className="font-medium text-foreground dark:text-foreground">{app.name}</span>
+                        <span className="block text-xs text-muted-foreground">{app.description}</span>
                       </span>
                     </button>
                   </li>
@@ -299,7 +299,7 @@ export function ShellSearchPalette() {
 
           {tasks.length > 0 ? (
             <section className="mb-3">
-              <h3 className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+              <h3 className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                 Open tasks
               </h3>
               <ul>
@@ -312,10 +312,10 @@ export function ShellSearchPalette() {
                         useShellStore.getState().setActiveTask(task.id);
                         setSearchOpen(false);
                       }}
-                      className="flex w-full flex-col rounded-lg px-2 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-900"
+                      className="flex w-full flex-col rounded-lg px-2 py-2 text-left hover:bg-background dark:hover:bg-primary-soft"
                     >
-                      <span className="font-medium text-slate-800 dark:text-slate-100">{task.title}</span>
-                      <span className="text-xs text-slate-500">{task.route}</span>
+                      <span className="font-medium text-foreground dark:text-foreground">{task.title}</span>
+                      <span className="text-xs text-muted-foreground">{task.route}</span>
                     </button>
                   </li>
                 ))}
@@ -325,7 +325,7 @@ export function ShellSearchPalette() {
 
           {recents.length > 0 ? (
             <section className="mb-3">
-              <h3 className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Recent</h3>
+              <h3 className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Recent</h3>
               <ul>
                 {recents.map((r) => (
                   <li key={r.id}>
@@ -335,10 +335,10 @@ export function ShellSearchPalette() {
                         router.push(r.href);
                         setSearchOpen(false);
                       }}
-                      className="flex w-full flex-col rounded-lg px-2 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-900"
+                      className="flex w-full flex-col rounded-lg px-2 py-2 text-left hover:bg-background dark:hover:bg-primary-soft"
                     >
-                      <span className="font-medium text-slate-800 dark:text-slate-100">{r.title}</span>
-                      {r.subtitle ? <span className="text-xs text-slate-500">{r.subtitle}</span> : null}
+                      <span className="font-medium text-foreground dark:text-foreground">{r.title}</span>
+                      {r.subtitle ? <span className="text-xs text-muted-foreground">{r.subtitle}</span> : null}
                     </button>
                   </li>
                 ))}
@@ -348,18 +348,18 @@ export function ShellSearchPalette() {
 
           {q.length >= 2 && fusionHints.length > 0 ? (
             <section className="mb-3">
-              <h3 className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+              <h3 className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                 Fused hints
               </h3>
-              <p className="px-2 pb-1 text-[10px] text-slate-500">
+              <p className="px-2 pb-1 text-[10px] text-muted-foreground">
                 Index + guidance knowledge (Health Intelligence plane). Same visibility rules as underlying services.
               </p>
               <ul>
                 {fusionHints.map((h) => {
                   const body = (
                     <>
-                      <span className="font-medium text-slate-800 dark:text-slate-100">{h.title}</span>
-                      <span className="block text-xs text-slate-500">
+                      <span className="font-medium text-foreground dark:text-foreground">{h.title}</span>
+                      <span className="block text-xs text-muted-foreground">
                         {h.source.replace(/_/g, " ")}
                         {h.href ? " · Open" : ""} · {h.subtitle}
                       </span>
@@ -370,7 +370,7 @@ export function ShellSearchPalette() {
                       <li key={h.id}>
                         <button
                           type="button"
-                          className="w-full rounded-lg px-2 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-900"
+                          className="w-full rounded-lg px-2 py-2 text-left hover:bg-background dark:hover:bg-primary-soft"
                           onClick={() => {
                             recordRecent({
                               kind: "resource",
@@ -401,19 +401,19 @@ export function ShellSearchPalette() {
 
           {q.length >= 2 ? (
             <section>
-              <h3 className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+              <h3 className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                 Platform index
               </h3>
               {platformHits.length === 0 && !loading ? (
-                <p className="px-2 py-3 text-xs text-slate-500">No indexed matches for this query.</p>
+                <p className="px-2 py-3 text-xs text-muted-foreground">No indexed matches for this query.</p>
               ) : (
                 <ul>
                   {platformHits.map((h) => {
                     const href = resolveIndexHitHref(h);
                     const body = (
                       <>
-                        <span className="font-medium text-slate-800 dark:text-slate-100">{h.title}</span>
-                        <span className="block text-xs text-slate-500">
+                        <span className="font-medium text-foreground dark:text-foreground">{h.title}</span>
+                        <span className="block text-xs text-muted-foreground">
                           {h.entityType}
                           {href ? " · Open" : ""} · {h.subtitle}
                         </span>
@@ -424,7 +424,7 @@ export function ShellSearchPalette() {
                         <li key={h.id}>
                           <button
                             type="button"
-                            className="w-full rounded-lg px-2 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-900"
+                            className="w-full rounded-lg px-2 py-2 text-left hover:bg-background dark:hover:bg-primary-soft"
                             onClick={() => {
                               recordRecent({
                                 kind: "resource",
@@ -457,7 +457,7 @@ export function ShellSearchPalette() {
           ) : null}
         </div>
 
-        <div className="border-t border-slate-100 px-3 py-2 text-[10px] text-slate-400 dark:border-slate-800">
+        <div className="border-t border-border px-3 py-2 text-[10px] text-muted-foreground dark:border-border">
           Ctrl+K toggles search. Results respect your current roles; clinical routes still follow facility/workspace/shift
           guards.
         </div>

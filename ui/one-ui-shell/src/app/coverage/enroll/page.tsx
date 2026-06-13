@@ -78,29 +78,29 @@ export default function CoverageEnrollPage() {
       <PageShell
         title="Enroll in coverage"
         subtitle="Citizen enrollment — eligibility check, plan selection, and member confirmation"
-        icon={<Shield className="h-6 w-6 text-impilo-600" />}
+        icon={<Shield className="h-6 w-6 text-primary" />}
       >
         <Link
           href="/coverage"
-          className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-impilo-700 hover:text-impilo-900"
+          className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-primary-hover hover:text-impilo-900"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to coverage operations
         </Link>
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <section className="rounded-2xl border border-gray-200 bg-white p-5">
-            <h2 className="text-lg font-semibold text-gray-900">1. Choose a plan</h2>
-            <p className="mt-1 text-sm text-gray-600">Select an active coverage plan for enrollment.</p>
+          <section className="rounded-2xl border border-border bg-card p-5">
+            <h2 className="text-lg font-semibold text-foreground">1. Choose a plan</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Select an active coverage plan for enrollment.</p>
             {plansQ.isLoading ? (
-              <div className="mt-4 flex items-center gap-2 text-sm text-gray-500">
+              <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Loading plans…
               </div>
             ) : (
               <select
                 data-testid="coverage-enroll-plan-select"
-                className="mt-4 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                className="mt-4 w-full rounded-lg border border-border px-3 py-2 text-sm"
                 value={selectedPlanId}
                 onChange={(e) => {
                   setSelectedPlanId(e.target.value);
@@ -118,15 +118,15 @@ export default function CoverageEnrollPage() {
             )}
           </section>
 
-          <section className="rounded-2xl border border-gray-200 bg-white p-5">
-            <h2 className="text-lg font-semibold text-gray-900">2. Eligibility check</h2>
-            <p className="mt-1 text-sm text-gray-600">Verify coverage eligibility before enrolling.</p>
+          <section className="rounded-2xl border border-border bg-card p-5">
+            <h2 className="text-lg font-semibold text-foreground">2. Eligibility check</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Verify coverage eligibility before enrolling.</p>
             <button
               type="button"
               data-testid="coverage-run-eligibility"
               onClick={runEligibility}
               disabled={!selectedPlanId || eligibility.isPending}
-              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-impilo-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary-hover px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
             >
               {eligibility.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserCheck className="h-4 w-4" />}
               Run eligibility
@@ -136,8 +136,8 @@ export default function CoverageEnrollPage() {
                 data-testid="coverage-eligibility-result"
                 className={`mt-3 rounded-lg border p-3 text-sm ${
                   eligibilityPassed
-                    ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                    : "border-amber-200 bg-amber-50 text-amber-900"
+                    ? "border-success/25 bg-success-soft text-primary-hover"
+                    : "border-warning/35 bg-warning-soft text-warning-foreground"
                 }`}
               >
                 <p className="font-medium">
@@ -154,9 +154,9 @@ export default function CoverageEnrollPage() {
             )}
           </section>
 
-          <section className="rounded-2xl border border-gray-200 bg-white p-5 lg:col-span-2">
-            <h2 className="text-lg font-semibold text-gray-900">3. Confirm enrollment</h2>
-            <p className="mt-1 text-sm text-gray-600">Create the coverage member record after eligibility passes.</p>
+          <section className="rounded-2xl border border-border bg-card p-5 lg:col-span-2">
+            <h2 className="text-lg font-semibold text-foreground">3. Confirm enrollment</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Create the coverage member record after eligibility passes.</p>
             <div className="mt-4 flex flex-col gap-3 sm:flex-row">
               <input
                 type="text"
@@ -164,7 +164,7 @@ export default function CoverageEnrollPage() {
                 placeholder="Member number"
                 value={memberNumber}
                 onChange={(e) => setMemberNumber(e.target.value)}
-                className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                className="flex-1 rounded-lg border border-border px-3 py-2 text-sm"
               />
               <button
                 type="button"
@@ -180,12 +180,12 @@ export default function CoverageEnrollPage() {
             {enrolled && (
               <div
                 data-testid="coverage-enroll-success"
-                className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800"
+                className="mt-4 rounded-lg border border-success/25 bg-success-soft p-4 text-sm text-primary-hover"
               >
                 Enrollment submitted. Member record created via coverage-service.
                 <Link
                   href="/coverage/member"
-                  className="mt-2 inline-block text-sm font-medium text-emerald-900 underline"
+                  className="mt-2 inline-block text-sm font-medium text-primary-hover underline"
                 >
                   View member dashboard
                 </Link>

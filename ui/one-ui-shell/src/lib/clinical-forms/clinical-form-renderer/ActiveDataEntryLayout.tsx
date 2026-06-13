@@ -26,12 +26,12 @@ export function ActiveDataEntryLayout(props: {
             <button
               type="button"
               onClick={onRequestExit}
-              className="w-full text-xs font-medium text-impilo-600 hover:text-impilo-800 py-1.5 px-2 rounded border border-impilo-200 bg-white"
+              className="w-full text-xs font-medium text-primary hover:text-impilo-800 py-1.5 px-2 rounded border border-primary/25 bg-card"
             >
               Exit focused entry
             </button>
           )}
-          <div className="rounded-lg border border-gray-200 bg-gray-50/80 p-2 text-xs text-gray-700 max-h-[70vh] overflow-y-auto">
+          <div className="rounded-lg border border-border bg-background/80 p-2 text-xs text-foreground max-h-[70vh] overflow-y-auto">
             {contextRail}
           </div>
         </div>
@@ -40,7 +40,7 @@ export function ActiveDataEntryLayout(props: {
         {!active && alerts}
         {!active && <div className="mb-3">{contextRail}</div>}
         {active && alerts && <div className="mb-2">{alerts}</div>}
-        <div className={active ? "rounded-xl border-2 border-impilo-300 shadow-sm bg-white p-4 ring-1 ring-impilo-100" : ""}>{primary}</div>
+        <div className={active ? "rounded-xl border-2 border-impilo-300 shadow-sm bg-card p-4 ring-1 ring-impilo-100" : ""}>{primary}</div>
       </div>
     </div>
   );

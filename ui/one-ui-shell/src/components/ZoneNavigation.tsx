@@ -37,7 +37,7 @@ const WORK_MODE_COLORS: Record<WorkMode, string> = {
   independent_practice: "bg-amber-400",
   emergency_response: "bg-red-500",
   community_outreach: "bg-teal-400",
-  general: "bg-gray-400",
+  general: "bg-neutral-500",
 };
 
 // ── Role group arrays (must match SecurityConfig.java) ───────────
@@ -280,7 +280,7 @@ export function LegacyZoneNavigation() {
   }
 
   return (
-    <nav className={`bg-gray-900 text-gray-300 flex flex-col shrink-0 transition-all duration-200 ${collapsed ? "w-14" : "w-56"}`}>
+    <nav className={`bg-neutral-900 text-muted-foreground flex flex-col shrink-0 transition-all duration-200 ${collapsed ? "w-14" : "w-56"}`}>
       {/* Header */}
       <div className="h-14 flex items-center justify-between px-3 border-b border-gray-700">
         {!collapsed && (
@@ -290,7 +290,7 @@ export function LegacyZoneNavigation() {
         )}
         <button
           onClick={toggleCollapsed}
-          className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors"
+          className="p-1.5 text-muted-foreground hover:text-white hover:bg-primary-hover rounded transition-colors"
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
@@ -299,8 +299,8 @@ export function LegacyZoneNavigation() {
 
       {/* Context indicator */}
       {isInContext && !collapsed && (
-        <div className="px-4 py-2 border-b border-gray-700 bg-gray-800">
-          <Link href="/home" className="text-xs text-gray-400 hover:text-white transition-colors">
+        <div className="px-4 py-2 border-b border-gray-700 bg-primary-hover">
+          <Link href="/home" className="text-xs text-muted-foreground hover:text-white transition-colors">
             ← Home
           </Link>
           <div className="text-xs font-semibold text-white mt-0.5">
@@ -309,8 +309,8 @@ export function LegacyZoneNavigation() {
         </div>
       )}
       {isInContext && collapsed && (
-        <div className="py-2 border-b border-gray-700 bg-gray-800 flex justify-center">
-          <Link href="/home" className="p-1 text-gray-400 hover:text-white" title="Back to Home">
+        <div className="py-2 border-b border-gray-700 bg-primary-hover flex justify-center">
+          <Link href="/home" className="p-1 text-muted-foreground hover:text-white" title="Back to Home">
             <Home className="w-4 h-4" />
           </Link>
         </div>
@@ -327,7 +327,7 @@ export function LegacyZoneNavigation() {
           return (
             <div key={section.title} className="mb-4">
               {!collapsed && (
-                <div className="px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                <div className="px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {section.title}
                 </div>
               )}
@@ -343,8 +343,8 @@ export function LegacyZoneNavigation() {
                       collapsed ? "justify-center px-2 py-2.5" : "px-4 py-2"
                     } text-sm ${
                       isActive
-                        ? "bg-gray-800 text-white font-medium border-l-2 border-impilo-400"
-                        : "hover:bg-gray-800 hover:text-white"
+                        ? "bg-primary-hover text-white font-medium border-l-2 border-impilo-400"
+                        : "hover:bg-primary-hover hover:text-white"
                     }`}
                   >
                     <Icon className="w-4 h-4 shrink-0" />
@@ -362,7 +362,7 @@ export function LegacyZoneNavigation() {
         {collapsed ? (
           <>
             <Link href="/home" title={facility ? facility.name : "Select Facility"} className="block text-center">
-              <Building2 className={`w-4 h-4 mx-auto ${facility ? "text-gray-400" : "text-yellow-500"}`} />
+              <Building2 className={`w-4 h-4 mx-auto ${facility ? "text-muted-foreground" : "text-yellow-500"}`} />
             </Link>
             {shift && <Activity className="w-4 h-4 mx-auto text-green-400" />}
           </>
@@ -370,13 +370,13 @@ export function LegacyZoneNavigation() {
           <>
             <div className="flex items-center gap-1.5 mb-1">
               <span className={`w-1.5 h-1.5 rounded-full ${WORK_MODE_COLORS[workMode]}`} />
-              <span className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold truncate">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold truncate">
                 {WORK_MODE_LABELS[workMode]}
               </span>
             </div>
             {facility ? (
-              <Link href="/facility" className="block text-xs text-gray-400 hover:text-white truncate">
-                <span className="text-gray-500">Facility:</span> {facility.name}
+              <Link href="/facility" className="block text-xs text-muted-foreground hover:text-white truncate">
+                <span className="text-muted-foreground">Facility:</span> {facility.name}
               </Link>
             ) : (
               <Link href="/home" className="block text-xs text-yellow-500 hover:text-yellow-400">
@@ -384,9 +384,9 @@ export function LegacyZoneNavigation() {
               </Link>
             )}
             {workspace ? (
-              <Link href="/workspace" className="block text-xs text-gray-400 hover:text-white truncate">
-                <span className="text-gray-500">Workspace:</span> {workspace.name}
-                <span className="ml-1 text-[10px] text-gray-500">({workspace.workspaceType})</span>
+              <Link href="/workspace" className="block text-xs text-muted-foreground hover:text-white truncate">
+                <span className="text-muted-foreground">Workspace:</span> {workspace.name}
+                <span className="ml-1 text-[10px] text-muted-foreground">({workspace.workspaceType})</span>
               </Link>
             ) : facility ? (
               <Link href="/workspace" className="block text-xs text-yellow-500 hover:text-yellow-400">

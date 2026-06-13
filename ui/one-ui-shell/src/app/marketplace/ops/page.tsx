@@ -90,33 +90,33 @@ export default function MarketplaceOpsPage() {
         <div className="mb-4">
           <Link
             href="/marketplace"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" /> Back to marketplace
           </Link>
         </div>
 
         <div className="space-y-6">
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">Ops reviews</h2>
-            <p className="mt-1 text-xs text-slate-500">
+          <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
+            <h2 className="text-sm font-semibold text-foreground">Ops reviews</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
               GET/POST <code className="text-[11px]">/internal/v1/commerce/ops/reviews*</code>
             </p>
             <div className="mt-3 flex flex-wrap items-end gap-3">
-              <label className="text-xs text-slate-600">
+              <label className="text-xs text-muted-foreground">
                 page
-                <input value={reviewPage} onChange={(e) => setReviewPage(e.target.value)} className="mt-1 block w-24 rounded-lg border border-slate-200 px-2 py-1.5 text-sm" />
+                <input value={reviewPage} onChange={(e) => setReviewPage(e.target.value)} className="mt-1 block w-24 rounded-lg border border-border px-2 py-1.5 text-sm" />
               </label>
-              <label className="text-xs text-slate-600">
+              <label className="text-xs text-muted-foreground">
                 size
-                <input value={reviewSize} onChange={(e) => setReviewSize(e.target.value)} className="mt-1 block w-24 rounded-lg border border-slate-200 px-2 py-1.5 text-sm" />
+                <input value={reviewSize} onChange={(e) => setReviewSize(e.target.value)} className="mt-1 block w-24 rounded-lg border border-border px-2 py-1.5 text-sm" />
               </label>
-              <button type="button" className="rounded-lg border border-slate-200 px-4 py-2 text-sm hover:bg-slate-50" onClick={() => { setReviewsArmed(true); void reviewsQ.refetch(); }}>
+              <button type="button" className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-background" onClick={() => { setReviewsArmed(true); void reviewsQ.refetch(); }}>
                 Fetch reviews
               </button>
             </div>
-            {reviewsQ.isLoading ? <p className="mt-3 flex items-center gap-2 text-sm text-slate-500"><Loader2 className="h-4 w-4 animate-spin" /> Loading reviews...</p> : null}
-            {reviewsQ.isError ? <p className="mt-3 text-sm text-red-700">Could not load reviews.</p> : null}
+            {reviewsQ.isLoading ? <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Loading reviews...</p> : null}
+            {reviewsQ.isError ? <p className="mt-3 text-sm text-danger">Could not load reviews.</p> : null}
             {reviewsQ.data != null ? (
               <div className="mt-3">
                 <JsonApiDataTable
@@ -133,13 +133,13 @@ export default function MarketplaceOpsPage() {
               </div>
             ) : null}
             <div className="mt-4 grid gap-3 lg:grid-cols-[0.4fr_1fr_auto_auto] lg:items-end">
-              <label className="text-xs text-slate-600">
+              <label className="text-xs text-muted-foreground">
                 Review id
-                <input value={reviewId} onChange={(e) => setReviewId(e.target.value)} className="mt-1 block rounded-lg border border-slate-200 px-3 py-2 text-sm font-mono" />
+                <input value={reviewId} onChange={(e) => setReviewId(e.target.value)} className="mt-1 block rounded-lg border border-border px-3 py-2 text-sm font-mono" />
               </label>
-              <label className="text-xs text-slate-600">
+              <label className="text-xs text-muted-foreground">
                 Body JSON
-                <textarea value={reviewJson} onChange={(e) => setReviewJson(e.target.value)} rows={3} className="mt-1 block w-full rounded-lg border border-slate-200 p-2 font-mono text-xs" />
+                <textarea value={reviewJson} onChange={(e) => setReviewJson(e.target.value)} rows={3} className="mt-1 block w-full rounded-lg border border-border p-2 font-mono text-xs" />
               </label>
               <button type="button" disabled={approveReview.isPending || !reviewId.trim()} className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50" onClick={() => approveReview.mutate({ reviewId: reviewId.trim(), body: parseJson(reviewJson) })}>
                 Approve
@@ -150,13 +150,13 @@ export default function MarketplaceOpsPage() {
             </div>
           </section>
 
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <h2 className="text-sm font-semibold text-slate-900">Stuck orders</h2>
-                <p className="mt-1 text-xs text-slate-500">GET <code className="text-[11px]">/internal/v1/commerce/ops/stuck-orders</code></p>
+                <h2 className="text-sm font-semibold text-foreground">Stuck orders</h2>
+                <p className="mt-1 text-xs text-muted-foreground">GET <code className="text-[11px]">/internal/v1/commerce/ops/stuck-orders</code></p>
               </div>
-              <button type="button" className="rounded-lg border border-slate-200 px-4 py-2 text-sm hover:bg-slate-50" onClick={() => { setStuckArmed(true); void stuckQ.refetch(); }}>
+              <button type="button" className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-background" onClick={() => { setStuckArmed(true); void stuckQ.refetch(); }}>
                 Fetch stuck orders
               </button>
             </div>
@@ -177,19 +177,19 @@ export default function MarketplaceOpsPage() {
             ) : null}
           </section>
 
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">Audit trail</h2>
-            <p className="mt-1 text-xs text-slate-500">GET <code className="text-[11px]">/internal/v1/commerce/ops/audit</code></p>
+          <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
+            <h2 className="text-sm font-semibold text-foreground">Audit trail</h2>
+            <p className="mt-1 text-xs text-muted-foreground">GET <code className="text-[11px]">/internal/v1/commerce/ops/audit</code></p>
             <div className="mt-3 flex flex-wrap items-end gap-3">
-              <label className="text-xs text-slate-600">
+              <label className="text-xs text-muted-foreground">
                 page
-                <input value={auditPage} onChange={(e) => setAuditPage(e.target.value)} className="mt-1 block w-24 rounded-lg border border-slate-200 px-2 py-1.5 text-sm" />
+                <input value={auditPage} onChange={(e) => setAuditPage(e.target.value)} className="mt-1 block w-24 rounded-lg border border-border px-2 py-1.5 text-sm" />
               </label>
-              <label className="text-xs text-slate-600">
+              <label className="text-xs text-muted-foreground">
                 size
-                <input value={auditSize} onChange={(e) => setAuditSize(e.target.value)} className="mt-1 block w-24 rounded-lg border border-slate-200 px-2 py-1.5 text-sm" />
+                <input value={auditSize} onChange={(e) => setAuditSize(e.target.value)} className="mt-1 block w-24 rounded-lg border border-border px-2 py-1.5 text-sm" />
               </label>
-              <button type="button" className="rounded-lg border border-slate-200 px-4 py-2 text-sm hover:bg-slate-50" onClick={() => { setAuditArmed(true); void auditQ.refetch(); }}>
+              <button type="button" className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-background" onClick={() => { setAuditArmed(true); void auditQ.refetch(); }}>
                 Fetch audit
               </button>
             </div>
@@ -210,21 +210,21 @@ export default function MarketplaceOpsPage() {
             ) : null}
           </section>
 
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">Vendor governance</h2>
-            <p className="mt-1 text-xs text-slate-500">
+          <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
+            <h2 className="text-sm font-semibold text-foreground">Vendor governance</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
               GET/POST <code className="text-[11px]">/internal/v1/commerce/ops/vendors*</code>
             </p>
             <div className="mt-3 flex flex-wrap items-end gap-3">
-              <label className="text-xs text-slate-600">
+              <label className="text-xs text-muted-foreground">
                 page
-                <input value={vendorPage} onChange={(e) => setVendorPage(e.target.value)} className="mt-1 block w-24 rounded-lg border border-slate-200 px-2 py-1.5 text-sm" />
+                <input value={vendorPage} onChange={(e) => setVendorPage(e.target.value)} className="mt-1 block w-24 rounded-lg border border-border px-2 py-1.5 text-sm" />
               </label>
-              <label className="text-xs text-slate-600">
+              <label className="text-xs text-muted-foreground">
                 size
-                <input value={vendorSize} onChange={(e) => setVendorSize(e.target.value)} className="mt-1 block w-24 rounded-lg border border-slate-200 px-2 py-1.5 text-sm" />
+                <input value={vendorSize} onChange={(e) => setVendorSize(e.target.value)} className="mt-1 block w-24 rounded-lg border border-border px-2 py-1.5 text-sm" />
               </label>
-              <button type="button" className="rounded-lg border border-slate-200 px-4 py-2 text-sm hover:bg-slate-50" onClick={() => { setVendorsArmed(true); void vendorsQ.refetch(); }}>
+              <button type="button" className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-background" onClick={() => { setVendorsArmed(true); void vendorsQ.refetch(); }}>
                 Fetch vendors
               </button>
             </div>
@@ -245,13 +245,13 @@ export default function MarketplaceOpsPage() {
             ) : null}
 
             <div className="mt-5 grid gap-3 lg:grid-cols-[0.4fr_1fr_auto_auto] lg:items-end">
-              <label className="text-xs text-slate-600">
+              <label className="text-xs text-muted-foreground">
                 Vendor id
-                <input value={vendorId} onChange={(e) => setVendorId(e.target.value)} className="mt-1 block rounded-lg border border-slate-200 px-3 py-2 text-sm font-mono" />
+                <input value={vendorId} onChange={(e) => setVendorId(e.target.value)} className="mt-1 block rounded-lg border border-border px-3 py-2 text-sm font-mono" />
               </label>
-              <label className="text-xs text-slate-600">
+              <label className="text-xs text-muted-foreground">
                 Suspend body JSON
-                <textarea value={vendorJson} onChange={(e) => setVendorJson(e.target.value)} rows={3} className="mt-1 block w-full rounded-lg border border-slate-200 p-2 font-mono text-xs" />
+                <textarea value={vendorJson} onChange={(e) => setVendorJson(e.target.value)} rows={3} className="mt-1 block w-full rounded-lg border border-border p-2 font-mono text-xs" />
               </label>
               <button type="button" disabled={suspendVendor.isPending || !vendorId.trim()} className="rounded-lg bg-amber-700 px-4 py-2 text-sm font-medium text-white hover:bg-amber-800 disabled:opacity-50" onClick={() => suspendVendor.mutate({ vendorId: vendorId.trim(), body: parseJson(vendorJson) })}>
                 Suspend
@@ -277,18 +277,18 @@ export default function MarketplaceOpsPage() {
             ) : null}
           </section>
 
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">Logistics desk</h2>
-            <p className="mt-1 text-xs text-slate-500">
+          <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
+            <h2 className="text-sm font-semibold text-foreground">Logistics desk</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
               GET/POST <code className="text-[11px]">/internal/v1/commerce/logistics/*</code>
             </p>
 
             <div className="mt-3 grid gap-3 lg:grid-cols-[0.45fr_auto_1fr] lg:items-end">
-              <label className="text-xs text-slate-600">
+              <label className="text-xs text-muted-foreground">
                 Fulfillment id
-                <input value={fulfillmentId} onChange={(e) => setFulfillmentId(e.target.value)} className="mt-1 block rounded-lg border border-slate-200 px-3 py-2 text-sm font-mono" />
+                <input value={fulfillmentId} onChange={(e) => setFulfillmentId(e.target.value)} className="mt-1 block rounded-lg border border-border px-3 py-2 text-sm font-mono" />
               </label>
-              <button type="button" className="rounded-lg border border-slate-200 px-4 py-2 text-sm hover:bg-slate-50" onClick={() => { setPlansArmed(true); void plansQ.refetch(); }}>
+              <button type="button" className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-background" onClick={() => { setPlansArmed(true); void plansQ.refetch(); }}>
                 Fetch plans
               </button>
               {plansQ.data != null ? (
@@ -306,14 +306,14 @@ export default function MarketplaceOpsPage() {
             </div>
 
             <div className="mt-4 grid gap-3 lg:grid-cols-[0.45fr_auto_auto_1fr] lg:items-end">
-              <label className="text-xs text-slate-600">
+              <label className="text-xs text-muted-foreground">
                 Plan id
-                <input value={planId} onChange={(e) => setPlanId(e.target.value)} className="mt-1 block rounded-lg border border-slate-200 px-3 py-2 text-sm font-mono" />
+                <input value={planId} onChange={(e) => setPlanId(e.target.value)} className="mt-1 block rounded-lg border border-border px-3 py-2 text-sm font-mono" />
               </label>
-              <button type="button" className="rounded-lg border border-slate-200 px-4 py-2 text-sm hover:bg-slate-50" onClick={() => { setExceptionsArmed(true); void exceptionsQ.refetch(); }}>
+              <button type="button" className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-background" onClick={() => { setExceptionsArmed(true); void exceptionsQ.refetch(); }}>
                 Fetch exceptions
               </button>
-              <button type="button" className="rounded-lg border border-slate-200 px-4 py-2 text-sm hover:bg-slate-50" onClick={() => { setProofsArmed(true); void proofsQ.refetch(); }}>
+              <button type="button" className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-background" onClick={() => { setProofsArmed(true); void proofsQ.refetch(); }}>
                 Fetch proofs
               </button>
               <div className="grid gap-2">
@@ -347,7 +347,7 @@ export default function MarketplaceOpsPage() {
             <div className="mt-4 grid gap-3 lg:grid-cols-[auto_1fr] lg:items-start">
               <button
                 type="button"
-                className="rounded-lg border border-slate-200 px-4 py-2 text-sm hover:bg-slate-50"
+                className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-background"
                 onClick={() => { setProvidersArmed(true); void providersQ.refetch(); }}
               >
                 Fetch providers
@@ -369,7 +369,7 @@ export default function MarketplaceOpsPage() {
             <div className="mt-4 grid gap-3 lg:grid-cols-[auto_1fr] lg:items-start">
               <button
                 type="button"
-                className="rounded-lg border border-slate-200 px-4 py-2 text-sm hover:bg-slate-50 disabled:opacity-50"
+                className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-background disabled:opacity-50"
                 onClick={() => { setHandoffsArmed(true); void handoffsQ.refetch(); }}
                 disabled={!fulfillmentId.trim()}
               >
@@ -393,7 +393,7 @@ export default function MarketplaceOpsPage() {
             <div className="mt-4 grid gap-3 lg:grid-cols-[auto_1fr] lg:items-start">
               <button
                 type="button"
-                className="rounded-lg border border-slate-200 px-4 py-2 text-sm hover:bg-slate-50 disabled:opacity-50"
+                className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-background disabled:opacity-50"
                 onClick={() => { setCustodyArmed(true); void custodyQ.refetch(); }}
                 disabled={!fulfillmentId.trim()}
               >

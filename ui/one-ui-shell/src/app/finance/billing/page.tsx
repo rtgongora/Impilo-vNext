@@ -40,13 +40,13 @@ function useBilling() {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  DRAFT: "bg-gray-100 text-gray-600",
+  DRAFT: "bg-neutral-100 text-muted-foreground",
   ACCUMULATING: "bg-yellow-100 text-yellow-700",
   APPROVAL_PENDING: "bg-orange-100 text-orange-700",
-  APPROVED: "bg-impilo-100 text-impilo-600",
+  APPROVED: "bg-primary-soft text-primary",
   FINAL: "bg-green-100 text-green-700",
-  VOID: "bg-red-100 text-red-700",
-  ADJUSTED: "bg-purple-100 text-purple-700",
+  VOID: "bg-red-100 text-danger",
+  ADJUSTED: "bg-purple-100 text-warning-foreground",
 };
 
 export default function BillingPage() {
@@ -81,7 +81,7 @@ export default function BillingPage() {
         <div className="mb-4">
           <Link
             href="/finance"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to finance
@@ -89,14 +89,14 @@ export default function BillingPage() {
         </div>
 
         {error ? (
-          <div className="bg-white rounded-lg border border-red-200 p-12 text-center">
+          <div className="bg-card rounded-lg border border-danger/28 p-12 text-center">
             <AlertCircle className="w-10 h-10 text-red-300 mx-auto mb-3" />
             <p className="text-red-600 text-sm">Failed to load billing records</p>
           </div>
         ) : isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading billing records...</span>
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading billing records...</span>
           </div>
         ) : (
           <div className="space-y-6">
@@ -135,59 +135,59 @@ export default function BillingPage() {
 
             <ServiceAccessPaymentPanel encounterId={encounterId} patientId={patientId} />
 
-            <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+            <div className="rounded-3xl border border-border bg-background/70 p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
                 Billing loop status
               </p>
-              <p className="mt-2 text-sm text-slate-800">
+              <p className="mt-2 text-sm text-foreground">
                 {source === "discharge"
                   ? "This billing view was reached from encounter outcome, so the loop here is confirming the right bill and continuing approval or payment steps without losing patient context."
                   : "This workspace shows the broader finance queue, but each bill still needs to resolve cleanly back to its encounter and patient context."}
               </p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Open a bill below for the detailed workflow, or move back to the encounter or patient chart when finance follow-through needs clinical clarification.
               </p>
             </div>
 
             {invoices.length === 0 ? (
-              <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-                <Receipt className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-400 text-sm">No billing records</p>
+              <div className="bg-card rounded-lg border border-border p-12 text-center">
+                <Receipt className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                <p className="text-muted-foreground text-sm">No billing records</p>
               </div>
             ) : (
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div className="bg-card rounded-lg border border-border overflow-hidden">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b bg-gray-50">
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Invoice #</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Patient</th>
-                      <th className="text-right px-4 py-3 font-medium text-gray-600">Amount</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Date</th>
+                    <tr className="border-b bg-background">
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Invoice #</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Patient</th>
+                      <th className="text-right px-4 py-3 font-medium text-muted-foreground">Amount</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Date</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {invoices.map((invoice) => {
                       const statusStyle =
-                        STATUS_STYLES[invoice.attributes.status] ?? "bg-gray-100 text-gray-600";
+                        STATUS_STYLES[invoice.attributes.status] ?? "bg-neutral-100 text-muted-foreground";
                       const billingHref =
                         patientId && encounterId
                           ? `/finance/billing/${invoice.id}?patientId=${patientId}&encounterId=${encounterId}&source=${source ?? "billing"}`
                           : `/finance/billing/${invoice.id}`;
                       return (
-                        <tr key={invoice.id} className="hover:bg-gray-50 transition-colors">
+                        <tr key={invoice.id} className="hover:bg-background transition-colors">
                           <td className="px-4 py-3">
                             <Link
                               href={billingHref}
-                              className="font-medium text-impilo-500 hover:text-impilo-700"
+                              className="font-medium text-primary hover:text-primary-hover"
                             >
                               {invoice.attributes.invoiceNumber}
                             </Link>
                           </td>
-                          <td className="px-4 py-3 text-gray-600">
+                          <td className="px-4 py-3 text-muted-foreground">
                             {invoice.attributes.patient}
                           </td>
-                          <td className="px-4 py-3 text-right font-mono text-gray-900">
+                          <td className="px-4 py-3 text-right font-mono text-foreground">
                             {invoice.attributes.currency}{" "}
                             {invoice.attributes.amount.toLocaleString(undefined, {
                               minimumFractionDigits: 2,
@@ -200,7 +200,7 @@ export default function BillingPage() {
                               {invoice.attributes.status}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
+                          <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
                             {new Date(invoice.attributes.date).toLocaleDateString()}
                           </td>
                         </tr>

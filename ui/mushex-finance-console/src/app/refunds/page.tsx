@@ -86,17 +86,17 @@ export default function RefundsPage() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-red-800">
           {error}
         </div>
       )}
 
       {successMessage && (
-        <div className="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-sm text-emerald-800">
+        <div className="mb-4 p-3 rounded-lg bg-success-soft border border-success/25 text-sm text-primary-hover">
           {successMessage}
           <button
             onClick={() => setSuccessMessage(null)}
-            className="ml-2 text-emerald-600 hover:text-emerald-800 font-medium"
+            className="ml-2 text-primary hover:text-primary-hover font-medium"
           >
             Dismiss
           </button>
@@ -126,9 +126,9 @@ export default function RefundsPage() {
               {intent.intentId}
             </h2>
             <span className={`badge ${
-              intent.status === "PAID" ? "bg-emerald-100 text-emerald-800" :
+              intent.status === "PAID" ? "bg-emerald-100 text-primary-hover" :
               intent.status === "REFUNDED" ? "bg-purple-100 text-purple-800" :
-              intent.status === "REFUND_PENDING" ? "bg-amber-100 text-amber-800" :
+              intent.status === "REFUND_PENDING" ? "bg-amber-100 text-warning-foreground" :
               "bg-neutral-100 text-neutral-600"
             }`}>
               {intent.status.replace(/_/g, " ")}
@@ -143,7 +143,7 @@ export default function RefundsPage() {
             </div>
             <div>
               <span className="text-neutral-500">Paid</span>
-              <p className="font-semibold font-mono text-emerald-700">
+              <p className="font-semibold font-mono text-primary-hover">
                 {intent.currency} {Number(intent.amountPaid).toFixed(2)}
               </p>
             </div>

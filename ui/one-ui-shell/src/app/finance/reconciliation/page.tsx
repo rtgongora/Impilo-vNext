@@ -52,7 +52,7 @@ export default function FinanceReconciliationPage() {
         subtitle="Import bank statement lines, list unmatched entries, and post matches — MusheX upstream via Experience BFF."
       >
         <div className="mb-4">
-          <Link href="/finance" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
+          <Link href="/finance" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-4 w-4" /> Finance dashboard
           </Link>
         </div>
@@ -60,23 +60,23 @@ export default function FinanceReconciliationPage() {
         <div className="max-w-4xl space-y-6">
           <FinancePayerOpsReconciliationNotice />
 
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">Import statement</h2>
-            <p className="mt-1 text-xs text-slate-500">
+          <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+            <h2 className="text-sm font-semibold text-foreground">Import statement</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
               POST <code className="text-[11px]">/internal/v1/finance/reconciliation/import-statement</code> with a JSON
               array of statement lines (see MusheX OpenAPI <code className="text-[11px]">ReconImportLine</code>).
             </p>
             <textarea
-              className="mt-3 w-full min-h-[140px] rounded-lg border border-slate-200 p-2 font-mono text-xs"
+              className="mt-3 w-full min-h-[140px] rounded-lg border border-border p-2 font-mono text-xs"
               value={importJson}
               onChange={(e) => setImportJson(e.target.value)}
               aria-label="Import statement JSON"
             />
-            {importError ? <p className="mt-2 text-xs text-red-700">{importError}</p> : null}
+            {importError ? <p className="mt-2 text-xs text-danger">{importError}</p> : null}
             <button
               type="button"
               disabled={importM.isPending}
-              className="mt-3 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+              className="mt-3 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary disabled:opacity-50"
               onClick={() => {
                 let body: unknown;
                 try {
@@ -98,40 +98,40 @@ export default function FinanceReconciliationPage() {
               )}
             </button>
             {importM.data != null ? (
-              <p className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+              <p className="mt-3 rounded-lg border border-success/25 bg-success-soft px-3 py-2 text-xs text-primary-hover">
                 Statement import accepted. Fetch unmatched entries to reconcile lines.
               </p>
             ) : null}
           </div>
 
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">Unmatched</h2>
-            <p className="mt-1 text-xs text-slate-500">
+          <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+            <h2 className="text-sm font-semibold text-foreground">Unmatched</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
               GET <code className="text-[11px]">/internal/v1/finance/reconciliation/unmatched</code> with optional{" "}
               <code className="text-[11px]">page</code> and <code className="text-[11px]">size</code>.
             </p>
             <div className="mt-3 flex flex-wrap items-end gap-3">
-              <label className="text-xs text-slate-600">
+              <label className="text-xs text-muted-foreground">
                 Page
                 <input
                   type="number"
-                  className="mt-1 block w-24 rounded-lg border border-slate-200 px-2 py-1.5 text-sm"
+                  className="mt-1 block w-24 rounded-lg border border-border px-2 py-1.5 text-sm"
                   value={page}
                   onChange={(e) => setPage(Number(e.target.value))}
                 />
               </label>
-              <label className="text-xs text-slate-600">
+              <label className="text-xs text-muted-foreground">
                 Size
                 <input
                   type="number"
-                  className="mt-1 block w-24 rounded-lg border border-slate-200 px-2 py-1.5 text-sm"
+                  className="mt-1 block w-24 rounded-lg border border-border px-2 py-1.5 text-sm"
                   value={size}
                   onChange={(e) => setSize(Number(e.target.value))}
                 />
               </label>
               <button
                 type="button"
-                className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium hover:bg-slate-50"
+                className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium hover:bg-background"
                 onClick={() => setUnmatchedArmed(true)}
               >
                 Fetch unmatched
@@ -139,22 +139,22 @@ export default function FinanceReconciliationPage() {
               <button
                 type="button"
                 disabled={!unmatchedArmed || unmatchedQ.isFetching}
-                className="rounded-lg border border-slate-200 px-3 py-2 text-sm hover:bg-slate-50 disabled:opacity-50"
+                className="rounded-lg border border-border px-3 py-2 text-sm hover:bg-background disabled:opacity-50"
                 onClick={() => void unmatchedQ.refetch()}
               >
                 Refresh
               </button>
             </div>
             {unmatchedQ.isLoading ? (
-              <p className="mt-3 flex items-center gap-2 text-sm text-slate-500">
+              <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" /> Loading…
               </p>
             ) : unmatchedQ.isError ? (
-              <p className="mt-3 text-sm text-red-700">Request failed (403 if your role is not allowed).</p>
+              <p className="mt-3 text-sm text-danger">Request failed (403 if your role is not allowed).</p>
             ) : unmatchedSummary ? (
               <div className="mt-3 space-y-2">
                 {typeof unmatchedSummary.totalElements === "number" ? (
-                  <p className="text-xs text-slate-600">Total elements: {String(unmatchedSummary.totalElements)}</p>
+                  <p className="text-xs text-muted-foreground">Total elements: {String(unmatchedSummary.totalElements)}</p>
                 ) : null}
                 <JsonApiDataTable
                   data={unmatchedQ.data}
@@ -170,15 +170,15 @@ export default function FinanceReconciliationPage() {
                 />
               </div>
             ) : unmatchedArmed ? (
-              <p className="mt-3 text-xs text-slate-500">No data.</p>
+              <p className="mt-3 text-xs text-muted-foreground">No data.</p>
             ) : (
-              <p className="mt-3 text-xs text-slate-500">Choose Fetch unmatched to call the BFF.</p>
+              <p className="mt-3 text-xs text-muted-foreground">Choose Fetch unmatched to call the BFF.</p>
             )}
           </div>
 
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">Match entry</h2>
-            <p className="mt-1 text-xs text-slate-500">
+          <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+            <h2 className="text-sm font-semibold text-foreground">Match entry</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
               POST <code className="text-[11px]">/internal/v1/finance/reconciliation/match?reconId=…</code> with body{" "}
               <code className="text-[11px]">{"{ \"intentId\": \"…\" }"}</code> (MusheX contract).
             </p>
@@ -188,7 +188,7 @@ export default function FinanceReconciliationPage() {
                 placeholder="recon id"
                 value={reconId}
                 onChange={(e) => setReconId(e.target.value)}
-                className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-mono min-w-[200px]"
+                className="rounded-lg border border-border px-3 py-2 text-sm font-mono min-w-[200px]"
                 aria-label="Reconciliation entry id"
               />
               <input
@@ -196,13 +196,13 @@ export default function FinanceReconciliationPage() {
                 placeholder="intent id to match"
                 value={matchIntentId}
                 onChange={(e) => setMatchIntentId(e.target.value)}
-                className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-mono min-w-[200px]"
+                className="rounded-lg border border-border px-3 py-2 text-sm font-mono min-w-[200px]"
                 aria-label="Payment intent id for match"
               />
               <button
                 type="button"
                 disabled={matchM.isPending || !reconId.trim() || !matchIntentId.trim()}
-                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary disabled:opacity-50"
                 onClick={() =>
                   matchM.mutate({ reconId: reconId.trim(), body: { intentId: matchIntentId.trim() } })
                 }
@@ -211,23 +211,23 @@ export default function FinanceReconciliationPage() {
               </button>
             </div>
             {matchM.data != null ? (
-              <p className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+              <p className="mt-3 rounded-lg border border-success/25 bg-success-soft px-3 py-2 text-xs text-primary-hover">
                 Match posted for reconciliation entry {reconId}.
               </p>
             ) : null}
           </div>
 
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">Triple-source match (intent ⇄ settlement ⇄ invoice)</h2>
-            <p className="mt-1 text-xs text-slate-500">
+          <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+            <h2 className="text-sm font-semibold text-foreground">Triple-source match (intent ⇄ settlement ⇄ invoice)</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
               GET <code className="text-[11px]">/internal/v1/finance/reconciliation/triple-match?encounterId=…</code>.
             </p>
             <div className="mt-3 flex flex-wrap items-end gap-3">
-              <label className="text-xs text-slate-600">
+              <label className="text-xs text-muted-foreground">
                 Encounter id
                 <input
                   type="text"
-                  className="mt-1 block min-w-[220px] rounded-lg border border-slate-200 px-2 py-1.5 text-sm font-mono"
+                  className="mt-1 block min-w-[220px] rounded-lg border border-border px-2 py-1.5 text-sm font-mono"
                   value={encounterId}
                   onChange={(e) => setEncounterId(e.target.value)}
                   aria-label="Triple match encounter id"
@@ -236,18 +236,18 @@ export default function FinanceReconciliationPage() {
               <button
                 type="button"
                 disabled={!encounterId.trim()}
-                className="rounded-lg border border-slate-200 px-3 py-2 text-sm hover:bg-slate-50 disabled:opacity-50"
+                className="rounded-lg border border-border px-3 py-2 text-sm hover:bg-background disabled:opacity-50"
                 onClick={() => setTripleArmed(true)}
               >
                 Fetch triple match
               </button>
             </div>
             {tripleQ.isLoading ? (
-              <p className="mt-3 flex items-center gap-2 text-sm text-slate-500">
+              <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" /> Loading triple-source rows…
               </p>
             ) : tripleQ.isError ? (
-              <p className="mt-3 text-sm text-red-700">Triple-source request failed.</p>
+              <p className="mt-3 text-sm text-danger">Triple-source request failed.</p>
             ) : tripleQ.data && typeof tripleQ.data === "object" ? (
               <div className="mt-3">
                 <JsonApiDataTable
@@ -263,12 +263,12 @@ export default function FinanceReconciliationPage() {
                 />
               </div>
             ) : tripleArmed ? (
-              <p className="mt-3 text-xs text-slate-500">No triple-source rows returned.</p>
+              <p className="mt-3 text-xs text-muted-foreground">No triple-source rows returned.</p>
             ) : null}
           </div>
 
-          <p className="text-xs text-slate-500">
-            <Link href="/finance/commerce-integrations" className="text-indigo-700 hover:underline">
+          <p className="text-xs text-muted-foreground">
+            <Link href="/finance/commerce-integrations" className="text-primary-hover hover:underline">
               Commerce and payer integration map
             </Link>
           </p>

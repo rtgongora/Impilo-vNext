@@ -114,7 +114,7 @@ export default function FinanceReportsPage() {
         ? String((err as { error?: { message?: string } }).error?.message ?? "Request failed")
         : "Request failed";
     return (
-      <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 flex items-center gap-2">
+      <div className="rounded-lg border border-danger/28 bg-danger-soft px-3 py-2 text-sm text-red-800 flex items-center gap-2">
         <AlertTriangle className="h-4 w-4 shrink-0" />
         {msg}
       </div>
@@ -129,34 +129,34 @@ export default function FinanceReportsPage() {
       >
         <OrganizationPlaneContextBar />
         <div className="space-y-6">
-          <div className="flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-4">
-            <label className="text-xs font-medium text-slate-600">
+          <div className="flex flex-wrap items-end gap-3 rounded-xl border border-border bg-card p-4">
+            <label className="text-xs font-medium text-muted-foreground">
               Year
               <input
                 type="number"
-                className="mt-1 block w-24 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                className="mt-1 block w-24 rounded-md border border-border px-2 py-1.5 text-sm"
                 value={year}
                 onChange={(e) => setYear(Number(e.target.value))}
               />
             </label>
-            <label className="text-xs font-medium text-slate-600">
+            <label className="text-xs font-medium text-muted-foreground">
               Month
               <input
                 type="number"
                 min={1}
                 max={12}
-                className="mt-1 block w-20 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                className="mt-1 block w-20 rounded-md border border-border px-2 py-1.5 text-sm"
                 value={month}
                 onChange={(e) => setMonth(Number(e.target.value))}
               />
             </label>
-            <div className="text-xs text-slate-500">
+            <div className="text-xs text-muted-foreground">
               Facility:{" "}
-              <span className="font-medium text-slate-800">{facility?.name ?? "None selected (tenant-wide where supported)"}</span>
+              <span className="font-medium text-foreground">{facility?.name ?? "None selected (tenant-wide where supported)"}</span>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-2">
+          <div className="flex flex-wrap gap-2 border-b border-border pb-2">
             {(
               [
                 ["revenue", "Revenue", Receipt],
@@ -170,7 +170,7 @@ export default function FinanceReportsPage() {
                 type="button"
                 onClick={() => setTab(id)}
                 className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                  tab === id ? "bg-indigo-100 text-indigo-900" : "text-slate-600 hover:bg-slate-100"
+                  tab === id ? "bg-indigo-100 text-primary-hover" : "text-muted-foreground hover:bg-neutral-100"
                 }`}
               >
                 <Icon className="h-4 w-4" />
@@ -182,30 +182,30 @@ export default function FinanceReportsPage() {
           {tab === "revenue" && (
             <div className="space-y-6">
               {revenueQ.isLoading && (
-                <div className="flex items-center gap-2 text-sm text-slate-500">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" /> Loading revenue summary…
                 </div>
               )}
               {revenueQ.isError && errorBanner(revenueQ.error)}
               {!revenueQ.isLoading && !revenueQ.data && !revenueQ.isError && (
-                <p className="text-sm text-slate-500">No revenue data for this period.</p>
+                <p className="text-sm text-muted-foreground">No revenue data for this period.</p>
               )}
               {revenue && (
                 <>
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    <div className="rounded-xl border border-slate-200 bg-white p-4">
-                      <p className="text-xs uppercase tracking-wide text-slate-500">Total net revenue</p>
-                      <p className="mt-1 text-2xl font-semibold text-slate-900">{money(revenue.totalRevenue)}</p>
+                    <div className="rounded-xl border border-border bg-card p-4">
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Total net revenue</p>
+                      <p className="mt-1 text-2xl font-semibold text-foreground">{money(revenue.totalRevenue)}</p>
                     </div>
-                    <div className="rounded-xl border border-slate-200 bg-white p-4">
-                      <p className="text-xs uppercase tracking-wide text-slate-500">Encounters</p>
-                      <p className="mt-1 text-2xl font-semibold text-slate-900">{String(revenue.encounterCount ?? 0)}</p>
+                    <div className="rounded-xl border border-border bg-card p-4">
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Encounters</p>
+                      <p className="mt-1 text-2xl font-semibold text-foreground">{String(revenue.encounterCount ?? 0)}</p>
                     </div>
-                    <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 p-4">
-                      <p className="text-xs uppercase tracking-wide text-indigo-800">Period close</p>
+                    <div className="rounded-xl border border-indigo-100 bg-info-soft/60 p-4">
+                      <p className="text-xs uppercase tracking-wide text-primary-hover">Period close</p>
                       <div className="mt-2 flex flex-wrap items-center gap-2">
                         <select
-                          className="rounded-md border border-indigo-200 bg-white px-2 py-1 text-xs"
+                          className="rounded-md border border-info/25 bg-card px-2 py-1 text-xs"
                           value={closeType}
                           onChange={(e) => setCloseType(e.target.value)}
                         >
@@ -216,24 +216,24 @@ export default function FinanceReportsPage() {
                           type="button"
                           disabled={closeM.isPending}
                           onClick={() => closeM.mutate({ periodType: closeType, year, month })}
-                          className="inline-flex items-center gap-1 rounded-md bg-indigo-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-800 disabled:opacity-50"
+                          className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-800 disabled:opacity-50"
                         >
                           {closeM.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
                           Close period
                         </button>
                       </div>
                       {closeM.isError && <p className="mt-2 text-xs text-red-600">Close failed — check roles and upstream COSTA.</p>}
-                      {closeM.isSuccess && <p className="mt-2 text-xs text-emerald-700">Period close accepted.</p>}
+                      {closeM.isSuccess && <p className="mt-2 text-xs text-primary-hover">Period close accepted.</p>}
                     </div>
                   </div>
 
-                  <div className="rounded-xl border border-slate-200 bg-white p-4">
+                  <div className="rounded-xl border border-border bg-card p-4">
                     <div className="mb-3 flex items-center gap-2">
-                      <BarChart3 className="h-4 w-4 text-slate-500" />
-                      <h3 className="text-sm font-semibold text-slate-900">Monthly revenue trend ({year})</h3>
+                      <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                      <h3 className="text-sm font-semibold text-foreground">Monthly revenue trend ({year})</h3>
                     </div>
                     {trend.length === 0 ? (
-                      <p className="text-sm text-slate-500">No trend rows for this facility/year.</p>
+                      <p className="text-sm text-muted-foreground">No trend rows for this facility/year.</p>
                     ) : (
                       <div className="space-y-2">
                         {trend.map((row) => {
@@ -241,15 +241,15 @@ export default function FinanceReportsPage() {
                           const w = Math.round((Number.isNaN(total) ? 0 : total / trendMax) * 100);
                           return (
                             <div key={String(row.month)} className="flex items-center gap-3 text-sm">
-                              <span className="w-10 text-slate-500">M{String(row.month)}</span>
-                              <div className="h-3 flex-1 rounded-full bg-slate-100">
+                              <span className="w-10 text-muted-foreground">M{String(row.month)}</span>
+                              <div className="h-3 flex-1 rounded-full bg-neutral-100">
                                 <div
                                   className="h-3 rounded-full bg-indigo-500"
                                   style={{ width: `${Math.max(w, 2)}%` }}
                                   title={money(row.total)}
                                 />
                               </div>
-                              <span className="w-24 text-right text-slate-700">{money(row.total)}</span>
+                              <span className="w-24 text-right text-foreground">{money(row.total)}</span>
                             </div>
                           );
                         })}
@@ -258,21 +258,21 @@ export default function FinanceReportsPage() {
                   </div>
 
                   <div className="grid gap-4 lg:grid-cols-2">
-                    <div className="rounded-xl border border-slate-200 bg-white p-4">
-                      <h3 className="text-sm font-semibold text-slate-900">By payer type</h3>
+                    <div className="rounded-xl border border-border bg-card p-4">
+                      <h3 className="text-sm font-semibold text-foreground">By payer type</h3>
                       {byPayer.length === 0 ? (
-                        <p className="mt-2 text-sm text-slate-500">No payer-type breakdown.</p>
+                        <p className="mt-2 text-sm text-muted-foreground">No payer-type breakdown.</p>
                       ) : (
                         <table className="mt-3 w-full text-sm">
                           <thead>
-                            <tr className="text-left text-xs text-slate-500">
+                            <tr className="text-left text-xs text-muted-foreground">
                               <th className="pb-2">Type</th>
                               <th className="pb-2 text-right">Net</th>
                             </tr>
                           </thead>
                           <tbody>
                             {byPayer.map((row) => (
-                              <tr key={String(row.bucket)} className="border-t border-slate-100">
+                              <tr key={String(row.bucket)} className="border-t border-border">
                                 <td className="py-2">{String(row.bucket)}</td>
                                 <td className="py-2 text-right font-medium">{money(row.total)}</td>
                               </tr>
@@ -281,21 +281,21 @@ export default function FinanceReportsPage() {
                         </table>
                       )}
                     </div>
-                    <div className="rounded-xl border border-slate-200 bg-white p-4">
-                      <h3 className="text-sm font-semibold text-slate-900">By department</h3>
+                    <div className="rounded-xl border border-border bg-card p-4">
+                      <h3 className="text-sm font-semibold text-foreground">By department</h3>
                       {byDept.length === 0 ? (
-                        <p className="mt-2 text-sm text-slate-500">No department breakdown.</p>
+                        <p className="mt-2 text-sm text-muted-foreground">No department breakdown.</p>
                       ) : (
                         <table className="mt-3 w-full text-sm">
                           <thead>
-                            <tr className="text-left text-xs text-slate-500">
+                            <tr className="text-left text-xs text-muted-foreground">
                               <th className="pb-2">Department</th>
                               <th className="pb-2 text-right">Net</th>
                             </tr>
                           </thead>
                           <tbody>
                             {byDept.map((row) => (
-                              <tr key={String(row.bucket)} className="border-t border-slate-100">
+                              <tr key={String(row.bucket)} className="border-t border-border">
                                 <td className="py-2">{String(row.bucket)}</td>
                                 <td className="py-2 text-right font-medium">{money(row.total)}</td>
                               </tr>
@@ -313,7 +313,7 @@ export default function FinanceReportsPage() {
           {tab === "receivables" && (
             <div className="space-y-6">
               {debtQ.isLoading && (
-                <div className="flex items-center gap-2 text-sm text-slate-500">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" /> Loading receivables…
                 </div>
               )}
@@ -322,33 +322,33 @@ export default function FinanceReportsPage() {
                 <>
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                     {aging.length === 0 ? (
-                      <p className="text-sm text-slate-500 col-span-full">No open receivables buckets.</p>
+                      <p className="text-sm text-muted-foreground col-span-full">No open receivables buckets.</p>
                     ) : (
                       aging.map((row) => (
                         <div
                           key={String(row.bucket)}
-                          className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm"
+                          className="rounded-xl border border-border bg-card p-3 shadow-sm"
                         >
                           <div className={`mb-2 h-1.5 rounded-full ${bucketColor(String(row.bucket))}`} />
-                          <p className="text-xs font-medium uppercase text-slate-500">{String(row.bucket)}</p>
-                          <p className="mt-1 text-lg font-semibold text-slate-900">{money(row.outstanding)}</p>
-                          <p className="text-xs text-slate-500">{String(row.rowCount ?? 0)} lines</p>
+                          <p className="text-xs font-medium uppercase text-muted-foreground">{String(row.bucket)}</p>
+                          <p className="mt-1 text-lg font-semibold text-foreground">{money(row.outstanding)}</p>
+                          <p className="text-xs text-muted-foreground">{String(row.rowCount ?? 0)} lines</p>
                         </div>
                       ))
                     )}
                   </div>
-                  <div className="rounded-xl border border-slate-200 bg-white p-4">
-                    <h3 className="text-sm font-semibold text-slate-900">Write-off total (linked receivables)</h3>
-                    <p className="mt-2 text-2xl font-semibold text-rose-700">{money(debt.writeOffTotal)}</p>
+                  <div className="rounded-xl border border-border bg-card p-4">
+                    <h3 className="text-sm font-semibold text-foreground">Write-off total (linked receivables)</h3>
+                    <p className="mt-2 text-2xl font-semibold text-danger">{money(debt.writeOffTotal)}</p>
                   </div>
-                  <div className="rounded-xl border border-slate-200 bg-white p-4">
-                    <h3 className="text-sm font-semibold text-slate-900">Top debtors</h3>
+                  <div className="rounded-xl border border-border bg-card p-4">
+                    <h3 className="text-sm font-semibold text-foreground">Top debtors</h3>
                     {debtors.length === 0 ? (
-                      <p className="mt-2 text-sm text-slate-500">No debtor rows.</p>
+                      <p className="mt-2 text-sm text-muted-foreground">No debtor rows.</p>
                     ) : (
                       <table className="mt-3 w-full text-sm">
                         <thead>
-                          <tr className="text-left text-xs text-slate-500">
+                          <tr className="text-left text-xs text-muted-foreground">
                             <th className="pb-2">Name</th>
                             <th className="pb-2">Ref</th>
                             <th className="pb-2 text-right">Outstanding</th>
@@ -356,9 +356,9 @@ export default function FinanceReportsPage() {
                         </thead>
                         <tbody>
                           {debtors.map((row, i) => (
-                            <tr key={`${String(row.debtorRef)}-${i}`} className="border-t border-slate-100">
+                            <tr key={`${String(row.debtorRef)}-${i}`} className="border-t border-border">
                               <td className="py-2">{String(row.debtorName ?? "—")}</td>
-                              <td className="py-2 text-slate-600">{String(row.debtorRef ?? "")}</td>
+                              <td className="py-2 text-muted-foreground">{String(row.debtorRef ?? "")}</td>
                               <td className="py-2 text-right font-medium">{money(row.outstanding)}</td>
                             </tr>
                           ))}
@@ -374,20 +374,20 @@ export default function FinanceReportsPage() {
           {tab === "budget" && (
             <div className="space-y-6">
               {!facilityId && (
-                <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                <p className="text-sm text-warning-foreground bg-warning-soft border border-warning/35 rounded-lg px-3 py-2">
                   Select a facility in context to load budget vs actual and allocations.
                 </p>
               )}
               {budgetVaQ.isLoading && (
-                <div className="flex items-center gap-2 text-sm text-slate-500">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" /> Loading budget vs actual…
                 </div>
               )}
               {budgetVaQ.isError && errorBanner(budgetVaQ.error)}
               {budgetVaQ.data && (
-                <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+                <div className="rounded-xl border border-border bg-card overflow-hidden">
                   <table className="w-full text-sm">
-                    <thead className="bg-slate-50 text-left text-xs text-slate-600">
+                    <thead className="bg-background text-left text-xs text-muted-foreground">
                       <tr>
                         <th className="px-3 py-2">Category</th>
                         <th className="px-3 py-2 text-right">Allocated</th>
@@ -400,7 +400,7 @@ export default function FinanceReportsPage() {
                     <tbody>
                       {bvaRows.length === 0 ? (
                         <tr>
-                          <td colSpan={6} className="px-3 py-6 text-center text-slate-500">
+                          <td colSpan={6} className="px-3 py-6 text-center text-muted-foreground">
                             No budget allocations for this year. Create one below.
                           </td>
                         </tr>
@@ -408,7 +408,7 @@ export default function FinanceReportsPage() {
                         bvaRows.map((row) => {
                           const used = Number(row.percentUsed ?? 0);
                           return (
-                            <tr key={String(row.allocationId)} className="border-t border-slate-100">
+                            <tr key={String(row.allocationId)} className="border-t border-border">
                               <td className="px-3 py-2 font-medium">{String(row.category)}</td>
                               <td className="px-3 py-2 text-right">{money(row.allocated)}</td>
                               <td className="px-3 py-2 text-right">{money(row.spent)}</td>
@@ -416,13 +416,13 @@ export default function FinanceReportsPage() {
                               <td className="px-3 py-2 text-right">{money(row.available)}</td>
                               <td className="px-3 py-2">
                                 <div className="flex items-center gap-2">
-                                  <div className="h-2 w-24 overflow-hidden rounded-full bg-slate-100">
+                                  <div className="h-2 w-24 overflow-hidden rounded-full bg-neutral-100">
                                     <div
                                       className="h-2 rounded-full bg-teal-500"
                                       style={{ width: `${Math.min(used, 100)}%` }}
                                     />
                                   </div>
-                                  <span className="text-xs text-slate-600">{pct(row.percentUsed)}</span>
+                                  <span className="text-xs text-muted-foreground">{pct(row.percentUsed)}</span>
                                 </div>
                               </td>
                             </tr>
@@ -435,22 +435,22 @@ export default function FinanceReportsPage() {
               )}
 
               <div className="grid gap-4 lg:grid-cols-2">
-                <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-3">
-                  <h3 className="text-sm font-semibold text-slate-900">Create allocation</h3>
+                <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+                  <h3 className="text-sm font-semibold text-foreground">Create allocation</h3>
                   <input
-                    className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                    className="w-full rounded-md border border-border px-2 py-1.5 text-sm"
                     placeholder="Department id (optional)"
                     value={budgetDept}
                     onChange={(e) => setBudgetDept(e.target.value)}
                   />
                   <input
-                    className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                    className="w-full rounded-md border border-border px-2 py-1.5 text-sm"
                     placeholder="Category"
                     value={budgetCategory}
                     onChange={(e) => setBudgetCategory(e.target.value)}
                   />
                   <input
-                    className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                    className="w-full rounded-md border border-border px-2 py-1.5 text-sm"
                     placeholder="Allocated amount"
                     value={budgetAmount}
                     onChange={(e) => setBudgetAmount(e.target.value)}
@@ -468,24 +468,24 @@ export default function FinanceReportsPage() {
                         allocatedAmount: Number(budgetAmount),
                       });
                     }}
-                    className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+                    className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover disabled:opacity-50"
                   >
                     {createBudgetM.isPending ? "Saving…" : "Create allocation"}
                   </button>
                   {createBudgetM.isError && errorBanner(createBudgetM.error)}
-                  {createBudgetM.isSuccess && <p className="text-xs text-emerald-700">Allocation created.</p>}
+                  {createBudgetM.isSuccess && <p className="text-xs text-primary-hover">Allocation created.</p>}
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-3">
-                  <h3 className="text-sm font-semibold text-slate-900">Record spend (by allocation id)</h3>
-                  <p className="text-xs text-slate-500">Use numeric id from COSTA row or list below.</p>
+                <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+                  <h3 className="text-sm font-semibold text-foreground">Record spend (by allocation id)</h3>
+                  <p className="text-xs text-muted-foreground">Use numeric id from COSTA row or list below.</p>
                   <input
-                    className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                    className="w-full rounded-md border border-border px-2 py-1.5 text-sm"
                     placeholder="Allocation id (number)"
                     value={spendId}
                     onChange={(e) => setSpendId(e.target.value)}
                   />
                   <input
-                    className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                    className="w-full rounded-md border border-border px-2 py-1.5 text-sm"
                     placeholder="Amount"
                     value={spendAmount}
                     onChange={(e) => setSpendAmount(e.target.value)}
@@ -502,7 +502,7 @@ export default function FinanceReportsPage() {
                         year,
                       });
                     }}
-                    className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
+                    className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-background disabled:opacity-50"
                   >
                     {spendM.isPending ? "Recording…" : "Record spend"}
                   </button>
@@ -510,16 +510,16 @@ export default function FinanceReportsPage() {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-slate-200 bg-white p-4">
-                <h3 className="text-sm font-semibold text-slate-900">Allocations ({year})</h3>
+              <div className="rounded-xl border border-border bg-card p-4">
+                <h3 className="text-sm font-semibold text-foreground">Allocations ({year})</h3>
                 {budgetsListQ.isLoading && (
-                  <p className="mt-2 text-sm text-slate-500 flex items-center gap-2">
+                  <p className="mt-2 text-sm text-muted-foreground flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin" /> Loading…
                   </p>
                 )}
                 {budgetsListQ.isError && errorBanner(budgetsListQ.error)}
                 {Array.isArray(budgetsListQ.data) && budgetsListQ.data.length === 0 && (
-                  <p className="mt-2 text-sm text-slate-500">No rows.</p>
+                  <p className="mt-2 text-sm text-muted-foreground">No rows.</p>
                 )}
                 {Array.isArray(budgetsListQ.data) && budgetsListQ.data.length > 0 && (
                   <ul className="mt-2 divide-y divide-slate-100 text-sm">
@@ -528,7 +528,7 @@ export default function FinanceReportsPage() {
                       return (
                         <li key={String(r.id)} className="py-2 flex flex-wrap justify-between gap-2">
                           <span className="font-medium">{String(r.budgetCategory)}</span>
-                          <span className="text-slate-600">
+                          <span className="text-muted-foreground">
                             id {String(r.id)} · avail {money(r.availableAmount)}
                           </span>
                         </li>
@@ -542,44 +542,44 @@ export default function FinanceReportsPage() {
 
           {tab === "claims" && (
             <div className="space-y-6">
-              <label className="block text-xs font-medium text-slate-600">
+              <label className="block text-xs font-medium text-muted-foreground">
                 Payer id (insurer ref) — optional filter
                 <input
-                  className="mt-1 block max-w-md rounded-md border border-slate-300 px-2 py-1.5 text-sm w-full"
+                  className="mt-1 block max-w-md rounded-md border border-border px-2 py-1.5 text-sm w-full"
                   value={payerId}
                   onChange={(e) => setPayerId(e.target.value)}
                   placeholder="UUID or insurer reference"
                 />
               </label>
               {claimsQ.isLoading && (
-                <div className="flex items-center gap-2 text-sm text-slate-500">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" /> Loading claims expenditure…
                 </div>
               )}
               {claimsQ.isError && errorBanner(claimsQ.error)}
               {claimsQ.data && (
                 <div className="grid gap-4 lg:grid-cols-3">
-                  <div className="rounded-xl border border-slate-200 bg-white p-4 lg:col-span-1">
-                    <p className="text-xs uppercase text-slate-500">Loss ratio</p>
-                    <p className="mt-1 text-2xl font-semibold text-slate-900">
+                  <div className="rounded-xl border border-border bg-card p-4 lg:col-span-1">
+                    <p className="text-xs uppercase text-muted-foreground">Loss ratio</p>
+                    <p className="mt-1 text-2xl font-semibold text-foreground">
                       {claimsQ.data.lossRatio != null
                         ? `${(Number(claimsQ.data.lossRatio) * 100).toFixed(2)}%`
                         : "N/A"}
                     </p>
-                    <p className="mt-2 text-xs text-slate-500">
+                    <p className="mt-2 text-xs text-muted-foreground">
                       Claims exposure / premiums collected (premium rows use revenue_type containing PREMIUM).
                     </p>
-                    <p className="mt-1 text-xs text-slate-600">Exposure: {money(claimsQ.data.claimsExposure)}</p>
-                    <p className="text-xs text-slate-600">Premiums: {money(claimsQ.data.premiumsCollected)}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Exposure: {money(claimsQ.data.claimsExposure)}</p>
+                    <p className="text-xs text-muted-foreground">Premiums: {money(claimsQ.data.premiumsCollected)}</p>
                   </div>
-                  <div className="rounded-xl border border-slate-200 bg-white p-4 lg:col-span-2">
-                    <h3 className="text-sm font-semibold text-slate-900">Claims by status</h3>
+                  <div className="rounded-xl border border-border bg-card p-4 lg:col-span-2">
+                    <h3 className="text-sm font-semibold text-foreground">Claims by status</h3>
                     {claimsByStatus.length === 0 ? (
-                      <p className="mt-2 text-sm text-slate-500">No claim packs in period.</p>
+                      <p className="mt-2 text-sm text-muted-foreground">No claim packs in period.</p>
                     ) : (
                       <table className="mt-3 w-full text-sm">
                         <thead>
-                          <tr className="text-left text-xs text-slate-500">
+                          <tr className="text-left text-xs text-muted-foreground">
                             <th className="pb-2">Status</th>
                             <th className="pb-2 text-right">Count</th>
                             <th className="pb-2 text-right">Insurer payable</th>
@@ -587,7 +587,7 @@ export default function FinanceReportsPage() {
                         </thead>
                         <tbody>
                           {claimsByStatus.map((row) => (
-                            <tr key={String(row.status)} className="border-t border-slate-100">
+                            <tr key={String(row.status)} className="border-t border-border">
                               <td className="py-2">{String(row.status)}</td>
                               <td className="py-2 text-right">{String(row.claimCount ?? 0)}</td>
                               <td className="py-2 text-right font-medium">{money(row.amount)}</td>
@@ -600,13 +600,13 @@ export default function FinanceReportsPage() {
                 </div>
               )}
 
-              <div className="rounded-xl border border-slate-200 bg-white p-4">
-                <h3 className="text-sm font-semibold text-slate-900">Provider payment summary</h3>
-                <p className="text-xs text-slate-500 mt-1">
+              <div className="rounded-xl border border-border bg-card p-4">
+                <h3 className="text-sm font-semibold text-foreground">Provider payment summary</h3>
+                <p className="text-xs text-muted-foreground mt-1">
                   Using selected facility id as provider (facility) anchor for paid MusheX-linked payments in period.
                 </p>
                 {providerQ.isLoading && (
-                  <p className="mt-2 text-sm text-slate-500 flex items-center gap-2">
+                  <p className="mt-2 text-sm text-muted-foreground flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin" /> Loading…
                   </p>
                 )}
@@ -615,11 +615,11 @@ export default function FinanceReportsPage() {
                   <>
                     <p className="mt-3 text-lg font-semibold">Total paid: {money(providerQ.data.totalPaid)}</p>
                     {payTypes.length === 0 ? (
-                      <p className="mt-2 text-sm text-slate-500">No paid payments in period.</p>
+                      <p className="mt-2 text-sm text-muted-foreground">No paid payments in period.</p>
                     ) : (
                       <table className="mt-3 w-full text-sm">
                         <thead>
-                          <tr className="text-left text-xs text-slate-500">
+                          <tr className="text-left text-xs text-muted-foreground">
                             <th className="pb-2">Payment type</th>
                             <th className="pb-2 text-right">Paid</th>
                             <th className="pb-2 text-right">Count</th>
@@ -627,7 +627,7 @@ export default function FinanceReportsPage() {
                         </thead>
                         <tbody>
                           {payTypes.map((row) => (
-                            <tr key={String(row.paymentType)} className="border-t border-slate-100">
+                            <tr key={String(row.paymentType)} className="border-t border-border">
                               <td className="py-2">{String(row.paymentType)}</td>
                               <td className="py-2 text-right font-medium">{money(row.paid)}</td>
                               <td className="py-2 text-right">{String(row.paymentCount ?? 0)}</td>

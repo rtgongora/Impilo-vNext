@@ -74,57 +74,57 @@ export default function TodayAppointmentsPage() {
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <Link
             href="/scheduling"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" /> Scheduling
           </Link>
           <Link
             href="/scheduling/booking-requests"
-            className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+            className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-background"
           >
             Booking requests
           </Link>
         </div>
 
         {!facility?.id ? (
-          <p className="text-sm text-gray-500">Select a facility to view today&apos;s appointments.</p>
+          <p className="text-sm text-muted-foreground">Select a facility to view today&apos;s appointments.</p>
         ) : isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : today.length === 0 ? (
-          <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
-            <CalendarDays className="mx-auto mb-3 h-10 w-10 text-gray-300" />
-            <p className="text-sm text-gray-500">No confirmed appointments scheduled for today.</p>
+          <div className="rounded-lg border border-border bg-card p-12 text-center">
+            <CalendarDays className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">No confirmed appointments scheduled for today.</p>
           </div>
         ) : (
           <div className="space-y-2">
             {today.map((appt) => {
               const statusStyle =
                 APPOINTMENT_STATUS_STYLES[appt.status.toUpperCase()] ??
-                "bg-gray-100 text-gray-600";
+                "bg-neutral-100 text-muted-foreground";
               const isVirtual =
                 appt.channel?.toUpperCase() === "VIRTUAL" ||
                 appt.appointmentType?.toUpperCase() === "TELEMEDICINE";
               return (
                 <div
                   key={appt.id}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white p-4"
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card p-4"
                 >
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-gray-900">
+                      <span className="text-sm font-semibold text-foreground">
                         {formatTime(appt.startTime)}
                       </span>
                       <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusStyle}`}>
                         {appt.status.replace(/_/g, " ")}
                       </span>
                     </div>
-                    <p className="mt-0.5 text-sm text-gray-700">
+                    <p className="mt-0.5 text-sm text-foreground">
                       {appt.appointmentType.replace(/_/g, " ")}
                     </p>
                     {appt.providerName && (
-                      <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                      <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                         <Clock className="h-3 w-3" />
                         {appt.providerName}
                       </p>
@@ -135,7 +135,7 @@ export default function TodayAppointmentsPage() {
                       type="button"
                       onClick={() => checkIn.mutate(appt.id)}
                       disabled={checkIn.isPending}
-                      className="inline-flex items-center gap-1 rounded-lg bg-impilo-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-impilo-600 disabled:opacity-50"
+                      className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-primary-hover disabled:opacity-50"
                     >
                       <CheckCircle2 className="h-3 w-3" />
                       Check in

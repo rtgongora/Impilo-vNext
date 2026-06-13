@@ -43,14 +43,14 @@ const CHART_SECTIONS = [
   { label: "Conditions", href: "conditions", icon: AlertCircle, color: "bg-orange-100 text-orange-600" },
   { label: "Medications", href: "medications", icon: Pill, color: "bg-green-100 text-green-600" },
   { label: "Allergies", href: "allergies", icon: AlertCircle, color: "bg-yellow-100 text-yellow-600" },
-  { label: "Orders", href: "orders", icon: ClipboardList, color: "bg-impilo-100 text-impilo-500" },
+  { label: "Orders", href: "orders", icon: ClipboardList, color: "bg-primary-soft text-primary" },
   { label: "Results", href: "results", icon: TestTube2, color: "bg-purple-100 text-purple-600" },
   { label: "Notes", href: "notes", icon: FileText, color: "bg-indigo-100 text-indigo-600" },
   { label: "Immunizations", href: "immunizations", icon: Syringe, color: "bg-teal-100 text-teal-600" },
   { label: "Encounters", href: "encounters", icon: Clock, color: "bg-cyan-100 text-cyan-600" },
   { label: "Consults", href: "consults", icon: FileText, color: "bg-rose-100 text-rose-600" },
   { label: "Teleconsults", href: "consults?tab=teleconsults", icon: Clock, color: "bg-violet-100 text-violet-600" },
-  { label: "Timeline", href: "timeline", icon: Clock, color: "bg-gray-100 text-gray-600" },
+  { label: "Timeline", href: "timeline", icon: Clock, color: "bg-neutral-100 text-muted-foreground" },
   { label: "Discharge", href: "discharge", icon: Clock, color: "bg-amber-100 text-amber-600" },
 ] as const;
 
@@ -111,7 +111,7 @@ export default function PatientChartPage() {
         <div className="mb-4">
           <Link
             href="/queue"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to queue
@@ -120,13 +120,13 @@ export default function PatientChartPage() {
 
         {isLoadingPatient ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading patient data...</span>
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading patient data...</span>
           </div>
         ) : !patient ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <User className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-400 text-sm">Patient not found</p>
+          <div className="bg-card rounded-lg border border-border p-12 text-center">
+            <User className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground text-sm">Patient not found</p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -151,7 +151,7 @@ export default function PatientChartPage() {
                       <p className="text-sm font-semibold text-green-800">
                         Active encounter workspace ready
                       </p>
-                      <p className="mt-1 text-sm text-gray-600">
+                      <p className="mt-1 text-sm text-muted-foreground">
                         {activeEncounter.attributes.encounterType} is already in progress for this patient.
                         Continue in the live encounter workspace or stay in the longitudinal chart.
                       </p>
@@ -159,11 +159,11 @@ export default function PatientChartPage() {
                         <span className="rounded-full bg-green-100 px-2.5 py-1 font-medium text-green-700">
                           {activeEncounter.attributes.status}
                         </span>
-                        <span className="rounded-full bg-white px-2.5 py-1 text-gray-600 border border-gray-200">
+                        <span className="rounded-full bg-card px-2.5 py-1 text-muted-foreground border border-border">
                           Started {new Date(activeEncounter.attributes.startedAt).toLocaleString()}
                         </span>
                         {queueEntry && (
-                          <span className="rounded-full bg-impilo-100 px-2.5 py-1 font-medium text-impilo-600">
+                          <span className="rounded-full bg-primary-soft px-2.5 py-1 font-medium text-primary">
                             Entered from queue
                           </span>
                         )}
@@ -179,7 +179,7 @@ export default function PatientChartPage() {
                     </Link>
                     <Link
                       href={`/ehr/${patientId}/summary`}
-                      className="px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                      className="px-4 py-2 bg-card text-foreground text-sm font-medium rounded-lg border border-border hover:bg-background transition-colors"
                     >
                       Open Summary
                     </Link>
@@ -189,7 +189,7 @@ export default function PatientChartPage() {
             )}
 
             {activeAdmission && (
-              <div className="bg-gradient-to-r from-purple-50 via-white to-indigo-50 border border-purple-200 rounded-xl p-5">
+              <div className="bg-gradient-to-r from-purple-50 via-white to-indigo-50 border border-warning/35 rounded-xl p-5">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-3">
                     <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
@@ -199,15 +199,15 @@ export default function PatientChartPage() {
                       <p className="text-sm font-semibold text-purple-800">
                         Inpatient admission active
                       </p>
-                      <p className="mt-1 text-sm text-gray-600">
+                      <p className="mt-1 text-sm text-muted-foreground">
                         Ward: {String(activeAdmission.attributes.wardName ?? activeAdmission.attributes.ward_name ?? "Unassigned")}
                       </p>
                       <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                        <span className="rounded-full bg-purple-100 px-2.5 py-1 font-medium text-purple-700">
+                        <span className="rounded-full bg-purple-100 px-2.5 py-1 font-medium text-warning-foreground">
                           {String(activeAdmission.attributes.status)}
                         </span>
                         {Boolean(activeAdmission.attributes.admittedAt) && (
-                          <span className="rounded-full bg-white px-2.5 py-1 text-gray-600 border border-gray-200">
+                          <span className="rounded-full bg-card px-2.5 py-1 text-muted-foreground border border-border">
                             Admitted {new Date(String(activeAdmission.attributes.admittedAt ?? activeAdmission.attributes.admitted_at)).toLocaleString()}
                           </span>
                         )}
@@ -224,37 +224,37 @@ export default function PatientChartPage() {
               </div>
             )}
 
-            <div className="rounded-3xl border border-slate-200 bg-[linear-gradient(135deg,#f8fbff_0%,#eef6ff_45%,#fffaf5_100%)] p-5 shadow-sm">
+            <div className="rounded-3xl border border-border bg-[linear-gradient(135deg,#f8fbff_0%,#eef6ff_45%,#fffaf5_100%)] p-5 shadow-sm">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="space-y-2">
-                  <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-xs font-medium text-slate-600">
-                    <ArrowRightLeft className="h-3.5 w-3.5 text-impilo-500" />
+                  <div className="inline-flex items-center gap-2 rounded-full bg-card/80 px-3 py-1 text-xs font-medium text-muted-foreground">
+                    <ArrowRightLeft className="h-3.5 w-3.5 text-primary" />
                     Care coordination pulse
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900">Consult and teleconsult outcomes are visible from the chart</h3>
-                    <p className="mt-1 max-w-2xl text-sm text-slate-600">
+                    <h3 className="text-lg font-semibold text-foreground">Consult and teleconsult outcomes are visible from the chart</h3>
+                    <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
                       Referral responses, teleconsult activity, and returned specialist guidance are now surfaced here so the chart can signal the next coordination action before you open the deeper workspace.
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2 pt-1">
                     <Link
                       href={`/ehr/${patientId}/consults?tab=referrals`}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800"
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
                     >
                       <ArrowRightLeft className="h-4 w-4" />
                       Open Consults
                     </Link>
                     <Link
                       href={`/ehr/${patientId}/consults?tab=teleconsults`}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-background"
                     >
                       <Video className="h-4 w-4" />
                       Teleconsults
                     </Link>
                     <Link
                       href={`/ehr/${patientId}/notes`}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-background"
                     >
                       <FileText className="h-4 w-4" />
                       Notes Evidence
@@ -263,41 +263,41 @@ export default function PatientChartPage() {
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2 xl:w-[28rem]">
-                  <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
-                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Loop closures ready</p>
-                    <p className="mt-2 text-2xl font-semibold text-purple-700">{coordinationPulse.closureReady}</p>
-                    <p className="mt-1 text-xs text-slate-500">Referral responses waiting for final review or closure.</p>
+                  <div className="rounded-2xl border border-white/70 bg-card/80 p-4">
+                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Loop closures ready</p>
+                    <p className="mt-2 text-2xl font-semibold text-warning-foreground">{coordinationPulse.closureReady}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Referral responses waiting for final review or closure.</p>
                   </div>
-                  <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
-                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Receiving context</p>
-                    <p className="mt-2 text-2xl font-semibold text-impilo-600">{coordinationPulse.receivingHere}</p>
-                    <p className="mt-1 text-xs text-slate-500">Referrals where this facility is currently on the receiving side.</p>
+                  <div className="rounded-2xl border border-white/70 bg-card/80 p-4">
+                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Receiving context</p>
+                    <p className="mt-2 text-2xl font-semibold text-primary">{coordinationPulse.receivingHere}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Referrals where this facility is currently on the receiving side.</p>
                   </div>
-                  <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
-                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Teleconsult activity</p>
-                    <p className="mt-2 text-2xl font-semibold text-emerald-700">{coordinationPulse.activeTeleconsults}</p>
-                    <p className="mt-1 text-xs text-slate-500">Scheduled or active virtual consult sessions linked to this patient.</p>
+                  <div className="rounded-2xl border border-white/70 bg-card/80 p-4">
+                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Teleconsult activity</p>
+                    <p className="mt-2 text-2xl font-semibold text-primary-hover">{coordinationPulse.activeTeleconsults}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Scheduled or active virtual consult sessions linked to this patient.</p>
                   </div>
-                  <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
-                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Returned guidance</p>
-                    <p className="mt-2 text-2xl font-semibold text-indigo-700">{coordinationPulse.referralLoopUpdates}</p>
-                    <p className="mt-1 text-xs text-slate-500">Consultation notes that include referral-loop updates from teleconsult or specialist review.</p>
+                  <div className="rounded-2xl border border-white/70 bg-card/80 p-4">
+                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Returned guidance</p>
+                    <p className="mt-2 text-2xl font-semibold text-primary-hover">{coordinationPulse.referralLoopUpdates}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Consultation notes that include referral-loop updates from teleconsult or specialist review.</p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Patient Summary Card */}
-            <div className="bg-white rounded-lg border border-gray-200 p-5">
+            <div className="bg-card rounded-lg border border-border p-5">
               <div className="flex items-start gap-4">
-                <div className="w-14 h-14 rounded-full bg-impilo-100 flex items-center justify-center shrink-0">
-                  <User className="w-7 h-7 text-impilo-500" />
+                <div className="w-14 h-14 rounded-full bg-primary-soft flex items-center justify-center shrink-0">
+                  <User className="w-7 h-7 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-lg font-semibold text-gray-900">
+                  <h2 className="text-lg font-semibold text-foreground">
                     {maskName(patient.attributes.displayName, usePrivacyDisplayStore.getState().level)}
                   </h2>
-                  <div className="mt-1 flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-500">
+                  <div className="mt-1 flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground">
                     <span>{maskDob(patient.attributes.dateOfBirth, usePrivacyDisplayStore.getState().level)}</span>
                     <span>Gender: {patient.attributes.gender}</span>
                     <span>CPID: {displayCpid(patient.attributes.cpid)}</span>
@@ -314,7 +314,7 @@ export default function PatientChartPage() {
                   <button
                     onClick={() => router.push(`/ehr/${patientId}/encounters`)}
                     disabled={!facility}
-                    className="px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-50 transition-colors shrink-0 flex items-center gap-1.5"
+                    className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover disabled:opacity-50 transition-colors shrink-0 flex items-center gap-1.5"
                   >
                     <><Activity className="w-4 h-4" /> Start Encounter</>
                   </button>
@@ -330,14 +330,14 @@ export default function PatientChartPage() {
                   <Link
                     key={section.href}
                     href={`/ehr/${patientId}/${section.href}`}
-                    className="bg-white rounded-lg border border-gray-200 p-4 text-center hover:border-impilo-200 hover:shadow-sm transition-all group"
+                    className="bg-card rounded-lg border border-border p-4 text-center hover:border-primary/25 hover:shadow-sm transition-all group"
                   >
                     <div
                       className={`w-10 h-10 rounded-lg ${section.color} flex items-center justify-center mx-auto mb-2`}
                     >
                       <Icon className="w-5 h-5" />
                     </div>
-                    <p className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
+                    <p className="text-sm font-medium text-foreground group-hover:text-foreground">
                       {section.label}
                     </p>
                   </Link>
@@ -347,20 +347,20 @@ export default function PatientChartPage() {
 
             {/* Recent Encounters */}
             {encounters.length > 0 && (
-              <div className="bg-white rounded-lg border border-gray-200 p-5">
-                <h3 className="font-medium text-gray-900 mb-3">Recent Encounters</h3>
+              <div className="bg-card rounded-lg border border-border p-5">
+                <h3 className="font-medium text-foreground mb-3">Recent Encounters</h3>
                 <div className="space-y-2">
                   {encounters.slice(0, 5).map((enc) => (
                     <Link
                       key={enc.id}
                       href={`/ehr/${patientId}/encounter/${enc.id}`}
-                      className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors"
+                      className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-background transition-colors"
                     >
                       <div>
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-sm font-medium text-foreground">
                           {enc.attributes.encounterType}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-muted-foreground">
                           {new Date(enc.attributes.startedAt).toLocaleString()}
                         </p>
                       </div>
@@ -368,7 +368,7 @@ export default function PatientChartPage() {
                         className={`px-2 py-0.5 text-xs rounded-full ${
                           enc.attributes.status === "ACTIVE" || enc.attributes.status === "IN_PROGRESS"
                             ? "bg-green-100 text-green-700"
-                            : "bg-gray-100 text-gray-600"
+                            : "bg-neutral-100 text-muted-foreground"
                         }`}
                       >
                         {enc.attributes.status}

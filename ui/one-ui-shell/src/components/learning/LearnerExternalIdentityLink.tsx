@@ -74,31 +74,31 @@ export function LearnerExternalIdentityLink({ variant = "default" }: { variant?:
 
   const subject = deriveLearningSubject(user);
   const compact = variant === "compact";
-  const labelClass = compact ? "text-[11px] font-medium text-slate-600 dark:text-slate-400" : "text-xs font-medium text-slate-700 dark:text-slate-300";
+  const labelClass = compact ? "text-[11px] font-medium text-muted-foreground dark:text-muted-foreground" : "text-xs font-medium text-foreground dark:text-muted-foreground";
   const inputClass =
-    "mt-0.5 w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-900 shadow-sm focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100";
+    "mt-0.5 w-full rounded-md border border-border bg-card px-2 py-1.5 text-xs text-foreground shadow-sm focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600 dark:border-border dark:bg-card dark:text-foreground";
 
   return (
     <div
       className={
         compact
-          ? "rounded-md border border-slate-200 bg-white/80 p-3 dark:border-slate-700 dark:bg-slate-950/50"
-          : "rounded-lg border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-700 dark:bg-slate-900/40"
+          ? "rounded-md border border-border bg-card/80 p-3 dark:border-border dark:bg-card/50"
+          : "rounded-lg border border-border bg-background/80 p-4 dark:border-border dark:bg-neutral-900/40"
       }
     >
       <div className="mb-2 flex items-center gap-2">
         <Link2 className={`${compact ? "h-3.5 w-3.5" : "h-4 w-4"} text-teal-700 dark:text-teal-400`} />
-        <h4 className={`font-semibold text-slate-900 dark:text-slate-100 ${compact ? "text-xs" : "text-sm"}`}>
+        <h4 className={`font-semibold text-foreground dark:text-foreground ${compact ? "text-xs" : "text-sm"}`}>
           Link Fundo &amp; Moodle
         </h4>
       </div>
       {!compact ? (
-        <p className="mb-3 text-xs text-slate-600 dark:text-slate-400">
+        <p className="mb-3 text-xs text-muted-foreground dark:text-muted-foreground">
           Store your Impilo Fundo account reference and Moodle user id against your profile so orchestration and
           completion sync can match you. Use the numeric Moodle user id from your Moodle profile URL.
         </p>
       ) : (
-        <p className="mb-2 text-[11px] text-slate-500 dark:text-slate-400">
+        <p className="mb-2 text-[11px] text-muted-foreground dark:text-muted-foreground">
           Optional: save Fundo / Moodle ids for automated learning sync.
         </p>
       )}
@@ -133,18 +133,18 @@ export function LearnerExternalIdentityLink({ variant = "default" }: { variant?:
             setFeedback(null);
             mutation.mutate();
           }}
-          className="inline-flex items-center gap-1.5 rounded-md bg-teal-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-800 disabled:opacity-60 dark:bg-teal-600 dark:hover:bg-teal-500"
+          className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-800 disabled:opacity-60 dark:bg-teal-600 dark:hover:bg-teal-500"
         >
           {mutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
           Save to learning profile
         </button>
-        <span className="text-[11px] text-slate-500">
+        <span className="text-[11px] text-muted-foreground">
           Subject: {subject.subjectType} / {subject.subjectId}
         </span>
       </div>
       {feedback ? (
         <p
-          className={`mt-2 text-xs ${feedback.kind === "ok" ? "text-emerald-800 dark:text-emerald-300" : "text-red-700 dark:text-red-400"}`}
+          className={`mt-2 text-xs ${feedback.kind === "ok" ? "text-primary-hover dark:text-emerald-300" : "text-danger dark:text-red-400"}`}
           role="status"
         >
           {feedback.text}

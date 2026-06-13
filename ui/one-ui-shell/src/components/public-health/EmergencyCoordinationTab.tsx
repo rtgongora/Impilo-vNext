@@ -66,7 +66,7 @@ export function EmergencyCoordinationTab() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border border-red-200 bg-red-50/90 p-3 text-xs text-red-950">
+      <div className="rounded-lg border border-danger/28 bg-danger-soft/90 p-3 text-xs text-red-950">
         <strong>Live:</strong> protocol activations below use the same BFF as{" "}
         <Link href="/clinical/emergency" className="underline font-medium">
           ED / Casualty
@@ -75,22 +75,22 @@ export function EmergencyCoordinationTab() {
         <code className="text-[10px]">/internal/v1/emergency/*</code> — prior demo content was removed.
       </div>
 
-      <div className={`rounded-lg border p-3 ${activeRows.length > 0 ? "border-amber-200 bg-amber-50" : "border-gray-200 bg-gray-50"}`}>
+      <div className={`rounded-lg border p-3 ${activeRows.length > 0 ? "border-warning/35 bg-warning-soft" : "border-border bg-background"}`}>
         <div className="flex items-center gap-2">
-          <Siren className="h-5 w-5 text-amber-700" />
-          <p className="text-sm font-medium text-gray-900">
+          <Siren className="h-5 w-5 text-warning-foreground" />
+          <p className="text-sm font-medium text-foreground">
             Active protocol activations: {activeRows.length}
-            {rows.length > 0 && <span className="text-gray-500 font-normal"> ({rows.length} recent total)</span>}
+            {rows.length > 0 && <span className="text-muted-foreground font-normal"> ({rows.length} recent total)</span>}
           </p>
         </div>
       </div>
 
-      <div className="flex gap-1 border-b border-gray-200">
+      <div className="flex gap-1 border-b border-border">
         <button
           type="button"
           onClick={() => setActiveSubTab("activations")}
           className={`px-3 py-2 text-sm font-medium border-b-2 ${
-            activeSubTab === "activations" ? "border-amber-600 text-amber-600" : "border-transparent text-gray-500"
+            activeSubTab === "activations" ? "border-amber-600 text-amber-600" : "border-transparent text-muted-foreground"
           }`}
         >
           Activations
@@ -99,7 +99,7 @@ export function EmergencyCoordinationTab() {
           type="button"
           onClick={() => setActiveSubTab("unsupported")}
           className={`px-3 py-2 text-sm font-medium border-b-2 ${
-            activeSubTab === "unsupported" ? "border-amber-600 text-amber-600" : "border-transparent text-gray-500"
+            activeSubTab === "unsupported" ? "border-amber-600 text-amber-600" : "border-transparent text-muted-foreground"
           }`}
         >
           EOC / SitRep / logistics (unsupported)
@@ -107,12 +107,12 @@ export function EmergencyCoordinationTab() {
       </div>
 
       {activeSubTab === "unsupported" && (
-        <div className="bg-white rounded-lg border border-gray-200 p-6 text-sm text-gray-600 space-y-2">
+        <div className="bg-card rounded-lg border border-border p-6 text-sm text-muted-foreground space-y-2">
           <p>
             <strong>Gap:</strong> situation reports, resource mobilization grids, inter-agency contact lists, and IAP widgets
             need dedicated persistence and BFF routes. None are exposed on the current Experience emergency contract.
           </p>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-muted-foreground">
             Blocker examples (for backlog): <code className="text-[10px]">GET /internal/v1/eoc/status</code>,{" "}
             <code className="text-[10px]">GET /internal/v1/sitreps</code>, or domain-specific service proxies.
           </p>
@@ -121,8 +121,8 @@ export function EmergencyCoordinationTab() {
 
       {activeSubTab === "activations" && (
         <>
-          <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-3">
-            <h4 className="text-sm font-semibold text-gray-900">Start activation</h4>
+          <div className="bg-card rounded-lg border border-border p-4 space-y-3">
+            <h4 className="text-sm font-semibold text-foreground">Start activation</h4>
             <form onSubmit={(e) => { e.preventDefault(); activate.mutate({ protocolType, patientId: patientId.trim() || null, encounterId: encounterId.trim() || null, teamLeader: teamLeader.trim(), location: location.trim() }); }} className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
               <label className="block">
                 Protocol
@@ -154,20 +154,20 @@ export function EmergencyCoordinationTab() {
             </form>
           </div>
 
-          <div className="bg-white rounded-lg border border-gray-200">
+          <div className="bg-card rounded-lg border border-border">
             <div className="px-4 py-3 border-b flex justify-between items-center">
               <h4 className="text-sm font-semibold">Recent activations</h4>
-              <button type="button" onClick={() => refetch()} className="text-xs text-impilo-500 hover:underline">Refresh</button>
+              <button type="button" onClick={() => refetch()} className="text-xs text-primary hover:underline">Refresh</button>
             </div>
             <div className="p-4">
               {isLoading && (
-                <div className="flex items-center gap-2 text-sm text-gray-500 py-6 justify-center">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground py-6 justify-center">
                   <Loader2 className="h-5 w-5 animate-spin" /> Loading…
                 </div>
               )}
               {isError && <p className="text-sm text-red-600 text-center py-4">Failed to load activations.</p>}
               {!isLoading && !isError && rows.length === 0 && (
-                <p className="text-sm text-gray-500 text-center py-6">No activations returned.</p>
+                <p className="text-sm text-muted-foreground text-center py-6">No activations returned.</p>
               )}
               {!isLoading && !isError && rows.length > 0 && (
                 <ul className="divide-y divide-gray-100 max-h-[360px] overflow-y-auto">
@@ -175,7 +175,7 @@ export function EmergencyCoordinationTab() {
                     <li key={asString(r.id)} className="py-3 flex flex-wrap gap-2 justify-between items-start">
                       <div>
                         <p className="font-medium text-sm">{asString(r.protocol_type)}</p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-muted-foreground">
                           {formatWhen(r.activation_time)} · {asString(r.location) || "—"} · {asString(r.status)}
                         </p>
                       </div>
@@ -191,13 +191,13 @@ export function EmergencyCoordinationTab() {
           </div>
 
           {actionFor && (
-            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-2">
+            <div className="bg-background border border-border rounded-lg p-4 space-y-2">
               <h4 className="text-sm font-semibold">Log action — {asString(actionFor.protocol_type)}</h4>
               <form onSubmit={(e) => { e.preventDefault(); if (!actionFor.id) return; logAction.mutate({ id: actionFor.id, actionType, description: actionDescription.trim(), performedBy: performedByName || performedBy }, { onSuccess: () => { setActionFor(null); setActionDescription(""); } }); }} className="space-y-2 text-xs">
                 <input value={actionType} onChange={(e) => setActionType(e.target.value)} className="w-full border rounded px-2 py-1.5" placeholder="Action type" />
                 <textarea value={actionDescription} onChange={(e) => setActionDescription(e.target.value)} className="w-full border rounded px-2 py-1.5 min-h-[60px]" placeholder="Description" />
                 <div className="flex gap-2">
-                  <button type="submit" disabled={logAction.isPending} className="px-3 py-1.5 bg-impilo-500 text-white rounded">Save</button>
+                  <button type="submit" disabled={logAction.isPending} className="px-3 py-1.5 bg-primary text-white rounded">Save</button>
                   <button type="button" onClick={() => setActionFor(null)} className="px-3 py-1.5 border rounded">Cancel</button>
                 </div>
               </form>
@@ -205,7 +205,7 @@ export function EmergencyCoordinationTab() {
           )}
 
           {endFor && (
-            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-2">
+            <div className="bg-background border border-border rounded-lg p-4 space-y-2">
               <h4 className="text-sm font-semibold">End activation</h4>
               <form onSubmit={(e) => { e.preventDefault(); if (!endFor.id) return; endEmergency.mutate({ id: endFor.id, outcome: endOutcome, notes: endNotes.trim() }, { onSuccess: () => { setEndFor(null); setEndNotes(""); } }); }} className="space-y-2 text-xs">
                 <input value={endOutcome} onChange={(e) => setEndOutcome(e.target.value)} className="w-full border rounded px-2 py-1.5" />

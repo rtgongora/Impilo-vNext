@@ -62,7 +62,7 @@ export default function LedgerPage() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-red-800">
           {error}
         </div>
       )}
@@ -88,7 +88,7 @@ export default function LedgerPage() {
           <div className="flex items-center gap-3 text-sm">
             <span className="font-mono text-xs font-medium">{intent.intentId}</span>
             <span className={`badge ${
-              intent.status === "PAID" ? "bg-emerald-100 text-emerald-800" :
+              intent.status === "PAID" ? "bg-emerald-100 text-primary-hover" :
               "bg-neutral-100 text-neutral-600"
             }`}>
               {intent.status}
@@ -128,8 +128,8 @@ export default function LedgerPage() {
                     <td className="px-4 py-2 text-xs">
                       <span className="badge bg-blue-100 text-blue-800">{entry.referenceType}</span>
                     </td>
-                    <td className="px-4 py-2 font-mono text-xs text-red-700">{entry.debitAccount}</td>
-                    <td className="px-4 py-2 font-mono text-xs text-emerald-700">{entry.creditAccount}</td>
+                    <td className="px-4 py-2 font-mono text-xs text-danger">{entry.debitAccount}</td>
+                    <td className="px-4 py-2 font-mono text-xs text-primary-hover">{entry.creditAccount}</td>
                     <td className="px-4 py-2 text-right font-mono text-xs font-medium">
                       {entry.currency} {Number(entry.amount).toFixed(2)}
                     </td>

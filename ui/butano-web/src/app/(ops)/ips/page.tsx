@@ -105,7 +105,7 @@ export default function IpsPage() {
       </div>
 
       {/* Search form */}
-      <form onSubmit={handleGenerate} className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6 mb-6">
+      <form onSubmit={handleGenerate} className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6 mb-6">
         <div className="flex gap-3 items-end">
           <div className="flex-1">
             <label htmlFor="cpid" className="block text-sm font-medium text-neutral-700 mb-1">
@@ -152,7 +152,7 @@ export default function IpsPage() {
             return (
               <div
                 key={resourceType}
-                className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 overflow-hidden"
+                className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 overflow-hidden"
               >
                 <button
                   onClick={() => toggleSection(resourceType)}

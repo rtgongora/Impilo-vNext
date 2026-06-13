@@ -181,21 +181,21 @@ export default function AskPage() {
             <button
               type="button"
               onClick={() => setMode("general")}
-              className={`text-xs px-3 py-1.5 rounded-full border ${mode === "general" ? "bg-impilo-500 text-white border-impilo-500" : "bg-white text-gray-700 border-gray-300"}`}
+              className={`text-xs px-3 py-1.5 rounded-full border ${mode === "general" ? "bg-primary text-white border-impilo-500" : "bg-card text-foreground border-border"}`}
             >
               General guidance
             </button>
             <button
               type="button"
               onClick={() => setMode("edliz")}
-              className={`text-xs px-3 py-1.5 rounded-full border inline-flex items-center gap-1 ${mode === "edliz" ? "bg-emerald-700 text-white border-emerald-700" : "bg-white text-gray-700 border-gray-300"}`}
+              className={`text-xs px-3 py-1.5 rounded-full border inline-flex items-center gap-1 ${mode === "edliz" ? "bg-emerald-700 text-white border-emerald-700" : "bg-card text-foreground border-border"}`}
             >
               <BookMarked className="h-3 w-3" /> Ask EDLIZ
             </button>
           </div>
           {/* Health OS §16a: consent-aware guidance banner */}
           {consentChecked && !consentGranted && (
-            <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 flex items-start gap-2">
+            <div className="mb-3 rounded-lg border border-warning/35 bg-warning-soft p-3 text-xs text-warning-foreground flex items-start gap-2">
               <ShieldCheck className="h-4 w-4 mt-0.5 shrink-0" />
               <div>
                 <strong>Non-personalized mode.</strong> Responses are general and not tailored to your health profile.
@@ -204,8 +204,8 @@ export default function AskPage() {
             </div>
           )}
           {mode === "edliz" && pathways.length > 0 && (
-            <div className="mb-3 rounded-lg border border-emerald-100 bg-white p-3 text-xs text-gray-700">
-              <p className="font-medium text-emerald-900 mb-2">Guided pathways (national demo)</p>
+            <div className="mb-3 rounded-lg border border-emerald-100 bg-card p-3 text-xs text-foreground">
+              <p className="font-medium text-primary-hover mb-2">Guided pathways (national demo)</p>
               <div className="flex flex-wrap gap-2">
                 {pathways
                   .filter((p) => (p.step_count ?? 0) > 0)
@@ -227,16 +227,16 @@ export default function AskPage() {
                           }
                         );
                       }}
-                      className="rounded-full border border-emerald-200 px-2 py-1 hover:bg-emerald-50 disabled:opacity-50"
+                      className="rounded-full border border-success/25 px-2 py-1 hover:bg-success-soft disabled:opacity-50"
                     >
                       {p.pathway_name ?? p.condition_code}
                     </button>
                   ))}
               </div>
               {pathwaySessionId && (
-                <p className="mt-2 text-[10px] text-gray-500">
+                <p className="mt-2 text-[10px] text-muted-foreground">
                   Session started: <span className="font-mono">{pathwaySessionId}</span> — advance via{" "}
-                  <code className="bg-gray-100 px-1 rounded">POST /clinical/pathways/sessions/…/advance</code>
+                  <code className="bg-neutral-100 px-1 rounded">POST /clinical/pathways/sessions/…/advance</code>
                 </p>
               )}
             </div>
@@ -247,25 +247,25 @@ export default function AskPage() {
               <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                 <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
                   msg.role === "user"
-                    ? "bg-impilo-500 text-white rounded-br-md"
-                    : "bg-gray-100 text-gray-900 rounded-bl-md"
+                    ? "bg-primary text-white rounded-br-md"
+                    : "bg-neutral-100 text-foreground rounded-bl-md"
                 }`}>
                   {msg.role === "assistant" && (
-                    <div className="flex items-center gap-1 mb-1 text-xs text-gray-500">
+                    <div className="flex items-center gap-1 mb-1 text-xs text-muted-foreground">
                       <Sparkles className="h-3 w-3" />{" "}
                       {msg.clinicalMeta?.traceId ? "EDLIZ clinical knowledge" : "Health OS Guidance"}
                     </div>
                   )}
                   <p className="whitespace-pre-wrap">{msg.content}</p>
                   {msg.clinicalMeta?.traceId && (
-                    <p className="mt-2 text-[10px] text-gray-400">Trace: {msg.clinicalMeta.traceId}</p>
+                    <p className="mt-2 text-[10px] text-muted-foreground">Trace: {msg.clinicalMeta.traceId}</p>
                   )}
                 </div>
               </div>
             ))}
             {sending && (
               <div className="flex justify-start">
-                <div className="bg-gray-100 rounded-2xl rounded-bl-md px-4 py-3 text-sm text-gray-500">
+                <div className="bg-neutral-100 rounded-2xl rounded-bl-md px-4 py-3 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin inline mr-1" /> Thinking...
                 </div>
               </div>
@@ -274,18 +274,18 @@ export default function AskPage() {
           </div>
 
           {/* Input */}
-          <form onSubmit={handleSend} className="flex gap-2 border-t border-gray-200 pt-4">
+          <form onSubmit={handleSend} className="flex gap-2 border-t border-border pt-4">
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask about health, wellness, diet, sleep, services..."
-              className="flex-1 rounded-full border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:border-impilo-400 focus:ring-1 focus:ring-impilo-200"
+              className="flex-1 rounded-full border border-border px-4 py-2.5 text-sm focus:outline-none focus:border-impilo-400 focus:ring-1 focus:ring-impilo-200"
               disabled={sending}
             />
             <button
               type="submit"
               disabled={sending || !input.trim()}
-              className="rounded-full bg-impilo-500 p-2.5 text-white hover:bg-impilo-600 disabled:opacity-50 transition-colors"
+              className="rounded-full bg-primary p-2.5 text-white hover:bg-primary-hover disabled:opacity-50 transition-colors"
             >
               <Send className="h-4 w-4" />
             </button>

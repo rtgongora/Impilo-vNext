@@ -36,23 +36,23 @@ export default function LiveManagePage() {
           >
             Create new event
           </Link>
-          <Link href="/live" className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700">
+          <Link href="/live" className="rounded-lg border border-border px-3 py-2 text-sm text-foreground">
             Back to hub
           </Link>
         </div>
 
         {draftEvents.length > 0 ? (
           <section className="mb-8">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">Drafts</h2>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3">Drafts</h2>
             <div className="space-y-2">
               {draftEvents.map((event) => (
                 <div
                   key={event.id}
-                  className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-gray-200 bg-white p-3"
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-card p-3"
                 >
                   <div>
-                    <p className="font-medium text-gray-900">{event.title}</p>
-                    <p className="text-xs text-gray-500">{event.eventType}</p>
+                    <p className="font-medium text-foreground">{event.title}</p>
+                    <p className="text-xs text-muted-foreground">{event.eventType}</p>
                   </div>
                   <div className="flex gap-2">
                     <button
@@ -65,7 +65,7 @@ export default function LiveManagePage() {
                     </button>
                     <Link
                       href={`/live/event/${event.id}`}
-                      className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700"
+                      className="rounded-lg border border-border px-3 py-1.5 text-sm text-foreground"
                     >
                       Edit
                     </Link>
@@ -77,14 +77,14 @@ export default function LiveManagePage() {
         ) : null}
 
         <section className="mb-8">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3">
             Scheduled &amp; live
           </h2>
           <LiveEventList events={activeEvents} loading={isLoading} />
         </section>
 
         <section>
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3">
             Moderation console
           </h2>
           <div className="mb-3 flex flex-wrap gap-2">
@@ -96,7 +96,7 @@ export default function LiveManagePage() {
                 className={`rounded-lg border px-3 py-1.5 text-sm ${
                   selectedEventId === event.id
                     ? "border-violet-400 bg-violet-50 text-violet-800"
-                    : "border-gray-300 text-gray-700"
+                    : "border-border text-foreground"
                 }`}
               >
                 {event.title}
@@ -109,7 +109,7 @@ export default function LiveManagePage() {
               <div className="mt-3 flex gap-2">
                 <Link
                   href={`/live/event/${selectedEventId}/analytics`}
-                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700"
+                  className="rounded-lg border border-border px-3 py-1.5 text-sm text-foreground"
                 >
                   Open analytics
                 </Link>
@@ -117,14 +117,14 @@ export default function LiveManagePage() {
                   type="button"
                   onClick={() => cancel.mutate(selectedEventId)}
                   disabled={cancel.isPending}
-                  className="rounded-lg border border-amber-300 px-3 py-1.5 text-sm text-amber-900"
+                  className="rounded-lg border border-amber-300 px-3 py-1.5 text-sm text-warning-foreground"
                 >
                   Cancel event
                 </button>
               </div>
             </>
           ) : (
-            <p className="text-sm text-gray-500">Select an event to open moderation controls.</p>
+            <p className="text-sm text-muted-foreground">Select an event to open moderation controls.</p>
           )}
         </section>
       </PageShell>

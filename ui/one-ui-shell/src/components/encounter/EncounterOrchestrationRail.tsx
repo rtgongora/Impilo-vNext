@@ -24,11 +24,11 @@ export function EncounterOrchestrationRail({ encounterId, patientId }: Encounter
   if (isLoading) {
     return (
       <section
-        className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
+        className="rounded-xl border border-border bg-background px-4 py-3"
         data-testid="encounter-orchestration-rail"
         aria-busy="true"
       >
-        <div className="flex items-center gap-2 text-sm text-slate-500">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
           Loading encounter transaction context…
         </div>
@@ -39,10 +39,10 @@ export function EncounterOrchestrationRail({ encounterId, patientId }: Encounter
   if (isError) {
     return (
       <section
-        className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"
+        className="rounded-xl border border-warning/35 bg-warning-soft px-4 py-3"
         data-testid="encounter-orchestration-rail"
       >
-        <div className="flex items-start gap-2 text-sm text-amber-800">
+        <div className="flex items-start gap-2 text-sm text-warning-foreground">
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
           <p>
             Core transaction context unavailable. Clinical capture continues; retry when Experience BFF is reachable.
@@ -55,18 +55,18 @@ export function EncounterOrchestrationRail({ encounterId, patientId }: Encounter
   if (!transaction) {
     return (
       <section
-        className="rounded-xl border border-slate-200 bg-white px-4 py-3"
+        className="rounded-xl border border-border bg-card px-4 py-3"
         data-testid="encounter-orchestration-rail"
       >
         <div className="flex items-start gap-2">
-          <Route className="mt-0.5 h-4 w-4 text-impilo-600" />
+          <Route className="mt-0.5 h-4 w-4 text-primary" />
           <div className="space-y-1 text-sm">
-            <p className="font-medium text-slate-900">Encounter transaction not linked yet</p>
-            <p className="text-slate-600">
+            <p className="font-medium text-foreground">Encounter transaction not linked yet</p>
+            <p className="text-muted-foreground">
               Start the encounter from the encounters list after walk-in registration, or confirm the encounter exists
               in PCT for this facility.
             </p>
-            <Link href={`/ehr/${patientId}/encounters`} className="text-xs font-medium text-impilo-600 hover:underline">
+            <Link href={`/ehr/${patientId}/encounters`} className="text-xs font-medium text-primary hover:underline">
               Review encounter history
             </Link>
           </div>
@@ -82,23 +82,23 @@ export function EncounterOrchestrationRail({ encounterId, patientId }: Encounter
   if (denied) {
     return (
       <section
-        className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"
+        className="rounded-xl border border-warning/35 bg-warning-soft px-4 py-3"
         data-testid="encounter-orchestration-rail"
       >
-        <p className="text-sm text-amber-800">You do not have permission to view this encounter transaction context.</p>
+        <p className="text-sm text-warning-foreground">You do not have permission to view this encounter transaction context.</p>
       </section>
     );
   }
 
   return (
     <section
-      className="rounded-xl border border-impilo-200 bg-[linear-gradient(135deg,#f8fbff_0%,#ffffff_100%)] px-4 py-4 shadow-sm"
+      className="rounded-xl border border-primary/25 bg-[linear-gradient(135deg,#f8fbff_0%,#ffffff_100%)] px-4 py-4 shadow-sm"
       data-testid="encounter-orchestration-rail"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Route className="h-4 w-4 text-impilo-600" />
-          <h3 className="text-sm font-semibold text-slate-900">Encounter transaction journey</h3>
+          <Route className="h-4 w-4 text-primary" />
+          <h3 className="text-sm font-semibold text-foreground">Encounter transaction journey</h3>
         </div>
         <div className="flex flex-wrap gap-2">
           <TransactionTypeBadge type={transaction.transaction.type} />
@@ -106,7 +106,7 @@ export function EncounterOrchestrationRail({ encounterId, patientId }: Encounter
         </div>
       </div>
 
-      <p className="mt-2 text-xs text-slate-600">
+      <p className="mt-2 text-xs text-muted-foreground">
         Provider stage: <span className="font-medium">{transaction.journeys.provider.currentStage}</span>
         {" · "}
         Person stage: <span className="font-medium">{transaction.journeys.person.currentStage}</span>
@@ -116,13 +116,13 @@ export function EncounterOrchestrationRail({ encounterId, patientId }: Encounter
 
       {transaction.nextActions.length > 0 ? (
         <div className="mt-3 space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Next trusted actions</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Next trusted actions</p>
           <ul className="flex flex-wrap gap-2">
             {transaction.nextActions.map((action) => (
               <li key={action.code}>
                 <button
                   type="button"
-                  className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                  className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-background disabled:opacity-50"
                   disabled={applyAction.isPending}
                   onClick={() => {
                     applyAction.mutate({
@@ -144,10 +144,10 @@ export function EncounterOrchestrationRail({ encounterId, patientId }: Encounter
         </div>
       )}
 
-      <p className="mt-3 text-xs text-slate-500">
+      <p className="mt-3 text-xs text-muted-foreground">
         <Link
           href={`/core-transaction`}
-          className="font-medium text-impilo-600 hover:underline"
+          className="font-medium text-primary hover:underline"
         >
           Open core transaction shell
         </Link>

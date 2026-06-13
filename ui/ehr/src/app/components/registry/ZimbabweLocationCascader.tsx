@@ -106,16 +106,16 @@ export function ZimbabweLocationCascader(props: Props) {
   }
 
   if (countryAlpha2 !== "ZW") {
-    return <p className="text-xs text-gray-500">ZW pickers appear when country is Zimbabwe.</p>;
+    return <p className="text-xs text-muted-foreground">ZW pickers appear when country is Zimbabwe.</p>;
   }
 
   const provinces = listZimbabweProvinces();
 
   return (
-    <div className="space-y-2 rounded border border-dashed border-impilo-primary/30 bg-white p-2 text-sm">
-      {geoErr ? <p className="text-xs text-amber-800">{geoErr}</p> : null}
+    <div className="space-y-2 rounded border border-dashed border-impilo-primary/30 bg-card p-2 text-sm">
+      {geoErr ? <p className="text-xs text-warning-foreground">{geoErr}</p> : null}
       <div>
-        <label className="block text-xs text-gray-600">Province</label>
+        <label className="block text-xs text-muted-foreground">Province</label>
         <select
           disabled={disabled}
           value={provinceCode}
@@ -136,7 +136,7 @@ export function ZimbabweLocationCascader(props: Props) {
         </select>
       </div>
       <div>
-        <label className="block text-xs text-gray-600">District</label>
+        <label className="block text-xs text-muted-foreground">District</label>
         <select
           disabled={disabled || !provinceCode}
           value={districtCode}
@@ -156,7 +156,7 @@ export function ZimbabweLocationCascader(props: Props) {
         </select>
       </div>
       <div>
-        <label className="block text-xs text-gray-600">Ward</label>
+        <label className="block text-xs text-muted-foreground">Ward</label>
         <select
           disabled={disabled || !districtCode}
           value={wardCode}
@@ -172,7 +172,7 @@ export function ZimbabweLocationCascader(props: Props) {
         </select>
       </div>
       <div>
-        <label className="block text-xs text-gray-600">Locality search</label>
+        <label className="block text-xs text-muted-foreground">Locality search</label>
         <input
           className="w-full border rounded px-2 py-1 text-sm"
           disabled={disabled || !districtCode}
@@ -185,7 +185,7 @@ export function ZimbabweLocationCascader(props: Props) {
               <li key={h.id}>
                 <button
                   type="button"
-                  className="w-full text-left px-2 py-0.5 hover:bg-slate-100"
+                  className="w-full text-left px-2 py-0.5 hover:bg-neutral-100"
                   onClick={() => {
                     onLocalityId(h.id);
                     onLocalityFreeText(h.name);
@@ -197,10 +197,10 @@ export function ZimbabweLocationCascader(props: Props) {
             ))}
           </ul>
         ) : null}
-        <p className="text-[10px] text-gray-500">ID: {localityGazetteerId || "—"}</p>
+        <p className="text-[10px] text-muted-foreground">ID: {localityGazetteerId || "—"}</p>
       </div>
       <div>
-        <label className="block text-xs text-gray-600">Locality proposal text</label>
+        <label className="block text-xs text-muted-foreground">Locality proposal text</label>
         <input
           className="w-full border rounded px-2 py-1 text-sm"
           disabled={disabled}

@@ -19,12 +19,12 @@ import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { FileText, Printer, PackageCheck } from "lucide-react";
 
 const STATE_STYLES: Record<IssuanceState, string> = {
-  SUBMITTED: "bg-blue-50 text-blue-700 border-blue-100",
-  PROOFING: "bg-amber-50 text-amber-700 border-amber-100",
-  APPROVED: "bg-emerald-50 text-emerald-700 border-emerald-100",
+  SUBMITTED: "bg-info-soft text-primary-hover border-blue-100",
+  PROOFING: "bg-warning-soft text-warning-foreground border-amber-100",
+  APPROVED: "bg-success-soft text-primary-hover border-emerald-100",
   ISSUED: "bg-sky-50 text-sky-700 border-sky-100",
   DELIVERED: "bg-green-50 text-green-700 border-green-100",
-  REJECTED: "bg-red-50 text-red-700 border-red-100",
+  REJECTED: "bg-danger-soft text-danger border-red-100",
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -131,25 +131,25 @@ export default function IssuanceDetailPage() {
           <div className="flex flex-wrap items-center gap-3">
             <Link
               href="/operations/vito/issuance"
-              className="text-sm text-gray-600 hover:text-gray-900 underline-offset-2 hover:underline"
+              className="text-sm text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
             >
               ← Issuance queue
             </Link>
           </div>
 
           {request.isLoading ? (
-            <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-500">
+            <div className="rounded-2xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">
               Loading request…
             </div>
           ) : request.isError || !item ? (
-            <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center text-sm text-red-600">
+            <div className="rounded-2xl border border-border bg-card p-8 text-center text-sm text-red-600">
               Failed to load issuance request. It may not exist or the Experience BFF is unreachable.
             </div>
           ) : (
             <>
-              <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
+              <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
                 <div className="flex flex-wrap items-center gap-3">
-                  <h2 className="text-sm font-semibold text-gray-900">Request details</h2>
+                  <h2 className="text-sm font-semibold text-foreground">Request details</h2>
                   <span
                     className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${STATE_STYLES[item.state]}`}
                   >
@@ -158,47 +158,47 @@ export default function IssuanceDetailPage() {
                 </div>
                 <dl className="grid gap-3 sm:grid-cols-2">
                   <div>
-                    <dt className="text-xs text-gray-500">Request ID</dt>
-                    <dd className="mt-0.5 font-mono text-sm text-gray-900 break-all">{item.id}</dd>
+                    <dt className="text-xs text-muted-foreground">Request ID</dt>
+                    <dd className="mt-0.5 font-mono text-sm text-foreground break-all">{item.id}</dd>
                   </div>
                   <div>
-                    <dt className="text-xs text-gray-500">Health ID</dt>
-                    <dd className="mt-0.5 font-mono text-sm text-gray-900">{item.healthId}</dd>
+                    <dt className="text-xs text-muted-foreground">Health ID</dt>
+                    <dd className="mt-0.5 font-mono text-sm text-foreground">{item.healthId}</dd>
                   </div>
                   <div>
-                    <dt className="text-xs text-gray-500">Type</dt>
-                    <dd className="mt-0.5 text-sm text-gray-900">{TYPE_LABELS[item.type] ?? item.type}</dd>
+                    <dt className="text-xs text-muted-foreground">Type</dt>
+                    <dd className="mt-0.5 text-sm text-foreground">{TYPE_LABELS[item.type] ?? item.type}</dd>
                   </div>
                   <div>
-                    <dt className="text-xs text-gray-500">Channel</dt>
-                    <dd className="mt-0.5 text-sm text-gray-900">{CHANNEL_LABELS[item.channel] ?? item.channel}</dd>
+                    <dt className="text-xs text-muted-foreground">Channel</dt>
+                    <dd className="mt-0.5 text-sm text-foreground">{CHANNEL_LABELS[item.channel] ?? item.channel}</dd>
                   </div>
                   <div>
-                    <dt className="text-xs text-gray-500">Requested</dt>
-                    <dd className="mt-0.5 text-sm text-gray-900">{formatDatetime(item.requestedAt)}</dd>
+                    <dt className="text-xs text-muted-foreground">Requested</dt>
+                    <dd className="mt-0.5 text-sm text-foreground">{formatDatetime(item.requestedAt)}</dd>
                   </div>
                   <div>
-                    <dt className="text-xs text-gray-500">Last updated</dt>
-                    <dd className="mt-0.5 text-sm text-gray-900">{formatDatetime(item.updatedAt)}</dd>
+                    <dt className="text-xs text-muted-foreground">Last updated</dt>
+                    <dd className="mt-0.5 text-sm text-foreground">{formatDatetime(item.updatedAt)}</dd>
                   </div>
                   {item.notes && (
                     <div className="sm:col-span-2">
-                      <dt className="text-xs text-gray-500">Notes</dt>
-                      <dd className="mt-0.5 text-sm text-gray-900">{item.notes}</dd>
+                      <dt className="text-xs text-muted-foreground">Notes</dt>
+                      <dd className="mt-0.5 text-sm text-foreground">{item.notes}</dd>
                     </div>
                   )}
                 </dl>
               </div>
 
-              <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
-                <h2 className="text-sm font-semibold text-gray-900">Workflow actions</h2>
+              <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
+                <h2 className="text-sm font-semibold text-foreground">Workflow actions</h2>
 
                 <div className="flex flex-wrap gap-3">
                   <button
                     type="button"
                     disabled={!canProof || anyPending}
                     onClick={() => requestId && startProofing.mutate(requestId)}
-                    className="inline-flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-800 hover:border-amber-300 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="inline-flex items-center gap-2 rounded-xl border border-warning/35 bg-warning-soft px-4 py-2 text-sm font-medium text-warning-foreground hover:border-amber-300 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     {startProofing.isPending ? "Starting…" : "Start proofing"}
                   </button>
@@ -207,7 +207,7 @@ export default function IssuanceDetailPage() {
                     type="button"
                     disabled={!canApprove || anyPending}
                     onClick={() => requestId && approveIssuance.mutate(requestId)}
-                    className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-800 hover:border-emerald-300 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="inline-flex items-center gap-2 rounded-xl border border-success/25 bg-success-soft px-4 py-2 text-sm font-medium text-primary-hover hover:border-emerald-300 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     {approveIssuance.isPending ? "Approving…" : "Approve"}
                   </button>
@@ -235,7 +235,7 @@ export default function IssuanceDetailPage() {
                       type="button"
                       disabled={anyPending}
                       onClick={() => setShowRejectForm(true)}
-                      className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 hover:border-red-300 disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="inline-flex items-center gap-2 rounded-xl border border-danger/28 bg-danger-soft px-4 py-2 text-sm font-medium text-danger hover:border-red-300 disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       Reject
                     </button>
@@ -243,13 +243,13 @@ export default function IssuanceDetailPage() {
                 </div>
 
                 {showRejectForm && (
-                  <div className="rounded-xl border border-red-100 bg-red-50 p-4 space-y-3">
+                  <div className="rounded-xl border border-red-100 bg-danger-soft p-4 space-y-3">
                     <p className="text-sm font-medium text-red-800">Reject this request</p>
-                    <label className="flex flex-col gap-1 text-xs text-red-700">
+                    <label className="flex flex-col gap-1 text-xs text-danger">
                       Reason (required)
                       <textarea
                         rows={3}
-                        className="rounded-lg border border-red-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-300"
+                        className="rounded-lg border border-danger/28 bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-red-300"
                         value={rejectReason}
                         onChange={(e) => setRejectReason(e.target.value)}
                         placeholder="Describe the reason for rejection…"
@@ -270,13 +270,13 @@ export default function IssuanceDetailPage() {
                           setShowRejectForm(false);
                           setRejectReason("");
                         }}
-                        className="rounded-xl border border-red-200 px-4 py-2 text-sm font-medium text-red-700 hover:border-red-300"
+                        className="rounded-xl border border-danger/28 px-4 py-2 text-sm font-medium text-danger hover:border-red-300"
                       >
                         Cancel
                       </button>
                     </div>
                     {rejectIssuance.isError && (
-                      <p className="text-xs text-red-700">Rejection failed. Please try again.</p>
+                      <p className="text-xs text-danger">Rejection failed. Please try again.</p>
                     )}
                   </div>
                 )}
@@ -292,9 +292,9 @@ export default function IssuanceDetailPage() {
               </div>
 
               {(state === "APPROVED" || state === "ISSUED" || state === "DELIVERED") && (
-                <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
-                  <h2 className="text-sm font-semibold text-gray-900">Card operations</h2>
-                  <p className="text-sm text-gray-500">
+                <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
+                  <h2 className="text-sm font-semibold text-foreground">Card operations</h2>
+                  <p className="text-sm text-muted-foreground">
                     Continue the Health ID card journey after approval — print the card, verify delegate pickup, or review
                     slips.
                   </p>
@@ -302,9 +302,9 @@ export default function IssuanceDetailPage() {
                     {(state === "APPROVED" || state === "ISSUED" || state === "DELIVERED") && (
                       <Link
                         href="/operations/vito/print"
-                        className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-800 hover:border-gray-300"
+                        className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:border-border"
                       >
-                        <Printer className="h-4 w-4 text-impilo-600" />
+                        <Printer className="h-4 w-4 text-primary" />
                         Print &amp; slips
                       </Link>
                     )}
@@ -319,33 +319,33 @@ export default function IssuanceDetailPage() {
                     )}
                     <Link
                       href="/operations/vito/cards"
-                      className="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:border-gray-300"
+                      className="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground hover:border-border"
                     >
                       Card registry
                     </Link>
                   </div>
-                  <p className="text-xs text-gray-500">
-                    Health ID: <span className="font-mono text-gray-700">{item.healthId}</span>
+                  <p className="text-xs text-muted-foreground">
+                    Health ID: <span className="font-mono text-foreground">{item.healthId}</span>
                   </p>
                 </div>
               )}
 
               {(state === "ISSUED" || state === "DELIVERED") && (
-                <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
-                  <h2 className="text-sm font-semibold text-gray-900">Delegated pickup package</h2>
-                  <p className="text-sm text-gray-500">
+                <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
+                  <h2 className="text-sm font-semibold text-foreground">Delegated pickup package</h2>
+                  <p className="text-sm text-muted-foreground">
                     Create a pickup token and OTP for delegate handover at{" "}
                     {facility?.name ?? "the active facility context"}.
                   </p>
                   {!facility?.id && (
-                    <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                    <p className="text-xs text-warning-foreground bg-warning-soft border border-amber-100 rounded-lg px-3 py-2">
                       Select a facility context before creating a pickup package.
                     </p>
                   )}
-                  <label className="flex flex-col gap-1 text-xs text-gray-600">
+                  <label className="flex flex-col gap-1 text-xs text-muted-foreground">
                     Delegate name
                     <input
-                      className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      className="rounded-lg border border-border px-3 py-2 text-sm"
                       value={delegateName}
                       onChange={(e) => setDelegateName(e.target.value)}
                       placeholder="Person collecting the card"

@@ -113,7 +113,7 @@ export default function WorkPage() {
       </p>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-red-800">
           {error}
         </div>
       )}
@@ -160,7 +160,7 @@ export default function WorkPage() {
                   <span
                     className={`badge ${
                       activeSession.dutyMode === "CLINICAL"
-                        ? "bg-emerald-100 text-emerald-800"
+                        ? "bg-emerald-100 text-primary-hover"
                         : activeSession.dutyMode === "ADMIN"
                           ? "bg-blue-100 text-blue-800"
                           : "bg-purple-100 text-purple-800"

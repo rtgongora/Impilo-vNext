@@ -77,8 +77,8 @@ export function RoleJourneyNavigation() {
         className={`ml-auto rounded-full px-2.5 py-1 text-xs font-medium ${
           pathname.startsWith("/production-command-centre") ||
           pathname.startsWith("/health-os/command-centre")
-            ? "bg-impilo-100 text-impilo-700"
-            : "text-impilo-600 hover:bg-impilo-50"
+            ? "bg-primary-soft text-primary-hover"
+            : "text-primary hover:bg-primary-soft"
         }`}
       >
         Command Centre

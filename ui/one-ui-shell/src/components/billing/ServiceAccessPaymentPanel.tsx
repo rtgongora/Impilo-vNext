@@ -58,13 +58,13 @@ export type ServiceAccessPaymentPanelProps = {
 
 export function BillingTimingDoctrineBanner() {
   return (
-    <div className="rounded-lg border border-amber-200 bg-amber-50/80 p-4 text-sm text-amber-950">
+    <div className="rounded-lg border border-warning/35 bg-warning-soft/80 p-4 text-sm text-warning-foreground">
       <p className="font-medium">Pre-service billing and access</p>
       <p className="mt-2">
         Some services may require payment, deposit, authorisation, cover confirmation, exemption, waiver, or deferred
         payment approval before service delivery.
       </p>
-      <p className="mt-2 text-amber-900/90">
+      <p className="mt-2 text-warning-foreground/90">
         Billing timing depends on service type, facility policy, payer rules, exemption status, and emergency rules.
         COSTA supports pre-service, point-of-care, post-service, claim-based, package-based, periodic, and deferred
         billing; costing continues even when billing has not yet happened.
@@ -122,31 +122,31 @@ export function ServiceAccessPaymentPanel({ encounterId, patientId }: ServiceAcc
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+          className="inline-flex items-center gap-2 rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
         >
           <Shield className="h-4 w-4" />
           Service access / payment requirement
         </button>
         <button
           type="button"
-          className="text-xs font-medium text-slate-600 underline decoration-slate-300 hover:text-slate-900"
+          className="text-xs font-medium text-muted-foreground underline decoration-slate-300 hover:text-foreground"
           onClick={() => void refetch()}
         >
           Refresh decisions
         </button>
       </div>
       {lastAction ? (
-        <p className="text-xs text-slate-600">
+        <p className="text-xs text-muted-foreground">
           Last operator path (sets access status): <strong>{lastAction}</strong>
         </p>
       ) : null}
       {isLoading ? (
-        <p className="text-xs text-slate-500">Loading service access decisions…</p>
+        <p className="text-xs text-muted-foreground">Loading service access decisions…</p>
       ) : isError ? (
-        <p className="text-xs text-amber-800">Could not load decisions (check finance role / BFF).</p>
+        <p className="text-xs text-warning-foreground">Could not load decisions (check finance role / BFF).</p>
       ) : decisions.length > 0 ? (
-        <div className="rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-700">
-          <p className="font-medium text-slate-800">Recent decisions (COSTA)</p>
+        <div className="rounded-lg border border-border bg-card p-3 text-xs text-foreground">
+          <p className="font-medium text-foreground">Recent decisions (COSTA)</p>
           <ul className="mt-2 list-disc space-y-1 pl-4">
             {decisions.slice(0, 5).map((d) => (
               <li key={d.service_access_decision_id}>{formatDecisionRow(d)}</li>
@@ -154,7 +154,7 @@ export function ServiceAccessPaymentPanel({ encounterId, patientId }: ServiceAcc
           </ul>
         </div>
       ) : (
-        <p className="text-xs text-slate-500">No service access decisions recorded for this filter yet.</p>
+        <p className="text-xs text-muted-foreground">No service access decisions recorded for this filter yet.</p>
       )}
       {register.isError ? (
         <p className="text-xs text-red-600">
@@ -168,31 +168,31 @@ export function ServiceAccessPaymentPanel({ encounterId, patientId }: ServiceAcc
             role="dialog"
             aria-modal="true"
             aria-labelledby="service-access-title"
-            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-xl"
+            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-border bg-card shadow-xl"
           >
-            <div className="flex items-start justify-between border-b border-slate-100 px-5 py-4">
+            <div className="flex items-start justify-between border-b border-border px-5 py-4">
               <div>
-                <h2 id="service-access-title" className="text-base font-semibold text-slate-900">
+                <h2 id="service-access-title" className="text-base font-semibold text-foreground">
                   Service access before care
                 </h2>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-muted-foreground">
                   Registers a COSTA ServiceAccessDecision via Experience BFF (persists to costing-engine).
                 </p>
               </div>
               <button
                 type="button"
                 aria-label="Close"
-                className="rounded p-1 text-slate-500 hover:bg-slate-100"
+                className="rounded p-1 text-muted-foreground hover:bg-neutral-100"
                 onClick={() => setOpen(false)}
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
             <div className="space-y-4 px-5 py-4 text-sm">
-              <label className="block text-xs font-medium text-slate-600">
+              <label className="block text-xs font-medium text-muted-foreground">
                 Access status (required)
                 <select
-                  className="mt-1 block w-full rounded-lg border border-slate-200 px-2 py-2 text-sm"
+                  className="mt-1 block w-full rounded-lg border border-border px-2 py-2 text-sm"
                   value={accessStatus}
                   onChange={(e) => setAccessStatus(e.target.value)}
                 >
@@ -203,10 +203,10 @@ export function ServiceAccessPaymentPanel({ encounterId, patientId }: ServiceAcc
                   ))}
                 </select>
               </label>
-              <label className="block text-xs font-medium text-slate-600">
+              <label className="block text-xs font-medium text-muted-foreground">
                 Billing timing mode
                 <select
-                  className="mt-1 block w-full rounded-lg border border-slate-200 px-2 py-2 text-sm"
+                  className="mt-1 block w-full rounded-lg border border-border px-2 py-2 text-sm"
                   value={timing}
                   onChange={(e) => setTiming(e.target.value as BillingTimingModeValue)}
                 >
@@ -217,35 +217,35 @@ export function ServiceAccessPaymentPanel({ encounterId, patientId }: ServiceAcc
                   ))}
                 </select>
               </label>
-              <label className="block text-xs font-medium text-slate-600">
+              <label className="block text-xs font-medium text-muted-foreground">
                 Requested service name (optional)
                 <input
-                  className="mt-1 block w-full rounded-lg border border-slate-200 px-2 py-2 text-sm"
+                  className="mt-1 block w-full rounded-lg border border-border px-2 py-2 text-sm"
                   value={serviceName}
                   onChange={(e) => setServiceName(e.target.value)}
                   placeholder="e.g. Initial consultation"
                 />
               </label>
-              <label className="block text-xs font-medium text-slate-600">
+              <label className="block text-xs font-medium text-muted-foreground">
                 Estimated cost (display / optional number)
                 <input
-                  className="mt-1 block w-full rounded-lg border border-slate-200 px-2 py-2 text-sm"
+                  className="mt-1 block w-full rounded-lg border border-border px-2 py-2 text-sm"
                   value={estimated}
                   onChange={(e) => setEstimated(e.target.value)}
                   placeholder="e.g. 120.00"
                 />
               </label>
-              <label className="block text-xs font-medium text-slate-600">
+              <label className="block text-xs font-medium text-muted-foreground">
                 Tariff / service code context (optional)
                 <input
-                  className="mt-1 block w-full rounded-lg border border-slate-200 px-2 py-2 text-sm"
+                  className="mt-1 block w-full rounded-lg border border-border px-2 py-2 text-sm"
                   value={tariffLabel}
                   onChange={(e) => setTariffLabel(e.target.value)}
                   placeholder="Tariff list code or service id"
                 />
               </label>
-              <div className="rounded-lg bg-slate-50 p-3 text-xs text-slate-700">
-                <p className="font-medium text-slate-800">Summary</p>
+              <div className="rounded-lg bg-background p-3 text-xs text-foreground">
+                <p className="font-medium text-foreground">Summary</p>
                 <ul className="mt-2 list-disc space-y-1 pl-4">
                   <li>Encounter: {encounterId?.trim() || "—"}</li>
                   <li>Patient CPID: {patientId?.trim() || "—"}</li>
@@ -256,13 +256,13 @@ export function ServiceAccessPaymentPanel({ encounterId, patientId }: ServiceAcc
                 </ul>
               </div>
               <div>
-                <p className="text-xs font-medium text-slate-700">Quick actions (sets access status)</p>
+                <p className="text-xs font-medium text-foreground">Quick actions (sets access status)</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {ACCESS_ACTIONS.map((a) => (
                     <button
                       key={a.id}
                       type="button"
-                      className="rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-medium text-slate-800 hover:bg-slate-50"
+                      className="rounded-lg border border-border px-2 py-1.5 text-xs font-medium text-foreground hover:bg-background"
                       onClick={() => {
                         setAccessStatus(a.status);
                         setLastAction(a.label);
@@ -274,10 +274,10 @@ export function ServiceAccessPaymentPanel({ encounterId, patientId }: ServiceAcc
                 </div>
               </div>
             </div>
-            <div className="flex flex-wrap justify-end gap-2 border-t border-slate-100 px-5 py-3">
+            <div className="flex flex-wrap justify-end gap-2 border-t border-border px-5 py-3">
               <button
                 type="button"
-                className="rounded-lg border border-slate-200 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                className="rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-background"
                 onClick={() => setOpen(false)}
               >
                 Cancel
@@ -285,7 +285,7 @@ export function ServiceAccessPaymentPanel({ encounterId, patientId }: ServiceAcc
               <button
                 type="button"
                 disabled={register.isPending}
-                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
+                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary disabled:opacity-60"
                 onClick={() => void submitDecision().catch(() => undefined)}
               >
                 {register.isPending ? "Saving…" : "Register decision"}

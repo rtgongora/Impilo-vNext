@@ -35,19 +35,19 @@ export default function FacilityOperationsHubPage() {
         subtitle="Queue, scheduling, workforce, beds, patient flow, and alerts â€” scoped to your selected facility and role."
       >
         {!facility ? (
-          <div className="rounded-xl border border-amber-200 bg-amber-50/80 p-6 text-sm text-amber-950">
+          <div className="rounded-xl border border-warning/35 bg-warning-soft/80 p-6 text-sm text-warning-foreground">
             <p className="font-medium">Select a facility from the header context</p>
-            <p className="mt-1 text-amber-900/90">
+            <p className="mt-1 text-warning-foreground/90">
               Operational metrics and queue APIs are facility-scoped. Choose a facility on Home before opening the
               control tower or patient flow board.
             </p>
-            <Link href="/home" className="mt-3 inline-block text-sm font-semibold text-impilo-700 underline">
+            <Link href="/home" className="mt-3 inline-block text-sm font-semibold text-primary-hover underline">
               Return to Home
             </Link>
           </div>
         ) : (
-          <p className="text-xs text-slate-500">
-            Active facility: <span className="font-semibold text-slate-800">{facility.name}</span>
+          <p className="text-xs text-muted-foreground">
+            Active facility: <span className="font-semibold text-foreground">{facility.name}</span>
           </p>
         )}
 
@@ -59,9 +59,9 @@ export default function FacilityOperationsHubPage() {
         ) : null}
 
         {facility ? (
-          <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 min-h-[480px]">
-            <h2 className="text-sm font-semibold text-slate-900 mb-1">Workspace operations hub</h2>
-            <p className="text-xs text-slate-500 mb-4">
+          <section className="mt-6 rounded-2xl border border-border bg-card p-4 min-h-[480px]">
+            <h2 className="text-sm font-semibold text-foreground mb-1">Workspace operations hub</h2>
+            <p className="text-xs text-muted-foreground mb-4">
               Billing, inventory, and staffing for the active facility — live data when BFF paths are available.
             </p>
             <WorkspaceOpsHub
@@ -78,15 +78,15 @@ export default function FacilityOperationsHubPage() {
               <Link
                 key={id}
                 href={href}
-                className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-impilo-300 hover:shadow-md"
+                className="group rounded-2xl border border-border bg-card p-5 shadow-sm transition hover:border-impilo-300 hover:shadow-md"
               >
                 <div className="flex items-start gap-3">
-                  <div className="rounded-xl bg-rose-50 p-2 text-rose-700">
+                  <div className="rounded-xl bg-danger-soft p-2 text-danger">
                     <Icon className="h-5 w-5" aria-hidden />
                   </div>
                   <div>
-                    <h2 className="text-sm font-semibold text-slate-900 group-hover:text-impilo-800">{label}</h2>
-                    <p className="mt-1 text-xs leading-relaxed text-slate-600">{description}</p>
+                    <h2 className="text-sm font-semibold text-foreground group-hover:text-impilo-800">{label}</h2>
+                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{description}</p>
                   </div>
                 </div>
               </Link>
@@ -95,14 +95,14 @@ export default function FacilityOperationsHubPage() {
         ) : null}
 
         {isAdmin ? (
-          <section className="mt-10 border-t border-slate-200 pt-6">
-            <h2 className="text-sm font-semibold text-slate-800">Platform operations (admin)</h2>
-            <p className="mt-1 text-xs text-slate-500">
+          <section className="mt-10 border-t border-border pt-6">
+            <h2 className="text-sm font-semibold text-foreground">Platform operations (admin)</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
               Sovereign registry and asset planes â€” separate from day-to-day facility command.
             </p>
             <Link
               href="/operations"
-              className="mt-3 inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-slate-50 px-4 py-2 text-xs font-semibold text-slate-800 hover:bg-white"
+              className="mt-3 inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-xs font-semibold text-foreground hover:bg-card"
             >
               <Settings2 className="h-4 w-4" aria-hidden />
               Open platform operations

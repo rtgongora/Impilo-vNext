@@ -17,7 +17,7 @@ export default function LearningAdminHomePage() {
       <PageShell title="Fundo authoring admin" subtitle="Native authoring shell for courses, pathways and assessments.">
         <div className="flex flex-wrap gap-2">
           {links.map(([href, label]) => (
-            <Link key={String(href)} href={String(href)} className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700">
+            <Link key={String(href)} href={String(href)} className="rounded border border-border px-3 py-1.5 text-sm text-foreground">
               {String(label)}
             </Link>
           ))}

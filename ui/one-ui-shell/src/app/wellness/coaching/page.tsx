@@ -105,16 +105,16 @@ export default function CoachingPage() {
               <p className="text-5xl font-bold">{doneCount}<span className="text-2xl font-normal text-violet-200">/{totalToday || 0}</span></p>
               <p className="text-sm text-violet-200 mb-1">habits completed</p>
             </div>
-            <div className="h-3 mt-4 rounded-full bg-white/20 overflow-hidden">
-              <div className="h-full rounded-full bg-white transition-all" style={{ width: `${totalToday > 0 ? (doneCount / totalToday) * 100 : 0}%` }} />
+            <div className="h-3 mt-4 rounded-full bg-card/20 overflow-hidden">
+              <div className="h-full rounded-full bg-card transition-all" style={{ width: `${totalToday > 0 ? (doneCount / totalToday) * 100 : 0}%` }} />
             </div>
           </div>
-          <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-6 flex flex-col justify-center">
+          <div className="rounded-xl border border-border bg-card shadow-sm p-6 flex flex-col justify-center">
             <Sparkles className="h-6 w-6 text-amber-500 mb-2" />
             {askGuidance.isPending ? (
-              <p className="text-sm text-gray-500 flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Loading coaching tip…</p>
+              <p className="text-sm text-muted-foreground flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Loading coaching tip…</p>
             ) : (
-              <p className="text-gray-800 font-medium italic">
+              <p className="text-foreground font-medium italic">
                 {quote ? `“${quote}”` : "Tap below for a governed coaching prompt from the guidance service."}
               </p>
             )}
@@ -129,11 +129,11 @@ export default function CoachingPage() {
         </div>
 
         {nudges.length > 0 && (
-          <div className="rounded-xl border border-amber-200 bg-amber-50 mb-6 p-5">
-            <h3 className="font-semibold text-amber-900 mb-2">Coaching nudges (Simba SOR)</h3>
+          <div className="rounded-xl border border-warning/35 bg-warning-soft mb-6 p-5">
+            <h3 className="font-semibold text-warning-foreground mb-2">Coaching nudges (Simba SOR)</h3>
             <ul className="space-y-2">
               {nudges.map((n, idx) => (
-                <li key={String(n.nudgeId ?? n.nudge_id ?? idx)} className="text-sm text-amber-900">
+                <li key={String(n.nudgeId ?? n.nudge_id ?? idx)} className="text-sm text-warning-foreground">
                   {String(n.message ?? "")}
                 </li>
               ))}
@@ -141,9 +141,9 @@ export default function CoachingPage() {
           </div>
         )}
 
-        <div className="rounded-xl border border-gray-200 bg-white shadow-sm mb-6">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gray-50">
-            <h3 className="font-semibold text-gray-800">Today&apos;s Habits (SIMBA goals)</h3>
+        <div className="rounded-xl border border-border bg-card shadow-sm mb-6">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-background">
+            <h3 className="font-semibold text-foreground">Today&apos;s Habits (SIMBA goals)</h3>
             <button onClick={() => setShowForm(!showForm)} className="text-violet-600 hover:text-violet-700 text-sm font-medium flex items-center gap-1">
               {showForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}{showForm ? "Cancel" : "New Habit"}
             </button>
@@ -157,20 +157,20 @@ export default function CoachingPage() {
             </div>
           )}
           {goalsQ.isLoading ? (
-            <p className="px-5 py-6 text-sm text-gray-500 flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Loading goals…</p>
+            <p className="px-5 py-6 text-sm text-muted-foreground flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Loading goals…</p>
           ) : habits.length === 0 ? (
-            <p className="px-5 py-6 text-sm text-gray-500">No wellness goals yet — add a habit to start tracking.</p>
+            <p className="px-5 py-6 text-sm text-muted-foreground">No wellness goals yet — add a habit to start tracking.</p>
           ) : (
             <div className="divide-y divide-gray-50">
               {habits.map((h) => (
                 <div key={h.id} className="px-5 py-3 flex items-center gap-4">
-                  <button onClick={() => toggleToday(h.id, h.name)} className={`h-6 w-6 rounded-md border-2 flex items-center justify-center transition-colors ${completedToday.has(h.id) ? "bg-violet-600 border-violet-600 text-white" : "border-gray-300 hover:border-violet-400"}`}>
+                  <button onClick={() => toggleToday(h.id, h.name)} className={`h-6 w-6 rounded-md border-2 flex items-center justify-center transition-colors ${completedToday.has(h.id) ? "bg-violet-600 border-violet-600 text-white" : "border-border hover:border-violet-400"}`}>
                     {completedToday.has(h.id) && <Check className="h-4 w-4" />}
                   </button>
-                  <span className={`flex-1 text-sm font-medium ${completedToday.has(h.id) ? "text-gray-400 line-through" : "text-gray-800"}`}>{h.name}</span>
+                  <span className={`flex-1 text-sm font-medium ${completedToday.has(h.id) ? "text-muted-foreground line-through" : "text-foreground"}`}>{h.name}</span>
                   <div className="flex items-center gap-1 text-sm">
-                    <Flame className={`h-4 w-4 ${h.streak >= 7 ? "text-orange-500" : "text-gray-400"}`} />
-                    <span className={`font-semibold ${h.streak >= 7 ? "text-orange-600" : "text-gray-500"}`}>{h.streak}</span>
+                    <Flame className={`h-4 w-4 ${h.streak >= 7 ? "text-orange-500" : "text-muted-foreground"}`} />
+                    <span className={`font-semibold ${h.streak >= 7 ? "text-orange-600" : "text-muted-foreground"}`}>{h.streak}</span>
                   </div>
                 </div>
               ))}

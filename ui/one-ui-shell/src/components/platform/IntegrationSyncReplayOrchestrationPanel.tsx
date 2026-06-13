@@ -113,7 +113,7 @@ export function IntegrationSyncReplayOrchestrationPanel() {
             {replayFeedback ? (
               <p
                 className={`mt-1 flex items-center gap-1 text-xs ${
-                  replayFeedback.status === "success" ? "text-emerald-800" : "text-amber-800"
+                  replayFeedback.status === "success" ? "text-primary-hover" : "text-warning-foreground"
                 }`}
                 data-testid="integration-replay-feedback"
               >
@@ -130,7 +130,7 @@ export function IntegrationSyncReplayOrchestrationPanel() {
         </div>
         <Link
           href="/admin/integration-templates"
-          className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-cyan-300 bg-white px-3 py-1.5 text-xs font-medium text-cyan-900 hover:bg-cyan-50"
+          className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-cyan-300 bg-card px-3 py-1.5 text-xs font-medium text-cyan-900 hover:bg-cyan-50"
         >
           Mapping templates
         </Link>
@@ -141,7 +141,7 @@ export function IntegrationSyncReplayOrchestrationPanel() {
           {deadRows.map((row) => (
             <li
               key={row.id}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-cyan-100 bg-white px-3 py-2 text-xs"
+              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-cyan-100 bg-card px-3 py-2 text-xs"
             >
               <span className="font-mono text-cyan-900">{row.id}</span>
               <span className="text-cyan-800">{row.summary}</span>

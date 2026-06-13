@@ -83,7 +83,7 @@ export default function QueuePage() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-red-800">
           {error}
         </div>
       )}
@@ -136,7 +136,7 @@ export default function QueuePage() {
                       <button
                         onClick={() => handleAccept(order.orderId)}
                         disabled={actionLoading}
-                        className="text-xs text-emerald-600 hover:text-emerald-800 font-medium"
+                        className="text-xs text-primary hover:text-primary-hover font-medium"
                       >
                         Accept
                       </button>
@@ -146,7 +146,7 @@ export default function QueuePage() {
                       <button
                         onClick={() => handleMarkReady(order.orderId)}
                         disabled={actionLoading}
-                        className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                        className="text-xs text-primary hover:text-blue-800 font-medium"
                       >
                         Mark Ready
                       </button>

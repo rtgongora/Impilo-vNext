@@ -14,8 +14,13 @@ describe("PageShell", () => {
   });
 
   it("does not render subtitle when not provided", () => {
-    const { container } = render(<PageShell title="Dashboard" />);
-    const paragraphs = container.querySelectorAll("p.text-sm.text-gray-500");
+    const { container } = render(
+      <PageShell title="Dashboard">
+        <div data-testid="content" />
+      </PageShell>,
+    );
+    const header = container.querySelector(".impilo-surface-card");
+    const paragraphs = header?.querySelectorAll("p.text-sm.text-muted-foreground") ?? [];
     expect(paragraphs).toHaveLength(0);
   });
 
@@ -54,7 +59,7 @@ describe("PageShell", () => {
     const heading = screen.getByRole("heading", { level: 1 });
     expect(heading.className).toContain("text-2xl");
     expect(heading.className).toContain("font-bold");
-    expect(heading.className).toContain("text-gray-900");
+    expect(heading.className).toContain("text-foreground");
   });
 
   it("renders service logo when serviceSlug is provided", () => {

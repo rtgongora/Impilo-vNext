@@ -61,14 +61,14 @@ export default function DistrictOperationsPage() {
     return (
       <AppLayout>
         <PageShell title="District operations" subtitle="Multi-facility queue intelligence">
-          <div className="rounded-xl border border-amber-200 bg-amber-50/80 p-6 text-sm text-amber-950">
+          <div className="rounded-xl border border-warning/35 bg-warning-soft/80 p-6 text-sm text-warning-foreground">
             <p className="font-medium">Your account does not have operations oversight roles.</p>
-            <p className="mt-2 text-amber-900/90">
+            <p className="mt-2 text-warning-foreground/90">
               District and national aggregates require public-health, HIE, or combined clinical/queue oversight roles
               aligned with the Experience BFF policy for{" "}
-              <code className="rounded bg-white/80 px-1">/internal/v1/operations/facility-queue-snapshots</code>.
+              <code className="rounded bg-card/80 px-1">/internal/v1/operations/facility-queue-snapshots</code>.
             </p>
-            <Link href="/operations/facility-operations" className="mt-3 inline-block text-sm font-semibold text-impilo-700 underline">
+            <Link href="/operations/facility-operations" className="mt-3 inline-block text-sm font-semibold text-primary-hover underline">
               Back to facility operations
             </Link>
           </div>
@@ -88,7 +88,7 @@ export default function DistrictOperationsPage() {
         <div className="mb-4">
           <Link
             href="/operations/facility-operations"
-            className="inline-flex items-center gap-1 text-xs font-semibold text-impilo-700 hover:text-impilo-900"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-primary-hover hover:text-impilo-900"
           >
             <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
             Facility operations hub
@@ -97,7 +97,7 @@ export default function DistrictOperationsPage() {
 
         <div className="mb-6 flex flex-wrap items-end gap-3">
           <div>
-            <label htmlFor="prov-filter" className="block text-xs font-medium text-slate-600">
+            <label htmlFor="prov-filter" className="block text-xs font-medium text-muted-foreground">
               Province filter (optional)
             </label>
             <input
@@ -105,27 +105,27 @@ export default function DistrictOperationsPage() {
               value={province}
               onChange={(e) => setProvince(e.target.value)}
               placeholder="e.g. Harare"
-              className="mt-1 w-56 rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 w-56 rounded-lg border border-border px-3 py-2 text-sm"
             />
           </div>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-muted-foreground">
             Loads up to 40 facilities from the registry, then requests live queue snapshots in one BFF call.
           </p>
         </div>
 
         {loading ? (
-          <div className="flex items-center gap-2 py-16 text-sm text-slate-500">
-            <Loader2 className="h-5 w-5 animate-spin text-impilo-500" aria-hidden />
+          <div className="flex items-center gap-2 py-16 text-sm text-muted-foreground">
+            <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden />
             Loading facilities and queue snapshotsâ€¦
           </div>
         ) : merged.length === 0 ? (
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-8 text-sm text-slate-600">
+          <div className="rounded-xl border border-border bg-background p-8 text-sm text-muted-foreground">
             No facilities returned for this filter. Clear the province filter or widen your search.
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+          <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-sm">
             <table className="min-w-[720px] w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+              <thead className="border-b border-border bg-background text-xs uppercase tracking-wide text-muted-foreground">
                 <tr>
                   <th className="px-4 py-3">Facility</th>
                   <th className="px-4 py-3">Province</th>
@@ -141,19 +141,19 @@ export default function DistrictOperationsPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {merged.map((row) => (
-                  <tr key={row.id} className="hover:bg-slate-50/80">
-                    <td className="px-4 py-3 font-medium text-slate-900">{row.name}</td>
-                    <td className="px-4 py-3 text-slate-600">{row.province}</td>
-                    <td className="px-4 py-3 text-slate-600">{row.district}</td>
+                  <tr key={row.id} className="hover:bg-background/80">
+                    <td className="px-4 py-3 font-medium text-foreground">{row.name}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{row.province}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{row.district}</td>
                     <td className="px-4 py-3 text-right tabular-nums">{row.waiting}</td>
                     <td className="px-4 py-3 text-right tabular-nums">{row.called}</td>
                     <td className="px-4 py-3 text-right tabular-nums">{row.inService}</td>
                     <td className="px-4 py-3 text-right tabular-nums">{row.completed}</td>
                     <td className="px-4 py-3 text-right tabular-nums">{row.noShow}</td>
                     <td className="px-4 py-3 text-right tabular-nums">{row.avgWaitSeconds}</td>
-                    <td className="px-4 py-3 text-xs text-slate-500">
+                    <td className="px-4 py-3 text-xs text-muted-foreground">
                       <span className="inline-flex items-center gap-1">
-                        <Globe2 className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+                        <Globe2 className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
                         {row.source}
                       </span>
                       {row.error ? <span className="ml-1 text-rose-600">({row.error})</span> : null}

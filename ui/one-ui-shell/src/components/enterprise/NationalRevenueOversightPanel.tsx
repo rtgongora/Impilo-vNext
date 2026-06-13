@@ -59,36 +59,36 @@ export function NationalRevenueOversightPanel() {
 
   return (
     <section
-      className="rounded-2xl border border-violet-200 bg-white p-5 shadow-sm"
+      className="rounded-2xl border border-violet-200 bg-card p-5 shadow-sm"
       data-testid="national-revenue-oversight-panel"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3">
           <Wallet className="mt-0.5 h-5 w-5 text-violet-600" aria-hidden />
           <div>
-            <h2 className="text-sm font-semibold text-slate-900">National revenue oversight</h2>
-            <p className="mt-1 text-xs text-slate-500">
+            <h2 className="text-sm font-semibold text-foreground">National revenue oversight</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
               Costa national aggregate, claims exposure, MusheX settlement rows, and receivables — no synthetic KPIs.
             </p>
           </div>
         </div>
         <div className="flex flex-wrap items-end gap-3">
-          <label className="text-xs font-medium text-slate-600">
+          <label className="text-xs font-medium text-muted-foreground">
             Year
             <input
               type="number"
-              className="mt-1 block w-24 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+              className="mt-1 block w-24 rounded-md border border-border px-2 py-1.5 text-sm"
               value={year}
               onChange={(e) => setYear(Number(e.target.value))}
             />
           </label>
-          <label className="text-xs font-medium text-slate-600">
+          <label className="text-xs font-medium text-muted-foreground">
             Month
             <input
               type="number"
               min={1}
               max={12}
-              className="mt-1 block w-20 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+              className="mt-1 block w-20 rounded-md border border-border px-2 py-1.5 text-sm"
               value={month}
               onChange={(e) => setMonth(Number(e.target.value))}
             />
@@ -97,45 +97,45 @@ export function NationalRevenueOversightPanel() {
       </div>
 
       {anyLoading ? (
-        <p className="mt-4 flex items-center gap-2 text-sm text-slate-500">
+        <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> Loading national finance signals…
         </p>
       ) : null}
 
       <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Net revenue (national)</p>
+        <div className="rounded-xl border border-border bg-background/80 p-4">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">Net revenue (national)</p>
           {revenueQ.isError ? (
-            <p className="mt-2 flex items-start gap-1.5 text-sm text-red-700">
+            <p className="mt-2 flex items-start gap-1.5 text-sm text-danger">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
               {errorMessage(revenueQ.error)}
             </p>
           ) : revenue ? (
             <>
-              <p className="mt-1 text-2xl font-semibold text-slate-900">{money(revenue.totalRevenue)}</p>
-              <p className="mt-1 text-xs text-slate-600">{String(revenue.encounterCount ?? 0)} encounters</p>
+              <p className="mt-1 text-2xl font-semibold text-foreground">{money(revenue.totalRevenue)}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{String(revenue.encounterCount ?? 0)} encounters</p>
               {byPayer.length > 0 ? (
                 <p className="mt-1 text-xs text-violet-700">{byPayer.length} payer type buckets</p>
               ) : (
-                <p className="mt-1 text-xs text-slate-500">No payer breakdown for period.</p>
+                <p className="mt-1 text-xs text-muted-foreground">No payer breakdown for period.</p>
               )}
             </>
           ) : (
-            <p className="mt-2 text-sm text-slate-500">No revenue data for this period.</p>
+            <p className="mt-2 text-sm text-muted-foreground">No revenue data for this period.</p>
           )}
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Claims exposure</p>
+        <div className="rounded-xl border border-border bg-background/80 p-4">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">Claims exposure</p>
           {claimsQ.isError ? (
-            <p className="mt-2 flex items-start gap-1.5 text-sm text-red-700">
+            <p className="mt-2 flex items-start gap-1.5 text-sm text-danger">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
               {errorMessage(claimsQ.error)}
             </p>
           ) : claimsQ.data ? (
             <>
-              <p className="mt-1 text-2xl font-semibold text-slate-900">{money(claimsQ.data.claimsExposure)}</p>
-              <p className="mt-1 text-xs text-slate-600">
+              <p className="mt-1 text-2xl font-semibold text-foreground">{money(claimsQ.data.claimsExposure)}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
                 Loss ratio:{" "}
                 {claimsQ.data.lossRatio != null
                   ? `${(Number(claimsQ.data.lossRatio) * 100).toFixed(2)}%`
@@ -143,61 +143,61 @@ export function NationalRevenueOversightPanel() {
               </p>
             </>
           ) : (
-            <p className="mt-2 text-sm text-slate-500">No claims expenditure for this period.</p>
+            <p className="mt-2 text-sm text-muted-foreground">No claims expenditure for this period.</p>
           )}
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
-          <p className="text-xs uppercase tracking-wide text-slate-500">MusheX remittance rows</p>
+        <div className="rounded-xl border border-border bg-background/80 p-4">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">MusheX remittance rows</p>
           {remittancesQ.isError ? (
-            <p className="mt-2 flex items-start gap-1.5 text-sm text-red-700">
+            <p className="mt-2 flex items-start gap-1.5 text-sm text-danger">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
               {errorMessage(remittancesQ.error)}
             </p>
           ) : settlementCount != null ? (
-            <p className="mt-1 text-2xl font-semibold text-slate-900">{String(settlementCount)}</p>
+            <p className="mt-1 text-2xl font-semibold text-foreground">{String(settlementCount)}</p>
           ) : (
-            <p className="mt-2 text-sm text-slate-500">Remittance response shape not recognised.</p>
+            <p className="mt-2 text-sm text-muted-foreground">Remittance response shape not recognised.</p>
           )}
-          <p className="mt-1 text-xs text-slate-500">Settlement-adjacent transfer rows from mushex-platform BFF.</p>
+          <p className="mt-1 text-xs text-muted-foreground">Settlement-adjacent transfer rows from mushex-platform BFF.</p>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
-          <p className="text-xs uppercase tracking-wide text-slate-500">National receivables</p>
+        <div className="rounded-xl border border-border bg-background/80 p-4">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">National receivables</p>
           {debtQ.isError ? (
-            <p className="mt-2 flex items-start gap-1.5 text-sm text-red-700">
+            <p className="mt-2 flex items-start gap-1.5 text-sm text-danger">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
               {errorMessage(debtQ.error)}
             </p>
           ) : debtQ.data ? (
             <>
-              <p className="mt-1 text-2xl font-semibold text-slate-900">
+              <p className="mt-1 text-2xl font-semibold text-foreground">
                 {totalOutstanding != null ? money(totalOutstanding) : "—"}
               </p>
-              <p className="mt-1 text-xs text-slate-600">
+              <p className="mt-1 text-xs text-muted-foreground">
                 {aging.length > 0 ? `${aging.length} aging buckets` : "No aging buckets on record"}
                 {debtQ.data.writeOffTotal != null ? ` · write-offs ${money(debtQ.data.writeOffTotal)}` : ""}
               </p>
             </>
           ) : (
-            <p className="mt-2 text-sm text-slate-500">No receivables snapshot available.</p>
+            <p className="mt-2 text-sm text-muted-foreground">No receivables snapshot available.</p>
           )}
         </div>
       </div>
 
       {byPayer.length > 0 && !revenueQ.isError ? (
-        <div className="mt-4 rounded-xl border border-slate-100 bg-slate-50/60 p-4">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-600">Revenue by payer type</h3>
+        <div className="mt-4 rounded-xl border border-border bg-background/60 p-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Revenue by payer type</h3>
           <table className="mt-2 w-full text-sm">
             <thead>
-              <tr className="text-left text-xs text-slate-500">
+              <tr className="text-left text-xs text-muted-foreground">
                 <th className="pb-2">Payer type</th>
                 <th className="pb-2 text-right">Net</th>
               </tr>
             </thead>
             <tbody>
               {byPayer.map((row) => (
-                <tr key={String(row.bucket ?? row.payerType)} className="border-t border-slate-100">
+                <tr key={String(row.bucket ?? row.payerType)} className="border-t border-border">
                   <td className="py-2">{String(row.bucket ?? row.payerType ?? "—")}</td>
                   <td className="py-2 text-right font-medium">{money(row.total)}</td>
                 </tr>

@@ -23,10 +23,10 @@ import {
 
 type AnyRecord = Record<string, unknown>;
 
-const inputClass = "mt-1 w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-800";
-const labelClass = "text-xs font-medium text-slate-600";
+const inputClass = "mt-1 w-full rounded-md border border-border bg-card px-2 py-1.5 text-sm text-foreground";
+const labelClass = "text-xs font-medium text-muted-foreground";
 const buttonClass =
-  "rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50";
+  "rounded-md border border-border bg-card px-2 py-1 text-xs font-medium text-foreground hover:bg-background disabled:opacity-50";
 
 const REGISTRY_SECTIONS = [
   {
@@ -41,7 +41,7 @@ const REGISTRY_SECTIONS = [
     description: "View and manage registered healthcare providers",
     href: "/registry/providers",
     icon: UserCheck,
-    color: "bg-impilo-100 text-impilo-500",
+    color: "bg-primary-soft text-primary",
     serviceSlug: "varapi",
   },
   {
@@ -65,7 +65,7 @@ const REGISTRY_SECTIONS = [
     description: "Open national terminology curation (external ZIBO workspace)",
     href: process.env.NEXT_PUBLIC_ZIBO_URL ?? "https://zibo.impilo.health",
     icon: BookOpen,
-    color: "bg-fuchsia-100 text-fuchsia-700",
+    color: "bg-fuchsia-100 text-muted-foreground",
     external: true,
   },
   {
@@ -80,7 +80,7 @@ const REGISTRY_SECTIONS = [
     description: "Registry trust controls, federation posture, and identity alignment",
     href: "/registry/trust",
     icon: ShieldCheck,
-    color: "bg-indigo-100 text-indigo-700",
+    color: "bg-indigo-100 text-primary-hover",
     serviceSlug: "tshepo",
   },
   {
@@ -126,7 +126,7 @@ export default function RegistryHubPage() {
                 href={section.href}
                 target={external ? "_blank" : undefined}
                 rel={external ? "noopener noreferrer" : undefined}
-                className="bg-white rounded-lg border border-gray-200 p-6 hover:border-impilo-200 hover:shadow-md transition-all group"
+                className="bg-card rounded-lg border border-border p-6 hover:border-primary/25 hover:shadow-md transition-all group"
               >
                 <div className="flex items-start gap-4">
                   {"serviceSlug" in section && section.serviceSlug ? (
@@ -139,10 +139,10 @@ export default function RegistryHubPage() {
                   </div>
                   )}
                   <div>
-                    <h3 className="font-medium text-gray-900 group-hover:text-impilo-500 transition-colors">
+                    <h3 className="font-medium text-foreground group-hover:text-primary transition-colors">
                       {section.title}
                     </h3>
-                    <p className="text-sm text-gray-500 mt-1">{section.description}</p>
+                    <p className="text-sm text-muted-foreground mt-1">{section.description}</p>
                   </div>
                 </div>
               </Link>
@@ -182,15 +182,15 @@ function CompactJsonResult({ value }: { value: unknown }) {
     .slice(0, 6);
 
   if (entries.length === 0) {
-    return <p className="mt-2 text-xs text-slate-600">Command accepted. Response contains structured data.</p>;
+    return <p className="mt-2 text-xs text-muted-foreground">Command accepted. Response contains structured data.</p>;
   }
 
   return (
     <dl className="mt-2 grid gap-2 sm:grid-cols-2">
       {entries.map(([key, entryValue]) => (
-        <div key={key} className="rounded-md border border-emerald-100 bg-emerald-50 p-2">
-          <dt className="text-[10px] uppercase tracking-wide text-emerald-700">{key}</dt>
-          <dd className="mt-0.5 break-words text-xs font-medium text-slate-900">{String(entryValue)}</dd>
+        <div key={key} className="rounded-md border border-emerald-100 bg-success-soft p-2">
+          <dt className="text-[10px] uppercase tracking-wide text-primary-hover">{key}</dt>
+          <dd className="mt-0.5 break-words text-xs font-medium text-foreground">{String(entryValue)}</dd>
         </div>
       ))}
     </dl>
@@ -295,26 +295,26 @@ function IdentityOperationsPanel() {
   }
 
   return (
-    <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="mb-6 rounded-2xl border border-border bg-card p-5 shadow-sm">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Registry plane</p>
-          <h2 className="mt-1 text-lg font-semibold text-slate-900">Identity Operations</h2>
-          <p className="mt-1 max-w-3xl text-sm text-slate-600">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Registry plane</p>
+          <h2 className="mt-1 text-lg font-semibold text-foreground">Identity Operations</h2>
+          <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
             Live BFF-backed controls for VITO patient identity and VARAPI provider identity. Facility identity
             creation remains intentionally unsupported here until a canonical Experience contract exists.
           </p>
         </div>
-        <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+        <span className="rounded-full border border-success/25 bg-success-soft px-3 py-1 text-xs font-medium text-primary-hover">
           actionable partial
         </span>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
-        <div className="rounded-xl border border-slate-200 p-4">
-          <h3 className="text-sm font-semibold text-slate-900">Search and resolve identities</h3>
+        <div className="rounded-xl border border-border p-4">
+          <h3 className="text-sm font-semibold text-foreground">Search and resolve identities</h3>
           <div className="mt-3 grid gap-3 md:grid-cols-2">
-            <label className="text-xs text-slate-600">
+            <label className="text-xs text-muted-foreground">
               Identity search
               <div className="mt-1 flex gap-2">
                 <input
@@ -333,7 +333,7 @@ function IdentityOperationsPanel() {
                 </button>
               </div>
             </label>
-            <label className="text-xs text-slate-600">
+            <label className="text-xs text-muted-foreground">
               Resolve patient Health ID
               <input
                 className={inputClass}
@@ -352,27 +352,27 @@ function IdentityOperationsPanel() {
             {resolvePatient.isPending ? "Resolving..." : "Resolve patient identity"}
           </button>
           <div className="mt-3 space-y-2">
-            {search.isLoading ? <p className="text-xs text-slate-600">Searching identities...</p> : null}
-            {search.isError ? <p className="text-xs text-rose-700">Identity search unavailable.</p> : null}
+            {search.isLoading ? <p className="text-xs text-muted-foreground">Searching identities...</p> : null}
+            {search.isError ? <p className="text-xs text-danger">Identity search unavailable.</p> : null}
             {search.items.slice(0, 4).map((item, index) => {
               const id = fieldValue(item, ["healthId", "id", "cpid", "providerId"], `identity-${index + 1}`);
               return (
-                <div key={`${id}-${index}`} className="rounded-md border border-slate-200 bg-slate-50 p-2">
-                  <p className="text-xs font-medium text-slate-900">{id}</p>
-                  <p className="text-xs text-slate-600">
+                <div key={`${id}-${index}`} className="rounded-md border border-border bg-background p-2">
+                  <p className="text-xs font-medium text-foreground">{id}</p>
+                  <p className="text-xs text-muted-foreground">
                     {fieldValue(item, ["displayName", "name", "fullName", "givenName"], "Registry identity")}
                   </p>
                 </div>
               );
             })}
             <CompactJsonResult value={resolvePatient.data} />
-            {resolvePatient.isError ? <p className="text-xs text-rose-700">Patient identity resolution failed.</p> : null}
+            {resolvePatient.isError ? <p className="text-xs text-danger">Patient identity resolution failed.</p> : null}
           </div>
         </div>
 
-        <div className="rounded-xl border border-slate-200 p-4">
-          <h3 className="text-sm font-semibold text-slate-900">Patient registration command</h3>
-          <p className="mt-1 text-xs text-slate-600">
+        <div className="rounded-xl border border-border p-4">
+          <h3 className="text-sm font-semibold text-foreground">Patient registration command</h3>
+          <p className="mt-1 text-xs text-muted-foreground">
             Guided live command to <code>/internal/v1/identity/patient/register</code>. Identity registration is not
             provisionally queued because replay can create high-trust identity conflicts.
           </p>
@@ -404,14 +404,14 @@ function IdentityOperationsPanel() {
           >
             {registerPatient.isPending ? "Registering..." : "Register patient identity"}
           </button>
-          {patientFeedback ? <p className="mt-2 text-xs text-slate-700">{patientFeedback}</p> : null}
+          {patientFeedback ? <p className="mt-2 text-xs text-foreground">{patientFeedback}</p> : null}
           <CompactJsonResult value={registerPatient.data} />
         </div>
 
-        <div className="rounded-xl border border-slate-200 p-4">
-          <h3 className="text-sm font-semibold text-slate-900">Provider identity operations</h3>
+        <div className="rounded-xl border border-border p-4">
+          <h3 className="text-sm font-semibold text-foreground">Provider identity operations</h3>
           <div className="mt-3 grid gap-3 md:grid-cols-2">
-            <label className="text-xs text-slate-600">
+            <label className="text-xs text-muted-foreground">
               Provider lookup ID
               <input
                 className={inputClass}
@@ -431,7 +431,7 @@ function IdentityOperationsPanel() {
               </button>
             </div>
           </div>
-          <p className="mt-3 text-xs text-slate-600">
+          <p className="mt-3 text-xs text-muted-foreground">
             Guided provider command uses <code>/internal/v1/identity/provider/create</code>. Facility identity and
             lifecycle work remains under the dedicated facility registry routes.
           </p>
@@ -465,15 +465,15 @@ function IdentityOperationsPanel() {
           >
             {createProvider.isPending ? "Creating..." : "Create provider identity"}
           </button>
-          {providerFeedback ? <p className="mt-2 text-xs text-slate-700">{providerFeedback}</p> : null}
-          {providerLookup.isLoading ? <p className="mt-2 text-xs text-slate-600">Loading provider...</p> : null}
-          {providerLookup.isError ? <p className="mt-2 text-xs text-rose-700">Provider lookup failed.</p> : null}
+          {providerFeedback ? <p className="mt-2 text-xs text-foreground">{providerFeedback}</p> : null}
+          {providerLookup.isLoading ? <p className="mt-2 text-xs text-muted-foreground">Loading provider...</p> : null}
+          {providerLookup.isError ? <p className="mt-2 text-xs text-danger">Provider lookup failed.</p> : null}
           <CompactJsonResult value={providerLookup.data ?? createProvider.data} />
         </div>
 
-        <div className="rounded-xl border border-slate-200 p-4">
-          <h3 className="text-sm font-semibold text-slate-900">Patient recovery commands</h3>
-          <p className="mt-1 text-xs text-slate-600">
+        <div className="rounded-xl border border-border p-4">
+          <h3 className="text-sm font-semibold text-foreground">Patient recovery commands</h3>
+          <p className="mt-1 text-xs text-muted-foreground">
             Patient recovery is live; provider recovery stays explicitly unsupported until VARAPI exposes a contract.
             Recovery start and verification are not queued offline because OTP/recovery replay must remain synchronous.
           </p>
@@ -526,7 +526,7 @@ function IdentityOperationsPanel() {
           >
             {verifyRecovery.isPending ? "Verifying..." : "Verify patient recovery"}
           </button>
-          {recoveryFeedback ? <p className="mt-2 text-xs text-slate-700">{recoveryFeedback}</p> : null}
+          {recoveryFeedback ? <p className="mt-2 text-xs text-foreground">{recoveryFeedback}</p> : null}
           <CompactJsonResult value={verifyRecovery.data ?? startRecovery.data} />
         </div>
       </div>

@@ -27,12 +27,12 @@ export default function EquipmentPage() {
               { label: "Due Calibration", value: "0", alert: true },
               { label: "Under Maintenance", value: "0" },
             ].map(({ label, value, alert }) => (
-              <div key={label} className={`rounded-lg border bg-white p-4 ${alert ? "border-amber-200" : "border-gray-200"}`}>
+              <div key={label} className={`rounded-lg border bg-card p-4 ${alert ? "border-warning/35" : "border-border"}`}>
                 <div className="flex items-center justify-between">
-                  <p className="text-sm text-gray-500">{label}</p>
+                  <p className="text-sm text-muted-foreground">{label}</p>
                   {alert && <AlertTriangle className="h-4 w-4 text-amber-500" />}
                 </div>
-                <p className="text-2xl font-bold text-gray-900">{value}</p>
+                <p className="text-2xl font-bold text-foreground">{value}</p>
               </div>
             ))}
           </div>
@@ -41,24 +41,24 @@ export default function EquipmentPage() {
           <div className="flex items-center justify-between">
             <div className="flex gap-3">
               <div className="relative w-80">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input
                   type="text"
                   placeholder="Search equipment by name or serial..."
-                  className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+                  className="w-full rounded-lg border border-border py-2 pl-10 pr-4 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
                 />
               </div>
-              <button className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+              <button className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-foreground hover:bg-background transition-colors">
                 <Filter className="h-4 w-4" />
                 Filters
               </button>
             </div>
             <div className="flex items-center gap-2">
-              <button className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+              <button className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-foreground hover:bg-background transition-colors">
                 <Calendar className="h-4 w-4" />
                 Maintenance Schedule
               </button>
-              <button className="inline-flex items-center gap-2 rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 transition-colors">
+              <button className="inline-flex items-center gap-2 rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover transition-colors">
                 <Plus className="h-4 w-4" />
                 Register Equipment
               </button>
@@ -66,10 +66,10 @@ export default function EquipmentPage() {
           </div>
 
           {/* Empty state */}
-          <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-12 text-center">
-            <Wrench className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-4 text-sm font-semibold text-gray-900">No equipment registered</h3>
-            <p className="mt-2 text-sm text-gray-600">
+          <div className="rounded-lg border border-dashed border-border bg-background p-12 text-center">
+            <Wrench className="mx-auto h-12 w-12 text-muted-foreground" />
+            <h3 className="mt-4 text-sm font-semibold text-foreground">No equipment registered</h3>
+            <p className="mt-2 text-sm text-muted-foreground">
               Register clinical equipment to track calibration schedules, maintenance history, and device linkage.
             </p>
           </div>

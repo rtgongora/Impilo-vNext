@@ -263,10 +263,10 @@ function compareTimestamps(a: TimelineRow, b: TimelineRow): number {
 
 function statusBadgeChrome(kind: TimelineKind, status: string | undefined): string {
   if (kind === "COST_EVENT") {
-    return "bg-emerald-100 text-emerald-800 border-emerald-200";
+    return "bg-emerald-100 text-primary-hover border-success/25";
   }
   if (kind === "INVOICE") {
-    return "bg-indigo-100 text-indigo-800 border-indigo-200";
+    return "bg-indigo-100 text-primary-hover border-info/25";
   }
   if (kind === "INTENT") {
     return "bg-violet-100 text-violet-800 border-violet-200";
@@ -275,22 +275,22 @@ function statusBadgeChrome(kind: TimelineKind, status: string | undefined): stri
     return "bg-cyan-100 text-cyan-800 border-cyan-200";
   }
   if (kind === "SUBSIDY") {
-    return "bg-amber-100 text-amber-800 border-amber-200";
+    return "bg-amber-100 text-warning-foreground border-warning/35";
   }
   const s = (status ?? "").toUpperCase();
   if (s === "GRANTED" || s === "APPROVED" || s === "AUTHORISED") {
-    return "bg-emerald-100 text-emerald-800 border-emerald-200";
+    return "bg-emerald-100 text-primary-hover border-success/25";
   }
   if (s === "DEFERRED" || s === "PENDING") {
-    return "bg-amber-100 text-amber-800 border-amber-200";
+    return "bg-amber-100 text-warning-foreground border-warning/35";
   }
   if (s === "DENIED" || s === "REJECTED" || s === "BLOCKED") {
-    return "bg-red-100 text-red-800 border-red-200";
+    return "bg-red-100 text-red-800 border-danger/28";
   }
   if (s === "EXEMPT" || s === "WAIVED") {
     return "bg-sky-100 text-sky-800 border-sky-200";
   }
-  return "bg-slate-100 text-slate-700 border-slate-200";
+  return "bg-neutral-100 text-foreground border-border";
 }
 
 export default function CostaEncounterTimelinePage() {
@@ -370,7 +370,7 @@ export default function CostaEncounterTimelinePage() {
         <div className="mb-4">
           <Link
             href={`/finance/costa${handoffSuffix}`}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to COSTA hub
@@ -379,28 +379,28 @@ export default function CostaEncounterTimelinePage() {
 
         <div className="space-y-6">
           {/* Identity / context card */}
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
             <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-primary-hover">
                 <Clock className="h-5 w-5" />
               </div>
               <div className="flex-1">
-                <h2 className="text-sm font-semibold text-slate-900">Encounter context</h2>
+                <h2 className="text-sm font-semibold text-foreground">Encounter context</h2>
                 <dl className="mt-3 grid gap-2 text-xs sm:grid-cols-3">
                   <div>
-                    <dt className="text-slate-500">Encounter</dt>
-                    <dd className="font-mono text-[11px] text-slate-900">{encounterId || "—"}</dd>
+                    <dt className="text-muted-foreground">Encounter</dt>
+                    <dd className="font-mono text-[11px] text-foreground">{encounterId || "—"}</dd>
                   </div>
                   <div>
-                    <dt className="text-slate-500">Patient</dt>
-                    <dd className="font-mono text-[11px] text-slate-900">{patientId ?? "—"}</dd>
+                    <dt className="text-muted-foreground">Patient</dt>
+                    <dd className="font-mono text-[11px] text-foreground">{patientId ?? "—"}</dd>
                   </div>
                   <div>
-                    <dt className="text-slate-500">Patient CPID</dt>
-                    <dd className="font-mono text-[11px] text-slate-900">{patientCpid ?? "—"}</dd>
+                    <dt className="text-muted-foreground">Patient CPID</dt>
+                    <dd className="font-mono text-[11px] text-foreground">{patientCpid ?? "—"}</dd>
                   </div>
                 </dl>
-                <p className="mt-3 inline-flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] text-slate-600">
+                <p className="mt-3 inline-flex items-center gap-2 rounded-md border border-border bg-background px-2 py-1 text-[11px] text-muted-foreground">
                   Timeline is read-only. Issue-invoice-from-estimate is the one actionable billing trigger
                   exposed here when a cost estimate id is available.
                 </p>
@@ -409,16 +409,16 @@ export default function CostaEncounterTimelinePage() {
           </section>
 
           {/* Chronological merged timeline */}
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
             <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-warning-foreground">
                 <Layers className="h-5 w-5" />
               </div>
               <div className="flex-1">
-                <h2 className="text-sm font-semibold text-slate-900">
+                <h2 className="text-sm font-semibold text-foreground">
                   Service-access decisions & charge sheet events
                 </h2>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-muted-foreground">
                   Combined timeline sourced from
                   <code className="mx-1 text-[10px]">
                     /internal/v1/finance/service-access-decisions?encounter_id=…
@@ -447,26 +447,26 @@ export default function CostaEncounterTimelinePage() {
                 </p>
 
                 {isLoading && (
-                  <p className="mt-3 flex items-center gap-2 text-xs text-slate-500">
+                  <p className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
                     <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading timeline…
                   </p>
                 )}
                 {hasError && (
-                  <p className="mt-3 flex items-center gap-2 text-xs text-red-700">
+                  <p className="mt-3 flex items-center gap-2 text-xs text-danger">
                     <AlertCircle className="h-3.5 w-3.5" /> Could not load one or both timeline
                     sources from COSTA.
                   </p>
                 )}
                 {isEmpty && (
-                  <p className="mt-3 text-xs text-slate-500">
+                  <p className="mt-3 text-xs text-muted-foreground">
                     No service-access decisions, cost events, invoices, intents, settlements, or subsidy rows returned for this encounter.
                   </p>
                 )}
 
                 {!isLoading && !hasError && timeline.length > 0 && (
-                  <div className="mt-3 overflow-x-auto rounded-lg border border-slate-200">
+                  <div className="mt-3 overflow-x-auto rounded-lg border border-border">
                     <table className="w-full text-xs">
-                      <thead className="bg-slate-50 text-slate-600">
+                      <thead className="bg-background text-muted-foreground">
                         <tr>
                           <th className="px-3 py-2 text-left font-medium">When</th>
                           <th className="px-3 py-2 text-left font-medium">Kind</th>
@@ -480,13 +480,13 @@ export default function CostaEncounterTimelinePage() {
                         {timeline.map((row, idx) => (
                           <tr
                             key={`${row.kind}-${idx}-${row.timestamp ?? "no-ts"}`}
-                            className="bg-white"
+                            className="bg-card"
                           >
-                            <td className="px-3 py-2 text-slate-500 font-mono text-[10px]">
+                            <td className="px-3 py-2 text-muted-foreground font-mono text-[10px]">
                               {row.timestamp ?? "—"}
                             </td>
                             <td className="px-3 py-2">
-                              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-700">
+                              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-foreground">
                                 {row.kind === "DECISION" ? (
                                   <ClipboardCheck className="h-3 w-3" />
                                 ) : row.kind === "COST_EVENT" ? (
@@ -513,8 +513,8 @@ export default function CostaEncounterTimelinePage() {
                                         : "Invoice"}
                               </span>
                             </td>
-                            <td className="px-3 py-2 text-slate-900">{row.label}</td>
-                            <td className="px-3 py-2 text-right text-slate-900">
+                            <td className="px-3 py-2 text-foreground">{row.label}</td>
+                            <td className="px-3 py-2 text-right text-foreground">
                               {row.amount ?? "—"}
                             </td>
                             <td className="px-3 py-2">
@@ -524,7 +524,7 @@ export default function CostaEncounterTimelinePage() {
                                 {row.badge}
                               </span>
                             </td>
-                            <td className="px-3 py-2 text-slate-600">{row.detail}</td>
+                            <td className="px-3 py-2 text-muted-foreground">{row.detail}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -536,9 +536,9 @@ export default function CostaEncounterTimelinePage() {
           </section>
 
           {/* Actionable billing trigger — issue invoice from cost estimate */}
-          <section className="rounded-xl border border-amber-200 bg-amber-50/40 p-5 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">Billing trigger — issue invoice from estimate</h2>
-            <p className="mt-1 text-xs text-slate-600">
+          <section className="rounded-xl border border-warning/35 bg-warning-soft/40 p-5 shadow-sm">
+            <h2 className="text-sm font-semibold text-foreground">Billing trigger — issue invoice from estimate</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
               POST{" "}
               <code className="text-[10px]">
                 /internal/v1/finance/costa-intel/invoices/from-cost-estimate
@@ -548,18 +548,18 @@ export default function CostaEncounterTimelinePage() {
             </p>
             <textarea
               aria-label="Invoice-from-estimate JSON"
-              className="mt-3 min-h-[120px] w-full rounded-lg border border-slate-200 p-2 font-mono text-xs"
+              className="mt-3 min-h-[120px] w-full rounded-lg border border-border p-2 font-mono text-xs"
               value={invoiceJson}
               onChange={(e) => setInvoiceJson(e.target.value)}
             />
             <input
               type="text"
               placeholder="Reason for this write (required)"
-              className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-xs"
+              className="mt-2 w-full rounded-lg border border-border px-3 py-2 text-xs"
               value={invoiceReason}
               onChange={(e) => setInvoiceReason(e.target.value)}
             />
-            <label className="mt-2 flex items-center gap-2 text-xs text-slate-700">
+            <label className="mt-2 flex items-center gap-2 text-xs text-foreground">
               <input
                 type="checkbox"
                 checked={invoiceConfirmed}
@@ -567,7 +567,7 @@ export default function CostaEncounterTimelinePage() {
               />
               I confirm this is an intentional billing write for this encounter.
             </label>
-            {invoiceErr ? <p className="mt-2 text-xs text-red-700">{invoiceErr}</p> : null}
+            {invoiceErr ? <p className="mt-2 text-xs text-danger">{invoiceErr}</p> : null}
             <button
               type="button"
               disabled={issueInvoiceM.isPending || !invoiceConfirmed || !invoiceReason.trim()}
@@ -600,27 +600,27 @@ export default function CostaEncounterTimelinePage() {
           </section>
 
           {/* Honest gap card — what we don't show yet and why */}
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
             <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-neutral-100 text-foreground">
                 <CreditCard className="h-5 w-5" />
               </div>
               <div className="flex-1">
-                <h2 className="text-sm font-semibold text-slate-900">
+                <h2 className="text-sm font-semibold text-foreground">
                   Invoices, payments, and settlement
                 </h2>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-muted-foreground">
                   Most read linkage is now surfaced. The remaining gap is settlement detail
                   granularity beyond per-intent filtered settlement headers.
                 </p>
-                <ul className="mt-3 list-disc space-y-1 pl-5 text-xs text-slate-600">
+                <ul className="mt-3 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
                   <li>
-                    <span className="font-medium text-slate-800">Invoice and intent linkage</span>{" "}
+                    <span className="font-medium text-foreground">Invoice and intent linkage</span>{" "}
                     — now surfaced through billing-workspace invoice lifecycle rows
                     (including MusheX intent id + payment-status signal where present).
                   </li>
                   <li>
-                    <span className="font-medium text-slate-800">Settlement detail granularity</span> —
+                    <span className="font-medium text-foreground">Settlement detail granularity</span> —
                     timeline shows settlement headers linked by intent filter; per-batch/per-item settlement
                     drill-down stays on reconciliation surfaces.
                   </li>
@@ -628,25 +628,25 @@ export default function CostaEncounterTimelinePage() {
                 <div className="mt-3 flex flex-wrap gap-3 text-xs">
                   <Link
                     href={`/finance/billing${handoffSuffix}`}
-                    className="inline-flex items-center gap-1 font-medium text-indigo-700 hover:text-indigo-900"
+                    className="inline-flex items-center gap-1 font-medium text-primary-hover hover:text-primary-hover"
                   >
                     <Receipt className="h-3 w-3" /> Open billing →
                   </Link>
                   <Link
                     href={`/finance/payments${handoffSuffix}`}
-                    className="inline-flex items-center gap-1 font-medium text-indigo-700 hover:text-indigo-900"
+                    className="inline-flex items-center gap-1 font-medium text-primary-hover hover:text-primary-hover"
                   >
                     <Wallet className="h-3 w-3" /> Open payments →
                   </Link>
                   <Link
                     href="/finance/reconciliation"
-                    className="inline-flex items-center gap-1 font-medium text-indigo-700 hover:text-indigo-900"
+                    className="inline-flex items-center gap-1 font-medium text-primary-hover hover:text-primary-hover"
                   >
                     <Layers className="h-3 w-3" /> Open reconciliation →
                   </Link>
                   <Link
                     href={`/finance/claims${handoffSuffix}`}
-                    className="inline-flex items-center gap-1 font-medium text-indigo-700 hover:text-indigo-900"
+                    className="inline-flex items-center gap-1 font-medium text-primary-hover hover:text-primary-hover"
                   >
                     <ClipboardCheck className="h-3 w-3" /> Open claims →
                   </Link>

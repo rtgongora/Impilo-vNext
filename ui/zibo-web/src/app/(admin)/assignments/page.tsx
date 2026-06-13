@@ -125,13 +125,13 @@ export default function AssignmentsPage() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-red-800">
           {error}
         </div>
       )}
 
       {successMessage && (
-        <div className="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-sm text-emerald-800">
+        <div className="mb-4 p-3 rounded-lg bg-success-soft border border-success/25 text-sm text-primary-hover">
           {successMessage}
         </div>
       )}
@@ -260,7 +260,7 @@ export default function AssignmentsPage() {
                 </td>
                 <td className="px-4 py-3">
                   {assignment.active ? (
-                    <span className="badge bg-emerald-100 text-emerald-800">Active</span>
+                    <span className="badge bg-emerald-100 text-primary-hover">Active</span>
                   ) : (
                     <span className="badge bg-neutral-100 text-neutral-500">Inactive</span>
                   )}

@@ -48,34 +48,34 @@ export function MusheXProgrammeAttributionPanel() {
           <Layers className="h-5 w-5" />
         </div>
         <div className="flex-1 min-w-0">
-          <h2 className="text-sm font-semibold text-slate-900">Programme attribution</h2>
-          <p className="mt-1 text-xs text-slate-600">
+          <h2 className="text-sm font-semibold text-foreground">Programme attribution</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
             Custodial wallets with programme, sponsor, or payer owner types from{" "}
             <code className="text-[10px]">GET /internal/v1/finance/mushex-platform/wallets</code>
             — used to trace subsidy and remittance attribution without fabricating balances.
           </p>
 
           {walletsQ.isLoading ? (
-            <p className="mt-3 flex items-center gap-2 text-xs text-slate-500">
+            <p className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
               <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading programme-attributed wallets…
             </p>
           ) : walletsQ.isError ? (
-            <p className="mt-3 text-xs text-red-700">Could not load MusheX wallet list from the BFF.</p>
+            <p className="mt-3 text-xs text-danger">Could not load MusheX wallet list from the BFF.</p>
           ) : programmeWallets.length === 0 ? (
-            <p className="mt-3 text-xs text-slate-600">
+            <p className="mt-3 text-xs text-muted-foreground">
               No programme/sponsor/payer custodial wallets returned
               {totalCount != null ? ` (${totalCount} total wallet row(s) in envelope).` : "."}
             </p>
           ) : (
             <>
-              <p className="mt-3 text-xs text-slate-700">
+              <p className="mt-3 text-xs text-foreground">
                 <span className="font-medium">{programmeWallets.length}</span> programme-attributed wallet
                 {programmeWallets.length === 1 ? "" : "s"}
                 {totalCount != null ? ` of ${totalCount} total` : ""}.
               </p>
-              <div className="mt-3 overflow-x-auto rounded-lg border border-violet-100 bg-white">
+              <div className="mt-3 overflow-x-auto rounded-lg border border-violet-100 bg-card">
                 <table className="w-full text-xs">
-                  <thead className="bg-violet-50/80 text-left text-slate-600">
+                  <thead className="bg-violet-50/80 text-left text-muted-foreground">
                     <tr>
                       <th className="px-3 py-2 font-medium">Owner type</th>
                       <th className="px-3 py-2 font-medium">Owner ref</th>
@@ -88,10 +88,10 @@ export function MusheXProgrammeAttributionPanel() {
                       const walletId = readWalletField(row, "wallet_id", "walletId", "id") || `row-${idx}`;
                       return (
                         <tr key={walletId}>
-                          <td className="px-3 py-2 text-slate-800">
+                          <td className="px-3 py-2 text-foreground">
                             {readWalletField(row, "owner_type", "ownerType") || "—"}
                           </td>
-                          <td className="px-3 py-2 font-mono text-[10px] text-slate-600">
+                          <td className="px-3 py-2 font-mono text-[10px] text-muted-foreground">
                             {readWalletField(row, "owner_ref", "ownerRef") || "—"}
                           </td>
                           <td className="px-3 py-2">
@@ -102,7 +102,7 @@ export function MusheXProgrammeAttributionPanel() {
                               {walletId}
                             </Link>
                           </td>
-                          <td className="px-3 py-2 text-right text-slate-800">
+                          <td className="px-3 py-2 text-right text-foreground">
                             {readWalletField(row, "available_balance", "availableBalance", "balance") || "—"}
                           </td>
                         </tr>

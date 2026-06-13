@@ -75,8 +75,8 @@ function statusBadge(status: string) {
   const s = status.toUpperCase();
   if (s === "ACTIVE") return "bg-green-100 text-green-800";
   if (s === "SUSPENDED") return "bg-red-100 text-red-800";
-  if (s === "PENDING") return "bg-amber-100 text-amber-800";
-  return "bg-gray-100 text-gray-700";
+  if (s === "PENDING") return "bg-amber-100 text-warning-foreground";
+  return "bg-neutral-100 text-foreground";
 }
 
 const MERCHANT_TYPES = ["PHARMACY", "CLINIC", "HOSPITAL", "LABORATORY", "OTHER"] as const;
@@ -153,29 +153,29 @@ export default function MerchantDashboardPage() {
         <div className="mb-4">
           <Link
             href="/wallet"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" /> Back to wallet
           </Link>
         </div>
 
         {!providerId && (
-          <p className="text-sm text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+          <p className="text-sm text-warning-foreground bg-warning-soft border border-amber-100 rounded-lg px-3 py-2">
             Activate a Provider ID to access the merchant dashboard. Merchant accounts are linked to your provider number.
           </p>
         )}
 
         {providerId && merchantQ.isLoading && (
-          <div className="flex items-center gap-2 text-gray-600 text-sm py-8">
+          <div className="flex items-center gap-2 text-muted-foreground text-sm py-8">
             <Loader2 className="h-5 w-5 animate-spin" /> Loading merchant account...
           </div>
         )}
 
         {providerId && !merchantQ.isLoading && !hasMerchant && (
           <div className="space-y-6">
-            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-              <h3 className="text-sm font-semibold text-amber-900 mb-1">No merchant account</h3>
-              <p className="text-xs text-amber-800 mb-3">
+            <div className="rounded-xl border border-warning/35 bg-warning-soft p-4">
+              <h3 className="text-sm font-semibold text-warning-foreground mb-1">No merchant account</h3>
+              <p className="text-xs text-warning-foreground mb-3">
                 You are not registered as a merchant yet. Register to start accepting wallet payments from patients.
               </p>
               <button
@@ -188,39 +188,39 @@ export default function MerchantDashboardPage() {
             </div>
 
             {showRegisterForm && (
-              <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-4 max-w-xl">
-                <h3 className="text-sm font-semibold text-gray-900">Merchant registration</h3>
+              <div className="rounded-xl border border-border bg-card p-5 space-y-4 max-w-xl">
+                <h3 className="text-sm font-semibold text-foreground">Merchant registration</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Provider number *</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Provider number *</label>
                     <input
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                       value={regForm.providerNumber}
                       onChange={(e) => setRegForm({ ...regForm, providerNumber: e.target.value })}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Facility ID *</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Facility ID *</label>
                     <input
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                       placeholder="Facility identifier"
                       value={regForm.facilityId}
                       onChange={(e) => setRegForm({ ...regForm, facilityId: e.target.value })}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Merchant name *</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Merchant name *</label>
                     <input
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                       placeholder="Business display name"
                       value={regForm.merchantName}
                       onChange={(e) => setRegForm({ ...regForm, merchantName: e.target.value })}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Merchant type</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Merchant type</label>
                     <select
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                       value={regForm.merchantType}
                       onChange={(e) => setRegForm({ ...regForm, merchantType: e.target.value })}
                     >
@@ -230,18 +230,18 @@ export default function MerchantDashboardPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Settlement account</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Settlement account</label>
                     <input
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                       placeholder="Bank account number"
                       value={regForm.settlementAccount}
                       onChange={(e) => setRegForm({ ...regForm, settlementAccount: e.target.value })}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Settlement bank</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Settlement bank</label>
                     <input
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                       placeholder="Bank name"
                       value={regForm.settlementBank}
                       onChange={(e) => setRegForm({ ...regForm, settlementBank: e.target.value })}
@@ -252,7 +252,7 @@ export default function MerchantDashboardPage() {
                   <button
                     type="button"
                     onClick={() => setShowRegisterForm(false)}
-                    className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm"
+                    className="rounded-lg border border-border bg-card px-4 py-2 text-sm"
                   >
                     Cancel
                   </button>
@@ -277,32 +277,32 @@ export default function MerchantDashboardPage() {
         {providerId && !merchantQ.isLoading && hasMerchant && (
           <div className="space-y-8">
             {/* Merchant Summary */}
-            <section className="rounded-xl border border-gray-200 bg-white shadow-sm p-5">
-              <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2 mb-4">
+            <section className="rounded-xl border border-border bg-card shadow-sm p-5">
+              <h2 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-4">
                 <Briefcase className="h-4 w-4 text-violet-600" />
                 Merchant account
               </h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                <div className="rounded-lg bg-gray-50 p-3">
-                  <div className="text-gray-500 text-xs">Provider number</div>
-                  <div className="font-mono font-semibold text-gray-900">
+                <div className="rounded-lg bg-background p-3">
+                  <div className="text-muted-foreground text-xs">Provider number</div>
+                  <div className="font-mono font-semibold text-foreground">
                     {readStr(merchantData, "providerNumber", "provider_number")}
                   </div>
                 </div>
-                <div className="rounded-lg bg-gray-50 p-3">
-                  <div className="text-gray-500 text-xs">Merchant name</div>
-                  <div className="font-semibold text-gray-900">
+                <div className="rounded-lg bg-background p-3">
+                  <div className="text-muted-foreground text-xs">Merchant name</div>
+                  <div className="font-semibold text-foreground">
                     {readStr(merchantData, "merchantName", "merchant_name")}
                   </div>
                 </div>
-                <div className="rounded-lg bg-gray-50 p-3">
-                  <div className="text-gray-500 text-xs">Type</div>
-                  <div className="font-semibold text-gray-900">
+                <div className="rounded-lg bg-background p-3">
+                  <div className="text-muted-foreground text-xs">Type</div>
+                  <div className="font-semibold text-foreground">
                     {readStr(merchantData, "merchantType", "merchant_type")}
                   </div>
                 </div>
-                <div className="rounded-lg bg-gray-50 p-3">
-                  <div className="text-gray-500 text-xs">Status</div>
+                <div className="rounded-lg bg-background p-3">
+                  <div className="text-muted-foreground text-xs">Status</div>
                   <span className={`inline-block px-2 py-0.5 text-xs rounded-full font-medium ${statusBadge(merchantStatus)}`}>
                     {merchantStatus}
                   </span>
@@ -311,7 +311,7 @@ export default function MerchantDashboardPage() {
             </section>
 
             {/* Merchant Wallet Balance */}
-            <section className="rounded-xl border border-gray-200 bg-gradient-to-br from-violet-900 to-violet-800 text-white shadow-lg p-5">
+            <section className="rounded-xl border border-border bg-gradient-to-br from-violet-900 to-violet-800 text-white shadow-lg p-5">
               <div className="flex items-center gap-2 mb-3">
                 <Wallet className="h-5 w-5 text-violet-300" />
                 <h2 className="text-sm font-semibold text-violet-200">Merchant wallet balance</h2>
@@ -329,23 +329,23 @@ export default function MerchantDashboardPage() {
             </section>
 
             {/* Recent Payments Received */}
-            <section className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-              <div className="border-b border-gray-100 px-4 py-3 bg-slate-50/80 flex items-center gap-2">
-                <Store className="h-4 w-4 text-slate-600" />
-                <h2 className="text-sm font-semibold text-gray-900">Recent payments received</h2>
+            <section className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+              <div className="border-b border-border px-4 py-3 bg-background/80 flex items-center gap-2">
+                <Store className="h-4 w-4 text-muted-foreground" />
+                <h2 className="text-sm font-semibold text-foreground">Recent payments received</h2>
               </div>
               <div className="overflow-x-auto">
                 {txQ.isLoading && (
-                  <div className="p-6 flex items-center gap-2 text-gray-600 text-sm">
+                  <div className="p-6 flex items-center gap-2 text-muted-foreground text-sm">
                     <Loader2 className="h-4 w-4 animate-spin" /> Loading...
                   </div>
                 )}
                 {!txQ.isLoading && txQ.isError && (
-                  <p className="p-4 text-sm text-red-700">Could not load transactions.</p>
+                  <p className="p-4 text-sm text-danger">Could not load transactions.</p>
                 )}
                 {!txQ.isLoading && !txQ.isError && (
                   <table className="min-w-full text-sm">
-                    <thead className="bg-gray-50 text-left text-xs text-gray-500 uppercase tracking-wide">
+                    <thead className="bg-background text-left text-xs text-muted-foreground uppercase tracking-wide">
                       <tr>
                         <th className="px-4 py-2">Date</th>
                         <th className="px-4 py-2">Counterparty</th>
@@ -357,27 +357,27 @@ export default function MerchantDashboardPage() {
                     <tbody className="divide-y divide-gray-100">
                       {txRows.length === 0 && (
                         <tr>
-                          <td colSpan={5} className="px-4 py-6 text-center text-gray-500">
+                          <td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">
                             No payments received yet.
                           </td>
                         </tr>
                       )}
                       {txRows.map((row, i) => (
-                        <tr key={readStr(row, "txnId", "txn_id", "transactionId", "transaction_id") || String(i)} className="hover:bg-gray-50/80">
-                          <td className="px-4 py-2 whitespace-nowrap text-gray-700">
+                        <tr key={readStr(row, "txnId", "txn_id", "transactionId", "transaction_id") || String(i)} className="hover:bg-background/80">
+                          <td className="px-4 py-2 whitespace-nowrap text-foreground">
                             {readStr(row, "createdAt", "created_at").slice(0, 16).replace("T", " ")}
                           </td>
-                          <td className="px-4 py-2 text-gray-800">
+                          <td className="px-4 py-2 text-foreground">
                             {readStr(row, "counterpartyName", "counterparty_name") || readStr(row, "counterpartyRef", "counterparty_ref") || "--"}
                           </td>
-                          <td className="px-4 py-2 text-gray-800 max-w-xs truncate">
+                          <td className="px-4 py-2 text-foreground max-w-xs truncate">
                             {readStr(row, "description") || readStr(row, "reference")}
                           </td>
-                          <td className="px-4 py-2 text-right tabular-nums font-medium text-emerald-700">
+                          <td className="px-4 py-2 text-right tabular-nums font-medium text-primary-hover">
                             +{formatMoney(readNum(row, "amount"), currency)}
                           </td>
                           <td className="px-4 py-2">
-                            <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
+                            <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-foreground">
                               {readStr(row, "channel") || "--"}
                             </span>
                           </td>
@@ -390,18 +390,18 @@ export default function MerchantDashboardPage() {
             </section>
 
             {/* Settlement Account */}
-            <section className="rounded-xl border border-gray-200 bg-white shadow-sm p-5">
-              <h2 className="text-sm font-semibold text-gray-900 mb-3">Settlement account</h2>
+            <section className="rounded-xl border border-border bg-card shadow-sm p-5">
+              <h2 className="text-sm font-semibold text-foreground mb-3">Settlement account</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                <div className="rounded-lg bg-gray-50 p-3">
-                  <div className="text-gray-500 text-xs">Account</div>
-                  <div className="font-mono font-medium text-gray-900">
+                <div className="rounded-lg bg-background p-3">
+                  <div className="text-muted-foreground text-xs">Account</div>
+                  <div className="font-mono font-medium text-foreground">
                     {readStr(merchantData, "settlementAccount", "settlement_account") || "Not configured"}
                   </div>
                 </div>
-                <div className="rounded-lg bg-gray-50 p-3">
-                  <div className="text-gray-500 text-xs">Bank</div>
-                  <div className="font-medium text-gray-900">
+                <div className="rounded-lg bg-background p-3">
+                  <div className="text-muted-foreground text-xs">Bank</div>
+                  <div className="font-medium text-foreground">
                     {readStr(merchantData, "settlementBank", "settlement_bank") || "Not configured"}
                   </div>
                 </div>

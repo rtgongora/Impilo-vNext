@@ -27,19 +27,19 @@ export default function DriveDetailPage() {
     <AppLayout>
       <PageShell title="Drive Detail" subtitle={String(metrics?.title ?? driveId)} icon={<CalendarDays className="h-6 w-6" />}>
         {isPending && (
-          <div className="flex items-center gap-2 text-gray-500 mb-4">
+          <div className="flex items-center gap-2 text-muted-foreground mb-4">
             <Loader2 className="h-5 w-5 animate-spin" /> Loading drive…
           </div>
         )}
 
         {metrics && (
           <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="rounded-xl border border-gray-200 bg-white p-3">
-              <p className="text-xs text-gray-500">Status</p>
+            <div className="rounded-xl border border-border bg-card p-3">
+              <p className="text-xs text-muted-foreground">Status</p>
               <p className="text-lg font-semibold">{String(metrics.status ?? "—")}</p>
             </div>
-            <div className="rounded-xl border border-gray-200 bg-white p-3">
-              <p className="text-xs text-gray-500">Capacity</p>
+            <div className="rounded-xl border border-border bg-card p-3">
+              <p className="text-xs text-muted-foreground">Capacity</p>
               <p className="text-lg font-semibold">{String(metrics.capacity ?? "—")}</p>
             </div>
           </div>
@@ -50,7 +50,7 @@ export default function DriveDetailPage() {
             type="button"
             onClick={() => publish.mutate({})}
             disabled={publish.isPending}
-            className="inline-flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-800 hover:bg-rose-100"
+            className="inline-flex items-center gap-2 rounded-xl border border-danger/28 bg-danger-soft px-3 py-2 text-sm font-medium text-rose-800 hover:bg-rose-100"
           >
             <Send className="h-4 w-4" /> Publish
           </button>
@@ -58,17 +58,17 @@ export default function DriveDetailPage() {
             type="button"
             onClick={() => close.mutate()}
             disabled={close.isPending}
-            className="inline-flex items-center gap-2 rounded-xl border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="inline-flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-background"
           >
             Close drive
           </button>
-          <Link href="/madi/drives" className="inline-flex items-center gap-2 rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+          <Link href="/madi/drives" className="inline-flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm text-foreground hover:bg-background">
             All drives
           </Link>
         </div>
 
-        <section className="rounded-2xl border border-gray-200 bg-white p-5">
-          <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2 mb-3">
+        <section className="rounded-2xl border border-border bg-card p-5">
+          <h2 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
             <Droplet className="h-4 w-4 text-rose-500" /> Record donation
           </h2>
           <form
@@ -78,8 +78,8 @@ export default function DriveDetailPage() {
             }}
             className="grid grid-cols-1 md:grid-cols-3 gap-3"
           >
-            <input required placeholder="Donor UUID" value={donorId} onChange={(e) => setDonorId(e.target.value)} className="rounded-xl border border-gray-300 px-3 py-2 text-sm" />
-            <input required placeholder="Bag number" value={bagNumber} onChange={(e) => setBagNumber(e.target.value)} className="rounded-xl border border-gray-300 px-3 py-2 text-sm" />
+            <input required placeholder="Donor UUID" value={donorId} onChange={(e) => setDonorId(e.target.value)} className="rounded-xl border border-border px-3 py-2 text-sm" />
+            <input required placeholder="Bag number" value={bagNumber} onChange={(e) => setBagNumber(e.target.value)} className="rounded-xl border border-border px-3 py-2 text-sm" />
             <button type="submit" disabled={recordDonation.isPending} className="rounded-xl bg-rose-600 text-white text-sm font-medium py-2 hover:bg-rose-700 disabled:opacity-50 inline-flex items-center justify-center gap-2">
               {recordDonation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
               Record

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MessageCircle, X } from "lucide-react";
+import { X } from "lucide-react";
+import { NompiloTipCard } from "shared-ui";
 
 interface NompiloHintProps {
   /** Context-specific guidance message */
@@ -37,38 +38,19 @@ export function NompiloHint({ message, suggestions }: NompiloHintProps) {
           visible ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0",
         ].join(" ")}
       >
-        <div className="flex items-start gap-2.5 rounded-xl bg-white/95 backdrop-blur border border-impilo-200 px-3.5 py-2.5 shadow-md">
-          <div className="h-6 w-6 rounded-full bg-impilo-50 flex items-center justify-center shrink-0 mt-0.5">
-            <MessageCircle className="h-3.5 w-3.5 text-impilo-600" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[11px] font-semibold text-impilo-700 leading-none">
-              Nompilo
-            </p>
-            <p className="text-xs text-gray-600 mt-1 leading-relaxed">
-              {message}
-            </p>
-            {suggestions && suggestions.length > 0 && (
-              <div className="mt-1.5 space-y-0.5">
-                {suggestions.map((s, i) => (
-                  <p
-                    key={i}
-                    className="text-[11px] text-impilo-500 leading-snug"
-                  >
-                    • {s}
-                  </p>
-                ))}
-              </div>
-            )}
-          </div>
-          <button
-            onClick={() => setDismissed(true)}
-            className="text-gray-300 hover:text-gray-500 transition-colors shrink-0 mt-0.5"
-            aria-label="Dismiss hint"
-          >
-            <X className="h-3.5 w-3.5" />
-          </button>
-        </div>
+        <NompiloTipCard
+          message={message}
+          suggestions={suggestions}
+          onDismiss={() => setDismissed(true)}
+          className="backdrop-blur-sm"
+        />
+        <button
+          onClick={() => setDismissed(true)}
+          className="sr-only"
+          aria-label="Dismiss hint"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
       </div>
     </div>
   );

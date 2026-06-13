@@ -135,7 +135,7 @@ export default function NhumeNewDeliveryPage() {
         icon={<PackagePlus className="h-6 w-6" />}
       >
         <div className="mb-4">
-          <Link href="/nhume/deliveries" className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900">
+          <Link href="/nhume/deliveries" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-4 w-4" />
             Back to deliveries
           </Link>
@@ -242,12 +242,12 @@ export default function NhumeNewDeliveryPage() {
           </Section>
 
           <Section title="Allowed modes">
-            <p className="text-xs text-gray-500 mb-2">
+            <p className="text-xs text-muted-foreground mb-2">
               The dispatcher may further restrict by policy at assignment time.
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {MODES.map((m) => (
-                <label key={m} className="inline-flex items-center gap-2 text-sm rounded-lg border border-gray-200 px-3 py-2 cursor-pointer hover:bg-gray-50">
+                <label key={m} className="inline-flex items-center gap-2 text-sm rounded-lg border border-border px-3 py-2 cursor-pointer hover:bg-background">
                   <input type="checkbox"
                     checked={form.allowed_modes.includes(m)}
                     onChange={() => toggleMode(m)} />
@@ -276,19 +276,19 @@ export default function NhumeNewDeliveryPage() {
           </Section>
 
           {createMutation.isError && (
-            <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
+            <div className="rounded-xl border border-danger/28 bg-danger-soft p-3 text-sm text-rose-800">
               {((createMutation.error as { error?: { message?: string } })?.error?.message) ?? "Could not create the delivery."}
             </div>
           )}
 
           <div className="flex justify-end gap-2">
-            <Link href="/nhume/deliveries" className="rounded-xl border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+            <Link href="/nhume/deliveries" className="rounded-xl border border-border px-4 py-2 text-sm text-foreground hover:bg-background">
               Cancel
             </Link>
             <button
               type="submit"
               disabled={createMutation.isPending}
-              className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary disabled:opacity-50"
             >
               {createMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
               Create delivery
@@ -319,8 +319,8 @@ export default function NhumeNewDeliveryPage() {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white p-5">
-      <h2 className="text-sm font-semibold text-gray-900 mb-3">{title}</h2>
+    <section className="rounded-2xl border border-border bg-card p-5">
+      <h2 className="text-sm font-semibold text-foreground mb-3">{title}</h2>
       {children}
     </section>
   );
@@ -329,7 +329,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function Field({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
   return (
     <label className={`block ${className ?? ""}`}>
-      <span className="text-xs font-medium text-gray-600 mb-1 block">{label}</span>
+      <span className="text-xs font-medium text-muted-foreground mb-1 block">{label}</span>
       {children}
     </label>
   );
@@ -339,7 +339,7 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
   return (
     <label className="inline-flex items-center gap-2 text-sm cursor-pointer">
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
-      <span className="text-gray-800">{label}</span>
+      <span className="text-foreground">{label}</span>
     </label>
   );
 }

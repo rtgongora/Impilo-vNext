@@ -4,9 +4,9 @@ import { useState, useEffect, useCallback } from "react";
 import { opsApi, type Vendor, type PagedResponse } from "@/lib/opsApi";
 
 const STATUS_STYLES: Record<string, string> = {
-  ACTIVE: "bg-emerald-100 text-emerald-700",
-  PENDING: "bg-amber-100 text-amber-700",
-  SUSPENDED: "bg-red-100 text-red-700",
+  ACTIVE: "bg-emerald-100 text-primary-hover",
+  PENDING: "bg-amber-100 text-warning-foreground",
+  SUSPENDED: "bg-red-100 text-danger",
   INACTIVE: "bg-neutral-100 text-neutral-600",
 };
 
@@ -93,7 +93,7 @@ export default function VendorsPage() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-red-800">
           {error}
         </div>
       )}
@@ -196,7 +196,7 @@ export default function VendorsPage() {
                         <button
                           onClick={() => handleReinstate(vendor.vendorId)}
                           disabled={actionLoading}
-                          className="text-xs text-emerald-600 hover:text-emerald-800 font-medium"
+                          className="text-xs text-primary hover:text-primary-hover font-medium"
                         >
                           Reinstate
                         </button>

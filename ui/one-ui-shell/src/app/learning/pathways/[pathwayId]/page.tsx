@@ -18,8 +18,8 @@ export default function PathwayDetailPage() {
       <PageShell title={String(pathway.title ?? "Pathway")} subtitle="Ordered courses and prerequisites.">
         <ul className="space-y-2">
           {items.map((it) => (
-            <li key={String(it.id)} className="rounded border border-gray-200 bg-white p-3 text-sm">
-              <p className="font-medium text-gray-900">
+            <li key={String(it.id)} className="rounded border border-border bg-card p-3 text-sm">
+              <p className="font-medium text-foreground">
                 {String(it.sequence ?? "-")}. {String(it.courseTitle ?? it.courseId)}
               </p>
               {it.courseId ? (

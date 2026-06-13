@@ -45,7 +45,7 @@ export default function PickupPage() {
       <p className="text-sm text-neutral-500 mb-6">Issue pickup tokens, view QR codes, and claim orders.</p>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">{error}</div>
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-red-800">{error}</div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -66,14 +66,14 @@ export default function PickupPage() {
           </div>
 
           {slip && (
-            <div className="mt-4 p-4 bg-emerald-50 rounded-lg border border-emerald-200">
-              <h3 className="font-semibold text-emerald-800 mb-2">Pickup Slip</h3>
+            <div className="mt-4 p-4 bg-success-soft rounded-lg border border-success/25">
+              <h3 className="font-semibold text-primary-hover mb-2">Pickup Slip</h3>
               <div className="space-y-1 text-sm">
-                <p><strong>OTP:</strong> <span className="font-mono text-2xl tracking-widest text-emerald-700">{slip.otp}</span></p>
+                <p><strong>OTP:</strong> <span className="font-mono text-2xl tracking-widest text-primary-hover">{slip.otp}</span></p>
                 <p><strong>Token:</strong> <span className="font-mono text-xs break-all">{slip.rawToken}</span></p>
                 <p><strong>Expires:</strong> {new Date(slip.expiresAt).toLocaleString()}</p>
               </div>
-              <div className="mt-3 p-3 bg-white rounded border text-center">
+              <div className="mt-3 p-3 bg-card rounded border text-center">
                 <p className="text-xs text-neutral-500 mb-1">QR Payload</p>
                 <p className="font-mono text-xs break-all">{slip.qrPayload}</p>
               </div>
@@ -98,7 +98,7 @@ export default function PickupPage() {
           </div>
 
           {claimResult && (
-            <div className="mt-4 p-3 bg-emerald-50 rounded-lg border border-emerald-200 text-sm text-emerald-800">
+            <div className="mt-4 p-3 bg-success-soft rounded-lg border border-success/25 text-sm text-primary-hover">
               {claimResult}
             </div>
           )}

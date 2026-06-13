@@ -318,7 +318,7 @@ export function SurveillanceTab() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border border-impilo-200 bg-impilo-50/80 p-3 text-xs text-impilo-800">
+      <div className="rounded-lg border border-primary/25 bg-primary-soft/80 p-3 text-xs text-impilo-800">
         <strong>Live data:</strong> threshold signals, case-based reports, and counter snapshots load from the Experience BFF
         → surveillance-service (empty if the service is down or unseeded). <strong>Weekly IDSR / eIDSR</strong> uses the
         &quot;Weekly Aggregate&quot; sub-tab from{" "}
@@ -331,7 +331,7 @@ export function SurveillanceTab() {
           {
             label: "Signal definitions (tenant)",
             value: sigLoading ? "…" : String(apiSignals.length),
-            color: "text-red-700",
+            color: "text-danger",
             sub: sigError ? "Could not reach surveillance" : "From /public-health/signals",
           },
           {
@@ -343,27 +343,27 @@ export function SurveillanceTab() {
           {
             label: "Counter snapshots",
             value: ctrLoading ? "…" : String(counters.length),
-            color: "text-impilo-600",
+            color: "text-primary",
             sub: ctrError ? "Could not reach counters" : "From /public-health/counters",
           },
           {
             label: "Weekly IDSR",
             value: weeklyLoading ? "…" : String(weeklyRows.length),
-            color: "text-impilo-700",
+            color: "text-primary-hover",
             sub: weeklyError ? "Could not reach weekly aggregate" : "From /public-health/weekly-idsr",
           },
-          { label: "Reporting completeness", value: "Live", color: "text-emerald-700", sub: "Derived from weekly aggregate feed" },
+          { label: "Reporting completeness", value: "Live", color: "text-primary-hover", sub: "Derived from weekly aggregate feed" },
         ].map((kpi, i) => (
-          <div key={i} className="bg-white rounded-lg border border-gray-200 p-3 text-center">
+          <div key={i} className="bg-card rounded-lg border border-border p-3 text-center">
             <p className={`text-2xl font-bold ${kpi.color}`}>{kpi.value}</p>
-            <p className="text-xs font-medium text-gray-900">{kpi.label}</p>
-            <p className="text-[10px] text-gray-500">{kpi.sub}</p>
+            <p className="text-xs font-medium text-foreground">{kpi.label}</p>
+            <p className="text-[10px] text-muted-foreground">{kpi.sub}</p>
           </div>
         ))}
       </div>
 
       {/* Sub-tabs */}
-      <div className="flex gap-1 border-b border-gray-200">
+      <div className="flex gap-1 border-b border-border">
         {[
           { key: "signals" as const, label: "Threshold Signals" },
           { key: "cases" as const, label: "Case-Based Reports" },
@@ -371,7 +371,7 @@ export function SurveillanceTab() {
         ].map((tab) => (
           <button key={tab.key} onClick={() => setActiveSubTab(tab.key)}
             className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
-              activeSubTab === tab.key ? "border-amber-600 text-amber-600" : "border-transparent text-gray-500 hover:text-gray-700"
+              activeSubTab === tab.key ? "border-amber-600 text-amber-600" : "border-transparent text-muted-foreground hover:text-foreground"
             }`}>
             {tab.label}
           </button>
@@ -380,17 +380,17 @@ export function SurveillanceTab() {
 
       {/* Signals Tab */}
       {activeSubTab === "signals" && (
-        <div className="bg-white rounded-lg border border-gray-200">
+        <div className="bg-card rounded-lg border border-border">
           <div className="px-4 py-3 border-b flex items-center justify-between">
             <div>
-              <h4 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4" /> Signal Triage Queue
               </h4>
-              <p className="text-xs text-gray-500">Automated threshold alerts from facility-level reporting</p>
+              <p className="text-xs text-muted-foreground">Automated threshold alerts from facility-level reporting</p>
             </div>
             <div className="flex gap-2">
               <select value={filter} onChange={(e) => setFilter(e.target.value)}
-                className="h-8 px-2 text-xs border border-gray-300 rounded-lg">
+                className="h-8 px-2 text-xs border border-border rounded-lg">
                 <option value="all">All</option>
                 <option value="ACTIVE">Active</option>
                 <option value="INACTIVE">Inactive</option>
@@ -402,7 +402,7 @@ export function SurveillanceTab() {
                   setSignalFormError(null);
                   setSignalFormSuccess(null);
                 }}
-                className="inline-flex items-center gap-1 px-3 py-1.5 bg-impilo-500 text-white text-xs font-medium rounded-lg hover:bg-impilo-600"
+                className="inline-flex items-center gap-1 px-3 py-1.5 bg-primary text-white text-xs font-medium rounded-lg hover:bg-primary-hover"
               >
                 <Plus className="h-3.5 w-3.5" /> {showNewEvent ? "Close form" : "Report Event"}
               </button>
@@ -417,20 +417,20 @@ export function SurveillanceTab() {
             )}
             {/* New Event Form */}
             {showNewEvent && (
-              <div className="p-4 border border-impilo-200 bg-impilo-50 rounded-lg">
+              <div className="p-4 border border-primary/25 bg-primary-soft rounded-lg">
                 <h4 className="font-semibold text-sm mb-3">Report New Surveillance Event</h4>
                 {signalFormError && (
-                  <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800">
+                  <div className="mb-3 rounded-lg border border-danger/28 bg-danger-soft px-3 py-2 text-xs text-red-800">
                     {signalFormError}
                   </div>
                 )}
                 <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label className="text-xs font-medium text-gray-600">Disease / Condition</label>
+                    <label className="text-xs font-medium text-muted-foreground">Disease / Condition</label>
                     <select
                       value={signalForm.disease}
                       onChange={(e) => updateSignalForm("disease", e.target.value)}
-                      className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                      className="w-full h-8 px-2 text-xs border border-border rounded-lg mt-1"
                     >
                       <option value="">Select disease</option>
                       <option value="cholera">Cholera</option>
@@ -445,48 +445,48 @@ export function SurveillanceTab() {
                     </select>
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-gray-600">Reporting Facility</label>
+                    <label className="text-xs font-medium text-muted-foreground">Reporting Facility</label>
                     <input
                       value={signalForm.facility}
                       onChange={(e) => updateSignalForm("facility", e.target.value)}
                       placeholder="Search facility..."
-                      className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                      className="w-full h-8 px-2 text-xs border border-border rounded-lg mt-1"
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-gray-600">Number of Cases</label>
+                    <label className="text-xs font-medium text-muted-foreground">Number of Cases</label>
                     <input
                       type="number"
                       min={1}
                       value={signalForm.cases}
                       onChange={(e) => updateSignalForm("cases", e.target.value)}
-                      className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                      className="w-full h-8 px-2 text-xs border border-border rounded-lg mt-1"
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-gray-600">Date of Detection</label>
+                    <label className="text-xs font-medium text-muted-foreground">Date of Detection</label>
                     <input
                       type="date"
                       value={signalForm.detectedOn}
                       onChange={(e) => updateSignalForm("detectedOn", e.target.value)}
-                      className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                      className="w-full h-8 px-2 text-xs border border-border rounded-lg mt-1"
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-gray-600">Location / Ward</label>
+                    <label className="text-xs font-medium text-muted-foreground">Location / Ward</label>
                     <input
                       value={signalForm.location}
                       onChange={(e) => updateSignalForm("location", e.target.value)}
                       placeholder="e.g. Ward 22, Budiriro"
-                      className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                      className="w-full h-8 px-2 text-xs border border-border rounded-lg mt-1"
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-gray-600">Source</label>
+                    <label className="text-xs font-medium text-muted-foreground">Source</label>
                     <select
                       value={signalForm.source}
                       onChange={(e) => updateSignalForm("source", e.target.value)}
-                      className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                      className="w-full h-8 px-2 text-xs border border-border rounded-lg mt-1"
                     >
                       <option value="">Source</option>
                       <option value="facility">Facility Report</option>
@@ -498,11 +498,11 @@ export function SurveillanceTab() {
                   </div>
                 </div>
                 <div className="mt-3">
-                  <label className="text-xs font-medium text-gray-600">Priority</label>
+                  <label className="text-xs font-medium text-muted-foreground">Priority</label>
                   <select
                     value={signalForm.priority}
                     onChange={(e) => updateSignalForm("priority", e.target.value)}
-                    className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                    className="w-full h-8 px-2 text-xs border border-border rounded-lg mt-1"
                   >
                     <option value="LOW">Low</option>
                     <option value="MEDIUM">Moderate</option>
@@ -511,12 +511,12 @@ export function SurveillanceTab() {
                   </select>
                 </div>
                 <div className="mt-3">
-                  <label className="text-xs font-medium text-gray-600">Clinical Details / Notes</label>
+                  <label className="text-xs font-medium text-muted-foreground">Clinical Details / Notes</label>
                   <textarea
                     value={signalForm.notes}
                     onChange={(e) => updateSignalForm("notes", e.target.value)}
                     placeholder="Describe symptoms, clinical presentation, epidemiological context..."
-                    className="w-full text-xs border border-gray-300 rounded-lg mt-1 p-2 min-h-[60px]"
+                    className="w-full text-xs border border-border rounded-lg mt-1 p-2 min-h-[60px]"
                   />
                 </div>
                 <div className="flex gap-2 mt-3">
@@ -524,14 +524,14 @@ export function SurveillanceTab() {
                     type="button"
                     onClick={submitSignalEvent}
                     disabled={createSignal.isPending}
-                    className="px-3 py-1.5 bg-impilo-500 text-white text-xs font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-60"
+                    className="px-3 py-1.5 bg-primary text-white text-xs font-medium rounded-lg hover:bg-primary-hover disabled:opacity-60"
                   >
                     {createSignal.isPending ? "Submitting..." : "Submit Event"}
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowNewEvent(false)}
-                    className="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg"
+                    className="px-3 py-1.5 bg-neutral-100 text-foreground text-xs font-medium rounded-lg"
                   >
                     Cancel
                   </button>
@@ -542,44 +542,44 @@ export function SurveillanceTab() {
             {/* Signals Table */}
             <div className="overflow-x-auto">
               {sigLoading && (
-                <div className="flex items-center justify-center gap-2 py-8 text-sm text-gray-500">
+                <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" /> Loading signals…
                 </div>
               )}
               {sigError && (
-                <p className="px-3 py-4 text-sm text-red-700">Unable to load signals from surveillance-service via BFF.</p>
+                <p className="px-3 py-4 text-sm text-danger">Unable to load signals from surveillance-service via BFF.</p>
               )}
               {!sigLoading && !sigError && filteredSignals.length === 0 && (
-                <p className="px-3 py-4 text-sm text-gray-600">No signal definitions returned for this tenant.</p>
+                <p className="px-3 py-4 text-sm text-muted-foreground">No signal definitions returned for this tenant.</p>
               )}
               {!sigLoading && !sigError && filteredSignals.length > 0 && (
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b bg-gray-50">
-                    <th className="text-left px-3 py-2 font-medium text-gray-600">Signal ID</th>
-                    <th className="text-left px-3 py-2 font-medium text-gray-600">Disease</th>
-                    <th className="text-left px-3 py-2 font-medium text-gray-600">Facility</th>
-                    <th className="text-left px-3 py-2 font-medium text-gray-600">Cases</th>
-                    <th className="text-left px-3 py-2 font-medium text-gray-600">Threshold</th>
-                    <th className="text-left px-3 py-2 font-medium text-gray-600">Status</th>
-                    <th className="text-left px-3 py-2 font-medium text-gray-600">Date</th>
-                    <th className="text-left px-3 py-2 font-medium text-gray-600">Action</th>
+                  <tr className="border-b bg-background">
+                    <th className="text-left px-3 py-2 font-medium text-muted-foreground">Signal ID</th>
+                    <th className="text-left px-3 py-2 font-medium text-muted-foreground">Disease</th>
+                    <th className="text-left px-3 py-2 font-medium text-muted-foreground">Facility</th>
+                    <th className="text-left px-3 py-2 font-medium text-muted-foreground">Cases</th>
+                    <th className="text-left px-3 py-2 font-medium text-muted-foreground">Threshold</th>
+                    <th className="text-left px-3 py-2 font-medium text-muted-foreground">Status</th>
+                    <th className="text-left px-3 py-2 font-medium text-muted-foreground">Date</th>
+                    <th className="text-left px-3 py-2 font-medium text-muted-foreground">Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredSignals.map((sig) => (
                     <tr key={sig.id}>
-                      <td className={`px-3 py-2 font-mono ${selectedSignal === sig.id ? "bg-impilo-50" : ""}`}>{sig.id}</td>
-                      <td className="px-3 py-2 font-medium text-gray-900">{sig.disease}</td>
-                      <td className="px-3 py-2 text-gray-600">{sig.facility}</td>
+                      <td className={`px-3 py-2 font-mono ${selectedSignal === sig.id ? "bg-primary-soft" : ""}`}>{sig.id}</td>
+                      <td className="px-3 py-2 font-medium text-foreground">{sig.disease}</td>
+                      <td className="px-3 py-2 text-muted-foreground">{sig.facility}</td>
                       <td className="px-3 py-2 font-bold">{sig.cases || "—"}</td>
-                      <td className="px-3 py-2 text-gray-500">{sig.threshold}</td>
+                      <td className="px-3 py-2 text-muted-foreground">{sig.threshold}</td>
                       <td className="px-3 py-2">
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
-                          sig.status.toUpperCase() === "ACTIVE" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-700"
+                          sig.status.toUpperCase() === "ACTIVE" ? "bg-green-100 text-green-800" : "bg-neutral-100 text-foreground"
                         }`}>{sig.status}</span>
                       </td>
-                      <td className="px-3 py-2 text-gray-500">{sig.detectedAt || "—"}</td>
+                      <td className="px-3 py-2 text-muted-foreground">{sig.detectedAt || "—"}</td>
                       <td className="px-3 py-2">
                         <button
                           type="button"
@@ -592,7 +592,7 @@ export function SurveillanceTab() {
                               resetSignalWorkflow();
                             }
                           }}
-                          className="inline-flex items-center gap-1 px-2 py-1 border border-gray-300 rounded text-[10px] font-medium hover:bg-gray-50">
+                          className="inline-flex items-center gap-1 px-2 py-1 border border-border rounded text-[10px] font-medium hover:bg-background">
                           {selectedSignal === sig.id ? "Close" : (
                             <>
                               <Eye className="h-3 w-3" /> Review
@@ -612,33 +612,33 @@ export function SurveillanceTab() {
               const sig = apiSignals.find((s) => s.id === selectedSignal);
               if (!sig) return null;
               return (
-                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-4">
+                <div className="p-4 bg-background rounded-lg border border-border space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <h4 className="text-sm font-semibold">Signal Response Workflow — {sig.disease} ({sig.facility})</h4>
-                    <span className="text-[10px] text-gray-500">
+                    <span className="text-[10px] text-muted-foreground">
                       {investigations.length} open investigation{investigations.length === 1 ? "" : "s"} via BFF
                     </span>
                   </div>
                   {signalWorkflowError ? (
-                    <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">{signalWorkflowError}</p>
+                    <p className="text-xs text-danger bg-danger-soft border border-danger/28 rounded px-3 py-2">{signalWorkflowError}</p>
                   ) : null}
                   {signalWorkflowSuccess ? (
-                    <p className="text-xs text-emerald-800 bg-emerald-50 border border-emerald-200 rounded px-3 py-2">{signalWorkflowSuccess}</p>
+                    <p className="text-xs text-primary-hover bg-success-soft border border-success/25 rounded px-3 py-2">{signalWorkflowSuccess}</p>
                   ) : null}
 
                   {/* Step 1: Verification */}
-                  <div className="p-3 border border-gray-200 rounded-lg bg-white space-y-2">
+                  <div className="p-3 border border-border rounded-lg bg-card space-y-2">
                     <div className="flex items-center gap-2">
-                      <span className="px-2 py-0.5 text-[10px] border border-gray-300 rounded">Step 1</span>
+                      <span className="px-2 py-0.5 text-[10px] border border-border rounded">Step 1</span>
                       <span className="text-sm font-medium">Signal Verification</span>
                     </div>
                     <div className="grid grid-cols-3 gap-3">
                       <div>
-                        <label className="text-xs font-medium text-gray-600">Verification Status</label>
+                        <label className="text-xs font-medium text-muted-foreground">Verification Status</label>
                         <select
                           value={signalWorkflow.verificationStatus}
                           onChange={(e) => updateSignalWorkflow("verificationStatus", e.target.value)}
-                          className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                          className="w-full h-8 px-2 text-xs border border-border rounded-lg mt-1"
                         >
                           <option value="">Select</option>
                           <option value="confirmed">Confirmed - True Signal</option>
@@ -648,39 +648,39 @@ export function SurveillanceTab() {
                         </select>
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-gray-600">Verified By</label>
+                        <label className="text-xs font-medium text-muted-foreground">Verified By</label>
                         <input
                           value={signalWorkflow.verifiedBy}
                           onChange={(e) => updateSignalWorkflow("verifiedBy", e.target.value)}
                           placeholder="Officer name"
-                          className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                          className="w-full h-8 px-2 text-xs border border-border rounded-lg mt-1"
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-gray-600">Verification Date</label>
+                        <label className="text-xs font-medium text-muted-foreground">Verification Date</label>
                         <input
                           type="date"
                           value={signalWorkflow.verificationDate}
                           onChange={(e) => updateSignalWorkflow("verificationDate", e.target.value)}
-                          className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                          className="w-full h-8 px-2 text-xs border border-border rounded-lg mt-1"
                         />
                       </div>
                     </div>
                   </div>
 
                   {/* Step 2: Risk Assessment */}
-                  <div className="p-3 border border-gray-200 rounded-lg bg-white space-y-2">
+                  <div className="p-3 border border-border rounded-lg bg-card space-y-2">
                     <div className="flex items-center gap-2">
-                      <span className="px-2 py-0.5 text-[10px] border border-gray-300 rounded">Step 2</span>
+                      <span className="px-2 py-0.5 text-[10px] border border-border rounded">Step 2</span>
                       <span className="text-sm font-medium">Risk Assessment</span>
                     </div>
                     <div className="grid grid-cols-3 gap-3">
                       <div>
-                        <label className="text-xs font-medium text-gray-600">Risk Level</label>
+                        <label className="text-xs font-medium text-muted-foreground">Risk Level</label>
                         <select
                           value={signalWorkflow.riskLevel}
                           onChange={(e) => updateSignalWorkflow("riskLevel", e.target.value)}
-                          className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                          className="w-full h-8 px-2 text-xs border border-border rounded-lg mt-1"
                         >
                           <option value="">Assess risk</option>
                           <option value="low">Low - Monitor Only</option>
@@ -690,11 +690,11 @@ export function SurveillanceTab() {
                         </select>
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-gray-600">Spread Potential</label>
+                        <label className="text-xs font-medium text-muted-foreground">Spread Potential</label>
                         <select
                           value={signalWorkflow.spreadPotential}
                           onChange={(e) => updateSignalWorkflow("spreadPotential", e.target.value)}
-                          className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                          className="w-full h-8 px-2 text-xs border border-border rounded-lg mt-1"
                         >
                           <option value="">Select</option>
                           <option value="contained">Contained</option>
@@ -703,26 +703,26 @@ export function SurveillanceTab() {
                         </select>
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-gray-600">Population at Risk</label>
+                        <label className="text-xs font-medium text-muted-foreground">Population at Risk</label>
                         <input
                           value={signalWorkflow.populationAtRisk}
                           onChange={(e) => updateSignalWorkflow("populationAtRisk", e.target.value)}
                           placeholder="Estimated number"
-                          className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                          className="w-full h-8 px-2 text-xs border border-border rounded-lg mt-1"
                         />
                       </div>
                     </div>
                   </div>
 
                   {/* Step 3: Response Actions */}
-                  <div className="p-3 border border-gray-200 rounded-lg bg-white space-y-2">
+                  <div className="p-3 border border-border rounded-lg bg-card space-y-2">
                     <div className="flex items-center gap-2">
-                      <span className="px-2 py-0.5 text-[10px] border border-gray-300 rounded">Step 3</span>
+                      <span className="px-2 py-0.5 text-[10px] border border-border rounded">Step 3</span>
                       <span className="text-sm font-medium">Response Actions</span>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="text-xs font-medium text-gray-600">Response Actions (select all applicable)</label>
+                        <label className="text-xs font-medium text-muted-foreground">Response Actions (select all applicable)</label>
                         <div className="space-y-1 mt-1">
                           {RESPONSE_ACTIONS.map((action) => (
                             <label key={action} className="flex items-center gap-2 text-xs">
@@ -739,20 +739,20 @@ export function SurveillanceTab() {
                       </div>
                       <div className="space-y-3">
                         <div>
-                          <label className="text-xs font-medium text-gray-600">Assign To Team</label>
+                          <label className="text-xs font-medium text-muted-foreground">Assign To Team</label>
                           <input
                             value={signalWorkflow.assignToTeam}
                             onChange={(e) => updateSignalWorkflow("assignToTeam", e.target.value)}
                             placeholder="Team or officer ref"
-                            className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                            className="w-full h-8 px-2 text-xs border border-border rounded-lg mt-1"
                           />
                         </div>
                         <div>
-                          <label className="text-xs font-medium text-gray-600">Escalation Level</label>
+                          <label className="text-xs font-medium text-muted-foreground">Escalation Level</label>
                           <select
                             value={signalWorkflow.escalationLevel}
                             onChange={(e) => updateSignalWorkflow("escalationLevel", e.target.value)}
-                            className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                            className="w-full h-8 px-2 text-xs border border-border rounded-lg mt-1"
                           >
                             <option value="">Select</option>
                             <option value="district">District Level</option>
@@ -762,21 +762,21 @@ export function SurveillanceTab() {
                           </select>
                         </div>
                         <div>
-                          <label className="text-xs font-medium text-gray-600">Notes</label>
+                          <label className="text-xs font-medium text-muted-foreground">Notes</label>
                           <textarea
                             value={signalWorkflow.notes}
                             onChange={(e) => updateSignalWorkflow("notes", e.target.value)}
                             placeholder="Additional instructions..."
-                            className="w-full text-xs border border-gray-300 rounded-lg mt-1 p-2 min-h-[60px]"
+                            className="w-full text-xs border border-border rounded-lg mt-1 p-2 min-h-[60px]"
                           />
                         </div>
                         {showOutbreakLink ? (
                           <div>
-                            <label className="text-xs font-medium text-gray-600">Linked outbreak</label>
+                            <label className="text-xs font-medium text-muted-foreground">Linked outbreak</label>
                             <select
                               value={signalWorkflow.linkedOutbreakId}
                               onChange={(e) => updateSignalWorkflow("linkedOutbreakId", e.target.value)}
-                              className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                              className="w-full h-8 px-2 text-xs border border-border rounded-lg mt-1"
                             >
                               <option value="">Select outbreak</option>
                               {outbreaks.map((o) => (
@@ -796,7 +796,7 @@ export function SurveillanceTab() {
                       type="button"
                       disabled={openInvestigation.isPending || updateInvestigationStatus.isPending}
                       onClick={() => void submitSignalInvestigation(sig, true)}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-impilo-500 text-white text-xs font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-50"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-primary text-white text-xs font-medium rounded-lg hover:bg-primary-hover disabled:opacity-50"
                     >
                       {(openInvestigation.isPending || updateInvestigationStatus.isPending) ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -807,14 +807,14 @@ export function SurveillanceTab() {
                       type="button"
                       disabled={openInvestigation.isPending}
                       onClick={() => void submitSignalInvestigation(sig, false)}
-                      className="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg disabled:opacity-50"
+                      className="px-3 py-1.5 bg-neutral-100 text-foreground text-xs font-medium rounded-lg disabled:opacity-50"
                     >
                       Save as Draft
                     </button>
                     <button
                       type="button"
                       onClick={() => setShowOutbreakLink((v) => !v)}
-                      className="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg"
+                      className="px-3 py-1.5 bg-neutral-100 text-foreground text-xs font-medium rounded-lg"
                     >
                       {showOutbreakLink ? "Hide outbreak link" : "Link to Outbreak"}
                     </button>
@@ -824,7 +824,7 @@ export function SurveillanceTab() {
                         setSelectedSignal(null);
                         resetSignalWorkflow();
                       }}
-                      className="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg"
+                      className="px-3 py-1.5 bg-neutral-100 text-foreground text-xs font-medium rounded-lg"
                     >
                       Cancel
                     </button>
@@ -838,11 +838,11 @@ export function SurveillanceTab() {
 
       {/* Cases Tab */}
       {activeSubTab === "cases" && (
-        <div className="bg-white rounded-lg border border-gray-200">
+        <div className="bg-card rounded-lg border border-border">
           <div className="px-4 py-3 border-b flex items-center justify-between">
             <div>
-              <h4 className="text-sm font-semibold text-gray-900">Case-Based Surveillance Reports</h4>
-              <p className="text-xs text-gray-500">Individual case investigations for notifiable diseases</p>
+              <h4 className="text-sm font-semibold text-foreground">Case-Based Surveillance Reports</h4>
+              <p className="text-xs text-muted-foreground">Individual case investigations for notifiable diseases</p>
             </div>
             <button
               type="button"
@@ -851,7 +851,7 @@ export function SurveillanceTab() {
                 setCaseFormError(null);
                 setCaseFormSuccess(null);
               }}
-              className="inline-flex items-center gap-1 px-3 py-1.5 bg-impilo-500 text-white text-xs font-medium rounded-lg hover:bg-impilo-600"
+              className="inline-flex items-center gap-1 px-3 py-1.5 bg-primary text-white text-xs font-medium rounded-lg hover:bg-primary-hover"
             >
               <Plus className="h-3.5 w-3.5" /> {showNewCase ? "Close form" : "New Case Report"}
             </button>
@@ -864,65 +864,65 @@ export function SurveillanceTab() {
               </div>
             )}
             {showNewCase && (
-              <div className="p-4 border border-impilo-200 bg-impilo-50 rounded-lg">
+              <div className="p-4 border border-primary/25 bg-primary-soft rounded-lg">
                 <h4 className="font-semibold text-sm mb-3">New Case-Based Report (CBR)</h4>
                 {caseFormError && (
-                  <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800">
+                  <div className="mb-3 rounded-lg border border-danger/28 bg-danger-soft px-3 py-2 text-xs text-red-800">
                     {caseFormError}
                   </div>
                 )}
                 <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label className="text-xs font-medium text-gray-600">Disease</label>
+                    <label className="text-xs font-medium text-muted-foreground">Disease</label>
                     <input
                       value={caseForm.disease}
                       onChange={(e) => updateCaseForm("disease", e.target.value)}
                       placeholder="e.g. cholera"
-                      className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                      className="w-full h-8 px-2 text-xs border border-border rounded-lg mt-1"
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-gray-600">Patient (CPID)</label>
+                    <label className="text-xs font-medium text-muted-foreground">Patient (CPID)</label>
                     <input
                       value={caseForm.patientRef}
                       onChange={(e) => updateCaseForm("patientRef", e.target.value)}
                       placeholder="Search or enter CPID"
-                      className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                      className="w-full h-8 px-2 text-xs border border-border rounded-lg mt-1"
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-gray-600">Reporting Facility UUID</label>
+                    <label className="text-xs font-medium text-muted-foreground">Reporting Facility UUID</label>
                     <input
                       value={caseForm.facilityId}
                       onChange={(e) => updateCaseForm("facilityId", e.target.value)}
                       placeholder="optional UUID"
-                      className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                      className="w-full h-8 px-2 text-xs border border-border rounded-lg mt-1"
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-gray-600">Date of Onset</label>
+                    <label className="text-xs font-medium text-muted-foreground">Date of Onset</label>
                     <input
                       type="date"
                       value={caseForm.dateOnset}
                       onChange={(e) => updateCaseForm("dateOnset", e.target.value)}
-                      className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                      className="w-full h-8 px-2 text-xs border border-border rounded-lg mt-1"
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-gray-600">Date of Notification</label>
+                    <label className="text-xs font-medium text-muted-foreground">Date of Notification</label>
                     <input
                       type="date"
                       value={caseForm.dateNotification}
                       onChange={(e) => updateCaseForm("dateNotification", e.target.value)}
-                      className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                      className="w-full h-8 px-2 text-xs border border-border rounded-lg mt-1"
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-gray-600">Initial Classification</label>
+                    <label className="text-xs font-medium text-muted-foreground">Initial Classification</label>
                     <select
                       value={caseForm.classification}
                       onChange={(e) => updateCaseForm("classification", e.target.value)}
-                      className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                      className="w-full h-8 px-2 text-xs border border-border rounded-lg mt-1"
                     >
                       <option value="suspected">Suspected</option>
                       <option value="probable">Probable</option>
@@ -930,11 +930,11 @@ export function SurveillanceTab() {
                     </select>
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-gray-600">Outcome</label>
+                    <label className="text-xs font-medium text-muted-foreground">Outcome</label>
                     <select
                       value={caseForm.outcome}
                       onChange={(e) => updateCaseForm("outcome", e.target.value)}
-                      className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                      className="w-full h-8 px-2 text-xs border border-border rounded-lg mt-1"
                     >
                       <option value="admitted">Admitted</option>
                       <option value="outpatient">Outpatient</option>
@@ -944,12 +944,12 @@ export function SurveillanceTab() {
                   </div>
                 </div>
                 <div className="mt-3">
-                  <label className="text-xs font-medium text-gray-600">Clinical Summary</label>
+                  <label className="text-xs font-medium text-muted-foreground">Clinical Summary</label>
                   <textarea
                     value={caseForm.summary}
                     onChange={(e) => updateCaseForm("summary", e.target.value)}
                     placeholder="Symptoms, signs, treatment given..."
-                    className="w-full text-xs border border-gray-300 rounded-lg mt-1 p-2 min-h-[60px]"
+                    className="w-full text-xs border border-border rounded-lg mt-1 p-2 min-h-[60px]"
                   />
                 </div>
                 <div className="flex gap-2 mt-3">
@@ -957,14 +957,14 @@ export function SurveillanceTab() {
                     type="button"
                     onClick={submitCaseReport}
                     disabled={ingestEvent.isPending}
-                    className="px-3 py-1.5 bg-impilo-500 text-white text-xs font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-60"
+                    className="px-3 py-1.5 bg-primary text-white text-xs font-medium rounded-lg hover:bg-primary-hover disabled:opacity-60"
                   >
                     {ingestEvent.isPending ? "Submitting..." : "Submit CBR"}
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowNewCase(false)}
-                    className="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg"
+                    className="px-3 py-1.5 bg-neutral-100 text-foreground text-xs font-medium rounded-lg"
                   >
                     Cancel
                   </button>
@@ -974,47 +974,47 @@ export function SurveillanceTab() {
 
             <div className="overflow-x-auto">
               {caseLoading && (
-                <div className="flex items-center justify-center gap-2 py-8 text-sm text-gray-500">
+                <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" /> Loading cases…
                 </div>
               )}
               {caseError && (
-                <p className="px-3 py-4 text-sm text-red-700">Unable to load cases from surveillance-service via BFF.</p>
+                <p className="px-3 py-4 text-sm text-danger">Unable to load cases from surveillance-service via BFF.</p>
               )}
               {!caseLoading && !caseError && apiCases.length === 0 && (
-                <p className="px-3 py-4 text-sm text-gray-600">No surveillance cases returned for this tenant.</p>
+                <p className="px-3 py-4 text-sm text-muted-foreground">No surveillance cases returned for this tenant.</p>
               )}
               {!caseLoading && !caseError && apiCases.length > 0 && (
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b bg-gray-50">
-                    <th className="text-left px-3 py-2 font-medium text-gray-600">CBR ID</th>
-                    <th className="text-left px-3 py-2 font-medium text-gray-600">Disease</th>
-                    <th className="text-left px-3 py-2 font-medium text-gray-600">Patient (CPID)</th>
-                    <th className="text-left px-3 py-2 font-medium text-gray-600">Age/Sex</th>
-                    <th className="text-left px-3 py-2 font-medium text-gray-600">Facility</th>
-                    <th className="text-left px-3 py-2 font-medium text-gray-600">Date</th>
-                    <th className="text-left px-3 py-2 font-medium text-gray-600">Classification</th>
-                    <th className="text-left px-3 py-2 font-medium text-gray-600">Outcome</th>
-                    <th className="text-left px-3 py-2 font-medium text-gray-600"></th>
+                  <tr className="border-b bg-background">
+                    <th className="text-left px-3 py-2 font-medium text-muted-foreground">CBR ID</th>
+                    <th className="text-left px-3 py-2 font-medium text-muted-foreground">Disease</th>
+                    <th className="text-left px-3 py-2 font-medium text-muted-foreground">Patient (CPID)</th>
+                    <th className="text-left px-3 py-2 font-medium text-muted-foreground">Age/Sex</th>
+                    <th className="text-left px-3 py-2 font-medium text-muted-foreground">Facility</th>
+                    <th className="text-left px-3 py-2 font-medium text-muted-foreground">Date</th>
+                    <th className="text-left px-3 py-2 font-medium text-muted-foreground">Classification</th>
+                    <th className="text-left px-3 py-2 font-medium text-muted-foreground">Outcome</th>
+                    <th className="text-left px-3 py-2 font-medium text-muted-foreground"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {apiCases.map((c) => (
-                    <tr key={c.id} className={`border-b hover:bg-gray-50 ${selectedCase === c.id ? "bg-impilo-50" : ""}`}>
+                    <tr key={c.id} className={`border-b hover:bg-background ${selectedCase === c.id ? "bg-primary-soft" : ""}`}>
                       <td className="px-3 py-2 font-mono">{c.id}</td>
-                      <td className="px-3 py-2 font-medium text-gray-900">{c.disease}</td>
+                      <td className="px-3 py-2 font-medium text-foreground">{c.disease}</td>
                       <td className="px-3 py-2 font-mono">{c.patientRef}</td>
-                      <td className="px-3 py-2 text-gray-400">—</td>
-                      <td className="px-3 py-2 text-gray-600">{c.facility}</td>
-                      <td className="px-3 py-2 text-gray-500">{c.reportedAt || "—"}</td>
+                      <td className="px-3 py-2 text-muted-foreground">—</td>
+                      <td className="px-3 py-2 text-muted-foreground">{c.facility}</td>
+                      <td className="px-3 py-2 text-muted-foreground">{c.reportedAt || "—"}</td>
                       <td className="px-3 py-2">
-                        <span className="px-2 py-0.5 border border-gray-300 rounded text-[10px] capitalize">{c.status.replace(/_/g, " ")}</span>
+                        <span className="px-2 py-0.5 border border-border rounded text-[10px] capitalize">{c.status.replace(/_/g, " ")}</span>
                       </td>
                       <td className="px-3 py-2 capitalize">{c.outcome}</td>
                       <td className="px-3 py-2">
                         <button type="button" onClick={() => setSelectedCase(selectedCase === c.id ? null : c.id)}
-                          className="px-2 py-1 border border-gray-300 rounded text-[10px] font-medium hover:bg-gray-50">
+                          className="px-2 py-1 border border-border rounded text-[10px] font-medium hover:bg-background">
                           {selectedCase === c.id ? "Close" : "Update"}
                         </button>
                       </td>
@@ -1030,12 +1030,12 @@ export function SurveillanceTab() {
               const c = apiCases.find((r) => r.id === selectedCase);
               if (!c) return null;
               return (
-                <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 space-y-3">
+                <div className="p-3 bg-background rounded-lg border border-border space-y-3">
                   <h4 className="text-sm font-semibold">Case Update - {c.id}</h4>
                   <div className="grid grid-cols-3 gap-3">
                     <div>
-                      <label className="text-xs font-medium text-gray-600">Update Classification</label>
-                      <select className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1">
+                      <label className="text-xs font-medium text-muted-foreground">Update Classification</label>
+                      <select className="w-full h-8 px-2 text-xs border border-border rounded-lg mt-1">
                         <option value="suspected">Suspected</option>
                         <option value="probable">Probable</option>
                         <option value="confirmed">Confirmed</option>
@@ -1043,8 +1043,8 @@ export function SurveillanceTab() {
                       </select>
                     </div>
                     <div>
-                      <label className="text-xs font-medium text-gray-600">Update Outcome</label>
-                      <select className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1">
+                      <label className="text-xs font-medium text-muted-foreground">Update Outcome</label>
+                      <select className="w-full h-8 px-2 text-xs border border-border rounded-lg mt-1">
                         <option value="admitted">Admitted</option>
                         <option value="recovering">Recovering</option>
                         <option value="discharged">Discharged</option>
@@ -1052,8 +1052,8 @@ export function SurveillanceTab() {
                       </select>
                     </div>
                     <div>
-                      <label className="text-xs font-medium text-gray-600">Lab Result</label>
-                      <select className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1">
+                      <label className="text-xs font-medium text-muted-foreground">Lab Result</label>
+                      <select className="w-full h-8 px-2 text-xs border border-border rounded-lg mt-1">
                         <option value="">Select</option>
                         <option value="pending">Pending</option>
                         <option value="positive">Positive</option>
@@ -1063,13 +1063,13 @@ export function SurveillanceTab() {
                     </div>
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-gray-600">Investigation Notes</label>
-                    <textarea placeholder="Progress notes..." className="w-full text-xs border border-gray-300 rounded-lg mt-1 p-2 min-h-[40px]" />
+                    <label className="text-xs font-medium text-muted-foreground">Investigation Notes</label>
+                    <textarea placeholder="Progress notes..." className="w-full text-xs border border-border rounded-lg mt-1 p-2 min-h-[40px]" />
                   </div>
                   <div className="flex gap-2">
-                    <button className="px-3 py-1.5 bg-impilo-500 text-white text-xs font-medium rounded-lg hover:bg-impilo-600">Save Update</button>
-                    <button className="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg">Link Contacts</button>
-                    <button className="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg">Generate Line List</button>
+                    <button className="px-3 py-1.5 bg-primary text-white text-xs font-medium rounded-lg hover:bg-primary-hover">Save Update</button>
+                    <button className="px-3 py-1.5 bg-neutral-100 text-foreground text-xs font-medium rounded-lg">Link Contacts</button>
+                    <button className="px-3 py-1.5 bg-neutral-100 text-foreground text-xs font-medium rounded-lg">Generate Line List</button>
                   </div>
                 </div>
               );
@@ -1081,62 +1081,62 @@ export function SurveillanceTab() {
       {/* Weekly IDSR / eIDSR — live feed from /public-health/weekly-idsr */}
       {activeSubTab === "weekly" && (
         <div className="space-y-4">
-          <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
+          <div className="rounded-lg border border-success/25 bg-success-soft px-4 py-3 text-sm text-emerald-950">
             <p className="font-medium">Weekly aggregate (IDSR / eIDSR)</p>
-            <p className="mt-2 text-xs leading-relaxed text-emerald-900/90">
+            <p className="mt-2 text-xs leading-relaxed text-primary-hover/90">
               Data is loaded from <code className="text-[11px]">GET /internal/v1/public-health/weekly-idsr</code>.
               This feed is currently derived from surveillance counters while richer weekly aggregates are productized.
             </p>
           </div>
 
-          <div className="rounded-lg border border-gray-200 bg-white">
+          <div className="rounded-lg border border-border bg-card">
             <div className="border-b px-4 py-3">
-              <h4 className="text-sm font-semibold text-gray-900">Facility reporting completeness (demo W14-2026)</h4>
-              <p className="text-xs text-gray-500">Zero reporting vs positive counts per notifiable week</p>
+              <h4 className="text-sm font-semibold text-foreground">Facility reporting completeness (demo W14-2026)</h4>
+              <p className="text-xs text-muted-foreground">Zero reporting vs positive counts per notifiable week</p>
             </div>
             <div className="overflow-x-auto p-2">
               <table className="w-full min-w-[640px] text-xs">
                 <thead>
-                  <tr className="border-b bg-gray-50 text-left">
-                    <th className="px-3 py-2 font-medium text-gray-600">Facility</th>
-                    <th className="px-3 py-2 font-medium text-gray-600">Week</th>
-                    <th className="px-3 py-2 font-medium text-gray-600">Submitted</th>
-                    <th className="px-3 py-2 font-medium text-gray-600">On time</th>
-                    <th className="px-3 py-2 font-medium text-gray-600">Diseases</th>
-                    <th className="px-3 py-2 font-medium text-gray-600">Zero reports</th>
-                    <th className="px-3 py-2 font-medium text-gray-600">Positive</th>
+                  <tr className="border-b bg-background text-left">
+                    <th className="px-3 py-2 font-medium text-muted-foreground">Facility</th>
+                    <th className="px-3 py-2 font-medium text-muted-foreground">Week</th>
+                    <th className="px-3 py-2 font-medium text-muted-foreground">Submitted</th>
+                    <th className="px-3 py-2 font-medium text-muted-foreground">On time</th>
+                    <th className="px-3 py-2 font-medium text-muted-foreground">Diseases</th>
+                    <th className="px-3 py-2 font-medium text-muted-foreground">Zero reports</th>
+                    <th className="px-3 py-2 font-medium text-muted-foreground">Positive</th>
                   </tr>
                 </thead>
                 <tbody>
                   {weeklyRows.map((w) => (
-                    <tr key={w.id} className="border-b hover:bg-gray-50">
-                      <td className="px-3 py-2 font-medium text-gray-900">{w.detail || "Unknown facility"}</td>
-                      <td className="px-3 py-2 font-mono text-gray-600">Current</td>
+                    <tr key={w.id} className="border-b hover:bg-background">
+                      <td className="px-3 py-2 font-medium text-foreground">{w.detail || "Unknown facility"}</td>
+                      <td className="px-3 py-2 font-mono text-muted-foreground">Current</td>
                       <td className="px-3 py-2">Yes</td>
                       <td className="px-3 py-2">Yes</td>
                       <td className="px-3 py-2 tabular-nums">1</td>
                       <td className="px-3 py-2 tabular-nums">0</td>
-                      <td className="px-3 py-2 tabular-nums font-medium text-gray-900">{w.value}</td>
+                      <td className="px-3 py-2 tabular-nums font-medium text-foreground">{w.value}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
               {!weeklyLoading && !weeklyError && weeklyRows.length === 0 && (
-                <p className="px-3 py-4 text-sm text-gray-600">No weekly aggregate rows returned.</p>
+                <p className="px-3 py-4 text-sm text-muted-foreground">No weekly aggregate rows returned.</p>
               )}
               {weeklyLoading && (
-                <p className="px-3 py-4 text-sm text-gray-600">Loading weekly aggregate feed…</p>
+                <p className="px-3 py-4 text-sm text-muted-foreground">Loading weekly aggregate feed…</p>
               )}
               {weeklyError && (
-                <p className="px-3 py-4 text-sm text-red-700">Unable to load weekly aggregate feed from the BFF.</p>
+                <p className="px-3 py-4 text-sm text-danger">Unable to load weekly aggregate feed from the BFF.</p>
               )}
             </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-lg border border-gray-200 bg-white p-4">
-              <h5 className="text-sm font-semibold text-gray-900">Aggregate disease counts (demo)</h5>
-              <p className="mb-3 text-xs text-gray-500">Cross-facility roll-up for the same reporting week</p>
+            <div className="rounded-lg border border-border bg-card p-4">
+              <h5 className="text-sm font-semibold text-foreground">Aggregate disease counts (demo)</h5>
+              <p className="mb-3 text-xs text-muted-foreground">Cross-facility roll-up for the same reporting week</p>
               <ul className="space-y-2 text-xs">
                 {[
                   { disease: "Weekly rows received", n: weeklyRows.length, trend: "from weekly feed" },
@@ -1144,18 +1144,18 @@ export function SurveillanceTab() {
                   { disease: "Signal definitions", n: apiSignals.length, trend: "from signals" },
                   { disease: "Case reports", n: apiCases.length, trend: "from cases" },
                 ].map((d) => (
-                  <li key={d.disease} className="flex justify-between rounded border border-gray-100 px-2 py-1.5">
-                    <span className="font-medium text-gray-800">{d.disease}</span>
-                    <span className="tabular-nums text-gray-700">
-                      {d.n} <span className="text-[10px] text-gray-500">({d.trend})</span>
+                  <li key={d.disease} className="flex justify-between rounded border border-border px-2 py-1.5">
+                    <span className="font-medium text-foreground">{d.disease}</span>
+                    <span className="tabular-nums text-foreground">
+                      {d.n} <span className="text-[10px] text-muted-foreground">({d.trend})</span>
                     </span>
                   </li>
                 ))}
               </ul>
             </div>
-            <div className="rounded-lg border border-gray-200 bg-white p-4">
-              <h5 className="text-sm font-semibold text-gray-900">Timeliness &amp; completeness (demo KPIs)</h5>
-              <p className="mb-3 text-xs text-gray-500">Aligns with MoHCC IDSR targets — wire to analytics when ready</p>
+            <div className="rounded-lg border border-border bg-card p-4">
+              <h5 className="text-sm font-semibold text-foreground">Timeliness &amp; completeness (demo KPIs)</h5>
+              <p className="mb-3 text-xs text-muted-foreground">Aligns with MoHCC IDSR targets — wire to analytics when ready</p>
               <ul className="space-y-3 text-xs">
                 {[
                   { label: "Weekly feed availability", value: weeklyError ? 0 : 100, target: 100 },
@@ -1165,12 +1165,12 @@ export function SurveillanceTab() {
                 ].map((m) => (
                   <li key={m.label}>
                     <div className="mb-1 flex justify-between">
-                      <span className="font-medium text-gray-800">{m.label}</span>
-                      <span className={m.value >= m.target ? "text-emerald-700" : "text-amber-800"}>
+                      <span className="font-medium text-foreground">{m.label}</span>
+                      <span className={m.value >= m.target ? "text-primary-hover" : "text-warning-foreground"}>
                         {m.value}% (target {m.target}%)
                       </span>
                     </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-gray-100">
+                    <div className="h-2 overflow-hidden rounded-full bg-neutral-100">
                       <div
                         className={`h-full rounded-full ${m.value >= m.target ? "bg-emerald-500" : "bg-amber-500"}`}
                         style={{ width: `${Math.min(100, m.value)}%` }}

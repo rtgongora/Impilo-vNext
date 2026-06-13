@@ -98,7 +98,7 @@ export default function DisplaySettingsPage() {
         <div className="mb-4">
           <Link
             href="/settings"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to settings
@@ -106,14 +106,14 @@ export default function DisplaySettingsPage() {
         </div>
 
         {error ? (
-          <div className="bg-white rounded-lg border border-red-200 p-12 text-center">
+          <div className="bg-card rounded-lg border border-danger/28 p-12 text-center">
             <AlertCircle className="w-10 h-10 text-red-300 mx-auto mb-3" />
             <p className="text-red-600 text-sm">Failed to load display settings</p>
           </div>
         ) : isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading display settings...</span>
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading display settings...</span>
           </div>
         ) : (
           <div className="max-w-2xl">
@@ -126,8 +126,8 @@ export default function DisplaySettingsPage() {
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Theme */}
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <h3 className="text-sm font-medium text-gray-900 mb-4">Theme</h3>
+              <div className="bg-card rounded-lg border border-border p-6">
+                <h3 className="text-sm font-medium text-foreground mb-4">Theme</h3>
                 <div className="grid grid-cols-3 gap-3">
                   {THEMES.map((t) => {
                     const Icon = t.icon;
@@ -138,18 +138,18 @@ export default function DisplaySettingsPage() {
                         onClick={() => setTheme(t.value)}
                         className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-colors ${
                           theme === t.value
-                            ? "border-impilo-400 bg-impilo-50"
-                            : "border-gray-200 hover:border-gray-300"
+                            ? "border-impilo-400 bg-primary-soft"
+                            : "border-border hover:border-border"
                         }`}
                       >
                         <Icon
                           className={`w-6 h-6 ${
-                            theme === t.value ? "text-impilo-500" : "text-gray-400"
+                            theme === t.value ? "text-primary" : "text-muted-foreground"
                           }`}
                         />
                         <span
                           className={`text-sm font-medium ${
-                            theme === t.value ? "text-impilo-600" : "text-gray-600"
+                            theme === t.value ? "text-primary" : "text-muted-foreground"
                           }`}
                         >
                           {t.label}
@@ -161,8 +161,8 @@ export default function DisplaySettingsPage() {
               </div>
 
               {/* Font Size */}
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <h3 className="text-sm font-medium text-gray-900 mb-4">Font Size</h3>
+              <div className="bg-card rounded-lg border border-border p-6">
+                <h3 className="text-sm font-medium text-foreground mb-4">Font Size</h3>
                 <div className="flex gap-3">
                   {FONT_SIZES.map((fs) => (
                     <button
@@ -171,8 +171,8 @@ export default function DisplaySettingsPage() {
                       onClick={() => setFontSize(fs.value)}
                       className={`px-4 py-2.5 rounded-lg border-2 text-sm font-medium transition-colors ${
                         fontSize === fs.value
-                          ? "border-impilo-400 bg-impilo-50 text-impilo-600"
-                          : "border-gray-200 text-gray-600 hover:border-gray-300"
+                          ? "border-impilo-400 bg-primary-soft text-primary"
+                          : "border-border text-muted-foreground hover:border-border"
                       }`}
                     >
                       {fs.label}
@@ -182,8 +182,8 @@ export default function DisplaySettingsPage() {
               </div>
 
               {/* Density */}
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <h3 className="text-sm font-medium text-gray-900 mb-4">Density</h3>
+              <div className="bg-card rounded-lg border border-border p-6">
+                <h3 className="text-sm font-medium text-foreground mb-4">Density</h3>
                 <div className="flex gap-3">
                   {DENSITIES.map((d) => (
                     <button
@@ -192,8 +192,8 @@ export default function DisplaySettingsPage() {
                       onClick={() => setDensity(d.value)}
                       className={`px-4 py-2.5 rounded-lg border-2 text-sm font-medium transition-colors ${
                         density === d.value
-                          ? "border-impilo-400 bg-impilo-50 text-impilo-600"
-                          : "border-gray-200 text-gray-600 hover:border-gray-300"
+                          ? "border-impilo-400 bg-primary-soft text-primary"
+                          : "border-border text-muted-foreground hover:border-border"
                       }`}
                     >
                       {d.label}
@@ -205,7 +205,7 @@ export default function DisplaySettingsPage() {
               <button
                 type="submit"
                 disabled={saveDisplay.isPending}
-                className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-impilo-500 rounded-lg hover:bg-impilo-600 transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50"
               >
                 {saveDisplay.isPending ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

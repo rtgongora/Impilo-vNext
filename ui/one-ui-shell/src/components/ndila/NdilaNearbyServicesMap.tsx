@@ -50,7 +50,7 @@ export function NdilaNearbyServicesMap({
   return (
     <div className="space-y-2">
       <NdilaMap center={origin} zoom={13} markers={markers} height={height} layers={["nearby-services"]} mode="CITIZEN" />
-      <div className="text-[10px] text-gray-500">
+      <div className="text-[10px] text-muted-foreground">
         {loading ? "Searching nearby services…" : error ?? `${items.length} services within ${(radiusMeters / 1000).toFixed(0)}km`}
       </div>
     </div>

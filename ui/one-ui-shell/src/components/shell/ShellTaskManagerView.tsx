@@ -21,16 +21,16 @@ export function ShellTaskManagerView() {
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
-      <section className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-        <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Open workspaces</h2>
-        <p className="mt-1 text-xs text-slate-500">
+      <section className="rounded-xl border border-border bg-card p-4 dark:border-border dark:bg-neutral-900">
+        <h2 className="text-sm font-semibold text-foreground dark:text-foreground">Open workspaces</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
           Tasks are synced from navigation. Close removes them from this session; reopen modules from Start or the
           sidebar.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <button
             type="button"
-            className="rounded-md border border-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+            className="rounded-md border border-border px-2 py-1 text-xs font-medium text-foreground hover:bg-background dark:border-border dark:text-foreground dark:hover:bg-neutral-900"
             onClick={() => clearClosedTasks()}
           >
             Clear minimized from taskbar
@@ -38,14 +38,14 @@ export function ShellTaskManagerView() {
         </div>
         <ul className="mt-4 divide-y divide-slate-100 dark:divide-slate-800">
           {ordered.length === 0 ? (
-            <li className="py-8 text-center text-sm text-slate-500">No open tasks.</li>
+            <li className="py-8 text-center text-sm text-muted-foreground">No open tasks.</li>
           ) : (
             ordered.map((task) => (
               <li key={task.id} className="flex flex-wrap items-center gap-2 py-3">
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium text-slate-900 dark:text-slate-50">{task.title}</p>
-                  <p className="text-xs text-slate-500">{task.route}</p>
-                  <p className="text-[10px] uppercase tracking-wide text-slate-400">
+                  <p className="font-medium text-foreground dark:text-foreground">{task.title}</p>
+                  <p className="text-xs text-muted-foreground">{task.route}</p>
+                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
                     {task.taskType} · {task.status}
                     {task.id === activeTaskId ? " · active" : ""}
                   </p>
@@ -53,7 +53,7 @@ export function ShellTaskManagerView() {
                 <div className="flex flex-wrap gap-1">
                   <button
                     type="button"
-                    className="rounded-md border border-slate-200 px-2 py-1 text-xs font-medium hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
+                    className="rounded-md border border-border px-2 py-1 text-xs font-medium hover:bg-background dark:border-border dark:hover:bg-neutral-900"
                     onClick={() => {
                       restoreTask(task.id);
                       setActiveTask(task.id);
@@ -64,14 +64,14 @@ export function ShellTaskManagerView() {
                   </button>
                   <button
                     type="button"
-                    className="rounded-md border border-slate-200 px-2 py-1 text-xs font-medium hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
+                    className="rounded-md border border-border px-2 py-1 text-xs font-medium hover:bg-background dark:border-border dark:hover:bg-neutral-900"
                     onClick={() => minimizeTask(task.id)}
                   >
                     Minimize
                   </button>
                   <button
                     type="button"
-                    className="rounded-md border border-red-200 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950/40"
+                    className="rounded-md border border-danger/28 px-2 py-1 text-xs font-medium text-danger hover:bg-danger-soft dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950/40"
                     onClick={() => closeTask(task.id)}
                   >
                     Close
@@ -84,23 +84,23 @@ export function ShellTaskManagerView() {
       </section>
 
       <aside className="space-y-4">
-        <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Quick links</h3>
+        <div className="rounded-xl border border-border bg-card p-4 dark:border-border dark:bg-neutral-900">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Quick links</h3>
           <ul className="mt-2 space-y-2 text-sm">
             <li>
-              <Link href="/home" className="text-impilo-600 hover:underline">
+              <Link href="/home" className="text-primary hover:underline">
                 Home dashboard
               </Link>
             </li>
             <li>
-              <Link href="/shell/file-manager" className="text-impilo-600 hover:underline">
+              <Link href="/shell/file-manager" className="text-primary hover:underline">
                 File manager
               </Link>
             </li>
             <li>
               <button
                 type="button"
-                className="text-left text-impilo-600 hover:underline"
+                className="text-left text-primary hover:underline"
                 onClick={() => useShellStore.getState().toggleSearch()}
               >
                 Global search
@@ -108,12 +108,12 @@ export function ShellTaskManagerView() {
             </li>
           </ul>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Recent shell activity</h3>
-          <ul className="mt-2 max-h-64 space-y-2 overflow-y-auto text-xs text-slate-600 dark:text-slate-300">
+        <div className="rounded-xl border border-border bg-card p-4 dark:border-border dark:bg-neutral-900">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Recent shell activity</h3>
+          <ul className="mt-2 max-h-64 space-y-2 overflow-y-auto text-xs text-muted-foreground dark:text-muted-foreground">
             {recentItems.slice(0, 12).map((r) => (
               <li key={r.id}>
-                <Link href={r.href} className="line-clamp-2 hover:text-impilo-600 hover:underline">
+                <Link href={r.href} className="line-clamp-2 hover:text-primary hover:underline">
                   {r.title}
                 </Link>
               </li>

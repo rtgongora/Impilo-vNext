@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useCreateClientRegistration } from "@/hooks/queries/useClientRegistry";
 
 const inputClass =
-  "w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500";
+  "w-full rounded-xl border border-border px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500";
 
 export function GuardianAssistedIntakePanel() {
   const router = useRouter();
@@ -57,18 +57,18 @@ export function GuardianAssistedIntakePanel() {
 
   return (
     <section className="rounded-2xl border border-sky-200 bg-sky-50/50 p-5" data-testid="guardian-assisted-intake-panel">
-      <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+      <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
         <Users className="h-4 w-4 text-sky-600" />
         Guardian-assisted intake
       </div>
-      <p className="mt-1 text-xs text-gray-600">
+      <p className="mt-1 text-xs text-muted-foreground">
         Provider-assisted registration with guardian linkage — posts to{" "}
         <code className="text-[10px]">POST /internal/v1/client-registry/registrations</code>.
       </p>
 
       <form onSubmit={handleSubmit} className="mt-4 grid gap-3 md:grid-cols-2">
         <div>
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Guardian Health ID</label>
+          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Guardian Health ID</label>
           <input
             value={form.guardianHealthId}
             onChange={(e) => setForm((c) => ({ ...c, guardianHealthId: e.target.value }))}
@@ -78,7 +78,7 @@ export function GuardianAssistedIntakePanel() {
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Relationship</label>
+          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Relationship</label>
           <select
             value={form.guardianRelationship}
             onChange={(e) => setForm((c) => ({ ...c, guardianRelationship: e.target.value }))}
@@ -92,23 +92,23 @@ export function GuardianAssistedIntakePanel() {
           </select>
         </div>
         <div>
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Child first name</label>
+          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Child first name</label>
           <input value={form.firstName} onChange={(e) => setForm((c) => ({ ...c, firstName: e.target.value }))} className={inputClass} required />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Child last name</label>
+          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Child last name</label>
           <input value={form.lastName} onChange={(e) => setForm((c) => ({ ...c, lastName: e.target.value }))} className={inputClass} required />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Date of birth</label>
+          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Date of birth</label>
           <input type="date" value={form.dateOfBirth} onChange={(e) => setForm((c) => ({ ...c, dateOfBirth: e.target.value }))} className={inputClass} />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Contact phone</label>
+          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Contact phone</label>
           <input value={form.phone} onChange={(e) => setForm((c) => ({ ...c, phone: e.target.value }))} className={inputClass} />
         </div>
         <div className="md:col-span-2">
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Notes</label>
+          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Notes</label>
           <textarea value={form.notes} onChange={(e) => setForm((c) => ({ ...c, notes: e.target.value }))} rows={2} className={inputClass} />
         </div>
         <div className="md:col-span-2 flex justify-end">

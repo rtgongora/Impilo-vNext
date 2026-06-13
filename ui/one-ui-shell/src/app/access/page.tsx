@@ -27,7 +27,7 @@ export default function AccessPage() {
       <Suspense
         fallback={
           <PageShell title="Access Channels" icon={<MessageSquare className="w-5 h-5" />}>
-            <div className="flex items-center gap-2 text-sm text-gray-500">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" /> Loading…
             </div>
           </PageShell>
@@ -60,11 +60,11 @@ function AccessPageContent() {
 
   return (
     <PageShell title="Access Channels" icon={<MessageSquare className="w-5 h-5" />}>
-      <p className="text-sm text-gray-500 mb-4">
+      <p className="text-sm text-muted-foreground mb-4">
         Communication, document services, and self-service kiosk management
       </p>
 
-      <div className="flex gap-1 mb-6 border-b border-gray-200">
+      <div className="flex gap-1 mb-6 border-b border-border">
         {tabs.map((t) => {
           const Icon = t.icon;
           return (
@@ -74,8 +74,8 @@ function AccessPageContent() {
               onClick={() => setTab(t.id)}
               className={`flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                 tab === t.id
-                  ? "border-impilo-500 text-impilo-500"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
+                  ? "border-impilo-500 text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
               <Icon className="w-4 h-4" /> {t.label}
@@ -105,12 +105,12 @@ function CommunicationTab() {
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Send Notification</h3>
-      <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-3">
+      <div className="bg-card rounded-lg border border-border p-4 space-y-3">
         <div className="grid grid-cols-2 gap-3">
           <select
             value={form.channel}
             onChange={(e) => setForm({ ...form, channel: e.target.value })}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="px-3 py-2 border border-border rounded-lg text-sm"
           >
             <option value="SMS">SMS</option>
             <option value="EMAIL">Email</option>
@@ -122,7 +122,7 @@ function CommunicationTab() {
             placeholder="Recipient ID"
             value={form.recipientId}
             onChange={(e) => setForm({ ...form, recipientId: e.target.value })}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="px-3 py-2 border border-border rounded-lg text-sm"
           />
         </div>
         <textarea
@@ -130,13 +130,13 @@ function CommunicationTab() {
           value={form.message}
           onChange={(e) => setForm({ ...form, message: e.target.value })}
           rows={3}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+          className="w-full px-3 py-2 border border-border rounded-lg text-sm"
         />
         <button
           type="button"
           onClick={() => sendMutation.mutate(form)}
           disabled={!form.recipientId || !form.message || sendMutation.isPending}
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-impilo-500 text-white rounded-lg disabled:opacity-50"
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-primary text-white rounded-lg disabled:opacity-50"
         >
           <Send className="w-4 h-4" /> {sendMutation.isPending ? "Sending..." : "Send"}
         </button>
@@ -144,9 +144,9 @@ function CommunicationTab() {
       </div>
       <h3 className="text-lg font-semibold">Recent Notifications</h3>
       {isLoading ? (
-        <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
       ) : (
-        <p className="text-sm text-gray-400">{(data?.data ?? []).length} recent notifications</p>
+        <p className="text-sm text-muted-foreground">{(data?.data ?? []).length} recent notifications</p>
       )}
     </div>
   );
@@ -190,7 +190,7 @@ function LandelaTab({ focusedDocumentId }: { focusedDocumentId: string }) {
               <Loader2 className="h-4 w-4 animate-spin" /> Loading metadata…
             </div>
           ) : metaError ? (
-            <p className="mt-2 text-xs text-red-700">
+            <p className="mt-2 text-xs text-danger">
               Could not load metadata (confirm Landela is up and trust headers are accepted).
             </p>
           ) : (
@@ -215,39 +215,39 @@ function LandelaTab({ focusedDocumentId }: { focusedDocumentId: string }) {
           </div>
         </div>
       ) : (
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-muted-foreground">
           Tip: open a document from{" "}
-          <Link href="/registry/intake" className="text-impilo-600 hover:underline">
+          <Link href="/registry/intake" className="text-primary hover:underline">
             Registry intake
           </Link>{" "}
           using &quot;Open in Landela workspace&quot;, or append{" "}
-          <code className="rounded bg-gray-100 px-1">?tab=landela&amp;documentId=&lt;uuid&gt;</code> to this page URL.
+          <code className="rounded bg-neutral-100 px-1">?tab=landela&amp;documentId=&lt;uuid&gt;</code> to this page URL.
         </p>
       )}
 
       <h3 className="text-lg font-semibold">Document Templates</h3>
       {tLoading ? (
-        <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
       ) : (
-        <p className="text-sm text-gray-500">{(templates?.data ?? []).length} templates available</p>
+        <p className="text-sm text-muted-foreground">{(templates?.data ?? []).length} templates available</p>
       )}
       <h3 className="text-lg font-semibold">Search Documents</h3>
       <div className="flex gap-2">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
           <input
             type="text"
             placeholder="Search documents..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="w-full pl-10 pr-3 py-2 border border-border rounded-lg text-sm"
           />
         </div>
       </div>
       {dLoading ? (
-        <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
       ) : (
-        <p className="text-sm text-gray-500">{(docs?.data ?? []).length} documents found</p>
+        <p className="text-sm text-muted-foreground">{(docs?.data ?? []).length} documents found</p>
       )}
     </div>
   );
@@ -257,15 +257,15 @@ function KioskTab() {
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Self-Service Kiosk</h3>
-      <div className="bg-white rounded-lg border border-gray-200 p-6 text-center">
-        <Monitor className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-        <p className="text-sm text-gray-600">
+      <div className="bg-card rounded-lg border border-border p-6 text-center">
+        <Monitor className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+        <p className="text-sm text-muted-foreground">
           Kiosk check-in is available at <strong>/kiosk</strong>
         </p>
-        <p className="text-xs text-gray-400 mt-1">Patients can self-check-in, verify identity, and join queues</p>
+        <p className="text-xs text-muted-foreground mt-1">Patients can self-check-in, verify identity, and join queues</p>
         <Link
           href="/kiosk"
-          className="mt-4 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-impilo-500 text-white rounded-lg hover:bg-impilo-600"
+          className="mt-4 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-primary text-white rounded-lg hover:bg-primary-hover"
         >
           Open Kiosk Mode
         </Link>

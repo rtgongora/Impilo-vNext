@@ -42,14 +42,14 @@ export function FundoStudioWorkspace({ title, subtitle, children }: Props) {
         </div>
         <div className="mb-4 grid gap-2 md:grid-cols-3">
           {STUDIO_LINKS.map(([href, label]) => (
-            <Link key={href} href={href} className="rounded border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 hover:border-teal-300">
+            <Link key={href} href={href} className="rounded border border-border bg-card px-3 py-2 text-sm text-foreground hover:border-teal-300">
               {label}
             </Link>
           ))}
         </div>
         <div className="mb-6 flex flex-wrap gap-2">
           {LEARNER_LINKS.map(([href, label]) => (
-            <Link key={href} href={href} className="rounded border border-gray-300 px-2.5 py-1 text-xs text-gray-700">
+            <Link key={href} href={href} className="rounded border border-border px-2.5 py-1 text-xs text-foreground">
               {label}
             </Link>
           ))}

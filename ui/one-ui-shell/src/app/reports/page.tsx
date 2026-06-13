@@ -37,7 +37,7 @@ const REPORT_CATEGORIES = [
     description: "Patient census, diagnosis summary, lab tests, prescriptions",
     href: "/reports/clinical",
     icon: FileText,
-    color: "bg-impilo-100 text-impilo-500",
+    color: "bg-primary-soft text-primary",
   },
   {
     title: "Facility Reports",
@@ -64,12 +64,12 @@ const REPORT_CATEGORIES = [
 
 function TabTable({ rows, columns }: { rows: Record<string, string>[]; columns: { key: string; label: string }[] }) {
   if (rows.length === 0) {
-    return <p className="text-sm text-slate-500 py-6 text-center">No rows for this view (connect upstream analytics).</p>;
+    return <p className="text-sm text-muted-foreground py-6 text-center">No rows for this view (connect upstream analytics).</p>;
   }
   return (
-    <div className="overflow-x-auto rounded-lg border border-slate-200">
+    <div className="overflow-x-auto rounded-lg border border-border">
       <table className="w-full text-sm min-w-[520px]">
-        <thead className="bg-slate-50 text-left text-xs text-slate-600">
+        <thead className="bg-background text-left text-xs text-muted-foreground">
           <tr>
             {columns.map((c) => (
               <th key={c.key} className="px-3 py-2">
@@ -80,9 +80,9 @@ function TabTable({ rows, columns }: { rows: Record<string, string>[]; columns: 
         </thead>
         <tbody>
           {rows.map((row, i) => (
-            <tr key={i} className="border-t border-slate-100">
+            <tr key={i} className="border-t border-border">
               {columns.map((c) => (
-                <td key={c.key} className="px-3 py-2 text-slate-800">
+                <td key={c.key} className="px-3 py-2 text-foreground">
                   {row[c.key] ?? "—"}
                 </td>
               ))}
@@ -143,14 +143,14 @@ export default function ReportsHubPage() {
         <section className="mb-10 space-y-4">
           <div className="flex items-center gap-2">
             <Activity className="h-5 w-5 text-indigo-600" />
-            <h2 className="text-lg font-semibold text-slate-900">National reporting dashboard</h2>
+            <h2 className="text-lg font-semibold text-foreground">National reporting dashboard</h2>
           </div>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-muted-foreground">
             National aggregate reporting is now wired to governed Data Plane warehouse statistics where available.
             Tabs without governed feeds continue to show explicit unavailable states (no synthetic values).
           </p>
 
-          <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-2">
+          <div className="flex flex-wrap gap-2 border-b border-border pb-2">
             {(
               [
                 ["dhis2", "DHIS2 indicators", BarChart3],
@@ -165,7 +165,7 @@ export default function ReportsHubPage() {
                 type="button"
                 onClick={() => setTab(id)}
                 className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                  tab === id ? "bg-indigo-100 text-indigo-900" : "text-slate-600 hover:bg-slate-100"
+                  tab === id ? "bg-indigo-100 text-primary-hover" : "text-muted-foreground hover:bg-neutral-100"
                 }`}
               >
                 <Icon className="h-4 w-4" />
@@ -177,17 +177,17 @@ export default function ReportsHubPage() {
           {tab === "dhis2" && (
             <div className="space-y-4">
               <div className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-xl border border-slate-200 bg-white p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Gold encounters</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-900">{numberOrUnavailable(goldStats.gold_encounters)}</p>
+                <div className="rounded-xl border border-border bg-card p-4">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Gold encounters</p>
+                  <p className="mt-1 text-2xl font-semibold text-foreground">{numberOrUnavailable(goldStats.gold_encounters)}</p>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-white p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Gold medications</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-900">{numberOrUnavailable(goldStats.gold_medications)}</p>
+                <div className="rounded-xl border border-border bg-card p-4">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Gold medications</p>
+                  <p className="mt-1 text-2xl font-semibold text-foreground">{numberOrUnavailable(goldStats.gold_medications)}</p>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-white p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Gold labs</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-900">{numberOrUnavailable(goldStats.gold_labs)}</p>
+                <div className="rounded-xl border border-border bg-card p-4">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Gold labs</p>
+                  <p className="mt-1 text-2xl font-semibold text-foreground">{numberOrUnavailable(goldStats.gold_labs)}</p>
                 </div>
               </div>
               <TabTable
@@ -205,17 +205,17 @@ export default function ReportsHubPage() {
           {tab === "facility" && (
             <div className="space-y-4">
               <div className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-xl border border-slate-200 bg-white p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Facilities on target</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-900">Unavailable</p>
+                <div className="rounded-xl border border-border bg-card p-4">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Facilities on target</p>
+                  <p className="mt-1 text-2xl font-semibold text-foreground">Unavailable</p>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-white p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Avg. wait (OPD)</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-900">Unavailable</p>
+                <div className="rounded-xl border border-border bg-card p-4">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Avg. wait (OPD)</p>
+                  <p className="mt-1 text-2xl font-semibold text-foreground">Unavailable</p>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-white p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Stock-out alerts (7d)</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-900">Unavailable</p>
+                <div className="rounded-xl border border-border bg-card p-4">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Stock-out alerts (7d)</p>
+                  <p className="mt-1 text-2xl font-semibold text-foreground">Unavailable</p>
                 </div>
               </div>
               <TabTable
@@ -233,17 +233,17 @@ export default function ReportsHubPage() {
           {tab === "disease" && (
             <div className="space-y-4">
               <div className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-xl border border-slate-200 bg-white p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">IDSR alerts open</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-900">Unavailable</p>
+                <div className="rounded-xl border border-border bg-card p-4">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">IDSR alerts open</p>
+                  <p className="mt-1 text-2xl font-semibold text-foreground">Unavailable</p>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-white p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Signals above threshold</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-900">Unavailable</p>
+                <div className="rounded-xl border border-border bg-card p-4">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Signals above threshold</p>
+                  <p className="mt-1 text-2xl font-semibold text-foreground">Unavailable</p>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-white p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Clusters under review</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-900">Unavailable</p>
+                <div className="rounded-xl border border-border bg-card p-4">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Clusters under review</p>
+                  <p className="mt-1 text-2xl font-semibold text-foreground">Unavailable</p>
                 </div>
               </div>
               <TabTable
@@ -261,17 +261,17 @@ export default function ReportsHubPage() {
           {tab === "mortality" && (
             <div className="space-y-4">
               <div className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-xl border border-slate-200 bg-white p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">U5 deaths (MTD)</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-900">Unavailable</p>
+                <div className="rounded-xl border border-border bg-card p-4">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">U5 deaths (MTD)</p>
+                  <p className="mt-1 text-2xl font-semibold text-foreground">Unavailable</p>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-white p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Maternal deaths (YTD)</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-900">Unavailable</p>
+                <div className="rounded-xl border border-border bg-card p-4">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Maternal deaths (YTD)</p>
+                  <p className="mt-1 text-2xl font-semibold text-foreground">Unavailable</p>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-white p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Audit coverage</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-900">Unavailable</p>
+                <div className="rounded-xl border border-border bg-card p-4">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Audit coverage</p>
+                  <p className="mt-1 text-2xl font-semibold text-foreground">Unavailable</p>
                 </div>
               </div>
               <TabTable
@@ -289,17 +289,17 @@ export default function ReportsHubPage() {
           {tab === "immunization" && (
             <div className="space-y-4">
               <div className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-xl border border-slate-200 bg-white p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Full course (DTP3)</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-900">Unavailable</p>
+                <div className="rounded-xl border border-border bg-card p-4">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Full course (DTP3)</p>
+                  <p className="mt-1 text-2xl font-semibold text-foreground">Unavailable</p>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-white p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Drop-out (Penta1→3)</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-900">Unavailable</p>
+                <div className="rounded-xl border border-border bg-card p-4">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Drop-out (Penta1→3)</p>
+                  <p className="mt-1 text-2xl font-semibold text-foreground">Unavailable</p>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-white p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Zero-dose catch-up</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-900">Unavailable</p>
+                <div className="rounded-xl border border-border bg-card p-4">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Zero-dose catch-up</p>
+                  <p className="mt-1 text-2xl font-semibold text-foreground">Unavailable</p>
                 </div>
               </div>
               <TabTable
@@ -316,21 +316,21 @@ export default function ReportsHubPage() {
         </section>
 
         <section>
-          <h2 className="text-sm font-semibold text-slate-900 mb-3">Report workspaces</h2>
+          <h2 className="text-sm font-semibold text-foreground mb-3">Report workspaces</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {REPORT_CATEGORIES.map((cat) => (
               <Link
                 key={cat.href}
                 href={withPlane(cat.href)}
-                className="bg-white rounded-lg border border-gray-200 p-5 hover:border-impilo-200 hover:shadow-md transition-all group"
+                className="bg-card rounded-lg border border-border p-5 hover:border-primary/25 hover:shadow-md transition-all group"
               >
                 <div className="flex items-start gap-4">
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${cat.color}`}>
                     <cat.icon className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-medium text-gray-900 group-hover:text-impilo-600">{cat.title}</h3>
-                    <p className="text-xs text-gray-500 mt-1">{cat.description}</p>
+                    <h3 className="font-medium text-foreground group-hover:text-primary">{cat.title}</h3>
+                    <p className="text-xs text-muted-foreground mt-1">{cat.description}</p>
                   </div>
                 </div>
               </Link>

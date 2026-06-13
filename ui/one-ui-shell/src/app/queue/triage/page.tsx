@@ -49,7 +49,7 @@ const ACUITY_LEVELS = [
     level: 1,
     label: "Red",
     desc: "Resuscitation",
-    color: "border-red-400 bg-red-50 text-red-700",
+    color: "border-red-400 bg-danger-soft text-danger",
     active: "border-red-500 bg-red-100 ring-2 ring-red-300",
   },
   {
@@ -77,7 +77,7 @@ const ACUITY_LEVELS = [
     level: 5,
     label: "Blue",
     desc: "Non-urgent",
-    color: "border-impilo-400 bg-impilo-50 text-impilo-600",
+    color: "border-impilo-400 bg-primary-soft text-primary",
     active: "border-impilo-400 bg-blue-100 ring-2 ring-impilo-300",
   },
 ];
@@ -218,28 +218,28 @@ export default function TriageQueuePage() {
 
           {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : error ? (
-          <div className="rounded-3xl border border-red-200 bg-red-50 p-6 text-center">
+          <div className="rounded-3xl border border-danger/28 bg-danger-soft p-6 text-center">
             <AlertTriangle className="mx-auto mb-2 h-8 w-8 text-red-400" />
-            <p className="text-sm text-red-700">Failed to load the triage queue.</p>
+            <p className="text-sm text-danger">Failed to load the triage queue.</p>
           </div>
         ) : (
           <div className="space-y-6">
             {/* Triage Form — when assessing a patient */}
             {triagingEntry && (
-              <div className="rounded-3xl border-2 border-amber-300 bg-white p-5 shadow-sm">
+              <div className="rounded-3xl border-2 border-amber-300 bg-card p-5 shadow-sm">
                 <div className="mb-4 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Stethoscope className="w-5 h-5 text-amber-600" />
-                    <h3 className="font-medium text-gray-900">
+                    <h3 className="font-medium text-foreground">
                       Triage: {getQueuePatientName(triagingEntry)}
                     </h3>
                   </div>
                   <button
                     onClick={resetComposer}
-                    className="text-xs text-gray-500 hover:text-gray-700"
+                    className="text-xs text-muted-foreground hover:text-foreground"
                   >
                     Cancel
                   </button>
@@ -247,7 +247,7 @@ export default function TriageQueuePage() {
 
                 {/* Acuity */}
                 <div className="mb-4">
-                  <label className="block text-xs font-medium text-gray-600 mb-2">Triage Category</label>
+                  <label className="block text-xs font-medium text-muted-foreground mb-2">Triage Category</label>
                   <div className="grid grid-cols-5 gap-2">
                     {ACUITY_LEVELS.map((t) => (
                       <button
@@ -267,7 +267,7 @@ export default function TriageQueuePage() {
 
                 {/* Danger Signs */}
                 <div className="mb-4">
-                  <label className="block text-xs font-medium text-gray-600 mb-2">Danger Signs</label>
+                  <label className="block text-xs font-medium text-muted-foreground mb-2">Danger Signs</label>
                   <div className="grid grid-cols-2 gap-2">
                     {DANGER_SIGNS.map((sign) => {
                       const present = dangerSigns[sign] ?? false;
@@ -276,7 +276,7 @@ export default function TriageQueuePage() {
                           key={sign}
                           onClick={() => setDangerSigns((prev) => ({ ...prev, [sign]: !prev[sign] }))}
                           className={`flex items-center gap-2 p-2 rounded-lg text-left transition-colors text-xs ${
-                            present ? "bg-red-50 border border-red-200 text-red-700" : "bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100"
+                            present ? "bg-danger-soft border border-danger/28 text-danger" : "bg-background border border-border text-muted-foreground hover:bg-neutral-100"
                           }`}
                         >
                           {present ? <AlertTriangle className="w-3.5 h-3.5 text-red-500 shrink-0" /> : <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0" />}
@@ -289,50 +289,50 @@ export default function TriageQueuePage() {
 
                 {/* Quick Triage Vitals */}
                 <div className="mb-4">
-                  <label className="block text-xs font-medium text-gray-600 mb-2">Triage Vitals</label>
+                  <label className="block text-xs font-medium text-muted-foreground mb-2">Triage Vitals</label>
                   <div className="grid grid-cols-3 gap-2">
                     <div>
-                      <label className="block text-[10px] text-gray-500 mb-0.5">Systolic</label>
+                      <label className="block text-[10px] text-muted-foreground mb-0.5">Systolic</label>
                       <input type="number" value={vSystolic} onChange={(e) => setVSystolic(e.target.value)} placeholder="mmHg"
-                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
+                        className="w-full px-2 py-1.5 border border-border rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
                     </div>
                     <div>
-                      <label className="block text-[10px] text-gray-500 mb-0.5">Diastolic</label>
+                      <label className="block text-[10px] text-muted-foreground mb-0.5">Diastolic</label>
                       <input type="number" value={vDiastolic} onChange={(e) => setVDiastolic(e.target.value)} placeholder="mmHg"
-                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
+                        className="w-full px-2 py-1.5 border border-border rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
                     </div>
                     <div>
-                      <label className="block text-[10px] text-gray-500 mb-0.5">Heart Rate</label>
+                      <label className="block text-[10px] text-muted-foreground mb-0.5">Heart Rate</label>
                       <input type="number" value={vHR} onChange={(e) => setVHR(e.target.value)} placeholder="bpm"
-                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
+                        className="w-full px-2 py-1.5 border border-border rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
                     </div>
                     <div>
-                      <label className="block text-[10px] text-gray-500 mb-0.5">Temperature</label>
+                      <label className="block text-[10px] text-muted-foreground mb-0.5">Temperature</label>
                       <input type="number" step="0.1" value={vTemp} onChange={(e) => setVTemp(e.target.value)} placeholder="°C"
-                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
+                        className="w-full px-2 py-1.5 border border-border rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
                     </div>
                     <div>
-                      <label className="block text-[10px] text-gray-500 mb-0.5">SpO₂</label>
+                      <label className="block text-[10px] text-muted-foreground mb-0.5">SpO₂</label>
                       <input type="number" value={vSpO2} onChange={(e) => setVSpO2(e.target.value)} placeholder="%"
-                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
+                        className="w-full px-2 py-1.5 border border-border rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
                     </div>
                     <div>
-                      <label className="block text-[10px] text-gray-500 mb-0.5">Resp Rate</label>
+                      <label className="block text-[10px] text-muted-foreground mb-0.5">Resp Rate</label>
                       <input type="number" value={vRR} onChange={(e) => setVRR(e.target.value)} placeholder="/min"
-                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
+                        className="w-full px-2 py-1.5 border border-border rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
                     </div>
                   </div>
                 </div>
 
                 {/* Notes */}
                 <div className="mb-4">
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Notes</label>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">Notes</label>
                   <textarea
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     rows={2}
                     placeholder="Clinical observations..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
+                    className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
                   />
                 </div>
 
@@ -352,20 +352,20 @@ export default function TriageQueuePage() {
 
             {/* Queue List */}
             {entries.length === 0 ? (
-              <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-sm">
-                <Stethoscope className="mx-auto mb-3 h-10 w-10 text-slate-300" />
-                <p className="text-sm text-slate-500">No patients waiting for triage at this facility.</p>
+              <div className="rounded-3xl border border-border bg-card p-12 text-center shadow-sm">
+                <Stethoscope className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">No patients waiting for triage at this facility.</p>
               </div>
             ) : (
-              <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+              <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b bg-gray-50">
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Patient</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Arrival</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Wait</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Triage</th>
-                      <th className="text-right px-4 py-3 font-medium text-gray-600">Action</th>
+                    <tr className="border-b bg-background">
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Patient</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Arrival</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Wait</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Triage</th>
+                      <th className="text-right px-4 py-3 font-medium text-muted-foreground">Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -374,23 +374,23 @@ export default function TriageQueuePage() {
                       const queuedAt = getQueueQueuedAt(entry);
                       const patientName = getQueuePatientName(entry);
                       const catColor = triageCat
-                        ? QUEUE_TRIAGE_STYLES[triageCat] ?? "bg-slate-200 text-slate-700"
+                        ? QUEUE_TRIAGE_STYLES[triageCat] ?? "bg-border text-foreground"
                         : "";
 
                       return (
-                        <tr key={entry.id} className="border-b last:border-b-0 hover:bg-gray-50">
-                          <td className="px-4 py-3 font-medium text-gray-900">
+                        <tr key={entry.id} className="border-b last:border-b-0 hover:bg-background">
+                          <td className="px-4 py-3 font-medium text-foreground">
                             <div>
                               <p>{patientName}</p>
                               {getQueueReason(entry) ? (
-                                <p className="mt-1 text-xs font-normal text-slate-500">{getQueueReason(entry)}</p>
+                                <p className="mt-1 text-xs font-normal text-muted-foreground">{getQueueReason(entry)}</p>
                               ) : null}
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-gray-600 text-xs">
+                          <td className="px-4 py-3 text-muted-foreground text-xs">
                             {formatQueueDateTime(queuedAt, { hour: "2-digit", minute: "2-digit" })}
                           </td>
-                          <td className="px-4 py-3 text-gray-600">
+                          <td className="px-4 py-3 text-muted-foreground">
                             <span className="inline-flex items-center gap-1 text-xs">
                               <Clock className="w-3 h-3" />
                               {formatQueueWaitTime(queuedAt)}
@@ -402,7 +402,7 @@ export default function TriageQueuePage() {
                                 {triageCat.charAt(0)}
                               </span>
                             ) : (
-                              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+                              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-warning-foreground">
                                 Needs triage
                               </span>
                             )}
@@ -429,7 +429,7 @@ export default function TriageQueuePage() {
                                     type="button"
                                     onClick={() => handleStartHandoff(entry)}
                                     disabled={callPatient.isPending}
-                                    className="rounded-xl bg-impilo-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-impilo-600 disabled:opacity-50"
+                                    className="rounded-xl bg-primary px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-50"
                                   >
                                     {COORDINATION_COPY.startEncounterHandoff}
                                   </button>

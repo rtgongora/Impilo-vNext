@@ -36,7 +36,7 @@ function useRoles() {
 
 const STATUS_STYLES: Record<string, string> = {
   ACTIVE: "bg-green-100 text-green-700",
-  INACTIVE: "bg-gray-100 text-gray-600",
+  INACTIVE: "bg-neutral-100 text-muted-foreground",
   DEPRECATED: "bg-yellow-100 text-yellow-700",
 };
 
@@ -55,7 +55,7 @@ export default function RolesPage() {
         <div className="mb-4">
           <Link
             href="/admin"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to administration
@@ -63,12 +63,12 @@ export default function RolesPage() {
         </div>
 
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-sm font-medium text-gray-700">
+          <h2 className="text-sm font-medium text-foreground">
             {roles.length > 0 ? `${roles.length} role(s)` : ""}
           </h2>
           <button
             onClick={() => setShowCreate(!showCreate)}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-impilo-500 rounded-lg hover:bg-impilo-600 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-hover transition-colors"
           >
             <Plus className="w-4 h-4" />
             Create Role
@@ -76,8 +76,8 @@ export default function RolesPage() {
         </div>
 
         {showCreate && (
-          <div className="mb-4 bg-white rounded-lg border border-impilo-200 p-4">
-            <h3 className="text-sm font-medium text-gray-900 mb-3">Create New Role</h3>
+          <div className="mb-4 bg-card rounded-lg border border-primary/25 p-4">
+            <h3 className="text-sm font-medium text-foreground mb-3">Create New Role</h3>
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -94,24 +94,24 @@ export default function RolesPage() {
                 name="name"
                 placeholder="Role name"
                 required
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                className="px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
               />
               <input
                 name="description"
                 placeholder="Description"
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                className="px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
               />
               <div className="flex gap-2">
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-impilo-500 rounded-lg hover:bg-impilo-600 transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-hover transition-colors"
                 >
                   Create
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowCreate(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-foreground bg-neutral-100 rounded-lg hover:bg-neutral-100 transition-colors"
                 >
                   Cancel
                 </button>
@@ -121,45 +121,45 @@ export default function RolesPage() {
         )}
 
         {error ? (
-          <div className="bg-white rounded-lg border border-red-200 p-12 text-center">
+          <div className="bg-card rounded-lg border border-danger/28 p-12 text-center">
             <AlertCircle className="w-10 h-10 text-red-300 mx-auto mb-3" />
             <p className="text-red-600 text-sm">Failed to load roles</p>
           </div>
         ) : isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading roles...</span>
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading roles...</span>
           </div>
         ) : roles.length === 0 ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <Shield className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-400 text-sm">No roles configured</p>
+          <div className="bg-card rounded-lg border border-border p-12 text-center">
+            <Shield className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground text-sm">No roles configured</p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="bg-card rounded-lg border border-border overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-gray-50">
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Name</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Description</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Permissions</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
+                <tr className="border-b bg-background">
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Name</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Description</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Permissions</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {roles.map((role) => {
                   const statusStyle =
-                    STATUS_STYLES[role.attributes.status] ?? "bg-gray-100 text-gray-600";
+                    STATUS_STYLES[role.attributes.status] ?? "bg-neutral-100 text-muted-foreground";
                   return (
-                    <tr key={role.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3 font-medium text-gray-900">
+                    <tr key={role.id} className="hover:bg-background transition-colors">
+                      <td className="px-4 py-3 font-medium text-foreground">
                         {role.attributes.name}
                       </td>
-                      <td className="px-4 py-3 text-gray-600">
+                      <td className="px-4 py-3 text-muted-foreground">
                         {role.attributes.description}
                       </td>
-                      <td className="px-4 py-3 text-gray-600">
-                        <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-impilo-100 text-impilo-600">
+                      <td className="px-4 py-3 text-muted-foreground">
+                        <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-primary-soft text-primary">
                           {role.attributes.permissionCount} permissions
                         </span>
                       </td>

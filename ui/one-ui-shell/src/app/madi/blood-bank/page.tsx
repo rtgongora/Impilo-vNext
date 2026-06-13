@@ -54,30 +54,30 @@ export default function BloodBankHubPage() {
     <AppLayout>
       <PageShell title="Local Blood Bank" subtitle="Facility blood bank workspace" icon={<Building2 className="h-6 w-6" />}>
         {!facility?.id && (
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 mb-4">
+          <div className="rounded-xl border border-warning/35 bg-warning-soft p-4 text-sm text-warning-foreground mb-4">
             Select a facility work context to manage the blood bank.
           </div>
         )}
 
-        <div className="rounded-2xl border border-gray-200 bg-white p-5 mb-6 space-y-3">
-          <p className="text-sm text-gray-600">Set the blood bank UUID for this facility session.</p>
+        <div className="rounded-2xl border border-border bg-card p-5 mb-6 space-y-3">
+          <p className="text-sm text-muted-foreground">Set the blood bank UUID for this facility session.</p>
           <div className="flex flex-wrap gap-2">
             <input
               value={bloodBankId}
               onChange={(e) => setBloodBankId(e.target.value)}
               placeholder="Blood bank UUID"
-              className="flex-1 min-w-[240px] rounded-xl border border-gray-300 px-3 py-2 text-sm font-mono"
+              className="flex-1 min-w-[240px] rounded-xl border border-border px-3 py-2 text-sm font-mono"
             />
-            <button type="button" onClick={saveId} className="rounded-xl bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-900">
+            <button type="button" onClick={saveId} className="rounded-xl bg-primary-hover px-4 py-2 text-sm font-medium text-white hover:bg-neutral-900">
               Save for session
             </button>
           </div>
         </div>
 
         {!bloodBankId && facility?.id && (
-          <form onSubmit={handleRegister} className="rounded-2xl border border-dashed border-gray-300 p-6 mb-6 space-y-3">
-            <h3 className="font-medium text-gray-900">Register a new blood bank</h3>
-            <input required value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="Bank name" className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" />
+          <form onSubmit={handleRegister} className="rounded-2xl border border-dashed border-border p-6 mb-6 space-y-3">
+            <h3 className="font-medium text-foreground">Register a new blood bank</h3>
+            <input required value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="Bank name" className="w-full rounded-xl border border-border px-3 py-2 text-sm" />
             <button type="submit" disabled={register.isPending} className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">
               {register.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               Register bank
@@ -90,7 +90,7 @@ export default function BloodBankHubPage() {
             <Link
               key={href}
               href={href}
-              className={`rounded-xl border p-4 text-sm font-medium transition-colors ${bloodBankId ? "border-gray-200 bg-white hover:border-rose-300 text-gray-900" : "border-gray-100 bg-gray-50 text-gray-400 pointer-events-none"}`}
+              className={`rounded-xl border p-4 text-sm font-medium transition-colors ${bloodBankId ? "border-border bg-card hover:border-rose-300 text-foreground" : "border-border bg-background text-muted-foreground pointer-events-none"}`}
             >
               {label}
             </Link>
@@ -98,7 +98,7 @@ export default function BloodBankHubPage() {
         </div>
 
         {!bloodBankId && (
-          <p className="mt-4 text-xs text-gray-500">Save or register a blood bank ID to unlock sub-workspaces.</p>
+          <p className="mt-4 text-xs text-muted-foreground">Save or register a blood bank ID to unlock sub-workspaces.</p>
         )}
       </PageShell>
     </AppLayout>

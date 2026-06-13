@@ -15,7 +15,7 @@ export function DiscoverFacilitiesMapPanel() {
     <div className="space-y-4" data-testid="discover-facilities-map-panel">
       <div className="grid gap-4 lg:grid-cols-2">
         <div>
-          <p className="mb-2 text-xs font-medium text-slate-700">Search near a location</p>
+          <p className="mb-2 text-xs font-medium text-foreground">Search near a location</p>
           <NdilaAddressSearchBox
             country="ZWE"
             purposeOfUse="CITIZEN_DISCOVERY"
@@ -31,7 +31,7 @@ export function DiscoverFacilitiesMapPanel() {
           </div>
         </div>
         <div>
-          <label className="mb-2 block text-xs font-medium text-slate-700" htmlFor="discover-facility-search">
+          <label className="mb-2 block text-xs font-medium text-foreground" htmlFor="discover-facility-search">
             Filter Tuso registry facilities
           </label>
           <input
@@ -39,7 +39,7 @@ export function DiscoverFacilitiesMapPanel() {
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Facility name or type…"
-            className="mb-3 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            className="mb-3 w-full rounded-lg border border-border px-3 py-2 text-sm"
           />
           <FacilitiesGeoMapPanel
             title="Registered facilities"

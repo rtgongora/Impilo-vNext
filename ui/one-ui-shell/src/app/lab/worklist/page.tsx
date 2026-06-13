@@ -101,13 +101,13 @@ export default function LabWorklistPage() {
       label: "Pending Collection",
       value: String(summary?.pending_collection ?? 0),
       Icon: Clock,
-      color: "bg-amber-50 text-amber-600",
+      color: "bg-warning-soft text-amber-600",
     },
     {
       label: "In Progress",
       value: String(summary?.in_progress ?? 0),
       Icon: ListChecks,
-      color: "bg-impilo-50 text-impilo-500",
+      color: "bg-primary-soft text-primary",
     },
     {
       label: "Completed",
@@ -119,7 +119,7 @@ export default function LabWorklistPage() {
       label: "Urgent",
       value: String(summary?.urgent ?? 0),
       Icon: AlertCircle,
-      color: "bg-red-50 text-red-600",
+      color: "bg-danger-soft text-red-600",
     },
   ];
 
@@ -162,7 +162,7 @@ export default function LabWorklistPage() {
         </div>
 
         {!facility?.id ? (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
+          <div className="rounded-lg border border-warning/35 bg-warning-soft p-6 text-sm text-warning-foreground">
             Select a facility to load the lab worklist for this shift.
           </div>
         ) : null}
@@ -177,7 +177,7 @@ export default function LabWorklistPage() {
                 className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                   orderType === type
                     ? "bg-violet-600 text-white"
-                    : "border border-gray-300 text-gray-700 hover:bg-gray-50"
+                    : "border border-border text-foreground hover:bg-background"
                 }`}
               >
                 {type === "LAB"
@@ -192,33 +192,33 @@ export default function LabWorklistPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {summaryCards.map(({ label, value, Icon, color }) => (
-              <div key={label} className="rounded-lg border border-gray-200 bg-white p-4">
+              <div key={label} className="rounded-lg border border-border bg-card p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-500">{label}</span>
+                  <span className="text-sm text-muted-foreground">{label}</span>
                   <div className={`rounded-lg p-1.5 ${color.split(" ")[0]}`}>
                     <Icon className={`h-4 w-4 ${color.split(" ")[1]}`} />
                   </div>
                 </div>
-                <p className="text-2xl font-bold text-gray-900">{value}</p>
+                <p className="text-2xl font-bold text-foreground">{value}</p>
               </div>
             ))}
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by patient CPID, order ID, or notes..."
-                className="w-full rounded-lg border border-gray-300 py-2.5 pl-10 pr-4 text-sm focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                className="w-full rounded-lg border border-border py-2.5 pl-10 pr-4 text-sm focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
               />
             </div>
             <button
               type="button"
               onClick={() => setShowFilters((v) => !v)}
-              className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-background transition-colors"
             >
               <Filter className="h-4 w-4" />
               Filters
@@ -226,13 +226,13 @@ export default function LabWorklistPage() {
           </div>
 
           {showFilters ? (
-            <div className="flex flex-wrap gap-3 rounded-lg border border-gray-200 bg-white p-4">
-              <label className="text-sm text-gray-600">
+            <div className="flex flex-wrap gap-3 rounded-lg border border-border bg-card p-4">
+              <label className="text-sm text-muted-foreground">
                 Status
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="mt-1 block rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  className="mt-1 block rounded-lg border border-border px-3 py-2 text-sm"
                 >
                   {STATUS_FILTERS.map((opt) => (
                     <option key={opt.value || "all"} value={opt.value}>
@@ -241,12 +241,12 @@ export default function LabWorklistPage() {
                   ))}
                 </select>
               </label>
-              <label className="text-sm text-gray-600">
+              <label className="text-sm text-muted-foreground">
                 Priority
                 <select
                   value={priorityFilter}
                   onChange={(e) => setPriorityFilter(e.target.value)}
-                  className="mt-1 block rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  className="mt-1 block rounded-lg border border-border px-3 py-2 text-sm"
                 >
                   {PRIORITY_FILTERS.map((opt) => (
                     <option key={opt.value || "all"} value={opt.value}>
@@ -265,25 +265,25 @@ export default function LabWorklistPage() {
           ) : null}
 
           {worklistQ.isLoading ? (
-            <div className="flex items-center justify-center gap-2 py-16 text-sm text-gray-500">
+            <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin" />
               Loading lab worklist…
             </div>
           ) : worklistQ.isError ? (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-sm text-red-800">
+            <div className="rounded-lg border border-danger/28 bg-danger-soft p-6 text-sm text-red-800">
               Unable to load the lab worklist. Confirm OROS is running and the BFF proxy is configured.
             </div>
           ) : items.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-12 text-center">
-              <ListChecks className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-4 text-sm font-semibold text-gray-900">Worklist empty</h3>
-              <p className="mt-2 text-sm text-gray-600">
+            <div className="rounded-lg border border-dashed border-border bg-background p-12 text-center">
+              <ListChecks className="mx-auto h-12 w-12 text-muted-foreground" />
+              <h3 className="mt-4 text-sm font-semibold text-foreground">Worklist empty</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
                 No lab orders match the current filters. New orders appear here as clinicians place them.
               </p>
             </div>
           ) : (
-            <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-              <div className="border-b border-gray-200 px-4 py-3 grid grid-cols-7 gap-3 text-xs font-semibold text-gray-500 uppercase">
+            <div className="rounded-lg border border-border bg-card overflow-hidden">
+              <div className="border-b border-border px-4 py-3 grid grid-cols-7 gap-3 text-xs font-semibold text-muted-foreground uppercase">
                 <span>Order</span>
                 <span>Patient CPID</span>
                 <span>Priority</span>
@@ -298,12 +298,12 @@ export default function LabWorklistPage() {
                   const canAct = ["PLACED", "SCHEDULED"].includes(String(item.status ?? "").toUpperCase());
                   return (
                     <li key={id} className="px-4 py-3 grid grid-cols-7 gap-3 text-sm items-center">
-                      <span className="font-medium text-gray-900">{id || "—"}</span>
-                      <span className="text-gray-700">{item.patientCpid ?? "—"}</span>
-                      <span className="text-gray-700">{item.priority ?? "—"}</span>
-                      <span className="text-gray-700">{item.status ?? "—"}</span>
-                      <span className="text-gray-500 text-xs">{item.placedAt ?? "—"}</span>
-                      <span className="text-gray-600 text-xs truncate">{item.clinicalNotes ?? "—"}</span>
+                      <span className="font-medium text-foreground">{id || "—"}</span>
+                      <span className="text-foreground">{item.patientCpid ?? "—"}</span>
+                      <span className="text-foreground">{item.priority ?? "—"}</span>
+                      <span className="text-foreground">{item.status ?? "—"}</span>
+                      <span className="text-muted-foreground text-xs">{item.placedAt ?? "—"}</span>
+                      <span className="text-muted-foreground text-xs truncate">{item.clinicalNotes ?? "—"}</span>
                       <div className="flex flex-wrap gap-2">
                         {canAct ? (
                           <>
@@ -323,14 +323,14 @@ export default function LabWorklistPage() {
                                 setRejectReason("");
                                 setActionError(null);
                               }}
-                              className="inline-flex items-center gap-1 rounded-md border border-red-200 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
+                              className="inline-flex items-center gap-1 rounded-md border border-danger/28 px-2 py-1 text-xs font-medium text-danger hover:bg-danger-soft"
                             >
                               <X className="h-3 w-3" />
                               Reject
                             </button>
                           </>
                         ) : (
-                          <span className="text-xs text-gray-400">No actions</span>
+                          <span className="text-xs text-muted-foreground">No actions</span>
                         )}
                       </div>
                       {rejectingId === id ? (
@@ -340,7 +340,7 @@ export default function LabWorklistPage() {
                             value={rejectReason}
                             onChange={(e) => setRejectReason(e.target.value)}
                             placeholder="Rejection reason"
-                            className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                            className="flex-1 rounded-lg border border-border px-3 py-2 text-sm"
                           />
                           <button
                             type="button"
@@ -353,7 +353,7 @@ export default function LabWorklistPage() {
                           <button
                             type="button"
                             onClick={() => setRejectingId(null)}
-                            className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                            className="rounded-lg border border-border px-3 py-2 text-sm text-foreground hover:bg-background"
                           >
                             Cancel
                           </button>

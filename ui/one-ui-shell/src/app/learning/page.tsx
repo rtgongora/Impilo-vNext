@@ -39,12 +39,12 @@ export default function LearningHubPage() {
             <Link
               key={card.label}
               href={card.href}
-              className={`rounded-lg border bg-white p-4 transition hover:border-teal-300 ${
-                card.focusKey && focus === card.focusKey ? "border-teal-400 ring-2 ring-teal-100" : "border-gray-200"
+              className={`rounded-lg border bg-card p-4 transition hover:border-teal-300 ${
+                card.focusKey && focus === card.focusKey ? "border-teal-400 ring-2 ring-teal-100" : "border-border"
               }`}
             >
-              <p className="text-sm text-gray-500">{card.label}</p>
-              <p className="mt-1 text-xl font-semibold text-gray-900">{isLoading ? "…" : card.value}</p>
+              <p className="text-sm text-muted-foreground">{card.label}</p>
+              <p className="mt-1 text-xl font-semibold text-foreground">{isLoading ? "…" : card.value}</p>
             </Link>
           ))}
         </div>
@@ -64,7 +64,7 @@ export default function LearningHubPage() {
             ["/learning/library", "Library"],
             ["/learning/notifications", "Notifications"],
           ].map(([href, label]) => (
-            <Link key={href} href={href} className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700">
+            <Link key={href} href={href} className="rounded border border-border px-3 py-1.5 text-sm text-foreground">
               {label}
             </Link>
           ))}

@@ -157,10 +157,10 @@ export default function WellnessHealthConnectPage() {
         subtitle="Typed changesets → wellness_activities / vitals (idempotent by record id)"
         icon={<Link2 className="h-6 w-6" />}
       >
-        <p className="text-sm text-gray-600 mb-4">
-          This surface aligns with Android Health Connect–style batches: stable <code className="text-xs bg-gray-100 px-1 rounded">records[].id</code>,
+        <p className="text-sm text-muted-foreground mb-4">
+          This surface aligns with Android Health Connect–style batches: stable <code className="text-xs bg-neutral-100 px-1 rounded">records[].id</code>,
           ISO times, and types <strong>Steps</strong>, <strong>Hydration</strong>, <strong>SleepSession</strong>, <strong>HeartRate</strong>. See BFF{" "}
-          <code className="text-xs bg-gray-100 px-1 rounded">GET /internal/v1/wellness/connect/v1/manifest</code>.
+          <code className="text-xs bg-neutral-100 px-1 rounded">GET /internal/v1/wellness/connect/v1/manifest</code>.
         </p>
 
         <div className="flex flex-wrap gap-2 mb-6">
@@ -168,7 +168,7 @@ export default function WellnessHealthConnectPage() {
             type="button"
             onClick={loadManifest}
             disabled={loadingManifest}
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50"
+            className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium hover:bg-background"
           >
             {loadingManifest ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             Load manifest
@@ -177,7 +177,7 @@ export default function WellnessHealthConnectPage() {
             type="button"
             onClick={connectAndroidHealthConnect}
             disabled={!patientId}
-            className="inline-flex items-center gap-2 rounded-lg border border-impilo-300 bg-white px-4 py-2 text-sm font-medium hover:bg-impilo-50 disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-lg border border-impilo-300 bg-card px-4 py-2 text-sm font-medium hover:bg-primary-soft disabled:opacity-50"
           >
             Connect source
           </button>
@@ -185,7 +185,7 @@ export default function WellnessHealthConnectPage() {
             type="button"
             onClick={loadSources}
             disabled={loadingSources || !patientId}
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium hover:bg-background disabled:opacity-50"
           >
             {loadingSources ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             Refresh sources
@@ -194,7 +194,7 @@ export default function WellnessHealthConnectPage() {
             type="button"
             onClick={submit}
             disabled={posting || !patientId}
-            className="inline-flex items-center gap-2 rounded-lg bg-impilo-500 text-white px-4 py-2 text-sm font-medium hover:bg-impilo-600 disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary text-white px-4 py-2 text-sm font-medium hover:bg-primary-hover disabled:opacity-50"
           >
             {posting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
             POST changeset
@@ -202,36 +202,36 @@ export default function WellnessHealthConnectPage() {
         </div>
 
         {!patientId && (
-          <p className="flex items-center gap-2 text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-sm mb-4">
+          <p className="flex items-center gap-2 text-warning-foreground bg-warning-soft border border-warning/35 rounded-lg px-3 py-2 text-sm mb-4">
             <AlertCircle className="h-4 w-4 shrink-0" /> Sign in to set patientId automatically.
           </p>
         )}
 
         {manifest && (
           <div className="mb-6">
-            <h3 className="text-sm font-semibold text-gray-800 mb-2">Manifest</h3>
-            <pre className="text-xs bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto max-h-48">{manifest}</pre>
+            <h3 className="text-sm font-semibold text-foreground mb-2">Manifest</h3>
+            <pre className="text-xs bg-neutral-900 text-gray-100 p-4 rounded-lg overflow-x-auto max-h-48">{manifest}</pre>
           </div>
         )}
 
         <div className="mb-6">
-          <h3 className="text-sm font-semibold text-gray-800 mb-2">Connected sources & permissions</h3>
-          <div className="rounded-lg border border-gray-200 divide-y bg-white">
+          <h3 className="text-sm font-semibold text-foreground mb-2">Connected sources & permissions</h3>
+          <div className="rounded-lg border border-border divide-y bg-card">
             {sources.length === 0 ? (
-              <p className="px-3 py-2 text-sm text-gray-500">No connected sources yet.</p>
+              <p className="px-3 py-2 text-sm text-muted-foreground">No connected sources yet.</p>
             ) : (
               sources.map((source) => (
                 <div key={source.id} className="px-3 py-2 flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-sm font-medium text-gray-800">{source.source_name}</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-sm font-medium text-foreground">{source.source_name}</p>
+                    <p className="text-xs text-muted-foreground">
                       {source.source_type} · {source.status} · consent {source.consent_status}
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => void toggleProviderSharing(source)}
-                    className="rounded-md border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50"
+                    className="rounded-md border border-border px-2 py-1 text-xs hover:bg-background"
                   >
                     {source.provider_access_allowed ? "Revoke provider sharing" : "Allow provider sharing"}
                   </button>
@@ -243,24 +243,24 @@ export default function WellnessHealthConnectPage() {
 
         {summary && (
           <div className="mb-6">
-            <h3 className="text-sm font-semibold text-gray-800 mb-2">Wellness summary</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-2">Wellness summary</h3>
             <JsonApiDataTable data={summary} columns={WELLNESS_CONNECT_COLUMNS} emptyTitle="No wellness summary" />
           </div>
         )}
 
         <div>
-          <h3 className="text-sm font-semibold text-gray-800 mb-2">Changeset JSON</h3>
+          <h3 className="text-sm font-semibold text-foreground mb-2">Changeset JSON</h3>
           <textarea
             value={jsonText}
             onChange={(e) => setJsonText(e.target.value)}
             rows={16}
-            className="w-full font-mono text-xs border border-gray-300 rounded-lg p-3 bg-white"
+            className="w-full font-mono text-xs border border-border rounded-lg p-3 bg-card"
             spellCheck={false}
           />
         </div>
 
         {result && (
-          <p className="mt-4 text-sm text-gray-800 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 font-mono">{result}</p>
+          <p className="mt-4 text-sm text-foreground bg-background border border-border rounded-lg px-3 py-2 font-mono">{result}</p>
         )}
       </PageShell>
     </AppLayout>

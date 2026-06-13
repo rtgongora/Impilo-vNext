@@ -14,12 +14,12 @@ import { useAuthStore } from "@/hooks/useAuthStore";
 import { useCreateGoal, useWellnessGoals } from "@/hooks/queries/useSimba";
 
 const GOAL_TEMPLATES = [
-  { title: "Steps & Movement", description: "Daily step count and active minutes targets", color: "bg-impilo-50 border-impilo-200" },
+  { title: "Steps & Movement", description: "Daily step count and active minutes targets", color: "bg-primary-soft border-primary/25" },
   { title: "Weight Management", description: "Set a target weight and track progress over time", color: "bg-green-50 border-green-200" },
   { title: "Nutrition", description: "Daily calorie, water intake, or macronutrient goals", color: "bg-orange-50 border-orange-200" },
-  { title: "Sleep Quality", description: "Target sleep duration and consistency goals", color: "bg-indigo-50 border-indigo-200" },
-  { title: "Blood Pressure", description: "Maintain blood pressure within target range", color: "bg-red-50 border-red-200" },
-  { title: "Blood Glucose", description: "Keep blood sugar within healthy levels", color: "bg-amber-50 border-amber-200" },
+  { title: "Sleep Quality", description: "Target sleep duration and consistency goals", color: "bg-info-soft border-info/25" },
+  { title: "Blood Pressure", description: "Maintain blood pressure within target range", color: "bg-danger-soft border-danger/28" },
+  { title: "Blood Glucose", description: "Keep blood sugar within healthy levels", color: "bg-warning-soft border-warning/35" },
 ];
 
 export default function WellnessGoalsPage() {
@@ -73,22 +73,22 @@ export default function WellnessGoalsPage() {
 
           {/* Active goals - empty state */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">Active Goals</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-3">Active Goals</h3>
             {goalsQ.isLoading ? (
-              <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-8 text-center">
-                <p className="text-sm text-gray-600">Loading goals...</p>
+              <div className="rounded-lg border border-dashed border-border bg-background p-8 text-center">
+                <p className="text-sm text-muted-foreground">Loading goals...</p>
               </div>
             ) : goals.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-8 text-center">
-                <Target className="mx-auto h-10 w-10 text-gray-400" />
-                <p className="mt-3 text-sm text-gray-600">No active goals. Choose a template below to get started.</p>
+              <div className="rounded-lg border border-dashed border-border bg-background p-8 text-center">
+                <Target className="mx-auto h-10 w-10 text-muted-foreground" />
+                <p className="mt-3 text-sm text-muted-foreground">No active goals. Choose a template below to get started.</p>
               </div>
             ) : (
               <div className="space-y-2">
                 {goals.map((goal, idx) => (
-                  <div key={idx} className="rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm">
-                    <p className="font-medium text-gray-900">{String(goal.goalType ?? goal.goal_type ?? "Goal")}</p>
-                    <p className="text-gray-600">
+                  <div key={idx} className="rounded-lg border border-border bg-card px-4 py-3 text-sm">
+                    <p className="font-medium text-foreground">{String(goal.goalType ?? goal.goal_type ?? "Goal")}</p>
+                    <p className="text-muted-foreground">
                       Current: {String(goal.currentValue ?? goal.current_value ?? 0)} / Target:{" "}
                       {String(goal.targetValue ?? goal.target_value ?? 0)} {String(goal.unit ?? "")}
                     </p>
@@ -100,7 +100,7 @@ export default function WellnessGoalsPage() {
 
           {/* Goal templates */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">Goal Templates</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-3">Goal Templates</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {GOAL_TEMPLATES.map(({ title, description, color }) => (
                 <div
@@ -112,8 +112,8 @@ export default function WellnessGoalsPage() {
                   }}
                   className={`rounded-xl border p-5 hover:shadow-md transition-all cursor-pointer ${selectedTemplate?.title === title ? "ring-2 ring-green-500" : ""} ${color}`}
                 >
-                  <h4 className="font-semibold text-gray-900 mb-1">{title}</h4>
-                  <p className="text-sm text-gray-600">{description}</p>
+                  <h4 className="font-semibold text-foreground mb-1">{title}</h4>
+                  <p className="text-sm text-muted-foreground">{description}</p>
                 </div>
               ))}
             </div>

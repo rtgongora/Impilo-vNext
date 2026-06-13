@@ -50,22 +50,22 @@ export default function NewCoursePage() {
   return (
     <AppLayout>
       <PageShell title="New course" subtitle="Basic native course authoring form.">
-        <div className="max-w-xl space-y-2 rounded border border-gray-200 bg-white p-4">
-          <input className="w-full rounded border border-gray-300 px-2 py-1 text-sm" placeholder="Course code" value={code} onChange={(e) => setCode(e.target.value)} />
-          <input className="w-full rounded border border-gray-300 px-2 py-1 text-sm" placeholder="Course title" value={title} onChange={(e) => setTitle(e.target.value)} />
-          <textarea className="w-full rounded border border-gray-300 px-2 py-1 text-sm" placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} />
+        <div className="max-w-xl space-y-2 rounded border border-border bg-card p-4">
+          <input className="w-full rounded border border-border px-2 py-1 text-sm" placeholder="Course code" value={code} onChange={(e) => setCode(e.target.value)} />
+          <input className="w-full rounded border border-border px-2 py-1 text-sm" placeholder="Course title" value={title} onChange={(e) => setTitle(e.target.value)} />
+          <textarea className="w-full rounded border border-border px-2 py-1 text-sm" placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} />
           <div className="grid grid-cols-3 gap-2">
-            <input className="rounded border border-gray-300 px-2 py-1 text-sm" placeholder="Category" value={category} onChange={(e) => setCategory(e.target.value)} />
-            <input className="rounded border border-gray-300 px-2 py-1 text-sm" placeholder="Level" value={level} onChange={(e) => setLevel(e.target.value)} />
-            <select className="rounded border border-gray-300 px-2 py-1 text-sm" value={status} onChange={(e) => setStatus(e.target.value)}>
+            <input className="rounded border border-border px-2 py-1 text-sm" placeholder="Category" value={category} onChange={(e) => setCategory(e.target.value)} />
+            <input className="rounded border border-border px-2 py-1 text-sm" placeholder="Level" value={level} onChange={(e) => setLevel(e.target.value)} />
+            <select className="rounded border border-border px-2 py-1 text-sm" value={status} onChange={(e) => setStatus(e.target.value)}>
               <option value="DRAFT">DRAFT</option>
               <option value="PUBLISHED">PUBLISHED</option>
               <option value="ARCHIVED">ARCHIVED</option>
             </select>
           </div>
-          <button onClick={save} disabled={isSaving} className="rounded bg-teal-700 px-3 py-1.5 text-sm text-white disabled:opacity-50">Create course</button>
-          {error ? <p className="text-xs text-rose-700">{error}</p> : null}
-          {saved ? <p className="text-xs text-emerald-700">Created: {saved}</p> : null}
+          <button onClick={save} disabled={isSaving} className="rounded bg-primary px-3 py-1.5 text-sm text-white disabled:opacity-50">Create course</button>
+          {error ? <p className="text-xs text-danger">{error}</p> : null}
+          {saved ? <p className="text-xs text-primary-hover">Created: {saved}</p> : null}
           {saved ? (
             <Link className="text-xs text-teal-700 hover:underline" href={`/learning/admin/courses/${saved}/edit`}>
               Continue to modules and lessons

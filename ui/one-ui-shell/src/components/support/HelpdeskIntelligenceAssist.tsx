@@ -21,9 +21,9 @@ export function HelpdeskIntelligenceAssist() {
     <section className="rounded-lg border border-teal-100 bg-teal-50/40 p-4">
       <div className="flex items-center gap-2 mb-2">
         <Sparkles className="h-5 w-5 text-teal-600" />
-        <h2 className="text-sm font-semibold text-gray-900">Helpdesk intelligence</h2>
+        <h2 className="text-sm font-semibold text-foreground">Helpdesk intelligence</h2>
       </div>
-      <p className="text-xs text-gray-600 mb-3">
+      <p className="text-xs text-muted-foreground mb-3">
         Grounded knowledge, learning-service routes when configured, and optional DAGS queue insight. Review matches
         before acting — this is decision support, not authorization.
       </p>
@@ -32,19 +32,19 @@ export function HelpdeskIntelligenceAssist() {
         onChange={(e) => setIssue(e.target.value)}
         rows={3}
         placeholder="Describe the issue (symptoms, error text, user role)…"
-        className="w-full rounded-lg border border-teal-200 bg-white px-3 py-2 text-sm mb-2"
+        className="w-full rounded-lg border border-teal-200 bg-card px-3 py-2 text-sm mb-2"
       />
       <div className="mb-2 flex flex-wrap gap-3 text-xs">
-        <label className="flex flex-col gap-0.5 text-gray-700">
-          <span className="text-gray-500">Issue type (learning plane)</span>
+        <label className="flex flex-col gap-0.5 text-foreground">
+          <span className="text-muted-foreground">Issue type (learning plane)</span>
           <input
             value={issueType}
             onChange={(e) => setIssueType(e.target.value)}
-            className="rounded border border-teal-200 bg-white px-2 py-1 text-xs w-40"
+            className="rounded border border-teal-200 bg-card px-2 py-1 text-xs w-40"
             placeholder="GENERAL"
           />
         </label>
-        <label className="flex items-center gap-2 self-end pb-1 text-gray-700">
+        <label className="flex items-center gap-2 self-end pb-1 text-foreground">
           <input type="checkbox" checked={attachDags} onChange={(e) => setAttachDags(e.target.checked)} />
           Include DAGS pending count
         </label>
@@ -64,7 +64,7 @@ export function HelpdeskIntelligenceAssist() {
             });
             setPack(data);
           }}
-          className="rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-700 disabled:opacity-50"
+          className="rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-primary disabled:opacity-50"
         >
           {loading ? "Analyzing…" : "Suggest KB & learning routes"}
         </button>
@@ -76,7 +76,7 @@ export function HelpdeskIntelligenceAssist() {
         </Link>
       </div>
       {pack ? (
-        <div className="mt-3 rounded border border-teal-100 bg-white/80 p-2">
+        <div className="mt-3 rounded border border-teal-100 bg-card/80 p-2">
           <IntelligenceResultPanel data={pack} />
         </div>
       ) : null}

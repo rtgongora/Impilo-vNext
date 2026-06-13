@@ -21,11 +21,11 @@ import {
 
 function statusBadge(status: string): string {
   const u = status.toUpperCase();
-  if (u.includes("DRAFT") || u.includes("PLAN")) return "bg-slate-100 text-slate-800";
-  if (u.includes("ACTIVE") || u.includes("RUN")) return "bg-emerald-100 text-emerald-900";
-  if (u.includes("COMPLET") || u.includes("CLOSE")) return "bg-indigo-100 text-indigo-900";
+  if (u.includes("DRAFT") || u.includes("PLAN")) return "bg-neutral-100 text-foreground";
+  if (u.includes("ACTIVE") || u.includes("RUN")) return "bg-emerald-100 text-primary-hover";
+  if (u.includes("COMPLET") || u.includes("CLOSE")) return "bg-indigo-100 text-primary-hover";
   if (u.includes("CANCEL")) return "bg-rose-100 text-rose-800";
-  return "bg-amber-50 text-amber-900";
+  return "bg-warning-soft text-warning-foreground";
 }
 
 function coveragePct(c: PublicHealthCampaign): string {
@@ -56,7 +56,7 @@ export default function PublicHealthCampaignsPage() {
         ? String((err as { error?: { message?: string } }).error?.message ?? "Request failed")
         : "Request failed";
     return (
-      <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 flex items-center gap-2">
+      <div className="rounded-lg border border-danger/28 bg-danger-soft px-3 py-2 text-sm text-red-800 flex items-center gap-2">
         <AlertTriangle className="h-4 w-4 shrink-0" />
         {msg}
       </div>
@@ -77,11 +77,11 @@ export default function PublicHealthCampaignsPage() {
         </div>
 
         <div className="space-y-6">
-          <div className="flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-4">
-            <label className="text-xs font-medium text-slate-600">
+          <div className="flex flex-wrap items-end gap-3 rounded-xl border border-border bg-card p-4">
+            <label className="text-xs font-medium text-muted-foreground">
               Status filter
               <select
-                className="mt-1 block rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                className="mt-1 block rounded-md border border-border px-2 py-1.5 text-sm"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
               >
@@ -93,38 +93,38 @@ export default function PublicHealthCampaignsPage() {
             </label>
           </div>
 
-          <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-3">
-            <h2 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-              <Megaphone className="h-4 w-4 text-slate-500" />
+          <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+            <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <Megaphone className="h-4 w-4 text-muted-foreground" />
               Create campaign
             </h2>
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
               <input
-                className="rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                className="rounded-md border border-border px-2 py-1.5 text-sm"
                 placeholder="Campaign name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
               <input
-                className="rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                className="rounded-md border border-border px-2 py-1.5 text-sm"
                 placeholder="Description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
               />
               <input
-                className="rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                className="rounded-md border border-border px-2 py-1.5 text-sm"
                 placeholder="Type (e.g. OUTREACH, EPI)"
                 value={campaignType}
                 onChange={(e) => setCampaignType(e.target.value)}
               />
               <input
-                className="rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                className="rounded-md border border-border px-2 py-1.5 text-sm"
                 placeholder="Target population (number)"
                 value={targetPopulation}
                 onChange={(e) => setTargetPopulation(e.target.value)}
               />
               <input
-                className="rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                className="rounded-md border border-border px-2 py-1.5 text-sm"
                 placeholder="Channel (SMS, EMAIL, …)"
                 value={channel}
                 onChange={(e) => setChannel(e.target.value)}
@@ -144,31 +144,31 @@ export default function PublicHealthCampaignsPage() {
                   channel: channel.trim() || "SMS",
                 });
               }}
-              className="rounded-lg bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-800 disabled:opacity-50"
+              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-indigo-800 disabled:opacity-50"
             >
               {createM.isPending ? "Creating…" : "Create campaign"}
             </button>
             {createM.isError && errorBanner(createM.error)}
-            {createM.isSuccess && <p className="text-xs text-emerald-700">Campaign created.</p>}
+            {createM.isSuccess && <p className="text-xs text-primary-hover">Campaign created.</p>}
           </div>
 
-          <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
-            <div className="border-b border-slate-100 px-4 py-3">
-              <h2 className="text-sm font-semibold text-slate-900">Campaigns</h2>
+          <div className="rounded-xl border border-border bg-card overflow-hidden">
+            <div className="border-b border-border px-4 py-3">
+              <h2 className="text-sm font-semibold text-foreground">Campaigns</h2>
             </div>
             {campaignsQ.isLoading && (
-              <p className="px-4 py-6 text-sm text-slate-500 flex items-center gap-2">
+              <p className="px-4 py-6 text-sm text-muted-foreground flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" /> Loading…
               </p>
             )}
             {campaignsQ.isError && <div className="p-4">{errorBanner(campaignsQ.error)}</div>}
             {!campaignsQ.isLoading && rows.length === 0 && (
-              <p className="px-4 py-6 text-sm text-slate-500">No campaigns for this tenant.</p>
+              <p className="px-4 py-6 text-sm text-muted-foreground">No campaigns for this tenant.</p>
             )}
             {rows.length > 0 && (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm min-w-[720px]">
-                  <thead className="bg-slate-50 text-left text-xs text-slate-600">
+                  <thead className="bg-background text-left text-xs text-muted-foreground">
                     <tr>
                       <th className="px-3 py-2">Name</th>
                       <th className="px-3 py-2">Type</th>
@@ -182,17 +182,17 @@ export default function PublicHealthCampaignsPage() {
                   </thead>
                   <tbody>
                     {rows.map((c) => (
-                      <tr key={c.id} className="border-t border-slate-100">
-                        <td className="px-3 py-2 font-medium text-slate-900">{c.name}</td>
-                        <td className="px-3 py-2 text-slate-600">{c.campaignType}</td>
+                      <tr key={c.id} className="border-t border-border">
+                        <td className="px-3 py-2 font-medium text-foreground">{c.name}</td>
+                        <td className="px-3 py-2 text-muted-foreground">{c.campaignType}</td>
                         <td className="px-3 py-2 text-right">{c.targetPopulation || "—"}</td>
                         <td className="px-3 py-2">
                           <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusBadge(c.status)}`}>
                             {c.status.toUpperCase()}
                           </span>
                         </td>
-                        <td className="px-3 py-2 text-slate-600">{c.startDate || "—"}</td>
-                        <td className="px-3 py-2 text-slate-600">{c.endDate || "—"}</td>
+                        <td className="px-3 py-2 text-muted-foreground">{c.startDate || "—"}</td>
+                        <td className="px-3 py-2 text-muted-foreground">{c.endDate || "—"}</td>
                         <td className="px-3 py-2 text-right font-medium">{coveragePct(c)}</td>
                         <td className="px-3 py-2">
                           <div className="flex flex-wrap gap-1">
@@ -200,7 +200,7 @@ export default function PublicHealthCampaignsPage() {
                               type="button"
                               disabled={launchM.isPending}
                               onClick={() => launchM.mutate(c.id)}
-                              className="inline-flex items-center gap-1 rounded-md border border-emerald-300 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-900 hover:bg-emerald-100 disabled:opacity-50"
+                              className="inline-flex items-center gap-1 rounded-md border border-emerald-300 bg-success-soft px-2 py-1 text-xs font-medium text-primary-hover hover:bg-emerald-100 disabled:opacity-50"
                               title="Launch / dispatch deliveries"
                             >
                               <Play className="h-3 w-3" />
@@ -210,7 +210,7 @@ export default function PublicHealthCampaignsPage() {
                               type="button"
                               disabled={closeM.isPending}
                               onClick={() => closeM.mutate(c.id)}
-                              className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
+                              className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-xs font-medium text-foreground hover:bg-background disabled:opacity-50"
                               title="Mark campaign completed"
                             >
                               <Square className="h-3 w-3" />

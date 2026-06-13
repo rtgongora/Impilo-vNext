@@ -54,7 +54,7 @@ export default function LiveDiscoverPage() {
               className={`rounded-lg px-3 py-1.5 text-sm ${
                 contextType === ctx
                   ? "bg-violet-600 text-white"
-                  : "border border-gray-300 text-gray-700"
+                  : "border border-border text-foreground"
               }`}
             >
               {ctx}

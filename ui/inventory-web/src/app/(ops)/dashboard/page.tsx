@@ -109,7 +109,7 @@ export default function DashboardPage() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-red-800">
           {error}
         </div>
       )}
@@ -163,7 +163,7 @@ export default function DashboardPage() {
 
       {/* Stockout Risk Alert */}
       {stockouts && stockouts.content.length > 0 && (
-        <div className="card p-5 mb-6 border-red-200 bg-red-50">
+        <div className="card p-5 mb-6 border-danger/28 bg-danger-soft">
           <h2 className="text-sm font-semibold text-red-800 mb-3">
             Stockout Risk Items
           </h2>
@@ -261,7 +261,7 @@ export default function DashboardPage() {
                       <span className="badge-expiry-warning ml-1">EXPIRING</span>
                     )}
                     {!pos.belowReorder && days > 30 && (
-                      <span className="badge bg-emerald-100 text-emerald-800">OK</span>
+                      <span className="badge bg-emerald-100 text-primary-hover">OK</span>
                     )}
                   </td>
                 </tr>

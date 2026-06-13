@@ -31,7 +31,7 @@ export default function ProcedureEpisodePage() {
   if (isLoading) {
     return (
       <EHRLayout>
-        <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-gray-400" /></div>
+        <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
       </EHRLayout>
     );
   }
@@ -40,8 +40,8 @@ export default function ProcedureEpisodePage() {
     return (
       <EHRLayout>
         <PageShell title="Procedure case">
-          <p className="text-sm text-gray-600">Unable to load procedure episode.</p>
-          <button type="button" onClick={() => void refetch()} className="mt-4 rounded-lg bg-impilo-500 px-4 py-2 text-white text-sm">Retry</button>
+          <p className="text-sm text-muted-foreground">Unable to load procedure episode.</p>
+          <button type="button" onClick={() => void refetch()} className="mt-4 rounded-lg bg-primary px-4 py-2 text-white text-sm">Retry</button>
         </PageShell>
       </EHRLayout>
     );
@@ -58,10 +58,10 @@ export default function ProcedureEpisodePage() {
         subtitle={`Status: ${episode.status}`}
       >
         <div className="mb-6 flex items-center gap-3">
-          <Link href={`/ehr/${params.patientId}/procedures`} className="inline-flex items-center gap-1 text-sm text-impilo-600 hover:underline">
+          <Link href={`/ehr/${params.patientId}/procedures`} className="inline-flex items-center gap-1 text-sm text-primary hover:underline">
             <ArrowLeft className="h-4 w-4" /> Back to procedures
           </Link>
-          <Scissors className="h-5 w-5 text-impilo-500" />
+          <Scissors className="h-5 w-5 text-primary" />
         </div>
 
         <div className="mb-8 flex flex-wrap gap-2">
@@ -70,7 +70,7 @@ export default function ProcedureEpisodePage() {
               key={label}
               type="button"
               onClick={() => setStep(i)}
-              className={`rounded-full px-3 py-1 text-xs font-medium ${step === i ? "bg-impilo-500 text-white" : "bg-gray-100 text-gray-600"}`}
+              className={`rounded-full px-3 py-1 text-xs font-medium ${step === i ? "bg-primary text-white" : "bg-neutral-100 text-muted-foreground"}`}
             >
               {label}
             </button>
@@ -88,7 +88,7 @@ export default function ProcedureEpisodePage() {
                     type="button"
                     disabled={actions.submitPreop.isPending}
                     onClick={() => actions.submitPreop.mutate({ assessmentType: "NURSING", fastingVerified: true, allergiesReviewed: true, assessedBy: "nurse-web" })}
-                    className="mt-3 rounded-lg bg-impilo-500 px-4 py-2 text-sm text-white"
+                    className="mt-3 rounded-lg bg-primary px-4 py-2 text-sm text-white"
                   >
                     Submit nursing assessment
                   </button>
@@ -115,7 +115,7 @@ export default function ProcedureEpisodePage() {
               return (
                 <div key={phase} className="rounded-xl border p-4">
                   <h3 className="font-medium">{phase.replace("_", " ")}</h3>
-                  <ul className="mt-2 space-y-1 text-sm text-gray-600">
+                  <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
                     {items.map((item) => (
                       <li key={item.id} className={item.completed ? "text-green-700" : ""}>
                         {item.completed ? "✓" : "○"} {item.item_label}
@@ -127,7 +127,7 @@ export default function ProcedureEpisodePage() {
                       type="button"
                       disabled={actions.completeChecklist.isPending}
                       onClick={() => actions.completeChecklist.mutate({ phase, itemIds: pending.map((p) => p.id) })}
-                      className="mt-3 rounded-lg bg-impilo-500 px-4 py-2 text-sm text-white"
+                      className="mt-3 rounded-lg bg-primary px-4 py-2 text-sm text-white"
                     >
                       Complete {phase.replace("_", " ")}
                     </button>
@@ -141,7 +141,7 @@ export default function ProcedureEpisodePage() {
         {step === 2 && (
           <section className="rounded-2xl border p-6">
             <h2 className="text-lg font-semibold">Start procedure in theatre</h2>
-            <p className="mt-2 text-sm text-gray-600">
+            <p className="mt-2 text-sm text-muted-foreground">
               MVUMO consent must be GRANTED before theatre start.
               {episode.consent_status !== "GRANTED" && " Complete consent in the Pre-op step first."}
             </p>
@@ -172,7 +172,7 @@ export default function ProcedureEpisodePage() {
                 actions.recordIntraop.mutate({ eventType: "NOTE", description: intraopNote, recordedBy: "surgeon-web" });
                 setIntraopNote("");
               }}
-              className="rounded-lg bg-impilo-500 px-4 py-2 text-sm text-white"
+              className="rounded-lg bg-primary px-4 py-2 text-sm text-white"
             >
               Record event
             </button>
@@ -193,13 +193,13 @@ export default function ProcedureEpisodePage() {
                       recordedBy: "anaesthetist-web",
                     })
                   }
-                  className="rounded-lg bg-impilo-500 px-3 py-1 text-sm text-white"
+                  className="rounded-lg bg-primary px-3 py-1 text-sm text-white"
                 >
                   Record vitals snapshot
                 </button>
               </div>
             </div>
-            <ul className="text-sm text-gray-600 space-y-1">
+            <ul className="text-sm text-muted-foreground space-y-1">
               {(episode.intraop_events ?? []).map((ev) => (
                 <li key={String(ev.id)}>
                   {ev.event_type === "VITALS" ? "🫀 " : ""}{String(ev.description)}
@@ -217,7 +217,7 @@ export default function ProcedureEpisodePage() {
                 }}
                 className="text-sm"
               />
-              <ul className="text-xs text-gray-500 space-y-1">
+              <ul className="text-xs text-muted-foreground space-y-1">
                 {(episode.documents ?? []).map((doc) => (
                   <li key={String(doc.id)}>{String(doc.title)} ({String(doc.document_type)})</li>
                 ))}
@@ -249,12 +249,12 @@ export default function ProcedureEpisodePage() {
                     storeId,
                     recordedBy: "theatre-nurse",
                   })}
-                  className="rounded-lg bg-impilo-500 px-3 py-1 text-sm text-white"
+                  className="rounded-lg bg-primary px-3 py-1 text-sm text-white"
                 >
                   Issue consumable
                 </button>
               </div>
-              <ul className="text-xs text-gray-500 space-y-1">
+              <ul className="text-xs text-muted-foreground space-y-1">
                 {(episode.consumables ?? []).map((c) => (
                   <li key={String(c.id)}>{String(c.item_code)} × {String(c.quantity)}</li>
                 ))}
@@ -264,7 +264,7 @@ export default function ProcedureEpisodePage() {
               type="button"
               onClick={() => actions.enterPacu.mutate()}
               disabled={actions.enterPacu.isPending}
-              className="rounded-lg border border-impilo-500 px-4 py-2 text-sm text-impilo-600"
+              className="rounded-lg border border-impilo-500 px-4 py-2 text-sm text-primary"
             >
               Transfer to PACU
             </button>
@@ -286,7 +286,7 @@ export default function ProcedureEpisodePage() {
                 recordedBy: "pacu-nurse",
               })}
               disabled={actions.completePostop.isPending}
-              className="rounded-lg bg-impilo-500 px-4 py-2 text-sm text-white"
+              className="rounded-lg bg-primary px-4 py-2 text-sm text-white"
             >
               Complete PACU recovery
             </button>

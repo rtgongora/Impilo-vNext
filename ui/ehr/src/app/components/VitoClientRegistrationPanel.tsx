@@ -77,16 +77,16 @@ export function VitoClientRegistrationPanel({ onRegistered }: Props) {
   }
 
   return (
-    <div className="mt-4 rounded-md border border-impilo-primary/30 bg-slate-50 p-3 space-y-2 text-sm">
+    <div className="mt-4 rounded-md border border-impilo-primary/30 bg-background p-3 space-y-2 text-sm">
       <p className="font-semibold text-impilo-primary">New client (Vito registry)</p>
-      <p className="text-xs text-gray-600">
+      <p className="text-xs text-muted-foreground">
         This flow does not create a purely local patient record first. The BFF issues or falls back with explicit
         registry sync metadata.
       </p>
       <div className="flex flex-wrap gap-1 text-[10px]">
-        <span className="rounded bg-amber-100 px-1.5 py-0.5 text-amber-900">{registrationMode}</span>
+        <span className="rounded bg-amber-100 px-1.5 py-0.5 text-warning-foreground">{registrationMode}</span>
         <span className="rounded bg-violet-100 px-1.5 py-0.5 text-violet-900">{assuranceLevel}</span>
-        <span className="rounded bg-slate-200 px-1.5 py-0.5 text-slate-800">{identityState}</span>
+        <span className="rounded bg-border px-1.5 py-0.5 text-foreground">{identityState}</span>
       </div>
       <div className="grid grid-cols-2 gap-2">
         <input
@@ -141,7 +141,7 @@ export function VitoClientRegistrationPanel({ onRegistered }: Props) {
         Offline provisional
       </label>
       <div>
-        <label className="text-xs text-gray-600">Country</label>
+        <label className="text-xs text-muted-foreground">Country</label>
         <CountryPicker value={country} onChange={setCountry} />
       </div>
       <ZimbabweLocationCascader

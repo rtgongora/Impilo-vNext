@@ -24,13 +24,13 @@ export default function DataAuditPage() {
     >
       <TrustContextBanner purposeOfUse="AUDIT_REVIEW" />
       <div className="flex flex-wrap gap-3">
-        <Link href="/admin/audit" className="rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white">
+        <Link href="/admin/audit" className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white">
           Audit trail admin
         </Link>
-        <Link href="/core-transaction" className="rounded-lg border px-4 py-2 text-sm hover:bg-slate-50">
+        <Link href="/core-transaction" className="rounded-lg border px-4 py-2 text-sm hover:bg-background">
           Core transaction history
         </Link>
-        <Link href="/admin/data-governance" className="rounded-lg border px-4 py-2 text-sm hover:bg-slate-50">
+        <Link href="/admin/data-governance" className="rounded-lg border px-4 py-2 text-sm hover:bg-background">
           Data governance
         </Link>
       </div>

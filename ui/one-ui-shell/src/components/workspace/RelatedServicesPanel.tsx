@@ -37,14 +37,14 @@ export function RelatedServicesPanel(props: {
                 <ServiceLogo slug={slug} size="compact" className="mt-0.5" />
               ) : null}
               <span className="min-w-0 flex-1">
-                <span className="block text-sm font-medium text-[var(--text-primary)] group-hover:text-impilo-700">
+                <span className="block text-sm font-medium text-[var(--text-primary)] group-hover:text-primary-hover">
                   {link.label}
                 </span>
                 {link.description ? (
                   <span className="block text-xs text-[var(--text-secondary)]">{link.description}</span>
                 ) : null}
               </span>
-              <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-[var(--border-strong)] group-hover:text-impilo-600" />
+              <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-[var(--border-strong)] group-hover:text-primary" />
             </Link>
           </li>
           );

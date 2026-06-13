@@ -28,13 +28,13 @@ function formatEventDate(value?: string | null): string {
 function statusTone(status: string): string {
   switch (status) {
     case "LIVE":
-      return "bg-red-100 text-red-800 border-red-200";
+      return "bg-red-100 text-red-800 border-danger/28";
     case "SCHEDULED":
       return "bg-sky-100 text-sky-800 border-sky-200";
     case "ENDED":
-      return "bg-gray-100 text-gray-700 border-gray-200";
+      return "bg-neutral-100 text-foreground border-border";
     case "CANCELLED":
-      return "bg-amber-100 text-amber-900 border-amber-200";
+      return "bg-amber-100 text-warning-foreground border-warning/35";
     default:
       return "bg-violet-100 text-violet-800 border-violet-200";
   }
@@ -54,7 +54,7 @@ export function LiveEventCard({
   const hostLabel = event.facilityId ? `Facility ${event.facilityId}` : "Impilo Live";
 
   return (
-    <article className="rounded-2xl border border-gray-200 bg-white p-5 hover:border-violet-300 hover:shadow-sm transition-all">
+    <article className="rounded-2xl border border-border bg-card p-5 hover:border-violet-300 hover:shadow-sm transition-all">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2 mb-2">
@@ -62,26 +62,26 @@ export function LiveEventCard({
               {isLive ? <Radio className="h-3 w-3 mr-1 animate-pulse" /> : null}
               {event.status}
             </span>
-            <span className="text-xs text-gray-500">{event.eventType.replace(/_/g, " ")}</span>
+            <span className="text-xs text-muted-foreground">{event.eventType.replace(/_/g, " ")}</span>
             {event.cpdEnabled ? (
-              <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700">
+              <span className="rounded-full bg-info-soft px-2 py-0.5 text-xs font-medium text-primary-hover">
                 CPD{event.cpdPoints ? ` · ${event.cpdPoints} pts` : ""}
               </span>
             ) : null}
             {saved ? (
-              <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800">
+              <span className="rounded-full bg-warning-soft px-2 py-0.5 text-xs font-medium text-warning-foreground">
                 Saved
               </span>
             ) : null}
           </div>
-          <h3 className="font-semibold text-gray-900 truncate">{event.title}</h3>
+          <h3 className="font-semibold text-foreground truncate">{event.title}</h3>
           {event.description ? (
-            <p className="mt-1 text-sm text-gray-600 line-clamp-2">{event.description}</p>
+            <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{event.description}</p>
           ) : null}
         </div>
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-3 text-xs text-gray-500">
+      <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
         <span className="inline-flex items-center gap-1">
           <Calendar className="h-3.5 w-3.5" />
           {formatEventDate(event.startTime)}
@@ -114,7 +114,7 @@ export function LiveEventCard({
         {isEnded ? (
           <Link
             href={`/live/event/${event.id}/replay`}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-background"
           >
             Watch replay
           </Link>
@@ -122,7 +122,7 @@ export function LiveEventCard({
 
         <Link
           href={`/live/event/${event.id}`}
-          className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-background"
         >
           Details
         </Link>
@@ -131,7 +131,7 @@ export function LiveEventCard({
           <button
             type="button"
             onClick={onSave}
-            className="rounded-lg border border-amber-300 px-3 py-1.5 text-sm font-medium text-amber-900 hover:bg-amber-50"
+            className="rounded-lg border border-amber-300 px-3 py-1.5 text-sm font-medium text-warning-foreground hover:bg-warning-soft"
           >
             {saved ? "Unsave" : "Save"}
           </button>

@@ -20,7 +20,7 @@ const STATUS_BADGE: Record<RequisitionStatus, string> = {
 
 const PRIORITY_BADGE: Record<RequisitionPriority, string> = {
   ROUTINE: "badge bg-neutral-100 text-neutral-700",
-  URGENT: "badge bg-amber-100 text-amber-800",
+  URGENT: "badge bg-amber-100 text-warning-foreground",
   EMERGENCY: "badge bg-red-100 text-red-800",
 };
 
@@ -185,17 +185,17 @@ export default function RequisitionsPage() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-red-800">
           {error}
         </div>
       )}
 
       {successMessage && (
-        <div className="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-sm text-emerald-800">
+        <div className="mb-4 p-3 rounded-lg bg-success-soft border border-success/25 text-sm text-primary-hover">
           {successMessage}
           <button
             onClick={() => setSuccessMessage(null)}
-            className="ml-2 text-emerald-600 hover:text-emerald-800 font-medium"
+            className="ml-2 text-primary hover:text-primary-hover font-medium"
           >
             Dismiss
           </button>
@@ -278,7 +278,7 @@ export default function RequisitionsPage() {
           <div>
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold text-neutral-700">Line Items</h3>
-              <button onClick={addLine} className="text-sm text-amber-600 hover:text-amber-800 font-medium">
+              <button onClick={addLine} className="text-sm text-amber-600 hover:text-warning-foreground font-medium">
                 + Add Line
               </button>
             </div>
@@ -323,7 +323,7 @@ export default function RequisitionsPage() {
                     {createLines.length > 1 && (
                       <button
                         onClick={() => removeLine(idx)}
-                        className="text-red-500 hover:text-red-700 text-sm font-medium"
+                        className="text-red-500 hover:text-danger text-sm font-medium"
                         title="Remove line"
                       >
                         X
@@ -476,7 +476,7 @@ export default function RequisitionsPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <span className={line.quantityFulfilled !== null ? "text-emerald-600 font-medium" : "text-neutral-400"}>
+                      <span className={line.quantityFulfilled !== null ? "text-primary font-medium" : "text-neutral-400"}>
                         {line.quantityFulfilled ?? "-"}
                       </span>
                     </td>

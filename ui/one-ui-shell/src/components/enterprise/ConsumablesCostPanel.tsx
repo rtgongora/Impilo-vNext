@@ -73,59 +73,59 @@ export function ConsumablesCostPanel() {
 
   return (
     <section
-      className="rounded-2xl border border-indigo-200 bg-white p-5 shadow-sm"
+      className="rounded-2xl border border-info/25 bg-card p-5 shadow-sm"
       data-testid="consumables-cost-panel"
     >
       <div className="flex items-start gap-3">
         <Package className="mt-0.5 h-5 w-5 text-indigo-600" />
         <div className="flex-1 min-w-0">
-          <h2 className="text-sm font-semibold text-slate-900">Consumables cost alignment</h2>
-          <p className="mt-1 text-xs text-slate-500">
+          <h2 className="text-sm font-semibold text-foreground">Consumables cost alignment</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
             Maps inventory on-hand consumable categories to COSTA tariff lists (
             <code className="text-[10px]">GET /internal/v1/finance/costa-intel/tariff-lists</code>
             ). Charge capture stays in encounters; this panel is reference-only for enterprise charge sheets.
           </p>
 
           {!facility ? (
-            <p className="mt-3 text-sm text-amber-800">Select a facility to load on-hand consumables.</p>
+            <p className="mt-3 text-sm text-warning-foreground">Select a facility to load on-hand consumables.</p>
           ) : onHandQ.isLoading || tariffsQ.isLoading ? (
-            <p className="mt-3 flex items-center gap-2 text-sm text-slate-500">
+            <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" /> Loading inventory and tariffs…
             </p>
           ) : onHandQ.isError ? (
-            <p className="mt-3 text-sm text-red-700">Could not load inventory on-hand from the BFF.</p>
+            <p className="mt-3 text-sm text-danger">Could not load inventory on-hand from the BFF.</p>
           ) : grouped.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-500">
+            <p className="mt-3 text-sm text-muted-foreground">
               No consumable/supply category rows on hand.{" "}
-              <Link href="/inventory/stock-management" className="font-medium text-indigo-700 underline">
+              <Link href="/inventory/stock-management" className="font-medium text-primary-hover underline">
                 Stock management
               </Link>
             </p>
           ) : (
             <div className="mt-4 space-y-4">
               {grouped.map(([category, rows]) => (
-                <div key={category} className="rounded-lg border border-slate-100 bg-slate-50/80 p-3">
-                  <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-600">{category}</h3>
+                <div key={category} className="rounded-lg border border-border bg-background/80 p-3">
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{category}</h3>
                   <ul className="mt-2 space-y-2 text-xs">
                     {rows.slice(0, 6).map((row) => {
                       const tariff = matchTariffForItem(tariffs, row.code, row.name);
                       return (
                         <li
                           key={`${row.code}-${row.name}`}
-                          className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-white px-2 py-1.5 border border-slate-100"
+                          className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-card px-2 py-1.5 border border-border"
                         >
-                          <span className="font-medium text-slate-900">
+                          <span className="font-medium text-foreground">
                             {row.name}{" "}
-                            <span className="font-mono text-[10px] text-slate-500">({row.code})</span>
+                            <span className="font-mono text-[10px] text-muted-foreground">({row.code})</span>
                           </span>
-                          <span className="text-slate-600">
+                          <span className="text-muted-foreground">
                             {row.qty} {row.unit}
                             {tariff ? (
-                              <span className="ml-2 text-indigo-700">
+                              <span className="ml-2 text-primary-hover">
                                 → {tariff.name ?? tariff.externalCode}
                               </span>
                             ) : (
-                              <span className="ml-2 text-amber-700">No tariff match</span>
+                              <span className="ml-2 text-warning-foreground">No tariff match</span>
                             )}
                           </span>
                         </li>
@@ -138,10 +138,10 @@ export function ConsumablesCostPanel() {
           )}
 
           <div className="mt-4 flex flex-wrap gap-3 text-xs">
-            <Link href="/finance/tariffs" className="font-medium text-indigo-700 hover:underline">
+            <Link href="/finance/tariffs" className="font-medium text-primary-hover hover:underline">
               COSTA tariff library
             </Link>
-            <Link href="/inventory/stock-management" className="font-medium text-indigo-700 hover:underline">
+            <Link href="/inventory/stock-management" className="font-medium text-primary-hover hover:underline">
               Inventory stock
             </Link>
           </div>

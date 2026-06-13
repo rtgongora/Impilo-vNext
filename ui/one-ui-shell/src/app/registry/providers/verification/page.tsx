@@ -61,7 +61,7 @@ export default function ProviderVerificationQueuePage() {
 
         {councilApps.length > 0 ? (
           <div
-            className="mb-4 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-blue-900"
+            className="mb-4 rounded-lg border border-blue-100 bg-info-soft px-4 py-3 text-xs text-blue-900"
             data-testid="verification-council-banner"
           >
             Council applications awaiting review: <strong>{councilApps.length}</strong>{" "}
@@ -77,10 +77,10 @@ export default function ProviderVerificationQueuePage() {
 
         {councilApps.length > 0 ? (
           <section
-            className="mb-6 rounded-xl border border-gray-200 bg-white p-4"
+            className="mb-6 rounded-xl border border-border bg-card p-4"
             data-testid="verification-council-workflow"
           >
-            <h2 className="mb-3 text-sm font-semibold text-gray-900">Council workflow actions</h2>
+            <h2 className="mb-3 text-sm font-semibold text-foreground">Council workflow actions</h2>
             <ul className="divide-y divide-gray-100">
               {councilApps.slice(0, 5).map((app) => {
                 const appId = councilApplicationId(app);
@@ -95,10 +95,10 @@ export default function ProviderVerificationQueuePage() {
                     data-testid={`verification-council-app-${appId}`}
                   >
                     <div>
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-medium text-foreground">
                         Council app #{appId} · {String(app.applicationType ?? "REGISTRATION")}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         {workflow} · review {String(app.reviewState ?? "pending")}
                       </p>
                     </div>
@@ -185,7 +185,7 @@ export default function ProviderVerificationQueuePage() {
                             { onSuccess: () => void councilQueue.refetch() },
                           )
                         }
-                        className="inline-flex items-center gap-1 rounded-lg border border-amber-200 px-2.5 py-1 text-xs font-medium text-amber-800 hover:bg-amber-50 disabled:opacity-50"
+                        className="inline-flex items-center gap-1 rounded-lg border border-warning/35 px-2.5 py-1 text-xs font-medium text-warning-foreground hover:bg-warning-soft disabled:opacity-50"
                       >
                         <HelpCircle className="h-3.5 w-3.5" />
                         Needs info
@@ -204,7 +204,7 @@ export default function ProviderVerificationQueuePage() {
                             { onSuccess: () => void councilQueue.refetch() },
                           )
                         }
-                        className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-2.5 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+                        className="inline-flex items-center gap-1 rounded-lg border border-danger/28 px-2.5 py-1 text-xs font-medium text-danger hover:bg-danger-soft disabled:opacity-50"
                       >
                         <XCircle className="h-3.5 w-3.5" />
                         Reject
@@ -219,7 +219,7 @@ export default function ProviderVerificationQueuePage() {
 
         <Link
           href="/registry/providers"
-          className="mb-4 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+          className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to provider registry
@@ -234,7 +234,7 @@ export default function ProviderVerificationQueuePage() {
               className={`rounded-full px-3 py-1 text-xs font-medium ${
                 statusFilter === status
                   ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  : "bg-neutral-100 text-foreground hover:bg-neutral-100"
               }`}
             >
               {status}
@@ -244,14 +244,14 @@ export default function ProviderVerificationQueuePage() {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : providers.length === 0 ? (
-          <div className="rounded-lg border border-gray-200 bg-white p-10 text-center text-sm text-gray-500">
+          <div className="rounded-lg border border-border bg-card p-10 text-center text-sm text-muted-foreground">
             No providers in <strong>{statusFilter}</strong> status.
           </div>
         ) : (
-          <ul className="divide-y divide-gray-100 rounded-xl border border-gray-200 bg-white">
+          <ul className="divide-y divide-gray-100 rounded-xl border border-border bg-card">
             {providers.map((provider) => {
               const attrs = provider.attributes ?? {};
               const name = String(attrs.displayName ?? provider.id);
@@ -259,8 +259,8 @@ export default function ProviderVerificationQueuePage() {
               return (
                 <li key={provider.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{name}</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-sm font-medium text-foreground">{name}</p>
+                    <p className="text-xs text-muted-foreground">
                       {String(attrs.registrationNumber ?? "—")} · {String(attrs.speciality ?? "—")} ·{" "}
                       <span className="font-medium">{currentStatus}</span>
                     </p>
@@ -291,7 +291,7 @@ export default function ProviderVerificationQueuePage() {
                               { onSuccess: () => void refetch() },
                             )
                           }
-                          className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+                          className="inline-flex items-center gap-1 rounded-lg border border-danger/28 px-3 py-1.5 text-xs font-medium text-danger hover:bg-danger-soft disabled:opacity-50"
                         >
                           <XCircle className="h-3.5 w-3.5" />
                           Suspend
@@ -308,7 +308,7 @@ export default function ProviderVerificationQueuePage() {
                             { onSuccess: () => void refetch() },
                           )
                         }
-                        className="inline-flex items-center gap-1 rounded-lg border border-amber-200 px-3 py-1.5 text-xs font-medium text-amber-800 hover:bg-amber-50 disabled:opacity-50"
+                        className="inline-flex items-center gap-1 rounded-lg border border-warning/35 px-3 py-1.5 text-xs font-medium text-warning-foreground hover:bg-warning-soft disabled:opacity-50"
                       >
                         <ShieldAlert className="h-3.5 w-3.5" />
                         Revoke
@@ -316,7 +316,7 @@ export default function ProviderVerificationQueuePage() {
                     ) : null}
                     <Link
                       href={`/registry/providers/${encodeURIComponent(provider.id)}`}
-                      className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                      className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-background"
                     >
                       Profile
                     </Link>

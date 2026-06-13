@@ -28,17 +28,17 @@ export function ManagementTileGrid({ contract, tiles }: ManagementTileGridProps)
           return (
             <div
               key={tile.id}
-              className="flex flex-col rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 opacity-90"
+              className="flex flex-col rounded-2xl border border-dashed border-border bg-background p-5 opacity-90"
               aria-disabled
             >
               <div className="flex items-start gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-200 text-slate-600">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-border text-muted-foreground">
                   <Icon className="h-5 w-5" />
                 </div>
                 <div>
-                  <h4 className="font-medium text-slate-700">{tile.title}</h4>
-                  <p className="mt-1 text-sm text-slate-600">{blockedMsg?.description ?? tile.description}</p>
-                  <p className="mt-2 text-xs font-medium text-amber-800">{blockedMsg?.title ?? "Not available in your scope"}</p>
+                  <h4 className="font-medium text-foreground">{tile.title}</h4>
+                  <p className="mt-1 text-sm text-muted-foreground">{blockedMsg?.description ?? tile.description}</p>
+                  <p className="mt-2 text-xs font-medium text-warning-foreground">{blockedMsg?.title ?? "Not available in your scope"}</p>
                 </div>
               </div>
             </div>
@@ -49,19 +49,19 @@ export function ManagementTileGrid({ contract, tiles }: ManagementTileGridProps)
           <Link
             key={tile.id}
             href={tile.href}
-            className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-indigo-300 hover:shadow-md"
+            className="group flex flex-col rounded-2xl border border-border bg-card p-5 shadow-sm transition hover:border-indigo-300 hover:shadow-md"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-800">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-primary-hover">
                   <Icon className="h-5 w-5" />
                 </div>
                 <div>
-                  <h4 className="font-medium text-slate-900 group-hover:text-indigo-900">{tile.title}</h4>
-                  <p className="mt-1 text-sm text-slate-600">{tile.description}</p>
+                  <h4 className="font-medium text-foreground group-hover:text-primary-hover">{tile.title}</h4>
+                  <p className="mt-1 text-sm text-muted-foreground">{tile.description}</p>
                 </div>
               </div>
-              <ArrowUpRight className="h-4 w-4 shrink-0 text-slate-400 group-hover:text-indigo-700" />
+              <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-primary-hover" />
             </div>
           </Link>
         );

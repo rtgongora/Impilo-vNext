@@ -96,12 +96,12 @@ export function FinanceInvoicePanel({
   error?: Error | null;
 }) {
   if (error) {
-    return <p className="mt-3 text-sm text-red-700">Could not load invoice: {error.message}</p>;
+    return <p className="mt-3 text-sm text-danger">Could not load invoice: {error.message}</p>;
   }
   if (isLoading) return null;
   const invoice = normalizeInvoice(data);
   if (!invoice) {
-    return <p className="mt-3 text-xs text-slate-500">No invoice data returned.</p>;
+    return <p className="mt-3 text-xs text-muted-foreground">No invoice data returned.</p>;
   }
 
   const fields = [
@@ -113,11 +113,11 @@ export function FinanceInvoicePanel({
   ] as const;
 
   return (
-    <div className="mt-3 grid gap-3 rounded-lg border border-slate-200 bg-slate-50/80 p-4 sm:grid-cols-2">
+    <div className="mt-3 grid gap-3 rounded-lg border border-border bg-background/80 p-4 sm:grid-cols-2">
       {fields.map(([label, value]) => (
         <div key={label}>
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{label}</p>
-          <p className="mt-1 font-mono text-sm text-slate-900">{value}</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+          <p className="mt-1 font-mono text-sm text-foreground">{value}</p>
         </div>
       ))}
     </div>

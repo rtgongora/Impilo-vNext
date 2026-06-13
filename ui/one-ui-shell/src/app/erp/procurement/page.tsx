@@ -26,14 +26,14 @@ function SectionCard(props: {
   children?: ReactNode;
 }) {
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+    <section className="rounded-lg border border-border bg-card p-4 shadow-sm">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-slate-800">{props.title}</h3>
-        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">
+        <h3 className="text-sm font-semibold text-foreground">{props.title}</h3>
+        <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-semibold text-foreground">
           {props.loading ? "…" : props.error ? "—" : props.count}
         </span>
       </div>
-      {props.error ? <p className="mt-2 text-xs text-rose-700">Request failed — check BFF and procurement service.</p> : null}
+      {props.error ? <p className="mt-2 text-xs text-danger">Request failed — check BFF and procurement service.</p> : null}
       {props.children}
     </section>
   );
@@ -59,16 +59,16 @@ export default function ErpProcurementPage() {
     <AppLayout>
       <PageShell title="Procurement" subtitle="Suppliers, requisitions, POs, GRN, invoices, and RFQs via Experience BFF.">
         <div className="mb-4 flex flex-wrap items-center gap-3">
-          <Link href="/erp" className="text-sm text-impilo-500 hover:underline">
+          <Link href="/erp" className="text-sm text-primary hover:underline">
             ← ERP hub
           </Link>
-          <Link href="/enterprise" className="text-sm text-slate-600 hover:underline">
+          <Link href="/enterprise" className="text-sm text-muted-foreground hover:underline">
             Enterprise dashboard
           </Link>
-          <label className="flex items-center gap-2 text-sm text-slate-700">
+          <label className="flex items-center gap-2 text-sm text-foreground">
             RFQ
             <select
-              className="rounded border border-slate-300 px-2 py-1 text-sm"
+              className="rounded border border-border px-2 py-1 text-sm"
               value={effRfq}
               onChange={(e) => setRfqId(e.target.value)}
             >
@@ -112,7 +112,7 @@ export default function ErpProcurementPage() {
           />
         </div>
 
-        <p className="mt-6 text-xs text-slate-500">
+        <p className="mt-6 text-xs text-muted-foreground">
           Detailed row explorers ship with datagrids once procurement contracts stabilise; counts above are derived from API envelopes
           only — no mock rows.
         </p>

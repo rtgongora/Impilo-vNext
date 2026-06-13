@@ -66,7 +66,7 @@ export function LiveNompiloAssistPanel({
         <select
           value={op}
           onChange={(e) => setOp(e.target.value as LiveComposerOp)}
-          className="w-full rounded-lg border border-teal-200 bg-white px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-teal-200 bg-card px-3 py-2 text-sm"
         >
           {OPS.map((item) => (
             <option key={item.value} value={item.value}>
@@ -78,20 +78,20 @@ export function LiveNompiloAssistPanel({
           value={context}
           onChange={(e) => setContext(e.target.value)}
           placeholder="Describe the session topic or paste draft content…"
-          className="w-full rounded-lg border border-teal-200 bg-white px-3 py-2 text-sm min-h-[80px]"
+          className="w-full rounded-lg border border-teal-200 bg-card px-3 py-2 text-sm min-h-[80px]"
         />
         <button
           type="button"
           onClick={onAssist}
           disabled={assist.isPending}
-          className="inline-flex items-center gap-2 rounded-lg bg-teal-700 px-3 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
+          className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
         >
           {assist.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
           Ask Nompilo
         </button>
       </div>
       {result ? (
-        <pre className="mt-3 max-h-48 overflow-auto rounded-lg border border-teal-100 bg-white p-3 text-xs text-gray-700 whitespace-pre-wrap">
+        <pre className="mt-3 max-h-48 overflow-auto rounded-lg border border-teal-100 bg-card p-3 text-xs text-foreground whitespace-pre-wrap">
           {result}
         </pre>
       ) : null}

@@ -48,13 +48,13 @@ export default function DonorDrivesPage() {
         />
 
         <div className="mb-6 flex flex-wrap gap-2 items-end">
-          <label className="text-sm text-gray-700 flex-1 min-w-[200px]">
+          <label className="text-sm text-foreground flex-1 min-w-[200px]">
             Ndila site reference (optional)
             <input
               value={draftSite}
               onChange={(e) => setDraftSite(e.target.value)}
               placeholder="e.g. facility or community site ref"
-              className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm"
             />
           </label>
           <button
@@ -67,27 +67,27 @@ export default function DonorDrivesPage() {
         </div>
 
         {siteRef && nearMe.isPending && (
-          <div className="flex items-center gap-2 text-gray-500 mb-4">
+          <div className="flex items-center gap-2 text-muted-foreground mb-4">
             <Loader2 className="h-4 w-4 animate-spin" /> Searching…
           </div>
         )}
 
         {siteRef && !nearMe.isPending && nearRows.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-gray-300 p-8 text-center mb-6">
-            <MapPin className="mx-auto h-8 w-8 text-gray-400" />
-            <p className="mt-2 text-sm text-gray-600">No drives found within 25 km of that site.</p>
+          <div className="rounded-2xl border border-dashed border-border p-8 text-center mb-6">
+            <MapPin className="mx-auto h-8 w-8 text-muted-foreground" />
+            <p className="mt-2 text-sm text-muted-foreground">No drives found within 25 km of that site.</p>
           </div>
         )}
 
         {nearRows.length > 0 && (
           <section className="mb-8">
-            <h2 className="text-sm font-semibold text-gray-900 mb-3">Near you</h2>
+            <h2 className="text-sm font-semibold text-foreground mb-3">Near you</h2>
             <ul className="space-y-2">
               {nearRows.map((row, i) => (
-                <li key={String(row.drive_id ?? i)} className="rounded-xl border border-gray-200 bg-white p-4 text-sm">
-                  <p className="font-medium text-gray-900">{String(row.title ?? "Donation drive")}</p>
+                <li key={String(row.drive_id ?? i)} className="rounded-xl border border-border bg-card p-4 text-sm">
+                  <p className="font-medium text-foreground">{String(row.title ?? "Donation drive")}</p>
                   {row.start_at != null && row.start_at !== "" ? (
-                    <p className="text-gray-500 mt-1">{new Date(String(row.start_at)).toLocaleString()}</p>
+                    <p className="text-muted-foreground mt-1">{new Date(String(row.start_at)).toLocaleString()}</p>
                   ) : null}
                 </li>
               ))}
@@ -96,25 +96,25 @@ export default function DonorDrivesPage() {
         )}
 
         <section>
-          <h2 className="text-sm font-semibold text-gray-900 mb-3">All published drives</h2>
+          <h2 className="text-sm font-semibold text-foreground mb-3">All published drives</h2>
           {allDrives.isPending && (
-            <div className="flex items-center gap-2 text-gray-500">
+            <div className="flex items-center gap-2 text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" /> Loading drives…
             </div>
           )}
           {!allDrives.isPending && tenantDrives.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-gray-300 p-8 text-center">
-              <p className="text-sm text-gray-600">No drives scheduled yet.</p>
+            <div className="rounded-2xl border border-dashed border-border p-8 text-center">
+              <p className="text-sm text-muted-foreground">No drives scheduled yet.</p>
               <Link href="/madi/donor" className="mt-2 inline-block text-sm text-rose-600">Back to donor hub</Link>
             </div>
           )}
           <ul className="space-y-2">
             {tenantDrives.map((d) => (
-              <li key={d.driveId} className="rounded-xl border border-gray-200 bg-white p-4 text-sm flex justify-between items-center">
+              <li key={d.driveId} className="rounded-xl border border-border bg-card p-4 text-sm flex justify-between items-center">
                 <div>
-                  <p className="font-medium text-gray-900">{d.title}</p>
-                  <p className="text-gray-500">{d.driveType} · {d.status ?? "DRAFT"}</p>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="font-medium text-foreground">{d.title}</p>
+                  <p className="text-muted-foreground">{d.driveType} · {d.status ?? "DRAFT"}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
                     {new Date(d.startAt).toLocaleString()} – {new Date(d.endAt).toLocaleString()}
                   </p>
                 </div>

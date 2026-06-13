@@ -14,9 +14,9 @@ export interface ClientIntakeStatusInput {
 }
 
 const BADGE_STYLES: Record<ClientIntakeBadgeKind, string> = {
-  unverified: "border border-gray-200 bg-gray-100 text-gray-700",
-  verified: "border border-emerald-200 bg-emerald-50 text-emerald-800",
-  "facility-registered": "border border-indigo-200 bg-indigo-50 text-indigo-800",
+  unverified: "border border-border bg-neutral-100 text-muted-foreground",
+  verified: "border border-success/25 bg-success-soft text-primary-hover",
+  "facility-registered": "border border-info/25 bg-info-soft text-primary-hover",
 };
 
 const BADGE_LABELS: Record<ClientIntakeBadgeKind, string> = {

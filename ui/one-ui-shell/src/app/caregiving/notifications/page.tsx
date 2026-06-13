@@ -21,21 +21,21 @@ export default function CareNotificationsPage() {
         <div className="space-y-6">
           {/* Actions bar */}
           <div className="flex items-center justify-between">
-            <button className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+            <button className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-foreground hover:bg-background transition-colors">
               <Filter className="h-4 w-4" />
               Filter
             </button>
-            <button className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+            <button className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-foreground hover:bg-background transition-colors">
               <CheckCheck className="h-4 w-4" />
               Mark all read
             </button>
           </div>
 
           {/* Empty state */}
-          <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-12 text-center">
-            <Bell className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-4 text-sm font-semibold text-gray-900">No care alerts</h3>
-            <p className="mt-2 text-sm text-gray-600">
+          <div className="rounded-lg border border-dashed border-border bg-background p-12 text-center">
+            <Bell className="mx-auto h-12 w-12 text-muted-foreground" />
+            <h3 className="mt-4 text-sm font-semibold text-foreground">No care alerts</h3>
+            <p className="mt-2 text-sm text-muted-foreground">
               Alerts about medication adherence, appointment reminders, and health changes for your dependants will appear here.
             </p>
           </div>

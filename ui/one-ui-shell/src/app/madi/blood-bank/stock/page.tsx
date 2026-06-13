@@ -24,29 +24,29 @@ export default function BloodBankStockPage() {
     <AppLayout>
       <PageShell title="Blood Stock" subtitle="Available inventory by group and component" icon={<Package className="h-6 w-6" />}>
         {!bloodBankId ? (
-          <div className="rounded-2xl border border-dashed border-gray-300 p-8 text-center">
+          <div className="rounded-2xl border border-dashed border-border p-8 text-center">
             <Link href="/madi/blood-bank" className="text-sm font-medium text-rose-600">Configure blood bank →</Link>
           </div>
         ) : (
           <>
             {isPending && (
-              <div className="flex items-center gap-2 text-gray-500">
+              <div className="flex items-center gap-2 text-muted-foreground">
                 <Loader2 className="h-5 w-5 animate-spin" /> Loading stock…
               </div>
             )}
             {isError && (
-              <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">Stock could not be loaded.</div>
+              <div className="rounded-xl border border-danger/28 bg-danger-soft p-4 text-sm text-rose-800">Stock could not be loaded.</div>
             )}
             {!isPending && !isError && rows.length === 0 && (
-              <div className="rounded-2xl border border-dashed border-gray-300 p-12 text-center">
-                <Package className="mx-auto h-10 w-10 text-gray-400" />
-                <p className="mt-3 text-sm text-gray-600">No stock balances recorded yet.</p>
+              <div className="rounded-2xl border border-dashed border-border p-12 text-center">
+                <Package className="mx-auto h-10 w-10 text-muted-foreground" />
+                <p className="mt-3 text-sm text-muted-foreground">No stock balances recorded yet.</p>
                 <Link href="/madi/processing" className="mt-3 inline-block text-sm text-rose-600">Receive units via processing →</Link>
               </div>
             )}
             {rows.length > 0 && (
-              <table className="w-full text-sm rounded-2xl border border-gray-200 bg-white overflow-hidden">
-                <thead className="bg-gray-50 text-xs uppercase text-gray-500">
+              <table className="w-full text-sm rounded-2xl border border-border bg-card overflow-hidden">
+                <thead className="bg-background text-xs uppercase text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3 text-left">Item</th>
                     <th className="px-4 py-3 text-left">Group</th>

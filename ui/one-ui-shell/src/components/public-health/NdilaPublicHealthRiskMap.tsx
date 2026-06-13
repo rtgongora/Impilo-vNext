@@ -46,7 +46,7 @@ export function NdilaPublicHealthRiskMap({
 
   if (loading) {
     return (
-      <div className="flex items-center gap-2 text-sm text-gray-500 py-6 justify-center">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground py-6 justify-center">
         <Loader2 className="h-4 w-4 animate-spin" /> Loading map data…
       </div>
     );
@@ -54,7 +54,7 @@ export function NdilaPublicHealthRiskMap({
 
   if (ndilaMarkers.length === 0) {
     return (
-      <p className="text-xs text-gray-500 py-4 text-center">
+      <p className="text-xs text-muted-foreground py-4 text-center">
         No geo-tagged outbreaks or field tasks yet. Record coordinates when submitting outbreaks or field activities.
       </p>
     );
@@ -72,12 +72,12 @@ export function NdilaPublicHealthRiskMap({
       />
       <div className="space-y-2 max-h-40 overflow-y-auto mt-3">
         {ndilaMarkers.map((m) => (
-          <div key={m.id} className="flex justify-between text-xs border border-gray-100 rounded p-2">
-            <span className="font-medium text-gray-900 flex items-center gap-1">
+          <div key={m.id} className="flex justify-between text-xs border border-border rounded p-2">
+            <span className="font-medium text-foreground flex items-center gap-1">
               <MapPin className="h-3 w-3 text-indigo-600" />
               {m.label}
             </span>
-            <span className="text-gray-500">
+            <span className="text-muted-foreground">
               {m.markerType} · {m.status} · {m.latitude.toFixed(4)}, {m.longitude.toFixed(4)}
             </span>
           </div>

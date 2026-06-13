@@ -29,15 +29,15 @@ import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 
 const DOC_TYPE_CONFIG: Record<string, { label: string; icon: typeof FileText; color: string }> = {
-  CLINICAL_NOTE: { label: "Clinical Note", icon: FileText, color: "bg-impilo-100 text-impilo-600" },
+  CLINICAL_NOTE: { label: "Clinical Note", icon: FileText, color: "bg-primary-soft text-primary" },
   LAB_REPORT: { label: "Lab Report", icon: ClipboardList, color: "bg-green-100 text-green-700" },
-  IMAGING: { label: "Imaging", icon: Image, color: "bg-purple-100 text-purple-700" },
+  IMAGING: { label: "Imaging", icon: Image, color: "bg-purple-100 text-warning-foreground" },
   CONSENT_FORM: { label: "Consent Form", icon: File, color: "bg-yellow-100 text-yellow-700" },
   REFERRAL_LETTER: { label: "Referral Letter", icon: Paperclip, color: "bg-orange-100 text-orange-700" },
   DISCHARGE_SUMMARY: { label: "Discharge Summary", icon: FileText, color: "bg-teal-100 text-teal-700" },
   PRESCRIPTION: { label: "Prescription", icon: ClipboardList, color: "bg-pink-100 text-pink-700" },
-  PROCEDURE_NOTE: { label: "Procedure Note", icon: FileText, color: "bg-indigo-100 text-indigo-700" },
-  OTHER: { label: "Other", icon: File, color: "bg-gray-100 text-gray-600" },
+  PROCEDURE_NOTE: { label: "Procedure Note", icon: FileText, color: "bg-indigo-100 text-primary-hover" },
+  OTHER: { label: "Other", icon: File, color: "bg-neutral-100 text-muted-foreground" },
 };
 
 function DocumentOcrButton({ objectId }: { objectId: string }) {
@@ -50,7 +50,7 @@ function DocumentOcrButton({ objectId }: { objectId: string }) {
       type="button"
       disabled={requestOcr.isPending || status === "RUNNING" || status === "PENDING"}
       onClick={() => requestOcr.mutate()}
-      className="rounded-md border border-slate-200 px-2 py-1 text-[11px] font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+      className="rounded-md border border-border px-2 py-1 text-[11px] font-medium text-foreground hover:bg-background disabled:opacity-50"
     >
       {requestOcr.isPending || status === "RUNNING" || status === "PENDING"
         ? "Indexing…"
@@ -139,7 +139,7 @@ export default function DocumentsPage() {
       <PageShell title="Documents">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : (
           <div className="space-y-5">
@@ -179,16 +179,16 @@ export default function DocumentsPage() {
               ]}
             />
 
-            <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+            <div className="rounded-3xl border border-border bg-background/70 p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
                 Document continuity
               </p>
-              <p className="mt-2 text-sm text-slate-800">
+              <p className="mt-2 text-sm text-foreground">
                 {activeEncounter
                   ? "New uploads from this workspace attach to the active encounter so the evidence trail stays with the current clinical episode."
                   : "There is no active encounter in scope, so uploads will still land on the patient record but may need follow-up linkage from notes or the next encounter."}
               </p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Use this surface for the attachment itself, then move directly back to notes, orders, or results through the linked workspaces above.
               </p>
             </div>
@@ -196,12 +196,12 @@ export default function DocumentsPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <FileText className="h-5 w-5 text-impilo-400" />
-                <h2 className="text-sm font-semibold text-gray-900">Documents ({documents.length})</h2>
+                <h2 className="text-sm font-semibold text-foreground">Documents ({documents.length})</h2>
               </div>
               <button
                 type="button"
                 onClick={() => setShowForm((value) => !value)}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-impilo-500 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
               >
                 <Plus className="h-4 w-4" />
                 Upload Document
@@ -209,29 +209,29 @@ export default function DocumentsPage() {
             </div>
 
             {showForm && (
-              <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-gray-200 bg-white p-5">
-                <h3 className="flex items-center gap-2 text-sm font-medium text-gray-900">
+              <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-border bg-card p-5">
+                <h3 className="flex items-center gap-2 text-sm font-medium text-foreground">
                   <Paperclip className="h-4 w-4 text-impilo-400" />
                   Upload Clinical Document
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-600">Title *</label>
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Title *</label>
                     <input
                       type="text"
                       required
                       value={form.title}
                       onChange={(e) => updateField("title", e.target.value)}
                       placeholder="e.g. Blood Test Results"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                      className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-600">Document Type</label>
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Document Type</label>
                     <select
                       value={form.document_type}
                       onChange={(e) => updateField("document_type", e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                      className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                     >
                       {Object.entries(DOC_TYPE_CONFIG).map(([key, config]) => (
                         <option key={key} value={key}>{config.label}</option>
@@ -240,31 +240,31 @@ export default function DocumentsPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-600">Description</label>
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Description</label>
                   <textarea
                     value={form.description}
                     onChange={(e) => updateField("description", e.target.value)}
                     rows={2}
                     placeholder="Brief description of the document content..."
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 resize-none"
+                    className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-600">File *</label>
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">File *</label>
                   <input
                     type="file"
                     required
                     onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                    className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                   />
                   {selectedFile && (
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-1 text-xs text-muted-foreground">
                       {selectedFile.name} ({formatFileSize(selectedFile.size)})
                     </p>
                   )}
                 </div>
                 {activeEncounter && (
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     Linked to encounter: {activeEncounter.attributes.encounterType} (started {new Date(activeEncounter.attributes.startedAt).toLocaleString()})
                   </p>
                 )}
@@ -272,14 +272,14 @@ export default function DocumentsPage() {
                   <button
                     type="button"
                     onClick={() => setShowForm(false)}
-                    className="flex-1 rounded-lg bg-gray-100 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200"
+                    className="flex-1 rounded-lg bg-neutral-100 py-2 text-sm font-medium text-foreground transition-colors hover:bg-neutral-100"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={uploadDocument.isPending}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-impilo-500 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600 disabled:opacity-50"
+                    className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-50"
                   >
                     {uploadDocument.isPending ? (
                       <>
@@ -296,9 +296,9 @@ export default function DocumentsPage() {
             )}
 
             {documents.length === 0 ? (
-              <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
-                <FileText className="mx-auto mb-3 h-10 w-10 text-gray-300" />
-                <p className="text-sm text-gray-400">No documents uploaded yet</p>
+              <div className="rounded-lg border border-border bg-card p-12 text-center">
+                <FileText className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">No documents uploaded yet</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -308,22 +308,22 @@ export default function DocumentsPage() {
                   const Icon = typeConfig.icon;
 
                   return (
-                    <div key={document.id} className="rounded-lg border border-gray-200 bg-white p-4 transition-colors hover:bg-gray-50">
+                    <div key={document.id} className="rounded-lg border border-border bg-card p-4 transition-colors hover:bg-background">
                       <div className="flex items-start gap-3">
                         <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${typeConfig.color}`}>
                           <Icon className="h-5 w-5" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="mb-1 flex items-center gap-2">
-                            <span className="text-sm font-medium text-gray-900">{attrs.title}</span>
+                            <span className="text-sm font-medium text-foreground">{attrs.title}</span>
                             <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${typeConfig.color}`}>
                               {typeConfig.label}
                             </span>
                           </div>
                           {attrs.description && (
-                            <p className="mb-1 line-clamp-2 text-xs text-gray-500">{attrs.description}</p>
+                            <p className="mb-1 line-clamp-2 text-xs text-muted-foreground">{attrs.description}</p>
                           )}
-                          <div className="flex flex-wrap items-center gap-3 text-xs text-gray-400">
+                          <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                             <span>By: {attrs.uploadedBy}</span>
                             <span>{new Date(attrs.createdAt).toLocaleDateString()}</span>
                             {attrs.mimeType && <span className="font-mono">{attrs.mimeType}</span>}

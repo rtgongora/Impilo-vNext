@@ -82,7 +82,7 @@ export default function RequestIdPage() {
 
   return (
     <div className="max-w-lg mx-auto">
-      <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
+      <div className="bg-card rounded-xl shadow-sm border border-neutral-200 p-6">
         <h1 className="text-xl font-semibold text-neutral-900 mb-1">
           Request Health ID
         </h1>
@@ -103,7 +103,7 @@ export default function RequestIdPage() {
               id="type"
               value={form.type}
               onChange={(e) => update("type", e.target.value as RequestType)}
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm bg-card focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="NEW">New ID</option>
               <option value="REPLACEMENT">Replacement</option>
@@ -175,7 +175,7 @@ export default function RequestIdPage() {
               id="sex"
               value={form.sex}
               onChange={(e) => update("sex", e.target.value)}
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm bg-card focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">Select</option>
               <option value="M">Male</option>
@@ -186,8 +186,8 @@ export default function RequestIdPage() {
 
           {/* Error message */}
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <p className="text-sm text-red-700">{error}</p>
+            <div className="bg-danger-soft border border-danger/28 rounded-lg p-3">
+              <p className="text-sm text-danger">{error}</p>
             </div>
           )}
 

@@ -116,7 +116,7 @@ export default function PlatformJourneyPage() {
             Platform journey calls enforce trust-context propagation and now include live workflow and dispatch feeds
             for operational state visibility.
           </div>
-          <div className="rounded-xl border border-fuchsia-200 bg-fuchsia-50 p-3 text-sm text-fuchsia-900">
+          <div className="rounded-xl border border-border bg-neutral-100 p-3 text-sm text-fuchsia-900">
             <div className="flex items-center gap-2">
               <FeatureMaturityBadge
                 status={transactions.length > 0 ? "live" : isError ? "partial" : "connected"}
@@ -148,10 +148,10 @@ export default function PlatformJourneyPage() {
               emptyLabel="No workflow events available."
               controls={
                 <div className="grid gap-2 sm:grid-cols-2">
-                  <label className="text-xs text-slate-600">
+                  <label className="text-xs text-muted-foreground">
                     Workflow status
                     <select
-                      className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"
+                      className="mt-1 w-full rounded-md border border-border bg-card px-2 py-1 text-sm"
                       value={workflowStatus}
                       onChange={(event) => setFilter({ wfStatus: event.target.value })}
                     >
@@ -162,10 +162,10 @@ export default function PlatformJourneyPage() {
                       ))}
                     </select>
                   </label>
-                  <label className="text-xs text-slate-600">
+                  <label className="text-xs text-muted-foreground">
                     Workflow type
                     <select
-                      className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"
+                      className="mt-1 w-full rounded-md border border-border bg-card px-2 py-1 text-sm"
                       value={workflowType}
                       onChange={(event) => setFilter({ wfType: event.target.value })}
                     >
@@ -199,10 +199,10 @@ export default function PlatformJourneyPage() {
               detail="Backed by /internal/v1/dispatch/tasks."
               emptyLabel="No dispatch events available."
               controls={
-                <label className="text-xs text-slate-600">
+                <label className="text-xs text-muted-foreground">
                   Dispatch status
                   <select
-                    className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"
+                    className="mt-1 w-full rounded-md border border-border bg-card px-2 py-1 text-sm"
                     value={dispatchStatus}
                     onChange={(event) => setFilter({ dpStatus: event.target.value })}
                   >

@@ -74,7 +74,7 @@ export function ReferralPackageBuilder({
   }
 
   return (
-    <div className="bg-white rounded-lg border border-impilo-200 p-5">
+    <div className="bg-card rounded-lg border border-primary/25 p-5">
       {/* Step indicator */}
       <div className="flex items-center gap-1 mb-5">
         {STEPS.map((s, i) => {
@@ -82,12 +82,12 @@ export function ReferralPackageBuilder({
           return (
             <div key={i} className="flex items-center gap-1">
               <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-                i === step ? "bg-impilo-100 text-impilo-600" : i < step ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+                i === step ? "bg-primary-soft text-primary" : i < step ? "bg-green-100 text-green-700" : "bg-neutral-100 text-muted-foreground"
               }`}>
                 {i < step ? <CheckCircle2 className="w-3 h-3" /> : <Icon className="w-3 h-3" />}
                 {s.label}
               </div>
-              {i < STEPS.length - 1 && <ChevronRight className="w-3 h-3 text-gray-300" />}
+              {i < STEPS.length - 1 && <ChevronRight className="w-3 h-3 text-muted-foreground" />}
             </div>
           );
         })}
@@ -96,55 +96,55 @@ export function ReferralPackageBuilder({
       {/* Step content */}
       {step === 0 && (
         <div className="space-y-3">
-          <h4 className="text-sm font-semibold text-gray-900">Patient Context</h4>
-          <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-            <p className="text-sm"><span className="text-gray-500">Patient:</span> <span className="font-medium">{patientName}</span></p>
-            {patientDob && <p className="text-sm"><span className="text-gray-500">DOB:</span> {patientDob}</p>}
-            <p className="text-sm"><span className="text-gray-500">Conditions:</span> {conditions.length > 0 ? conditions.join(", ") : "None recorded"}</p>
-            <p className="text-sm"><span className="text-gray-500">Allergies:</span> {allergies.length > 0 ? allergies.join(", ") : "NKDA"}</p>
+          <h4 className="text-sm font-semibold text-foreground">Patient Context</h4>
+          <div className="bg-background rounded-lg p-4 space-y-2">
+            <p className="text-sm"><span className="text-muted-foreground">Patient:</span> <span className="font-medium">{patientName}</span></p>
+            {patientDob && <p className="text-sm"><span className="text-muted-foreground">DOB:</span> {patientDob}</p>}
+            <p className="text-sm"><span className="text-muted-foreground">Conditions:</span> {conditions.length > 0 ? conditions.join(", ") : "None recorded"}</p>
+            <p className="text-sm"><span className="text-muted-foreground">Allergies:</span> {allergies.length > 0 ? allergies.join(", ") : "NKDA"}</p>
           </div>
         </div>
       )}
 
       {step === 1 && (
         <div className="space-y-3">
-          <h4 className="text-sm font-semibold text-gray-900">Clinical Summary</h4>
-          <p className="text-xs text-gray-500">Review and edit the auto-generated clinical summary for the referral package.</p>
+          <h4 className="text-sm font-semibold text-foreground">Clinical Summary</h4>
+          <p className="text-xs text-muted-foreground">Review and edit the auto-generated clinical summary for the referral package.</p>
           {autoSummary && (
-            <div className="bg-impilo-50 rounded-lg p-3 text-xs text-impilo-600">
+            <div className="bg-primary-soft rounded-lg p-3 text-xs text-primary">
               <p className="font-medium mb-1">Auto-generated from patient data:</p>
               <p>{autoSummary}</p>
             </div>
           )}
           <textarea value={summary} onChange={(e) => setSummary(e.target.value)} rows={4}
             placeholder="Clinical summary for the receiving provider..."
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+            className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
         </div>
       )}
 
       {step === 2 && (
         <div className="space-y-3">
-          <h4 className="text-sm font-semibold text-gray-900">Referral Details</h4>
+          <h4 className="text-sm font-semibold text-foreground">Referral Details</h4>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Specialty</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Specialty</label>
               <input type="text" value={specialty} onChange={(e) => setSpecialty(e.target.value)}
-                placeholder="e.g. Cardiology" className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg" />
+                placeholder="e.g. Cardiology" className="w-full px-3 py-2 text-sm border border-border rounded-lg" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Referred To</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Referred To</label>
               <input type="text" value={referredTo} onChange={(e) => setReferredTo(e.target.value)}
-                placeholder="Provider name" className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg" />
+                placeholder="Provider name" className="w-full px-3 py-2 text-sm border border-border rounded-lg" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Facility</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Facility</label>
               <input type="text" value={facility} onChange={(e) => setFacility(e.target.value)}
-                placeholder="Receiving facility" className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg" />
+                placeholder="Receiving facility" className="w-full px-3 py-2 text-sm border border-border rounded-lg" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Urgency</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Urgency</label>
               <select value={urgency} onChange={(e) => setUrgency(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg">
+                className="w-full px-3 py-2 text-sm border border-border rounded-lg">
                 <option value="ROUTINE">Routine</option>
                 <option value="URGENT">Urgent</option>
                 <option value="EMERGENCY">Emergency</option>
@@ -152,24 +152,24 @@ export function ReferralPackageBuilder({
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Reason for Referral</label>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Reason for Referral</label>
             <textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2}
               placeholder="Why is this referral needed?"
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg" />
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg" />
           </div>
         </div>
       )}
 
       {step === 3 && (
         <div className="space-y-3">
-          <h4 className="text-sm font-semibold text-gray-900">Review & Submit</h4>
-          <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
-            <p><span className="text-gray-500">Type:</span> {referralType}</p>
-            <p><span className="text-gray-500">Specialty:</span> {specialty || "—"}</p>
-            <p><span className="text-gray-500">To:</span> {referredTo || "—"} at {facility || "—"}</p>
-            <p><span className="text-gray-500">Urgency:</span> <span className={urgency === "EMERGENCY" ? "text-red-600 font-semibold" : urgency === "URGENT" ? "text-amber-600 font-semibold" : ""}>{urgency}</span></p>
-            <p><span className="text-gray-500">Reason:</span> {reason || "—"}</p>
-            <p className="text-xs text-gray-400 border-t pt-2 mt-2">{summary || autoSummary || "No clinical summary"}</p>
+          <h4 className="text-sm font-semibold text-foreground">Review & Submit</h4>
+          <div className="bg-background rounded-lg p-4 space-y-2 text-sm">
+            <p><span className="text-muted-foreground">Type:</span> {referralType}</p>
+            <p><span className="text-muted-foreground">Specialty:</span> {specialty || "—"}</p>
+            <p><span className="text-muted-foreground">To:</span> {referredTo || "—"} at {facility || "—"}</p>
+            <p><span className="text-muted-foreground">Urgency:</span> <span className={urgency === "EMERGENCY" ? "text-red-600 font-semibold" : urgency === "URGENT" ? "text-amber-600 font-semibold" : ""}>{urgency}</span></p>
+            <p><span className="text-muted-foreground">Reason:</span> {reason || "—"}</p>
+            <p className="text-xs text-muted-foreground border-t pt-2 mt-2">{summary || autoSummary || "No clinical summary"}</p>
           </div>
         </div>
       )}
@@ -178,15 +178,15 @@ export function ReferralPackageBuilder({
       <div className="flex justify-between mt-4 pt-3 border-t">
         <div>
           {step > 0 && (
-            <button onClick={() => setStep(step - 1)} className="inline-flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900">
+            <button onClick={() => setStep(step - 1)} className="inline-flex items-center gap-1 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground">
               <ChevronLeft className="w-4 h-4" /> Back
             </button>
           )}
         </div>
         <div className="flex gap-2">
-          <button onClick={onCancel} className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700">Cancel</button>
+          <button onClick={onCancel} className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground">Cancel</button>
           {step < 3 ? (
-            <button onClick={handleNext} className="inline-flex items-center gap-1 px-4 py-1.5 text-sm font-medium bg-impilo-500 text-white rounded-lg hover:bg-impilo-600">
+            <button onClick={handleNext} className="inline-flex items-center gap-1 px-4 py-1.5 text-sm font-medium bg-primary text-white rounded-lg hover:bg-primary-hover">
               Next <ChevronRight className="w-4 h-4" />
             </button>
           ) : (

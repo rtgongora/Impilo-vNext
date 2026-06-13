@@ -9,7 +9,7 @@ export default function AdminAssessmentsPage() {
     <AppLayout>
       <PageShell title="Admin assessments" subtitle="Create/edit assessments and objective/manual questions.">
         <div className="flex gap-2">
-          <Link href="/learning/admin/assessments/new" className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700">
+          <Link href="/learning/admin/assessments/new" className="rounded border border-border px-3 py-1.5 text-sm text-foreground">
             New assessment
           </Link>
         </div>

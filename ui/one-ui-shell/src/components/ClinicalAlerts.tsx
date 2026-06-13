@@ -10,9 +10,9 @@ import { useState } from "react";
 import { type ClinicalAlert, type AlertSeverity } from "@/hooks/useClinicalAlerts";
 
 const SEVERITY_STYLES: Record<AlertSeverity, { bg: string; border: string; icon: typeof AlertTriangle; iconColor: string }> = {
-  critical: { bg: "bg-red-50", border: "border-red-200", icon: AlertTriangle, iconColor: "text-red-600" },
-  warning: { bg: "bg-amber-50", border: "border-amber-200", icon: AlertCircle, iconColor: "text-amber-600" },
-  info: { bg: "bg-impilo-50", border: "border-impilo-200", icon: Info, iconColor: "text-impilo-500" },
+  critical: { bg: "bg-danger-soft", border: "border-danger/28", icon: AlertTriangle, iconColor: "text-red-600" },
+  warning: { bg: "bg-warning-soft", border: "border-warning/35", icon: AlertCircle, iconColor: "text-amber-600" },
+  info: { bg: "bg-primary-soft", border: "border-primary/25", icon: Info, iconColor: "text-primary" },
 };
 
 export function ClinicalAlerts({ alerts }: { alerts: ClinicalAlert[] }) {
@@ -37,18 +37,18 @@ export function ClinicalAlerts({ alerts }: { alerts: ClinicalAlert[] }) {
           <div key={alert.id} className={`flex items-start gap-2 px-3 py-2 rounded-lg border ${style.bg} ${style.border}`}>
             <Icon className={`w-4 h-4 shrink-0 mt-0.5 ${style.iconColor}`} />
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-gray-900">{alert.title}</p>
-              <p className="text-xs text-gray-600">{alert.message}</p>
+              <p className="text-xs font-semibold text-foreground">{alert.title}</p>
+              <p className="text-xs text-muted-foreground">{alert.message}</p>
             </div>
             <button onClick={() => setDismissed((prev) => new Set(prev).add(alert.id))}
-              className="shrink-0 p-0.5 text-gray-400 hover:text-gray-600">
+              className="shrink-0 p-0.5 text-muted-foreground hover:text-muted-foreground">
               <X className="w-3 h-3" />
             </button>
           </div>
         );
       })}
       {sorted.length > 5 && (
-        <p className="text-xs text-gray-500 px-3">+{sorted.length - 5} more alerts</p>
+        <p className="text-xs text-muted-foreground px-3">+{sorted.length - 5} more alerts</p>
       )}
     </div>
   );

@@ -15,9 +15,9 @@ export function EnterpriseSubnav() {
   return (
     <nav
       aria-label="Enterprise resources"
-      className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+      className="mb-6 rounded-2xl border border-border bg-card p-4 shadow-sm"
     >
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Enterprise resource plane</p>
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Enterprise resource plane</p>
       <div className="mt-3 flex flex-wrap gap-2">
         {items.map((item) => {
           const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -29,8 +29,8 @@ export function EnterpriseSubnav() {
               className={[
                 "rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
                 active
-                  ? "border-impilo-500 bg-impilo-50 text-impilo-900"
-                  : "border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50",
+                  ? "border-impilo-500 bg-primary-soft text-impilo-900"
+                  : "border-border text-foreground hover:border-border hover:bg-background",
               ].join(" ")}
             >
               {item.label}
@@ -39,7 +39,7 @@ export function EnterpriseSubnav() {
         })}
       </div>
       {!facility ? (
-        <p className="mt-3 text-xs text-amber-700">
+        <p className="mt-3 text-xs text-warning-foreground">
           Select a facility to unlock facility-scoped inventory, pharmacy stock, and charge-sheet shortcuts.
         </p>
       ) : null}

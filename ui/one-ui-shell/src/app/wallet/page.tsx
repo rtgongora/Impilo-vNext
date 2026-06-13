@@ -75,19 +75,19 @@ function formatMoney(n: number, currency = "USD") {
 function statusBadge(status: string) {
   const s = status.toUpperCase();
   if (s === "ACTIVE" || s === "VERIFIED") return "bg-green-100 text-green-800";
-  if (s === "ISSUED") return "bg-impilo-100 text-impilo-700";
+  if (s === "ISSUED") return "bg-primary-soft text-primary-hover";
   if (s === "BLOCKED") return "bg-red-100 text-red-800";
-  if (s === "EXPIRED" || s === "REPLACED") return "bg-gray-100 text-gray-600";
-  return "bg-gray-100 text-gray-700";
+  if (s === "EXPIRED" || s === "REPLACED") return "bg-neutral-100 text-muted-foreground";
+  return "bg-neutral-100 text-foreground";
 }
 
 function channelBadge(channel: string) {
   const ch = channel.toUpperCase();
   if (ch === "MOBILE_MONEY") return "bg-yellow-100 text-yellow-800";
   if (ch === "CARD" || ch === "POS") return "bg-purple-100 text-purple-800";
-  if (ch === "BANK_TRANSFER") return "bg-impilo-100 text-impilo-700";
-  if (ch === "CASH") return "bg-emerald-100 text-emerald-800";
-  return "bg-gray-100 text-gray-700";
+  if (ch === "BANK_TRANSFER") return "bg-primary-soft text-primary-hover";
+  if (ch === "CASH") return "bg-emerald-100 text-primary-hover";
+  return "bg-neutral-100 text-foreground";
 }
 
 export default function WalletDashboardPage() {
@@ -139,7 +139,7 @@ export default function WalletDashboardPage() {
         icon={<Wallet className="h-6 w-6" />}
       >
         {!cpid && (
-          <p className="text-sm text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 mb-6">
+          <p className="text-sm text-warning-foreground bg-warning-soft border border-amber-100 rounded-lg px-3 py-2 mb-6">
             Sign in to view your wallet.
           </p>
         )}
@@ -147,13 +147,13 @@ export default function WalletDashboardPage() {
         {cpid && (
           <div className="space-y-8">
             {/* Balance Card */}
-            <section className="rounded-xl border border-gray-200 bg-gradient-to-br from-slate-900 to-slate-800 text-white shadow-lg p-6">
+            <section className="rounded-xl border border-border bg-gradient-to-br from-slate-900 to-slate-800 text-white shadow-lg p-6">
               <div className="flex items-center gap-2 mb-4">
                 <Wallet className="h-5 w-5 text-emerald-400" />
-                <h2 className="text-sm font-semibold text-slate-300">Wallet Balance</h2>
+                <h2 className="text-sm font-semibold text-muted-foreground">Wallet Balance</h2>
               </div>
               {(walletQ.isLoading || balanceQ.isLoading) && (
-                <div className="flex items-center gap-2 text-slate-400 text-sm">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm">
                   <Loader2 className="h-4 w-4 animate-spin" /> Loading...
                 </div>
               )}
@@ -163,19 +163,19 @@ export default function WalletDashboardPage() {
               {!walletQ.isLoading && !walletQ.isError && walletId && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <div className="text-xs text-slate-400">Available</div>
+                    <div className="text-xs text-muted-foreground">Available</div>
                     <div className="text-2xl font-bold text-emerald-400 tabular-nums">
                       {formatMoney(availableBalance, currency)}
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs text-slate-400">On hold</div>
+                    <div className="text-xs text-muted-foreground">On hold</div>
                     <div className="text-lg font-semibold text-amber-300 tabular-nums">
                       {formatMoney(heldBalance, currency)}
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs text-slate-400">Total</div>
+                    <div className="text-xs text-muted-foreground">Total</div>
                     <div className="text-lg font-semibold text-white tabular-nums">
                       {formatMoney(totalBalance, currency)}
                     </div>
@@ -183,38 +183,38 @@ export default function WalletDashboardPage() {
                 </div>
               )}
               {!walletQ.isLoading && !walletQ.isError && !walletId && (
-                <p className="text-sm text-slate-400">No wallet found for your account.</p>
+                <p className="text-sm text-muted-foreground">No wallet found for your account.</p>
               )}
             </section>
 
             {/* Quick Actions */}
             <section>
-              <h2 className="text-sm font-semibold text-gray-900 mb-3">Quick actions</h2>
+              <h2 className="text-sm font-semibold text-foreground mb-3">Quick actions</h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <Link
                   href="/wallet/send"
-                  className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-800 hover:bg-gray-50 shadow-sm transition"
+                  className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground hover:bg-background shadow-sm transition"
                 >
-                  <ArrowUpRight className="h-4 w-4 text-impilo-500" />
+                  <ArrowUpRight className="h-4 w-4 text-primary" />
                   Send Money
                 </Link>
                 <Link
                   href="/wallet/send?mode=merchant"
-                  className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-800 hover:bg-gray-50 shadow-sm transition"
+                  className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground hover:bg-background shadow-sm transition"
                 >
                   <CreditCard className="h-4 w-4 text-purple-600" />
                   Pay Merchant
                 </Link>
                 <Link
                   href="/wallet/deposit"
-                  className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-800 hover:bg-gray-50 shadow-sm transition"
+                  className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground hover:bg-background shadow-sm transition"
                 >
-                  <ArrowDownLeft className="h-4 w-4 text-emerald-600" />
+                  <ArrowDownLeft className="h-4 w-4 text-primary" />
                   Deposit
                 </Link>
                 <Link
                   href="/wallet/cards"
-                  className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-800 hover:bg-gray-50 shadow-sm transition"
+                  className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground hover:bg-background shadow-sm transition"
                 >
                   <Plus className="h-4 w-4 text-amber-600" />
                   Request Card
@@ -223,31 +223,31 @@ export default function WalletDashboardPage() {
             </section>
 
             {/* Recent Transactions */}
-            <section className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-              <div className="border-b border-gray-100 px-4 py-3 bg-slate-50/80 flex items-center justify-between">
+            <section className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+              <div className="border-b border-border px-4 py-3 bg-background/80 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <ArrowUpRight className="h-4 w-4 text-slate-600" />
-                  <h2 className="text-sm font-semibold text-gray-900">Recent transactions</h2>
+                  <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+                  <h2 className="text-sm font-semibold text-foreground">Recent transactions</h2>
                 </div>
                 <Link
                   href="/wallet/transactions"
-                  className="text-xs font-medium text-impilo-600 hover:underline"
+                  className="text-xs font-medium text-primary hover:underline"
                 >
                   View all
                 </Link>
               </div>
               <div className="overflow-x-auto">
                 {txQ.isLoading && (
-                  <div className="p-6 flex items-center gap-2 text-gray-600 text-sm">
+                  <div className="p-6 flex items-center gap-2 text-muted-foreground text-sm">
                     <Loader2 className="h-4 w-4 animate-spin" /> Loading...
                   </div>
                 )}
                 {!txQ.isLoading && txQ.isError && (
-                  <p className="p-4 text-sm text-red-700">Could not load transactions.</p>
+                  <p className="p-4 text-sm text-danger">Could not load transactions.</p>
                 )}
                 {!txQ.isLoading && !txQ.isError && (
                   <table className="min-w-full text-sm">
-                    <thead className="bg-gray-50 text-left text-xs text-gray-500 uppercase tracking-wide">
+                    <thead className="bg-background text-left text-xs text-muted-foreground uppercase tracking-wide">
                       <tr>
                         <th className="px-4 py-2">Date</th>
                         <th className="px-4 py-2">Description</th>
@@ -259,7 +259,7 @@ export default function WalletDashboardPage() {
                     <tbody className="divide-y divide-gray-100">
                       {txRows.length === 0 && (
                         <tr>
-                          <td colSpan={5} className="px-4 py-6 text-center text-gray-500">
+                          <td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">
                             No transactions yet.
                           </td>
                         </tr>
@@ -271,17 +271,17 @@ export default function WalletDashboardPage() {
                         const balAfter = readNum(row, "balanceAfter", "balance_after", "runningBalance", "running_balance");
                         const channel = readStr(row, "channel");
                         return (
-                          <tr key={readStr(row, "txnId", "txn_id", "transactionId", "transaction_id") || String(i)} className="hover:bg-gray-50/80">
-                            <td className="px-4 py-2 whitespace-nowrap text-gray-700">
+                          <tr key={readStr(row, "txnId", "txn_id", "transactionId", "transaction_id") || String(i)} className="hover:bg-background/80">
+                            <td className="px-4 py-2 whitespace-nowrap text-foreground">
                               {readStr(row, "createdAt", "created_at", "txnDate", "txn_date").slice(0, 16).replace("T", " ")}
                             </td>
-                            <td className="px-4 py-2 text-gray-800 max-w-xs truncate">
+                            <td className="px-4 py-2 text-foreground max-w-xs truncate">
                               {readStr(row, "description") || readStr(row, "txnType", "txn_type")}
                             </td>
-                            <td className={`px-4 py-2 text-right tabular-nums font-medium ${isCredit ? "text-emerald-700" : "text-red-700"}`}>
+                            <td className={`px-4 py-2 text-right tabular-nums font-medium ${isCredit ? "text-primary-hover" : "text-danger"}`}>
                               {isCredit ? "+" : "-"}{formatMoney(amount, currency)}
                             </td>
-                            <td className="px-4 py-2 text-right tabular-nums text-gray-900">
+                            <td className="px-4 py-2 text-right tabular-nums text-foreground">
                               {formatMoney(balAfter, currency)}
                             </td>
                             <td className="px-4 py-2">
@@ -301,27 +301,27 @@ export default function WalletDashboardPage() {
             </section>
 
             {/* My Cards */}
-            <section className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-              <div className="border-b border-gray-100 px-4 py-3 bg-slate-50/80 flex items-center justify-between">
+            <section className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+              <div className="border-b border-border px-4 py-3 bg-background/80 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <CreditCard className="h-4 w-4 text-slate-600" />
-                  <h2 className="text-sm font-semibold text-gray-900">My Cards</h2>
+                  <CreditCard className="h-4 w-4 text-muted-foreground" />
+                  <h2 className="text-sm font-semibold text-foreground">My Cards</h2>
                 </div>
                 <Link
                   href="/wallet/cards"
-                  className="text-xs font-medium text-impilo-600 hover:underline"
+                  className="text-xs font-medium text-primary hover:underline"
                 >
                   Manage cards
                 </Link>
               </div>
               <div className="p-4">
                 {cardsQ.isLoading && (
-                  <div className="flex items-center gap-2 text-gray-600 text-sm">
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm">
                     <Loader2 className="h-4 w-4 animate-spin" /> Loading...
                   </div>
                 )}
                 {!cardsQ.isLoading && cards.length === 0 && (
-                  <p className="text-sm text-gray-500">No cards issued yet.</p>
+                  <p className="text-sm text-muted-foreground">No cards issued yet.</p>
                 )}
                 {!cardsQ.isLoading && cards.length > 0 && (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -335,18 +335,18 @@ export default function WalletDashboardPage() {
                       return (
                         <div
                           key={cardId || String(i)}
-                          className="rounded-lg border border-gray-100 bg-gray-50 p-3 flex flex-col gap-2"
+                          className="rounded-lg border border-border bg-background p-3 flex flex-col gap-2"
                         >
                           <div className="flex items-center justify-between">
-                            <span className="font-mono text-sm text-gray-900">{masked || "****"}</span>
+                            <span className="font-mono text-sm text-foreground">{masked || "****"}</span>
                             <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusBadge(status)}`}>
                               {status}
                             </span>
                           </div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-muted-foreground">
                             Expires: {expMonth ? `${String(expMonth).padStart(2, "0")}/${expYear}` : "--/--"}
                           </div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-muted-foreground">
                             Health data: {healthUpdated ? new Date(healthUpdated).toLocaleDateString() : "Not synced"}
                           </div>
                         </div>
@@ -358,19 +358,19 @@ export default function WalletDashboardPage() {
             </section>
 
             {/* Funding Sources */}
-            <section className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-              <div className="border-b border-gray-100 px-4 py-3 bg-slate-50/80 flex items-center gap-2">
-                <ArrowDownLeft className="h-4 w-4 text-slate-600" />
-                <h2 className="text-sm font-semibold text-gray-900">Funding Sources</h2>
+            <section className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+              <div className="border-b border-border px-4 py-3 bg-background/80 flex items-center gap-2">
+                <ArrowDownLeft className="h-4 w-4 text-muted-foreground" />
+                <h2 className="text-sm font-semibold text-foreground">Funding Sources</h2>
               </div>
               <div className="p-4">
                 {fundingQ.isLoading && (
-                  <div className="flex items-center gap-2 text-gray-600 text-sm">
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm">
                     <Loader2 className="h-4 w-4 animate-spin" /> Loading...
                   </div>
                 )}
                 {!fundingQ.isLoading && fundingSources.length === 0 && (
-                  <p className="text-sm text-gray-500">No linked funding sources.</p>
+                  <p className="text-sm text-muted-foreground">No linked funding sources.</p>
                 )}
                 {!fundingQ.isLoading && fundingSources.length > 0 && (
                   <div className="space-y-2">
@@ -383,11 +383,11 @@ export default function WalletDashboardPage() {
                       return (
                         <div
                           key={srcId || String(i)}
-                          className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 px-3 py-2"
+                          className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2"
                         >
                           <div>
-                            <div className="text-sm font-medium text-gray-900">{accName || provider || srcType}</div>
-                            <div className="text-xs text-gray-500">{srcType} {provider ? `- ${provider}` : ""}</div>
+                            <div className="text-sm font-medium text-foreground">{accName || provider || srcType}</div>
+                            <div className="text-xs text-muted-foreground">{srcType} {provider ? `- ${provider}` : ""}</div>
                           </div>
                           {verified && (
                             <span className="rounded-full bg-green-100 text-green-800 px-2 py-0.5 text-xs font-medium">

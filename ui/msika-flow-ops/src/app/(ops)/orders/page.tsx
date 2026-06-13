@@ -5,12 +5,12 @@ import { opsApi, type Order, type PagedResponse } from "@/lib/opsApi";
 
 const STATUS_STYLES: Record<string, string> = {
   CREATED: "bg-neutral-100 text-neutral-700",
-  VALIDATED: "bg-blue-100 text-blue-700",
-  PRICED: "bg-indigo-100 text-indigo-700",
-  CONFIRMED: "bg-purple-100 text-purple-700",
-  FULFILLING: "bg-amber-100 text-amber-700",
-  COMPLETED: "bg-emerald-100 text-emerald-700",
-  CANCELLED: "bg-red-100 text-red-700",
+  VALIDATED: "bg-blue-100 text-primary-hover",
+  PRICED: "bg-indigo-100 text-primary-hover",
+  CONFIRMED: "bg-purple-100 text-warning-foreground",
+  FULFILLING: "bg-amber-100 text-warning-foreground",
+  COMPLETED: "bg-emerald-100 text-primary-hover",
+  CANCELLED: "bg-red-100 text-danger",
 };
 
 export default function OpsOrdersPage() {
@@ -80,7 +80,7 @@ export default function OpsOrdersPage() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-red-800">
           {error}
         </div>
       )}

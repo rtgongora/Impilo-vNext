@@ -67,13 +67,13 @@ export default function EmergencyPatientViewPage() {
       <PageShell title="Emergency summary">
         {loadingPatient ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : !patient ? (
-          <p className="text-sm text-slate-500">Patient not found.</p>
+          <p className="text-sm text-muted-foreground">Patient not found.</p>
         ) : (
           <div className="space-y-4 max-w-3xl">
-            <div className="flex items-center justify-between gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2">
+            <div className="flex items-center justify-between gap-2 rounded-lg border border-danger/28 bg-danger-soft px-3 py-2">
               <div className="flex items-center gap-2 text-sm font-semibold text-red-900">
                 <Siren className="h-4 w-4" aria-hidden />
                 High-risk / emergency snapshot
@@ -83,21 +83,21 @@ export default function EmergencyPatientViewPage() {
               </Link>
             </div>
 
-            <div className="rounded-lg border border-slate-200 bg-white p-4">
+            <div className="rounded-lg border border-border bg-card p-4">
               <div className="flex items-start gap-2">
-                <User className="h-4 w-4 text-slate-500 mt-0.5" aria-hidden />
+                <User className="h-4 w-4 text-muted-foreground mt-0.5" aria-hidden />
                 <div>
-                  <p className="text-sm font-semibold text-slate-900">
+                  <p className="text-sm font-semibold text-foreground">
                     {maskName(patient.attributes.displayName, privacyLevel)}
                   </p>
-                  <p className="text-xs font-mono text-slate-600">{displayCpid(patient.attributes.cpid)}</p>
+                  <p className="text-xs font-mono text-muted-foreground">{displayCpid(patient.attributes.cpid)}</p>
                   {patient.attributes.dateOfBirth && (
-                    <p className="text-xs text-slate-500">DoB: {String(patient.attributes.dateOfBirth)}</p>
+                    <p className="text-xs text-muted-foreground">DoB: {String(patient.attributes.dateOfBirth)}</p>
                   )}
                 </div>
               </div>
               {activeEncounter && (
-                <p className="mt-3 text-sm text-amber-900">
+                <p className="mt-3 text-sm text-warning-foreground">
                   <span className="font-medium">Active encounter:</span>{" "}
                   {String(activeEncounter.attributes.encounterType)} — since{" "}
                   {String(activeEncounter.attributes.startedAt ?? "")}
@@ -105,11 +105,11 @@ export default function EmergencyPatientViewPage() {
               )}
             </div>
 
-            <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-4">
-              <h2 className="text-xs font-bold uppercase tracking-wide text-amber-900">Resuscitation &amp; consent</h2>
-              <ul className="mt-2 space-y-1 text-sm text-amber-950">
+            <div className="rounded-lg border border-warning/35 bg-warning-soft/50 p-4">
+              <h2 className="text-xs font-bold uppercase tracking-wide text-warning-foreground">Resuscitation &amp; consent</h2>
+              <ul className="mt-2 space-y-1 text-sm text-warning-foreground">
                 {(cs?.criticalFlags ?? []).length === 0 && (
-                  <li className="text-amber-800/90">No critical consent flags in the current extract.</li>
+                  <li className="text-warning-foreground/90">No critical consent flags in the current extract.</li>
                 )}
                 {(cs?.criticalFlags ?? []).map((f) => (
                   <li key={f.id ?? f.code} className="font-medium">
@@ -126,15 +126,15 @@ export default function EmergencyPatientViewPage() {
               <BreakGlassRequestPanel patientId={patientId} resourceType="EMERGENCY_PATIENT_RECORD" />
             </div>
 
-            <div className="rounded-lg border border-red-100 bg-red-50/30 p-4">
+            <div className="rounded-lg border border-red-100 bg-danger-soft/30 p-4">
               <h2 className="flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-red-900">
                 <ShieldAlert className="h-3.5 w-3.5" />
                 Allergies
               </h2>
               {activeAllergies.length === 0 ? (
-                <p className="mt-1 text-sm text-slate-600">No active allergies on record in this view.</p>
+                <p className="mt-1 text-sm text-muted-foreground">No active allergies on record in this view.</p>
               ) : (
-                <ul className="mt-2 space-y-1 text-sm text-slate-900">
+                <ul className="mt-2 space-y-1 text-sm text-foreground">
                   {activeAllergies.map((a) => (
                     <li key={a.id}>
                       <span className="font-medium">{String(a.attributes.allergen)}</span>
@@ -146,10 +146,10 @@ export default function EmergencyPatientViewPage() {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-lg border border-slate-200 p-3">
-                <h2 className="text-xs font-bold uppercase text-slate-500">Problems (active)</h2>
-                <ul className="mt-2 space-y-1 text-sm text-slate-800">
-                  {activeConditions.length === 0 && <li className="text-slate-500">None listed.</li>}
+              <div className="rounded-lg border border-border p-3">
+                <h2 className="text-xs font-bold uppercase text-muted-foreground">Problems (active)</h2>
+                <ul className="mt-2 space-y-1 text-sm text-foreground">
+                  {activeConditions.length === 0 && <li className="text-muted-foreground">None listed.</li>}
                   {activeConditions.slice(0, 8).map((c) => (
                     <li key={c.id}>
                       {String(
@@ -159,13 +159,13 @@ export default function EmergencyPatientViewPage() {
                   ))}
                 </ul>
               </div>
-              <div className="rounded-lg border border-slate-200 p-3">
-                <h2 className="flex items-center gap-1 text-xs font-bold uppercase text-slate-500">
+              <div className="rounded-lg border border-border p-3">
+                <h2 className="flex items-center gap-1 text-xs font-bold uppercase text-muted-foreground">
                   <Pill className="h-3.5 w-3.5" />
                   Medications
                 </h2>
-                <ul className="mt-2 space-y-1 text-sm text-slate-800">
-                  {activeMeds.length === 0 && <li className="text-slate-500">None active.</li>}
+                <ul className="mt-2 space-y-1 text-sm text-foreground">
+                  {activeMeds.length === 0 && <li className="text-muted-foreground">None active.</li>}
                   {activeMeds.slice(0, 8).map((m) => (
                     <li key={m.id}>{String(m.attributes.medicationName ?? m.attributes.name ?? m.id)}</li>
                   ))}
@@ -173,15 +173,15 @@ export default function EmergencyPatientViewPage() {
               </div>
             </div>
 
-            <div className="rounded-lg border border-slate-200 p-3 text-xs text-slate-600">
-              <p className="font-medium text-slate-800">Pregnancy &amp; emergency contacts</p>
+            <div className="rounded-lg border border-border p-3 text-xs text-muted-foreground">
+              <p className="font-medium text-foreground">Pregnancy &amp; emergency contacts</p>
               <p className="mt-1">
                 When available from PCT longitudinal summary, extend this view to include obstetric status and
                 next-of-kin.
               </p>
             </div>
 
-            <p className="text-[10px] text-slate-500">
+            <p className="text-[10px] text-muted-foreground">
               <AlertTriangle className="inline h-3 w-3 -translate-y-px" aria-hidden /> Audit: details shown for rapid
               decision support; use governed workflows for override and attestation.
             </p>

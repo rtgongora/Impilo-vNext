@@ -20,20 +20,20 @@ export function AppointmentMessagePanel({ appointmentId, patientLabel }: Appoint
   const rows = Array.isArray(messages) ? messages : [];
 
   return (
-    <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
-      <div className="mb-2 flex items-center gap-2 text-xs font-medium text-gray-700">
+    <div className="mt-3 rounded-lg border border-border bg-background p-3">
+      <div className="mb-2 flex items-center gap-2 text-xs font-medium text-foreground">
         <MessageSquare className="h-3.5 w-3.5" />
         Appointment messages
-        {patientLabel ? <span className="text-gray-400">· {patientLabel}</span> : null}
+        {patientLabel ? <span className="text-muted-foreground">· {patientLabel}</span> : null}
       </div>
 
       {isLoading ? (
-        <div className="flex items-center gap-2 py-2 text-xs text-gray-500">
+        <div className="flex items-center gap-2 py-2 text-xs text-muted-foreground">
           <Loader2 className="h-3 w-3 animate-spin" />
           Loading thread…
         </div>
       ) : rows.length === 0 ? (
-        <p className="py-1 text-xs text-gray-500">No messages yet. Send a note to the citizen.</p>
+        <p className="py-1 text-xs text-muted-foreground">No messages yet. Send a note to the citizen.</p>
       ) : (
         <ul className="mb-2 max-h-40 space-y-1.5 overflow-y-auto">
           {rows.map((row) => {
@@ -44,7 +44,7 @@ export function AppointmentMessagePanel({ appointmentId, patientLabel }: Appoint
               <li
                 key={String(item.id ?? `${direction}-${item.sentAt}`)}
                 className={`rounded px-2 py-1.5 text-xs ${
-                  isProvider ? "bg-impilo-50 text-impilo-800" : "bg-white text-gray-700"
+                  isProvider ? "bg-primary-soft text-impilo-800" : "bg-card text-foreground"
                 }`}
               >
                 <span className="font-medium">{isProvider ? "You" : "Citizen"}:</span>{" "}
@@ -61,7 +61,7 @@ export function AppointmentMessagePanel({ appointmentId, patientLabel }: Appoint
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           placeholder="Message the citizen about this appointment…"
-          className="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-impilo-400"
+          className="flex-1 rounded-lg border border-border px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/40"
         />
         <button
           type="button"
@@ -72,7 +72,7 @@ export function AppointmentMessagePanel({ appointmentId, patientLabel }: Appoint
               { onSuccess: () => setDraft("") },
             );
           }}
-          className="inline-flex items-center gap-1 rounded-lg bg-impilo-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-impilo-600 disabled:opacity-50"
+          className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-primary-hover disabled:opacity-50"
         >
           {sendMessage.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
           Send

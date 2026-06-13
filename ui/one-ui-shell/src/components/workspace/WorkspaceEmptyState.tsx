@@ -11,14 +11,24 @@ export function WorkspaceEmptyState(props: {
   icon?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 px-6 py-12 text-center dark:border-slate-700 dark:bg-slate-900/40">
-      {props.icon ? <div className="mb-3 text-slate-400">{props.icon}</div> : null}
-      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{props.title}</h3>
-      <p className="mt-1 max-w-md text-sm text-slate-500 dark:text-slate-400">{props.description}</p>
+    <div className="relative flex flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed border-border bg-primary-soft px-6 py-12 text-center">
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.05]"
+        style={{
+          backgroundImage: "url('/brand/mark-rgb.svg')",
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "center",
+          backgroundSize: "180px",
+        }}
+        aria-hidden
+      />
+      {props.icon ? <div className="relative mb-3 text-muted-foreground">{props.icon}</div> : null}
+      <h3 className="relative text-sm font-semibold text-foreground">{props.title}</h3>
+      <p className="relative mt-1 max-w-md text-sm text-muted-foreground">{props.description}</p>
       {props.actionLabel && props.actionHref ? (
         <Link
           href={props.actionHref}
-          className="mt-4 inline-flex rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white hover:bg-impilo-600"
+          className="relative mt-4 inline-flex rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary-hover"
         >
           {props.actionLabel}
         </Link>

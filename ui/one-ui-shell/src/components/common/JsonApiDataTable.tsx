@@ -37,7 +37,7 @@ export function JsonApiDataTable({
     header: col.header,
     className: col.className,
     render: (row) =>
-      col.render ? col.render(row) : <span className="text-sm text-slate-800">{pickField(row, ...col.fields)}</span>,
+      col.render ? col.render(row) : <span className="text-sm text-foreground">{pickField(row, ...col.fields)}</span>,
   }));
 
   return (

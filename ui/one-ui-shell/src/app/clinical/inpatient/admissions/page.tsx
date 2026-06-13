@@ -63,7 +63,7 @@ export default function InpatientAdmissionsPage() {
       <div className="flex justify-end">
         <Link
           href="/beds"
-          className="inline-flex items-center gap-2 rounded-lg bg-impilo-500 px-3 py-2 text-sm font-medium text-white hover:bg-impilo-600"
+          className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white hover:bg-primary-hover"
         >
           <Plus className="h-4 w-4" />
           New admission (via beds)
@@ -71,7 +71,7 @@ export default function InpatientAdmissionsPage() {
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-12 text-slate-500">
+        <div className="flex items-center justify-center py-12 text-muted-foreground">
           <Loader2 className="mr-2 h-5 w-5 animate-spin" />
           Loading admissions…
         </div>
@@ -90,35 +90,35 @@ export default function InpatientAdmissionsPage() {
           actionHref="/clinical/inpatient/ward-board"
         />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-slate-200">
+        <div className="overflow-hidden rounded-xl border border-border">
           <table className="min-w-full divide-y divide-slate-200 text-sm">
-            <thead className="bg-slate-50">
+            <thead className="bg-background">
               <tr>
-                <th className="px-4 py-3 text-left font-medium text-slate-600">Admission</th>
-                <th className="px-4 py-3 text-left font-medium text-slate-600">Patient</th>
-                <th className="px-4 py-3 text-left font-medium text-slate-600">Ward / bed</th>
-                <th className="px-4 py-3 text-left font-medium text-slate-600">Status</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Admission</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Patient</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Ward / bed</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
+            <tbody className="divide-y divide-slate-100 bg-card">
               {rows.map((row, idx) => {
                 const id = String(row.id ?? row.admissionId ?? idx);
                 const attrs = (row.attributes ?? row) as Record<string, unknown>;
                 return (
-                  <tr key={id} className="hover:bg-slate-50">
+                  <tr key={id} className="hover:bg-background">
                     <td className="px-4 py-3">
-                      <Link href={`/clinical/inpatient/admissions/${id}`} className="font-medium text-impilo-600 hover:underline">
+                      <Link href={`/clinical/inpatient/admissions/${id}`} className="font-medium text-primary hover:underline">
                         {id}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-slate-700">
+                    <td className="px-4 py-3 text-foreground">
                       {String(attrs.patientName ?? attrs.patient_cpid ?? attrs.patientCpid ?? "—")}
                     </td>
-                    <td className="px-4 py-3 text-slate-600">
+                    <td className="px-4 py-3 text-muted-foreground">
                       {String(attrs.wardName ?? attrs.ward ?? "—")} / {String(attrs.bedNumber ?? attrs.bed ?? "—")}
                     </td>
                     <td className="px-4 py-3">
-                      <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
+                      <span className="rounded-full bg-warning-soft px-2 py-0.5 text-xs font-medium text-warning-foreground">
                         {String(attrs.status ?? "ACTIVE")}
                       </span>
                     </td>

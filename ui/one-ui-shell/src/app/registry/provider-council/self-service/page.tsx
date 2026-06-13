@@ -36,23 +36,23 @@ export default function ProviderCouncilSelfServicePage() {
         <div className="mb-4">
           <Link
             href="/registry/providers"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to provider registry
           </Link>
         </div>
 
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm text-muted-foreground mb-4">
           Experience Doctrine: the person&apos;s <strong>Impilo / Health ID</strong> is the canonical identity; the
-          numeric <code className="bg-gray-100 px-1 rounded">providerId</code> here is the registry technical key.
-          Pass <code className="bg-gray-100 px-1 rounded">?providerId=&hellip;</code> to load obligations and Fundo
+          numeric <code className="bg-neutral-100 px-1 rounded">providerId</code> here is the registry technical key.
+          Pass <code className="bg-neutral-100 px-1 rounded">?providerId=&hellip;</code> to load obligations and Fundo
           candidates from Varapi via the BFF. Prefer Health-ID-first flows where the BFF exposes{" "}
-          <code className="bg-gray-100 px-1 rounded">/by-health-id/...</code> for lookups.
+          <code className="bg-neutral-100 px-1 rounded">/by-health-id/...</code> for lookups.
         </p>
 
         {!providerId ? (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          <div className="rounded-lg border border-warning/35 bg-warning-soft p-4 text-sm text-warning-foreground">
             Add <strong>providerId</strong> query parameter to view obligations and Fundo-linked CPD candidates.
           </div>
         ) : null}
@@ -61,9 +61,9 @@ export default function ProviderCouncilSelfServicePage() {
           <section className="mb-6 rounded-lg border border-violet-100 bg-violet-50/50 p-4">
             <div className="flex items-center gap-2 mb-2">
               <Brain className="h-5 w-5 text-violet-600" />
-              <h2 className="text-sm font-semibold text-gray-900">Registry intelligence briefing</h2>
+              <h2 className="text-sm font-semibold text-foreground">Registry intelligence briefing</h2>
             </div>
-            <p className="text-xs text-gray-600 mb-2">
+            <p className="text-xs text-muted-foreground mb-2">
               Varapi-backed provider summary plus data-quality hints (council alignment). Read-only — does not change
               registry records.
             </p>
@@ -95,13 +95,13 @@ export default function ProviderCouncilSelfServicePage() {
             {intelBrief ? (
               <div className="mt-3 grid gap-3 md:grid-cols-2">
                 {intelBrief.summary && typeof intelBrief.summary === "object" ? (
-                  <div className="rounded border border-violet-100 bg-white p-2">
+                  <div className="rounded border border-violet-100 bg-card p-2">
                     <p className="text-[11px] font-semibold text-violet-800 mb-1">Provider summary</p>
                     <IntelligenceResultPanel data={intelBrief.summary as Record<string, unknown>} />
                   </div>
                 ) : null}
                 {intelBrief.dataQuality && typeof intelBrief.dataQuality === "object" ? (
-                  <div className="rounded border border-violet-100 bg-white p-2">
+                  <div className="rounded border border-violet-100 bg-card p-2">
                     <p className="text-[11px] font-semibold text-violet-800 mb-1">Data quality</p>
                     <IntelligenceResultPanel data={intelBrief.dataQuality as Record<string, unknown>} />
                   </div>
@@ -112,9 +112,9 @@ export default function ProviderCouncilSelfServicePage() {
         ) : null}
 
         <div className="grid gap-6 md:grid-cols-2">
-          <section className="rounded-lg border border-gray-200 bg-white p-4">
-            <h2 className="text-sm font-semibold text-gray-900 mb-2">Payment obligations</h2>
-            <p className="mb-3 text-xs text-gray-600">
+          <section className="rounded-lg border border-border bg-card p-4">
+            <h2 className="text-sm font-semibold text-foreground mb-2">Payment obligations</h2>
+            <p className="mb-3 text-xs text-muted-foreground">
               Create a MusheX payment intent, sync settlement from MusheX, then complete council fee payment via the
               governed wallet rail.
             </p>
@@ -124,10 +124,10 @@ export default function ProviderCouncilSelfServicePage() {
               isLoading={loadOb}
             />
           </section>
-          <section className="rounded-lg border border-gray-200 bg-white p-4">
-            <h2 className="text-sm font-semibold text-gray-900 mb-2">Fundo CPD candidates</h2>
+          <section className="rounded-lg border border-border bg-card p-4">
+            <h2 className="text-sm font-semibold text-foreground mb-2">Fundo CPD candidates</h2>
             {loadFd ? (
-              <div className="flex items-center gap-2 text-gray-500 text-sm">
+              <div className="flex items-center gap-2 text-muted-foreground text-sm">
                 <Loader2 className="w-4 h-4 animate-spin" /> Loading…
               </div>
             ) : (

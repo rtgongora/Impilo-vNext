@@ -53,14 +53,14 @@ export function ProcedureConsentCapture({ episodeId, episode }: Props) {
   return (
     <div className="rounded-xl border p-4 space-y-4">
       <div className="flex items-center gap-2">
-        <Shield className="h-5 w-5 text-impilo-500" />
+        <Shield className="h-5 w-5 text-primary" />
         <h3 className="font-medium">MVUMO surgical consent</h3>
       </div>
 
-      <p className="text-sm text-gray-600">
-        Live MVUMO state: <span className="font-semibold text-gray-900">{mvumoState}</span>
+      <p className="text-sm text-muted-foreground">
+        Live MVUMO state: <span className="font-semibold text-foreground">{mvumoState}</span>
         {episode.consent_proof_ref ? (
-          <span className="block text-xs text-gray-500 mt-1">Proof: {episode.consent_proof_ref}</span>
+          <span className="block text-xs text-muted-foreground mt-1">Proof: {episode.consent_proof_ref}</span>
         ) : null}
       </p>
 
@@ -76,7 +76,7 @@ export function ProcedureConsentCapture({ episodeId, episode }: Props) {
               type="button"
               disabled={capture.requestConsent.isPending}
               onClick={() => capture.requestConsent.mutate()}
-              className="rounded-lg bg-impilo-500 px-4 py-2 text-sm text-white disabled:opacity-50"
+              className="rounded-lg bg-primary px-4 py-2 text-sm text-white disabled:opacity-50"
             >
               {capture.requestConsent.isPending ? "Creating…" : "Create MVUMO consent request"}
             </button>
@@ -86,14 +86,14 @@ export function ProcedureConsentCapture({ episodeId, episode }: Props) {
                 <button
                   type="button"
                   onClick={() => setMode("facility")}
-                  className={`rounded-full px-3 py-1 text-xs ${mode === "facility" ? "bg-impilo-500 text-white" : "bg-gray-100"}`}
+                  className={`rounded-full px-3 py-1 text-xs ${mode === "facility" ? "bg-primary text-white" : "bg-neutral-100"}`}
                 >
                   Facility-assisted
                 </button>
                 <button
                   type="button"
                   onClick={() => setMode("remote")}
-                  className={`rounded-full px-3 py-1 text-xs ${mode === "remote" ? "bg-impilo-500 text-white" : "bg-gray-100"}`}
+                  className={`rounded-full px-3 py-1 text-xs ${mode === "remote" ? "bg-primary text-white" : "bg-neutral-100"}`}
                 >
                   Remote session
                 </button>
@@ -106,7 +106,7 @@ export function ProcedureConsentCapture({ episodeId, episode }: Props) {
                       <span
                         key={step.key}
                         className={`rounded-full px-2 py-0.5 text-xs ${
-                          i <= stepIndex ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-500"
+                          i <= stepIndex ? "bg-green-100 text-green-800" : "bg-neutral-100 text-muted-foreground"
                         }`}
                       >
                         {step.label}
@@ -116,7 +116,7 @@ export function ProcedureConsentCapture({ episodeId, episode }: Props) {
 
                   {stepIndex < 1 && (
                     <>
-                      <label className="block text-xs text-gray-600">
+                      <label className="block text-xs text-muted-foreground">
                         Explanation notes
                         <textarea
                           value={explanationNotes}
@@ -133,7 +133,7 @@ export function ProcedureConsentCapture({ episodeId, episode }: Props) {
                             actualMethod: "FACILITY_TABLET",
                           })
                         }
-                        className="rounded-lg bg-impilo-500 px-4 py-2 text-sm text-white disabled:opacity-50"
+                        className="rounded-lg bg-primary px-4 py-2 text-sm text-white disabled:opacity-50"
                       >
                         Record explanation (MVUMO)
                       </button>
@@ -150,7 +150,7 @@ export function ProcedureConsentCapture({ episodeId, episode }: Props) {
                           actualMethod: "FACILITY_WITNESSED",
                         })
                       }
-                      className="rounded-lg bg-impilo-500 px-4 py-2 text-sm text-white disabled:opacity-50"
+                      className="rounded-lg bg-primary px-4 py-2 text-sm text-white disabled:opacity-50"
                     >
                       Verify patient identity (MVUMO)
                     </button>
@@ -175,7 +175,7 @@ export function ProcedureConsentCapture({ episodeId, episode }: Props) {
                         type="button"
                         disabled={isPending}
                         onClick={() => capture.refuseConsent.mutate("Patient declined procedure consent")}
-                        className="rounded-lg border border-red-300 px-4 py-2 text-sm text-red-700 disabled:opacity-50"
+                        className="rounded-lg border border-red-300 px-4 py-2 text-sm text-danger disabled:opacity-50"
                       >
                         Record refusal
                       </button>
@@ -212,9 +212,9 @@ export function ProcedureConsentCapture({ episodeId, episode }: Props) {
                     </button>
                   ) : (
                     <>
-                      <p className="text-xs font-mono text-gray-600">Session: {remoteSessionId}</p>
+                      <p className="text-xs font-mono text-muted-foreground">Session: {remoteSessionId}</p>
                       {sessionTokenDisplay ? (
-                        <p className="text-xs break-all rounded bg-white p-2 border">
+                        <p className="text-xs break-all rounded bg-card p-2 border">
                           Patient token: <strong>{sessionTokenDisplay}</strong>
                         </p>
                       ) : null}
@@ -258,7 +258,7 @@ export function ProcedureConsentCapture({ episodeId, episode }: Props) {
                 type="button"
                 disabled={capture.syncConsent.isPending}
                 onClick={() => capture.syncConsent.mutate()}
-                className="text-xs text-impilo-600 hover:underline disabled:opacity-50"
+                className="text-xs text-primary hover:underline disabled:opacity-50"
               >
                 {capture.syncConsent.isPending ? "Syncing…" : "Sync state from MVUMO"}
               </button>
@@ -267,7 +267,7 @@ export function ProcedureConsentCapture({ episodeId, episode }: Props) {
         </>
       )}
 
-      {isPending && <Loader2 className="h-4 w-4 animate-spin text-gray-400" />}
+      {isPending && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
     </div>
   );
 }

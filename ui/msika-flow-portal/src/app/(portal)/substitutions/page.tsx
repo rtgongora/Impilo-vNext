@@ -4,9 +4,9 @@ import { useState, useEffect, useCallback } from "react";
 import { msikaFlowApi, type SubstitutionRequest } from "@/lib/msikaFlowApi";
 
 const STATUS_STYLES: Record<string, string> = {
-  PENDING: "bg-amber-100 text-amber-700",
-  APPROVED: "bg-emerald-100 text-emerald-700",
-  REJECTED: "bg-red-100 text-red-700",
+  PENDING: "bg-amber-100 text-warning-foreground",
+  APPROVED: "bg-emerald-100 text-primary-hover",
+  REJECTED: "bg-red-100 text-danger",
 };
 
 export default function SubstitutionsPage() {
@@ -80,7 +80,7 @@ export default function SubstitutionsPage() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-red-800">
           {error}
         </div>
       )}
@@ -177,7 +177,7 @@ export default function SubstitutionsPage() {
                         <button
                           onClick={() => handleApprove(sub)}
                           disabled={actionLoading}
-                          className="text-xs text-emerald-600 hover:text-emerald-800 font-medium"
+                          className="text-xs text-primary hover:text-primary-hover font-medium"
                         >
                           Approve
                         </button>

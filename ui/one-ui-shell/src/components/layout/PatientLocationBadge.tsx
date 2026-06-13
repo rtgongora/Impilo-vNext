@@ -23,10 +23,10 @@ import { useFacilityStore } from "@/hooks/useFacilityStore";
 // Variant styles
 // ---------------------------------------------------------------------------
 const VARIANT_STYLES = {
-  default: "bg-impilo-50 text-impilo-600 border-impilo-200",
-  secondary: "bg-gray-100 text-gray-700 border-gray-200",
-  destructive: "bg-red-50 text-red-700 border-red-200",
-  outline: "bg-white text-gray-600 border-gray-300",
+  default: "bg-primary-soft text-primary border-primary/25",
+  secondary: "bg-neutral-100 text-foreground border-border",
+  destructive: "bg-danger-soft text-danger border-danger/28",
+  outline: "bg-card text-muted-foreground border-border",
 } as const;
 
 type BadgeVariant = keyof typeof VARIANT_STYLES;
@@ -129,7 +129,7 @@ export function PatientLocationBadge() {
 
   return (
     <div className="flex items-center gap-2">
-      <div className="h-4 w-px bg-gray-200" />
+      <div className="h-4 w-px bg-neutral-100" />
       <span
         className={`inline-flex items-center gap-1.5 text-xs font-medium py-1 px-3 rounded-full border ${VARIANT_STYLES[location.variant]}`}
       >
@@ -144,7 +144,7 @@ export function PatientLocationBadge() {
           </>
         )}
       </span>
-      <div className="h-4 w-px bg-gray-200" />
+      <div className="h-4 w-px bg-neutral-100" />
     </div>
   );
 }

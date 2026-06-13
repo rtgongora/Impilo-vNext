@@ -181,10 +181,10 @@ export function CampaignsTab() {
       {/* Header + New Campaign button */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+          <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
             <Megaphone className="w-5 h-5 text-amber-600" /> Campaigns & Outreach
           </h3>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <p className="text-xs text-muted-foreground mt-0.5">
             Plan, record, and manage public health campaigns and community outreach programmes
           </p>
         </div>
@@ -206,77 +206,77 @@ export function CampaignsTab() {
 
       {/* ═══ NEW CAMPAIGN FORM ═══ */}
       {showNewCampaignForm && (
-        <div className="bg-white rounded-xl border-2 border-amber-200 p-6 space-y-6">
-          <h4 className="text-sm font-semibold text-amber-800 flex items-center gap-2">
+        <div className="bg-card rounded-xl border-2 border-warning/35 p-6 space-y-6">
+          <h4 className="text-sm font-semibold text-warning-foreground flex items-center gap-2">
             <Megaphone className="w-4 h-4" /> New Campaign Registration
           </h4>
 
           {campFormError && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{campFormError}</div>
+            <div className="p-3 bg-danger-soft border border-danger/28 rounded-lg text-sm text-danger">{campFormError}</div>
           )}
 
           {/* Section 1: Classification */}
           <fieldset className="space-y-3">
-            <legend className="text-xs font-semibold text-gray-500 uppercase tracking-wider">1. Campaign Classification</legend>
+            <legend className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">1. Campaign Classification</legend>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <label className="block">
-                <span className="text-sm font-medium text-gray-700">Campaign Type *</span>
+                <span className="text-sm font-medium text-foreground">Campaign Type *</span>
                 <select value={campForm.campaignType} onChange={(e) => updateCamp("campaignType", e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400 focus:border-amber-400">
+                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400 focus:border-amber-400">
                   <option value="">Select type...</option>
                   {CAMPAIGN_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
               </label>
               <label className="block">
-                <span className="text-sm font-medium text-gray-700">Status</span>
+                <span className="text-sm font-medium text-foreground">Status</span>
                 <select value={campForm.status} onChange={(e) => updateCamp("status", e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400 focus:border-amber-400">
+                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400 focus:border-amber-400">
                   <option value="">Select status...</option>
                   {CAMPAIGN_STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
                 </select>
               </label>
             </div>
             <label className="block">
-              <span className="text-sm font-medium text-gray-700">Campaign Name / Title *</span>
+              <span className="text-sm font-medium text-foreground">Campaign Name / Title *</span>
               <input value={campForm.campaignName} onChange={(e) => updateCamp("campaignName", e.target.value)}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="e.g. National Measles-Rubella Catch-up Campaign 2026" />
+                className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" placeholder="e.g. National Measles-Rubella Catch-up Campaign 2026" />
             </label>
             <label className="block">
-              <span className="text-sm font-medium text-gray-700">Description / Objectives</span>
+              <span className="text-sm font-medium text-foreground">Description / Objectives</span>
               <textarea value={campForm.description} onChange={(e) => updateCamp("description", e.target.value)} rows={3}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm resize-none" placeholder="Campaign objectives, target outcomes, and key strategies..." />
+                className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm resize-none" placeholder="Campaign objectives, target outcomes, and key strategies..." />
             </label>
           </fieldset>
 
           {/* Section 2: Target & Reach */}
           <fieldset className="space-y-3">
-            <legend className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+            <legend className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
               <Users className="w-3.5 h-3.5" /> 2. Target Population & Reach
             </legend>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <label className="block">
-                <span className="text-sm font-medium text-gray-700">Target Population</span>
+                <span className="text-sm font-medium text-foreground">Target Population</span>
                 <input value={campForm.targetPopulation} onChange={(e) => updateCamp("targetPopulation", e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="e.g. Children 6 months - 15 years" />
+                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" placeholder="e.g. Children 6 months - 15 years" />
               </label>
               <label className="block">
-                <span className="text-sm font-medium text-gray-700">Estimated Reach</span>
+                <span className="text-sm font-medium text-foreground">Estimated Reach</span>
                 <input type="number" min="0" value={campForm.estimatedReach} onChange={(e) => updateCamp("estimatedReach", e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="e.g. 500000" />
+                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" placeholder="e.g. 500000" />
               </label>
             </div>
           </fieldset>
 
           {/* Section 3: Location */}
           <fieldset className="space-y-3">
-            <legend className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+            <legend className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
               <MapPin className="w-3.5 h-3.5" /> 3. Geographic Coverage
             </legend>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <label className="block">
-                <span className="text-sm font-medium text-gray-700">Province</span>
+                <span className="text-sm font-medium text-foreground">Province</span>
                 <select value={campForm.province} onChange={(e) => updateCamp("province", e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm">
                   <option value="">Select province...</option>
                   {["Harare Metropolitan", "Bulawayo Metropolitan", "Manicaland", "Mashonaland Central", "Mashonaland East", "Mashonaland West", "Masvingo", "Matabeleland North", "Matabeleland South", "Midlands"].map((p) => (
                     <option key={p} value={p}>{p}</option>
@@ -284,67 +284,67 @@ export function CampaignsTab() {
                 </select>
               </label>
               <label className="block">
-                <span className="text-sm font-medium text-gray-700">District</span>
+                <span className="text-sm font-medium text-foreground">District</span>
                 <input value={campForm.district} onChange={(e) => updateCamp("district", e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="e.g. Harare Urban" />
+                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" placeholder="e.g. Harare Urban" />
               </label>
               <label className="block">
-                <span className="text-sm font-medium text-gray-700">Ward / Community</span>
+                <span className="text-sm font-medium text-foreground">Ward / Community</span>
                 <input value={campForm.wardCommunity} onChange={(e) => updateCamp("wardCommunity", e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="e.g. Mbare, Epworth" />
+                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" placeholder="e.g. Mbare, Epworth" />
               </label>
             </div>
           </fieldset>
 
           {/* Section 4: Dates */}
           <fieldset className="space-y-3">
-            <legend className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+            <legend className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5" /> 4. Campaign Period
             </legend>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <label className="block">
-                <span className="text-sm font-medium text-gray-700">Start Date</span>
+                <span className="text-sm font-medium text-foreground">Start Date</span>
                 <input type="date" value={campForm.startDate} onChange={(e) => updateCamp("startDate", e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" />
               </label>
               <label className="block">
-                <span className="text-sm font-medium text-gray-700">End Date</span>
+                <span className="text-sm font-medium text-foreground">End Date</span>
                 <input type="date" value={campForm.endDate} onChange={(e) => updateCamp("endDate", e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" />
               </label>
             </div>
           </fieldset>
 
           {/* Section 5: Responsible Officer & Partners */}
           <fieldset className="space-y-3">
-            <legend className="text-xs font-semibold text-gray-500 uppercase tracking-wider">5. Responsible Officer & Partners</legend>
+            <legend className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">5. Responsible Officer & Partners</legend>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <label className="block">
-                <span className="text-sm font-medium text-gray-700">Responsible Officer</span>
+                <span className="text-sm font-medium text-foreground">Responsible Officer</span>
                 <input value={campForm.responsibleOfficer} onChange={(e) => updateCamp("responsibleOfficer", e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Full name" />
+                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" placeholder="Full name" />
               </label>
               <label className="block">
-                <span className="text-sm font-medium text-gray-700">Phone</span>
+                <span className="text-sm font-medium text-foreground">Phone</span>
                 <input value={campForm.responsiblePhone} onChange={(e) => updateCamp("responsiblePhone", e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="+263 7..." />
+                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" placeholder="+263 7..." />
               </label>
               <label className="block">
-                <span className="text-sm font-medium text-gray-700">Budget Allocated (USD)</span>
+                <span className="text-sm font-medium text-foreground">Budget Allocated (USD)</span>
                 <input type="number" min="0" value={campForm.budgetAllocated} onChange={(e) => updateCamp("budgetAllocated", e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="e.g. 150000" />
+                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" placeholder="e.g. 150000" />
               </label>
             </div>
             <label className="block">
-              <span className="text-sm font-medium text-gray-700">Partner Organizations</span>
+              <span className="text-sm font-medium text-foreground">Partner Organizations</span>
               <input value={campForm.partnerOrganizations} onChange={(e) => updateCamp("partnerOrganizations", e.target.value)}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="e.g. WHO, UNICEF, Clinton Health Access Initiative" />
+                className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" placeholder="e.g. WHO, UNICEF, Clinton Health Access Initiative" />
             </label>
           </fieldset>
 
           {/* Submit */}
           <div className="flex items-center justify-between pt-2 border-t">
-            <p className="text-xs text-gray-400">* Required fields</p>
+            <p className="text-xs text-muted-foreground">* Required fields</p>
             <button
               onClick={handleCampSubmit}
               disabled={campSubmitting}
@@ -357,7 +357,7 @@ export function CampaignsTab() {
         </div>
       )}
 
-      <div className="rounded-lg border border-impilo-200 bg-impilo-50/80 p-3 text-xs text-impilo-800">
+      <div className="rounded-lg border border-primary/25 bg-primary-soft/80 p-3 text-xs text-impilo-800">
         <strong>Live data:</strong> Campaign registry, plan, and dispatch use{" "}
         <code className="text-[10px]">GET/POST /internal/v1/public-health/campaigns</code> (Experience BFF →
         campaigns-service). <strong>Site Coverage</strong> and <strong>Supply &amp; Logistics</strong> sub-tabs are not
@@ -365,7 +365,7 @@ export function CampaignsTab() {
       </div>
 
       {(campError || sitesError) && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-950">
+        <div className="rounded-lg border border-warning/35 bg-warning-soft p-3 text-xs text-warning-foreground">
           {campError && <p>Could not load campaigns.</p>}
           {sitesError && <p>Could not load Indawo sites for the sites KPI.</p>}
         </div>
@@ -373,20 +373,20 @@ export function CampaignsTab() {
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
         {kpis.map((kpi) => (
-          <div key={kpi.label} className="bg-white rounded-lg border border-gray-200 p-3 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-impilo-50">
-              <kpi.Icon className="h-4 w-4 text-impilo-500" />
+          <div key={kpi.label} className="bg-card rounded-lg border border-border p-3 flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary-soft">
+              <kpi.Icon className="h-4 w-4 text-primary" />
             </div>
             <div className="min-w-0">
-              <p className="text-lg font-bold text-gray-900 truncate">{kpi.value}</p>
-              <p className="text-[10px] text-gray-500">{kpi.label}</p>
-              <p className="text-[9px] text-gray-400 mt-0.5 leading-tight">{kpi.hint}</p>
+              <p className="text-lg font-bold text-foreground truncate">{kpi.value}</p>
+              <p className="text-[10px] text-muted-foreground">{kpi.label}</p>
+              <p className="text-[9px] text-muted-foreground mt-0.5 leading-tight">{kpi.hint}</p>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="flex gap-1 border-b border-gray-200">
+      <div className="flex gap-1 border-b border-border">
         {[
           { key: "campaigns" as const, label: "Campaign Registry" },
           { key: "coverage" as const, label: "Site Coverage" },
@@ -398,7 +398,7 @@ export function CampaignsTab() {
             className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
               activeSubTab === tab.key
                 ? "border-amber-600 text-amber-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
+                : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
             {tab.label}
@@ -407,68 +407,68 @@ export function CampaignsTab() {
       </div>
 
       {activeSubTab === "campaigns" && (
-        <div className="bg-white rounded-lg border border-gray-200">
+        <div className="bg-card rounded-lg border border-border">
           <div className="px-4 py-3 border-b flex items-center justify-between">
-            <h4 className="text-sm font-semibold text-gray-900">Campaign Registry</h4>
+            <h4 className="text-sm font-semibold text-foreground">Campaign Registry</h4>
             <button
               type="button"
               onClick={() => setShowPlanForm((v) => !v)}
-              className="inline-flex items-center gap-1 px-3 py-1.5 bg-impilo-500 text-white text-xs font-medium rounded-lg hover:bg-impilo-600"
+              className="inline-flex items-center gap-1 px-3 py-1.5 bg-primary text-white text-xs font-medium rounded-lg hover:bg-primary-hover"
             >
               <Plus className="h-3.5 w-3.5" /> Plan campaign
             </button>
           </div>
 
           {showPlanForm && (
-            <div className="p-4 border-b border-gray-100 bg-slate-50 space-y-3">
-              <p className="text-xs text-gray-600">
+            <div className="p-4 border-b border-border bg-background space-y-3">
+              <p className="text-xs text-muted-foreground">
                 Submits to <code className="text-[10px]">POST /internal/v1/public-health/campaigns</code>. Fields must
                 match campaigns-service expectations; adjust if the upstream contract differs.
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <label className="text-xs font-medium text-gray-700 block">
+                <label className="text-xs font-medium text-foreground block">
                   Name
                   <input
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    className="mt-1 w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                    className="mt-1 w-full px-2 py-1.5 border border-border rounded text-sm"
                     placeholder="Campaign name"
                   />
                 </label>
-                <label className="text-xs font-medium text-gray-700 block">
+                <label className="text-xs font-medium text-foreground block">
                   Type
                   <input
                     value={form.campaign_type}
                     onChange={(e) => setForm({ ...form, campaign_type: e.target.value })}
-                    className="mt-1 w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                    className="mt-1 w-full px-2 py-1.5 border border-border rounded text-sm"
                   />
                 </label>
-                <label className="text-xs font-medium text-gray-700 block">
+                <label className="text-xs font-medium text-foreground block">
                   Jurisdiction
                   <input
                     value={form.jurisdiction}
                     onChange={(e) => setForm({ ...form, jurisdiction: e.target.value })}
-                    className="mt-1 w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                    className="mt-1 w-full px-2 py-1.5 border border-border rounded text-sm"
                     placeholder="e.g. Harare"
                   />
                 </label>
-                <label className="text-xs font-medium text-gray-700 block">
+                <label className="text-xs font-medium text-foreground block">
                   Status
                   <select
                     value={form.status}
                     onChange={(e) => setForm({ ...form, status: e.target.value })}
-                    className="mt-1 w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                    className="mt-1 w-full px-2 py-1.5 border border-border rounded text-sm"
                   >
                     <option value="planning">planning</option>
                     <option value="active">active</option>
                   </select>
                 </label>
-                <label className="text-xs font-medium text-gray-700 block md:col-span-2">
+                <label className="text-xs font-medium text-foreground block md:col-span-2">
                   Target population
                   <input
                     value={form.target_population}
                     onChange={(e) => setForm({ ...form, target_population: e.target.value })}
-                    className="mt-1 w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                    className="mt-1 w-full px-2 py-1.5 border border-border rounded text-sm"
                     placeholder="e.g. 50000"
                   />
                 </label>
@@ -510,11 +510,11 @@ export function CampaignsTab() {
 
           <div className="p-4 space-y-3">
             {campLoading ? (
-              <div className="flex items-center gap-2 text-sm text-gray-500 py-8 justify-center">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground py-8 justify-center">
                 <Loader2 className="h-5 w-5 animate-spin" /> Loading campaigns…
               </div>
             ) : campaigns.length === 0 ? (
-              <p className="text-sm text-gray-500 py-6 text-center">No campaigns returned (empty or service unavailable).</p>
+              <p className="text-sm text-muted-foreground py-6 text-center">No campaigns returned (empty or service unavailable).</p>
             ) : (
               campaigns.map((cam) => {
                 const pct =
@@ -522,16 +522,16 @@ export function CampaignsTab() {
                     ? Math.min(100, Math.round((cam.reachedPopulation / cam.targetPopulation) * 100))
                     : 0;
                 return (
-                  <div key={cam.id} className="p-4 border border-gray-200 rounded-lg">
+                  <div key={cam.id} className="p-4 border border-border rounded-lg">
                     <div className="flex items-center justify-between mb-2 gap-2">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <p className="font-semibold text-sm text-gray-900 truncate">{cam.name}</p>
-                          <span className="px-2 py-0.5 border border-gray-300 rounded text-[10px] shrink-0">
+                          <p className="font-semibold text-sm text-foreground truncate">{cam.name}</p>
+                          <span className="px-2 py-0.5 border border-border rounded text-[10px] shrink-0">
                             {cam.campaignType}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-500 mt-0.5">
+                        <p className="text-xs text-muted-foreground mt-0.5">
                           {cam.jurisdiction}
                           {cam.startDate ? ` · ${cam.startDate}` : ""}
                           {cam.endDate ? ` → ${cam.endDate}` : ""}
@@ -542,15 +542,15 @@ export function CampaignsTab() {
                           cam.status.toLowerCase() === "active"
                             ? "bg-green-100 text-green-700"
                             : cam.status.toLowerCase() === "completed"
-                              ? "bg-impilo-100 text-impilo-600"
-                              : "bg-gray-100 text-gray-600"
+                              ? "bg-primary-soft text-primary"
+                              : "bg-neutral-100 text-muted-foreground"
                         }`}
                       >
                         {cam.status}
                       </span>
                     </div>
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                      <div className="flex-1 bg-gray-200 rounded-full h-2.5 min-w-0">
+                      <div className="flex-1 bg-neutral-100 rounded-full h-2.5 min-w-0">
                         <div className="h-2.5 rounded-full bg-green-500" style={{ width: `${pct}%` }} />
                       </div>
                       <span className="text-sm font-bold tabular-nums sm:w-36 text-right">
@@ -562,7 +562,7 @@ export function CampaignsTab() {
                         type="button"
                         disabled={!cam.id || dispatchCampaign.isPending}
                         onClick={() => dispatchCampaign.mutate(cam.id)}
-                        className="inline-flex items-center gap-1 px-2 py-1 border border-gray-300 rounded text-[10px] font-medium hover:bg-gray-50 disabled:opacity-50"
+                        className="inline-flex items-center gap-1 px-2 py-1 border border-border rounded text-[10px] font-medium hover:bg-background disabled:opacity-50"
                       >
                         <Send className="h-3 w-3" /> Dispatch
                       </button>
@@ -579,10 +579,10 @@ export function CampaignsTab() {
       )}
 
       {activeSubTab === "coverage" && (
-        <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-          <MapPin className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-          <h4 className="text-sm font-semibold text-gray-900">Site-level campaign coverage</h4>
-          <p className="text-xs text-gray-600 mt-2 max-w-lg mx-auto">
+        <div className="bg-card rounded-lg border border-border p-8 text-center">
+          <MapPin className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+          <h4 className="text-sm font-semibold text-foreground">Site-level campaign coverage</h4>
+          <p className="text-xs text-muted-foreground mt-2 max-w-lg mx-auto">
             Per-campaign site vaccination rows and ward breakdowns are <strong>not</strong> exposed on{" "}
             <code className="text-[10px]">/internal/v1/public-health/*</code> today. Use the live{" "}
             <strong>Campaign Registry</strong> for aggregate targets and the <strong>Field Operations</strong> tab for
@@ -592,10 +592,10 @@ export function CampaignsTab() {
       )}
 
       {activeSubTab === "supply" && (
-        <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-          <Package className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-          <h4 className="text-sm font-semibold text-gray-900">Supply &amp; logistics</h4>
-          <p className="text-xs text-gray-600 mt-2 max-w-lg mx-auto">
+        <div className="bg-card rounded-lg border border-border p-8 text-center">
+          <Package className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+          <h4 className="text-sm font-semibold text-foreground">Supply &amp; logistics</h4>
+          <p className="text-xs text-muted-foreground mt-2 max-w-lg mx-auto">
             Cold chain and stock balances are <strong>unsupported</strong> on the current public-health BFF contract. No
             placeholder inventory table is shown.
           </p>

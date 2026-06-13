@@ -70,10 +70,10 @@ function useClaimDetail(id: string) {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  SUBMITTED: "bg-impilo-100 text-impilo-600",
+  SUBMITTED: "bg-primary-soft text-primary",
   ADJUDICATED: "bg-yellow-100 text-yellow-700",
   PAID: "bg-green-100 text-green-700",
-  REJECTED: "bg-red-100 text-red-700",
+  REJECTED: "bg-red-100 text-danger",
 };
 
 const STATUS_ICONS: Record<string, typeof CheckCircle> = {
@@ -137,7 +137,7 @@ export default function ClaimDetailPage() {
         <div className="mb-4">
           <Link
             href={withHandoff("/finance/claims")}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to claims
@@ -145,19 +145,19 @@ export default function ClaimDetailPage() {
         </div>
 
         {error ? (
-          <div className="bg-white rounded-lg border border-red-200 p-12 text-center">
+          <div className="bg-card rounded-lg border border-danger/28 p-12 text-center">
             <AlertCircle className="w-10 h-10 text-red-300 mx-auto mb-3" />
             <p className="text-red-600 text-sm">Failed to load claim details</p>
           </div>
         ) : isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading claim details...</span>
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading claim details...</span>
           </div>
         ) : !claim ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <FileText className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-400 text-sm">Claim not found</p>
+          <div className="bg-card rounded-lg border border-border p-12 text-center">
+            <FileText className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground text-sm">Claim not found</p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -194,34 +194,34 @@ export default function ClaimDetailPage() {
               ]}
             />
 
-            <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+            <div className="rounded-3xl border border-border bg-background/70 p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
                 Claim loop status
               </p>
-              <p className="mt-2 text-sm text-slate-800">
+              <p className="mt-2 text-sm text-foreground">
                 {source === "discharge"
                   ? "This claim was opened from encounter outcome, so the loop here is resolving payer follow-through without losing the linked encounter, chart, or finance handoff."
                   : "This claim is already in the payer workflow; the key task is reviewing adjudication while keeping the source bill and clinical episode easy to reach."}
               </p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Use the quick actions above to move between billing, payments, the encounter, and the chart when adjudication needs finance or clinical clarification.
               </p>
             </div>
 
             {/* Claim Summary */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="bg-card rounded-lg border border-border p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900">
+                  <h2 className="text-lg font-semibold text-foreground">
                     {claim.attributes.claimNumber}
                   </h2>
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="text-sm text-muted-foreground mt-1">
                     Submitted {new Date(claim.attributes.date).toLocaleDateString()}
                   </p>
                 </div>
                 <span
                   className={`inline-block px-2.5 py-1 text-xs rounded-full font-medium ${
-                    STATUS_STYLES[claim.attributes.status] ?? "bg-gray-100 text-gray-600"
+                    STATUS_STYLES[claim.attributes.status] ?? "bg-neutral-100 text-muted-foreground"
                   }`}
                 >
                   {claim.attributes.status}
@@ -229,16 +229,16 @@ export default function ClaimDetailPage() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t">
                 <div>
-                  <p className="text-xs text-gray-500">Patient</p>
-                  <p className="text-sm font-medium text-gray-900">{claim.attributes.patient}</p>
+                  <p className="text-xs text-muted-foreground">Patient</p>
+                  <p className="text-sm font-medium text-foreground">{claim.attributes.patient}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">Scheme</p>
-                  <p className="text-sm font-medium text-gray-900">{claim.attributes.scheme}</p>
+                  <p className="text-xs text-muted-foreground">Scheme</p>
+                  <p className="text-sm font-medium text-foreground">{claim.attributes.scheme}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">Total Amount</p>
-                  <p className="text-sm font-semibold text-gray-900">
+                  <p className="text-xs text-muted-foreground">Total Amount</p>
+                  <p className="text-sm font-semibold text-foreground">
                     {claim.attributes.currency}{" "}
                     {claim.attributes.amount.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
@@ -249,35 +249,35 @@ export default function ClaimDetailPage() {
             </div>
 
             {/* Line Items */}
-            <div className="bg-white rounded-lg border border-gray-200">
+            <div className="bg-card rounded-lg border border-border">
               <div className="px-5 py-4 border-b">
-                <h3 className="text-sm font-medium text-gray-900">Line Items</h3>
+                <h3 className="text-sm font-medium text-foreground">Line Items</h3>
               </div>
               {!claim.attributes.lineItems || claim.attributes.lineItems.length === 0 ? (
                 <div className="p-8 text-center">
-                  <p className="text-gray-400 text-sm">No line items</p>
+                  <p className="text-muted-foreground text-sm">No line items</p>
                 </div>
               ) : (
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b bg-gray-50">
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Code</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Description</th>
-                      <th className="text-right px-4 py-3 font-medium text-gray-600">Qty</th>
-                      <th className="text-right px-4 py-3 font-medium text-gray-600">Unit Price</th>
-                      <th className="text-right px-4 py-3 font-medium text-gray-600">Total</th>
+                    <tr className="border-b bg-background">
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Code</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Description</th>
+                      <th className="text-right px-4 py-3 font-medium text-muted-foreground">Qty</th>
+                      <th className="text-right px-4 py-3 font-medium text-muted-foreground">Unit Price</th>
+                      <th className="text-right px-4 py-3 font-medium text-muted-foreground">Total</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {claim.attributes.lineItems.map((item, idx) => (
-                      <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-3 font-mono text-xs text-gray-900">{item.code}</td>
-                        <td className="px-4 py-3 text-gray-600">{item.description}</td>
-                        <td className="px-4 py-3 text-right text-gray-600">{item.quantity}</td>
-                        <td className="px-4 py-3 text-right font-mono text-gray-600">
+                      <tr key={idx} className="hover:bg-background transition-colors">
+                        <td className="px-4 py-3 font-mono text-xs text-foreground">{item.code}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{item.description}</td>
+                        <td className="px-4 py-3 text-right text-muted-foreground">{item.quantity}</td>
+                        <td className="px-4 py-3 text-right font-mono text-muted-foreground">
                           {item.unitPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </td>
-                        <td className="px-4 py-3 text-right font-mono text-gray-900">
+                        <td className="px-4 py-3 text-right font-mono text-foreground">
                           {item.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </td>
                       </tr>
@@ -288,14 +288,14 @@ export default function ClaimDetailPage() {
             </div>
 
             {/* Adjudication History / Status Timeline */}
-            <div className="bg-white rounded-lg border border-gray-200">
+            <div className="bg-card rounded-lg border border-border">
               <div className="px-5 py-4 border-b">
-                <h3 className="text-sm font-medium text-gray-900">Adjudication History</h3>
+                <h3 className="text-sm font-medium text-foreground">Adjudication History</h3>
               </div>
               {!claim.attributes.adjudicationHistory ||
               claim.attributes.adjudicationHistory.length === 0 ? (
                 <div className="p-8 text-center">
-                  <p className="text-gray-400 text-sm">No adjudication events</p>
+                  <p className="text-muted-foreground text-sm">No adjudication events</p>
                 </div>
               ) : (
                 <div className="p-5">
@@ -303,7 +303,7 @@ export default function ClaimDetailPage() {
                     {claim.attributes.adjudicationHistory.map((event, idx) => {
                       const StatusIcon = STATUS_ICONS[event.status] ?? Clock;
                       const style =
-                        STATUS_STYLES[event.status] ?? "bg-gray-100 text-gray-600";
+                        STATUS_STYLES[event.status] ?? "bg-neutral-100 text-muted-foreground";
                       return (
                         <div key={idx} className="flex gap-4">
                           <div className="flex flex-col items-center">
@@ -313,7 +313,7 @@ export default function ClaimDetailPage() {
                               <StatusIcon className="w-4 h-4" />
                             </div>
                             {idx < claim.attributes.adjudicationHistory.length - 1 && (
-                              <div className="w-px h-full bg-gray-200 mt-1" />
+                              <div className="w-px h-full bg-neutral-100 mt-1" />
                             )}
                           </div>
                           <div className="pb-4">
@@ -323,12 +323,12 @@ export default function ClaimDetailPage() {
                               >
                                 {event.status}
                               </span>
-                              <span className="text-xs text-gray-500">
+                              <span className="text-xs text-muted-foreground">
                                 {new Date(event.date).toLocaleString()}
                               </span>
                             </div>
-                            <p className="text-sm text-gray-600 mt-1">{event.notes}</p>
-                            <p className="text-xs text-gray-400 mt-0.5">
+                            <p className="text-sm text-muted-foreground mt-1">{event.notes}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
                               by {event.adjudicator}
                             </p>
                           </div>

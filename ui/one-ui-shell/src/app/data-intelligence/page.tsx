@@ -83,11 +83,11 @@ export default function DataIntelligenceOverviewPage() {
             <Link
               key={mod.href}
               href={mod.href}
-              className="rounded-xl border border-slate-200 bg-white p-5 hover:border-impilo-200 hover:shadow-md"
+              className="rounded-xl border border-border bg-card p-5 hover:border-primary/25 hover:shadow-md"
             >
-              <Icon className="mb-3 h-6 w-6 text-impilo-500" />
-              <h3 className="text-sm font-semibold text-slate-900">{mod.label}</h3>
-              <p className="mt-1 text-xs text-slate-500">{mod.description}</p>
+              <Icon className="mb-3 h-6 w-6 text-primary" />
+              <h3 className="text-sm font-semibold text-foreground">{mod.label}</h3>
+              <p className="mt-1 text-xs text-muted-foreground">{mod.description}</p>
             </Link>
           );
         })}

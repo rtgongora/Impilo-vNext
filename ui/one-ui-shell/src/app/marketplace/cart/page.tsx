@@ -43,18 +43,18 @@ export default function MarketplaceCartPage() {
           />
         </div>
         {isLoading ? (
-          <div className="flex items-center justify-center py-12 text-gray-500">
+          <div className="flex items-center justify-center py-12 text-muted-foreground">
             <Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading cart...
           </div>
         ) : items.length === 0 ? (
-          <div className="rounded-lg border border-gray-200 bg-white p-8 text-center text-sm text-gray-500">
-            <ShoppingCart className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-            <p>Your cart is empty. Browse the <a href="/marketplace/catalog" className="text-impilo-500 underline">catalog</a> to add items.</p>
+          <div className="rounded-lg border border-border bg-card p-8 text-center text-sm text-muted-foreground">
+            <ShoppingCart className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+            <p>Your cart is empty. Browse the <a href="/marketplace/catalog" className="text-primary underline">catalog</a> to add items.</p>
           </div>
         ) : (
           <div className="space-y-4">
             {/* Cart items */}
-            <div className="rounded-lg border border-gray-200 bg-white divide-y">
+            <div className="rounded-lg border border-border bg-card divide-y">
               {items.map((raw) => {
                 const item = raw as Record<string, unknown>;
                 const lineId = String(item.id ?? item.msikaCoreCode ?? "item");
@@ -63,8 +63,8 @@ export default function MarketplaceCartPage() {
                 return (
                 <div key={lineId} className="flex items-center justify-between p-4">
                   <div>
-                    <p className="font-medium text-gray-900">{code}</p>
-                    <p className="text-sm text-gray-500">Qty: {qty}</p>
+                    <p className="font-medium text-foreground">{code}</p>
+                    <p className="text-sm text-muted-foreground">Qty: {qty}</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="font-semibold">$0.00</span>
@@ -74,22 +74,22 @@ export default function MarketplaceCartPage() {
               );
               })}
               {/* Total */}
-              <div className="flex items-center justify-between p-4 bg-gray-50">
-                <span className="text-sm font-semibold text-gray-900">Total</span>
-                <span className="text-lg font-bold text-gray-900">${total.toFixed(2)}</span>
+              <div className="flex items-center justify-between p-4 bg-background">
+                <span className="text-sm font-semibold text-foreground">Total</span>
+                <span className="text-lg font-bold text-foreground">${total.toFixed(2)}</span>
               </div>
             </div>
 
             {/* Payment method selection (routing to MusheX handled post-checkout) */}
-            <div className="rounded-lg border border-gray-200 bg-white p-4 space-y-3">
+            <div className="rounded-lg border border-border bg-card p-4 space-y-3">
               <div className="flex items-center gap-2 mb-1">
-                <Wallet className="w-4 h-4 text-impilo-500" />
-                <p className="text-sm font-semibold text-gray-900">How would you like to pay?</p>
+                <Wallet className="w-4 h-4 text-primary" />
+                <p className="text-sm font-semibold text-foreground">How would you like to pay?</p>
               </div>
               <select
                 value={paymentMethod}
                 onChange={(event) => setPaymentMethod(event.target.value)}
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700"
+                className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
                 aria-label="Payment method"
               >
                 <option value="MUSHE_WALLET">Mushe Wallet</option>
@@ -97,7 +97,7 @@ export default function MarketplaceCartPage() {
                 <option value="BANK_TRANSFER">Bank transfer</option>
               </select>
               {paymentMethod === "MUSHE_WALLET" && (
-                <p className="text-xs text-impilo-600 bg-impilo-50 rounded-lg px-3 py-2">
+                <p className="text-xs text-primary bg-primary-soft rounded-lg px-3 py-2">
                   Payment will be deducted from your Mushe Health Wallet. Ensure you have sufficient balance.
                 </p>
               )}
@@ -118,14 +118,14 @@ export default function MarketplaceCartPage() {
                   );
                 }}
                 disabled={validating}
-                className="px-4 py-2 text-sm font-medium border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="px-4 py-2 text-sm font-medium border border-border rounded-lg hover:bg-background"
               >
                 {validating ? "Validating..." : "Validate Order"}
               </button>
               <button
                 onClick={() => cartId && checkout.mutate({ cartId, orderType: "OTC_PRODUCT_ORDER" })}
                 disabled={checkout.isPending || !cartId}
-                className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-impilo-500 rounded-lg hover:bg-impilo-600 disabled:opacity-50 transition-colors"
+                className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-hover disabled:opacity-50 transition-colors"
               >
                 <CreditCard className="h-4 w-4" />
                 {checkout.isPending

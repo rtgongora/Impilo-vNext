@@ -8,9 +8,9 @@ import { useNationalHaemovigilanceDashboard } from "@/hooks/queries/useMadi";
 
 function MetricCard({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-4">
-      <p className="text-xs uppercase tracking-wide text-gray-500">{label}</p>
-      <p className="mt-1 text-2xl font-bold text-gray-900">{value}</p>
+    <div className="rounded-2xl border border-border bg-card p-4">
+      <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="mt-1 text-2xl font-bold text-foreground">{value}</p>
     </div>
   );
 }
@@ -18,15 +18,15 @@ function MetricCard({ label, value }: { label: string; value: string | number })
 function CountMap({ title, data }: { title: string; data?: Record<string, number> }) {
   const entries = Object.entries(data ?? {});
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-4">
-      <h3 className="text-sm font-semibold text-gray-900 mb-3">{title}</h3>
+    <div className="rounded-2xl border border-border bg-card p-4">
+      <h3 className="text-sm font-semibold text-foreground mb-3">{title}</h3>
       {entries.length === 0 ? (
-        <p className="text-sm text-gray-500">No data recorded yet.</p>
+        <p className="text-sm text-muted-foreground">No data recorded yet.</p>
       ) : (
         <ul className="space-y-2 text-sm">
           {entries.map(([key, count]) => (
             <li key={key} className="flex justify-between">
-              <span className="text-gray-700">{key.replace(/_/g, " ")}</span>
+              <span className="text-foreground">{key.replace(/_/g, " ")}</span>
               <span className="font-medium">{count}</span>
             </li>
           ))}
@@ -43,7 +43,7 @@ export default function NationalHaemovigilancePage() {
   const TrendIcon =
     trend === "UP" ? TrendingUp : trend === "DOWN" ? TrendingDown : Minus;
   const trendColor =
-    trend === "UP" ? "text-red-600" : trend === "DOWN" ? "text-green-600" : "text-gray-600";
+    trend === "UP" ? "text-red-600" : trend === "DOWN" ? "text-green-600" : "text-muted-foreground";
 
   return (
     <AppLayout>
@@ -59,13 +59,13 @@ export default function NationalHaemovigilancePage() {
         </div>
 
         {isPending && (
-          <div className="flex items-center gap-2 text-gray-500">
+          <div className="flex items-center gap-2 text-muted-foreground">
             <Loader2 className="h-5 w-5 animate-spin" /> Loading national dashboard…
           </div>
         )}
 
         {isError && (
-          <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
+          <p className="text-sm text-danger bg-danger-soft border border-danger/28 rounded-xl p-3">
             Could not load national haemovigilance metrics.
           </p>
         )}
@@ -75,8 +75,8 @@ export default function NationalHaemovigilancePage() {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <MetricCard label="Open cases" value={data.openCases ?? 0} />
               <MetricCard label="Closed (30 days)" value={data.closedCases30d ?? 0} />
-              <div className="rounded-2xl border border-gray-200 bg-white p-4">
-                <p className="text-xs uppercase tracking-wide text-gray-500">30-day reaction trend</p>
+              <div className="rounded-2xl border border-border bg-card p-4">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">30-day reaction trend</p>
                 <p className={`mt-1 flex items-center gap-2 text-2xl font-bold ${trendColor}`}>
                   <TrendIcon className="h-6 w-6" />
                   {trend}

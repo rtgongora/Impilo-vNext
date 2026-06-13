@@ -30,10 +30,10 @@ function iconFor(type: string) {
 }
 
 const severityClass: Record<string, string> = {
-  LOW:      "bg-emerald-50 text-emerald-900 border-emerald-200",
-  MEDIUM:   "bg-amber-50 text-amber-900 border-amber-200",
+  LOW:      "bg-success-soft text-primary-hover border-success/25",
+  MEDIUM:   "bg-warning-soft text-warning-foreground border-warning/35",
   HIGH:     "bg-orange-50 text-orange-900 border-orange-200",
-  CRITICAL: "bg-red-50 text-red-900 border-red-200",
+  CRITICAL: "bg-danger-soft text-red-900 border-danger/28",
 };
 
 export function NdilaSpatialInsightCard({ signal, areaLabel }: Props) {

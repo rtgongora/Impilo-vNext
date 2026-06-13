@@ -4,10 +4,10 @@ import type { TileIntegrationHealth } from "@/features/production-command-centre
 import { tileIntegrationHealthLabel } from "@/features/production-command-centre/tile-integration-health";
 
 const CHIP_STYLES: Record<TileIntegrationHealth, string> = {
-  checking: "bg-slate-100 text-slate-600",
-  hub_down: "bg-rose-50 text-rose-700",
-  routed: "bg-emerald-50 text-emerald-700",
-  not_in_hub: "bg-amber-50 text-amber-800",
+  checking: "bg-neutral-100 text-muted-foreground",
+  hub_down: "bg-danger-soft text-danger",
+  routed: "bg-success-soft text-primary-hover",
+  not_in_hub: "bg-warning-soft text-warning-foreground",
   not_applicable: "",
 };
 

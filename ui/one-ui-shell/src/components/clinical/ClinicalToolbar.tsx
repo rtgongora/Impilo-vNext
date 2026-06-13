@@ -39,22 +39,22 @@ export function ClinicalToolbar({ hasActivePatient = true }: ClinicalToolbarProp
     <div className="shrink-0 border-b">
       <SystemFeedbackStrip />
 
-      <div className="relative h-11 min-h-[2.75rem] bg-gray-50 flex items-center px-3 overflow-x-auto">
+      <div className="relative h-11 min-h-[2.75rem] bg-background flex items-center px-3 overflow-x-auto">
         <div className="flex items-center gap-0.5 flex-1 min-w-0">
-          <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider shrink-0 mr-1.5">
+          <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider shrink-0 mr-1.5">
             Tools
           </span>
-          <div className="h-4 w-px bg-gray-200 mr-0.5 shrink-0" />
+          <div className="h-4 w-px bg-neutral-100 mr-0.5 shrink-0" />
 
           <ClinicalToolsMenu complexity={complexity} />
 
-          <div className="h-4 w-px bg-gray-200 mx-0.5 shrink-0" />
+          <div className="h-4 w-px bg-neutral-100 mx-0.5 shrink-0" />
 
           <button
             type="button"
             className={cn(
-              "h-8 gap-1.5 text-xs shrink-0 px-2 rounded flex items-center hover:bg-gray-100",
-              pathwaysHighlighted && "bg-impilo-50 text-impilo-500",
+              "h-8 gap-1.5 text-xs shrink-0 px-2 rounded flex items-center hover:bg-neutral-100",
+              pathwaysHighlighted && "bg-primary-soft text-primary",
             )}
             onClick={togglePathwaysDock}
             title="National clinical pathways"
@@ -65,7 +65,7 @@ export function ClinicalToolbar({ hasActivePatient = true }: ClinicalToolbarProp
 
           <button
             type="button"
-            className="h-8 gap-1.5 text-xs shrink-0 px-2 rounded flex items-center hover:bg-gray-100 text-emerald-800"
+            className="h-8 gap-1.5 text-xs shrink-0 px-2 rounded flex items-center hover:bg-neutral-100 text-primary-hover"
             onClick={() => openDock("prescribing")}
             title="EDLIZ prescribing evaluation"
           >
@@ -74,18 +74,18 @@ export function ClinicalToolbar({ hasActivePatient = true }: ClinicalToolbarProp
           </button>
 
           <button
-            className="h-7 w-7 shrink-0 flex items-center justify-center rounded hover:bg-gray-100"
+            className="h-7 w-7 shrink-0 flex items-center justify-center rounded hover:bg-neutral-100"
             onClick={() => setAiAssistEnabled(!aiAssistEnabled)}
             title={aiAssistEnabled ? "Disable AI Assist" : "Enable AI Assist"}
           >
             {aiAssistEnabled ? (
-              <ToggleRight className="h-4 w-4 text-emerald-600" />
+              <ToggleRight className="h-4 w-4 text-primary" />
             ) : (
-              <ToggleLeft className="h-4 w-4 text-gray-400" />
+              <ToggleLeft className="h-4 w-4 text-muted-foreground" />
             )}
           </button>
           {aiAssistEnabled && (
-            <button className="h-8 gap-1.5 text-xs shrink-0 px-2 rounded flex items-center hover:bg-gray-100 text-impilo-500">
+            <button className="h-8 gap-1.5 text-xs shrink-0 px-2 rounded flex items-center hover:bg-neutral-100 text-primary">
               <Sparkles className="w-3.5 h-3.5" />
               AI Assist
             </button>
@@ -94,7 +94,7 @@ export function ClinicalToolbar({ hasActivePatient = true }: ClinicalToolbarProp
           <ClinicalReferences />
 
           <button
-            className="h-7 w-7 shrink-0 flex items-center justify-center rounded hover:bg-gray-100"
+            className="h-7 w-7 shrink-0 flex items-center justify-center rounded hover:bg-neutral-100"
             onClick={() => setCdsEnabled(!cdsEnabled)}
             title={
               cdsEnabled
@@ -103,16 +103,16 @@ export function ClinicalToolbar({ hasActivePatient = true }: ClinicalToolbarProp
             }
           >
             {cdsEnabled ? (
-              <ToggleRight className="h-4 w-4 text-emerald-600" />
+              <ToggleRight className="h-4 w-4 text-primary" />
             ) : (
-              <ToggleLeft className="h-4 w-4 text-gray-400" />
+              <ToggleLeft className="h-4 w-4 text-muted-foreground" />
             )}
           </button>
 
           <div className="flex-1" />
 
-          <div className="h-4 w-px bg-gray-200 mx-0.5 shrink-0" />
-          <button className="h-8 gap-1.5 text-xs shrink-0 px-2 rounded flex items-center hover:bg-gray-100">
+          <div className="h-4 w-px bg-neutral-100 mx-0.5 shrink-0" />
+          <button className="h-8 gap-1.5 text-xs shrink-0 px-2 rounded flex items-center hover:bg-neutral-100">
             <Users className="w-3.5 h-3.5" />
             Directory
           </button>

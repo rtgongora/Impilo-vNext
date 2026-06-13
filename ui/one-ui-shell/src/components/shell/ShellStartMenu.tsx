@@ -69,15 +69,15 @@ export function ShellStartMenu() {
         aria-label="Close Start menu"
         onClick={() => setStartOpen(false)}
       />
-      <div className="relative mb-[58px] ml-2 w-[min(440px,calc(100vw-1rem))] max-h-[min(72vh,640px)] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-950">
-        <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800">
+      <div className="relative mb-[58px] ml-2 w-[min(440px,calc(100vw-1rem))] max-h-[min(72vh,640px)] overflow-hidden rounded-2xl border border-border bg-card shadow-2xl dark:border-border dark:bg-card">
+        <div className="flex items-center justify-between border-b border-border px-4 py-3 dark:border-border">
           <div>
-            <p className="text-sm font-semibold text-slate-900 dark:text-slate-50">Start</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Launch apps, utilities, and recent work</p>
+            <p className="text-sm font-semibold text-foreground dark:text-foreground">Start</p>
+            <p className="text-xs text-muted-foreground dark:text-muted-foreground">Launch apps, utilities, and recent work</p>
           </div>
           <button
             type="button"
-            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-900"
+            className="rounded-lg p-2 text-muted-foreground hover:bg-primary-soft hover:text-foreground dark:hover:bg-primary-soft"
             onClick={() => setStartOpen(false)}
             aria-label="Close"
           >
@@ -88,7 +88,7 @@ export function ShellStartMenu() {
         <div className="max-h-[calc(min(72vh,640px)-56px)] overflow-y-auto px-3 py-3">
           {recentItems.length > 0 ? (
             <section className="mb-4">
-              <h3 className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+              <h3 className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                 Recent
               </h3>
               <ul className="space-y-1">
@@ -100,15 +100,15 @@ export function ShellStartMenu() {
                         router.push(item.href);
                         setStartOpen(false);
                       }}
-                      className="flex w-full items-start gap-2 rounded-lg px-2 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-900"
+                      className="flex w-full items-start gap-2 rounded-lg px-2 py-2 text-left hover:bg-background dark:hover:bg-primary-soft"
                     >
-                      <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-impilo-500" />
+                      <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
                       <span className="min-w-0">
-                        <span className="block truncate text-sm font-medium text-slate-800 dark:text-slate-100">
+                        <span className="block truncate text-sm font-medium text-foreground dark:text-foreground">
                           {item.title}
                         </span>
                         {item.subtitle ? (
-                          <span className="block truncate text-xs text-slate-500">{item.subtitle}</span>
+                          <span className="block truncate text-xs text-muted-foreground">{item.subtitle}</span>
                         ) : null}
                       </span>
                     </button>
@@ -120,7 +120,7 @@ export function ShellStartMenu() {
 
           {marketplaceApps.length > 0 ? (
             <section className="mb-4">
-              <h3 className="mb-2 flex items-center gap-1.5 px-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+              <h3 className="mb-2 flex items-center gap-1.5 px-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                 <ShoppingBag className="h-3 w-3" />
                 Marketplace apps
               </h3>
@@ -130,7 +130,7 @@ export function ShellStartMenu() {
                   return (
                     <li
                       key={app.id}
-                      className="flex items-center gap-1 rounded-lg border border-transparent hover:border-slate-200 hover:bg-slate-50 dark:hover:border-slate-700 dark:hover:bg-slate-900"
+                      className="flex items-center gap-1 rounded-lg border border-transparent hover:border-border hover:bg-background dark:hover:border-border dark:hover:bg-primary-soft"
                     >
                       <button
                         type="button"
@@ -153,12 +153,12 @@ export function ShellStartMenu() {
                           size="card"
                         />
                         <span className="min-w-0">
-                          <span className="block truncate text-sm font-medium text-slate-800 dark:text-slate-100">
+                          <span className="block truncate text-sm font-medium text-foreground dark:text-foreground">
                             {app.name}
                           </span>
-                          <span className="block truncate text-[11px] text-slate-500">
+                          <span className="block truncate text-[11px] text-muted-foreground">
                             {isActionable ? app.description : (
-                              <span className="inline-flex items-center gap-1 text-amber-700 dark:text-amber-400">
+                              <span className="inline-flex items-center gap-1 text-warning-foreground dark:text-amber-400">
                                 <AlertCircle className="h-3 w-3" />
                                 {formatLauncherState(app.state)}
                               </span>
@@ -175,7 +175,7 @@ export function ShellStartMenu() {
 
           {Array.from(byCategory.entries()).map(([category, list]) => (
             <section key={category} className="mb-4">
-              <h3 className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+              <h3 className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                 {CATEGORY_LABEL[category]}
               </h3>
               <ul className="grid grid-cols-1 gap-1 sm:grid-cols-2">
@@ -184,7 +184,7 @@ export function ShellStartMenu() {
                   return (
                     <li
                       key={app.appCode}
-                      className="flex items-center gap-1 rounded-lg border border-transparent hover:border-slate-200 hover:bg-slate-50 dark:hover:border-slate-700 dark:hover:bg-slate-900"
+                      className="flex items-center gap-1 rounded-lg border border-transparent hover:border-border hover:bg-background dark:hover:border-border dark:hover:bg-primary-soft"
                     >
                       <button
                         type="button"
@@ -193,15 +193,15 @@ export function ShellStartMenu() {
                       >
                         <ShellAppIcon icon={app.icon} serviceSlug={app.serviceSlug} name={app.name} size="card" />
                         <span className="min-w-0">
-                          <span className="block truncate text-sm font-medium text-slate-800 dark:text-slate-100">
+                          <span className="block truncate text-sm font-medium text-foreground dark:text-foreground">
                             {app.name}
                           </span>
-                          <span className="block truncate text-[11px] text-slate-500">{app.description}</span>
+                          <span className="block truncate text-[11px] text-muted-foreground">{app.description}</span>
                         </span>
                       </button>
                       <button
                         type="button"
-                        className="mr-1 shrink-0 rounded-md p-2 text-slate-400 hover:bg-slate-200 hover:text-slate-700 dark:hover:bg-slate-800"
+                        className="mr-1 shrink-0 rounded-md p-2 text-muted-foreground hover:bg-primary-soft hover:text-foreground dark:hover:bg-neutral-900"
                         title={pinned ? "Unpin from taskbar" : "Pin to taskbar"}
                         onClick={() => togglePinApp(app.appCode)}
                       >
@@ -214,10 +214,10 @@ export function ShellStartMenu() {
             </section>
           ))}
 
-          <div className="border-t border-slate-100 px-1 py-3 dark:border-slate-800">
+          <div className="border-t border-border px-1 py-3 dark:border-border">
             <button
               type="button"
-              className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-left text-sm font-medium text-slate-800 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-900"
+              className="w-full rounded-xl border border-border px-3 py-2.5 text-left text-sm font-medium text-foreground transition hover:bg-background dark:border-border dark:text-foreground dark:hover:bg-primary-soft"
               onClick={() => {
                 setStartOpen(false);
                 setNavDrawerOpen(true);
@@ -225,7 +225,7 @@ export function ShellStartMenu() {
             >
               Full navigation map (Work · Professional · Life)
             </button>
-            <p className="mt-1 px-1 text-[11px] text-slate-500">
+            <p className="mt-1 px-1 text-[11px] text-muted-foreground">
               Same destinations as before — now off-canvas so the workspace stays wide.
             </p>
           </div>

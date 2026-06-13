@@ -45,48 +45,48 @@ export default function MadiHubPage() {
       >
         <div className="space-y-8">
           <section>
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">Work</h2>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3">Work</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {WORK_SECTIONS.map(({ href, label, description, Icon }) => (
                 <Link
                   key={href}
                   href={href}
-                  className="rounded-2xl border border-gray-200 bg-white p-5 hover:border-rose-300 hover:shadow-sm transition-all"
+                  className="rounded-2xl border border-border bg-card p-5 hover:border-rose-300 hover:shadow-sm transition-all"
                 >
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="rounded-xl bg-rose-50 p-2">
+                    <div className="rounded-xl bg-danger-soft p-2">
                       <Icon className="h-5 w-5 text-rose-600" />
                     </div>
-                    <h3 className="font-semibold text-gray-900">{label}</h3>
+                    <h3 className="font-semibold text-foreground">{label}</h3>
                   </div>
-                  <p className="text-sm text-gray-600">{description}</p>
+                  <p className="text-sm text-muted-foreground">{description}</p>
                 </Link>
               ))}
             </div>
           </section>
 
           <section>
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">My Life — Donors</h2>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3">My Life — Donors</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {LIFE_SECTIONS.map(({ href, label, description, Icon }) => (
                 <Link
                   key={href}
                   href={href}
-                  className="rounded-2xl border border-gray-200 bg-white p-5 hover:border-rose-300 hover:shadow-sm transition-all"
+                  className="rounded-2xl border border-border bg-card p-5 hover:border-rose-300 hover:shadow-sm transition-all"
                 >
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="rounded-xl bg-rose-50 p-2">
+                    <div className="rounded-xl bg-danger-soft p-2">
                       <Icon className="h-5 w-5 text-rose-600" />
                     </div>
-                    <h3 className="font-semibold text-gray-900">{label}</h3>
+                    <h3 className="font-semibold text-foreground">{label}</h3>
                   </div>
-                  <p className="text-sm text-gray-600">{description}</p>
+                  <p className="text-sm text-muted-foreground">{description}</p>
                 </Link>
               ))}
             </div>
           </section>
 
-          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">
+          <div className="rounded-2xl border border-danger/28 bg-danger-soft p-4 text-sm text-danger">
             <strong className="block mb-1">About Madi</strong>
             Madi connects voluntary donors, facility blood banks, and clinical teams under
             governed trust headers. Donor-facing surfaces use privacy-safe language; clinical

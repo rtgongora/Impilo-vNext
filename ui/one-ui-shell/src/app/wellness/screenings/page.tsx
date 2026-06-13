@@ -25,8 +25,8 @@ function extractReminders(payload: unknown): Reminder[] {
 }
 
 function priorityTone(priority: Reminder["priority"]): string {
-  if (priority === "HIGH") return "border-red-200 bg-red-50 text-red-700";
-  if (priority === "MEDIUM") return "border-amber-200 bg-amber-50 text-amber-700";
+  if (priority === "HIGH") return "border-danger/28 bg-danger-soft text-danger";
+  if (priority === "MEDIUM") return "border-warning/35 bg-warning-soft text-warning-foreground";
   return "border-green-200 bg-green-50 text-green-700";
 }
 
@@ -75,7 +75,7 @@ export default function WellnessScreeningsPage() {
           />
           <Link
             href="/guidance/reminders"
-            className="text-sm font-medium text-impilo-600 underline-offset-2 hover:underline"
+            className="text-sm font-medium text-primary underline-offset-2 hover:underline"
           >
             All health reminders
           </Link>
@@ -83,14 +83,14 @@ export default function WellnessScreeningsPage() {
 
         <div className="space-y-6">
           {programmes.length > 0 && (
-            <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
-              <h3 className="text-sm font-semibold text-emerald-900 mb-2">National screening programmes (Simba)</h3>
+            <div className="rounded-lg border border-success/25 bg-success-soft p-4">
+              <h3 className="text-sm font-semibold text-primary-hover mb-2">National screening programmes (Simba)</h3>
               <ul className="space-y-2">
                 {programmes.map((p, idx) => (
-                  <li key={String(p.programmeId ?? p.programme_id ?? idx)} className="text-sm text-emerald-900">
+                  <li key={String(p.programmeId ?? p.programme_id ?? idx)} className="text-sm text-primary-hover">
                     <span className="font-medium">{String(p.title ?? p.programmeCode ?? "Programme")}</span>
                     {p.frequencyMonths != null || p.frequency_months != null ? (
-                      <span className="text-emerald-700">
+                      <span className="text-primary-hover">
                         {" "}
                         — every {String(p.frequencyMonths ?? p.frequency_months)} months
                       </span>
@@ -101,8 +101,8 @@ export default function WellnessScreeningsPage() {
             </div>
           )}
 
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-            <p className="font-medium text-slate-900">Integration boundary</p>
+          <div className="rounded-lg border border-border bg-background p-4 text-sm text-foreground">
+            <p className="font-medium text-foreground">Integration boundary</p>
             <p className="mt-1">
               Personal due dates come from guidance reminders only — not fabricated. Programme catalogue is
               governed by Simba; individual scheduling still depends on guidance + clinical context.
@@ -110,11 +110,11 @@ export default function WellnessScreeningsPage() {
           </div>
 
           {remindersQ.isLoading ? (
-            <p className="flex items-center gap-2 text-sm text-slate-500">
+            <p className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" /> Loading screening reminders…
             </p>
           ) : remindersQ.isError ? (
-            <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+            <div className="flex items-start gap-2 rounded-lg border border-danger/28 bg-danger-soft p-4 text-sm text-red-800">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
               <div>
                 <p className="font-medium">Could not load screening reminders</p>
@@ -133,8 +133,8 @@ export default function WellnessScreeningsPage() {
             <>
               <div className="grid grid-cols-3 gap-4">
                 {[
-                  { label: "Overdue", count: overdueCount, Icon: AlertCircle, color: "border-red-200 bg-red-50 text-red-700" },
-                  { label: "Due Soon", count: dueSoonCount, Icon: Clock, color: "border-amber-200 bg-amber-50 text-amber-700" },
+                  { label: "Overdue", count: overdueCount, Icon: AlertCircle, color: "border-danger/28 bg-danger-soft text-danger" },
+                  { label: "Due Soon", count: dueSoonCount, Icon: Clock, color: "border-warning/35 bg-warning-soft text-warning-foreground" },
                   { label: "Tracked", count: upToDateCount, Icon: CalendarCheck, color: "border-green-200 bg-green-50 text-green-700" },
                 ].map(({ label, count, Icon, color }) => (
                   <div key={label} className={`rounded-lg border p-4 text-center ${color}`}>
@@ -146,10 +146,10 @@ export default function WellnessScreeningsPage() {
               </div>
 
               {screeningReminders.length === 0 ? (
-                <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-8 text-center">
-                  <CalendarCheck className="mx-auto h-10 w-10 text-gray-300" />
-                  <p className="mt-3 text-sm font-medium text-gray-900">No screening reminders returned</p>
-                  <p className="mt-1 text-sm text-gray-600">
+                <div className="rounded-lg border border-dashed border-border bg-background p-8 text-center">
+                  <CalendarCheck className="mx-auto h-10 w-10 text-muted-foreground" />
+                  <p className="mt-3 text-sm font-medium text-foreground">No screening reminders returned</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
                     Guidance-service did not return active SCREENING-type reminders for your profile.
                   </p>
                 </div>
@@ -158,29 +158,29 @@ export default function WellnessScreeningsPage() {
                   {screeningReminders.map((reminder) => (
                     <div
                       key={reminder.id}
-                      className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4 hover:shadow-sm transition-all"
+                      className="flex items-center justify-between rounded-lg border border-border bg-card p-4 hover:shadow-sm transition-all"
                     >
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold text-gray-900">{reminder.title}</h3>
+                          <h3 className="font-semibold text-foreground">{reminder.title}</h3>
                           <span
                             className={`rounded border px-2 py-0.5 text-xs font-medium ${priorityTone(reminder.priority)}`}
                           >
                             {reminder.priority}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-600">{reminder.description}</p>
+                        <p className="text-sm text-muted-foreground">{reminder.description}</p>
                         {reminder.dueDate ? (
-                          <p className="text-xs text-gray-400 mt-1">
+                          <p className="text-xs text-muted-foreground mt-1">
                             Due: {new Date(reminder.dueDate).toLocaleDateString()}
                           </p>
                         ) : (
-                          <p className="text-xs text-gray-400 mt-1">No due date on reminder payload</p>
+                          <p className="text-xs text-muted-foreground mt-1">No due date on reminder payload</p>
                         )}
                       </div>
                       <Link
                         href="/guidance/reminders"
-                        className="ml-4 rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        className="ml-4 rounded-lg border border-border px-3 py-1.5 text-sm text-foreground hover:bg-background transition-colors"
                       >
                         View in reminders
                       </Link>

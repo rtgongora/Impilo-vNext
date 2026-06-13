@@ -38,7 +38,7 @@ export default function RegisterClientPage() {
         </p>
       </div>
 
-      <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6 max-w-2xl">
+      <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6 max-w-2xl">
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-1.5">

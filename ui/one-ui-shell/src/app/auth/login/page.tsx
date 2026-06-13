@@ -116,24 +116,24 @@ export default function LoginPage() {
 
   return (
     <AuthLayout>
-      <h2 className="text-xl font-semibold text-gray-900 mb-1">Welcome back</h2>
-      <p className="text-sm text-gray-500 mb-6">
+      <h2 className="text-xl font-semibold text-foreground mb-1">Welcome back</h2>
+      <p className="text-sm text-muted-foreground mb-6">
         Sign in to continue to Impilo
       </p>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-danger">
           {error}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="identifier" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="identifier" className="block text-sm font-medium text-foreground mb-1">
             Email or phone
           </label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               id="identifier"
               type="text"
@@ -142,25 +142,25 @@ export default function LoginPage() {
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
               placeholder="you@example.com or +263..."
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+              className="w-full pl-10 pr-4 py-3 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
             />
           </div>
         </div>
 
         <div>
           <div className="flex items-center justify-between mb-1">
-            <label htmlFor="password" className="text-sm font-medium text-gray-700">
+            <label htmlFor="password" className="text-sm font-medium text-foreground">
               Password
             </label>
             <Link
               href="/auth/forgot-password"
-              className="text-xs text-impilo-500 hover:text-impilo-700 transition-colors"
+              className="text-xs text-primary hover:text-primary-hover transition-colors"
             >
               Forgot password?
             </Link>
           </div>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               id="password"
               type={showPassword ? "text" : "password"}
@@ -169,12 +169,12 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
-              className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+              className="w-full pl-10 pr-12 py-3 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
             />
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors"
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
@@ -184,7 +184,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={login.isPending}
-          className="w-full py-3 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+          className="w-full py-3 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
         >
           {login.isPending ? (
             <>
@@ -198,57 +198,57 @@ export default function LoginPage() {
       </form>
 
       {/* Alternative sign-in methods */}
-      <div className="mt-6 pt-6 border-t border-gray-200">
-        <p className="text-xs text-gray-500 text-center mb-3">
+      <div className="mt-6 pt-6 border-t border-border">
+        <p className="text-xs text-muted-foreground text-center mb-3">
           Other sign-in methods
         </p>
         <div className="flex gap-3">
           <Link
             href="/auth/login/provider-id"
-            className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-700 hover:border-impilo-200 hover:bg-impilo-50 transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 border border-border rounded-lg text-sm text-foreground hover:border-primary/25 hover:bg-primary-soft transition-colors"
           >
-            <BadgeCheck className="w-4 h-4 text-impilo-500" />
+            <BadgeCheck className="w-4 h-4 text-primary" />
             Health ID
           </Link>
           <Link
             href="/auth/login/biometric"
-            className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-700 hover:border-impilo-200 hover:bg-impilo-50 transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 border border-border rounded-lg text-sm text-foreground hover:border-primary/25 hover:bg-primary-soft transition-colors"
           >
-            <Fingerprint className="w-4 h-4 text-impilo-500" />
+            <Fingerprint className="w-4 h-4 text-primary" />
             Biometric
           </Link>
         </div>
       </div>
 
       {/* New to Impilo */}
-      <div className="mt-6 pt-6 border-t border-gray-200">
-        <p className="text-xs text-gray-500 text-center mb-3">
+      <div className="mt-6 pt-6 border-t border-border">
+        <p className="text-xs text-muted-foreground text-center mb-3">
           New to Impilo?
         </p>
         <Link
           href="/auth/register"
-          className="w-full flex items-center justify-center gap-2 py-2.5 border-2 border-impilo-500 text-impilo-600 text-sm font-medium rounded-lg hover:bg-impilo-50 transition-colors"
+          className="w-full flex items-center justify-center gap-2 py-2.5 border-2 border-impilo-500 text-primary text-sm font-medium rounded-lg hover:bg-primary-soft transition-colors"
         >
           Create an account
         </Link>
       </div>
 
       {/* Other ways to access */}
-      <div className="mt-4 pt-4 border-t border-gray-200">
-        <p className="text-xs text-gray-500 text-center mb-3">
+      <div className="mt-4 pt-4 border-t border-border">
+        <p className="text-xs text-muted-foreground text-center mb-3">
           Other ways to access
         </p>
         <div className="space-y-2">
           <Link
             href="/citizen/health-id/request"
-            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-700 hover:border-impilo-200 hover:bg-impilo-50 transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 border border-border rounded-lg text-sm text-foreground hover:border-primary/25 hover:bg-primary-soft transition-colors"
           >
-            <IdCard className="w-4 h-4 text-impilo-500" />
+            <IdCard className="w-4 h-4 text-primary" />
             Request a Health ID
           </Link>
           <Link
             href="/home"
-            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 border border-border rounded-lg text-sm text-muted-foreground hover:border-border hover:bg-background transition-colors"
           >
             Continue without an account
             <ArrowRight className="w-3.5 h-3.5" />
@@ -256,18 +256,18 @@ export default function LoginPage() {
         </div>
       </div>
 
-      <p className="mt-4 text-center text-xs text-gray-400">
+      <p className="mt-4 text-center text-xs text-muted-foreground">
         By signing in, you agree to the{" "}
-        <Link href="/terms" className="text-blue-500 hover:text-blue-700 underline">
+        <Link href="/terms" className="text-blue-500 hover:text-primary-hover underline">
           Terms of Use
         </Link>{" "}
         and{" "}
-        <Link href="/privacy" className="text-blue-500 hover:text-blue-700 underline">
+        <Link href="/privacy" className="text-blue-500 hover:text-primary-hover underline">
           Privacy Policy
         </Link>
         .
       </p>
-      <p className="mt-1 text-center text-[11px] text-gray-400">
+      <p className="mt-1 text-center text-[11px] text-muted-foreground">
         Consent policy version: {CURRENT_CONSENT_VERSION}
       </p>
 
@@ -279,13 +279,13 @@ export default function LoginPage() {
           </p>
           <div className="grid grid-cols-2 gap-2">
             {[
-              { email: "super@mohcc.gov.zw", label: "Super Admin", desc: "All roles", color: "bg-red-50 border-red-200 text-red-700" },
-              { email: "mapfumo@mohcc.gov.zw", label: "Dr Mapfumo", desc: "Clinician + Facility Admin", color: "bg-blue-50 border-blue-200 text-blue-700" },
+              { email: "super@mohcc.gov.zw", label: "Super Admin", desc: "All roles", color: "bg-danger-soft border-danger/28 text-danger" },
+              { email: "mapfumo@mohcc.gov.zw", label: "Dr Mapfumo", desc: "Clinician + Facility Admin", color: "bg-info-soft border-info/25 text-primary-hover" },
               { email: "chienda@mohcc.gov.zw", label: "Sr Chienda", desc: "Nurse", color: "bg-green-50 border-green-200 text-green-700" },
-              { email: "zenda@mohcc.gov.zw", label: "Pharmacist", desc: "Pharmacist", color: "bg-purple-50 border-purple-200 text-purple-700" },
-              { email: "finance.ndlovu@mohcc.gov.zw", label: "Finance", desc: "Finance", color: "bg-amber-50 border-amber-200 text-amber-700" },
-              { email: "tatenda.moyo@example.com", label: "Citizen", desc: "Citizen only", color: "bg-impilo-50 border-impilo-200 text-impilo-700" },
-              { email: "admin@mohcc.gov.zw", label: "Sys Admin", desc: "System Admin", color: "bg-gray-50 border-gray-200 text-gray-700" },
+              { email: "zenda@mohcc.gov.zw", label: "Pharmacist", desc: "Pharmacist", color: "bg-warning-soft border-warning/35 text-warning-foreground" },
+              { email: "finance.ndlovu@mohcc.gov.zw", label: "Finance", desc: "Finance", color: "bg-warning-soft border-warning/35 text-warning-foreground" },
+              { email: "tatenda.moyo@example.com", label: "Citizen", desc: "Citizen only", color: "bg-primary-soft border-primary/25 text-primary-hover" },
+              { email: "admin@mohcc.gov.zw", label: "Sys Admin", desc: "System Admin", color: "bg-background border-border text-foreground" },
               { email: "support@mohcc.gov.zw", label: "Support", desc: "Support Agent", color: "bg-teal-50 border-teal-200 text-teal-700" },
             ].map((acct) => (
               <button

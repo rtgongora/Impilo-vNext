@@ -108,33 +108,33 @@ export function SecureChartAccessFlow({ pendingAccess, isAuthorizing, onAuthoriz
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/50" onClick={onCancel} />
-      <div className="relative bg-white rounded-xl shadow-2xl w-[500px] max-h-[90vh] overflow-y-auto">
+      <div className="relative bg-card rounded-xl shadow-2xl w-[500px] max-h-[90vh] overflow-y-auto">
         <div className="px-6 py-4 border-b flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-impilo-100 flex items-center justify-center"><Shield className="w-5 h-5 text-impilo-500" /></div>
-            <div><h2 className="text-base font-semibold text-gray-900">Authorize Chart Access</h2><p className="text-xs text-gray-500">Identity verification required</p></div>
+            <div className="w-10 h-10 rounded-full bg-primary-soft flex items-center justify-center"><Shield className="w-5 h-5 text-primary" /></div>
+            <div><h2 className="text-base font-semibold text-foreground">Authorize Chart Access</h2><p className="text-xs text-muted-foreground">Identity verification required</p></div>
           </div>
-          <button onClick={onCancel} className="p-1.5 rounded hover:bg-gray-100"><X className="w-4 h-4" /></button>
+          <button onClick={onCancel} className="p-1.5 rounded hover:bg-neutral-100"><X className="w-4 h-4" /></button>
         </div>
 
         <div className="p-6 space-y-5">
           {/* Patient identity */}
-          <div className="bg-gray-50 rounded-lg p-4 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-impilo-50 flex items-center justify-center"><User className="w-6 h-6 text-impilo-500" /></div>
-            <div><p className="text-sm font-semibold text-gray-900">{pendingAccess.patientName}</p><p className="text-xs text-gray-500">MRN: {pendingAccess.patientMrn} &middot; DOB: {pendingAccess.patientDob}</p></div>
+          <div className="bg-background rounded-lg p-4 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-primary-soft flex items-center justify-center"><User className="w-6 h-6 text-primary" /></div>
+            <div><p className="text-sm font-semibold text-foreground">{pendingAccess.patientName}</p><p className="text-xs text-muted-foreground">MRN: {pendingAccess.patientMrn} &middot; DOB: {pendingAccess.patientDob}</p></div>
           </div>
 
           {/* Access reason */}
           <div>
-            <label className="text-sm font-medium text-gray-700">Reason for Access</label>
+            <label className="text-sm font-medium text-foreground">Reason for Access</label>
             <div className="mt-2 space-y-2">
               {ACCESS_REASONS.map(r => (
                 <button key={r.id} onClick={() => setSelectedReason(r.id)}
-                  className={`w-full flex items-start gap-3 p-3 rounded-lg border-2 text-left transition-all ${selectedReason === r.id ? "border-impilo-400 bg-impilo-50" : "border-gray-200 hover:bg-gray-50"}`}>
-                  <div className={`mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${selectedReason === r.id ? "border-impilo-400 bg-impilo-500" : "border-gray-300"}`}>
+                  className={`w-full flex items-start gap-3 p-3 rounded-lg border-2 text-left transition-all ${selectedReason === r.id ? "border-impilo-400 bg-primary-soft" : "border-border hover:bg-background"}`}>
+                  <div className={`mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${selectedReason === r.id ? "border-impilo-400 bg-primary" : "border-border"}`}>
                     {selectedReason === r.id && <CheckCircle2 className="w-3 h-3 text-white" />}
                   </div>
-                  <div><p className="text-sm font-medium text-gray-900">{r.label}</p><p className="text-xs text-gray-500">{r.description}</p>
+                  <div><p className="text-sm font-medium text-foreground">{r.label}</p><p className="text-xs text-muted-foreground">{r.description}</p>
                     {r.requiresJustification && <span className="inline-flex items-center gap-1 mt-1 text-[10px] text-amber-600"><AlertTriangle className="w-3 h-3" /> Requires written justification</span>}
                   </div>
                 </button>
@@ -145,23 +145,23 @@ export function SecureChartAccessFlow({ pendingAccess, isAuthorizing, onAuthoriz
           {/* Justification (if required) */}
           {reason?.requiresJustification && (
             <div>
-              <label className="text-sm font-medium text-gray-700">Justification <span className="text-red-500">*</span></label>
-              <textarea value={justification} onChange={e => setJustification(e.target.value)} rows={3} placeholder="Explain why you need access to this patient's chart..." className="w-full mt-1 px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400" />
+              <label className="text-sm font-medium text-foreground">Justification <span className="text-red-500">*</span></label>
+              <textarea value={justification} onChange={e => setJustification(e.target.value)} rows={3} placeholder="Explain why you need access to this patient's chart..." className="w-full mt-1 px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-primary/40 focus:border-impilo-400" />
               {justification.length > 0 && justification.length < 10 && <p className="text-xs text-red-500 mt-1">Minimum 10 characters required</p>}
             </div>
           )}
 
           {/* Warning */}
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
+          <div className="bg-warning-soft border border-warning/35 rounded-lg p-3 flex items-start gap-2">
             <Lock className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
-            <p className="text-xs text-amber-800">This access will be logged and audited. Unauthorized access to patient records is a violation of policy and may result in disciplinary action.</p>
+            <p className="text-xs text-warning-foreground">This access will be logged and audited. Unauthorized access to patient records is a violation of policy and may result in disciplinary action.</p>
           </div>
         </div>
 
         <div className="px-6 py-4 border-t flex justify-end gap-3">
-          <button onClick={onCancel} className="px-4 py-2 text-sm font-medium text-gray-600 border rounded-lg hover:bg-gray-100">Cancel</button>
+          <button onClick={onCancel} className="px-4 py-2 text-sm font-medium text-muted-foreground border rounded-lg hover:bg-neutral-100">Cancel</button>
           <button onClick={() => selectedReason && onAuthorize(selectedReason, justification || undefined)} disabled={!canProceed || isAuthorizing}
-            className="px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-50 flex items-center gap-2">
+            className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover disabled:opacity-50 flex items-center gap-2">
             {isAuthorizing ? <><Loader2 className="w-4 h-4 animate-spin" /> Authorizing...</> : <><Shield className="w-4 h-4" /> Authorize & Open Chart</>}
           </button>
         </div>

@@ -72,7 +72,7 @@ function daysAgo(isoDate: string): number {
 
 function getAcuityColor(acuity: string): string {
   const map: Record<string, string> = {
-    critical: 'bg-red-100 text-red-800 border border-red-200',
+    critical: 'bg-red-100 text-red-800 border border-danger/28',
     high: 'bg-orange-100 text-orange-800 border border-orange-200',
     medium: 'bg-yellow-100 text-yellow-800 border border-yellow-200',
     low: 'bg-green-100 text-green-800 border border-green-200',
@@ -85,7 +85,7 @@ function getBedColor(status: BedData['status'], acuity?: string): string {
   if (status === 'maintenance') return 'bg-yellow-100 border-yellow-300 text-yellow-800';
   if (status === 'cleaning') return 'bg-purple-100 border-purple-300 text-purple-800';
   if (status === 'occupied' && acuity === 'critical') return 'bg-red-100 border-red-300 text-red-800';
-  return 'bg-impilo-100 border-impilo-200 text-impilo-700';
+  return 'bg-primary-soft border-primary/25 text-primary-hover';
 }
 
 // ─── Component ───
@@ -155,8 +155,8 @@ export function WardManagementPanel() {
   if (bedsLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-impilo-500" />
-        <span className="ml-2 text-sm text-gray-500">Loading ward data...</span>
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        <span className="ml-2 text-sm text-muted-foreground">Loading ward data...</span>
       </div>
     );
   }
@@ -277,19 +277,19 @@ export function WardManagementPanel() {
           <div className="flex items-center gap-3">
             <button
               onClick={handleBackToOverview}
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-md hover:bg-gray-100 transition-colors"
+              className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-md hover:bg-neutral-100 transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />
               Overview
             </button>
             <div>
               <h3 className="text-base font-semibold">{ward?.name}</h3>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 {wardOccupied.length}/{wardBeds.length} beds occupied &middot; {wardAvailable.length} available
               </p>
             </div>
           </div>
-          <button className="inline-flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-200 rounded-md hover:bg-gray-50">
+          <button className="inline-flex items-center gap-1 px-3 py-1.5 text-sm border border-border rounded-md hover:bg-background">
             <RefreshCw className="h-3.5 w-3.5" />
             Refresh
           </button>
@@ -297,30 +297,30 @@ export function WardManagementPanel() {
 
         {/* Ward Stats */}
         <div className="grid grid-cols-5 gap-2 shrink-0">
-          <div className="bg-white border border-gray-200 rounded-lg p-2.5">
+          <div className="bg-card border border-border rounded-lg p-2.5">
             <div className="text-lg font-bold">{wardBeds.length}</div>
-            <p className="text-[10px] text-gray-500">Total Beds</p>
+            <p className="text-[10px] text-muted-foreground">Total Beds</p>
           </div>
-          <div className="bg-white border border-gray-200 rounded-lg p-2.5">
-            <div className="text-lg font-bold text-impilo-500">{wardOccupied.length}</div>
-            <p className="text-[10px] text-gray-500">Occupied</p>
+          <div className="bg-card border border-border rounded-lg p-2.5">
+            <div className="text-lg font-bold text-primary">{wardOccupied.length}</div>
+            <p className="text-[10px] text-muted-foreground">Occupied</p>
           </div>
-          <div className="bg-white border border-gray-200 rounded-lg p-2.5">
+          <div className="bg-card border border-border rounded-lg p-2.5">
             <div className="text-lg font-bold text-green-600">{wardAvailable.length}</div>
-            <p className="text-[10px] text-gray-500">Available</p>
+            <p className="text-[10px] text-muted-foreground">Available</p>
           </div>
-          <div className="bg-white border border-gray-200 rounded-lg p-2.5">
+          <div className="bg-card border border-border rounded-lg p-2.5">
             <div className={`text-lg font-bold ${wardPct >= 90 ? 'text-red-600' : ''}`}>{wardPct}%</div>
-            <p className="text-[10px] text-gray-500">Occupancy</p>
+            <p className="text-[10px] text-muted-foreground">Occupancy</p>
           </div>
-          <div className="bg-white border border-gray-200 rounded-lg p-2.5">
+          <div className="bg-card border border-border rounded-lg p-2.5">
             <div className="text-lg font-bold text-red-600">{wardCritical}</div>
-            <p className="text-[10px] text-gray-500">Critical</p>
+            <p className="text-[10px] text-muted-foreground">Critical</p>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 border-b border-gray-200 shrink-0">
+        <div className="flex gap-1 border-b border-border shrink-0">
           {([
             { key: 'patients' as WardTab, label: 'Patients', icon: Users, count: wardOccupied.length },
             { key: 'beds' as WardTab, label: 'Bed Map', icon: Bed },
@@ -333,14 +333,14 @@ export function WardManagementPanel() {
                 onClick={() => setWardTab(tab.key)}
                 className={`inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
                   wardTab === tab.key
-                    ? 'border-impilo-500 text-impilo-500'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? 'border-impilo-500 text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
                 }`}
               >
                 <Icon className="h-3.5 w-3.5" />
                 {tab.label}
                 {tab.count !== undefined && (
-                  <span className="ml-1 px-1.5 py-0.5 rounded-full bg-gray-100 text-[10px]">{tab.count}</span>
+                  <span className="ml-1 px-1.5 py-0.5 rounded-full bg-neutral-100 text-[10px]">{tab.count}</span>
                 )}
               </button>
             );
@@ -353,21 +353,21 @@ export function WardManagementPanel() {
           {wardTab === 'patients' && (
             <div className="space-y-2">
               {wardOccupied.length === 0 ? (
-                <div className="text-center py-8 text-gray-400 text-sm">No patients in this ward</div>
+                <div className="text-center py-8 text-muted-foreground text-sm">No patients in this ward</div>
               ) : (
                 wardOccupied.map(bed => (
                   <div
                     key={bed.id}
                     onClick={() => setPatientDetailBed(bed)}
-                    className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                    className="flex items-center justify-between p-3 bg-card border border-border rounded-lg cursor-pointer hover:bg-background transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="h-9 w-9 rounded-lg bg-impilo-100 flex items-center justify-center text-impilo-600 font-bold text-xs">
+                      <div className="h-9 w-9 rounded-lg bg-primary-soft flex items-center justify-center text-primary font-bold text-xs">
                         {bed.bedNumber}
                       </div>
                       <div>
                         <p className="font-medium text-sm">{bed.patient?.name}</p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-muted-foreground">
                           {bed.patient?.mrn} &middot; {bed.patient?.diagnosis}
                         </p>
                       </div>
@@ -376,11 +376,11 @@ export function WardManagementPanel() {
                       <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${getAcuityColor(bed.patient?.acuityLevel || 'medium')}`}>
                         {bed.patient?.acuityLevel}
                       </span>
-                      <span className="flex items-center gap-1 text-xs text-gray-500">
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
                         <Clock className="h-3 w-3" />
                         {daysAgo(bed.patient?.admissionDate || '')}d
                       </span>
-                      <ChevronRight className="h-4 w-4 text-gray-400" />
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
                     </div>
                   </div>
                 ))
@@ -391,7 +391,7 @@ export function WardManagementPanel() {
           {/* Bed Map Tab */}
           {wardTab === 'beds' && (
             <div>
-              <div className="flex gap-4 mb-3 text-xs text-gray-500">
+              <div className="flex gap-4 mb-3 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1"><span className="h-3 w-3 rounded bg-green-400" /> Available</span>
                 <span className="flex items-center gap-1"><span className="h-3 w-3 rounded bg-impilo-400" /> Occupied</span>
                 <span className="flex items-center gap-1"><span className="h-3 w-3 rounded bg-yellow-400" /> Maintenance</span>
@@ -419,13 +419,13 @@ export function WardManagementPanel() {
           {wardTab === 'activity' && (
             <div className="space-y-2">
               {([] as { id: number; action: string; detail: string; actor: string; time: string }[]).map(item => (
-                <div key={item.id} className="flex items-start gap-3 p-3 rounded-lg bg-gray-50">
-                  <div className="h-2 w-2 rounded-full bg-impilo-500 mt-1.5 shrink-0" />
+                <div key={item.id} className="flex items-start gap-3 p-3 rounded-lg bg-background">
+                  <div className="h-2 w-2 rounded-full bg-primary mt-1.5 shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm">{item.action}</p>
-                    <p className="text-xs text-gray-500">{item.detail} &middot; {item.actor}</p>
+                    <p className="text-xs text-muted-foreground">{item.detail} &middot; {item.actor}</p>
                   </div>
-                  <span className="text-xs text-gray-400 whitespace-nowrap">{item.time}</span>
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">{item.time}</span>
                 </div>
               ))}
             </div>
@@ -436,37 +436,37 @@ export function WardManagementPanel() {
         {patientDetailBed && patientDetailBed.patient && (
           <div className="fixed inset-0 z-50 flex justify-end">
             <div className="absolute inset-0 bg-black/30" onClick={() => setPatientDetailBed(null)} />
-            <div className="relative w-full max-w-lg bg-white shadow-xl overflow-auto">
-              <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+            <div className="relative w-full max-w-lg bg-card shadow-xl overflow-auto">
+              <div className="sticky top-0 bg-card border-b border-border px-4 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Bed className="h-5 w-5 text-gray-600" />
+                  <Bed className="h-5 w-5 text-muted-foreground" />
                   <h3 className="font-semibold">Bed {patientDetailBed.bedNumber}</h3>
-                  <span className="px-2 py-0.5 rounded border border-gray-200 text-xs text-gray-600">{patientDetailBed.wardName}</span>
+                  <span className="px-2 py-0.5 rounded border border-border text-xs text-muted-foreground">{patientDetailBed.wardName}</span>
                 </div>
-                <button onClick={() => setPatientDetailBed(null)} className="p-1 rounded hover:bg-gray-100">
-                  <X className="h-5 w-5 text-gray-500" />
+                <button onClick={() => setPatientDetailBed(null)} className="p-1 rounded hover:bg-neutral-100">
+                  <X className="h-5 w-5 text-muted-foreground" />
                 </button>
               </div>
 
               <div className="p-4 space-y-4">
                 {/* Patient Info */}
-                <div className="p-4 rounded-lg bg-gray-50 space-y-3">
+                <div className="p-4 rounded-lg bg-background space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-impilo-100 flex items-center justify-center">
-                      <User className="h-5 w-5 text-impilo-500" />
+                    <div className="h-10 w-10 rounded-full bg-primary-soft flex items-center justify-center">
+                      <User className="h-5 w-5 text-primary" />
                     </div>
                     <div>
                       <p className="font-semibold">{patientDetailBed.patient.name}</p>
-                      <p className="text-xs text-gray-500">{patientDetailBed.patient.mrn} &middot; {patientDetailBed.patient.age}y {patientDetailBed.patient.gender}</p>
+                      <p className="text-xs text-muted-foreground">{patientDetailBed.patient.mrn} &middot; {patientDetailBed.patient.age}y {patientDetailBed.patient.gender}</p>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <span className="text-gray-400 text-xs">Diagnosis</span>
+                      <span className="text-muted-foreground text-xs">Diagnosis</span>
                       <p className="font-medium">{patientDetailBed.patient.diagnosis}</p>
                     </div>
                     <div>
-                      <span className="text-gray-400 text-xs">Acuity</span>
+                      <span className="text-muted-foreground text-xs">Acuity</span>
                       <p>
                         <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${getAcuityColor(patientDetailBed.patient.acuityLevel)}`}>
                           {patientDetailBed.patient.acuityLevel}
@@ -474,11 +474,11 @@ export function WardManagementPanel() {
                       </p>
                     </div>
                     <div>
-                      <span className="text-gray-400 text-xs">Attending Physician</span>
+                      <span className="text-muted-foreground text-xs">Attending Physician</span>
                       <p className="font-medium">{patientDetailBed.patient.attendingPhysician}</p>
                     </div>
                     <div>
-                      <span className="text-gray-400 text-xs">Length of Stay</span>
+                      <span className="text-muted-foreground text-xs">Length of Stay</span>
                       <p className="font-medium">{daysAgo(patientDetailBed.patient.admissionDate)} days</p>
                     </div>
                   </div>
@@ -497,9 +497,9 @@ export function WardManagementPanel() {
                         { label: 'Temp', value: patientDetailBed.patient.vitals.temp, unit: '\u00B0C' },
                         { label: 'SpO2', value: patientDetailBed.patient.vitals.spo2, unit: '%' },
                       ].map(v => (
-                        <div key={v.label} className="bg-gray-50 rounded-lg p-2 text-center">
+                        <div key={v.label} className="bg-background rounded-lg p-2 text-center">
                           <p className="text-lg font-bold">{v.value}</p>
-                          <p className="text-[10px] text-gray-500">{v.label} ({v.unit})</p>
+                          <p className="text-[10px] text-muted-foreground">{v.label} ({v.unit})</p>
                         </div>
                       ))}
                     </div>
@@ -508,13 +508,13 @@ export function WardManagementPanel() {
 
                 {/* Actions */}
                 <div className="grid grid-cols-3 gap-2">
-                  <button className="flex items-center justify-center gap-1.5 px-3 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
+                  <button className="flex items-center justify-center gap-1.5 px-3 py-2 text-sm border border-border rounded-lg hover:bg-background">
                     <Eye className="h-3.5 w-3.5" />
                     View Chart
                   </button>
                   <button
                     onClick={() => handleOpenTransfer(patientDetailBed)}
-                    className="flex items-center justify-center gap-1.5 px-3 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50"
+                    className="flex items-center justify-center gap-1.5 px-3 py-2 text-sm border border-border rounded-lg hover:bg-background"
                   >
                     <ArrowRightLeft className="h-3.5 w-3.5" />
                     Transfer
@@ -536,26 +536,26 @@ export function WardManagementPanel() {
         {transferDialogOpen && transferBed && (
           <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div className="absolute inset-0 bg-black/30" onClick={() => setTransferDialogOpen(false)} />
-            <div className="relative bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
+            <div className="relative bg-card rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
               <div className="flex items-center gap-2">
-                <ArrowRightLeft className="h-5 w-5 text-gray-600" />
+                <ArrowRightLeft className="h-5 w-5 text-muted-foreground" />
                 <h3 className="text-lg font-semibold">Transfer Patient</h3>
               </div>
 
-              <div className="p-3 rounded-lg bg-gray-50 text-sm">
+              <div className="p-3 rounded-lg bg-background text-sm">
                 <p className="font-medium">{transferBed.patient?.name}</p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   Currently in Bed {transferBed.bedNumber} &middot; {transferBed.wardName}
                 </p>
               </div>
 
               <div className="space-y-3">
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Target Ward</label>
+                  <label className="block text-xs font-medium text-foreground mb-1">Target Ward</label>
                   <select
                     value={transferTargetWard}
                     onChange={e => { setTransferTargetWard(e.target.value); setTransferTargetBed(''); }}
-                    className="w-full h-9 border border-gray-200 rounded-md px-3 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                    className="w-full h-9 border border-border rounded-md px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                   >
                     <option value="">Select ward...</option>
                     {wards.map(w => (
@@ -565,12 +565,12 @@ export function WardManagementPanel() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Target Bed</label>
+                  <label className="block text-xs font-medium text-foreground mb-1">Target Bed</label>
                   <select
                     value={transferTargetBed}
                     onChange={e => setTransferTargetBed(e.target.value)}
                     disabled={!transferTargetWard}
-                    className="w-full h-9 border border-gray-200 rounded-md px-3 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 disabled:bg-gray-100 disabled:text-gray-400"
+                    className="w-full h-9 border border-border rounded-md px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:bg-neutral-100 disabled:text-muted-foreground"
                   >
                     <option value="">{transferTargetWard ? 'Select bed...' : 'Select ward first'}</option>
                     {availableTargetBeds.map(b => (
@@ -578,18 +578,18 @@ export function WardManagementPanel() {
                     ))}
                   </select>
                   {transferTargetWard && availableTargetBeds.length === 0 && (
-                    <p className="text-xs text-gray-400 mt-1">No available beds in this ward</p>
+                    <p className="text-xs text-muted-foreground mt-1">No available beds in this ward</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Reason for Transfer</label>
+                  <label className="block text-xs font-medium text-foreground mb-1">Reason for Transfer</label>
                   <textarea
                     value={transferReason}
                     onChange={e => setTransferReason(e.target.value)}
                     placeholder="Clinical reason for bed transfer..."
                     rows={2}
-                    className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                    className="w-full border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                   />
                 </div>
               </div>
@@ -600,14 +600,14 @@ export function WardManagementPanel() {
               <div className="flex justify-end gap-2">
                 <button
                   onClick={() => setTransferDialogOpen(false)}
-                  className="px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50"
+                  className="px-4 py-2 text-sm border border-border rounded-lg hover:bg-background"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={() => void handleTransferConfirm()}
                   disabled={!transferTargetBed || wardActionPending}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 text-sm bg-impilo-500 text-white rounded-lg hover:bg-impilo-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {wardActionPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ArrowRightLeft className="h-3.5 w-3.5" />}
                   Confirm Transfer
@@ -621,9 +621,9 @@ export function WardManagementPanel() {
         {dischargeConfirm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div className="absolute inset-0 bg-black/30" onClick={() => setDischargeConfirm(null)} />
-            <div className="relative bg-white rounded-xl shadow-xl w-full max-w-sm p-6 space-y-4">
+            <div className="relative bg-card rounded-xl shadow-xl w-full max-w-sm p-6 space-y-4">
               <h3 className="text-lg font-semibold">Confirm Discharge</h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 Discharge <span className="font-medium">{dischargeConfirm.patient?.name}</span> from Bed {dischargeConfirm.bedNumber}?
               </p>
               {wardActionError && dischargeConfirm ? (
@@ -632,7 +632,7 @@ export function WardManagementPanel() {
               <div className="flex justify-end gap-2">
                 <button
                   onClick={() => setDischargeConfirm(null)}
-                  className="px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50"
+                  className="px-4 py-2 text-sm border border-border rounded-lg hover:bg-background"
                 >
                   Cancel
                 </button>
@@ -658,23 +658,23 @@ export function WardManagementPanel() {
       {/* Hospital-wide KPI stats */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 shrink-0">
         {[
-          { label: 'Total Beds', value: totalBeds, icon: Bed, iconBg: 'bg-impilo-100', iconColor: 'text-impilo-500' },
+          { label: 'Total Beds', value: totalBeds, icon: Bed, iconBg: 'bg-primary-soft', iconColor: 'text-primary' },
           { label: 'Occupied', value: totalOccupied, icon: Users, iconBg: 'bg-orange-100', iconColor: 'text-orange-600' },
           { label: 'Available', value: totalAvailable, icon: Bed, iconBg: 'bg-green-100', iconColor: 'text-green-600' },
           { label: 'Maintenance', value: totalMaintenance, icon: RefreshCw, iconBg: 'bg-yellow-100', iconColor: 'text-yellow-600' },
-          { label: 'Occupancy', value: `${occupancyRate}%`, icon: Activity, iconBg: occupancyRate > 90 ? 'bg-red-100' : 'bg-impilo-100', iconColor: occupancyRate > 90 ? 'text-red-600' : 'text-impilo-500', textColor: occupancyRate > 90 ? 'text-red-600' : '' },
+          { label: 'Occupancy', value: `${occupancyRate}%`, icon: Activity, iconBg: occupancyRate > 90 ? 'bg-red-100' : 'bg-primary-soft', iconColor: occupancyRate > 90 ? 'text-red-600' : 'text-primary', textColor: occupancyRate > 90 ? 'text-red-600' : '' },
           { label: 'Critical', value: criticalPatients, icon: AlertTriangle, iconBg: 'bg-red-100', iconColor: 'text-red-600', textColor: 'text-red-600' },
         ].map(kpi => {
           const Icon = kpi.icon;
           return (
-            <div key={kpi.label} className="bg-white border border-gray-200 rounded-lg p-3">
+            <div key={kpi.label} className="bg-card border border-border rounded-lg p-3">
               <div className="flex items-center gap-2">
                 <div className={`h-9 w-9 rounded-lg ${kpi.iconBg} flex items-center justify-center`}>
                   <Icon className={`h-4 w-4 ${kpi.iconColor}`} />
                 </div>
                 <div>
                   <p className={`text-xl font-bold ${kpi.textColor || ''}`}>{kpi.value}</p>
-                  <p className="text-[10px] text-gray-500">{kpi.label}</p>
+                  <p className="text-[10px] text-muted-foreground">{kpi.label}</p>
                 </div>
               </div>
             </div>
@@ -688,7 +688,7 @@ export function WardManagementPanel() {
         const occ = wb.filter(bb => bb.status === 'occupied').length;
         return occ >= wb.length && wb.length > 0;
       }) && (
-        <div className="flex items-center gap-2 p-3 border border-red-200 bg-red-50 rounded-lg text-red-700 shrink-0">
+        <div className="flex items-center gap-2 p-3 border border-danger/28 bg-danger-soft rounded-lg text-danger shrink-0">
           <AlertTriangle className="h-4 w-4" />
           <span className="text-sm font-medium">
             {wards.filter(w => {
@@ -713,14 +713,14 @@ export function WardManagementPanel() {
               <div
                 key={ward.id}
                 onClick={() => handleSelectWard(ward.id)}
-                className={`bg-white border rounded-lg cursor-pointer hover:shadow-md transition-all ${isFull ? 'border-red-200' : 'border-gray-200 hover:border-impilo-200'}`}
+                className={`bg-card border rounded-lg cursor-pointer hover:shadow-md transition-all ${isFull ? 'border-danger/28' : 'border-border hover:border-primary/25'}`}
               >
                 <div className="px-3 pt-3 pb-2 flex items-center justify-between">
                   <h4 className="text-sm font-semibold flex items-center gap-2">
-                    <Building2 className="h-4 w-4 text-gray-400" />
+                    <Building2 className="h-4 w-4 text-muted-foreground" />
                     {ward.name}
                   </h4>
-                  <ChevronRight className="h-4 w-4 text-gray-400" />
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <div className="px-3 pb-3">
                   <div className="flex items-center justify-between mb-2">
@@ -730,7 +730,7 @@ export function WardManagementPanel() {
                     }`}>{pct}%</span>
                   </div>
                   {/* Progress bar */}
-                  <div className="w-full bg-gray-100 rounded-full h-2 mb-3">
+                  <div className="w-full bg-neutral-100 rounded-full h-2 mb-3">
                     <div
                       className={`h-2 rounded-full transition-all ${
                         pct >= 100 ? 'bg-red-500' : pct >= 80 ? 'bg-yellow-500' : 'bg-green-500'
@@ -738,7 +738,7 @@ export function WardManagementPanel() {
                       style={{ width: `${Math.min(pct, 100)}%` }}
                     />
                   </div>
-                  <div className="flex gap-3 text-xs text-gray-500">
+                  <div className="flex gap-3 text-xs text-muted-foreground">
                     {wardCritical > 0 && (
                       <span className="flex items-center gap-1">
                         <span className="h-2 w-2 rounded-full bg-red-500" />

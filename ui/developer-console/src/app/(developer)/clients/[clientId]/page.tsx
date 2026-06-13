@@ -175,11 +175,11 @@ export default function ClientDetailPage() {
 
       {/* Client info grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-5">
+        <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-5">
           <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide mb-1">Contact</p>
           <p className="text-sm text-neutral-900">{client?.contact_email}</p>
         </div>
-        <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-5">
+        <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-5">
           <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide mb-1">Sandbox</p>
           <div className="flex items-center justify-between">
             <span className={`text-sm font-medium ${client?.sandbox_enabled ? "text-info" : "text-neutral-400"}`}>
@@ -195,7 +195,7 @@ export default function ClientDetailPage() {
             )}
           </div>
         </div>
-        <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-5">
+        <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-5">
           <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide mb-1">Deprecation Posture</p>
           <div className="flex gap-1 mt-1">
             {(["NONE", "WARN", "BLOCK"] as DeprecationPosture[]).map((p) => (
@@ -237,7 +237,7 @@ export default function ClientDetailPage() {
       )}
 
       {/* API Keys section */}
-      <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6">
+      <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-neutral-900">API Keys</h2>
           <button

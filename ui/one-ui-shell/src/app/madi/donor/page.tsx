@@ -31,16 +31,16 @@ export default function DonorHubPage() {
         icon={<Heart className="h-6 w-6" />}
       >
         {isPending && personCpid && (
-          <div className="mb-4 flex items-center gap-2 text-sm text-gray-500">
+          <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" /> Checking donor registration…
           </div>
         )}
 
         {!isPending && !donor && !isError && (
-          <div className="mb-6 rounded-2xl border border-dashed border-rose-300 bg-rose-50 p-6 text-center">
+          <div className="mb-6 rounded-2xl border border-dashed border-rose-300 bg-danger-soft p-6 text-center">
             <Droplet className="mx-auto h-10 w-10 text-rose-400" />
-            <h3 className="mt-3 font-semibold text-gray-900">You are not registered as a donor yet</h3>
-            <p className="mt-1 text-sm text-gray-600">
+            <h3 className="mt-3 font-semibold text-foreground">You are not registered as a donor yet</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
               Registration is voluntary. Your health information stays protected.
             </p>
             <Link
@@ -53,16 +53,16 @@ export default function DonorHubPage() {
         )}
 
         {donor && (
-          <div className="mb-6 rounded-2xl border border-rose-200 bg-white p-4">
-            <p className="text-sm text-gray-600">
+          <div className="mb-6 rounded-2xl border border-danger/28 bg-card p-4">
+            <p className="text-sm text-muted-foreground">
               Registered donor · blood group{" "}
-              <span className="font-semibold text-gray-900">
+              <span className="font-semibold text-foreground">
                 {donor.bloodGroup}
                 {donor.rhFactor ? ` ${donor.rhFactor}` : ""}
               </span>
             </p>
             {eligibility && (
-              <p className="mt-2 text-sm text-gray-700">
+              <p className="mt-2 text-sm text-foreground">
                 {eligibility.eligible === false
                   ? `Not eligible to donate right now${eligibility.reason ? `: ${eligibility.reason}` : "."}`
                   : "You may be eligible to donate — confirm at your next drive."}
@@ -72,7 +72,7 @@ export default function DonorHubPage() {
         )}
 
         {isError && (
-          <div className="mb-4 flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          <div className="mb-4 flex items-center gap-2 rounded-xl border border-warning/35 bg-warning-soft p-3 text-sm text-warning-foreground">
             <AlertTriangle className="h-4 w-4 shrink-0" />
             Could not load donor profile. You can still register or browse drives.
           </div>
@@ -83,10 +83,10 @@ export default function DonorHubPage() {
             <Link
               key={href}
               href={href}
-              className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-4 hover:border-rose-300 transition-colors"
+              className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 hover:border-rose-300 transition-colors"
             >
               <Icon className="h-5 w-5 text-rose-500" />
-              <span className="text-sm font-medium text-gray-900">{label}</span>
+              <span className="text-sm font-medium text-foreground">{label}</span>
             </Link>
           ))}
         </div>

@@ -39,7 +39,7 @@ export default function ModerationQueuePage() {
                   <p className="text-sm font-semibold text-[color:var(--text-primary)]">{c.reason}</p>
                   {c.details && <p className="mt-1 text-xs text-[color:var(--text-secondary)]">{c.details}</p>}
                 </div>
-                <span className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+                <span className="rounded-full border border-amber-300 bg-warning-soft px-2 py-0.5 text-[11px] font-medium text-warning-foreground">
                   {c.status}
                 </span>
               </div>

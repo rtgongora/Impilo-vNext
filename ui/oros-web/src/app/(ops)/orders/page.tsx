@@ -35,7 +35,7 @@ const TYPE_BADGE: Record<OrderType, string> = {
   IMAGING: "badge-type-imaging",
   PHARMACY: "badge-type-pharmacy",
   REFERRAL: "badge-type-referral",
-  PROCEDURE: "badge bg-amber-100 text-amber-800",
+  PROCEDURE: "badge bg-amber-100 text-warning-foreground",
   SUPPLY: "badge bg-neutral-100 text-neutral-700",
 };
 
@@ -206,17 +206,17 @@ export default function OrdersPage() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-red-800">
           {error}
         </div>
       )}
 
       {successMessage && (
-        <div className="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-sm text-emerald-800">
+        <div className="mb-4 p-3 rounded-lg bg-success-soft border border-success/25 text-sm text-primary-hover">
           {successMessage}
           <button
             onClick={() => setSuccessMessage(null)}
-            className="ml-2 text-emerald-600 hover:text-emerald-800 font-medium"
+            className="ml-2 text-primary hover:text-primary-hover font-medium"
           >
             Dismiss
           </button>
@@ -311,7 +311,7 @@ export default function OrdersPage() {
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="block text-sm font-medium text-neutral-700">Order Items</label>
-              <button onClick={addItem} className="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
+              <button onClick={addItem} className="text-xs text-indigo-600 hover:text-primary-hover font-medium">
                 + Add Item
               </button>
             </div>
@@ -489,7 +489,7 @@ export default function OrdersPage() {
                 <td className="px-4 py-3 text-neutral-600">
                   {order.resultCount}
                   {order.acknowledged && (
-                    <span className="ml-1 text-emerald-600 text-xs" title="Acknowledged">
+                    <span className="ml-1 text-primary text-xs" title="Acknowledged">
                       ACK
                     </span>
                   )}

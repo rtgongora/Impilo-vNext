@@ -26,9 +26,9 @@ interface EligibilityStatusCardProps {
 }
 
 const statusConfig = {
-  eligible: { icon: BadgeCheck, color: "text-emerald-600", bgColor: "bg-emerald-50", label: "Eligible" },
-  ineligible: { icon: BadgeX, color: "text-red-600", bgColor: "bg-red-50", label: "Ineligible" },
-  partial: { icon: AlertCircle, color: "text-amber-600", bgColor: "bg-amber-50", label: "Partial" },
+  eligible: { icon: BadgeCheck, color: "text-primary", bgColor: "bg-success-soft", label: "Eligible" },
+  ineligible: { icon: BadgeX, color: "text-red-600", bgColor: "bg-danger-soft", label: "Ineligible" },
+  partial: { icon: AlertCircle, color: "text-amber-600", bgColor: "bg-warning-soft", label: "Partial" },
 };
 
 const criteriaConfig = [
@@ -83,19 +83,19 @@ export function EligibilityStatusCard({
             <div
               key={key}
               className={`flex items-center gap-2 rounded-md px-3 py-2 ${
-                passed ? "bg-white/80" : "bg-white/40"
+                passed ? "bg-card/80" : "bg-card/40"
               }`}
             >
               <IconComponent
-                className={`h-4 w-4 ${passed ? "text-emerald-600" : "text-slate-400"}`}
+                className={`h-4 w-4 ${passed ? "text-primary" : "text-muted-foreground"}`}
               />
               <span className={`text-sm ${passed ? "text-foreground" : "text-muted-foreground"}`}>
                 {label}
               </span>
               {passed ? (
-                <BadgeCheck className="ml-auto h-3.5 w-3.5 text-emerald-600" />
+                <BadgeCheck className="ml-auto h-3.5 w-3.5 text-primary" />
               ) : (
-                <Clock className="ml-auto h-3.5 w-3.5 text-slate-400" />
+                <Clock className="ml-auto h-3.5 w-3.5 text-muted-foreground" />
               )}
             </div>
           );

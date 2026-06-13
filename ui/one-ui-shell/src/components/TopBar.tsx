@@ -64,10 +64,10 @@ export function TopBar() {
   }));
 
   return (
-    <header className="h-12 border-b bg-white px-4 flex items-center gap-2 shrink-0 min-w-0">
+    <header className="h-12 border-b bg-card px-4 flex items-center gap-2 shrink-0 min-w-0">
       <Link
         href="/home"
-        className="text-gray-400 hover:text-impilo-500 transition-colors"
+        className="text-muted-foreground hover:text-primary transition-colors"
         title="Home"
       >
         <Home className="w-4 h-4" />
@@ -76,16 +76,16 @@ export function TopBar() {
       <nav aria-label="Breadcrumb" className="flex min-w-0 max-w-[min(100%,32rem)] items-center gap-0 overflow-x-auto">
         {breadcrumbs.map((crumb, i) => (
           <span key={`${crumb.label}-${i}`} className="flex min-w-0 items-center gap-1">
-            <ChevronRight className="w-3 h-3 shrink-0 text-gray-300" aria-hidden />
+            <ChevronRight className="w-3 h-3 shrink-0 text-muted-foreground" aria-hidden />
             {crumb.href ? (
               <Link
                 href={crumb.href}
-                className="truncate text-xs text-impilo-500 hover:text-impilo-700 font-medium"
+                className="truncate text-xs text-primary hover:text-primary-hover font-medium"
               >
                 {crumb.label}
               </Link>
             ) : (
-              <span className="truncate text-xs text-gray-700 font-medium">{crumb.label}</span>
+              <span className="truncate text-xs text-foreground font-medium">{crumb.label}</span>
             )}
           </span>
         ))}
@@ -94,7 +94,7 @@ export function TopBar() {
       {pathname.startsWith("/ehr") && (
         <Link
           href="/queue"
-          className="ml-2 hidden md:inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
+          className="ml-2 hidden md:inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1 text-xs font-medium text-foreground transition-colors hover:bg-neutral-100 hover:text-foreground"
         >
           Queue
         </Link>
@@ -115,7 +115,7 @@ export function TopBar() {
             <Link
               key={action.label}
               href={href}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-neutral-100 hover:text-foreground rounded-md transition-colors"
               title={action.label}
             >
               <Icon className="w-3.5 h-3.5" />
@@ -128,24 +128,24 @@ export function TopBar() {
       <div className="ml-2 pl-2 border-l flex items-center gap-3">
         <PrivacyToggle />
         {facility && (
-          <span className="bg-impilo-50 text-impilo-600 px-2 py-0.5 rounded text-xs font-medium">
+          <span className="bg-primary-soft text-primary px-2 py-0.5 rounded text-xs font-medium">
             {facility.name}
           </span>
         )}
         {shift && (
-          <span className="bg-amber-50 text-amber-700 px-2 py-0.5 rounded text-xs font-medium">
+          <span className="bg-warning-soft text-warning-foreground px-2 py-0.5 rounded text-xs font-medium">
             Shift Active
           </span>
         )}
         {user && (
-          <span className="text-xs text-gray-500 flex items-center gap-1">
+          <span className="text-xs text-muted-foreground flex items-center gap-1">
             <User className="w-3 h-3" />
             {user.displayName || user.email}
           </span>
         )}
         <Link
           href="/auth/logout"
-          className="text-gray-400 hover:text-red-500 transition-colors"
+          className="text-muted-foreground hover:text-red-500 transition-colors"
           title="Sign Out"
         >
           <LogOut className="w-3.5 h-3.5" />
@@ -157,8 +157,8 @@ export function TopBar() {
 
 const PRIVACY_BADGE_STYLES: Record<string, string> = {
   FULL: "bg-green-50 text-green-700 border-green-200",
-  PARTIAL: "bg-amber-50 text-amber-700 border-amber-200",
-  MINIMAL: "bg-red-50 text-red-700 border-red-200",
+  PARTIAL: "bg-warning-soft text-warning-foreground border-warning/35",
+  MINIMAL: "bg-danger-soft text-danger border-danger/28",
 };
 
 function PrivacyToggle() {

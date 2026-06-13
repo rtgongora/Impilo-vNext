@@ -58,13 +58,13 @@ export default function IdServicesPage() {
         subtitle="Use the real identity contracts that exist today. Unsupported provider recovery, facility identity, and batch issuance remain visible but are not simulated."
       >
         <RegistryPlaneContextBar />
-        <div className="flex gap-1 mb-6 border-b border-gray-200">
+        <div className="flex gap-1 mb-6 border-b border-border">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             return (
               <button key={tab.key} onClick={() => setActiveTab(tab.key)}
                 className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === tab.key ? "border-impilo-500 text-impilo-500" : "border-transparent text-gray-500 hover:text-gray-700"
+                  activeTab === tab.key ? "border-impilo-500 text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}>
                 <Icon className="w-4 h-4" /> {tab.label}
               </button>
@@ -171,34 +171,34 @@ function IdGenerationCard({ type, label, format, icon: Icon, color }: {
         };
 
   return (
-    <div data-testid={`generate-card-${type}`} className={`bg-white rounded-lg border-2 border-${color}-200 p-5 space-y-3`}>
+    <div data-testid={`generate-card-${type}`} className={`bg-card rounded-lg border-2 border-${color}-200 p-5 space-y-3`}>
       <div className="flex items-center gap-2 mb-1">
         <div className={`w-8 h-8 rounded-lg bg-${color}-100 flex items-center justify-center`}>
           <Icon className={`w-4 h-4 text-${color}-600`} />
         </div>
         <div>
-          <h4 className="text-sm font-semibold text-gray-900">{label}</h4>
-          <p className="text-[10px] font-mono text-gray-400">{format}</p>
+          <h4 className="text-sm font-semibold text-foreground">{label}</h4>
+          <p className="text-[10px] font-mono text-muted-foreground">{format}</p>
         </div>
       </div>
 
       <div className="space-y-2">
         <input type="text" value={name} onChange={(e) => setName(e.target.value)}
           placeholder={type === "facility" ? "Facility name" : "Given name"}
-          className="w-full px-2.5 py-1.5 text-xs border border-gray-300 rounded-lg" />
+          className="w-full px-2.5 py-1.5 text-xs border border-border rounded-lg" />
         {type !== "facility" && (
           <input type="text" value={familyName} onChange={(e) => setFamilyName(e.target.value)}
-            placeholder="Family name" className="w-full px-2.5 py-1.5 text-xs border border-gray-300 rounded-lg" />
+            placeholder="Family name" className="w-full px-2.5 py-1.5 text-xs border border-border rounded-lg" />
         )}
         {(type === "provider" || type === "facility") && (
           <select value={province} onChange={(e) => setProvince(e.target.value)}
-            className="w-full px-2.5 py-1.5 text-xs border border-gray-300 rounded-lg">
+            className="w-full px-2.5 py-1.5 text-xs border border-border rounded-lg">
             {PROVINCES.map((p) => <option key={p.code} value={p.code}>{p.label}</option>)}
           </select>
         )}
         {type === "patient" && (
           <input type="date" value={dob} onChange={(e) => setDob(e.target.value)}
-            className="w-full px-2.5 py-1.5 text-xs border border-gray-300 rounded-lg" />
+            className="w-full px-2.5 py-1.5 text-xs border border-border rounded-lg" />
         )}
       </div>
 
@@ -210,7 +210,7 @@ function IdGenerationCard({ type, label, format, icon: Icon, color }: {
       </button>
 
       {unsupportedFacilityCreation && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-[11px] text-amber-900">
+        <div className="bg-warning-soft border border-warning/35 rounded-lg p-3 text-[11px] text-warning-foreground">
           Facility identity creation is not proxied through the Experience BFF yet. Keep this flow unsupported
           until a real facility-registry create contract exists.
         </div>
@@ -221,10 +221,10 @@ function IdGenerationCard({ type, label, format, icon: Icon, color }: {
           {Object.entries(generatedIds).map(([k, v]) => (
             <div key={k} className="flex items-center justify-between">
               <div>
-                <p className="text-[9px] text-gray-500 uppercase">{k}</p>
-                <p className="text-xs font-mono font-bold text-gray-900">{v}</p>
+                <p className="text-[9px] text-muted-foreground uppercase">{k}</p>
+                <p className="text-xs font-mono font-bold text-foreground">{v}</p>
               </div>
-              <button onClick={() => copyToClipboard(v)} className="p-1 text-gray-400 hover:text-gray-600">
+              <button onClick={() => copyToClipboard(v)} className="p-1 text-muted-foreground hover:text-muted-foreground">
                 <Copy className="w-3 h-3" />
               </button>
             </div>
@@ -236,11 +236,11 @@ function IdGenerationCard({ type, label, format, icon: Icon, color }: {
         <>
           <div className="flex gap-1">
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email to send" className="flex-1 px-2 py-1 text-[10px] border border-gray-300 rounded" />
+              placeholder="Email to send" className="flex-1 px-2 py-1 text-[10px] border border-border rounded" />
             <button
               onClick={() => { if (email && generatedIds) sendIds.mutate({ email, ids: generatedIds }); }}
               disabled={sendIds.isPending || !email}
-              className="px-2 py-1 text-[10px] bg-gray-100 text-gray-600 rounded hover:bg-gray-200 disabled:opacity-50 flex items-center gap-0.5" title="Send IDs via email">
+              className="px-2 py-1 text-[10px] bg-neutral-100 text-muted-foreground rounded hover:bg-neutral-100 disabled:opacity-50 flex items-center gap-0.5" title="Send IDs via email">
               {sendIds.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Mail className="w-3 h-3" />}
             </button>
           </div>
@@ -253,7 +253,7 @@ function IdGenerationCard({ type, label, format, icon: Icon, color }: {
         </>
       )}
 
-      <p className="text-[9px] text-center text-gray-400">Cryptographically secure · Biometric linking available</p>
+      <p className="text-[9px] text-center text-muted-foreground">Cryptographically secure · Biometric linking available</p>
     </div>
   );
 }
@@ -284,12 +284,12 @@ function ValidateTab() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-base font-semibold text-gray-900 mb-4">Validate Health ID</h3>
+      <div className="bg-card rounded-lg border border-border p-6">
+        <h3 className="text-base font-semibold text-foreground mb-4">Validate Health ID</h3>
         <div className="flex gap-3 mb-4">
           {(["patient", "provider", "facility"] as const).map((t) => (
             <button key={t} onClick={() => setIdType(t)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${idType === t ? "bg-impilo-500 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+              className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${idType === t ? "bg-primary text-white" : "bg-neutral-100 text-muted-foreground hover:bg-neutral-100"}`}>
               {t === "patient" ? "Patient PHID" : t === "provider" ? "Provider ID" : "Facility ID"}
             </button>
           ))}
@@ -297,14 +297,14 @@ function ValidateTab() {
         <div className="flex gap-3">
           <input type="text" value={healthId} onChange={(e) => setHealthId(e.target.value)}
             placeholder={`Enter ${idType === "patient" ? "PHID or CPID" : idType === "provider" ? "Provider ID" : "Facility ID"}`}
-            className="flex-1 px-4 py-3 text-sm border border-gray-300 rounded-lg font-mono" />
+            className="flex-1 px-4 py-3 text-sm border border-border rounded-lg font-mono" />
           <button onClick={() => resolve.mutate(healthId)} disabled={resolve.isPending || !healthId || idType === "facility"}
-            className="px-6 py-3 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-50 flex items-center gap-2">
+            className="px-6 py-3 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover disabled:opacity-50 flex items-center gap-2">
             {resolve.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />} Validate
           </button>
         </div>
         {idType === "facility" && (
-          <p className="mt-3 text-xs text-amber-700">
+          <p className="mt-3 text-xs text-warning-foreground">
             Facility validation stays unsupported until the facility registry exposes a canonical Experience BFF read contract.
           </p>
         )}
@@ -314,18 +314,18 @@ function ValidateTab() {
           <div className="flex items-center gap-2 mb-3"><CheckCircle2 className="w-5 h-5 text-green-600" /><h4 className="text-sm font-semibold text-green-800">Identity Verified</h4></div>
           <div className="grid grid-cols-2 gap-3">
             {Object.entries(resolve.data?.data ?? {}).filter(([, v]) => v != null && typeof v !== "object").map(([k, v]) => (
-              <div key={k} className="bg-white rounded border border-green-200 p-2">
-                <p className="text-[10px] text-gray-500 uppercase">{k.replace(/_/g, " ")}</p>
-                <p className="text-sm font-mono text-gray-900">{String(v)}</p>
+              <div key={k} className="bg-card rounded border border-green-200 p-2">
+                <p className="text-[10px] text-muted-foreground uppercase">{k.replace(/_/g, " ")}</p>
+                <p className="text-sm font-mono text-foreground">{String(v)}</p>
               </div>
             ))}
           </div>
         </div>
       )}
       {resolve.isError && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-2">
+        <div className="bg-danger-soft border border-danger/28 rounded-lg p-4 flex items-center gap-2">
           <AlertCircle className="w-5 h-5 text-red-500" />
-          <p className="text-sm text-red-700">
+          <p className="text-sm text-danger">
             {(resolve.error as Error | null)?.message ?? "Identity not found or invalid."}
           </p>
         </div>
@@ -381,7 +381,7 @@ function RecoveryTab() {
       <div className="space-y-6">
         <div className="flex gap-2 mb-2">
           <button onClick={() => { setRecoveryType("patient"); setMethod("phone_otp"); setStep("form"); }}
-            className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-600">
+            className="px-4 py-2 text-sm font-medium rounded-lg bg-neutral-100 text-muted-foreground">
             Patient PHID Recovery
           </button>
           <button onClick={() => { setRecoveryType("provider"); setMethod("phone_otp"); setStep("form"); }}
@@ -390,7 +390,7 @@ function RecoveryTab() {
           </button>
         </div>
 
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-5 text-sm text-amber-950">
+        <div className="rounded-lg border border-warning/35 bg-warning-soft p-5 text-sm text-warning-foreground">
           <p className="font-semibold">Provider recovery is not delivered in Experience yet</p>
           <p className="mt-2">
             The current Experience BFF only proxies patient recovery endpoints. Do not simulate provider recovery
@@ -405,11 +405,11 @@ function RecoveryTab() {
     <div className="space-y-6">
       <div className="flex gap-2 mb-2">
         <button onClick={() => { setRecoveryType("patient"); setMethod("phone_otp"); setStep("form"); }}
-          className={`px-4 py-2 text-sm font-medium rounded-lg ${recoveryType === "patient" ? "bg-impilo-500 text-white" : "bg-gray-100 text-gray-600"}`}>
+          className={`px-4 py-2 text-sm font-medium rounded-lg ${recoveryType === "patient" ? "bg-primary text-white" : "bg-neutral-100 text-muted-foreground"}`}>
           Patient PHID Recovery
         </button>
         <button onClick={() => { setRecoveryType("provider"); setMethod("phone_otp"); setStep("form"); }}
-          className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-600">
+          className="px-4 py-2 text-sm font-medium rounded-lg bg-neutral-100 text-muted-foreground">
           Provider ID Recovery
         </button>
       </div>
@@ -422,7 +422,7 @@ function RecoveryTab() {
             return (
               <button key={m.key} onClick={() => { setMethod(m.key); setStep("form"); }}
                 className={`w-full flex items-center gap-2 px-3 py-2.5 text-sm rounded-lg transition-colors ${
-                  method === m.key ? "bg-impilo-50 text-impilo-600 font-medium" : "text-gray-600 hover:bg-gray-50"
+                  method === m.key ? "bg-primary-soft text-primary font-medium" : "text-muted-foreground hover:bg-background"
                 }`}>
                 <MIcon className="w-4 h-4" /> {m.label}
               </button>
@@ -431,25 +431,25 @@ function RecoveryTab() {
         </div>
 
         {/* Form area */}
-        <div className="col-span-2 bg-white rounded-lg border border-gray-200 p-5">
+        <div className="col-span-2 bg-card rounded-lg border border-border p-5">
           {step === "form" && (
             <div className="space-y-4">
-              <h4 className="text-sm font-semibold text-gray-900">Recovery via {methods.find((m) => m.key === method)?.label}</h4>
+              <h4 className="text-sm font-semibold text-foreground">Recovery via {methods.find((m) => m.key === method)?.label}</h4>
 
               {method === "biometric" && (
                 <div className="text-center py-8">
-                  <Fingerprint className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-sm text-gray-500">Place finger on scanner or position face for camera</p>
-                  <button disabled className="mt-3 px-4 py-2 bg-gray-200 text-gray-500 text-sm rounded-lg">Waiting for hardware...</button>
+                  <Fingerprint className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-sm text-muted-foreground">Place finger on scanner or position face for camera</p>
+                  <button disabled className="mt-3 px-4 py-2 bg-neutral-100 text-muted-foreground text-sm rounded-lg">Waiting for hardware...</button>
                 </div>
               )}
 
               {(method === "phone_otp" || method === "email_otp") && (
                 <>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">{method === "phone_otp" ? "Phone Number" : "Email Address"}</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">{method === "phone_otp" ? "Phone Number" : "Email Address"}</label>
                     <input type={method === "email_otp" ? "email" : "tel"} value={contact} onChange={(e) => setContact(e.target.value)}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg" />
+                      className="w-full px-3 py-2 text-sm border border-border rounded-lg" />
                   </div>
                   <button onClick={() => startRecovery.mutate({ contact, method, recoveryType })} disabled={startRecovery.isPending || !contact}
                     className="w-full py-2 bg-amber-600 text-white text-sm rounded-lg hover:bg-amber-700 disabled:opacity-50">
@@ -461,12 +461,12 @@ function RecoveryTab() {
               {method === "id_document" && (
                 <>
                   <div className="grid grid-cols-2 gap-3">
-                    <div><label className="block text-xs font-medium text-gray-600 mb-1">Document Number</label>
-                      <input type="text" value={docNumber} onChange={(e) => setDocNumber(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg" placeholder="National ID or passport" /></div>
-                    <div><label className="block text-xs font-medium text-gray-600 mb-1">Full Name</label>
-                      <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg" /></div>
-                    <div><label className="block text-xs font-medium text-gray-600 mb-1">Date of Birth</label>
-                      <input type="date" value={dob} onChange={(e) => setDob(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg" /></div>
+                    <div><label className="block text-xs font-medium text-muted-foreground mb-1">Document Number</label>
+                      <input type="text" value={docNumber} onChange={(e) => setDocNumber(e.target.value)} className="w-full px-3 py-2 text-sm border border-border rounded-lg" placeholder="National ID or passport" /></div>
+                    <div><label className="block text-xs font-medium text-muted-foreground mb-1">Full Name</label>
+                      <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full px-3 py-2 text-sm border border-border rounded-lg" /></div>
+                    <div><label className="block text-xs font-medium text-muted-foreground mb-1">Date of Birth</label>
+                      <input type="date" value={dob} onChange={(e) => setDob(e.target.value)} className="w-full px-3 py-2 text-sm border border-border rounded-lg" /></div>
                   </div>
                   <button onClick={() => startRecovery.mutate({ documentNumber: docNumber, fullName, dateOfBirth: dob, method })} disabled={startRecovery.isPending}
                     className="w-full py-2 bg-amber-600 text-white text-sm rounded-lg hover:bg-amber-700 disabled:opacity-50">Recover</button>
@@ -476,12 +476,12 @@ function RecoveryTab() {
               {method === "provider_verify" && (
                 <>
                   <div className="grid grid-cols-2 gap-3">
-                    <div><label className="block text-xs font-medium text-gray-600 mb-1">Provider ID</label>
-                      <input type="text" value={docNumber} onChange={(e) => setDocNumber(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg" /></div>
-                    <div><label className="block text-xs font-medium text-gray-600 mb-1">Patient Name</label>
-                      <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg" /></div>
-                    <div><label className="block text-xs font-medium text-gray-600 mb-1">Date of Birth</label>
-                      <input type="date" value={dob} onChange={(e) => setDob(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg" /></div>
+                    <div><label className="block text-xs font-medium text-muted-foreground mb-1">Provider ID</label>
+                      <input type="text" value={docNumber} onChange={(e) => setDocNumber(e.target.value)} className="w-full px-3 py-2 text-sm border border-border rounded-lg" /></div>
+                    <div><label className="block text-xs font-medium text-muted-foreground mb-1">Patient Name</label>
+                      <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full px-3 py-2 text-sm border border-border rounded-lg" /></div>
+                    <div><label className="block text-xs font-medium text-muted-foreground mb-1">Date of Birth</label>
+                      <input type="date" value={dob} onChange={(e) => setDob(e.target.value)} className="w-full px-3 py-2 text-sm border border-border rounded-lg" /></div>
                   </div>
                   <button onClick={() => startRecovery.mutate({ providerId: docNumber, patientName: fullName, dateOfBirth: dob, method })} disabled={startRecovery.isPending}
                     className="w-full py-2 bg-amber-600 text-white text-sm rounded-lg hover:bg-amber-700 disabled:opacity-50">Verify & Recover</button>
@@ -491,10 +491,10 @@ function RecoveryTab() {
               {method === "professional_license" && (
                 <>
                   <div className="grid grid-cols-2 gap-3">
-                    <div><label className="block text-xs font-medium text-gray-600 mb-1">License Number</label>
-                      <input type="text" value={licenseNumber} onChange={(e) => setLicenseNumber(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg" /></div>
-                    <div><label className="block text-xs font-medium text-gray-600 mb-1">Full Name</label>
-                      <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg" /></div>
+                    <div><label className="block text-xs font-medium text-muted-foreground mb-1">License Number</label>
+                      <input type="text" value={licenseNumber} onChange={(e) => setLicenseNumber(e.target.value)} className="w-full px-3 py-2 text-sm border border-border rounded-lg" /></div>
+                    <div><label className="block text-xs font-medium text-muted-foreground mb-1">Full Name</label>
+                      <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full px-3 py-2 text-sm border border-border rounded-lg" /></div>
                   </div>
                   <button onClick={() => startRecovery.mutate({ licenseNumber, fullName, method })} disabled={startRecovery.isPending}
                     className="w-full py-2 bg-amber-600 text-white text-sm rounded-lg hover:bg-amber-700 disabled:opacity-50">Recover via License</button>
@@ -504,12 +504,12 @@ function RecoveryTab() {
               {method === "facility_verify" && (
                 <>
                   <div className="grid grid-cols-2 gap-3">
-                    <div><label className="block text-xs font-medium text-gray-600 mb-1">Facility ID</label>
-                      <input type="text" value={facilityId} onChange={(e) => setFacilityId(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg" /></div>
-                    <div><label className="block text-xs font-medium text-gray-600 mb-1">Employee ID</label>
-                      <input type="text" value={docNumber} onChange={(e) => setDocNumber(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg" /></div>
-                    <div><label className="block text-xs font-medium text-gray-600 mb-1">Full Name</label>
-                      <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg" /></div>
+                    <div><label className="block text-xs font-medium text-muted-foreground mb-1">Facility ID</label>
+                      <input type="text" value={facilityId} onChange={(e) => setFacilityId(e.target.value)} className="w-full px-3 py-2 text-sm border border-border rounded-lg" /></div>
+                    <div><label className="block text-xs font-medium text-muted-foreground mb-1">Employee ID</label>
+                      <input type="text" value={docNumber} onChange={(e) => setDocNumber(e.target.value)} className="w-full px-3 py-2 text-sm border border-border rounded-lg" /></div>
+                    <div><label className="block text-xs font-medium text-muted-foreground mb-1">Full Name</label>
+                      <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full px-3 py-2 text-sm border border-border rounded-lg" /></div>
                   </div>
                   <button onClick={() => startRecovery.mutate({ facilityId, employeeId: docNumber, fullName, method })} disabled={startRecovery.isPending}
                     className="w-full py-2 bg-amber-600 text-white text-sm rounded-lg hover:bg-amber-700 disabled:opacity-50">Recover via Facility</button>
@@ -520,11 +520,11 @@ function RecoveryTab() {
 
           {step === "verify" && (
             <div className="space-y-4">
-              <h4 className="text-sm font-semibold text-gray-900">Enter Verification Code</h4>
+              <h4 className="text-sm font-semibold text-foreground">Enter Verification Code</h4>
               <input type="text" value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="6-digit code" maxLength={6}
-                className="w-full px-4 py-3 text-lg text-center tracking-widest border border-gray-300 rounded-lg font-mono" />
+                className="w-full px-4 py-3 text-lg text-center tracking-widest border border-border rounded-lg font-mono" />
               <div className="flex gap-3">
-                <button onClick={() => setStep("form")} className="flex-1 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg">Back</button>
+                <button onClick={() => setStep("form")} className="flex-1 py-2 bg-neutral-100 text-foreground text-sm rounded-lg">Back</button>
                 <button onClick={() => verifyRecovery.mutate({ contact, otp, method })} disabled={verifyRecovery.isPending || otp.length < 4}
                   className="flex-1 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 disabled:opacity-50">
                   {verifyRecovery.isPending ? "Verifying..." : "Verify & Recover"}
@@ -536,9 +536,9 @@ function RecoveryTab() {
           {step === "result" && (
             <div className="text-center py-6">
               <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-3" />
-              <h4 className="text-base font-semibold text-gray-900">ID Recovered Successfully</h4>
-              <p className="text-sm text-gray-500 mt-1">Your health ID has been recovered and verified.</p>
-              <button onClick={() => { setStep("form"); setOtp(""); }} className="mt-4 px-4 py-2 bg-impilo-500 text-white text-sm rounded-lg hover:bg-impilo-600">Start New Recovery</button>
+              <h4 className="text-base font-semibold text-foreground">ID Recovered Successfully</h4>
+              <p className="text-sm text-muted-foreground mt-1">Your health ID has been recovered and verified.</p>
+              <button onClick={() => { setStep("form"); setOtp(""); }} className="mt-4 px-4 py-2 bg-primary text-white text-sm rounded-lg hover:bg-primary-hover">Start New Recovery</button>
             </div>
           )}
         </div>
@@ -556,16 +556,16 @@ function BatchTab() {
 
   if (!batchIssuanceSupported) {
     return (
-      <div className="rounded-lg border border-amber-200 bg-amber-50 p-6 text-sm text-amber-950">
+      <div className="rounded-lg border border-warning/35 bg-warning-soft p-6 text-sm text-warning-foreground">
         <div className="flex items-start gap-3">
-          <Layers className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
+          <Layers className="mt-0.5 h-5 w-5 shrink-0 text-warning-foreground" />
           <div>
             <h3 className="text-base font-semibold">Batch identity issuance is intentionally unsupported</h3>
             <p className="mt-2">
               Experience will not deliver browser-generated PHIDs or CSV exports. The accepted surface now blocks this
               until a real backend contract exists for reserve, issue, and audited download.
             </p>
-            <p className="mt-3 text-xs text-amber-900/80">
+            <p className="mt-3 text-xs text-warning-foreground/80">
               Required contract: a canonical Experience BFF route for batch issuance with facility scope, audit
               metadata, and server-generated identifiers.
             </p>
@@ -600,18 +600,18 @@ function BatchTab() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
-        <h3 className="text-base font-semibold text-gray-900">Batch ID Generation</h3>
+      <div className="bg-card rounded-lg border border-border p-6 space-y-4">
+        <h3 className="text-base font-semibold text-foreground">Batch ID Generation</h3>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Facility</label>
-            <select value={facility} onChange={(e) => setFacility(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg">
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Facility</label>
+            <select value={facility} onChange={(e) => setFacility(e.target.value)} className="w-full px-3 py-2 text-sm border border-border rounded-lg">
               {FACILITIES.map((f) => <option key={f} value={f}>{f}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Batch Size</label>
-            <input type="number" min={1} max={1000} value={count} onChange={(e) => setCount(Number(e.target.value))} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg" />
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Batch Size</label>
+            <input type="number" min={1} max={1000} value={count} onChange={(e) => setCount(Number(e.target.value))} className="w-full px-3 py-2 text-sm border border-border rounded-lg" />
           </div>
         </div>
         <button onClick={handleGenerate} className="w-full py-2.5 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 flex items-center justify-center gap-2">
@@ -620,24 +620,24 @@ function BatchTab() {
       </div>
 
       {generated.length > 0 && (
-        <div className="bg-white rounded-lg border border-gray-200 p-5">
+        <div className="bg-card rounded-lg border border-border p-5">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <p className="text-sm font-semibold text-gray-900">{generated.length} IDs Generated</p>
-              <p className="text-xs text-gray-500">{facility} · {new Date().toLocaleDateString()}</p>
+              <p className="text-sm font-semibold text-foreground">{generated.length} IDs Generated</p>
+              <p className="text-xs text-muted-foreground">{facility} · {new Date().toLocaleDateString()}</p>
             </div>
             <button onClick={downloadCsv} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700">
               <Download className="w-4 h-4" /> Download CSV
             </button>
           </div>
-          <div className="max-h-48 overflow-y-auto bg-gray-50 rounded-lg p-3 font-mono text-xs space-y-0.5">
+          <div className="max-h-48 overflow-y-auto bg-background rounded-lg p-3 font-mono text-xs space-y-0.5">
             {generated.slice(0, 100).map((id, i) => (
               <div key={i} className="flex items-center justify-between py-0.5">
-                <span className="text-gray-700">{id}</span>
-                <button onClick={() => copyToClipboard(id)} className="text-gray-400 hover:text-gray-600"><Copy className="w-3 h-3" /></button>
+                <span className="text-foreground">{id}</span>
+                <button onClick={() => copyToClipboard(id)} className="text-muted-foreground hover:text-muted-foreground"><Copy className="w-3 h-3" /></button>
               </div>
             ))}
-            {generated.length > 100 && <p className="text-gray-400 pt-1">+{generated.length - 100} more...</p>}
+            {generated.length > 100 && <p className="text-muted-foreground pt-1">+{generated.length - 100} more...</p>}
           </div>
         </div>
       )}
@@ -648,16 +648,16 @@ function BatchTab() {
 // ── ARCHITECTURE TAB ─────────────────────────────────────────────
 function ArchitectureTab() {
   const cards = [
-    { title: "Patient PHID Architecture", color: "border-impilo-200 bg-impilo-50",
+    { title: "Patient PHID Architecture", color: "border-primary/25 bg-primary-soft",
       points: ["Portable Token — PHID travels with the patient across facilities", "Biometric = PHID — fingerprint/face binds to unique identity", "Multi-Recovery — 5 recovery methods for lost IDs"],
       flow: "PHID → Client Registry ID → SHR ID → Health Record" },
     { title: "Provider ID Architecture", color: "border-teal-200 bg-teal-50",
       points: ["VARAPI Format — province-coded provider identifier", "Biometric Binding — practitioner biometric links to provider ID", "Facility Verification — employment-based identity confirmation"],
       flow: "Provider ID → iHRIS Registry → Professional License → Access" },
-    { title: "Facility ID Architecture", color: "border-purple-200 bg-purple-50",
+    { title: "Facility ID Architecture", color: "border-warning/35 bg-warning-soft",
       points: ["THUSO Format — province-coded facility identifier", "GOFR Integration — linked to national facility registry"],
       flow: "Facility ID → GOFR → Location Data → Services" },
-    { title: "Security Model", color: "border-gray-200 bg-gray-50",
+    { title: "Security Model", color: "border-border bg-background",
       points: ["Luhn Check Digit — format validation at entry point", "Web Crypto API — cryptographic ID generation", "Database Sequences — guaranteed uniqueness", "Audit Logging — every generation/validation tracked"],
       flow: "" },
   ];
@@ -666,19 +666,19 @@ function ArchitectureTab() {
     <div className="grid grid-cols-2 gap-4">
       {cards.map((card) => (
         <div key={card.title} className={`rounded-lg border-2 p-5 ${card.color}`}>
-          <h4 className="text-sm font-semibold text-gray-900 mb-3">{card.title}</h4>
+          <h4 className="text-sm font-semibold text-foreground mb-3">{card.title}</h4>
           <ul className="space-y-2 mb-3">
             {card.points.map((point) => {
               const [bold, ...rest] = point.split(" — ");
               return (
-                <li key={bold} className="text-xs text-gray-700">
+                <li key={bold} className="text-xs text-foreground">
                   <span className="font-medium">{bold}</span>{rest.length > 0 && ` — ${rest.join(" — ")}`}
                 </li>
               );
             })}
           </ul>
           {card.flow && (
-            <div className="bg-white/60 rounded p-2 text-[10px] font-mono text-gray-500 text-center">{card.flow}</div>
+            <div className="bg-card/60 rounded p-2 text-[10px] font-mono text-muted-foreground text-center">{card.flow}</div>
           )}
         </div>
       ))}

@@ -47,17 +47,17 @@ export default function LocalityReviewPage() {
   return (
     <AppLayout>
       <PageShell title="Locality gazetteer review" subtitle="Pending proposals from Tuso">
-        {isLoading ? <p className="text-sm text-gray-500">Loading…</p> : null}
+        {isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : null}
         {error ? <p className="text-sm text-red-600">Failed to load proposals.</p> : null}
         {!isLoading && rows.length === 0 ? (
-          <p className="text-sm text-gray-600">No pending proposals.</p>
+          <p className="text-sm text-muted-foreground">No pending proposals.</p>
         ) : (
           <ul className="space-y-2 max-w-2xl">
             {rows.map((p) => (
-              <li key={p.id} className="rounded-lg border border-gray-200 bg-white p-3 flex flex-wrap justify-between gap-2">
+              <li key={p.id} className="rounded-lg border border-border bg-card p-3 flex flex-wrap justify-between gap-2">
                 <div>
-                  <p className="text-sm font-medium text-gray-900">{p.proposedName}</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-sm font-medium text-foreground">{p.proposedName}</p>
+                  <p className="text-xs text-muted-foreground">
                     District {p.districtCode}
                     {p.wardCode ? ` · Ward ${p.wardCode}` : ""}
                   </p>
@@ -73,7 +73,7 @@ export default function LocalityReviewPage() {
                   </button>
                   <button
                     type="button"
-                    className="text-xs px-2 py-1 rounded bg-gray-200 text-gray-800 disabled:opacity-50"
+                    className="text-xs px-2 py-1 rounded bg-neutral-100 text-foreground disabled:opacity-50"
                     disabled={reject.isPending}
                     onClick={() => reject.mutate(p.id)}
                   >

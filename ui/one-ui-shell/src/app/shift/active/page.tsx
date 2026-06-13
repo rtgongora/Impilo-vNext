@@ -53,12 +53,12 @@ export default function ActiveShiftPage() {
     return (
       <AppLayout>
         <PageShell title="Active Shift" subtitle="No active shift">
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <Clock className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-400 text-sm">No active shift. Start a shift to begin.</p>
+          <div className="bg-card rounded-lg border border-border p-12 text-center">
+            <Clock className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground text-sm">No active shift. Start a shift to begin.</p>
             <button
               onClick={() => router.push("/shift")}
-              className="mt-4 px-4 py-2 bg-impilo-500 text-white rounded-lg text-sm font-medium hover:bg-impilo-600"
+              className="mt-4 px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-hover"
             >
               Start Shift
             </button>
@@ -74,41 +74,41 @@ export default function ActiveShiftPage() {
         <FacilityWorkClusterRibbon shiftExpected activeEncounterCount={activeEncounters.length} />
         <div className="max-w-2xl space-y-6">
           {/* Shift Info */}
-          <div className="bg-white rounded-lg border border-gray-200 p-5">
-            <h3 className="font-medium text-gray-900 mb-4">Shift Information</h3>
+          <div className="bg-card rounded-lg border border-border p-5">
+            <h3 className="font-medium text-foreground mb-4">Shift Information</h3>
             {shiftLoading ? (
-              <div className="flex items-center gap-2 text-sm text-gray-500">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="w-4 h-4 animate-spin" /> Loading shift details...
               </div>
             ) : (
               <dl className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <dt className="text-gray-500">Start Time</dt>
-                  <dd className="font-medium text-gray-900 mt-0.5">
+                  <dt className="text-muted-foreground">Start Time</dt>
+                  <dd className="font-medium text-foreground mt-0.5">
                     {new Date(shift.startedAt).toLocaleString()}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-gray-500">Duration</dt>
-                  <dd className="font-medium text-gray-900 mt-0.5 flex items-center gap-1">
+                  <dt className="text-muted-foreground">Duration</dt>
+                  <dd className="font-medium text-foreground mt-0.5 flex items-center gap-1">
                     <Clock className="w-4 h-4 text-impilo-400" />
                     {formatDuration(shift.startedAt)}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-gray-500">Workspace</dt>
-                  <dd className="font-medium text-gray-900 mt-0.5">
+                  <dt className="text-muted-foreground">Workspace</dt>
+                  <dd className="font-medium text-foreground mt-0.5">
                     {currentShift?.attributes.workspaceId || shift.workspaceId}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-gray-500">Facility</dt>
-                  <dd className="font-medium text-gray-900 mt-0.5">
+                  <dt className="text-muted-foreground">Facility</dt>
+                  <dd className="font-medium text-foreground mt-0.5">
                     {currentShift?.attributes.facilityId || shift.facilityId}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-gray-500">Status</dt>
+                  <dt className="text-muted-foreground">Status</dt>
                   <dd className="mt-0.5">
                     <span className="inline-block px-2 py-0.5 text-xs rounded-full font-medium bg-green-100 text-green-700">
                       {currentShift?.attributes.status || "ACTIVE"}
@@ -121,26 +121,26 @@ export default function ActiveShiftPage() {
 
           {/* Activity Summary */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white rounded-lg border border-gray-200 p-5 text-center">
+            <div className="bg-card rounded-lg border border-border p-5 text-center">
               <Users className="w-8 h-8 text-impilo-400 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-gray-900">{activeEncounters.length}</p>
-              <p className="text-xs text-gray-500 mt-1">Encounters In Progress</p>
+              <p className="text-2xl font-bold text-foreground">{activeEncounters.length}</p>
+              <p className="text-xs text-muted-foreground mt-1">Encounters In Progress</p>
             </div>
-            <div className="bg-white rounded-lg border border-gray-200 p-5 text-center">
+            <div className="bg-card rounded-lg border border-border p-5 text-center">
               <Activity className="w-8 h-8 text-green-500 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-gray-900">{formatDuration(shift.startedAt)}</p>
-              <p className="text-xs text-gray-500 mt-1">Shift Duration</p>
+              <p className="text-2xl font-bold text-foreground">{formatDuration(shift.startedAt)}</p>
+              <p className="text-xs text-muted-foreground mt-1">Shift Duration</p>
             </div>
           </div>
 
           {/* End Shift */}
           {showConfirm ? (
-            <div className="bg-amber-50 rounded-lg border border-amber-200 p-5">
+            <div className="bg-warning-soft rounded-lg border border-warning/35 p-5">
               <div className="flex items-start gap-3">
                 <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-amber-900">End this shift?</p>
-                  <p className="text-xs text-amber-700 mt-1">
+                  <p className="text-sm font-medium text-warning-foreground">End this shift?</p>
+                  <p className="text-xs text-warning-foreground mt-1">
                     {activeEncounters.length > 0
                       ? `You have ${activeEncounters.length} encounter(s) in progress. Consider completing or handing over before ending.`
                       : "This will end your current shift."}
@@ -155,7 +155,7 @@ export default function ActiveShiftPage() {
                     </button>
                     <button
                       onClick={() => setShowConfirm(false)}
-                      className="px-4 py-1.5 bg-white text-gray-700 border border-gray-300 rounded text-xs font-medium hover:bg-gray-50"
+                      className="px-4 py-1.5 bg-card text-foreground border border-border rounded text-xs font-medium hover:bg-background"
                     >
                       Cancel
                     </button>

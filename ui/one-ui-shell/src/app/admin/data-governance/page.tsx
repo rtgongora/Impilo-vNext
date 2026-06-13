@@ -29,10 +29,10 @@ type TabId = "exports" | "rules" | "lineage";
 
 function requestStatusClass(status: string): string {
   const u = status.toUpperCase();
-  if (u === "APPROVED") return "bg-emerald-100 text-emerald-900";
-  if (u === "DENIED") return "bg-rose-100 text-rose-900";
-  if (u === "PENDING") return "bg-amber-100 text-amber-900";
-  return "bg-slate-100 text-slate-700";
+  if (u === "APPROVED") return "bg-emerald-100 text-primary-hover";
+  if (u === "DENIED") return "bg-rose-100 text-danger";
+  if (u === "PENDING") return "bg-amber-100 text-warning-foreground";
+  return "bg-neutral-100 text-foreground";
 }
 
 function ruleRowLabel(row: unknown): string {
@@ -66,7 +66,7 @@ export default function DataGovernanceAdminPage() {
         ? String((err as { error?: { message?: string } }).error?.message ?? "Request failed")
         : "Request failed";
     return (
-      <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 flex items-center gap-2">
+      <div className="rounded-lg border border-danger/28 bg-danger-soft px-3 py-2 text-sm text-red-800 flex items-center gap-2">
         <AlertTriangle className="h-4 w-4 shrink-0" />
         {msg}
       </div>
@@ -79,7 +79,7 @@ export default function DataGovernanceAdminPage() {
         title="Data governance"
         subtitle="Export requests, active governance rules, and dataset lineage (DAGS + data-governance-service)"
       >
-        <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-2 mb-6">
+        <div className="flex flex-wrap gap-2 border-b border-border pb-2 mb-6">
           {(
             [
               ["exports", "Export requests", FileOutput],
@@ -92,7 +92,7 @@ export default function DataGovernanceAdminPage() {
               type="button"
               onClick={() => setTab(id)}
               className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                tab === id ? "bg-indigo-100 text-indigo-900" : "text-slate-600 hover:bg-slate-100"
+                tab === id ? "bg-indigo-100 text-primary-hover" : "text-muted-foreground hover:bg-neutral-100"
               }`}
             >
               <Icon className="h-4 w-4" />
@@ -103,24 +103,24 @@ export default function DataGovernanceAdminPage() {
 
         {tab === "exports" && (
           <div className="space-y-6">
-            <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-3">
-              <h2 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-slate-500" />
+            <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+              <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-muted-foreground" />
                 Request export evaluation
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-muted-foreground">
                 Submits an export decision request to data-governance-service via{" "}
-                <code className="rounded bg-slate-100 px-1">POST /internal/v1/ai-governance/exports/evaluate</code>.
+                <code className="rounded bg-neutral-100 px-1">POST /internal/v1/ai-governance/exports/evaluate</code>.
               </p>
               <div className="flex flex-wrap gap-3">
                 <input
-                  className="rounded-md border border-slate-300 px-2 py-1.5 text-sm min-w-[200px]"
+                  className="rounded-md border border-border px-2 py-1.5 text-sm min-w-[200px]"
                   value={dataset}
                   onChange={(e) => setDataset(e.target.value)}
                   placeholder="Dataset key"
                 />
                 <input
-                  className="rounded-md border border-slate-300 px-2 py-1.5 text-sm min-w-[200px]"
+                  className="rounded-md border border-border px-2 py-1.5 text-sm min-w-[200px]"
                   value={purpose}
                   onChange={(e) => setPurpose(e.target.value)}
                   placeholder="Purpose of use"
@@ -129,14 +129,14 @@ export default function DataGovernanceAdminPage() {
                   type="button"
                   disabled={createEvalM.isPending}
                   onClick={() => createEvalM.mutate({ dataset, purposeOfUse: purpose })}
-                  className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+                  className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover disabled:opacity-50"
                 >
                   {createEvalM.isPending ? "Submitting…" : "Evaluate export"}
                 </button>
               </div>
               {createEvalM.isError && errorBanner(createEvalM.error)}
               {createEvalM.isSuccess && createEvalM.data ? (
-                <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+                <div className="rounded-lg border border-success/25 bg-success-soft px-3 py-2 text-sm text-primary-hover">
                   Export evaluation submitted. Decision id:{" "}
                   <span className="font-mono text-xs">
                     {String(
@@ -149,23 +149,23 @@ export default function DataGovernanceAdminPage() {
               ) : null}
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
-              <div className="border-b border-slate-100 px-4 py-3">
-                <h2 className="text-sm font-semibold text-slate-900">Access & export requests (DAGS)</h2>
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+              <div className="border-b border-border px-4 py-3">
+                <h2 className="text-sm font-semibold text-foreground">Access & export requests (DAGS)</h2>
               </div>
               {exportQ.isLoading && (
-                <p className="px-4 py-6 text-sm text-slate-500 flex items-center gap-2">
+                <p className="px-4 py-6 text-sm text-muted-foreground flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" /> Loading…
                 </p>
               )}
               {exportQ.isError && <div className="p-4">{errorBanner(exportQ.error)}</div>}
               {!exportQ.isLoading && requests.length === 0 && (
-                <p className="px-4 py-6 text-sm text-slate-500">No access requests returned.</p>
+                <p className="px-4 py-6 text-sm text-muted-foreground">No access requests returned.</p>
               )}
               {requests.length > 0 && (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[640px]">
-                    <thead className="bg-slate-50 text-left text-xs text-slate-600">
+                    <thead className="bg-background text-left text-xs text-muted-foreground">
                       <tr>
                         <th className="px-3 py-2">Status</th>
                         <th className="px-3 py-2">Requester</th>
@@ -178,7 +178,7 @@ export default function DataGovernanceAdminPage() {
                       {requests.map((r: AccessRequestResource) => {
                         const st = r.attributes.status;
                         return (
-                          <tr key={r.id} className="border-t border-slate-100">
+                          <tr key={r.id} className="border-t border-border">
                             <td className="px-3 py-2">
                               <span
                                 className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${requestStatusClass(st)}`}
@@ -187,13 +187,13 @@ export default function DataGovernanceAdminPage() {
                               </span>
                             </td>
                             <td className="px-3 py-2">
-                              <div className="font-medium text-slate-900">{r.attributes.requesterName}</div>
-                              <div className="text-xs text-slate-500">{r.attributes.requesterId}</div>
+                              <div className="font-medium text-foreground">{r.attributes.requesterName}</div>
+                              <div className="text-xs text-muted-foreground">{r.attributes.requesterId}</div>
                             </td>
-                            <td className="px-3 py-2 text-slate-700">
+                            <td className="px-3 py-2 text-foreground">
                               {r.attributes.resourceType}:{r.attributes.resourceId}
                             </td>
-                            <td className="px-3 py-2 text-slate-600">{r.attributes.purpose}</td>
+                            <td className="px-3 py-2 text-muted-foreground">{r.attributes.purpose}</td>
                             <td className="px-3 py-2">
                               {st === "PENDING" && (
                                 <div className="flex flex-wrap gap-1">
@@ -209,7 +209,7 @@ export default function DataGovernanceAdminPage() {
                                     type="button"
                                     disabled={denyM.isPending}
                                     onClick={() => denyM.mutate({ id: r.id, notes: "Denied from governance console" })}
-                                    className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
+                                    className="rounded-md border border-border bg-card px-2 py-1 text-xs font-medium text-foreground hover:bg-background disabled:opacity-50"
                                   >
                                     Deny
                                   </button>
@@ -234,19 +234,19 @@ export default function DataGovernanceAdminPage() {
         )}
 
         {tab === "rules" && (
-          <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+          <div className="rounded-xl border border-border bg-card overflow-hidden">
             {rulesQ.isLoading && (
-              <p className="px-4 py-6 text-sm text-slate-500 flex items-center gap-2">
+              <p className="px-4 py-6 text-sm text-muted-foreground flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" /> Loading rules…
               </p>
             )}
             {rulesQ.isError && <div className="p-4">{errorBanner(rulesQ.error)}</div>}
             {!rulesQ.isLoading && (rulesQ.data?.length ?? 0) === 0 && (
-              <p className="px-4 py-6 text-sm text-slate-500">No governance rules returned.</p>
+              <p className="px-4 py-6 text-sm text-muted-foreground">No governance rules returned.</p>
             )}
             {(rulesQ.data?.length ?? 0) > 0 && (
               <table className="w-full text-sm">
-                <thead className="bg-slate-50 text-left text-xs text-slate-600">
+                <thead className="bg-background text-left text-xs text-muted-foreground">
                   <tr>
                     <th className="px-3 py-2">Rule</th>
                     <th className="px-3 py-2">Effect</th>
@@ -257,11 +257,11 @@ export default function DataGovernanceAdminPage() {
                   {rulesQ.data!.map((row, i) => {
                     const r = row as Record<string, unknown>;
                     return (
-                      <tr key={String(r.id ?? i)} className="border-t border-slate-100">
+                      <tr key={String(r.id ?? i)} className="border-t border-border">
                         <td className="px-3 py-2 font-medium">{ruleRowLabel(row)}</td>
                         <td className="px-3 py-2">{String(r.effect ?? r.decision ?? "—")}</td>
                         <td className="px-3 py-2">
-                          <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-800">
+                          <span className="inline-flex rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-foreground">
                             {String(r.status ?? r.state ?? "ACTIVE")}
                           </span>
                         </td>
@@ -275,19 +275,19 @@ export default function DataGovernanceAdminPage() {
         )}
 
         {tab === "lineage" && (
-          <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+          <div className="rounded-xl border border-border bg-card overflow-hidden">
             {lineageQ.isLoading && (
-              <p className="px-4 py-6 text-sm text-slate-500 flex items-center gap-2">
+              <p className="px-4 py-6 text-sm text-muted-foreground flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" /> Loading datasets…
               </p>
             )}
             {lineageQ.isError && <div className="p-4">{errorBanner(lineageQ.error)}</div>}
             {!lineageQ.isLoading && (lineageQ.data?.length ?? 0) === 0 && (
-              <p className="px-4 py-6 text-sm text-slate-500">No datasets for lineage view.</p>
+              <p className="px-4 py-6 text-sm text-muted-foreground">No datasets for lineage view.</p>
             )}
             {(lineageQ.data?.length ?? 0) > 0 && (
               <table className="w-full text-sm">
-                <thead className="bg-slate-50 text-left text-xs text-slate-600">
+                <thead className="bg-background text-left text-xs text-muted-foreground">
                   <tr>
                     <th className="px-3 py-2">Dataset</th>
                     <th className="px-3 py-2">Provenance</th>
@@ -299,12 +299,12 @@ export default function DataGovernanceAdminPage() {
                     const r = row as Record<string, unknown>;
                     const id = String(r.id ?? r.datasetId ?? i);
                     return (
-                      <tr key={id} className="border-t border-slate-100">
+                      <tr key={id} className="border-t border-border">
                         <td className="px-3 py-2 font-medium">{lineageRowLabel(row)}</td>
-                        <td className="px-3 py-2 text-slate-600">
+                        <td className="px-3 py-2 text-muted-foreground">
                           {String(r.sourceSystem ?? r.upstream ?? "MOHCC · National spine")}
                         </td>
-                        <td className="px-3 py-2 text-slate-600">{String(r.updatedAt ?? r.lastSnapshot ?? "—")}</td>
+                        <td className="px-3 py-2 text-muted-foreground">{String(r.updatedAt ?? r.lastSnapshot ?? "—")}</td>
                       </tr>
                     );
                   })}

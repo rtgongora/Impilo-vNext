@@ -42,20 +42,20 @@ type Tab = "policies" | "requests";
 
 const EFFECT_STYLES: Record<string, string> = {
   ALLOW: "bg-green-100 text-green-700",
-  DENY: "bg-red-100 text-red-700",
+  DENY: "bg-red-100 text-danger",
 };
 
 const STATUS_STYLES: Record<string, string> = {
   ACTIVE: "bg-green-100 text-green-700",
   DRAFT: "bg-yellow-100 text-yellow-700",
-  DISABLED: "bg-gray-100 text-gray-500",
+  DISABLED: "bg-neutral-100 text-muted-foreground",
 };
 
 const REQUEST_STATUS_STYLES: Record<string, string> = {
   PENDING: "bg-yellow-100 text-yellow-700",
   APPROVED: "bg-green-100 text-green-700",
-  DENIED: "bg-red-100 text-red-700",
-  EXPIRED: "bg-gray-100 text-gray-500",
+  DENIED: "bg-red-100 text-danger",
+  EXPIRED: "bg-neutral-100 text-muted-foreground",
   REVOKED: "bg-orange-100 text-orange-700",
 };
 
@@ -77,14 +77,14 @@ export default function DataAccessGovernancePage() {
         <div className="mb-4">
           <Link
             href="/access"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to access channels
           </Link>
         </div>
 
-        <div className="flex gap-1 mb-6 border-b border-gray-200">
+        <div className="flex gap-1 mb-6 border-b border-border">
           {tabs.map((t) => {
             const Icon = t.icon;
             return (
@@ -93,8 +93,8 @@ export default function DataAccessGovernancePage() {
                 onClick={() => setTab(t.id)}
                 className={`flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                   tab === t.id
-                    ? "border-impilo-500 text-impilo-500"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
+                    ? "border-impilo-500 text-primary"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <Icon className="w-4 h-4" /> {t.label}
@@ -144,7 +144,7 @@ function PoliciesTab() {
 
   if (error) {
     return (
-      <div className="bg-white rounded-lg border border-red-200 p-12 text-center">
+      <div className="bg-card rounded-lg border border-danger/28 p-12 text-center">
         <AlertCircle className="w-10 h-10 text-red-300 mx-auto mb-3" />
         <p className="text-red-600 text-sm">Failed to load governance policies</p>
       </div>
@@ -154,8 +154,8 @@ function PoliciesTab() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-        <span className="ml-2 text-sm text-gray-500">Loading governance policies...</span>
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        <span className="ml-2 text-sm text-muted-foreground">Loading governance policies...</span>
       </div>
     );
   }
@@ -163,32 +163,32 @@ function PoliciesTab() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">
+        <h3 className="text-lg font-semibold text-foreground">
           Governance Policies ({policies.length})
         </h3>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-impilo-500 text-white rounded-lg hover:bg-impilo-600 transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors"
         >
           {showForm ? "Cancel" : "New Policy"}
         </button>
       </div>
 
       {showForm && (
-        <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-3">
-          <h4 className="text-sm font-semibold text-gray-700">Create Governance Policy</h4>
+        <div className="bg-card rounded-lg border border-border p-4 space-y-3">
+          <h4 className="text-sm font-semibold text-foreground">Create Governance Policy</h4>
           <div className="grid grid-cols-2 gap-3">
             <input
               type="text"
               placeholder="Policy name"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              className="px-3 py-2 border border-border rounded-lg text-sm"
             />
             <select
               value={form.resourceType}
               onChange={(e) => setForm({ ...form, resourceType: e.target.value })}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              className="px-3 py-2 border border-border rounded-lg text-sm"
             >
               <option value="">Select resource type</option>
               <option value="CLINICAL_RECORD">Clinical Record</option>
@@ -205,7 +205,7 @@ function PoliciesTab() {
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
             rows={2}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="w-full px-3 py-2 border border-border rounded-lg text-sm"
           />
           <div className="grid grid-cols-2 gap-3">
             <select
@@ -213,7 +213,7 @@ function PoliciesTab() {
               onChange={(e) =>
                 setForm({ ...form, effect: e.target.value as "ALLOW" | "DENY" })
               }
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              className="px-3 py-2 border border-border rounded-lg text-sm"
             >
               <option value="ALLOW">ALLOW</option>
               <option value="DENY">DENY</option>
@@ -223,7 +223,7 @@ function PoliciesTab() {
               onChange={(e) =>
                 setForm({ ...form, dataClassification: e.target.value })
               }
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              className="px-3 py-2 border border-border rounded-lg text-sm"
             >
               <option value="PUBLIC">Public</option>
               <option value="INTERNAL">Internal</option>
@@ -235,7 +235,7 @@ function PoliciesTab() {
             <button
               onClick={handleCreate}
               disabled={!form.name || !form.resourceType || createMutation.isPending}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-impilo-500 text-white rounded-lg disabled:opacity-50 hover:bg-impilo-600 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-primary text-white rounded-lg disabled:opacity-50 hover:bg-primary-hover transition-colors"
             >
               {createMutation.isPending ? (
                 <>
@@ -253,46 +253,46 @@ function PoliciesTab() {
       )}
 
       {policies.length === 0 ? (
-        <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-          <Shield className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-400 text-sm">No governance policies configured</p>
+        <div className="bg-card rounded-lg border border-border p-12 text-center">
+          <Shield className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+          <p className="text-muted-foreground text-sm">No governance policies configured</p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-card rounded-lg border border-border overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b bg-gray-50">
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Policy Name</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Resource Type</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Classification</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Effect</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Updated</th>
+              <tr className="border-b bg-background">
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Policy Name</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Resource Type</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Classification</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Effect</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Updated</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {policies.map((policy) => {
                 const effectStyle =
-                  EFFECT_STYLES[policy.attributes.effect] ?? "bg-gray-100 text-gray-600";
+                  EFFECT_STYLES[policy.attributes.effect] ?? "bg-neutral-100 text-muted-foreground";
                 const statusStyle =
-                  STATUS_STYLES[policy.attributes.status] ?? "bg-gray-100 text-gray-600";
+                  STATUS_STYLES[policy.attributes.status] ?? "bg-neutral-100 text-muted-foreground";
                 return (
-                  <tr key={policy.id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={policy.id} className="hover:bg-background transition-colors">
                     <td className="px-4 py-3">
-                      <div className="font-medium text-gray-900">{policy.attributes.name}</div>
+                      <div className="font-medium text-foreground">{policy.attributes.name}</div>
                       {policy.attributes.description && (
-                        <div className="text-xs text-gray-400 mt-0.5 max-w-xs truncate">
+                        <div className="text-xs text-muted-foreground mt-0.5 max-w-xs truncate">
                           {policy.attributes.description}
                         </div>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-gray-600">
-                      <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-purple-100 text-purple-700">
+                    <td className="px-4 py-3 text-muted-foreground">
+                      <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-purple-100 text-warning-foreground">
                         {policy.attributes.resourceType}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-600">
-                      <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-impilo-100 text-impilo-600">
+                    <td className="px-4 py-3 text-muted-foreground">
+                      <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-primary-soft text-primary">
                         {policy.attributes.dataClassification}
                       </span>
                     </td>
@@ -310,7 +310,7 @@ function PoliciesTab() {
                         {policy.attributes.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-500 whitespace-nowrap text-xs">
+                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap text-xs">
                       {new Date(policy.attributes.updatedAt).toLocaleDateString()}
                     </td>
                   </tr>
@@ -346,7 +346,7 @@ function AccessRequestsTab() {
 
   if (error) {
     return (
-      <div className="bg-white rounded-lg border border-red-200 p-12 text-center">
+      <div className="bg-card rounded-lg border border-danger/28 p-12 text-center">
         <AlertCircle className="w-10 h-10 text-red-300 mx-auto mb-3" />
         <p className="text-red-600 text-sm">Failed to load access requests</p>
       </div>
@@ -356,11 +356,11 @@ function AccessRequestsTab() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">Access Requests</h3>
+        <h3 className="text-lg font-semibold text-foreground">Access Requests</h3>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+          className="px-3 py-2 border border-border rounded-lg text-sm"
         >
           <option value="">All statuses</option>
           <option value="PENDING">Pending</option>
@@ -373,36 +373,36 @@ function AccessRequestsTab() {
 
       {isLoading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-          <span className="ml-2 text-sm text-gray-500">Loading access requests...</span>
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          <span className="ml-2 text-sm text-muted-foreground">Loading access requests...</span>
         </div>
       ) : requests.length === 0 ? (
-        <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-          <FileText className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-400 text-sm">
+        <div className="bg-card rounded-lg border border-border p-12 text-center">
+          <FileText className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+          <p className="text-muted-foreground text-sm">
             {statusFilter
               ? `No ${statusFilter.toLowerCase()} access requests`
               : "No access requests"}
           </p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-card rounded-lg border border-border overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b bg-gray-50">
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Requester</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Resource</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Purpose</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Requested</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Actions</th>
+              <tr className="border-b bg-background">
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Requester</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Resource</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Purpose</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Requested</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {requests.map((request) => {
                 const statusStyle =
                   REQUEST_STATUS_STYLES[request.attributes.status] ??
-                  "bg-gray-100 text-gray-600";
+                  "bg-neutral-100 text-muted-foreground";
                 const isPending = request.attributes.status === "PENDING";
                 const isActing =
                   (approveMutation.isPending &&
@@ -411,27 +411,27 @@ function AccessRequestsTab() {
                     denyMutation.variables?.id === request.id);
 
                 return (
-                  <tr key={request.id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={request.id} className="hover:bg-background transition-colors">
                     <td className="px-4 py-3">
-                      <div className="font-medium text-gray-900">
+                      <div className="font-medium text-foreground">
                         {request.attributes.requesterName}
                       </div>
-                      <div className="text-xs text-gray-400 mt-0.5">
+                      <div className="text-xs text-muted-foreground mt-0.5">
                         {request.attributes.requesterId}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-gray-600">
-                      <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-purple-100 text-purple-700">
+                    <td className="px-4 py-3 text-muted-foreground">
+                      <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-purple-100 text-warning-foreground">
                         {request.attributes.resourceType}
                       </span>
-                      <div className="text-xs text-gray-400 mt-0.5 font-mono">
+                      <div className="text-xs text-muted-foreground mt-0.5 font-mono">
                         {request.attributes.resourceId}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-gray-600 max-w-xs">
+                    <td className="px-4 py-3 text-muted-foreground max-w-xs">
                       <div className="truncate">{request.attributes.purpose}</div>
                       {request.attributes.justification && (
-                        <div className="text-xs text-gray-400 mt-0.5 truncate">
+                        <div className="text-xs text-muted-foreground mt-0.5 truncate">
                           {request.attributes.justification}
                         </div>
                       )}
@@ -452,7 +452,7 @@ function AccessRequestsTab() {
                         {request.attributes.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-500 whitespace-nowrap text-xs">
+                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap text-xs">
                       {new Date(request.attributes.requestedAt).toLocaleDateString()}
                     </td>
                     <td className="px-4 py-3">
@@ -486,7 +486,7 @@ function AccessRequestsTab() {
                           </button>
                         </div>
                       ) : (
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-muted-foreground">
                           {request.attributes.decidedBy
                             ? `by ${request.attributes.decidedBy}`
                             : "--"}
@@ -502,7 +502,7 @@ function AccessRequestsTab() {
       )}
 
       {(approveMutation.isError || denyMutation.isError) && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-600">
+        <div className="bg-danger-soft border border-danger/28 rounded-lg p-3 text-sm text-red-600">
           Failed to process access request. Please try again.
         </div>
       )}

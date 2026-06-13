@@ -24,14 +24,14 @@ import { useFacilityStore } from "@/hooks/useFacilityStore";
 /* ------------------------------------------------------------------ */
 
 const STATUS_BADGE: Record<string, string> = {
-  ACTIVE: "bg-red-100 text-red-700",
+  ACTIVE: "bg-red-100 text-danger",
   RESOLVED: "bg-green-100 text-green-700",
-  INACTIVE: "bg-gray-100 text-gray-600" };
+  INACTIVE: "bg-neutral-100 text-muted-foreground" };
 
 const SEVERITY_BADGE: Record<string, string> = {
   MILD: "bg-green-100 text-green-700",
   MODERATE: "bg-yellow-100 text-yellow-700",
-  SEVERE: "bg-red-100 text-red-700" };
+  SEVERE: "bg-red-100 text-danger" };
 
 /* ------------------------------------------------------------------ */
 /*  Empty form state                                                   */
@@ -104,8 +104,8 @@ export default function ConditionsPage() {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading conditions...</span>
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading conditions...</span>
           </div>
         ) : (
           <div className="space-y-6">
@@ -150,14 +150,14 @@ export default function ConditionsPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <HeartPulse className="w-5 h-5 text-red-500" />
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 className="text-lg font-semibold text-foreground">
                   Conditions ({conditions.length})
                 </h2>
               </div>
               <button
                 type="button"
                 onClick={() => setShowForm((prev) => !prev)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 transition-colors"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 Add Condition
@@ -166,12 +166,12 @@ export default function ConditionsPage() {
 
             {/* Add Condition form */}
             {showForm && (
-              <div className="bg-white rounded-lg border border-gray-200 p-5">
-                <h3 className="font-medium text-gray-900 mb-4">New Condition</h3>
+              <div className="bg-card rounded-lg border border-border p-5">
+                <h3 className="font-medium text-foreground mb-4">New Condition</h3>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
                         Condition Name
                       </label>
                       <input
@@ -180,11 +180,11 @@ export default function ConditionsPage() {
                         onChange={(e) => updateField("condition_name", e.target.value)}
                         placeholder="e.g. Type 2 Diabetes Mellitus"
                         required
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
                         ICD Code
                       </label>
                       <input
@@ -192,17 +192,17 @@ export default function ConditionsPage() {
                         value={form.icd_code}
                         onChange={(e) => updateField("icd_code", e.target.value)}
                         placeholder="e.g. E11.9"
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
                         Category
                       </label>
                       <select
                         value={form.category}
                         onChange={(e) => updateField("category", e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                       >
                         <option value="ENCOUNTER_DIAGNOSIS">Encounter Diagnosis</option>
                         <option value="PROBLEM_LIST">Problem List</option>
@@ -210,13 +210,13 @@ export default function ConditionsPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
                         Clinical Status
                       </label>
                       <select
                         value={form.clinical_status}
                         onChange={(e) => updateField("clinical_status", e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                       >
                         <option value="ACTIVE">Active</option>
                         <option value="RESOLVED">Resolved</option>
@@ -224,13 +224,13 @@ export default function ConditionsPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
                         Severity
                       </label>
                       <select
                         value={form.severity}
                         onChange={(e) => updateField("severity", e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                       >
                         <option value="MILD">Mild</option>
                         <option value="MODERATE">Moderate</option>
@@ -238,18 +238,18 @@ export default function ConditionsPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
                         Onset Date
                       </label>
                       <input
                         type="date"
                         value={form.onset_date}
                         onChange={(e) => updateField("onset_date", e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                       />
                     </div>
                     <div className="md:col-span-2 lg:col-span-3">
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
                         Notes
                       </label>
                       <textarea
@@ -257,7 +257,7 @@ export default function ConditionsPage() {
                         onChange={(e) => updateField("notes", e.target.value)}
                         rows={2}
                         placeholder="Additional clinical notes..."
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                       />
                     </div>
                   </div>
@@ -266,7 +266,7 @@ export default function ConditionsPage() {
                     <button
                       type="submit"
                       disabled={createCondition.isPending}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       {createCondition.isPending && (
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -279,7 +279,7 @@ export default function ConditionsPage() {
                         setForm({ ...EMPTY_FORM });
                         setShowForm(false);
                       }}
-                      className="px-4 py-2 text-sm font-medium text-gray-700 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+                      className="px-4 py-2 text-sm font-medium text-foreground rounded-lg border border-border hover:bg-background transition-colors"
                     >
                       Cancel
                     </button>
@@ -296,24 +296,24 @@ export default function ConditionsPage() {
 
             {/* Conditions table */}
             {conditions.length === 0 ? (
-              <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-                <HeartPulse className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-400 text-sm">No conditions recorded yet</p>
+              <div className="bg-card rounded-lg border border-border p-12 text-center">
+                <HeartPulse className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                <p className="text-muted-foreground text-sm">No conditions recorded yet</p>
               </div>
             ) : (
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div className="bg-card rounded-lg border border-border overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-gray-200 bg-gray-50">
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">Condition</th>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">ICD Code</th>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">Category</th>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">Severity</th>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">Onset Date</th>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">Notes</th>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">Actions</th>
+                      <tr className="border-b border-border bg-background">
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">Condition</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">ICD Code</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">Category</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">Severity</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">Onset Date</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">Notes</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -322,21 +322,21 @@ export default function ConditionsPage() {
                         return (
                           <tr
                             key={condition.id}
-                            className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                            className="border-b border-border hover:bg-background transition-colors"
                           >
-                            <td className="px-4 py-3 font-medium text-gray-900">
+                            <td className="px-4 py-3 font-medium text-foreground">
                               {a.conditionName}
                             </td>
-                            <td className="px-4 py-3 text-gray-700 font-mono text-xs">
+                            <td className="px-4 py-3 text-foreground font-mono text-xs">
                               {a.icdCode ?? "—"}
                             </td>
-                            <td className="px-4 py-3 text-gray-700 text-xs">
+                            <td className="px-4 py-3 text-foreground text-xs">
                               {a.category.replace(/_/g, " ")}
                             </td>
                             <td className="px-4 py-3">
                               <span
                                 className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${
-                                  STATUS_BADGE[a.clinicalStatus] ?? "bg-gray-100 text-gray-600"
+                                  STATUS_BADGE[a.clinicalStatus] ?? "bg-neutral-100 text-muted-foreground"
                                 }`}
                               >
                                 {a.clinicalStatus}
@@ -345,18 +345,18 @@ export default function ConditionsPage() {
                             <td className="px-4 py-3">
                               <span
                                 className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${
-                                  SEVERITY_BADGE[a.severity] ?? "bg-gray-100 text-gray-600"
+                                  SEVERITY_BADGE[a.severity] ?? "bg-neutral-100 text-muted-foreground"
                                 }`}
                               >
                                 {a.severity}
                               </span>
                             </td>
-                            <td className="px-4 py-3 text-gray-700">
+                            <td className="px-4 py-3 text-foreground">
                               {a.onsetDate
                                 ? new Date(a.onsetDate).toLocaleDateString()
                                 : "—"}
                             </td>
-                            <td className="px-4 py-3 text-gray-700 max-w-[200px] truncate">
+                            <td className="px-4 py-3 text-foreground max-w-[200px] truncate">
                               {a.notes ?? "—"}
                             </td>
                             <td className="px-4 py-3">

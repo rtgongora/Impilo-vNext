@@ -138,14 +138,14 @@ export function LiveRoom({ eventId }: LiveRoomProps) {
 
   return (
     <div className="flex flex-col lg:flex-row gap-4 min-h-[70vh]">
-      <div className="flex-1 flex flex-col rounded-2xl border border-gray-200 bg-gray-950 overflow-hidden min-h-[360px]">
-        <div className="flex items-center justify-between gap-2 px-3 py-2 bg-gray-900 text-gray-200 text-sm">
+      <div className="flex-1 flex flex-col rounded-2xl border border-border bg-neutral-900 overflow-hidden min-h-[360px]">
+        <div className="flex items-center justify-between gap-2 px-3 py-2 bg-neutral-900 text-muted-foreground text-sm">
           <div>
             <p className="font-medium text-white">{event?.title ?? "Live session"}</p>
             {isBroadcast ? (
               <p className="text-xs text-amber-300 mt-0.5">Public broadcast · moderated viewer mode</p>
             ) : null}
-            <p className="text-xs text-gray-400">{event?.status ?? "…"}</p>
+            <p className="text-xs text-muted-foreground">{event?.status ?? "…"}</p>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -153,8 +153,8 @@ export function LiveRoom({ eventId }: LiveRoomProps) {
               onClick={() => setLowBandwidth((v) => !v)}
               className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs border ${
                 lowBandwidth
-                  ? "border-amber-400 text-amber-200 bg-amber-950/40"
-                  : "border-gray-600 text-gray-300"
+                  ? "border-amber-400 text-warning-foreground bg-amber-950/40"
+                  : "border-gray-600 text-muted-foreground"
               }`}
             >
               <Headphones className="h-3.5 w-3.5" />
@@ -173,12 +173,12 @@ export function LiveRoom({ eventId }: LiveRoomProps) {
 
         <div className="flex-1 min-h-[280px]">
           {eventLoading || joinRoom.isPending || tokenLoading ? (
-            <div className="h-full flex items-center justify-center gap-2 text-gray-400 text-sm">
+            <div className="h-full flex items-center justify-center gap-2 text-muted-foreground text-sm">
               <Loader2 className="h-5 w-5 animate-spin" />
               Connecting to governed live room…
             </div>
           ) : tokenError || !roomToken ? (
-            <div className="h-full flex flex-col items-center justify-center gap-2 px-4 text-center text-gray-400 text-sm">
+            <div className="h-full flex flex-col items-center justify-center gap-2 px-4 text-center text-muted-foreground text-sm">
               <p>Room token not available yet.</p>
               <Link href={`/live/event/${eventId}`} className="text-violet-300 underline">
                 Return to event details
@@ -195,8 +195,8 @@ export function LiveRoom({ eventId }: LiveRoomProps) {
         </div>
       </div>
 
-      <aside className="w-full lg:w-96 flex flex-col rounded-2xl border border-gray-200 bg-white overflow-hidden">
-        <div className="flex border-b border-gray-200">
+      <aside className="w-full lg:w-96 flex flex-col rounded-2xl border border-border bg-card overflow-hidden">
+        <div className="flex border-b border-border">
           {tabs.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
@@ -205,7 +205,7 @@ export function LiveRoom({ eventId }: LiveRoomProps) {
               className={`flex-1 inline-flex items-center justify-center gap-1 px-2 py-2.5 text-xs font-medium ${
                 tab === id
                   ? "border-b-2 border-violet-600 text-violet-700 bg-violet-50"
-                  : "text-gray-600 hover:bg-gray-50"
+                  : "text-muted-foreground hover:bg-background"
               }`}
             >
               <Icon className="h-3.5 w-3.5" />
@@ -219,13 +219,13 @@ export function LiveRoom({ eventId }: LiveRoomProps) {
             <div className="space-y-3">
               <ul className="space-y-2 max-h-64 overflow-auto">
                 {chat.map((msg) => (
-                  <li key={msg.id} className="rounded-lg bg-gray-50 px-2 py-1.5 text-xs">
-                    <span className="text-gray-500">{msg.participantType}: </span>
+                  <li key={msg.id} className="rounded-lg bg-background px-2 py-1.5 text-xs">
+                    <span className="text-muted-foreground">{msg.participantType}: </span>
                     {msg.message}
                   </li>
                 ))}
                 {chat.length === 0 ? (
-                  <li className="text-xs text-gray-500">No messages yet.</li>
+                  <li className="text-xs text-muted-foreground">No messages yet.</li>
                 ) : null}
               </ul>
               {event?.chatEnabled !== false ? (
@@ -234,7 +234,7 @@ export function LiveRoom({ eventId }: LiveRoomProps) {
                     value={chatDraft}
                     onChange={(e) => setChatDraft(e.target.value)}
                     placeholder="Type a message…"
-                    className="flex-1 rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
+                    className="flex-1 rounded-lg border border-border px-2 py-1.5 text-sm"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") void handleSendChat();
                     }}
@@ -249,7 +249,7 @@ export function LiveRoom({ eventId }: LiveRoomProps) {
                   </button>
                 </div>
               ) : (
-                <p className="text-xs text-amber-700">Chat is disabled for this event.</p>
+                <p className="text-xs text-warning-foreground">Chat is disabled for this event.</p>
               )}
             </div>
           ) : null}
@@ -258,13 +258,13 @@ export function LiveRoom({ eventId }: LiveRoomProps) {
             <div className="space-y-3">
               <ul className="space-y-2 max-h-64 overflow-auto">
                 {questions.map((q) => (
-                  <li key={q.id} className="rounded-lg bg-gray-50 px-2 py-1.5 text-xs">
+                  <li key={q.id} className="rounded-lg bg-background px-2 py-1.5 text-xs">
                     <p>{q.questionText}</p>
-                    <p className="text-gray-500 mt-1">{q.upvotes} upvotes · {q.status}</p>
+                    <p className="text-muted-foreground mt-1">{q.upvotes} upvotes · {q.status}</p>
                   </li>
                 ))}
                 {questions.length === 0 ? (
-                  <li className="text-xs text-gray-500">No questions yet.</li>
+                  <li className="text-xs text-muted-foreground">No questions yet.</li>
                 ) : null}
               </ul>
               {event?.qnaEnabled !== false ? (
@@ -273,7 +273,7 @@ export function LiveRoom({ eventId }: LiveRoomProps) {
                     value={questionDraft}
                     onChange={(e) => setQuestionDraft(e.target.value)}
                     placeholder="Ask a question…"
-                    className="flex-1 rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
+                    className="flex-1 rounded-lg border border-border px-2 py-1.5 text-sm"
                   />
                   <button
                     type="button"
@@ -285,7 +285,7 @@ export function LiveRoom({ eventId }: LiveRoomProps) {
                   </button>
                 </div>
               ) : (
-                <p className="text-xs text-amber-700">Q&amp;A is disabled for this event.</p>
+                <p className="text-xs text-warning-foreground">Q&amp;A is disabled for this event.</p>
               )}
             </div>
           ) : null}
@@ -294,7 +294,7 @@ export function LiveRoom({ eventId }: LiveRoomProps) {
             <div className="space-y-3">
               {activePoll ? (
                 <>
-                  <p className="font-medium text-gray-900">{activePoll.question}</p>
+                  <p className="font-medium text-foreground">{activePoll.question}</p>
                   <div className="space-y-2">
                     {pollOptions.map((option) => (
                       <button
@@ -308,7 +308,7 @@ export function LiveRoom({ eventId }: LiveRoomProps) {
                           })
                         }
                         disabled={respondPoll.isPending}
-                        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-left text-sm hover:border-violet-300 hover:bg-violet-50"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-left text-sm hover:border-violet-300 hover:bg-violet-50"
                       >
                         {option}
                       </button>
@@ -316,7 +316,7 @@ export function LiveRoom({ eventId }: LiveRoomProps) {
                   </div>
                 </>
               ) : (
-                <p className="text-xs text-gray-500">No active polls.</p>
+                <p className="text-xs text-muted-foreground">No active polls.</p>
               )}
             </div>
           ) : null}
@@ -324,16 +324,16 @@ export function LiveRoom({ eventId }: LiveRoomProps) {
           {tab === "resources" ? (
             <ul className="space-y-2">
               {resources.map((res) => (
-                <li key={res.id} className="rounded-lg border border-gray-200 p-2 text-xs">
-                  <p className="font-medium text-gray-900">{res.title}</p>
-                  <p className="text-gray-500">{res.resourceType}</p>
+                <li key={res.id} className="rounded-lg border border-border p-2 text-xs">
+                  <p className="font-medium text-foreground">{res.title}</p>
+                  <p className="text-muted-foreground">{res.resourceType}</p>
                   {res.fileId ? (
                     <p className="text-violet-700 mt-1">File: {res.fileId}</p>
                   ) : null}
                 </li>
               ))}
               {resources.length === 0 ? (
-                <li className="text-xs text-gray-500">No shared resources yet.</li>
+                <li className="text-xs text-muted-foreground">No shared resources yet.</li>
               ) : null}
             </ul>
           ) : null}

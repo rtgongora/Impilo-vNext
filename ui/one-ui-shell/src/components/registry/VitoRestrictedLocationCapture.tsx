@@ -38,7 +38,7 @@ export function VitoRestrictedLocationCapture({
 
   if (!hasRole) {
     return (
-      <section className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+      <section className="rounded-xl border border-warning/35 bg-warning-soft p-4 text-sm text-warning-foreground">
         <div className="flex items-center gap-2 font-medium">
           <ShieldAlert className="h-4 w-4" />
           Location capture restricted
@@ -53,7 +53,7 @@ export function VitoRestrictedLocationCapture({
 
   if (!typeAllowed) {
     return (
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-muted-foreground">
         Location capture is available for outreach, community, and facility registration types only.
       </p>
     );

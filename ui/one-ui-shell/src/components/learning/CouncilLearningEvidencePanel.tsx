@@ -22,7 +22,7 @@ export function CouncilLearningEvidencePanel(props: { providerPublicId: string |
 
   if (!pid) {
     return (
-      <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+      <div className="rounded-lg border border-warning/35 bg-warning-soft p-3 text-sm text-warning-foreground">
         Pass <strong>providerPublicId</strong> in the query string to load learning completions from the platform layer.
       </div>
     );
@@ -30,14 +30,14 @@ export function CouncilLearningEvidencePanel(props: { providerPublicId: string |
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-2 text-sm text-gray-500">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" /> Loading learning evidence…
       </div>
     );
   }
   if (isError || items.length === 0) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-600">
+      <div className="rounded-lg border border-border bg-background p-3 text-sm text-muted-foreground">
         No learning completions recorded in the learning layer for this provider yet (Fundo webhooks must sync into
         learning-service).
       </div>
@@ -48,9 +48,9 @@ export function CouncilLearningEvidencePanel(props: { providerPublicId: string |
     <section className="rounded-lg border border-teal-200/80 bg-teal-50/30 p-4 dark:border-teal-900/40 dark:bg-teal-950/20">
       <div className="mb-2 flex items-center gap-2">
         <BookOpen className="h-5 w-5 text-teal-600" />
-        <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Learning evidence (platform layer)</h2>
+        <h2 className="text-sm font-semibold text-foreground dark:text-foreground">Learning evidence (platform layer)</h2>
       </div>
-      <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
+      <p className="text-xs text-muted-foreground dark:text-muted-foreground mb-3">
         Governed completions ingested into learning-service — CPD acceptance remains in Varapi council workflows.
       </p>
       <ul className="space-y-2 max-h-64 overflow-auto text-sm">
@@ -62,10 +62,10 @@ export function CouncilLearningEvidencePanel(props: { providerPublicId: string |
           return (
             <li
               key={i}
-              className="rounded-md border border-gray-200 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-950/60"
+              className="rounded-md border border-border bg-card px-3 py-2 dark:border-border dark:bg-card/60"
             >
-              <span className="font-medium text-gray-900 dark:text-gray-100">{title}</span>
-              <span className="ml-2 text-xs text-gray-500">
+              <span className="font-medium text-foreground dark:text-foreground">{title}</span>
+              <span className="ml-2 text-xs text-muted-foreground">
                 {when} · {src}
               </span>
             </li>

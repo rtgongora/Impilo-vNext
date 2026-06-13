@@ -17,8 +17,8 @@ import { useFacilityStore } from "@/hooks/useFacilityStore";
 
 const STATUS_BADGE: Record<string, string> = {
   COMPLETED: "bg-green-100 text-green-700",
-  NOT_DONE: "bg-gray-100 text-gray-600",
-  ENTERED_IN_ERROR: "bg-red-100 text-red-700",
+  NOT_DONE: "bg-neutral-100 text-muted-foreground",
+  ENTERED_IN_ERROR: "bg-red-100 text-danger",
 };
 
 const EMPTY_FORM = {
@@ -104,8 +104,8 @@ export default function ImmunizationsPage() {
       <PageShell title="Immunizations" subtitle="Patient immunization records">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading immunizations...</span>
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading immunizations...</span>
           </div>
         ) : (
           <div className="space-y-6">
@@ -147,16 +147,16 @@ export default function ImmunizationsPage() {
               ]}
             />
 
-            <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+            <div className="rounded-3xl border border-border bg-background/70 p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
                 Immunization continuity
               </p>
-              <p className="mt-2 text-sm text-slate-800">
+              <p className="mt-2 text-sm text-foreground">
                 {activeEncounter
                   ? "New immunizations recorded here are now sent with the active encounter and facility context so the vaccine update stays inside the current clinical episode."
                   : "You can still review and record immunizations here, but there is no active encounter in scope to bind the update to the current visit."}
               </p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Use History for narrative review, then return here to record the dose without leaving the patient workspace.
               </p>
             </div>
@@ -164,12 +164,12 @@ export default function ImmunizationsPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Syringe className="h-5 w-5 text-cyan-600" />
-                <h2 className="text-lg font-semibold text-gray-900">Immunizations ({immunizations.length})</h2>
+                <h2 className="text-lg font-semibold text-foreground">Immunizations ({immunizations.length})</h2>
               </div>
               <button
                 type="button"
                 onClick={() => setShowForm((prev) => !prev)}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
               >
                 <Plus className="h-4 w-4" />
                 Record Immunization
@@ -177,101 +177,101 @@ export default function ImmunizationsPage() {
             </div>
 
             {showForm && (
-              <div className="rounded-lg border border-gray-200 bg-white p-5">
-                <h3 className="mb-4 font-medium text-gray-900">Record Immunization</h3>
+              <div className="rounded-lg border border-border bg-card p-5">
+                <h3 className="mb-4 font-medium text-foreground">Record Immunization</h3>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-600">Vaccine Name</label>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Vaccine Name</label>
                       <input
                         type="text"
                         value={form.vaccine_name}
                         onChange={(e) => updateField("vaccine_name", e.target.value)}
                         placeholder="e.g. Influenza"
                         required
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-primary/40"
                       />
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-600">Vaccine Code</label>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Vaccine Code</label>
                       <input
                         type="text"
                         value={form.vaccine_code}
                         onChange={(e) => updateField("vaccine_code", e.target.value)}
                         placeholder="e.g. CVX-141"
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-primary/40"
                       />
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-600">Dose Number</label>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Dose Number</label>
                       <input
                         type="number"
                         min="1"
                         value={form.dose_number}
                         onChange={(e) => updateField("dose_number", e.target.value)}
                         placeholder="1"
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-primary/40"
                       />
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-600">Dose Sequence</label>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Dose Sequence</label>
                       <input
                         type="text"
                         value={form.dose_sequence}
                         onChange={(e) => updateField("dose_sequence", e.target.value)}
                         placeholder="e.g. 1 of 3"
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-primary/40"
                       />
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-600">Lot Number</label>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Lot Number</label>
                       <input
                         type="text"
                         value={form.lot_number}
                         onChange={(e) => updateField("lot_number", e.target.value)}
                         placeholder="e.g. AB1234"
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-primary/40"
                       />
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-600">Site</label>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Site</label>
                       <input
                         type="text"
                         value={form.site}
                         onChange={(e) => updateField("site", e.target.value)}
                         placeholder="e.g. Left deltoid"
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-primary/40"
                       />
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-600">Route</label>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Route</label>
                       <input
                         type="text"
                         value={form.route}
                         onChange={(e) => updateField("route", e.target.value)}
                         placeholder="e.g. Intramuscular"
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-primary/40"
                       />
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-600">Administered By</label>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Administered By</label>
                       <input
                         type="text"
                         value={form.administered_by}
                         onChange={(e) => updateField("administered_by", e.target.value)}
                         placeholder="Nurse Jane"
                         required
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-primary/40"
                       />
                     </div>
                     <div className="md:col-span-2 lg:col-span-3">
-                      <label className="mb-1 block text-xs font-medium text-gray-600">Notes</label>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Notes</label>
                       <textarea
                         value={form.notes}
                         onChange={(e) => updateField("notes", e.target.value)}
                         rows={2}
                         placeholder="Additional notes..."
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-primary/40"
                       />
                     </div>
                   </div>
@@ -280,7 +280,7 @@ export default function ImmunizationsPage() {
                     <button
                       type="submit"
                       disabled={recordImmunization.isPending}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {recordImmunization.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                       Save Immunization
@@ -291,7 +291,7 @@ export default function ImmunizationsPage() {
                         setForm(buildFormState());
                         setShowForm(false);
                       }}
-                      className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                      className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-background"
                     >
                       Cancel
                     </button>
@@ -305,45 +305,45 @@ export default function ImmunizationsPage() {
             )}
 
             {immunizations.length === 0 ? (
-              <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
-                <Syringe className="mx-auto mb-3 h-10 w-10 text-gray-300" />
-                <p className="text-sm text-gray-400">No immunizations recorded yet</p>
+              <div className="rounded-lg border border-border bg-card p-12 text-center">
+                <Syringe className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">No immunizations recorded yet</p>
               </div>
             ) : (
-              <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+              <div className="overflow-hidden rounded-lg border border-border bg-card">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-gray-200 bg-gray-50">
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">Vaccine</th>
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">Dose #</th>
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">Sequence</th>
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">Lot Number</th>
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">Site</th>
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">Route</th>
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">Status</th>
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">Administered By</th>
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">Date</th>
+                      <tr className="border-b border-border bg-background">
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">Vaccine</th>
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">Dose #</th>
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">Sequence</th>
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">Lot Number</th>
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">Site</th>
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">Route</th>
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">Administered By</th>
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">Date</th>
                       </tr>
                     </thead>
                     <tbody>
                       {immunizations.map((immunization) => {
                         const attrs = immunization.attributes;
                         return (
-                          <tr key={immunization.id} className="border-b border-gray-100 transition-colors hover:bg-gray-50">
-                            <td className="px-4 py-3 font-medium text-gray-900">{attrs.vaccineName}</td>
-                            <td className="px-4 py-3 text-gray-700">{attrs.doseNumber ?? "-"}</td>
-                            <td className="px-4 py-3 text-gray-700">{attrs.doseSequence ?? "-"}</td>
-                            <td className="px-4 py-3 font-mono text-xs text-gray-700">{attrs.lotNumber ?? "-"}</td>
-                            <td className="px-4 py-3 text-gray-700">{attrs.site ?? "-"}</td>
-                            <td className="px-4 py-3 text-gray-700">{attrs.route ?? "-"}</td>
+                          <tr key={immunization.id} className="border-b border-border transition-colors hover:bg-background">
+                            <td className="px-4 py-3 font-medium text-foreground">{attrs.vaccineName}</td>
+                            <td className="px-4 py-3 text-foreground">{attrs.doseNumber ?? "-"}</td>
+                            <td className="px-4 py-3 text-foreground">{attrs.doseSequence ?? "-"}</td>
+                            <td className="px-4 py-3 font-mono text-xs text-foreground">{attrs.lotNumber ?? "-"}</td>
+                            <td className="px-4 py-3 text-foreground">{attrs.site ?? "-"}</td>
+                            <td className="px-4 py-3 text-foreground">{attrs.route ?? "-"}</td>
                             <td className="px-4 py-3">
-                              <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_BADGE[attrs.status] ?? "bg-gray-100 text-gray-600"}`}>
+                              <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_BADGE[attrs.status] ?? "bg-neutral-100 text-muted-foreground"}`}>
                                 {attrs.status}
                               </span>
                             </td>
-                            <td className="px-4 py-3 text-gray-700">{attrs.administeredBy}</td>
-                            <td className="px-4 py-3 text-gray-700">{new Date(attrs.administeredAt).toLocaleDateString()}</td>
+                            <td className="px-4 py-3 text-foreground">{attrs.administeredBy}</td>
+                            <td className="px-4 py-3 text-foreground">{new Date(attrs.administeredAt).toLocaleDateString()}</td>
                           </tr>
                         );
                       })}

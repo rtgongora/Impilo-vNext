@@ -40,52 +40,52 @@ export default function LearningCourseDetailPage() {
         <div className="mb-4">
           <Link
             href="/learning/catalog"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" /> Back to catalogue
           </Link>
         </div>
 
         {isLoading ? (
-          <div className="rounded-lg border border-gray-200 bg-white p-6 text-sm text-gray-600">
+          <div className="rounded-lg border border-border bg-card p-6 text-sm text-muted-foreground">
             Loading course…
           </div>
         ) : null}
 
         {!isLoading && (isError || !structure) ? (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
+          <div className="rounded-lg border border-warning/35 bg-warning-soft p-6 text-sm text-warning-foreground">
             Course is currently unavailable. Please retry shortly.
           </div>
         ) : null}
 
         {!isLoading && !isError && structure ? (
           <>
-            <div className="mb-6 rounded-lg border border-gray-200 bg-white p-5">
+            <div className="mb-6 rounded-lg border border-border bg-card p-5">
               <div className="flex flex-wrap items-center gap-2 text-xs">
                 {structure.category ? (
-                  <span className="rounded bg-gray-100 px-1.5 py-0.5 text-gray-700">{structure.category}</span>
+                  <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-foreground">{structure.category}</span>
                 ) : null}
                 {structure.level ? (
-                  <span className="rounded bg-gray-100 px-1.5 py-0.5 text-gray-700">{structure.level}</span>
+                  <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-foreground">{structure.level}</span>
                 ) : null}
                 {structure.cpdEligible ? (
-                  <span className="inline-flex items-center gap-1 rounded bg-emerald-50 px-1.5 py-0.5 text-emerald-800">
+                  <span className="inline-flex items-center gap-1 rounded bg-success-soft px-1.5 py-0.5 text-primary-hover">
                     <BadgeCheck className="h-3 w-3" /> CPD
                   </span>
                 ) : null}
                 {structure.mandatory ? (
-                  <span className="inline-flex items-center gap-1 rounded bg-blue-50 px-1.5 py-0.5 text-blue-800">
+                  <span className="inline-flex items-center gap-1 rounded bg-info-soft px-1.5 py-0.5 text-blue-800">
                     <CheckCircle2 className="h-3 w-3" /> Mandatory
                   </span>
                 ) : null}
                 {structure.estimatedDurationMinutes ? (
-                  <span className="inline-flex items-center gap-1 text-gray-500">
+                  <span className="inline-flex items-center gap-1 text-muted-foreground">
                     <Clock className="h-3 w-3" /> {structure.estimatedDurationMinutes} min total
                   </span>
                 ) : null}
               </div>
               {structure.description ? (
-                <p className="mt-3 text-sm text-gray-700">{structure.description}</p>
+                <p className="mt-3 text-sm text-foreground">{structure.description}</p>
               ) : null}
               <div className="mt-3 flex gap-2">
                 <button
@@ -101,12 +101,12 @@ export default function LearningCourseDetailPage() {
                       router.push(`/learning/enrolments/${enrolmentId}`);
                     }
                   }}
-                  className="rounded bg-teal-700 px-3 py-1.5 text-sm text-white"
+                  className="rounded bg-primary px-3 py-1.5 text-sm text-white"
                   data-testid="fundo-enrol-button"
                 >
                   Enrol / Continue
                 </button>
-                <Link href="/learning/my-learning" className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700">
+                <Link href="/learning/my-learning" className="rounded border border-border px-3 py-1.5 text-sm text-foreground">
                   View my learning
                 </Link>
               </div>
@@ -124,38 +124,38 @@ export default function LearningCourseDetailPage() {
               />
             </div>
 
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               Modules ({structure.modules.length})
             </h2>
             {structure.modules.length === 0 ? (
-              <div className="rounded-lg border border-gray-200 bg-white p-6 text-sm text-gray-600">
+              <div className="rounded-lg border border-border bg-card p-6 text-sm text-muted-foreground">
                 This course has no published modules yet.
               </div>
             ) : (
               <ol className="space-y-3">
                 {structure.modules.map((m) => (
-                  <li key={m.id} className="rounded-lg border border-gray-200 bg-white p-4">
-                    <p className="font-semibold text-gray-900">
+                  <li key={m.id} className="rounded-lg border border-border bg-card p-4">
+                    <p className="font-semibold text-foreground">
                       {m.sequence}. {m.title}
                     </p>
-                    {m.description ? <p className="mt-1 text-xs text-gray-600">{m.description}</p> : null}
+                    {m.description ? <p className="mt-1 text-xs text-muted-foreground">{m.description}</p> : null}
                     {m.lessons.length > 0 ? (
                       <ul className="mt-3 space-y-1.5 pl-3">
                         {m.lessons.map((l) => (
-                          <li key={l.id} className="flex items-start gap-2 text-sm text-gray-700">
+                          <li key={l.id} className="flex items-start gap-2 text-sm text-foreground">
                             <BookOpenCheck className="mt-0.5 h-4 w-4 flex-shrink-0 text-teal-700" />
                             <span>
                               <span className="font-medium">{l.title}</span>
-                              <span className="ml-2 font-mono text-xs uppercase text-gray-500">
+                              <span className="ml-2 font-mono text-xs uppercase text-muted-foreground">
                                 {l.contentType}
                               </span>
                               {l.estimatedDurationMinutes ? (
-                                <span className="ml-2 text-xs text-gray-500">
+                                <span className="ml-2 text-xs text-muted-foreground">
                                   {l.estimatedDurationMinutes} min
                                 </span>
                               ) : null}
                               {!l.required ? (
-                                <span className="ml-2 rounded bg-gray-100 px-1 text-[10px] uppercase text-gray-600">
+                                <span className="ml-2 rounded bg-neutral-100 px-1 text-[10px] uppercase text-muted-foreground">
                                   Optional
                                 </span>
                               ) : null}
@@ -164,7 +164,7 @@ export default function LearningCourseDetailPage() {
                         ))}
                       </ul>
                     ) : (
-                      <p className="mt-2 text-xs italic text-gray-500">No lessons yet.</p>
+                      <p className="mt-2 text-xs italic text-muted-foreground">No lessons yet.</p>
                     )}
                   </li>
                 ))}

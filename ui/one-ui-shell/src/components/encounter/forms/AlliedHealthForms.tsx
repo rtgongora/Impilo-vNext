@@ -34,17 +34,17 @@ function Checklist({ title, items, checked, onToggle }: {
   title: string; items: CheckItem[]; checked: Set<string>; onToggle: (id: string) => void;
 }) {
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden">
-      <div className="px-3 py-2 bg-gray-50 text-xs font-semibold text-gray-600 flex justify-between">
+    <div className="border border-border rounded-lg overflow-hidden">
+      <div className="px-3 py-2 bg-background text-xs font-semibold text-muted-foreground flex justify-between">
         <span>{title}</span>
-        <span className="text-gray-400">{checked.size}/{items.length}</span>
+        <span className="text-muted-foreground">{checked.size}/{items.length}</span>
       </div>
       <div className="p-2 grid grid-cols-2 gap-1">
         {items.map((item) => (
-          <label key={item.id} className="flex items-center gap-2 px-2 py-1 rounded hover:bg-gray-50 cursor-pointer text-sm">
+          <label key={item.id} className="flex items-center gap-2 px-2 py-1 rounded hover:bg-background cursor-pointer text-sm">
             <input type="checkbox" checked={checked.has(item.id)} onChange={() => onToggle(item.id)}
-              className="rounded border-gray-300 text-impilo-500 focus:ring-impilo-400" />
-            <span className={checked.has(item.id) ? "text-gray-900" : "text-gray-600"}>{item.label}</span>
+              className="rounded border-border text-primary focus:ring-primary/40" />
+            <span className={checked.has(item.id) ? "text-foreground" : "text-muted-foreground"}>{item.label}</span>
           </label>
         ))}
       </div>
@@ -67,9 +67,9 @@ function Dropdown({ label, value, onChange, options }: {
 }) {
   return (
     <label className="block">
-      <span className="text-xs font-medium text-gray-600">{label}</span>
+      <span className="text-xs font-medium text-muted-foreground">{label}</span>
       <select value={value} onChange={(e) => onChange(e.target.value)}
-        className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+        className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm">
         <option value="">Select...</option>
         {options.map((o) => <option key={o} value={o}>{o}</option>)}
       </select>
@@ -82,9 +82,9 @@ function TextArea({ label, value, onChange, placeholder, rows = 2 }: {
 }) {
   return (
     <label className="block">
-      <span className="text-xs font-medium text-gray-600">{label}</span>
+      <span className="text-xs font-medium text-muted-foreground">{label}</span>
       <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={rows} placeholder={placeholder}
-        className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+        className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" />
     </label>
   );
 }
@@ -94,9 +94,9 @@ function Field({ label, value, onChange, placeholder }: {
 }) {
   return (
     <label className="block">
-      <span className="text-xs font-medium text-gray-600">{label}</span>
+      <span className="text-xs font-medium text-muted-foreground">{label}</span>
       <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
-        className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+        className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" />
     </label>
   );
 }
@@ -129,7 +129,7 @@ export function PhysiotherapyForm() {
   const [frequency, setFrequency] = useState("");
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-gray-900">Physiotherapy Assessment</h3>
+      <h3 className="text-sm font-semibold text-foreground">Physiotherapy Assessment</h3>
       <div className="grid grid-cols-2 gap-3">
         <Field label="Pain score (0-10)" value={painScore} onChange={setPainScore} placeholder="e.g. 6/10" />
         <Field label="Primary site / region" value={site} onChange={setSite} placeholder="e.g. Lumbar spine, Right knee" />
@@ -171,7 +171,7 @@ export function OccupationalTherapyForm() {
   const [treatment, setTreatment] = useState("");
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-gray-900">Occupational Therapy Assessment</h3>
+      <h3 className="text-sm font-semibold text-foreground">Occupational Therapy Assessment</h3>
       <Field label="Barthel Index / FIM score" value={barthel} onChange={setBarthel} placeholder="e.g. 75/100" />
       <Checklist title="Assessment Performed" items={OT_ASSESSMENT} checked={assess.checked} onToggle={assess.toggle} />
       <TextArea label="Treatment goals" value={goals} onChange={setGoals} placeholder="Functional independence goals..." />
@@ -206,7 +206,7 @@ export function PsychologyForm() {
   const [intervention, setIntervention] = useState("");
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-gray-900">Psychology / Counselling Session</h3>
+      <h3 className="text-sm font-semibold text-foreground">Psychology / Counselling Session</h3>
       <div className="grid grid-cols-3 gap-3">
         <Field label="PHQ-9 score" value={phq9} onChange={setPhq9} placeholder="0-27" />
         <Field label="GAD-7 score" value={gad7} onChange={setGad7} placeholder="0-21" />
@@ -245,7 +245,7 @@ export function NutritionForm() {
   const [plan, setPlan] = useState("");
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-gray-900">Nutrition / Dietetics Assessment</h3>
+      <h3 className="text-sm font-semibold text-foreground">Nutrition / Dietetics Assessment</h3>
       <div className="grid grid-cols-3 gap-3">
         <Field label="BMI" value={bmi} onChange={setBmi} placeholder="e.g. 22.5" />
         <Field label="MUAC (cm)" value={muac} onChange={setMuac} placeholder="e.g. 24.0" />
@@ -281,7 +281,7 @@ export function SocialWorkerForm() {
   const [plan, setPlan] = useState("");
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-gray-900">Social Work Assessment</h3>
+      <h3 className="text-sm font-semibold text-foreground">Social Work Assessment</h3>
       <Checklist title="Assessment Performed" items={SOCIAL_WORK_ASSESSMENT} checked={assess.checked} onToggle={assess.toggle} />
       <TextArea label="Key concerns" value={concerns} onChange={setConcerns} placeholder="Social, financial, safety concerns..." />
       <TextArea label="Social work plan" value={plan} onChange={setPlan} placeholder="Referrals, support services, follow-up..." />
@@ -310,7 +310,7 @@ export function SpeechTherapyForm() {
   const [plan, setPlan] = useState("");
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-gray-900">Speech & Language Therapy</h3>
+      <h3 className="text-sm font-semibold text-foreground">Speech & Language Therapy</h3>
       <Dropdown label="Dysphagia grade" value={dysphagia} onChange={setDysphagia}
         options={["None", "Mild", "Moderate", "Severe", "NPO (nil by mouth)"]} />
       <Checklist title="Assessment Performed" items={SLT_ASSESSMENT} checked={assess.checked} onToggle={assess.toggle} />
@@ -343,7 +343,7 @@ export function RadiographerForm() {
   const [notes, setNotes] = useState("");
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-gray-900">Radiographer / Imaging Tech</h3>
+      <h3 className="text-sm font-semibold text-foreground">Radiographer / Imaging Tech</h3>
       <div className="grid grid-cols-2 gap-3">
         <Dropdown label="Modality" value={modality} onChange={setModality}
           options={["X-ray", "CT", "MRI", "Ultrasound", "Fluoroscopy", "Mammography", "Nuclear medicine", "PET-CT"]} />
@@ -376,7 +376,7 @@ export function LabTechForm() {
   const [notes, setNotes] = useState("");
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-gray-900">Laboratory Technologist</h3>
+      <h3 className="text-sm font-semibold text-foreground">Laboratory Technologist</h3>
       <Dropdown label="Test category" value={testType} onChange={setTestType}
         options={["Haematology", "Biochemistry", "Microbiology", "Serology", "Parasitology", "Histopathology", "Cytology", "Blood bank", "Molecular / PCR"]} />
       <Checklist title="Lab Processing Checklist" items={LAB_CHECKS} checked={checks.checked} onToggle={checks.toggle} />
@@ -409,7 +409,7 @@ export function OptometristForm() {
   const [plan, setPlan] = useState("");
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-gray-900">Optometry Assessment</h3>
+      <h3 className="text-sm font-semibold text-foreground">Optometry Assessment</h3>
       <div className="grid grid-cols-4 gap-3">
         <Field label="VA Right" value={vaRight} onChange={setVaRight} placeholder="6/6" />
         <Field label="VA Left" value={vaLeft} onChange={setVaLeft} placeholder="6/6" />
@@ -443,7 +443,7 @@ export function DentalForm() {
   const [plan, setPlan] = useState("");
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-gray-900">Dental Assessment</h3>
+      <h3 className="text-sm font-semibold text-foreground">Dental Assessment</h3>
       <Checklist title="Assessment Performed" items={DENTAL_ASSESSMENT} checked={assess.checked} onToggle={assess.toggle} />
       <Dropdown label="Treatment performed" value={treatment} onChange={setTreatment}
         options={["Examination only", "Scaling & polishing", "Restoration / filling", "Extraction", "Root canal", "Crown / bridge", "Denture", "Emergency treatment", "Referral"]} />
@@ -478,7 +478,7 @@ export function EMTForm() {
   const [transport, setTransport] = useState("");
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-gray-900">EMT / Paramedic Assessment</h3>
+      <h3 className="text-sm font-semibold text-foreground">EMT / Paramedic Assessment</h3>
       <div className="grid grid-cols-2 gap-3">
         <Field label="Mechanism of injury / illness" value={mechanism} onChange={setMechanism} placeholder="e.g. RTA, fall, chest pain" />
         <Field label="GCS score" value={gcs} onChange={setGcs} placeholder="e.g. 15/15" />
@@ -519,7 +519,7 @@ export function CHWForm() {
   const [notes, setNotes] = useState("");
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-gray-900">Community Health Worker Visit</h3>
+      <h3 className="text-sm font-semibold text-foreground">Community Health Worker Visit</h3>
       <Dropdown label="Visit type" value={visitType} onChange={setVisitType}
         options={["Routine household visit", "Defaulter tracing", "Contact tracing", "ANC follow-up", "Postnatal visit", "Under-5 screening", "Growth monitoring", "Health education", "Referral follow-up"]} />
       <Checklist title="Visit Checklist" items={CHW_CHECKS} checked={checks.checked} onToggle={checks.toggle} />
@@ -551,7 +551,7 @@ export function EHOForm() {
   const [findings, setFindings] = useState("");
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-gray-900">Environmental Health Assessment</h3>
+      <h3 className="text-sm font-semibold text-foreground">Environmental Health Assessment</h3>
       <Dropdown label="Site type" value={siteType} onChange={setSiteType}
         options={["Food premises", "Water source", "School", "Market", "Housing", "Workplace", "Abattoir", "Burial site", "Healthcare facility", "Swimming pool"]} />
       <Checklist title="Inspection Checklist" items={EHO_CHECKS} checked={checks.checked} onToggle={checks.toggle} />
@@ -584,7 +584,7 @@ export function RespiratoryTherapistForm() {
   const [plan, setPlan] = useState("");
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-gray-900">Respiratory Therapy</h3>
+      <h3 className="text-sm font-semibold text-foreground">Respiratory Therapy</h3>
       <div className="grid grid-cols-2 gap-3">
         <Field label="SpO2 (%)" value={spo2} onChange={setSpo2} placeholder="e.g. 96" />
         <Field label="FiO2 (%)" value={fio2} onChange={setFio2} placeholder="e.g. 40" />
@@ -606,7 +606,7 @@ export function AudiologistForm() {
   const [plan, setPlan] = useState("");
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-gray-900">Audiology Assessment</h3>
+      <h3 className="text-sm font-semibold text-foreground">Audiology Assessment</h3>
       <div className="grid grid-cols-3 gap-3">
         <Field label="PTA Right (dBHL)" value={ptaRight} onChange={setPtaRight} placeholder="e.g. 25" />
         <Field label="PTA Left (dBHL)" value={ptaLeft} onChange={setPtaLeft} placeholder="e.g. 30" />
@@ -639,7 +639,7 @@ export function PodiatristForm() {
   const [plan, setPlan] = useState("");
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-gray-900">Podiatry Assessment</h3>
+      <h3 className="text-sm font-semibold text-foreground">Podiatry Assessment</h3>
       <Dropdown label="Diabetic foot risk category" value={risk} onChange={setRisk}
         options={["Low risk", "Moderate risk", "High risk", "Active foot disease"]} />
       <Checklist title="Assessment Performed" items={PODIATRY_CHECKS} checked={checks.checked} onToggle={checks.toggle} />
@@ -670,7 +670,7 @@ export function RadiotherapyForm() {
   const [sideEffects, setSideEffects] = useState("");
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-gray-900">Radiotherapy Session</h3>
+      <h3 className="text-sm font-semibold text-foreground">Radiotherapy Session</h3>
       <div className="grid grid-cols-2 gap-3">
         <Field label="Fraction number" value={fractionNum} onChange={setFractionNum} placeholder="e.g. 15" />
         <Field label="Total fractions" value={totalFractions} onChange={setTotalFractions} placeholder="e.g. 30" />

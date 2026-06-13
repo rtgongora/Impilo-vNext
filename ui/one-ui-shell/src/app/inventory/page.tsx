@@ -71,10 +71,10 @@ export default function InventoryPage() {
         subtitle="Supply Plane — stock summary, recent movements, and shortcuts to catalog, stock levels, requisitions, reconciliation, and assets"
       >
         {!facility ? (
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
+          <div className="rounded-xl border border-warning/35 bg-warning-soft p-5 text-sm text-warning-foreground">
             Inventory work needs a facility in scope before counts, stock movement, and requisitions can stay aligned.
             <div className="mt-3">
-              <Link href="/workspace" className="font-medium text-amber-950 underline">
+              <Link href="/workspace" className="font-medium text-warning-foreground underline">
                 Enter Facility Work
               </Link>
             </div>
@@ -84,7 +84,7 @@ export default function InventoryPage() {
             <SupplyPlaneContextBar />
 
             {error ? (
-              <div className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">
+              <div className="flex items-start gap-2 rounded-xl border border-danger/28 bg-danger-soft p-4 text-sm text-danger">
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
                 <div>
                   <p className="font-medium">Could not load inventory data</p>
@@ -93,12 +93,12 @@ export default function InventoryPage() {
               </div>
             ) : null}
 
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div>
-                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Facility in scope</div>
-                  <h2 className="mt-1 text-xl font-semibold text-slate-900">{facility.name}</h2>
-                  <p className="mt-2 max-w-3xl text-sm text-slate-600">
+                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Facility in scope</div>
+                  <h2 className="mt-1 text-xl font-semibold text-foreground">{facility.name}</h2>
+                  <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
                     Dashboard metrics refresh from the facility-scoped inventory API. Use the links below for catalog maintenance,
                     bin-level stock, replenishment, physical counts, and fixed assets.
                   </p>
@@ -107,139 +107,139 @@ export default function InventoryPage() {
             </section>
 
             <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+              <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                   <Warehouse className="h-4 w-4" aria-hidden />
                   Total items
                 </div>
                 <div className="mt-3 flex items-baseline gap-2">
-                  {loading ? <Loader2 className="h-6 w-6 animate-spin text-slate-400" aria-label="Loading" /> : null}
-                  <span className="text-3xl font-semibold text-slate-900">{items.length}</span>
+                  {loading ? <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" aria-label="Loading" /> : null}
+                  <span className="text-3xl font-semibold text-foreground">{items.length}</span>
                 </div>
-                <p className="mt-1 text-sm text-slate-600">Active catalog lines for this facility.</p>
+                <p className="mt-1 text-sm text-muted-foreground">Active catalog lines for this facility.</p>
               </div>
-              <div className="rounded-2xl border border-amber-200/80 bg-amber-50/80 p-4 shadow-sm">
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-amber-800">
+              <div className="rounded-2xl border border-warning/35/80 bg-warning-soft/80 p-4 shadow-sm">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-warning-foreground">
                   <AlertTriangle className="h-4 w-4" aria-hidden />
                   Low stock alerts
                 </div>
                 <div className="mt-3 flex items-baseline gap-2">
                   {loading ? <Loader2 className="h-6 w-6 animate-spin text-amber-600/70" aria-label="Loading" /> : null}
-                  <span className="text-3xl font-semibold text-amber-950">{lowStockItems.length}</span>
+                  <span className="text-3xl font-semibold text-warning-foreground">{lowStockItems.length}</span>
                 </div>
-                <p className="mt-1 text-sm text-amber-900/85">At or below reorder level, or flagged LOW_STOCK.</p>
+                <p className="mt-1 text-sm text-warning-foreground/85">At or below reorder level, or flagged LOW_STOCK.</p>
               </div>
-              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+              <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                   <ClipboardList className="h-4 w-4" aria-hidden />
                   Pending requisitions
                 </div>
                 <div className="mt-3 flex items-baseline gap-2">
-                  {loading ? <Loader2 className="h-6 w-6 animate-spin text-slate-400" aria-label="Loading" /> : null}
-                  <span className="text-3xl font-semibold text-slate-900">{pendingRequisitions.length}</span>
+                  {loading ? <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" aria-label="Loading" /> : null}
+                  <span className="text-3xl font-semibold text-foreground">{pendingRequisitions.length}</span>
                 </div>
-                <p className="mt-1 text-sm text-slate-600">Not yet received or closed in the replenishment pipeline.</p>
+                <p className="mt-1 text-sm text-muted-foreground">Not yet received or closed in the replenishment pipeline.</p>
               </div>
-              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+              <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                   <Layers className="h-4 w-4" aria-hidden />
                   Recent movements
                 </div>
-                <div className="mt-3 text-lg font-semibold text-slate-900">{movements.length}</div>
-                <p className="mt-1 text-sm text-slate-600">Total transfer events loaded for this facility.</p>
+                <div className="mt-3 text-lg font-semibold text-foreground">{movements.length}</div>
+                <p className="mt-1 text-sm text-muted-foreground">Total transfer events loaded for this facility.</p>
               </div>
             </section>
 
-            <section className="rounded-2xl border border-slate-200 bg-slate-50/60 p-5 shadow-sm">
-              <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-slate-600">Quick links</h3>
+            <section className="rounded-2xl border border-border bg-background/60 p-5 shadow-sm">
+              <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground">Quick links</h3>
               <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 <Link
                   href="/inventory/items"
-                  className="inline-flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50"
+                  className="inline-flex items-center justify-between gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground shadow-sm hover:bg-background"
                 >
                   <span className="inline-flex items-center gap-2">
                     <PackageSearch className="h-4 w-4 text-teal-700" aria-hidden />
                     Item catalog
                   </span>
-                  <ArrowRight className="h-4 w-4 text-slate-400" aria-hidden />
+                  <ArrowRight className="h-4 w-4 text-muted-foreground" aria-hidden />
                 </Link>
                 <Link
                   href="/inventory/stock-management"
-                  className="inline-flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50"
+                  className="inline-flex items-center justify-between gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground shadow-sm hover:bg-background"
                 >
                   <span className="inline-flex items-center gap-2">
                     <Warehouse className="h-4 w-4 text-teal-700" aria-hidden />
                     Stock & movements
                   </span>
-                  <ArrowRight className="h-4 w-4 text-slate-400" aria-hidden />
+                  <ArrowRight className="h-4 w-4 text-muted-foreground" aria-hidden />
                 </Link>
                 <Link
                   href="/inventory/requisitions"
-                  className="inline-flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50"
+                  className="inline-flex items-center justify-between gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground shadow-sm hover:bg-background"
                 >
                   <span className="inline-flex items-center gap-2">
                     <Truck className="h-4 w-4 text-teal-700" aria-hidden />
                     Requisitions
                   </span>
-                  <ArrowRight className="h-4 w-4 text-slate-400" aria-hidden />
+                  <ArrowRight className="h-4 w-4 text-muted-foreground" aria-hidden />
                 </Link>
                 <Link
                   href="/inventory/reconciliation"
-                  className="inline-flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50"
+                  className="inline-flex items-center justify-between gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground shadow-sm hover:bg-background"
                 >
                   <span className="inline-flex items-center gap-2">
                     <ClipboardList className="h-4 w-4 text-teal-700" aria-hidden />
                     Reconciliation
                   </span>
-                  <ArrowRight className="h-4 w-4 text-slate-400" aria-hidden />
+                  <ArrowRight className="h-4 w-4 text-muted-foreground" aria-hidden />
                 </Link>
                 <Link
                   href="/operations/assets"
-                  className="inline-flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50"
+                  className="inline-flex items-center justify-between gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground shadow-sm hover:bg-background"
                 >
                   <span className="inline-flex items-center gap-2">
                     <Package className="h-4 w-4 text-teal-700" aria-hidden />
                     Asset registry
                   </span>
-                  <ArrowRight className="h-4 w-4 text-slate-400" aria-hidden />
+                  <ArrowRight className="h-4 w-4 text-muted-foreground" aria-hidden />
                 </Link>
                 <Link
                   href="/inventory/counts"
-                  className="inline-flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50"
+                  className="inline-flex items-center justify-between gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground shadow-sm hover:bg-background"
                 >
                   <span className="inline-flex items-center gap-2">
                     <Pill className="h-4 w-4 text-sky-700" aria-hidden />
                     Legacy counts
                   </span>
-                  <ArrowRight className="h-4 w-4 text-slate-400" aria-hidden />
+                  <ArrowRight className="h-4 w-4 text-muted-foreground" aria-hidden />
                 </Link>
               </div>
             </section>
 
             <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900">Recent stock movements</h3>
-                    <p className="text-sm text-slate-600">Receipts, issues, and transfers (newest first). FEFO picks align with movement history.</p>
+                    <h3 className="text-lg font-semibold text-foreground">Recent stock movements</h3>
+                    <p className="text-sm text-muted-foreground">Receipts, issues, and transfers (newest first). FEFO picks align with movement history.</p>
                   </div>
                   <Link href="/inventory/stock-management" className="text-sm font-medium text-teal-800 hover:text-teal-950">
                     Open stock workspace
                   </Link>
                 </div>
                 {loading ? (
-                  <div className="mt-8 flex items-center justify-center gap-2 py-12 text-sm text-slate-500">
+                  <div className="mt-8 flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
                     <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
                     Loading movements…
                   </div>
                 ) : recentMovements.length === 0 ? (
-                  <div className="mt-6 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-10 text-center text-sm text-slate-500">
+                  <div className="mt-6 rounded-xl border border-dashed border-border bg-background px-4 py-10 text-center text-sm text-muted-foreground">
                     No movements recorded for this facility yet.
                   </div>
                 ) : (
                   <div className="mt-4 overflow-x-auto">
                     <table className="w-full min-w-[640px] text-sm">
-                      <thead className="border-b border-slate-200 bg-slate-50 text-left text-slate-600">
+                      <thead className="border-b border-border bg-background text-left text-muted-foreground">
                         <tr>
                           <th className="px-3 py-2 font-medium">When</th>
                           <th className="px-3 py-2 font-medium">Item</th>
@@ -251,13 +251,13 @@ export default function InventoryPage() {
                       </thead>
                       <tbody>
                         {recentMovements.map((m) => (
-                          <tr key={m.id} className="border-b border-slate-100 last:border-0">
-                            <td className="whitespace-nowrap px-3 py-2 text-slate-600">{formatDate(m.movedAt)}</td>
-                            <td className="px-3 py-2 font-medium text-slate-900">{m.itemName}</td>
-                            <td className="px-3 py-2 text-slate-800">{m.quantity}</td>
-                            <td className="px-3 py-2 text-slate-600">{m.fromLocation}</td>
-                            <td className="px-3 py-2 text-slate-600">{m.toLocation}</td>
-                            <td className="px-3 py-2 text-slate-600">{m.performedBy}</td>
+                          <tr key={m.id} className="border-b border-border last:border-0">
+                            <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">{formatDate(m.movedAt)}</td>
+                            <td className="px-3 py-2 font-medium text-foreground">{m.itemName}</td>
+                            <td className="px-3 py-2 text-foreground">{m.quantity}</td>
+                            <td className="px-3 py-2 text-muted-foreground">{m.fromLocation}</td>
+                            <td className="px-3 py-2 text-muted-foreground">{m.toLocation}</td>
+                            <td className="px-3 py-2 text-muted-foreground">{m.performedBy}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -266,41 +266,41 @@ export default function InventoryPage() {
                 )}
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <h3 className="text-lg font-semibold text-slate-900">Low-stock watchlist</h3>
-                <p className="mt-1 text-sm text-slate-600">Next actions before wards or pharmacy run short.</p>
+              <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                <h3 className="text-lg font-semibold text-foreground">Low-stock watchlist</h3>
+                <p className="mt-1 text-sm text-muted-foreground">Next actions before wards or pharmacy run short.</p>
                 <div className="mt-4 space-y-3">
                   {loading ? (
-                    <div className="flex items-center gap-2 py-8 text-sm text-slate-500">
+                    <div className="flex items-center gap-2 py-8 text-sm text-muted-foreground">
                       <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
                       Loading items…
                     </div>
                   ) : lowStockItems.length === 0 ? (
-                    <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+                    <div className="rounded-xl border border-success/25 bg-success-soft px-4 py-3 text-sm text-primary-hover">
                       No immediate stock pressure for this facility.
                     </div>
                   ) : (
                     lowStockItems.slice(0, 6).map((item) => (
                       <div
                         key={item.id}
-                        className="flex flex-col gap-2 rounded-xl border border-slate-200 px-3 py-3 sm:flex-row sm:items-center sm:justify-between"
+                        className="flex flex-col gap-2 rounded-xl border border-border px-3 py-3 sm:flex-row sm:items-center sm:justify-between"
                       >
                         <div>
-                          <div className="text-sm font-medium text-slate-900">{item.productName}</div>
-                          <div className="text-xs text-slate-500">
+                          <div className="text-sm font-medium text-foreground">{item.productName}</div>
+                          <div className="text-xs text-muted-foreground">
                             {item.productCode} • {item.category}
                           </div>
                         </div>
                         <div className="flex gap-6 text-xs sm:text-sm">
                           <div>
-                            <div className="text-slate-500">On hand</div>
-                            <div className="font-semibold text-slate-900">
+                            <div className="text-muted-foreground">On hand</div>
+                            <div className="font-semibold text-foreground">
                               {item.quantityOnHand} {item.unit}
                             </div>
                           </div>
                           <div>
-                            <div className="text-slate-500">Reorder</div>
-                            <div className="font-semibold text-slate-900">
+                            <div className="text-muted-foreground">Reorder</div>
+                            <div className="font-semibold text-foreground">
                               {item.reorderLevel} {item.unit}
                             </div>
                           </div>
@@ -312,13 +312,13 @@ export default function InventoryPage() {
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Link
                     href="/pharmacy/stock?source=inventory"
-                    className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-800 hover:bg-slate-50"
+                    className="rounded-lg border border-border px-3 py-2 text-xs font-medium text-foreground hover:bg-background"
                   >
                     Pharmacy stock
                   </Link>
                   <Link
                     href="/marketplace/orders?source=inventory"
-                    className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-800 hover:bg-slate-50"
+                    className="rounded-lg border border-border px-3 py-2 text-xs font-medium text-foreground hover:bg-background"
                   >
                     Order through marketplace
                   </Link>

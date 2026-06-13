@@ -29,15 +29,15 @@ export function ShellTaskManagerModal() {
         aria-label="Close task manager"
         onClick={() => setTaskManagerOpen(false)}
       />
-      <div className="relative flex max-h-[70vh] w-[min(720px,100vw-1rem)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-950">
-        <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800">
+      <div className="relative flex max-h-[70vh] w-[min(720px,100vw-1rem)] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl dark:border-border dark:bg-card">
+        <div className="flex items-center justify-between border-b border-border px-4 py-3 dark:border-border">
           <div>
-            <p className="text-sm font-semibold text-slate-900 dark:text-slate-50">Task manager</p>
-            <p className="text-xs text-slate-500">Switch, minimize, or close open workspaces</p>
+            <p className="text-sm font-semibold text-foreground dark:text-foreground">Task manager</p>
+            <p className="text-xs text-muted-foreground">Switch, minimize, or close open workspaces</p>
           </div>
           <button
             type="button"
-            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900"
+            className="rounded-lg p-2 text-muted-foreground hover:bg-neutral-100 dark:hover:bg-neutral-900"
             onClick={() => setTaskManagerOpen(false)}
             aria-label="Close"
           >
@@ -46,14 +46,14 @@ export function ShellTaskManagerModal() {
         </div>
         <ul className="min-h-0 flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
           {ordered.length === 0 ? (
-            <li className="px-4 py-10 text-center text-sm text-slate-500">No open tasks yet — navigate to a module.</li>
+            <li className="px-4 py-10 text-center text-sm text-muted-foreground">No open tasks yet — navigate to a module.</li>
           ) : (
             ordered.map((task) => (
               <li key={task.id} className="flex flex-wrap items-center gap-2 px-4 py-3">
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-50">{task.title}</p>
-                  <p className="truncate text-xs text-slate-500">{task.route}</p>
-                  <p className="text-[10px] uppercase tracking-wide text-slate-400">
+                  <p className="truncate text-sm font-medium text-foreground dark:text-foreground">{task.title}</p>
+                  <p className="truncate text-xs text-muted-foreground">{task.route}</p>
+                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
                     {task.taskType} · {task.status}
                     {task.id === activeTaskId ? " · active" : ""}
                   </p>
@@ -61,7 +61,7 @@ export function ShellTaskManagerModal() {
                 <div className="flex shrink-0 gap-1">
                   <button
                     type="button"
-                    className="rounded-md border border-slate-200 px-2 py-1 text-xs font-medium hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900"
+                    className="rounded-md border border-border px-2 py-1 text-xs font-medium hover:bg-background dark:border-border dark:hover:bg-neutral-900"
                     onClick={() => {
                       restoreTask(task.id);
                       setActiveTask(task.id);
@@ -73,14 +73,14 @@ export function ShellTaskManagerModal() {
                   </button>
                   <button
                     type="button"
-                    className="rounded-md border border-slate-200 px-2 py-1 text-xs font-medium hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900"
+                    className="rounded-md border border-border px-2 py-1 text-xs font-medium hover:bg-background dark:border-border dark:hover:bg-neutral-900"
                     onClick={() => minimizeTask(task.id)}
                   >
                     Minimize
                   </button>
                   <button
                     type="button"
-                    className="rounded-md border border-red-200 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950/40"
+                    className="rounded-md border border-danger/28 px-2 py-1 text-xs font-medium text-danger hover:bg-danger-soft dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950/40"
                     onClick={() => closeTask(task.id)}
                   >
                     Close
@@ -90,10 +90,10 @@ export function ShellTaskManagerModal() {
             ))
           )}
         </ul>
-        <div className="border-t border-slate-100 px-4 py-2 text-right dark:border-slate-800">
+        <div className="border-t border-border px-4 py-2 text-right dark:border-border">
           <button
             type="button"
-            className="text-xs font-medium text-impilo-600 hover:underline"
+            className="text-xs font-medium text-primary hover:underline"
             onClick={() => {
               router.push("/shell/task-manager");
               setTaskManagerOpen(false);

@@ -46,7 +46,7 @@ export function FloatingClinicalAssist() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="fixed bottom-5 right-5 z-[60] flex h-12 w-12 items-center justify-center rounded-full border border-impilo-200 bg-white text-impilo-700 shadow-lg hover:bg-impilo-50"
+        className="fixed bottom-5 right-5 z-[60] flex h-12 w-12 items-center justify-center rounded-full border border-primary/25 bg-card text-primary-hover shadow-lg hover:bg-primary-soft"
         title="Nompilo — contextual help"
         aria-label="Open Nompilo helpdesk"
       >
@@ -56,18 +56,18 @@ export function FloatingClinicalAssist() {
       {open && (
         <>
           <button type="button" className="fixed inset-0 z-[59] bg-black/20" aria-label="Close helpdesk" onClick={() => setOpen(false)} />
-          <div className="fixed bottom-20 right-5 z-[60] w-[min(100vw-2.5rem,22rem)] rounded-xl border border-gray-200 bg-white p-4 shadow-xl">
+          <div className="fixed bottom-20 right-5 z-[60] w-[min(100vw-2.5rem,22rem)] rounded-xl border border-border bg-card p-4 shadow-xl">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <p className="text-xs font-semibold text-impilo-700">Nompilo</p>
-                <p className="text-[11px] text-gray-500">Contextual help — no patient identifiers are sent in links.</p>
+                <p className="text-xs font-semibold text-primary-hover">Nompilo</p>
+                <p className="text-[11px] text-muted-foreground">Contextual help — no patient identifiers are sent in links.</p>
               </div>
-              <button type="button" className="text-gray-400 hover:text-gray-600" onClick={() => setOpen(false)} aria-label="Close">
+              <button type="button" className="text-muted-foreground hover:text-muted-foreground" onClick={() => setOpen(false)} aria-label="Close">
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            <p className="mt-2 text-[10px] text-gray-400">
+            <p className="mt-2 text-[10px] text-muted-foreground">
               If Nompilo or AI guidance is unavailable, use System Support — patient identifiers are never appended to these links.
             </p>
 
@@ -75,7 +75,7 @@ export function FloatingClinicalAssist() {
               <Link
                 href={askHref}
                 onClick={() => setOpen(false)}
-                className="flex items-center justify-between rounded-lg border border-impilo-100 bg-impilo-50 px-3 py-2 text-xs font-medium text-impilo-800 hover:bg-impilo-100"
+                className="flex items-center justify-between rounded-lg border border-primary/20 bg-primary-soft px-3 py-2 text-xs font-medium text-impilo-800 hover:bg-primary-soft"
               >
                 <span className="inline-flex items-center gap-2">
                   <Headphones className="h-4 w-4" />
@@ -86,14 +86,14 @@ export function FloatingClinicalAssist() {
               <Link
                 href="/communication"
                 onClick={() => setOpen(false)}
-                className="block rounded-lg border border-gray-100 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50"
+                className="block rounded-lg border border-border px-3 py-2 text-xs text-foreground hover:bg-background"
               >
                 Open Comms Hub
               </Link>
               <Link
                 href="/support/tickets"
                 onClick={() => setOpen(false)}
-                className="block rounded-lg border border-gray-100 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50"
+                className="block rounded-lg border border-border px-3 py-2 text-xs text-foreground hover:bg-background"
               >
                 Escalate to system support
               </Link>

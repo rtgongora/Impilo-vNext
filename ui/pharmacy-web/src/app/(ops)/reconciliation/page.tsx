@@ -9,20 +9,20 @@ import {
 
 const STATUS_BADGE: Record<ReconcileStockStatus, string> = {
   PENDING: "badge bg-yellow-100 text-yellow-800",
-  RESOLVED: "badge bg-emerald-100 text-emerald-800",
+  RESOLVED: "badge bg-emerald-100 text-primary-hover",
   EXPIRED: "badge bg-neutral-100 text-neutral-500",
 };
 
 const CONFIDENCE_COLOR = (score: number): string => {
-  if (score >= 0.8) return "text-emerald-700 bg-emerald-50";
+  if (score >= 0.8) return "text-primary-hover bg-success-soft";
   if (score >= 0.5) return "text-yellow-700 bg-yellow-50";
-  return "text-red-700 bg-red-50";
+  return "text-danger bg-danger-soft";
 };
 
 const VARIANCE_COLOR = (variance: number): string => {
-  if (variance === 0) return "text-emerald-700";
+  if (variance === 0) return "text-primary-hover";
   if (Math.abs(variance) <= 5) return "text-yellow-700";
-  return "text-red-700";
+  return "text-danger";
 };
 
 export default function ReconciliationPage() {
@@ -120,17 +120,17 @@ export default function ReconciliationPage() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-red-800">
           {error}
         </div>
       )}
 
       {successMessage && (
-        <div className="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-sm text-emerald-800">
+        <div className="mb-4 p-3 rounded-lg bg-success-soft border border-success/25 text-sm text-primary-hover">
           {successMessage}
           <button
             onClick={() => setSuccessMessage(null)}
-            className="ml-2 text-emerald-600 hover:text-emerald-800 font-medium"
+            className="ml-2 text-primary hover:text-primary-hover font-medium"
           >
             Dismiss
           </button>
@@ -257,7 +257,7 @@ export default function ReconciliationPage() {
                   {item.status === "PENDING" && (
                     <button
                       onClick={() => setResolvingId(item.id)}
-                      className="text-xs text-emerald-600 hover:text-emerald-800 font-medium"
+                      className="text-xs text-primary hover:text-primary-hover font-medium"
                     >
                       Resolve
                     </button>

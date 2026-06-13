@@ -39,7 +39,7 @@ export default function InpatientAdmissionDetailPage() {
       {admissionId ? <AdmissionOrchestrationRail admissionRef={admissionId} /> : null}
 
       {isLoading ? (
-        <div className="flex items-center py-12 text-slate-500">
+        <div className="flex items-center py-12 text-muted-foreground">
           <Loader2 className="mr-2 h-5 w-5 animate-spin" />
           Loading episode…
         </div>
@@ -53,35 +53,35 @@ export default function InpatientAdmissionDetailPage() {
       ) : (
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="rounded-xl border border-slate-200 p-4">
-              <h3 className="text-xs font-semibold uppercase text-slate-400">Episode</h3>
+            <div className="rounded-xl border border-border p-4">
+              <h3 className="text-xs font-semibold uppercase text-muted-foreground">Episode</h3>
               <dl className="mt-2 space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <dt className="text-slate-500">Status</dt>
+                  <dt className="text-muted-foreground">Status</dt>
                   <dd>{String(attrs.status ?? "ACTIVE")}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-slate-500">Ward</dt>
+                  <dt className="text-muted-foreground">Ward</dt>
                   <dd>{String(attrs.wardName ?? attrs.ward ?? "—")}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-slate-500">Bed</dt>
+                  <dt className="text-muted-foreground">Bed</dt>
                   <dd>{String(attrs.bedNumber ?? attrs.bed ?? "—")}</dd>
                 </div>
               </dl>
             </div>
-            <div className="rounded-xl border border-slate-200 p-4">
-              <h3 className="text-xs font-semibold uppercase text-slate-400">Quick actions</h3>
+            <div className="rounded-xl border border-border p-4">
+              <h3 className="text-xs font-semibold uppercase text-muted-foreground">Quick actions</h3>
               <div className="mt-3 flex flex-wrap gap-2">
-                <Link href="/clinical/inpatient/rounds" className="rounded-lg border px-3 py-1.5 text-sm hover:bg-slate-50">
+                <Link href="/clinical/inpatient/rounds" className="rounded-lg border px-3 py-1.5 text-sm hover:bg-background">
                   Ward round
                 </Link>
-                <Link href="/pharmacy/prescriptions" className="rounded-lg border px-3 py-1.5 text-sm hover:bg-slate-50">
+                <Link href="/pharmacy/prescriptions" className="rounded-lg border px-3 py-1.5 text-sm hover:bg-background">
                   Orders / Rx
                 </Link>
                 <Link
                   href={`/clinical/inpatient/discharge/${admissionId}`}
-                  className="rounded-lg border border-impilo-200 bg-impilo-50 px-3 py-1.5 text-sm text-impilo-700"
+                  className="rounded-lg border border-primary/25 bg-primary-soft px-3 py-1.5 text-sm text-primary-hover"
                 >
                   Discharge
                 </Link>
@@ -89,16 +89,16 @@ export default function InpatientAdmissionDetailPage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-slate-200 p-4">
-            <h3 className="text-sm font-semibold text-slate-900">Ward rounds</h3>
+          <div className="rounded-xl border border-border p-4">
+            <h3 className="text-sm font-semibold text-foreground">Ward rounds</h3>
             {roundsQuery.isLoading ? (
-              <p className="mt-2 text-sm text-slate-500">Loading rounds…</p>
+              <p className="mt-2 text-sm text-muted-foreground">Loading rounds…</p>
             ) : (
-              <p className="mt-2 text-sm text-slate-600">
+              <p className="mt-2 text-sm text-muted-foreground">
                 {roundsQuery.data ? "Round history available via BFF." : "No ward rounds recorded yet."}
               </p>
             )}
-            <Link href="/clinical/inpatient/rounds" className="mt-2 inline-block text-sm text-impilo-600 hover:underline">
+            <Link href="/clinical/inpatient/rounds" className="mt-2 inline-block text-sm text-primary hover:underline">
               Open medical rounds workspace →
             </Link>
           </div>

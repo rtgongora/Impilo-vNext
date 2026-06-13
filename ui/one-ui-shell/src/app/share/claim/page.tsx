@@ -132,7 +132,7 @@ export default function ShareClaimPage() {
                 ? "bg-blue-600 text-white border-blue-600"
                 : stepOrder.indexOf(s) < stepOrder.indexOf(step)
                 ? "bg-green-50 text-green-700 border-green-200"
-                : "bg-gray-50 text-gray-400 border-gray-200"
+                : "bg-background text-muted-foreground border-border"
             }`}
           >
             {stepLabels[s]}
@@ -141,20 +141,20 @@ export default function ShareClaimPage() {
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-lg border border-danger/28 bg-danger-soft px-4 py-3 text-sm text-danger">
           {error}
         </div>
       )}
 
       {step === "validate" && (
-        <form onSubmit={handleValidate} className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
+        <form onSubmit={handleValidate} className="bg-card border border-border rounded-lg p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Share token</label>
+            <label className="block text-sm font-medium text-foreground mb-1">Share token</label>
             <input
               value={shareToken}
               onChange={(e) => setShareToken(e.target.value)}
               placeholder="Paste the share token from your notification"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>
@@ -169,17 +169,17 @@ export default function ShareClaimPage() {
       )}
 
       {step === "otp" && (
-        <form onSubmit={handleOtp} className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
-          <p className="text-sm text-gray-600">
+        <form onSubmit={handleOtp} className="bg-card border border-border rounded-lg p-6 space-y-4">
+          <p className="text-sm text-muted-foreground">
             An OTP has been sent to the contact details associated with this share. Enter it below.
           </p>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">One-time passcode</label>
+            <label className="block text-sm font-medium text-foreground mb-1">One-time passcode</label>
             <input
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
               placeholder="6-digit code"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
               maxLength={8}
             />
@@ -195,16 +195,16 @@ export default function ShareClaimPage() {
       )}
 
       {step === "step-up" && (
-        <form onSubmit={handleStepUp} className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
-          <p className="text-sm text-gray-600">
+        <form onSubmit={handleStepUp} className="bg-card border border-border rounded-lg p-6 space-y-4">
+          <p className="text-sm text-muted-foreground">
             Step-up verification is required for this share. Provide your secondary credential.
           </p>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Verification type</label>
+            <label className="block text-sm font-medium text-foreground mb-1">Verification type</label>
             <select
               value={stepUpType}
               onChange={(e) => setStepUpType(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="TOTP">TOTP (authenticator app)</option>
               <option value="SMS_OTP">SMS OTP</option>
@@ -212,12 +212,12 @@ export default function ShareClaimPage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Code / token</label>
+            <label className="block text-sm font-medium text-foreground mb-1">Code / token</label>
             <input
               value={stepUpCode}
               onChange={(e) => setStepUpCode(e.target.value)}
               placeholder="Enter your code"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>
@@ -232,28 +232,28 @@ export default function ShareClaimPage() {
       )}
 
       {step === "identity" && (
-        <form onSubmit={handleIdentity} className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
-          <p className="text-sm text-gray-600">
+        <form onSubmit={handleIdentity} className="bg-card border border-border rounded-lg p-6 space-y-4">
+          <p className="text-sm text-muted-foreground">
             Optionally select a collaboration council for this session.
           </p>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tenant ID <span className="text-gray-400">(optional — filter councils)</span>
+            <label className="block text-sm font-medium text-foreground mb-1">
+              Tenant ID <span className="text-muted-foreground">(optional — filter councils)</span>
             </label>
             <input
               value={tenantId}
               onChange={(e) => setTenantId(e.target.value)}
               placeholder="e.g. ZWE"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           {councilsQuery.data?.data && councilsQuery.data.data.length > 0 && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Collaboration council</label>
+              <label className="block text-sm font-medium text-foreground mb-1">Collaboration council</label>
               <select
                 value={councilId}
                 onChange={(e) => setCouncilId(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">— None —</option>
                 {councilsQuery.data.data.map((c) => (
@@ -277,12 +277,12 @@ export default function ShareClaimPage() {
       {step === "workspace" && (
         <div className="space-y-4">
           {workspaceQuery.isLoading && (
-            <div className="bg-white border border-gray-200 rounded-lg p-6 text-sm text-gray-500">
+            <div className="bg-card border border-border rounded-lg p-6 text-sm text-muted-foreground">
               Loading workspace…
             </div>
           )}
           {workspaceQuery.isError && (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="rounded-lg border border-danger/28 bg-danger-soft px-4 py-3 text-sm text-danger">
               Failed to load workspace. Please refresh.
             </div>
           )}
@@ -328,16 +328,16 @@ function WorkspaceView({
 }: WorkspaceViewProps) {
   return (
     <div className="space-y-4">
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h2 className="text-base font-semibold text-gray-900 mb-1">{workspace.patientName}</h2>
-        <p className="text-xs text-gray-500">Health ID: {workspace.healthId}</p>
+      <div className="bg-card border border-border rounded-lg p-6">
+        <h2 className="text-base font-semibold text-foreground mb-1">{workspace.patientName}</h2>
+        <p className="text-xs text-muted-foreground">Health ID: {workspace.healthId}</p>
 
         {workspace.activeShares.length > 0 && (
           <div className="mt-4">
-            <h3 className="text-sm font-medium text-gray-700 mb-2">Active shares</h3>
+            <h3 className="text-sm font-medium text-foreground mb-2">Active shares</h3>
             <ul className="space-y-2">
               {workspace.activeShares.map((share) => (
-                <li key={share.id} className="flex items-center justify-between text-xs text-gray-600 bg-gray-50 rounded px-3 py-2">
+                <li key={share.id} className="flex items-center justify-between text-xs text-muted-foreground bg-background rounded px-3 py-2">
                   <span>{share.purpose}</span>
                   <span
                     className={`px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -345,7 +345,7 @@ function WorkspaceView({
                         ? "bg-green-100 text-green-700"
                         : share.status === "PENDING"
                         ? "bg-yellow-100 text-yellow-700"
-                        : "bg-gray-100 text-gray-500"
+                        : "bg-neutral-100 text-muted-foreground"
                     }`}
                   >
                     {share.status}
@@ -358,33 +358,33 @@ function WorkspaceView({
 
         {workspace.recentContributions.length > 0 && (
           <div className="mt-4">
-            <h3 className="text-sm font-medium text-gray-700 mb-2">Recent contributions</h3>
+            <h3 className="text-sm font-medium text-foreground mb-2">Recent contributions</h3>
             <ContributionList contributions={workspace.recentContributions} />
           </div>
         )}
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h3 className="text-sm font-semibold text-gray-800 mb-3">Add contribution</h3>
+      <div className="bg-card border border-border rounded-lg p-6">
+        <h3 className="text-sm font-semibold text-foreground mb-3">Add contribution</h3>
         <form onSubmit={onSubmitContribution} className="space-y-3">
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Contribution type</label>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Contribution type</label>
             <input
               value={contributionType}
               onChange={(e) => onContributionTypeChange(e.target.value)}
               placeholder="e.g. OBSERVATION, LAB_RESULT"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Content summary</label>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Content summary</label>
             <textarea
               value={contributionContent}
               onChange={(e) => onContributionContentChange(e.target.value)}
               rows={3}
               placeholder="Describe the contributed data…"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               required
             />
           </div>
@@ -405,11 +405,11 @@ function ContributionList({ contributions }: { contributions: ShareContribution[
   return (
     <ul className="space-y-2">
       {contributions.map((c) => (
-        <li key={c.id} className="text-xs text-gray-600 bg-gray-50 rounded px-3 py-2">
+        <li key={c.id} className="text-xs text-muted-foreground bg-background rounded px-3 py-2">
           <span className="font-medium">{c.type}</span>
           {" — "}
           {c.contentSummary}
-          <span className="ml-2 text-gray-400">{c.contributorName}</span>
+          <span className="ml-2 text-muted-foreground">{c.contributorName}</span>
         </li>
       ))}
     </ul>

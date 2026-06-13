@@ -40,22 +40,22 @@ const EVENT_TYPE_CONFIG: Record<
   { color: string; bgColor: string; borderColor: string; icon: React.ElementType }
 > = {
   ENCOUNTER: {
-    color: "text-impilo-600",
+    color: "text-primary",
     bgColor: "bg-blue-100",
     borderColor: "border-impilo-400",
     icon: Stethoscope },
   VITALS: {
-    color: "text-red-700",
+    color: "text-danger",
     bgColor: "bg-red-100",
     borderColor: "border-red-400",
     icon: HeartPulse },
   NOTE: {
-    color: "text-indigo-700",
+    color: "text-primary-hover",
     bgColor: "bg-indigo-100",
     borderColor: "border-indigo-400",
     icon: FileText },
   ORDER: {
-    color: "text-purple-700",
+    color: "text-warning-foreground",
     bgColor: "bg-purple-100",
     borderColor: "border-purple-400",
     icon: ClipboardList },
@@ -81,8 +81,8 @@ const EVENT_TYPE_CONFIG: Record<
     icon: Syringe } };
 
 const DEFAULT_CONFIG = {
-  color: "text-gray-700",
-  bgColor: "bg-gray-100",
+  color: "text-foreground",
+  bgColor: "bg-neutral-100",
   borderColor: "border-gray-400",
   icon: Clock };
 
@@ -124,42 +124,42 @@ export default function TimelinePage() {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading timeline...</span>
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading timeline...</span>
           </div>
         ) : (
           <div className="space-y-6">
-            <div className="rounded-3xl border border-slate-200 bg-[linear-gradient(135deg,#f8fbff_0%,#eef6ff_45%,#fffaf5_100%)] p-5 shadow-sm">
+            <div className="rounded-3xl border border-border bg-[linear-gradient(135deg,#f8fbff_0%,#eef6ff_45%,#fffaf5_100%)] p-5 shadow-sm">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="space-y-2">
-                  <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-xs font-medium text-slate-600">
-                    <ArrowRightLeft className="h-3.5 w-3.5 text-impilo-500" />
+                  <div className="inline-flex items-center gap-2 rounded-full bg-card/80 px-3 py-1 text-xs font-medium text-muted-foreground">
+                    <ArrowRightLeft className="h-3.5 w-3.5 text-primary" />
                     Coordination timeline
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900">Referral and teleconsult movement stays visible in the timeline</h3>
-                    <p className="mt-1 max-w-2xl text-sm text-slate-600">
+                    <h3 className="text-lg font-semibold text-foreground">Referral and teleconsult movement stays visible in the timeline</h3>
+                    <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
                       The clinical timeline now sits beside live coordination counts so chart review still shows where consult loops are active, returned, or waiting on the current facility.
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2 pt-1">
                     <Link
                       href={`/ehr/${patientId}/consults?tab=referrals`}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800"
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
                     >
                       <ArrowRightLeft className="h-4 w-4" />
                       Consults
                     </Link>
                     <Link
                       href={`/ehr/${patientId}/consults?tab=teleconsults`}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-background"
                     >
                       <Video className="h-4 w-4" />
                       Teleconsults
                     </Link>
                     <Link
                       href={`/ehr/${patientId}/notes`}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-background"
                     >
                       <FileText className="h-4 w-4" />
                       Notes Evidence
@@ -168,25 +168,25 @@ export default function TimelinePage() {
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2 xl:w-[28rem]">
-                  <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
-                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Referral events</p>
+                  <div className="rounded-2xl border border-white/70 bg-card/80 p-4">
+                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Referral events</p>
                     <p className="mt-2 text-2xl font-semibold text-orange-700">{coordinationPulse.referralEvents}</p>
-                    <p className="mt-1 text-xs text-slate-500">Referral milestones already represented in the timeline.</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Referral milestones already represented in the timeline.</p>
                   </div>
-                  <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
-                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Receiving here</p>
-                    <p className="mt-2 text-2xl font-semibold text-impilo-600">{coordinationPulse.receivingHere}</p>
-                    <p className="mt-1 text-xs text-slate-500">Open handoffs where this facility is the receiver.</p>
+                  <div className="rounded-2xl border border-white/70 bg-card/80 p-4">
+                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Receiving here</p>
+                    <p className="mt-2 text-2xl font-semibold text-primary">{coordinationPulse.receivingHere}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Open handoffs where this facility is the receiver.</p>
                   </div>
-                  <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
-                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Teleconsult activity</p>
-                    <p className="mt-2 text-2xl font-semibold text-emerald-700">{coordinationPulse.teleconsultActivity}</p>
-                    <p className="mt-1 text-xs text-slate-500">Scheduled or live virtual consult sessions tied to the patient.</p>
+                  <div className="rounded-2xl border border-white/70 bg-card/80 p-4">
+                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Teleconsult activity</p>
+                    <p className="mt-2 text-2xl font-semibold text-primary-hover">{coordinationPulse.teleconsultActivity}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Scheduled or live virtual consult sessions tied to the patient.</p>
                   </div>
-                  <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
-                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Returned guidance</p>
-                    <p className="mt-2 text-2xl font-semibold text-indigo-700">{coordinationPulse.returnedGuidance}</p>
-                    <p className="mt-1 text-xs text-slate-500">Consultation notes that include structured loop updates.</p>
+                  <div className="rounded-2xl border border-white/70 bg-card/80 p-4">
+                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Returned guidance</p>
+                    <p className="mt-2 text-2xl font-semibold text-primary-hover">{coordinationPulse.returnedGuidance}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Consultation notes that include structured loop updates.</p>
                   </div>
                 </div>
               </div>
@@ -195,20 +195,20 @@ export default function TimelinePage() {
             {/* Header */}
             <div className="flex items-center gap-2">
               <Clock className="w-5 h-5 text-impilo-400" />
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-lg font-semibold text-foreground">
                 Timeline ({entries.length} events)
               </h2>
             </div>
 
             {entries.length === 0 ? (
-              <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-                <Clock className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-400 text-sm">No timeline entries yet</p>
+              <div className="bg-card rounded-lg border border-border p-12 text-center">
+                <Clock className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                <p className="text-muted-foreground text-sm">No timeline entries yet</p>
               </div>
             ) : (
               <div className="relative">
                 {/* Vertical timeline line */}
-                <div className="absolute left-[19px] top-0 bottom-0 w-0.5 bg-gray-200" />
+                <div className="absolute left-[19px] top-0 bottom-0 w-0.5 bg-neutral-100" />
 
                 <div className="space-y-6">
                   {entries.map((entry) => {
@@ -226,7 +226,7 @@ export default function TimelinePage() {
                         </div>
 
                         {/* Timeline card */}
-                        <div className="flex-1 bg-white rounded-lg border border-gray-200 p-4 hover:shadow-sm transition-shadow">
+                        <div className="flex-1 bg-card rounded-lg border border-border p-4 hover:shadow-sm transition-shadow">
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
@@ -235,20 +235,20 @@ export default function TimelinePage() {
                                 >
                                   {a.eventType}
                                 </span>
-                                <span className="text-sm font-semibold text-gray-900 truncate">
+                                <span className="text-sm font-semibold text-foreground truncate">
                                   {a.title}
                                 </span>
                               </div>
                               {a.description && (
-                                <p className="text-sm text-gray-600 mt-1">{a.description}</p>
+                                <p className="text-sm text-muted-foreground mt-1">{a.description}</p>
                               )}
                               {a.actorName && (
-                                <p className="text-xs text-gray-500 mt-2">
+                                <p className="text-xs text-muted-foreground mt-2">
                                   By: <span className="font-medium">{a.actorName}</span>
                                 </p>
                               )}
                             </div>
-                            <span className="text-xs text-gray-400 whitespace-nowrap flex-shrink-0">
+                            <span className="text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">
                               {new Date(a.occurredAt).toLocaleString()}
                             </span>
                           </div>

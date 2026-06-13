@@ -90,9 +90,9 @@ export default function ProviderActivatePage() {
         <div className="max-w-xl mx-auto space-y-4">
           <ProviderRoleActivationRail compact returnTo={returnTo} />
           {/* Doctrine banner */}
-          <div className="mb-6 rounded-lg border border-impilo-200 bg-impilo-50 p-4 text-sm text-impilo-800">
+          <div className="mb-6 rounded-lg border border-primary/25 bg-primary-soft p-4 text-sm text-impilo-800">
             <div className="flex items-center gap-2 mb-1">
-              <ShieldCheck className="h-4 w-4 text-impilo-500" />
+              <ShieldCheck className="h-4 w-4 text-primary" />
               <strong>Provider Role Activation</strong>
             </div>
             <p>
@@ -102,25 +102,25 @@ export default function ProviderActivatePage() {
           </div>
 
           {loading && (
-            <div className="flex items-center justify-center py-12 text-gray-500">
+            <div className="flex items-center justify-center py-12 text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading provider registrations...
             </div>
           )}
 
           {error && (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+            <div className="rounded-lg border border-danger/28 bg-danger-soft p-4 text-sm text-red-800">
               <AlertTriangle className="h-4 w-4 inline mr-1" /> {error}
             </div>
           )}
 
           {!loading && !error && providers.length === 0 && (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+            <div className="rounded-lg border border-warning/35 bg-warning-soft p-4 text-sm text-warning-foreground">
               <p className="font-medium mb-1">No active Provider IDs found</p>
               <p>
                 Your Health ID is not linked to any active provider registration.
                 Contact your facility administrator or the Health Professions Authority if you believe this is an error.
               </p>
-              <button onClick={handleSkip} className="mt-3 text-xs underline text-amber-700">
+              <button onClick={handleSkip} className="mt-3 text-xs underline text-warning-foreground">
                 Continue as non-provider →
               </button>
             </div>
@@ -132,28 +132,28 @@ export default function ProviderActivatePage() {
                 <button
                   key={p.providerId}
                   onClick={() => handleActivate(p)}
-                  className="w-full text-left rounded-lg border border-gray-200 bg-white p-4 hover:border-impilo-400 hover:ring-1 hover:ring-impilo-200 transition-all"
+                  className="w-full text-left rounded-lg border border-border bg-card p-4 hover:border-impilo-400 hover:ring-1 hover:ring-impilo-200 transition-all"
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-gray-900">{p.displayName}</p>
-                      <p className="text-sm text-gray-600">{p.cadre} — {p.registrationNumber}</p>
+                      <p className="font-medium text-foreground">{p.displayName}</p>
+                      <p className="text-sm text-muted-foreground">{p.cadre} — {p.registrationNumber}</p>
                       {p.licensureExpiry && (
-                        <p className="text-xs text-gray-400 mt-1">Licence valid until {p.licensureExpiry}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Licence valid until {p.licensureExpiry}</p>
                       )}
                     </div>
                     <ShieldCheck className="h-5 w-5 text-green-500" />
                   </div>
                 </button>
               ))}
-              <button onClick={handleSkip} className="block mx-auto mt-4 text-xs text-gray-400 underline">
+              <button onClick={handleSkip} className="block mx-auto mt-4 text-xs text-muted-foreground underline">
                 Skip — continue without provider role
               </button>
             </div>
           )}
 
           {activating && (
-            <div className="flex items-center justify-center py-12 text-impilo-500">
+            <div className="flex items-center justify-center py-12 text-primary">
               <Loader2 className="h-5 w-5 animate-spin mr-2" /> Activating provider context...
             </div>
           )}

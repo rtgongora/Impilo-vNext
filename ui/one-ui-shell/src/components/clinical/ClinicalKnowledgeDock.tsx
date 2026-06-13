@@ -66,20 +66,20 @@ export function ClinicalKnowledgeDock() {
         className="fixed inset-0 z-[60] bg-black/20 lg:bg-transparent"
         onClick={closeDock}
       />
-      <aside className="fixed inset-y-0 right-0 z-[70] flex w-full max-w-md flex-col border-l border-gray-200 bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b border-gray-100 px-3 py-2">
-          <div className="flex gap-1 rounded-lg bg-gray-100 p-0.5 text-xs">
+      <aside className="fixed inset-y-0 right-0 z-[70] flex w-full max-w-md flex-col border-l border-border bg-card shadow-xl">
+        <div className="flex items-center justify-between border-b border-border px-3 py-2">
+          <div className="flex gap-1 rounded-lg bg-neutral-100 p-0.5 text-xs">
             <button
               type="button"
               onClick={() => openDock("pathways")}
-              className={`rounded-md px-2 py-1 ${dock.tab === "pathways" ? "bg-white shadow-sm font-medium" : "text-gray-600"}`}
+              className={`rounded-md px-2 py-1 ${dock.tab === "pathways" ? "bg-card shadow-sm font-medium" : "text-muted-foreground"}`}
             >
               Pathways
             </button>
             <button
               type="button"
               onClick={() => openDock("prescribing")}
-              className={`rounded-md px-2 py-1 ${dock.tab === "prescribing" ? "bg-white shadow-sm font-medium" : "text-gray-600"}`}
+              className={`rounded-md px-2 py-1 ${dock.tab === "prescribing" ? "bg-card shadow-sm font-medium" : "text-muted-foreground"}`}
             >
               EDLIZ Rx
             </button>
@@ -87,7 +87,7 @@ export function ClinicalKnowledgeDock() {
           <button
             type="button"
             onClick={closeDock}
-            className="rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+            className="rounded p-1 text-muted-foreground hover:bg-neutral-100 hover:text-foreground"
           >
             <X className="h-4 w-4" />
           </button>
@@ -105,7 +105,7 @@ export function ClinicalKnowledgeDock() {
               showOrderDraftBridge
             />
           ) : (
-            <div className="text-sm text-gray-600 space-y-2">
+            <div className="text-sm text-muted-foreground space-y-2">
               {!isPrescriber ? (
                 <p>Prescribing check is limited to prescriber roles.</p>
               ) : !patientId ? (
@@ -113,7 +113,7 @@ export function ClinicalKnowledgeDock() {
               ) : !encounterId ? (
                 <p>
                   Open an{" "}
-                  <Link href={`/ehr/${patientId}/encounters`} className="text-impilo-500 underline">
+                  <Link href={`/ehr/${patientId}/encounters`} className="text-primary underline">
                     encounter
                   </Link>{" "}
                   to attach context to the prescribing evaluation.
@@ -124,8 +124,8 @@ export function ClinicalKnowledgeDock() {
             </div>
           )}
         </div>
-        <div className="border-t border-gray-100 px-3 py-2 text-[10px] text-gray-500">
-          <Link href="/ask" className="text-impilo-500 hover:underline" onClick={closeDock}>
+        <div className="border-t border-border px-3 py-2 text-[10px] text-muted-foreground">
+          <Link href="/ask" className="text-primary hover:underline" onClick={closeDock}>
             Open Ask (conversational EDLIZ)
           </Link>
         </div>

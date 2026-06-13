@@ -35,7 +35,7 @@ export function PatientSearch() {
 
       {searchResults.data && searchResults.data.length > 0 && (
         <div className="space-y-1">
-          <h3 className="text-xs font-semibold text-gray-500 uppercase">
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase">
             Search Results
           </h3>
           {searchResults.data.map((patient) => (
@@ -50,7 +50,7 @@ export function PatientSearch() {
 
       {query.length < 2 && recentPatients.length > 0 && (
         <div className="space-y-1">
-          <h3 className="text-xs font-semibold text-gray-500 uppercase">
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase">
             Recent Patients
           </h3>
           {recentPatients.map((patient) => (
@@ -76,12 +76,12 @@ function PatientRow({
   return (
     <button
       onClick={onClick}
-      className="w-full text-left px-3 py-2 rounded-md hover:bg-blue-50 transition-colors"
+      className="w-full text-left px-3 py-2 rounded-md hover:bg-info-soft transition-colors"
     >
       <div className="font-medium text-sm">
         {patient.lastName}, {patient.firstName}
       </div>
-      <div className="text-xs text-gray-500">
+      <div className="text-xs text-muted-foreground">
         {patient.gender} | DOB: {patient.dateOfBirth} | CPID: {patient.cpid}
       </div>
     </button>

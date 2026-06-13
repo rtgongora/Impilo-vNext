@@ -25,7 +25,7 @@ export function LiveEventList({
 }: LiveEventListProps) {
   if (loading) {
     return (
-      <div className="flex items-center justify-center gap-2 py-12 text-sm text-gray-500">
+      <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
         Loading events…
       </div>
@@ -33,7 +33,7 @@ export function LiveEventList({
   }
 
   if (!events.length) {
-    return <p className="py-8 text-center text-sm text-gray-500">{emptyMessage}</p>;
+    return <p className="py-8 text-center text-sm text-muted-foreground">{emptyMessage}</p>;
   }
 
   const registrationByEvent = new Map(

@@ -42,23 +42,23 @@ type TileProps = {
 function MetricTile({ title, value, hint, icon: Icon, tone = "slate", loading, error, href }: TileProps) {
   const border =
     tone === "amber"
-      ? "border-amber-200 bg-amber-50"
+      ? "border-warning/35 bg-warning-soft"
       : tone === "rose"
-        ? "border-rose-200 bg-rose-50"
+        ? "border-danger/28 bg-danger-soft"
         : tone === "sky"
           ? "border-sky-200 bg-sky-50"
           : tone === "violet"
             ? "border-violet-200 bg-violet-50"
-            : "border-slate-200 bg-white";
+            : "border-border bg-card";
 
   const body = (
     <div className={`rounded-2xl border p-4 shadow-sm ${border} ${href ? "transition hover:shadow-md" : ""}`}>
-      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         <Icon className="h-4 w-4" aria-hidden />
         {title}
       </div>
-      <div className="mt-2 text-3xl font-semibold text-slate-900">{loading ? "…" : error ? "—" : value}</div>
-      {hint ? <p className="mt-1 text-sm text-slate-600">{hint}</p> : null}
+      <div className="mt-2 text-3xl font-semibold text-foreground">{loading ? "…" : error ? "—" : value}</div>
+      {hint ? <p className="mt-1 text-sm text-muted-foreground">{hint}</p> : null}
     </div>
   );
 
@@ -159,16 +159,16 @@ export function EnterpriseResourceDashboard() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <section className="rounded-2xl border border-border bg-background p-4">
         <div className="flex flex-wrap items-end gap-3">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-600">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             <Globe2 className="h-4 w-4" />
             Geography scope
           </div>
           <select
             value={geoLevel}
             onChange={(e) => setGeoLevel(e.target.value as GeoLevel)}
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            className="rounded-lg border border-border px-3 py-2 text-sm"
           >
             <option value="national">National</option>
             <option value="province">Province</option>
@@ -179,7 +179,7 @@ export function EnterpriseResourceDashboard() {
             <select
               value={province}
               onChange={(e) => setProvince(e.target.value)}
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="rounded-lg border border-border px-3 py-2 text-sm"
             >
               <option value="">All provinces</option>
               {provinceOptions.map((p) => (
@@ -193,7 +193,7 @@ export function EnterpriseResourceDashboard() {
             <select
               value={district}
               onChange={(e) => setDistrict(e.target.value)}
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="rounded-lg border border-border px-3 py-2 text-sm"
             >
               <option value="">All districts</option>
               {districtOptions.map((d) => (
@@ -203,26 +203,26 @@ export function EnterpriseResourceDashboard() {
               ))}
             </select>
           ) : null}
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-muted-foreground">
             {geoLevel === "facility"
               ? facility?.name ?? "No facility selected"
               : `${scopedFacilityIds.length} facilities in scope`}
           </span>
-          <Link href="/enterprise/oversight" className="ml-auto text-xs font-semibold text-impilo-600 hover:underline">
+          <Link href="/enterprise/oversight" className="ml-auto text-xs font-semibold text-primary hover:underline">
             National oversight links →
           </Link>
         </div>
       </section>
 
       {geoLevel === "facility" && !facility?.id ? (
-        <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+        <div className="flex items-start gap-2 rounded-xl border border-warning/35 bg-warning-soft p-4 text-sm text-warning-foreground">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
           <div>
             <p className="font-medium">Facility context required</p>
-            <p className="mt-1 text-amber-800/90">
+            <p className="mt-1 text-warning-foreground/90">
               Choose a facility from the workspace switcher for facility-scoped inventory and revenue tiles.
             </p>
-            <Link href="/facility" className="mt-2 inline-block text-sm font-semibold text-amber-950 underline">
+            <Link href="/facility" className="mt-2 inline-block text-sm font-semibold text-warning-foreground underline">
               Select facility
             </Link>
           </div>

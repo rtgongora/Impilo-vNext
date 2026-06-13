@@ -23,12 +23,12 @@ export default function DataIntegrationPage() {
       tabs={DATA_TABS}
     >
       <TrustContextBanner purposeOfUse="INTEGRATION_OPS" />
-      <p className="text-sm text-slate-600">
+      <p className="text-sm text-muted-foreground">
         Full integration status dashboards live on the admin integration monitor. This hub links operational intelligence to adapter health.
       </p>
       <Link
         href="/admin/integration-status"
-        className="mt-4 inline-flex rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white hover:bg-impilo-600"
+        className="mt-4 inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
       >
         Open integration status admin
       </Link>

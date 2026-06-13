@@ -59,8 +59,8 @@ function RecordRows({ record, fields }: { record: Record<string, unknown>; field
     <dl className="divide-y divide-slate-100">
       {fields.map(({ key, label }) => (
         <div key={key} className="flex justify-between gap-3 py-1.5 text-xs">
-          <dt className="text-slate-500">{label}</dt>
-          <dd className="max-w-[65%] text-right font-medium text-slate-900">{formatValue(record[key])}</dd>
+          <dt className="text-muted-foreground">{label}</dt>
+          <dd className="max-w-[65%] text-right font-medium text-foreground">{formatValue(record[key])}</dd>
         </div>
       ))}
     </dl>
@@ -92,16 +92,16 @@ export function QueryResultPanel({
 }: QueryResultPanelProps) {
   const busy = isLoading ?? isPending;
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-4">
-      <h3 className="text-sm font-semibold text-slate-800">{title}</h3>
+    <section className="rounded-lg border border-border bg-card p-4">
+      <h3 className="text-sm font-semibold text-foreground">{title}</h3>
       <div className="mt-2">
         {busy ? (
-          <div className="flex items-center gap-2 text-xs text-slate-500">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
             Loading…
           </div>
         ) : isError ? (
-          <div className="flex items-start gap-2 text-xs text-red-700">
+          <div className="flex items-start gap-2 text-xs text-danger">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
             <span>{error instanceof Error ? error.message : "Request failed"}</span>
           </div>
@@ -109,7 +109,7 @@ export function QueryResultPanel({
           (() => {
             const rows = asRows(data);
             if (rows.length === 0) {
-              return <p className="text-xs text-slate-500">No records returned.</p>;
+              return <p className="text-xs text-muted-foreground">No records returned.</p>;
             }
             return (
               <ul className="max-h-64 space-y-3 overflow-y-auto">
@@ -118,8 +118,8 @@ export function QueryResultPanel({
                   const label =
                     String(row.name ?? row.title ?? row.id ?? row.code ?? `Record ${index + 1}`);
                   return (
-                    <li key={String(row.id ?? index)} className="rounded-lg border border-slate-100 bg-slate-50 p-3">
-                      <p className="mb-1 text-xs font-semibold text-slate-800">{label}</p>
+                    <li key={String(row.id ?? index)} className="rounded-lg border border-border bg-background p-3">
+                      <p className="mb-1 text-xs font-semibold text-foreground">{label}</p>
                       <RecordRows record={row} fields={rowFields} />
                     </li>
                   );

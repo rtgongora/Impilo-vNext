@@ -22,14 +22,14 @@ export default function VerifyCredentialPage() {
 
   if (!base) {
     return (
-      <div className="max-w-xl rounded-lg border border-amber-200 bg-amber-50 p-6 text-sm text-amber-950">
+      <div className="max-w-xl rounded-lg border border-warning/35 bg-warning-soft p-6 text-sm text-warning-foreground">
         <p className="font-medium mb-2">Credential verifier base URL not configured</p>
         <p className="mb-2">
           Set <code className="text-xs">NEXT_PUBLIC_CREDENTIAL_VERIFY_PUBLIC_URL</code> to the public origin of
           credential-verification-service (e.g. <code className="text-xs">http://localhost:8094</code>) so this page can
           call <code className="text-xs">GET /v1/public/verify/{"{token}"}</code>.
         </p>
-        <p className="text-xs text-gray-600">
+        <p className="text-xs text-muted-foreground">
           Same runtime pattern as <code className="text-[10px]">NEXT_PUBLIC_SHARE_SLIP_PUBLIC_URL</code> for{" "}
           <code className="text-[10px]">/share/claim</code>.
         </p>
@@ -68,13 +68,13 @@ export default function VerifyCredentialPage() {
 
   return (
     <div className="max-w-xl space-y-6">
-      <p className="text-sm text-gray-600">
+      <p className="text-sm text-muted-foreground">
         Enter the verification token from the QR code or link on a certificate or credential card.
       </p>
 
-      <form onSubmit={handleVerify} className="flex flex-col sm:flex-row gap-3 sm:items-end bg-white border border-gray-200 rounded-lg p-4">
+      <form onSubmit={handleVerify} className="flex flex-col sm:flex-row gap-3 sm:items-end bg-card border border-border rounded-lg p-4">
         <div className="flex-1 min-w-0">
-          <label htmlFor="verify-token" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="verify-token" className="block text-sm font-medium text-foreground mb-1">
             Verification token
           </label>
           <input
@@ -83,32 +83,32 @@ export default function VerifyCredentialPage() {
             value={token}
             onChange={(e) => setToken(e.target.value)}
             placeholder="Paste or type token…"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="w-full px-3 py-2 border border-border rounded-lg text-sm"
             required
           />
         </div>
         <button
           type="submit"
           disabled={loading}
-          className="px-4 py-2 bg-impilo-500 text-white rounded-lg text-sm font-medium hover:bg-impilo-600 disabled:opacity-50 shrink-0"
+          className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-hover disabled:opacity-50 shrink-0"
         >
           {loading ? "Verifying…" : "Verify"}
         </button>
       </form>
 
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</div>
+        <div className="rounded-lg border border-danger/28 bg-danger-soft p-4 text-sm text-red-800">{error}</div>
       )}
 
       {result && (
-        <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+        <div className="rounded-lg border border-border bg-card overflow-hidden">
           <div
             className={`text-center p-4 border-b ${
               result.status === "VALID"
                 ? "bg-green-50 border-green-200"
                 : result.status === "EXPIRED"
                   ? "bg-yellow-50 border-yellow-200"
-                  : "bg-red-50 border-red-200"
+                  : "bg-danger-soft border-danger/28"
             }`}
           >
             <span
@@ -117,35 +117,35 @@ export default function VerifyCredentialPage() {
                   ? "text-green-700"
                   : result.status === "EXPIRED"
                     ? "text-yellow-700"
-                    : "text-red-700"
+                    : "text-danger"
               }`}
             >
               {result.status}
             </span>
           </div>
           <dl className="p-6 space-y-3 text-sm">
-            <div className="flex justify-between gap-4 py-2 border-b border-gray-100">
-              <dt className="text-gray-500 shrink-0">Name</dt>
+            <div className="flex justify-between gap-4 py-2 border-b border-border">
+              <dt className="text-muted-foreground shrink-0">Name</dt>
               <dd className="font-medium text-right">{result.subjectName || "—"}</dd>
             </div>
-            <div className="flex justify-between gap-4 py-2 border-b border-gray-100">
-              <dt className="text-gray-500 shrink-0">Credential</dt>
+            <div className="flex justify-between gap-4 py-2 border-b border-border">
+              <dt className="text-muted-foreground shrink-0">Credential</dt>
               <dd className="text-right">
                 {result.credentialType || "—"} — {result.title || "—"}
               </dd>
             </div>
-            <div className="flex justify-between gap-4 py-2 border-b border-gray-100">
-              <dt className="text-gray-500 shrink-0">Issued by</dt>
+            <div className="flex justify-between gap-4 py-2 border-b border-border">
+              <dt className="text-muted-foreground shrink-0">Issued by</dt>
               <dd className="text-right">{result.issuedBy || "—"}</dd>
             </div>
-            <div className="flex justify-between gap-4 py-2 border-b border-gray-100">
-              <dt className="text-gray-500 shrink-0">Valid period</dt>
+            <div className="flex justify-between gap-4 py-2 border-b border-border">
+              <dt className="text-muted-foreground shrink-0">Valid period</dt>
               <dd className="text-right">
                 {result.validFrom || "—"} — {result.validTo ?? "No expiry"}
               </dd>
             </div>
             <div className="flex justify-between gap-4 py-2">
-              <dt className="text-gray-500 shrink-0">Verified at</dt>
+              <dt className="text-muted-foreground shrink-0">Verified at</dt>
               <dd className="text-right">
                 {result.verifiedAt
                   ? (() => {

@@ -28,8 +28,8 @@ export function ClinicalDashboard({ patient }: { patient: Patient }) {
   return (
     <div className="grid grid-cols-2 gap-4">
       {/* Active Conditions */}
-      <div className="bg-white rounded-lg border p-4">
-        <h3 className="font-semibold text-sm text-gray-700 mb-3 uppercase">
+      <div className="bg-card rounded-lg border p-4">
+        <h3 className="font-semibold text-sm text-foreground mb-3 uppercase">
           Active Conditions
         </h3>
         {patient.conditions.length > 0 ? (
@@ -44,20 +44,20 @@ export function ClinicalDashboard({ patient }: { patient: Patient }) {
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-gray-400">No active conditions</p>
+          <p className="text-sm text-muted-foreground">No active conditions</p>
         )}
       </div>
 
       {/* Latest Vitals */}
-      <div className="bg-white rounded-lg border p-4">
-        <h3 className="font-semibold text-sm text-gray-700 mb-3 uppercase">
+      <div className="bg-card rounded-lg border p-4">
+        <h3 className="font-semibold text-sm text-foreground mb-3 uppercase">
           Latest Vitals
         </h3>
         {vitals.data ? (
           <div className="grid grid-cols-2 gap-2">
             {vitals.data.map((vital, i) => (
               <div key={i} className="text-sm">
-                <span className="text-gray-500">{vital.type}: </span>
+                <span className="text-muted-foreground">{vital.type}: </span>
                 <span className="font-medium">
                   {vital.value} {vital.unit}
                 </span>
@@ -65,15 +65,15 @@ export function ClinicalDashboard({ patient }: { patient: Patient }) {
             ))}
           </div>
         ) : (
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-muted-foreground">
             {vitals.isLoading ? "Loading..." : "No vitals recorded"}
           </p>
         )}
       </div>
 
       {/* Active Medications */}
-      <div className="bg-white rounded-lg border p-4">
-        <h3 className="font-semibold text-sm text-gray-700 mb-3 uppercase">
+      <div className="bg-card rounded-lg border p-4">
+        <h3 className="font-semibold text-sm text-foreground mb-3 uppercase">
           Active Medications
         </h3>
         {medications.data && medications.data.length > 0 ? (
@@ -81,22 +81,22 @@ export function ClinicalDashboard({ patient }: { patient: Patient }) {
             {medications.data.map((med, i) => (
               <li key={i} className="text-sm">
                 <div className="font-medium">{med.medication}</div>
-                <div className="text-gray-500">
+                <div className="text-muted-foreground">
                   {med.dosage} — {med.frequency}
                 </div>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-muted-foreground">
             {medications.isLoading ? "Loading..." : "No active medications"}
           </p>
         )}
       </div>
 
       {/* Recent Lab Results */}
-      <div className="bg-white rounded-lg border p-4">
-        <h3 className="font-semibold text-sm text-gray-700 mb-3 uppercase">
+      <div className="bg-card rounded-lg border p-4">
+        <h3 className="font-semibold text-sm text-foreground mb-3 uppercase">
           Recent Lab Results
         </h3>
         {labResults.data && labResults.data.length > 0 ? (
@@ -113,26 +113,26 @@ export function ClinicalDashboard({ patient }: { patient: Patient }) {
                     {result.value} {result.unit}
                   </span>
                 </div>
-                <div className="text-gray-400 text-xs">{result.date}</div>
+                <div className="text-muted-foreground text-xs">{result.date}</div>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-muted-foreground">
             {labResults.isLoading ? "Loading..." : "No recent results"}
           </p>
         )}
       </div>
 
       {/* Recent Encounters */}
-      <div className="bg-white rounded-lg border p-4 col-span-2">
-        <h3 className="font-semibold text-sm text-gray-700 mb-3 uppercase">
+      <div className="bg-card rounded-lg border p-4 col-span-2">
+        <h3 className="font-semibold text-sm text-foreground mb-3 uppercase">
           Recent Encounters
         </h3>
         {encounters.data && encounters.data.length > 0 ? (
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-gray-500 border-b">
+              <tr className="text-left text-muted-foreground border-b">
                 <th className="pb-2">Date</th>
                 <th className="pb-2">Type</th>
                 <th className="pb-2">Chief Complaint</th>
@@ -153,8 +153,8 @@ export function ClinicalDashboard({ patient }: { patient: Patient }) {
                         enc.status === "COMPLETED"
                           ? "bg-green-100 text-green-700"
                           : enc.status === "IN_PROGRESS"
-                          ? "bg-blue-100 text-blue-700"
-                          : "bg-gray-100 text-gray-600"
+                          ? "bg-blue-100 text-primary-hover"
+                          : "bg-neutral-100 text-muted-foreground"
                       }`}
                     >
                       {enc.status}
@@ -165,7 +165,7 @@ export function ClinicalDashboard({ patient }: { patient: Patient }) {
             </tbody>
           </table>
         ) : (
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-muted-foreground">
             {encounters.isLoading ? "Loading..." : "No encounters found"}
           </p>
         )}

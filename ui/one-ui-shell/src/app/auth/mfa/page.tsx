@@ -143,7 +143,7 @@ export default function MfaPage() {
       <div className="mb-4">
         <Link
           href="/auth/login"
-          className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to sign in
@@ -151,17 +151,17 @@ export default function MfaPage() {
       </div>
 
       <div className="flex items-center gap-2 mb-1">
-        <ShieldCheck className="w-5 h-5 text-impilo-500" />
-        <h2 className="text-xl font-semibold text-gray-900">
+        <ShieldCheck className="w-5 h-5 text-primary" />
+        <h2 className="text-xl font-semibold text-foreground">
           Verification Code
         </h2>
       </div>
-      <p className="text-sm text-gray-500 mb-6">
+      <p className="text-sm text-muted-foreground mb-6">
         Enter the 6-digit code from your authenticator app
       </p>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-danger">
           {error}
         </div>
       )}
@@ -182,7 +182,7 @@ export default function MfaPage() {
               onKeyDown={(e) => handleKeyDown(index, e)}
               onPaste={index === 0 ? handlePaste : undefined}
               disabled={isSubmitting}
-              className="w-12 h-14 text-center text-xl font-semibold border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-12 h-14 text-center text-xl font-semibold border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400 disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label={`Digit ${index + 1}`}
             />
           ))}
@@ -191,7 +191,7 @@ export default function MfaPage() {
         <button
           type="submit"
           disabled={isSubmitting || digits.some((d) => d === "")}
-          className="w-full py-2.5 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+          className="w-full py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
         >
           {isSubmitting ? (
             <>
@@ -204,7 +204,7 @@ export default function MfaPage() {
         </button>
       </form>
 
-      <p className="mt-6 text-xs text-gray-400 text-center">
+      <p className="mt-6 text-xs text-muted-foreground text-center">
         Didn&apos;t receive a code? Check your authenticator app or contact
         support.
       </p>

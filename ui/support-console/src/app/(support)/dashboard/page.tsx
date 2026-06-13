@@ -76,7 +76,7 @@ export default function DashboardPage() {
           {STAT_CARDS.map(({ key, label, color }) => (
             <div
               key={key}
-              className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-5"
+              className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-5"
             >
               <div className="flex items-center gap-2 mb-2">
                 <div className={`w-2.5 h-2.5 rounded-full ${color}`} />
@@ -87,7 +87,7 @@ export default function DashboardPage() {
               <p className="text-2xl font-semibold text-neutral-900">{stats[key]}</p>
             </div>
           ))}
-          <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-5">
+          <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-5">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-2.5 h-2.5 rounded-full bg-brand-primary" />
               <span className="text-xs font-medium text-neutral-500 uppercase tracking-wide">
@@ -104,21 +104,21 @@ export default function DashboardPage() {
       {/* Quick actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <Link href="/tickets?status=OPEN" className="block">
-          <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6 hover:border-brand-primary/30 transition-colors">
+          <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6 hover:border-brand-primary/30 transition-colors">
             <h3 className="text-sm font-medium text-neutral-500">Queue</h3>
             <p className="text-xl font-semibold text-neutral-900 mt-2">Open Tickets</p>
             <p className="text-xs text-neutral-500 mt-1">View and triage unassigned tickets</p>
           </div>
         </Link>
         <Link href="/incidents" className="block">
-          <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6 hover:border-danger/30 transition-colors">
+          <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6 hover:border-danger/30 transition-colors">
             <h3 className="text-sm font-medium text-neutral-500">Ops</h3>
             <p className="text-xl font-semibold text-neutral-900 mt-2">Incidents</p>
             <p className="text-xs text-neutral-500 mt-1">Active incidents and escalation queue</p>
           </div>
         </Link>
         <Link href="/knowledge" className="block">
-          <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6 hover:border-info/30 transition-colors">
+          <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6 hover:border-info/30 transition-colors">
             <h3 className="text-sm font-medium text-neutral-500">Reference</h3>
             <p className="text-xl font-semibold text-neutral-900 mt-2">Knowledge Base</p>
             <p className="text-xs text-neutral-500 mt-1">Articles, runbooks, and troubleshooting guides</p>
@@ -127,7 +127,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Recent tickets table */}
-      <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6">
+      <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-neutral-900">Recent Tickets</h2>
           <Link

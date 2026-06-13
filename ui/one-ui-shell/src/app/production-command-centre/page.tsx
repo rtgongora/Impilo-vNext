@@ -10,6 +10,7 @@ import { TrustContextBanner } from "@/components/experience/TrustContextBanner";
 import { NompiloContextPanel } from "@/components/intelligent/NompiloContextPanel";
 import { ServiceLogo } from "@/components/branding/ServiceLogo";
 import { RelatedServicesPanel } from "@/components/workspace/RelatedServicesPanel";
+import { WorkspaceHero } from "shared-ui";
 import { COMMAND_CENTRE_TILE_SLUGS } from "@/config/serviceBranding";
 
 const COMMAND_CENTRE_RELATED_LINKS = [
@@ -47,10 +48,16 @@ export default function ProductionCommandCentrePage() {
         icon={<LayoutGrid className="h-6 w-6" />}
       >
         <div className="space-y-6">
+          <WorkspaceHero
+            title="Production Command Centre"
+            subtitle="Discover, navigate, and demonstrate the Impilo Health OS — service status, demo paths, and known gaps"
+            watermark
+          />
+
           <TrustContextBanner purposeOfUse="HEALTH_OS_OPERATIONS" />
 
           <div className="flex flex-wrap gap-3 text-xs text-[var(--text-secondary)]">
-            <span className="impilo-chip bg-white">
+            <span className="impilo-chip bg-card">
               Integration hub:{" "}
               {health.isLoading
                 ? "checking…"
@@ -58,7 +65,7 @@ export default function ProductionCommandCentrePage() {
                   ? `live (${health.routeCount} routes)`
                   : "unavailable"}
             </span>
-            <span className="impilo-chip bg-white">
+            <span className="impilo-chip bg-card">
               Web routes: 417 registered (route parity CI)
             </span>
           </div>
@@ -103,7 +110,7 @@ export default function ProductionCommandCentrePage() {
                       <Link
                         key={tile.id}
                         href={tile.href}
-                        className="impilo-surface-card group flex flex-col p-4 transition hover:border-impilo-200 hover:shadow-impilo-card"
+                        className="impilo-surface-card group flex flex-col border-t-4 border-t-primary p-4 transition hover:border-primary/30 hover:shadow-impilo-card"
                       >
                         {serviceSlug ? (
                           <div className="mb-3">
@@ -126,15 +133,15 @@ export default function ProductionCommandCentrePage() {
                             {tile.priority}
                           </span>
                         </div>
-                        <h3 className="text-sm font-semibold text-[var(--text-primary)] group-hover:text-impilo-700">
+                        <h3 className="text-sm font-semibold text-[var(--text-primary)] group-hover:text-primary-hover">
                           {tile.title}
                         </h3>
                         <p className="mt-1 flex-1 text-xs text-[var(--text-secondary)]">{tile.description}</p>
                         {tile.demoAction ? (
-                          <p className="mt-2 text-xs font-medium text-impilo-600">{tile.demoAction}</p>
+                          <p className="mt-2 text-xs font-medium text-primary">{tile.demoAction}</p>
                         ) : null}
                         {tile.knownGaps ? (
-                          <p className="mt-1 text-[11px] text-amber-700">Gap: {tile.knownGaps}</p>
+                          <p className="mt-1 text-[11px] text-warning-foreground">Gap: {tile.knownGaps}</p>
                         ) : null}
                       </Link>
                     );

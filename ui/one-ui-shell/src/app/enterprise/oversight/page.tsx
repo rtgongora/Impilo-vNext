@@ -11,7 +11,7 @@ const OVERSIGHT_LINKS = [
     label: "Public health command",
     description: "Surveillance, campaigns, and site registry for national PH oversight.",
     icon: Stethoscope,
-    tone: "border-emerald-200 bg-emerald-50",
+    tone: "border-success/25 bg-success-soft",
   },
   {
     href: "/public-health/surveillance",
@@ -39,14 +39,14 @@ const OVERSIGHT_LINKS = [
     label: "District & national queue view",
     description: "Multi-facility queue pressure without synthetic KPIs.",
     icon: Globe2,
-    tone: "border-amber-200 bg-amber-50",
+    tone: "border-warning/35 bg-warning-soft",
   },
   {
     href: "/imaging/worklist",
     label: "Imaging worklist",
     description: "OROS imaging orders awaiting acquisition or reporting.",
     icon: ScanLine,
-    tone: "border-slate-200 bg-slate-50",
+    tone: "border-border bg-background",
   },
 ];
 
@@ -67,13 +67,13 @@ export default function EnterpriseOversightPage() {
             className={`block rounded-2xl border p-5 shadow-sm transition hover:shadow-md ${tone}`}
           >
             <div className="flex items-start gap-3">
-              <div className="rounded-lg bg-white p-2 shadow-sm">
-                <Icon className="h-5 w-5 text-slate-700" />
+              <div className="rounded-lg bg-card p-2 shadow-sm">
+                <Icon className="h-5 w-5 text-foreground" />
               </div>
               <div>
-                <h2 className="text-sm font-semibold text-slate-900">{label}</h2>
-                <p className="mt-1 text-xs text-slate-600">{description}</p>
-                <span className="mt-2 inline-block text-xs font-medium text-impilo-700">Open →</span>
+                <h2 className="text-sm font-semibold text-foreground">{label}</h2>
+                <p className="mt-1 text-xs text-muted-foreground">{description}</p>
+                <span className="mt-2 inline-block text-xs font-medium text-primary-hover">Open →</span>
               </div>
             </div>
           </Link>

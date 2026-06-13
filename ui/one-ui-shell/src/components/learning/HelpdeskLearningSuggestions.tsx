@@ -30,7 +30,7 @@ export function HelpdeskLearningSuggestions(props: { issueType?: string; title?:
 
   if (isLoading) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-white p-4 text-sm text-gray-500">Loading suggested training…</div>
+      <div className="rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">Loading suggested training…</div>
     );
   }
   if (isError || items.length === 0) {
@@ -41,7 +41,7 @@ export function HelpdeskLearningSuggestions(props: { issueType?: string; title?:
     <section className="rounded-lg border border-violet-200/80 bg-violet-50/50 p-4 dark:border-violet-900/40 dark:bg-violet-950/20">
       <div className="mb-2 flex items-center gap-2">
         <GraduationCap className="h-5 w-5 text-violet-600" />
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+        <h3 className="text-sm font-semibold text-foreground dark:text-foreground">
           {props.title ?? "Resolve with learning"}
         </h3>
       </div>
@@ -54,8 +54,8 @@ export function HelpdeskLearningSuggestions(props: { issueType?: string; title?:
           const exp = typeof res?.experienceHref === "string" ? res.experienceHref : undefined;
           const fundo = typeof res?.fundoLaunchUrl === "string" ? res.fundoLaunchUrl : undefined;
           return (
-            <li key={i} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-950/60">
-              <span className="text-gray-800 dark:text-gray-100">{title}</span>
+            <li key={i} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm dark:border-border dark:bg-card/60">
+              <span className="text-foreground dark:text-foreground">{title}</span>
               <div className="flex gap-2">
                 {exp ? (
                   <Link
@@ -72,7 +72,7 @@ export function HelpdeskLearningSuggestions(props: { issueType?: string; title?:
                     target="_blank"
                     rel="noreferrer"
                     onClick={() => track(rid)}
-                    className="inline-flex items-center gap-1 text-xs font-medium text-gray-700 hover:underline dark:text-gray-200"
+                    className="inline-flex items-center gap-1 text-xs font-medium text-foreground hover:underline dark:text-foreground"
                   >
                     <ExternalLink className="h-3.5 w-3.5" /> Fundo
                   </a>

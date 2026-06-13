@@ -22,15 +22,15 @@ function Card({
         ? "border-violet-100"
         : tone === "amber"
           ? "border-amber-100"
-          : "border-gray-200";
+          : "border-border";
   const bg =
     tone === "teal"
       ? "bg-teal-50/40"
       : tone === "violet"
         ? "bg-violet-50/40"
         : tone === "amber"
-          ? "bg-amber-50/40"
-          : "bg-white";
+          ? "bg-warning-soft/40"
+          : "bg-card";
   return (
     <section className={`rounded-3xl border ${border} ${bg} p-4 shadow-impilo-card`}>
       <h3 className="text-xs font-semibold uppercase tracking-wide text-[color:var(--text-muted)] mb-2">{title}</h3>
@@ -76,7 +76,7 @@ export function IntelligenceResultPanel({ data }: { data: Record<string, unknown
           <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
             {Object.entries(ev).map(([k, v]) => (
               <div key={k} className="contents">
-                <dt className="text-gray-500">{k}</dt>
+                <dt className="text-muted-foreground">{k}</dt>
                 <dd className="font-medium">{String(v)}</dd>
               </div>
             ))}
@@ -97,9 +97,9 @@ export function IntelligenceResultPanel({ data }: { data: Record<string, unknown
               const o = asRecord(r);
               if (!o) return null;
               return (
-                <li key={i} className="rounded border border-amber-100 bg-white/80 px-2 py-1.5 text-xs">
-                  <span className="font-medium text-gray-900">{String(o.summary ?? o.recommendationType ?? "Item")}</span>
-                  {o.rationale ? <p className="text-gray-600 mt-0.5">{String(o.rationale)}</p> : null}
+                <li key={i} className="rounded border border-amber-100 bg-card/80 px-2 py-1.5 text-xs">
+                  <span className="font-medium text-foreground">{String(o.summary ?? o.recommendationType ?? "Item")}</span>
+                  {o.rationale ? <p className="text-muted-foreground mt-0.5">{String(o.rationale)}</p> : null}
                 </li>
               );
             })}
@@ -109,7 +109,7 @@ export function IntelligenceResultPanel({ data }: { data: Record<string, unknown
 
       {ranked.length > 0 ? (
         <Card title="Retrieval hits" tone="slate">
-          <p className="text-xs text-gray-600 mb-1">{ranked.length} fused row(s) — open records only via governed routes.</p>
+          <p className="text-xs text-muted-foreground mb-1">{ranked.length} fused row(s) — open records only via governed routes.</p>
           <ul className="max-h-40 overflow-auto space-y-1 text-xs">
             {ranked.slice(0, 12).map((row, i) => {
               const m = asRecord(row);
@@ -122,8 +122,8 @@ export function IntelligenceResultPanel({ data }: { data: Record<string, unknown
                     ? hit.entityType
                     : "Hit";
               return (
-                <li key={i} className="truncate text-gray-700">
-                  <span className="text-gray-400">{src}</span> · {title}
+                <li key={i} className="truncate text-foreground">
+                  <span className="text-muted-foreground">{src}</span> · {title}
                 </li>
               );
             })}
@@ -141,13 +141,13 @@ export function IntelligenceResultPanel({ data }: { data: Record<string, unknown
 
       {learningHd || learningHits ? (
         <Card title="Learning service" tone="teal">
-          <p className="text-xs text-gray-600">Structured payloads from Impilo learning plane when configured.</p>
+          <p className="text-xs text-muted-foreground">Structured payloads from Impilo learning plane when configured.</p>
         </Card>
       ) : null}
 
-      <details className="text-xs text-gray-500">
+      <details className="text-xs text-muted-foreground">
         <summary className="cursor-pointer select-none">Raw JSON</summary>
-        <pre className="mt-2 max-h-48 overflow-auto rounded bg-gray-50 p-2 text-[11px]">{JSON.stringify(data, null, 2)}</pre>
+        <pre className="mt-2 max-h-48 overflow-auto rounded bg-background p-2 text-[11px]">{JSON.stringify(data, null, 2)}</pre>
       </details>
     </div>
   );

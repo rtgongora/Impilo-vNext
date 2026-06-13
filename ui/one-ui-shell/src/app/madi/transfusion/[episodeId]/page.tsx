@@ -36,7 +36,7 @@ export default function TransfusionEpisodePage() {
     <AppLayout>
       <PageShell title="Transfusion Episode" subtitle={`Episode ${episodeId}`} icon={<Activity className="h-6 w-6" />}>
         {episodeLoading && (
-          <div className="mb-4 flex items-center gap-2 text-sm text-gray-500">
+          <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" /> Loading episode…
           </div>
         )}
@@ -50,15 +50,15 @@ export default function TransfusionEpisodePage() {
           />
         </div>
 
-        <section className="rounded-2xl border border-gray-200 bg-white p-5 mb-4 space-y-3">
+        <section className="rounded-2xl border border-border bg-card p-5 mb-4 space-y-3">
           <h2 className="text-sm font-semibold">Record observation</h2>
-          <select value={obsType} onChange={(e) => setObsType(e.target.value)} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm bg-white">
+          <select value={obsType} onChange={(e) => setObsType(e.target.value)} className="w-full rounded-xl border border-border px-3 py-2 text-sm bg-card">
             <option value="VITAL_TEMP">Temperature</option>
             <option value="VITAL_HR">Heart rate</option>
             <option value="VITAL_BP">Blood pressure</option>
             <option value="REACTION">Reaction note</option>
           </select>
-          <input value={obsValue} onChange={(e) => setObsValue(e.target.value)} placeholder="Value" className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" />
+          <input value={obsValue} onChange={(e) => setObsValue(e.target.value)} placeholder="Value" className="w-full rounded-xl border border-border px-3 py-2 text-sm" />
           <button
             type="button"
             onClick={() => observation.mutate({
@@ -67,25 +67,25 @@ export default function TransfusionEpisodePage() {
               value_text: obsType === "REACTION" ? obsValue : undefined,
             })}
             disabled={!obsValue || observation.isPending || !patientVerified}
-            className="rounded-xl bg-gray-800 px-3 py-2 text-sm text-white disabled:opacity-50"
+            className="rounded-xl bg-primary-hover px-3 py-2 text-sm text-white disabled:opacity-50"
           >
             {observation.isPending ? <Loader2 className="h-4 w-4 animate-spin inline" /> : null} Add observation
           </button>
           {!patientVerified && (
-            <p className="text-xs text-amber-700">Complete bedside verification before recording observations.</p>
+            <p className="text-xs text-warning-foreground">Complete bedside verification before recording observations.</p>
           )}
         </section>
 
-        <section className="rounded-2xl border border-gray-200 bg-white p-5 space-y-3">
+        <section className="rounded-2xl border border-border bg-card p-5 space-y-3">
           <h2 className="text-sm font-semibold">Complete & verify</h2>
-          <select value={outcome} onChange={(e) => setOutcome(e.target.value)} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm bg-white">
+          <select value={outcome} onChange={(e) => setOutcome(e.target.value)} className="w-full rounded-xl border border-border px-3 py-2 text-sm bg-card">
             <option value="COMPLETED">Completed</option>
             <option value="STOPPED">Stopped early</option>
             <option value="ADVERSE_EVENT">Adverse event</option>
           </select>
           <div className="flex gap-2">
             <button type="button" onClick={() => complete.mutate({ outcome_status: outcome })} disabled={complete.isPending || !patientVerified} className="rounded-xl bg-rose-600 px-3 py-2 text-sm text-white disabled:opacity-50">Complete</button>
-            <button type="button" onClick={() => verify.mutate({})} disabled={verify.isPending} className="rounded-xl border border-gray-300 px-3 py-2 text-sm disabled:opacity-50">Verify</button>
+            <button type="button" onClick={() => verify.mutate({})} disabled={verify.isPending} className="rounded-xl border border-border px-3 py-2 text-sm disabled:opacity-50">Verify</button>
           </div>
           <Link href="/madi/haemovigilance" className="text-sm text-rose-600">Report reaction →</Link>
         </section>

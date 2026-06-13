@@ -172,16 +172,16 @@ function getModuleCategories(roles: {
       id: "clinical",
       title: "Clinical Care & Orders",
       icon: Stethoscope,
-      color: "bg-impilo-500",
+      color: "bg-primary",
       modules: [
         ...(roles.isClinical ? [
-          { label: "Clinical Hub", description: "All 10 clinical modules", href: "/clinical", icon: Stethoscope, color: "bg-impilo-100 text-impilo-500" },
+          { label: "Clinical Hub", description: "All 10 clinical modules", href: "/clinical", icon: Stethoscope, color: "bg-primary-soft text-primary" },
           { label: "Queues & Wards", description: "Intake, triage, waiting, and ward status", href: "/queue", icon: Users, color: "bg-orange-100 text-orange-600" },
           { label: "Walk-in Registration", description: "Register a patient directly into queue flow", href: "/queue/walk-in", icon: Users, color: "bg-amber-100 text-amber-600" },
           { label: "Bookings & Appointments", description: "Scheduling, waitlist, and planned arrivals", href: "/scheduling", icon: Calendar, color: "bg-cyan-100 text-cyan-600" },
           { label: "Referrals", description: "Telemedicine and referral coordination", href: "/telemedicine", icon: Video, color: "bg-teal-100 text-teal-600" },
           { label: "Laboratory (LIMS)", description: "Select a chart, then continue into orders and results", href: "/queue/search?workflow=lims", icon: TestTube2, color: "bg-violet-100 text-violet-700" },
-          { label: "Imaging (PACS)", description: "Select a chart, then continue into imaging review", href: "/queue/search?workflow=pacs", icon: Scan, color: "bg-rose-100 text-rose-700" },
+          { label: "Imaging (PACS)", description: "Select a chart, then continue into imaging review", href: "/queue/search?workflow=pacs", icon: Scan, color: "bg-rose-100 text-danger" },
         ] : []),
         ...(roles.isClinical || roles.isDispenser ? [
           { label: "Pharmacy & Rx", description: "Prescriptions, dispensing, and stock follow-through", href: "/pharmacy", icon: Pill, color: "bg-green-100 text-green-600" },
@@ -202,7 +202,7 @@ function getModuleCategories(roles: {
         ] : []),
         { label: "Control Tower", description: "Real-time facility operations", href: "/clinical/control-tower", icon: BarChart3, color: "bg-rose-100 text-rose-600" },
         { label: "Operations & Roster", description: "Shifts, roster, and workforce visibility", href: "/shift", icon: Clock, color: "bg-cyan-100 text-cyan-600" },
-        { label: "Communication Hub", description: "Messages, pages, and calls", href: "/communication", icon: MessageSquare, color: "bg-impilo-100 text-impilo-500" },
+        { label: "Communication Hub", description: "Messages, pages, and calls", href: "/communication", icon: MessageSquare, color: "bg-primary-soft text-primary" },
         { label: "Provider Noticeboard", description: "Announcements and staffing updates", href: "/scheduling/noticeboard", icon: ClipboardList, color: "bg-purple-100 text-purple-600" },
         ...(roles.isAdmin ? [
           { label: "Omnichannel Hub", description: "SMS, callbacks, disclosure, and access channels", href: "/omnichannel", icon: Radio, color: "bg-teal-100 text-teal-600" },
@@ -218,7 +218,7 @@ function getModuleCategories(roles: {
       icon: Receipt,
       color: "bg-emerald-500",
       modules: [
-        { label: "Billing", description: "Bills & invoices", href: "/finance/billing", icon: FileText, color: "bg-impilo-100 text-impilo-500" },
+        { label: "Billing", description: "Bills & invoices", href: "/finance/billing", icon: FileText, color: "bg-primary-soft text-primary" },
         { label: "Payments", description: "Payment tracking", href: "/finance/payments", icon: Receipt, color: "bg-green-100 text-green-600" },
         { label: "Claims", description: "Insurance claims", href: "/finance/claims", icon: ClipboardList, color: "bg-purple-100 text-purple-600" },
         { label: "Tariffs", description: "Tariff schedules", href: "/finance/tariffs", icon: BarChart3, color: "bg-amber-100 text-amber-600" },
@@ -235,7 +235,7 @@ function getModuleCategories(roles: {
       { label: "Providers", description: "Provider registry", href: "/registry/providers", icon: Stethoscope, color: "bg-teal-100 text-teal-600", serviceSlug: "varapi" },
       { label: "Facilities", description: "Facility registry", href: "/registry/facilities", icon: Building2, color: "bg-purple-100 text-purple-600", serviceSlug: "tuso" },
       { label: "Products", description: "Product catalogue", href: "/registry/products", icon: Package, color: "bg-orange-100 text-orange-600", serviceSlug: "msika" },
-      { label: "Terminology", description: "ICD, SNOMED, LOINC", href: "/registry/terminology", icon: BookOpen, color: "bg-impilo-100 text-impilo-500", serviceSlug: "zibo" },
+      { label: "Terminology", description: "ICD, SNOMED, LOINC", href: "/registry/terminology", icon: BookOpen, color: "bg-primary-soft text-primary", serviceSlug: "zibo" },
     ],
   });
 
@@ -247,7 +247,7 @@ function getModuleCategories(roles: {
       color: "bg-indigo-500",
       modules: [
         { label: "ID Services Hub", description: "Generate, validate & recover IDs", href: "/id-services", icon: Shield, color: "bg-indigo-100 text-indigo-600" },
-        { label: "Patient PHID", description: "Generate patient health IDs", href: "/id-services?tab=generate", icon: Users, color: "bg-impilo-100 text-impilo-500" },
+        { label: "Patient PHID", description: "Generate patient health IDs", href: "/id-services?tab=generate", icon: Users, color: "bg-primary-soft text-primary" },
         { label: "Provider ID", description: "Healthcare worker IDs", href: "/id-services?tab=generate", icon: Stethoscope, color: "bg-teal-100 text-teal-600" },
         { label: "ID Validation", description: "Verify ID authenticity", href: "/id-services?tab=validate", icon: Shield, color: "bg-green-100 text-green-600" },
         { label: "ID Recovery", description: "Recover lost IDs", href: "/id-services?tab=recovery", icon: Shield, color: "bg-amber-100 text-amber-600" },
@@ -266,7 +266,7 @@ function getModuleCategories(roles: {
         { label: "Surveillance", description: "Disease surveillance & eIDSR", href: "/public-health?tab=surveillance", icon: Shield, color: "bg-red-100 text-red-600" },
         { label: "Outbreaks", description: "Outbreak management", href: "/public-health?tab=outbreaks", icon: Shield, color: "bg-red-100 text-red-600" },
         { label: "Campaigns", description: "Immunization & outreach", href: "/public-health?tab=campaigns", icon: Shield, color: "bg-green-100 text-green-600" },
-        { label: "INDAWO Sites", description: "Premises registry", href: "/public-health?tab=sites", icon: Shield, color: "bg-emerald-100 text-emerald-600", serviceSlug: "indawo" },
+        { label: "INDAWO Sites", description: "Premises registry", href: "/public-health?tab=sites", icon: Shield, color: "bg-emerald-100 text-primary", serviceSlug: "indawo" },
       ],
     });
   }
@@ -281,8 +281,8 @@ function getModuleCategories(roles: {
         { label: "Coverage Hub", description: "Schemes, eligibility & claims", href: "/coverage", icon: Shield, color: "bg-violet-100 text-violet-600" },
         { label: "Eligibility Check", description: "Real-time coverage verification", href: "/coverage?tab=eligibility", icon: Users, color: "bg-green-100 text-green-600" },
         { label: "Claims", description: "Submit and track claims", href: "/coverage?tab=claims", icon: FileText, color: "bg-purple-100 text-purple-600" },
-        { label: "Settlement", description: "Remittance & payouts", href: "/coverage?tab=settlement", icon: Receipt, color: "bg-emerald-100 text-emerald-600" },
-        { label: "Schemes", description: "Plan administration", href: "/coverage?tab=schemes", icon: Shield, color: "bg-impilo-100 text-impilo-500" },
+        { label: "Settlement", description: "Remittance & payouts", href: "/coverage?tab=settlement", icon: Receipt, color: "bg-emerald-100 text-primary" },
+        { label: "Schemes", description: "Plan administration", href: "/coverage?tab=schemes", icon: Shield, color: "bg-primary-soft text-primary" },
       ],
     });
   }
@@ -307,8 +307,8 @@ function getModuleCategories(roles: {
       color: "bg-pink-500",
       modules: [
         { label: "Voice Dictation", description: "Speech-to-text for notes", href: "/clinical/dictation", icon: Shield, color: "bg-pink-100 text-pink-600" },
-        { label: "Offline Sync", description: "Sync status & conflicts", href: "/clinical-tools?tab=offline", icon: Shield, color: "bg-impilo-100 text-impilo-500" },
-        { label: "Documents", description: "Document management", href: "/clinical-tools?tab=documents", icon: FileText, color: "bg-impilo-100 text-impilo-500" },
+        { label: "Offline Sync", description: "Sync status & conflicts", href: "/clinical-tools?tab=offline", icon: Shield, color: "bg-primary-soft text-primary" },
+        { label: "Documents", description: "Document management", href: "/clinical-tools?tab=documents", icon: FileText, color: "bg-primary-soft text-primary" },
         { label: "CDS Alerts", description: "Clinical decision support", href: "/clinical-tools?tab=cds", icon: Shield, color: "bg-red-100 text-red-600" },
       ],
     });
@@ -321,10 +321,10 @@ function getModuleCategories(roles: {
       icon: Shield,
       color: "bg-slate-600",
       modules: [
-        { label: "Production Command Centre", description: "Discover services, demo paths, and live integration health", href: "/production-command-centre", icon: LayoutGrid, color: "bg-impilo-100 text-impilo-600" },
+        { label: "Production Command Centre", description: "Discover services, demo paths, and live integration health", href: "/production-command-centre", icon: LayoutGrid, color: "bg-primary-soft text-primary" },
         { label: WORKER_ACCESS_LABELS.workerAccess, description: "Providers, staff & local access", href: "/admin/users", icon: Users, color: "bg-red-100 text-red-600" },
         { label: "Audit Trail", description: "System audit logs", href: "/admin/audit", icon: ClipboardList, color: "bg-amber-100 text-amber-600" },
-        { label: "System Settings", description: "Configuration & security", href: "/admin", icon: Settings, color: "bg-gray-100 text-gray-600" },
+        { label: "System Settings", description: "Configuration & security", href: "/admin", icon: Settings, color: "bg-neutral-100 text-muted-foreground" },
       ],
     });
     cats.push({
@@ -334,9 +334,9 @@ function getModuleCategories(roles: {
       color: "bg-cyan-600",
       modules: [
         { label: "AI Governance Hub", description: "Policy, audit & decision controls", href: "/ai-governance", icon: Shield, color: "bg-cyan-100 text-cyan-700" },
-        { label: "Governance Datasets", description: "Register and classify datasets", href: "/ai-governance?tab=datasets", icon: Database, color: "bg-indigo-100 text-indigo-700" },
+        { label: "Governance Datasets", description: "Register and classify datasets", href: "/ai-governance?tab=datasets", icon: Database, color: "bg-indigo-100 text-primary-hover" },
         { label: "Decision Rules", description: "Policy rules for AI access", href: "/ai-governance?tab=rules", icon: Shield, color: "bg-violet-100 text-violet-700" },
-        { label: "Policy Publishing", description: "Publish AI governance policy versions", href: "/ai-governance?tab=policy", icon: FileText, color: "bg-emerald-100 text-emerald-700" },
+        { label: "Policy Publishing", description: "Publish AI governance policy versions", href: "/ai-governance?tab=policy", icon: FileText, color: "bg-emerald-100 text-primary-hover" },
       ],
     });
   }
@@ -346,7 +346,7 @@ function getModuleCategories(roles: {
       id: "production-readiness",
       title: "Production readiness",
       icon: LayoutGrid,
-      color: "bg-impilo-500",
+      color: "bg-primary",
       modules: [
         ...(roles.isAdmin ? [
           {
@@ -354,7 +354,7 @@ function getModuleCategories(roles: {
             description: "Service discovery, maturity labels, and integration probes",
             href: "/production-command-centre",
             icon: LayoutGrid,
-            color: "bg-impilo-100 text-impilo-600",
+            color: "bg-primary-soft text-primary",
           },
         ] : []),
         ...(roles.isClinical || roles.isAdmin ? [
@@ -363,21 +363,21 @@ function getModuleCategories(roles: {
             description: "Quality, pipelines, integration, and audit intelligence",
             href: "/data-intelligence",
             icon: Database,
-            color: "bg-indigo-100 text-indigo-700",
+            color: "bg-indigo-100 text-primary-hover",
           },
           {
             label: "Inpatient workspace",
             description: "Admissions, nursing workbench, and ward operations",
             href: "/clinical/inpatient",
             icon: BedDouble,
-            color: "bg-purple-100 text-purple-700",
+            color: "bg-purple-100 text-warning-foreground",
           },
           {
             label: "Core transactions",
             description: "Transaction audit feed and state history",
             href: "/core-transaction",
             icon: Layers,
-            color: "bg-slate-100 text-slate-700",
+            color: "bg-neutral-100 text-foreground",
           },
         ] : []),
         ...(roles.isClinical || roles.isDispenser || roles.isFinance ? [
@@ -395,7 +395,7 @@ function getModuleCategories(roles: {
             description: "Billing and payment transaction audit trail",
             href: "/core-transaction",
             icon: Layers,
-            color: "bg-slate-100 text-slate-700",
+            color: "bg-neutral-100 text-foreground",
           },
         ] : []),
       ],
@@ -428,7 +428,7 @@ function getWorkerLaunchActions(args: {
         description: "Start from prioritized clinical inbox, then open queue, telemedicine, labs, and tools from one surface.",
         href: "/provider-workspace",
         icon: Clipboard,
-        color: "bg-emerald-100 text-emerald-700",
+        color: "bg-emerald-100 text-primary-hover",
         requiresWorkContext: true,
       },
       {
@@ -436,7 +436,7 @@ function getWorkerLaunchActions(args: {
         description: "Search by CPID, national ID, or name and launch straight into chart flow.",
         href: "/queue/search",
         icon: Users,
-        color: "bg-impilo-100 text-impilo-600",
+        color: "bg-primary-soft text-primary",
         requiresWorkContext: true,
       },
       {
@@ -444,7 +444,7 @@ function getWorkerLaunchActions(args: {
         description: "Register a patient directly into today's service queue without losing facility context.",
         href: "/queue/walk-in",
         icon: ClipboardList,
-        color: "bg-amber-100 text-amber-700",
+        color: "bg-amber-100 text-warning-foreground",
         requiresWorkContext: true,
       },
       {
@@ -460,7 +460,7 @@ function getWorkerLaunchActions(args: {
         description: "Start first-contact assessment and move urgent patients forward quickly.",
         href: "/queue/triage",
         icon: AlertTriangle,
-        color: "bg-rose-100 text-rose-700",
+        color: "bg-rose-100 text-danger",
         requiresWorkContext: true,
       },
       {
@@ -475,7 +475,7 @@ function getWorkerLaunchActions(args: {
         description: "Move directly into dispensing and medication follow-through.",
         href: "/pharmacy/dispense",
         icon: Pill,
-        color: "bg-emerald-100 text-emerald-700",
+        color: "bg-emerald-100 text-primary-hover",
         requiresWorkContext: true,
       },
       {
@@ -483,7 +483,7 @@ function getWorkerLaunchActions(args: {
         description: "Open admissions, nursing workbench, and ward operations.",
         href: "/clinical/inpatient",
         icon: BedDouble,
-        color: "bg-purple-100 text-purple-700",
+        color: "bg-purple-100 text-warning-foreground",
         requiresWorkContext: true,
       },
       {
@@ -498,14 +498,14 @@ function getWorkerLaunchActions(args: {
         description: "Review transaction state, audit correlation, and next actions.",
         href: "/core-transaction",
         icon: Layers,
-        color: "bg-slate-100 text-slate-700",
+        color: "bg-neutral-100 text-foreground",
       },
       {
         label: "Data & intelligence",
         description: "Open quality, pipeline, and audit intelligence surfaces.",
         href: "/data-intelligence",
         icon: Database,
-        color: "bg-indigo-100 text-indigo-700",
+        color: "bg-indigo-100 text-primary-hover",
       },
     );
   }
@@ -532,7 +532,7 @@ function getWorkerLaunchActions(args: {
         description: "Go straight into billing, invoices, and revenue follow-through.",
         href: "/finance/billing",
         icon: FileText,
-        color: "bg-emerald-100 text-emerald-700",
+        color: "bg-emerald-100 text-primary-hover",
       },
       {
         label: "Settlements",
@@ -553,7 +553,7 @@ function getWorkerLaunchActions(args: {
         description: "Audit billing and payment transaction state.",
         href: "/core-transaction",
         icon: Layers,
-        color: "bg-slate-100 text-slate-700",
+        color: "bg-neutral-100 text-foreground",
       },
     );
   }
@@ -573,35 +573,35 @@ function getWorkerLaunchActions(args: {
         description: "Browse Health OS services, maturity labels, and integration hub probes before operational actions.",
         href: "/production-command-centre",
         icon: LayoutGrid,
-        color: "bg-impilo-100 text-impilo-600",
+        color: "bg-primary-soft text-primary",
       },
       {
         label: "Control Tower",
         description: "Start from live operational oversight when you are driving throughput or escalation.",
         href: "/clinical/control-tower",
         icon: Activity,
-        color: "bg-rose-100 text-rose-700",
+        color: "bg-rose-100 text-danger",
       },
       {
         label: "Staff & Roles",
         description: "Jump into admin action on users, roles, and governance surfaces.",
         href: "/admin/users",
         icon: UserCog,
-        color: "bg-slate-100 text-slate-700",
+        color: "bg-neutral-100 text-foreground",
       },
       {
         label: "Data & intelligence",
         description: "Open data quality, pipelines, and audit intelligence.",
         href: "/data-intelligence",
         icon: Database,
-        color: "bg-indigo-100 text-indigo-700",
+        color: "bg-indigo-100 text-primary-hover",
       },
       {
         label: "Core transactions",
         description: "Transaction audit feed across production journeys.",
         href: "/core-transaction",
         icon: Layers,
-        color: "bg-slate-100 text-slate-700",
+        color: "bg-neutral-100 text-foreground",
       },
     );
   }
@@ -997,13 +997,13 @@ export default function HomePage() {
         </span>
         <div className="space-y-6">
           {/* Welcome + Context */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-card rounded-lg border border-border p-6">
             <div className="flex items-start justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">
+                <h2 className="text-xl font-semibold text-foreground">
                   {greeting}, {user?.displayName ?? "User"}
                 </h2>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-muted-foreground mt-1">
                   {user?.actorType === "CITIZEN"
                     ? "Personal Health Account"
                     : user?.actorType === "PROVIDER"
@@ -1016,13 +1016,13 @@ export default function HomePage() {
               <div className="flex items-center gap-2">
                 {isClinical && licenses.length > 0 && (
                   <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
-                    licenseActive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
+                    licenseActive ? "bg-green-50 text-green-700" : "bg-danger-soft text-danger"
                   }`}>
                     {licenseActive ? "Licensed" : "License Issue"}
                   </span>
                 )}
                 {user?.actorType && (
-                  <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-impilo-50 text-impilo-600">
+                  <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-primary-soft text-primary">
                     {user.actorType}
                   </span>
                 )}
@@ -1031,25 +1031,25 @@ export default function HomePage() {
 
             <div className="mt-4 flex flex-wrap gap-3">
               {facility && (
-                <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 px-3 py-1.5 rounded-lg">
-                  <Building2 className="w-4 h-4 text-gray-400" />
+                <div className="flex items-center gap-2 text-sm text-muted-foreground bg-background px-3 py-1.5 rounded-lg">
+                  <Building2 className="w-4 h-4 text-muted-foreground" />
                   <span>{facility.name}</span>
                 </div>
               )}
               {shift && (
-                <div className="flex items-center gap-2 text-sm text-gray-600 bg-green-50 px-3 py-1.5 rounded-lg">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground bg-green-50 px-3 py-1.5 rounded-lg">
                   <Activity className="w-4 h-4 text-green-500" />
                   <span>Shift active since {new Date(shift.startedAt).toLocaleTimeString()}</span>
                 </div>
               )}
               {!shift && !facility && (
-                <div className="flex items-center gap-2 text-sm text-amber-700 bg-amber-50 px-3 py-1.5 rounded-lg">
+                <div className="flex items-center gap-2 text-sm text-warning-foreground bg-warning-soft px-3 py-1.5 rounded-lg">
                   <MapPin className="w-4 h-4" />
                   <span>Select where you are working from below</span>
                 </div>
               )}
               {facility && !shift && (
-                <Link href="/shift" className="flex items-center gap-2 text-sm text-impilo-500 bg-impilo-50 px-3 py-1.5 rounded-lg hover:bg-impilo-100 transition-colors">
+                <Link href="/shift" className="flex items-center gap-2 text-sm text-primary bg-primary-soft px-3 py-1.5 rounded-lg hover:bg-primary-soft transition-colors">
                   <Clock className="w-4 h-4" />
                   <span>Start a shift</span>
                   <ArrowRight className="w-3 h-3" />
@@ -1059,21 +1059,21 @@ export default function HomePage() {
           </div>
 
           {/* Tab Switcher (Lovable 3-tab: Work / Professional / Personal) */}
-          <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
+          <div className="flex gap-1 bg-neutral-100 p-1 rounded-lg">
             {identity.hasWorkAccess && (
             <button onClick={() => switchTab("work")}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === "work" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === "work" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
               <Briefcase className="w-4 h-4" /> Work
             </button>
             )}
             {!identity.isCitizenOnly && identity.hasProfessionalAccess && (
             <button onClick={() => switchTab("professional")}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === "professional" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === "professional" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
               <Stethoscope className="w-4 h-4" /> My Professional
             </button>
             )}
             <button onClick={() => switchTab("personal")}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === "personal" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === "personal" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
               <Heart className="w-4 h-4" /> {identity.hasWorkAccess ? "My Life" : "My Life / My Health"}
             </button>
           </div>
@@ -1143,18 +1143,18 @@ export default function HomePage() {
                 <div className="impilo-subtle-african-accent rounded-3xl bg-gradient-to-r from-impilo-700 via-impilo-600 to-cyan-600 p-6 text-white shadow-impilo-floating">
                   <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                     <div className="max-w-2xl">
-                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-impilo-100">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/85">
                         The Experience
                       </p>
                       <h3 className="mt-2 text-2xl font-semibold">
                         Launch Client Experience
                       </h3>
-                      <p className="mt-2 max-w-xl text-sm text-impilo-100">
+                      <p className="mt-2 max-w-xl text-sm text-white/85">
                         {operatingNarrative}
                       </p>
                       <div className="mt-4 flex flex-wrap gap-2">
                         {hasWorkContext ? (
-                          <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white">
+                          <span className="inline-flex items-center gap-2 rounded-full bg-card/15 px-3 py-1 text-xs font-medium text-white">
                             <Building2 className="h-3.5 w-3.5" />
                             {facility?.name ?? "Work context selected"}
                           </span>
@@ -1165,19 +1165,19 @@ export default function HomePage() {
                           </span>
                         )}
                         {shift && (
-                          <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white">
+                          <span className="inline-flex items-center gap-2 rounded-full bg-card/15 px-3 py-1 text-xs font-medium text-white">
                             <Activity className="h-3.5 w-3.5" />
                             Shift active
                           </span>
                         )}
                         {selectedOperatingModel?.facilityTier && (
-                          <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white">
+                          <span className="inline-flex items-center gap-2 rounded-full bg-card/15 px-3 py-1 text-xs font-medium text-white">
                             <Layers className="h-3.5 w-3.5" />
                             {formatOperatingLabel(selectedOperatingModel.facilityTier)}
                           </span>
                         )}
                         {selectedOperatingModel?.continuityClass && (
-                          <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white">
+                          <span className="inline-flex items-center gap-2 rounded-full bg-card/15 px-3 py-1 text-xs font-medium text-white">
                             <Wifi className="h-3.5 w-3.5" />
                             {formatOperatingLabel(selectedOperatingModel.continuityClass)}
                           </span>
@@ -1188,7 +1188,7 @@ export default function HomePage() {
                     {hasWorkContext ? (
                       <Link
                         href={launchActions[0]?.href ?? "/queue/search"}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-impilo-700 transition-colors hover:bg-impilo-50"
+                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-card px-5 py-3 text-sm font-semibold text-primary-hover transition-colors hover:bg-primary-soft"
                       >
                         <Play className="h-4 w-4" />
                         {launchActions[0]?.label ?? "Start care"}
@@ -1196,7 +1196,7 @@ export default function HomePage() {
                     ) : (
                       <a
                         href="#workplace-selection"
-                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-impilo-700 transition-colors hover:bg-impilo-50"
+                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-card px-5 py-3 text-sm font-semibold text-primary-hover transition-colors hover:bg-primary-soft"
                       >
                         <MapPin className="h-4 w-4" />
                         Choose workplace
@@ -1208,11 +1208,11 @@ export default function HomePage() {
                 <div className="grid grid-cols-2 gap-3">
                   {workerSnapshotCards.map((card) => {
                     const toneClasses = {
-                      impilo: "border-impilo-200 bg-impilo-50 text-impilo-700",
-                      emerald: "border-emerald-200 bg-emerald-50 text-emerald-700",
-                      amber: "border-amber-200 bg-amber-50 text-amber-800",
-                      rose: "border-rose-200 bg-rose-50 text-rose-700",
-                      slate: "border-slate-200 bg-white text-slate-700",
+                      impilo: "border-primary/25 bg-primary-soft text-primary-hover",
+                      emerald: "border-success/25 bg-success-soft text-primary-hover",
+                      amber: "border-warning/35 bg-warning-soft text-warning-foreground",
+                      rose: "border-danger/28 bg-danger-soft text-danger",
+                      slate: "border-border bg-card text-foreground",
                     } as const;
 
                     return (
@@ -1230,42 +1230,42 @@ export default function HomePage() {
               </div>
 
               {hasWorkContext && operatingSignals.length > 0 && (
-                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
                   <div className="mb-4 flex items-start justify-between gap-4">
                     <div>
-                      <h3 className="text-base font-semibold text-slate-900">Facility operating model</h3>
-                      <p className="mt-1 text-sm text-slate-500">
+                      <h3 className="text-base font-semibold text-foreground">Facility operating model</h3>
+                      <p className="mt-1 text-sm text-muted-foreground">
                         This facility is configured as a distinct care-delivery environment, not just a location. The operating model below should shape launch flow and continuity expectations for this shift.
                       </p>
                     </div>
-                    <div className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-medium uppercase tracking-[0.16em] text-slate-600">
+                    <div className="rounded-xl bg-neutral-100 px-3 py-2 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
                       Operating profile
                     </div>
                   </div>
                   <div className="grid gap-3 md:grid-cols-3">
                     {operatingSignals.map((signal) => (
-                      <div key={signal.label} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                      <div key={signal.label} className="rounded-xl border border-border bg-background p-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                           {signal.label}
                         </p>
-                        <p className="mt-2 text-lg font-semibold text-slate-900">{signal.value}</p>
-                        <p className="mt-2 text-xs leading-5 text-slate-500">{signal.detail}</p>
+                        <p className="mt-2 text-lg font-semibold text-foreground">{signal.value}</p>
+                        <p className="mt-2 text-xs leading-5 text-muted-foreground">{signal.detail}</p>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
 
-              <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <div className="bg-card rounded-lg border border-border p-4">
                 <div className="mb-4 flex items-center justify-between">
-                  <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900">
-                    <Clipboard className="w-5 h-5 text-impilo-500" />
+                  <h3 className="flex items-center gap-2 text-base font-semibold text-foreground">
+                    <Clipboard className="w-5 h-5 text-primary" />
                     Service Delivery Pathways
                   </h3>
-                  <p className="text-xs text-gray-500">Quick starts for the work that matters now</p>
+                  <p className="text-xs text-muted-foreground">Quick starts for the work that matters now</p>
                 </div>
                 {launchActions.length === 0 ? (
-                  <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-6 text-sm text-gray-500">
+                  <div className="rounded-xl border border-dashed border-border bg-background px-4 py-6 text-sm text-muted-foreground">
                     Select a workplace or activate the right operational plane to unlock role-specific launch actions.
                   </div>
                 ) : (
@@ -1275,7 +1275,7 @@ export default function HomePage() {
                         <Link
                           key={action.href}
                           href={action.href}
-                          className="group rounded-xl border border-gray-200 bg-gray-50 p-4 transition-colors hover:border-impilo-200 hover:bg-white hover:shadow-sm"
+                          className="group rounded-xl border border-border bg-background p-4 transition-colors hover:border-primary/25 hover:bg-card hover:shadow-sm"
                         >
                           <div className="mb-3">
                             <ModuleCardIcon
@@ -1286,10 +1286,10 @@ export default function HomePage() {
                           </div>
                           <div className="flex items-start justify-between gap-3">
                             <div>
-                              <p className="text-sm font-semibold text-gray-900 group-hover:text-impilo-600">{action.label}</p>
-                              <p className="mt-1 text-xs leading-5 text-gray-500">{action.description}</p>
+                              <p className="text-sm font-semibold text-foreground group-hover:text-primary">{action.label}</p>
+                              <p className="mt-1 text-xs leading-5 text-muted-foreground">{action.description}</p>
                             </div>
-                            <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-gray-400 group-hover:text-impilo-500" />
+                            <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground group-hover:text-primary" />
                           </div>
                         </Link>
                       );
@@ -1304,25 +1304,25 @@ export default function HomePage() {
           {isClinical && hasWorkContext && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Today's Schedule */}
-              <div className="bg-white rounded-lg border border-gray-200">
+              <div className="bg-card rounded-lg border border-border">
                 <div className="px-5 py-3 border-b flex items-center justify-between">
-                  <h3 className="text-sm font-medium text-gray-900">Today&apos;s Schedule</h3>
-                  <Link href="/scheduling" className="text-xs text-impilo-500 hover:text-impilo-700">View All →</Link>
+                  <h3 className="text-sm font-medium text-foreground">Today&apos;s Schedule</h3>
+                  <Link href="/scheduling" className="text-xs text-primary hover:text-primary-hover">View All →</Link>
                 </div>
                 {appointments.length === 0 ? (
                   <div className="p-6 text-center">
-                    <Calendar className="w-6 h-6 text-gray-300 mx-auto mb-1" />
-                    <p className="text-xs text-gray-400">No appointments today</p>
+                    <Calendar className="w-6 h-6 text-muted-foreground mx-auto mb-1" />
+                    <p className="text-xs text-muted-foreground">No appointments today</p>
                   </div>
                 ) : (
                   <div className="divide-y divide-gray-100">
                     {appointments.slice(0, 4).map((apt) => (
                       <div key={apt.id} className="px-5 py-2.5 flex items-center justify-between">
                         <div>
-                          <p className="text-sm text-gray-900">{(apt.attributes.appointment_type as string) ?? "Appointment"}</p>
-                          <p className="text-xs text-gray-500">{apt.attributes.start_time ? new Date(apt.attributes.start_time as string).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}</p>
+                          <p className="text-sm text-foreground">{(apt.attributes.appointment_type as string) ?? "Appointment"}</p>
+                          <p className="text-xs text-muted-foreground">{apt.attributes.start_time ? new Date(apt.attributes.start_time as string).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}</p>
                         </div>
-                        <span className={`px-2 py-0.5 text-xs rounded-full ${apt.attributes.status === "CONFIRMED" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>
+                        <span className={`px-2 py-0.5 text-xs rounded-full ${apt.attributes.status === "CONFIRMED" ? "bg-green-100 text-green-700" : "bg-neutral-100 text-muted-foreground"}`}>
                           {(apt.attributes.status as string) ?? "—"}
                         </span>
                       </div>
@@ -1332,15 +1332,15 @@ export default function HomePage() {
               </div>
 
               {/* Recent Encounters */}
-              <div className="bg-white rounded-lg border border-gray-200">
+              <div className="bg-card rounded-lg border border-border">
                 <div className="px-5 py-3 border-b flex items-center justify-between">
-                  <h3 className="text-sm font-medium text-gray-900">Recent Encounters</h3>
-                  <Link href="/queue" className="text-xs text-impilo-500 hover:text-impilo-700">Queue →</Link>
+                  <h3 className="text-sm font-medium text-foreground">Recent Encounters</h3>
+                  <Link href="/queue" className="text-xs text-primary hover:text-primary-hover">Queue →</Link>
                 </div>
                 {encounters.length === 0 ? (
                   <div className="p-6 text-center">
-                    <Stethoscope className="w-6 h-6 text-gray-300 mx-auto mb-1" />
-                    <p className="text-xs text-gray-400">No recent encounters</p>
+                    <Stethoscope className="w-6 h-6 text-muted-foreground mx-auto mb-1" />
+                    <p className="text-xs text-muted-foreground">No recent encounters</p>
                   </div>
                 ) : (
                   <div className="divide-y divide-gray-100">
@@ -1349,15 +1349,15 @@ export default function HomePage() {
                       const isActive = a.status === "IN_PROGRESS" || a.status === "ACTIVE";
                       return (
                         <Link key={enc.id} href={`/ehr/${a.patient_id}/encounter/${enc.id}`}
-                          className="flex items-center justify-between px-5 py-2.5 hover:bg-gray-50 transition-colors">
+                          className="flex items-center justify-between px-5 py-2.5 hover:bg-background transition-colors">
                           <div className="flex items-center gap-2">
                             <div className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-green-500" : "bg-gray-300"}`} />
                             <div>
-                              <p className="text-sm text-gray-900">{((a.encounter_type as string) ?? "Encounter").replace(/_/g, " ")}</p>
-                              <p className="text-xs text-gray-500">{a.started_at ? new Date(a.started_at as string).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}</p>
+                              <p className="text-sm text-foreground">{((a.encounter_type as string) ?? "Encounter").replace(/_/g, " ")}</p>
+                              <p className="text-xs text-muted-foreground">{a.started_at ? new Date(a.started_at as string).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}</p>
                             </div>
                           </div>
-                          <span className={`px-2 py-0.5 text-xs rounded-full ${isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>
+                          <span className={`px-2 py-0.5 text-xs rounded-full ${isActive ? "bg-green-100 text-green-700" : "bg-neutral-100 text-muted-foreground"}`}>
                             {(a.status as string)?.replace(/_/g, " ") ?? "—"}
                           </span>
                         </Link>
@@ -1370,39 +1370,39 @@ export default function HomePage() {
           )}
 
           {/* Communication Noticeboard (Lovable ModuleHome) */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="bg-card rounded-lg border border-border p-4">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-                <MessageSquare className="w-5 h-5 text-impilo-500" />
+              <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-primary" />
                 Communication & Access
               </h3>
-              <Link href="/communication" className="text-xs text-impilo-500 hover:text-impilo-700">
+              <Link href="/communication" className="text-xs text-primary hover:text-primary-hover">
                 View All →
               </Link>
             </div>
             <div className="flex flex-wrap gap-2 mb-3">
               <Link href="/communication?tab=messages"
-                className="inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border border-gray-200 rounded-lg hover:bg-impilo-50 hover:border-impilo-200 transition-colors">
-                <FileText className="w-5 h-5 text-impilo-500" />
+                className="inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border border-border rounded-lg hover:bg-primary-soft hover:border-primary/25 transition-colors">
+                <FileText className="w-5 h-5 text-primary" />
                 Messages
               </Link>
               <Link href="/communication?tab=pages"
-                className="inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border border-gray-200 rounded-lg hover:bg-amber-50 hover:border-amber-300 transition-colors">
+                className="inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border border-border rounded-lg hover:bg-warning-soft hover:border-amber-300 transition-colors">
                 <AlertTriangle className="w-5 h-5 text-amber-500" />
                 Pages
               </Link>
               <Link href="/communication?tab=calls"
-                className="inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border border-gray-200 rounded-lg hover:bg-green-50 hover:border-green-300 transition-colors">
+                className="inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border border-border rounded-lg hover:bg-green-50 hover:border-green-300 transition-colors">
                 <Video className="w-5 h-5 text-green-600" />
                 Calls
               </Link>
               <Link href="/omnichannel"
-                className="inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border border-gray-200 rounded-lg hover:bg-teal-50 hover:border-teal-300 transition-colors">
+                className="inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border border-border rounded-lg hover:bg-teal-50 hover:border-teal-300 transition-colors">
                 <Radio className="w-5 h-5 text-teal-600" />
                 Omnichannel
               </Link>
               <Link href="/scheduling/noticeboard"
-                className="inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border border-gray-200 rounded-lg hover:bg-purple-50 hover:border-purple-300 transition-colors">
+                className="inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border border-border rounded-lg hover:bg-warning-soft hover:border-purple-300 transition-colors">
                 <Globe className="w-5 h-5 text-purple-600" />
                 Noticeboard
               </Link>
@@ -1412,7 +1412,7 @@ export default function HomePage() {
 
           {/* Module Categories (Lovable ExpandableCategoryCards) */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">Modules</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wide">Modules</h3>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
               {categories.map((cat) => {
                 const CatIcon = cat.icon;
@@ -1422,7 +1422,7 @@ export default function HomePage() {
                     <button
                       onClick={() => setExpandedCategory(isExpanded ? null : cat.id)}
                       className={`w-full text-left rounded-lg border p-4 transition-all ${
-                        isExpanded ? "border-impilo-200 bg-impilo-50 shadow-sm" : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
+                        isExpanded ? "border-primary/25 bg-primary-soft shadow-sm" : "border-border bg-card hover:border-border hover:shadow-sm"
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -1430,17 +1430,17 @@ export default function HomePage() {
                           <CatIcon className="w-4.5 h-4.5 text-white" />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">{cat.title}</p>
-                          <p className="text-xs text-gray-500">{cat.modules.length} modules</p>
+                          <p className="text-sm font-medium text-foreground truncate">{cat.title}</p>
+                          <p className="text-xs text-muted-foreground">{cat.modules.length} modules</p>
                         </div>
                       </div>
                     </button>
                     {isExpanded && (
-                      <div className="mt-2 bg-white rounded-lg border border-gray-200 p-3 space-y-1">
+                      <div className="mt-2 bg-card rounded-lg border border-border p-3 space-y-1">
                         {cat.modules.map((mod) => {
                           return (
                             <Link key={mod.href + mod.label} href={mod.href}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors group">
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-background transition-colors group">
                               <ModuleCardIcon
                                 serviceSlug={mod.serviceSlug}
                                 icon={mod.icon}
@@ -1448,10 +1448,10 @@ export default function HomePage() {
                                 size="sm"
                               />
                               <div className="min-w-0">
-                                <p className="text-sm text-gray-900 group-hover:text-impilo-500">{mod.label}</p>
-                                <p className="text-xs text-gray-500 truncate">{mod.description}</p>
+                                <p className="text-sm text-foreground group-hover:text-primary">{mod.label}</p>
+                                <p className="text-xs text-muted-foreground truncate">{mod.description}</p>
                               </div>
-                              <ChevronRight className="w-3.5 h-3.5 text-gray-400 shrink-0 ml-auto" />
+                              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0 ml-auto" />
                             </Link>
                           );
                         })}
@@ -1467,21 +1467,21 @@ export default function HomePage() {
           {isFinance && (
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Finance Overview</h3>
-                <Link href="/finance" className="text-xs text-impilo-500 hover:text-impilo-700">Finance Dashboard →</Link>
+                <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">Finance Overview</h3>
+                <Link href="/finance" className="text-xs text-primary hover:text-primary-hover">Finance Dashboard →</Link>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Link href="/finance/billing" className="bg-white rounded-lg border border-gray-200 p-4 hover:border-impilo-200 transition-colors">
-                  <div className="flex items-center gap-2 mb-2"><Receipt className="w-4 h-4 text-impilo-400" /><span className="text-sm font-medium text-gray-900">Billing</span></div>
-                  <p className="text-xs text-gray-500">View and manage bills</p>
+                <Link href="/finance/billing" className="bg-card rounded-lg border border-border p-4 hover:border-primary/25 transition-colors">
+                  <div className="flex items-center gap-2 mb-2"><Receipt className="w-4 h-4 text-impilo-400" /><span className="text-sm font-medium text-foreground">Billing</span></div>
+                  <p className="text-xs text-muted-foreground">View and manage bills</p>
                 </Link>
-                <Link href="/finance/payments" className="bg-white rounded-lg border border-gray-200 p-4 hover:border-impilo-200 transition-colors">
-                  <div className="flex items-center gap-2 mb-2"><FileText className="w-4 h-4 text-green-500" /><span className="text-sm font-medium text-gray-900">Payments</span></div>
-                  <p className="text-xs text-gray-500">Track payment status</p>
+                <Link href="/finance/payments" className="bg-card rounded-lg border border-border p-4 hover:border-primary/25 transition-colors">
+                  <div className="flex items-center gap-2 mb-2"><FileText className="w-4 h-4 text-green-500" /><span className="text-sm font-medium text-foreground">Payments</span></div>
+                  <p className="text-xs text-muted-foreground">Track payment status</p>
                 </Link>
-                <Link href="/finance/claims" className="bg-white rounded-lg border border-gray-200 p-4 hover:border-impilo-200 transition-colors">
-                  <div className="flex items-center gap-2 mb-2"><ClipboardList className="w-4 h-4 text-purple-500" /><span className="text-sm font-medium text-gray-900">Claims</span></div>
-                  <p className="text-xs text-gray-500">Insurance claim tracking</p>
+                <Link href="/finance/claims" className="bg-card rounded-lg border border-border p-4 hover:border-primary/25 transition-colors">
+                  <div className="flex items-center gap-2 mb-2"><ClipboardList className="w-4 h-4 text-purple-500" /><span className="text-sm font-medium text-foreground">Claims</span></div>
+                  <p className="text-xs text-muted-foreground">Insurance claim tracking</p>
                 </Link>
               </div>
             </div>
@@ -1494,12 +1494,12 @@ export default function HomePage() {
             <div className="space-y-6">
               {(availableOperationalModes.includes("registry_admin") ||
                 availableOperationalModes.includes("organization_admin")) && (
-                <div className="rounded-xl border border-slate-200 bg-gradient-to-r from-slate-50 to-white p-5">
-                  <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-amber-700" />
+                <div className="rounded-xl border border-border bg-gradient-to-r from-slate-50 to-card p-5">
+                  <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-warning-foreground" />
                     Administrative planes
                   </h3>
-                  <p className="mt-1 text-xs text-gray-600 max-w-2xl">
+                  <p className="mt-1 text-xs text-muted-foreground max-w-2xl">
                     Enter sovereign registry governance or organization operations explicitly — separate from
                     Facility Work (facility → workspace → shift). These match the context strip at the top of
                     the shell.
@@ -1508,7 +1508,7 @@ export default function HomePage() {
                     {availableOperationalModes.includes("registry_admin") && (
                       <Link
                         href="/registry-admin"
-                        className="inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-medium text-amber-950 hover:border-amber-400 transition-colors"
+                        className="inline-flex items-center gap-2 rounded-lg border border-warning/35 bg-warning-soft px-4 py-2.5 text-sm font-medium text-warning-foreground hover:border-amber-400 transition-colors"
                       >
                         <ShieldCheck className="h-4 w-4" />
                         Registry administration
@@ -1530,35 +1530,35 @@ export default function HomePage() {
               {/* Credentials & License - Compact Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* License Card - Prominent */}
-                <div className={`rounded-xl border-2 p-4 ${licenseActive ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}`}>
+                <div className={`rounded-xl border-2 p-4 ${licenseActive ? "border-green-200 bg-green-50" : "border-danger/28 bg-danger-soft"}`}>
                   <div className="flex items-center gap-2 mb-2">
                     <Award className={`w-5 h-5 ${licenseActive ? "text-green-600" : "text-red-600"}`} />
-                    <span className={`text-sm font-semibold ${licenseActive ? "text-green-700" : "text-red-700"}`}>
+                    <span className={`text-sm font-semibold ${licenseActive ? "text-green-700" : "text-danger"}`}>
                       {licenseActive ? "Licensed" : "Action Required"}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-600">
+                  <p className="text-xs text-muted-foreground">
                     {licenses.length > 0 ? `${licenses.length} license${licenses.length > 1 ? "s" : ""} on record` : "No license data"}
                   </p>
-                  <Link href="/home/credentials" className="text-xs text-impilo-500 hover:text-impilo-700 mt-2 inline-block">
+                  <Link href="/home/credentials" className="text-xs text-primary hover:text-primary-hover mt-2 inline-block">
                     Manage →
                   </Link>
                 </div>
                 {/* CPD Progress */}
-                <div className="rounded-xl border border-gray-200 bg-white p-4">
+                <div className="rounded-xl border border-border bg-card p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-900">CPD Progress</span>
-                    <span className="text-xs text-impilo-500">
+                    <span className="text-sm font-medium text-foreground">CPD Progress</span>
+                    <span className="text-xs text-primary">
                       {cpdCycle ? `${cpdEarned}/${cpdRequired} pts` : "No active cycle"}
                     </span>
                   </div>
-                  <div className="w-full bg-gray-100 rounded-full h-2">
+                  <div className="w-full bg-neutral-100 rounded-full h-2">
                     <div
-                      className="bg-impilo-500 rounded-full h-2"
+                      className="bg-primary rounded-full h-2"
                       style={{ width: `${cpdProgressPct}%` }}
                     />
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-xs text-muted-foreground mt-2">
                     {cpdCycle
                       ? `${Math.max(0, cpdRequired - cpdEarned)} points remaining`
                       : "CPD cycle data unavailable"}
@@ -1576,19 +1576,19 @@ export default function HomePage() {
                     </Link>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
-                    <Link href="/learning?focus=required" className="rounded-lg bg-white px-2 py-2 text-center border border-cyan-100 hover:border-cyan-300 transition">
+                    <Link href="/learning?focus=required" className="rounded-lg bg-card px-2 py-2 text-center border border-cyan-100 hover:border-cyan-300 transition">
                       <p className="text-[10px] uppercase tracking-wide text-cyan-700">Required</p>
                       <p className="text-base font-semibold text-cyan-900">
                         {fundoKpisLoading ? "…" : fundoKpis.required}
                       </p>
                     </Link>
-                    <Link href="/learning?focus=overdue" className="rounded-lg bg-white px-2 py-2 text-center border border-cyan-100 hover:border-cyan-300 transition">
+                    <Link href="/learning?focus=overdue" className="rounded-lg bg-card px-2 py-2 text-center border border-cyan-100 hover:border-cyan-300 transition">
                       <p className="text-[10px] uppercase tracking-wide text-cyan-700">Overdue</p>
-                      <p className={`text-base font-semibold ${fundoKpis.overdue > 0 ? "text-rose-700" : "text-cyan-900"}`}>
+                      <p className={`text-base font-semibold ${fundoKpis.overdue > 0 ? "text-danger" : "text-cyan-900"}`}>
                         {fundoKpisLoading ? "…" : fundoKpis.overdue}
                       </p>
                     </Link>
-                    <Link href="/learning?focus=cpd" className="rounded-lg bg-white px-2 py-2 text-center border border-cyan-100 hover:border-cyan-300 transition">
+                    <Link href="/learning?focus=cpd" className="rounded-lg bg-card px-2 py-2 text-center border border-cyan-100 hover:border-cyan-300 transition">
                       <p className="text-[10px] uppercase tracking-wide text-cyan-700">CPD</p>
                       <p className="text-base font-semibold text-cyan-900">
                         {fundoKpisLoading ? "…" : fundoKpis.cpdEligible}
@@ -1602,19 +1602,19 @@ export default function HomePage() {
                   </p>
                 </div>
                 {/* Quick Actions */}
-                <div className="rounded-xl border border-gray-200 bg-white p-4">
-                  <span className="text-sm font-medium text-gray-900 mb-3 block">Quick Actions</span>
+                <div className="rounded-xl border border-border bg-card p-4">
+                  <span className="text-sm font-medium text-foreground mb-3 block">Quick Actions</span>
                   <div className="space-y-2">
-                    <Link href="/learning" className="flex items-center gap-2 text-xs text-gray-600 hover:text-impilo-500">
+                    <Link href="/learning" className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary">
                       <ServiceLogo slug="fundo" size="compact" /> Impilo Fundo
                     </Link>
-                    <Link href="/home/certifications" className="flex items-center gap-2 text-xs text-gray-600 hover:text-impilo-500">
+                    <Link href="/home/certifications" className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary">
                       <Award className="w-3.5 h-3.5" /> Certifications
                     </Link>
-                    <Link href="/professional" className="flex items-center gap-2 text-xs text-gray-600 hover:text-impilo-500">
+                    <Link href="/professional" className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary">
                       <User className="w-3.5 h-3.5" /> Full Profile
                     </Link>
-                    <Link href="/home/transcripts" className="flex items-center gap-2 text-xs text-gray-600 hover:text-impilo-500">
+                    <Link href="/home/transcripts" className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary">
                       <FileText className="w-3.5 h-3.5" /> CPD Transcripts
                     </Link>
                   </div>
@@ -1622,23 +1622,23 @@ export default function HomePage() {
               </div>
 
               {/* Affiliations (from VARAPI privileges or facility list fallback) */}
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-4">
+              <div className="bg-card rounded-lg border border-border p-6">
+                <h3 className="text-base font-semibold text-foreground flex items-center gap-2 mb-4">
                   <Building2 className="w-5 h-5 text-purple-600" /> Facility Affiliations
                 </h3>
                 {privileges.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {privileges.slice(0, 6).map((priv, idx) => (
-                      <div key={idx} className="flex items-center justify-between bg-gray-50 rounded-lg border border-gray-200 p-3">
+                      <div key={idx} className="flex items-center justify-between bg-background rounded-lg border border-border p-3">
                         <div className="flex items-center gap-2">
-                          <Building2 className="w-4 h-4 text-gray-400" />
+                          <Building2 className="w-4 h-4 text-muted-foreground" />
                           <div>
-                            <p className="text-sm font-medium text-gray-900">Facility {priv.facilityId?.slice(0, 8)}</p>
-                            <p className="text-xs text-gray-500">{priv.privilegeType} · {priv.scope}</p>
+                            <p className="text-sm font-medium text-foreground">Facility {priv.facilityId?.slice(0, 8)}</p>
+                            <p className="text-xs text-muted-foreground">{priv.privilegeType} · {priv.scope}</p>
                           </div>
                         </div>
                         <span className={`text-xs px-2 py-0.5 rounded-full ${
-                          priv.status === "APPROVED" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
+                          priv.status === "APPROVED" ? "bg-green-100 text-green-700" : "bg-neutral-100 text-muted-foreground"
                         }`}>{priv.status}</span>
                       </div>
                     ))}
@@ -1646,33 +1646,33 @@ export default function HomePage() {
                 ) : facilities.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {facilities.slice(0, 4).map((f) => (
-                      <div key={f.id} className="flex items-center justify-between bg-gray-50 rounded-lg border border-gray-200 p-3">
+                      <div key={f.id} className="flex items-center justify-between bg-background rounded-lg border border-border p-3">
                         <div className="flex items-center gap-2">
-                          <Building2 className="w-4 h-4 text-gray-400" />
+                          <Building2 className="w-4 h-4 text-muted-foreground" />
                           <div>
-                            <p className="text-sm font-medium text-gray-900">{f.attributes.name}</p>
-                            <p className="text-xs text-gray-500">{f.attributes.facilityType}</p>
+                            <p className="text-sm font-medium text-foreground">{f.attributes.name}</p>
+                            <p className="text-xs text-muted-foreground">{f.attributes.facilityType}</p>
                           </div>
                         </div>
                         <button onClick={() => handleFacilitySelect(f)}
-                          className="text-xs text-impilo-500 hover:text-impilo-700 font-medium">
+                          className="text-xs text-primary hover:text-primary-hover font-medium">
                           Start Shift →
                         </button>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-400">No facility affiliations found.</p>
+                  <p className="text-sm text-muted-foreground">No facility affiliations found.</p>
                 )}
               </div>
 
               {/* Work Modes — all ways a professional can work */}
               {isClinical && (
-                <div className="bg-white rounded-lg border border-gray-200 p-6">
-                  <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-4">
+                <div className="bg-card rounded-lg border border-border p-6">
+                  <h3 className="text-base font-semibold text-foreground flex items-center gap-2 mb-4">
                     <Globe className="w-5 h-5 text-teal-600" /> Other Ways to Work
                   </h3>
-                  <p className="text-sm text-gray-500 mb-4">
+                  <p className="text-sm text-muted-foreground mb-4">
                     Not at a facility? Choose how you are working today.
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -1680,43 +1680,43 @@ export default function HomePage() {
                     <button onClick={() => enterFacilityFreeMode("clinical", "/telemedicine")}
                       className="text-left bg-green-50 rounded-lg border border-green-200 p-4 hover:border-green-400 transition-all group">
                       <Video className="w-5 h-5 text-green-600 mb-2" />
-                      <p className="text-sm font-medium text-gray-900 group-hover:text-green-700">Telemedicine & Virtual</p>
-                      <p className="text-xs text-gray-500 mt-0.5">Video/voice consultations, remote patient monitoring, e-prescribing</p>
+                      <p className="text-sm font-medium text-foreground group-hover:text-green-700">Telemedicine & Virtual</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Video/voice consultations, remote patient monitoring, e-prescribing</p>
                     </button>
                     {/* Independent Practice */}
                     <button onClick={() => enterIndependentMode("independent_practice")}
-                      className="text-left bg-amber-50 rounded-lg border border-amber-200 p-4 hover:border-amber-400 transition-all group">
+                      className="text-left bg-warning-soft rounded-lg border border-warning/35 p-4 hover:border-amber-400 transition-all group">
                       <Briefcase className="w-5 h-5 text-amber-600 mb-2" />
-                      <p className="text-sm font-medium text-gray-900 group-hover:text-amber-700">Independent Practice</p>
-                      <p className="text-xs text-gray-500 mt-0.5">Work under your own licence without facility context</p>
+                      <p className="text-sm font-medium text-foreground group-hover:text-warning-foreground">Independent Practice</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Work under your own licence without facility context</p>
                     </button>
                     {/* Field Work */}
                     <button onClick={() => enterIndependentMode("community_outreach")}
                       className="text-left bg-teal-50 rounded-lg border border-teal-200 p-4 hover:border-teal-400 transition-all group">
                       <MapPin className="w-5 h-5 text-teal-600 mb-2" />
-                      <p className="text-sm font-medium text-gray-900 group-hover:text-teal-700">Field & Community Work</p>
-                      <p className="text-xs text-gray-500 mt-0.5">Community outreach, home visits, mobile clinics, school health</p>
+                      <p className="text-sm font-medium text-foreground group-hover:text-teal-700">Field & Community Work</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Community outreach, home visits, mobile clinics, school health</p>
                     </button>
                     {/* Emergency Response */}
                     <button onClick={() => enterIndependentMode("emergency_response")}
-                      className="text-left bg-red-50 rounded-lg border border-red-200 p-4 hover:border-red-400 transition-all group">
+                      className="text-left bg-danger-soft rounded-lg border border-danger/28 p-4 hover:border-red-400 transition-all group">
                       <Siren className="w-5 h-5 text-red-600 mb-2" />
-                      <p className="text-sm font-medium text-gray-900 group-hover:text-red-700">Emergency Response</p>
-                      <p className="text-xs text-gray-500 mt-0.5">Disaster, outbreak, mass casualty — elevated trust, break-glass access</p>
+                      <p className="text-sm font-medium text-foreground group-hover:text-danger">Emergency Response</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Disaster, outbreak, mass casualty — elevated trust, break-glass access</p>
                     </button>
                     {/* Above Site */}
                     <button onClick={() => enterFacilityFreeMode("admin", "/reports")}
-                      className="text-left bg-indigo-50 rounded-lg border border-indigo-200 p-4 hover:border-indigo-400 transition-all group">
+                      className="text-left bg-info-soft rounded-lg border border-info/25 p-4 hover:border-indigo-400 transition-all group">
                       <Layers className="w-5 h-5 text-indigo-600 mb-2" />
-                      <p className="text-sm font-medium text-gray-900 group-hover:text-indigo-700">Above-Site & Programme</p>
-                      <p className="text-xs text-gray-500 mt-0.5">District/provincial oversight, programme management, surveillance, reporting</p>
+                      <p className="text-sm font-medium text-foreground group-hover:text-primary-hover">Above-Site & Programme</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">District/provincial oversight, programme management, surveillance, reporting</p>
                     </button>
                     {/* Maintenance & Configuration */}
                     <button onClick={() => enterFacilityFreeMode("admin", "/admin")}
-                      className="text-left bg-gray-50 rounded-lg border border-gray-200 p-4 hover:border-gray-400 transition-all group">
-                      <Wrench className="w-5 h-5 text-gray-600 mb-2" />
-                      <p className="text-sm font-medium text-gray-900 group-hover:text-gray-700">Maintenance & Configuration</p>
-                      <p className="text-xs text-gray-500 mt-0.5">System setup, master data, user management, integrations, troubleshooting</p>
+                      className="text-left bg-background rounded-lg border border-border p-4 hover:border-gray-400 transition-all group">
+                      <Wrench className="w-5 h-5 text-muted-foreground mb-2" />
+                      <p className="text-sm font-medium text-foreground group-hover:text-foreground">Maintenance & Configuration</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">System setup, master data, user management, integrations, troubleshooting</p>
                     </button>
                   </div>
                 </div>
@@ -1728,112 +1728,112 @@ export default function HomePage() {
           {activeTab === "personal" && (
             <div className="space-y-6">
               {/* My Health Quick Actions */}
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-4">
+              <div className="bg-card rounded-lg border border-border p-6">
+                <h3 className="text-base font-semibold text-foreground flex items-center gap-2 mb-4">
                   <Heart className="w-5 h-5 text-pink-600" /> My Health
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <Link href="/scheduling" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-impilo-50 border border-impilo-200 hover:border-impilo-400 transition-colors text-center">
-                    <Calendar className="w-6 h-6 text-impilo-500" />
-                    <span className="text-xs font-medium text-gray-900">Book Visit</span>
+                  <Link href="/scheduling" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-primary-soft border border-primary/25 hover:border-impilo-400 transition-colors text-center">
+                    <Calendar className="w-6 h-6 text-primary" />
+                    <span className="text-xs font-medium text-foreground">Book Visit</span>
                   </Link>
                   <Link href="/telemedicine" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-green-50 border border-green-200 hover:border-green-400 transition-colors text-center">
                     <Video className="w-6 h-6 text-green-600" />
-                    <span className="text-xs font-medium text-gray-900">Video Call</span>
+                    <span className="text-xs font-medium text-foreground">Video Call</span>
                   </Link>
-                  <Link href="/home/medications" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-amber-50 border border-amber-200 hover:border-amber-400 transition-colors text-center">
+                  <Link href="/home/medications" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-warning-soft border border-warning/35 hover:border-amber-400 transition-colors text-center">
                     <Pill className="w-6 h-6 text-amber-600" />
-                    <span className="text-xs font-medium text-gray-900">My Medications</span>
+                    <span className="text-xs font-medium text-foreground">My Medications</span>
                   </Link>
-                  <Link href="/home/notifications" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-purple-50 border border-purple-200 hover:border-purple-400 transition-colors text-center">
+                  <Link href="/home/notifications" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-warning-soft border border-warning/35 hover:border-purple-400 transition-colors text-center">
                     <FileText className="w-6 h-6 text-purple-600" />
-                    <span className="text-xs font-medium text-gray-900">Messages</span>
+                    <span className="text-xs font-medium text-foreground">Messages</span>
                   </Link>
                 </div>
               </div>
 
               {/* Blood donation — My Life */}
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-4">
+              <div className="bg-card rounded-lg border border-border p-6">
+                <h3 className="text-base font-semibold text-foreground flex items-center gap-2 mb-4">
                   <Droplet className="w-5 h-5 text-rose-600" /> Give blood
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <Link href="/madi/donor/drives" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-rose-50 border border-rose-200 hover:border-rose-400 transition-colors text-center">
+                  <Link href="/madi/donor/drives" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-danger-soft border border-danger/28 hover:border-rose-400 transition-colors text-center">
                     <Droplet className="w-6 h-6 text-rose-600" />
-                    <span className="text-xs font-medium text-gray-900">Donate blood</span>
-                    <span className="text-[11px] text-gray-500">Find a drive near you</span>
+                    <span className="text-xs font-medium text-foreground">Donate blood</span>
+                    <span className="text-[11px] text-muted-foreground">Find a drive near you</span>
                   </Link>
-                  <Link href="/madi/donor/register" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-white border border-rose-200 hover:border-rose-400 transition-colors text-center">
+                  <Link href="/madi/donor/register" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-card border border-danger/28 hover:border-rose-400 transition-colors text-center">
                     <Heart className="w-6 h-6 text-rose-500" />
-                    <span className="text-xs font-medium text-gray-900">Become a blood donor</span>
-                    <span className="text-[11px] text-gray-500">Voluntary registration</span>
+                    <span className="text-xs font-medium text-foreground">Become a blood donor</span>
+                    <span className="text-[11px] text-muted-foreground">Voluntary registration</span>
                   </Link>
-                  <Link href="/madi/donor" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-white border border-gray-200 hover:border-rose-300 transition-colors text-center">
-                    <User className="w-6 h-6 text-gray-500" />
-                    <span className="text-xs font-medium text-gray-900">My donor hub</span>
-                    <span className="text-[11px] text-gray-500">History & preferences</span>
+                  <Link href="/madi/donor" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-card border border-border hover:border-rose-300 transition-colors text-center">
+                    <User className="w-6 h-6 text-muted-foreground" />
+                    <span className="text-xs font-medium text-foreground">My donor hub</span>
+                    <span className="text-[11px] text-muted-foreground">History & preferences</span>
                   </Link>
                 </div>
               </div>
 
               {/* Personal Links */}
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-4">
-                  <User className="w-5 h-5 text-gray-600" /> Account & Settings
+              <div className="bg-card rounded-lg border border-border p-6">
+                <h3 className="text-base font-semibold text-foreground flex items-center gap-2 mb-4">
+                  <User className="w-5 h-5 text-muted-foreground" /> Account & Settings
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <Link href="/home/profile" className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200 hover:border-impilo-200 transition-colors">
-                    <User className="w-5 h-5 text-gray-400" />
+                  <Link href="/home/profile" className="flex items-center gap-3 p-3 rounded-lg bg-background border border-border hover:border-primary/25 transition-colors">
+                    <User className="w-5 h-5 text-muted-foreground" />
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Profile</p>
-                      <p className="text-xs text-gray-500">View and edit your profile</p>
+                      <p className="text-sm font-medium text-foreground">Profile</p>
+                      <p className="text-xs text-muted-foreground">View and edit your profile</p>
                     </div>
                   </Link>
-                  <Link href="/home/preferences" className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200 hover:border-impilo-200 transition-colors">
-                    <Settings className="w-5 h-5 text-gray-400" />
+                  <Link href="/home/preferences" className="flex items-center gap-3 p-3 rounded-lg bg-background border border-border hover:border-primary/25 transition-colors">
+                    <Settings className="w-5 h-5 text-muted-foreground" />
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Preferences</p>
-                      <p className="text-xs text-gray-500">Language, notifications, display</p>
+                      <p className="text-sm font-medium text-foreground">Preferences</p>
+                      <p className="text-xs text-muted-foreground">Language, notifications, display</p>
                     </div>
                   </Link>
-                  <Link href="/settings/security" className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200 hover:border-impilo-200 transition-colors">
-                    <Shield className="w-5 h-5 text-gray-400" />
+                  <Link href="/settings/security" className="flex items-center gap-3 p-3 rounded-lg bg-background border border-border hover:border-primary/25 transition-colors">
+                    <Shield className="w-5 h-5 text-muted-foreground" />
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Security & Privacy</p>
-                      <p className="text-xs text-gray-500">Password, MFA, sessions</p>
+                      <p className="text-sm font-medium text-foreground">Security & Privacy</p>
+                      <p className="text-xs text-muted-foreground">Password, MFA, sessions</p>
                     </div>
                   </Link>
-                  <Link href="/marketplace" className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200 hover:border-impilo-200 transition-colors">
-                    <ShoppingCart className="w-5 h-5 text-gray-400" />
+                  <Link href="/marketplace" className="flex items-center gap-3 p-3 rounded-lg bg-background border border-border hover:border-primary/25 transition-colors">
+                    <ShoppingCart className="w-5 h-5 text-muted-foreground" />
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Health Marketplace</p>
-                      <p className="text-xs text-gray-500">Browse products & services</p>
+                      <p className="text-sm font-medium text-foreground">Health Marketplace</p>
+                      <p className="text-xs text-muted-foreground">Browse products & services</p>
                     </div>
                   </Link>
                 </div>
               </div>
 
               {/* Community Groups */}
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-4">
+              <div className="bg-card rounded-lg border border-border p-6">
+                <h3 className="text-base font-semibold text-foreground flex items-center gap-2 mb-4">
                   <Users className="w-5 h-5 text-purple-600" /> Communities
                 </h3>
                 {communityGroups.length === 0 ? (
-                  <p className="text-sm text-gray-400">No community groups available yet.</p>
+                  <p className="text-sm text-muted-foreground">No community groups available yet.</p>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {communityGroups.slice(0, 4).map((group) => (
-                      <div key={group.id} className="flex items-center justify-between bg-gray-50 rounded-lg border border-gray-200 p-3">
+                      <div key={group.id} className="flex items-center justify-between bg-background rounded-lg border border-border p-3">
                         <div>
-                          <p className="text-sm font-medium text-gray-900">{group.attributes.name}</p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-sm font-medium text-foreground">{group.attributes.name}</p>
+                          <p className="text-xs text-muted-foreground">
                             {group.attributes.groupType} · {group.attributes.memberCount} members
                           </p>
                         </div>
                         <button
                           onClick={() => joinGroup.mutate({ groupId: group.id, memberId: user?.id ?? "" })}
                           disabled={joinGroup.isPending}
-                          className="text-xs text-impilo-500 hover:text-impilo-700 font-medium"
+                          className="text-xs text-primary hover:text-primary-hover font-medium"
                         >
                           Join
                         </button>
@@ -1947,29 +1947,29 @@ function CitizenHome({
   return (
     <>
       {/* ── Top status bar ────────────────────────────────────────── */}
-      <div className="flex items-center justify-between bg-white border-b border-gray-200 px-4 py-2.5 -mx-4 -mt-4 mb-4 sm:px-6 sm:-mx-6">
+      <div className="flex items-center justify-between bg-card border-b border-border px-4 py-2.5 -mx-4 -mt-4 mb-4 sm:px-6 sm:-mx-6">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="h-9 w-9 rounded-full bg-impilo-100 flex items-center justify-center shrink-0">
-            <User className="h-4.5 w-4.5 text-impilo-600" />
+          <div className="h-9 w-9 rounded-full bg-primary-soft flex items-center justify-center shrink-0">
+            <User className="h-4.5 w-4.5 text-primary" />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-gray-900 truncate">
+            <p className="text-sm font-semibold text-foreground truncate">
               {greeting}, {user?.displayName?.split(" ")[0] ?? "there"}
             </p>
-            <p className="text-[11px] text-gray-400 truncate">
+            <p className="text-[11px] text-muted-foreground truncate">
               {user?.email}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-1.5">
-          <Link href="/home/notifications" className="p-2 rounded-full hover:bg-gray-100 relative" title="Notifications">
-            <Activity className="w-4.5 h-4.5 text-gray-500" />
+          <Link href="/home/notifications" className="p-2 rounded-full hover:bg-neutral-100 relative" title="Notifications">
+            <Activity className="w-4.5 h-4.5 text-muted-foreground" />
           </Link>
-          <Link href="/ask" className="p-2 rounded-full hover:bg-gray-100" title="Ask Nompilo">
-            <MessageSquare className="w-4.5 h-4.5 text-gray-500" />
+          <Link href="/ask" className="p-2 rounded-full hover:bg-neutral-100" title="Ask Nompilo">
+            <MessageSquare className="w-4.5 h-4.5 text-muted-foreground" />
           </Link>
-          <Link href="/auth/logout" className="p-2 rounded-full hover:bg-gray-100" title="Switch account">
-            <UserCog className="w-4.5 h-4.5 text-gray-500" />
+          <Link href="/auth/logout" className="p-2 rounded-full hover:bg-neutral-100" title="Switch account">
+            <UserCog className="w-4.5 h-4.5 text-muted-foreground" />
           </Link>
         </div>
       </div>
@@ -1981,19 +1981,19 @@ function CitizenHome({
         <aside className="hidden lg:block space-y-4">
           {/* Health ID QR - always visible */}
           <Link href="/citizen/health-id/qr"
-            className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-br from-impilo-50 to-impilo-100 border border-impilo-200 hover:border-impilo-300 transition-colors">
-            <div className="w-10 h-10 rounded-lg bg-impilo-500 flex items-center justify-center">
+            className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-br from-primary-soft to-impilo-100 border border-primary/25 hover:border-impilo-300 transition-colors">
+            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
               <QrCode className="w-5 h-5 text-white" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-impilo-700">My Health ID</p>
-              <p className="text-[11px] text-impilo-500">Tap to show QR</p>
+              <p className="text-sm font-semibold text-primary-hover">My Health ID</p>
+              <p className="text-[11px] text-primary">Tap to show QR</p>
             </div>
           </Link>
 
           {/* My Health shortcuts with badges */}
           <nav className="space-y-0.5">
-            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-2 mb-1">My Health</p>
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-2 mb-1">My Health</p>
             {[
               { href: "/home/profile", label: "Profile", icon: User, badge: null },
               { href: "/home/medications", label: "Medications", icon: Pill, badge: null },
@@ -2006,13 +2006,13 @@ function CitizenHome({
               const Icon = item.icon;
               return (
                 <Link key={item.href} href={item.href}
-                  className="flex items-center justify-between px-2 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                  className="flex items-center justify-between px-2 py-2 rounded-lg text-sm text-foreground hover:bg-neutral-100 transition-colors">
                   <div className="flex items-center gap-2.5">
-                    <Icon className="w-4 h-4 text-gray-400" />
+                    <Icon className="w-4 h-4 text-muted-foreground" />
                     {item.label}
                   </div>
                   {item.badge && (
-                    <span className="px-1.5 py-0.5 text-[10px] font-medium bg-amber-100 text-amber-700 rounded-full">
+                    <span className="px-1.5 py-0.5 text-[10px] font-medium bg-amber-100 text-warning-foreground rounded-full">
                       {item.badge}
                     </span>
                   )}
@@ -2021,11 +2021,11 @@ function CitizenHome({
             })}
           </nav>
 
-          <hr className="border-gray-200" />
+          <hr className="border-border" />
 
           {/* My Care */}
           <nav className="space-y-0.5">
-            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-2 mb-1">My Care</p>
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-2 mb-1">My Care</p>
             {[
               { href: "/home/care-team", label: "Care Team", icon: Users, badge: null },
               { href: "/coverage", label: "Coverage", icon: Shield, badge: null },
@@ -2034,13 +2034,13 @@ function CitizenHome({
               const Icon = item.icon;
               return (
                 <Link key={item.href} href={item.href}
-                  className="flex items-center justify-between px-2 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                  className="flex items-center justify-between px-2 py-2 rounded-lg text-sm text-foreground hover:bg-neutral-100 transition-colors">
                   <div className="flex items-center gap-2.5">
-                    <Icon className="w-4 h-4 text-gray-400" />
+                    <Icon className="w-4 h-4 text-muted-foreground" />
                     {item.label}
                   </div>
                   {item.badge && (
-                    <span className="px-1.5 py-0.5 text-[10px] font-medium bg-amber-100 text-amber-700 rounded-full">
+                    <span className="px-1.5 py-0.5 text-[10px] font-medium bg-amber-100 text-warning-foreground rounded-full">
                       {item.badge}
                     </span>
                   )}
@@ -2049,11 +2049,11 @@ function CitizenHome({
             })}
           </nav>
 
-          <hr className="border-gray-200" />
+          <hr className="border-border" />
 
           {/* Explore */}
           <nav className="space-y-0.5">
-            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-2 mb-1">Explore</p>
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-2 mb-1">Explore</p>
             {[
               { href: "/wellness", label: "Wellness", icon: Heart, badge: null },
               { href: "/discover", label: "Find services", icon: Globe, badge: null },
@@ -2064,8 +2064,8 @@ function CitizenHome({
               const Icon = item.icon;
               return (
                 <Link key={item.href} href={item.href}
-                  className="flex items-center gap-2.5 px-2 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                  <Icon className="w-4 h-4 text-gray-400" />
+                  className="flex items-center gap-2.5 px-2 py-2 rounded-lg text-sm text-foreground hover:bg-neutral-100 transition-colors">
+                  <Icon className="w-4 h-4 text-muted-foreground" />
                   {item.label}
                 </Link>
               );
@@ -2092,20 +2092,20 @@ function CitizenHome({
           </Link>
 
           {/* Upcoming appointments — confirmed scheduled events only */}
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-impilo-500" /> Upcoming appointments
+          <div className="bg-card rounded-xl border border-border p-4">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-primary" /> Upcoming appointments
             </h3>
             {citizenAppointmentsLoading && (
-              <p className="text-xs text-gray-500">Loading appointments…</p>
+              <p className="text-xs text-muted-foreground">Loading appointments…</p>
             )}
             {!citizenAppointmentsLoading && citizenAppointmentsError && (
-              <p className="text-xs text-gray-500 leading-relaxed">
+              <p className="text-xs text-muted-foreground leading-relaxed">
                 Appointments could not be loaded. Book a service or check My Bookings for pending requests.
               </p>
             )}
             {!citizenAppointmentsLoading && !citizenAppointmentsError && upcomingAppointments.length === 0 && (
-              <p className="text-xs text-gray-500 leading-relaxed">
+              <p className="text-xs text-muted-foreground leading-relaxed">
                 No confirmed appointments yet. Booking requests appear under My Bookings until confirmed.
               </p>
             )}
@@ -2117,31 +2117,31 @@ function CitizenHome({
                     ? new Date(when).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })
                     : "Date TBC";
                   return (
-                    <li key={appt.id} className="text-xs text-gray-700 border-b border-gray-100 pb-2 last:border-0 last:pb-0">
-                      <p className="font-medium text-gray-900">{getAppointmentType(appt)}</p>
-                      <p className="text-[11px] text-gray-500 mt-0.5">{label}</p>
-                      <p className="text-[11px] text-gray-500">{getAppointmentProvider(appt)}</p>
+                    <li key={appt.id} className="text-xs text-foreground border-b border-border pb-2 last:border-0 last:pb-0">
+                      <p className="font-medium text-foreground">{getAppointmentType(appt)}</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">{label}</p>
+                      <p className="text-[11px] text-muted-foreground">{getAppointmentProvider(appt)}</p>
                     </li>
                   );
                 })}
               </ul>
             )}
             <div className="mt-3 flex flex-col gap-1 text-center text-xs font-medium">
-              <Link href="/home/bookings/new" className="text-impilo-600 hover:underline">
+              <Link href="/home/bookings/new" className="text-primary hover:underline">
                 Book a service →
               </Link>
-              <Link href="/home/bookings" className="text-gray-500 hover:underline">
+              <Link href="/home/bookings" className="text-muted-foreground hover:underline">
                 My Bookings (pending requests)
               </Link>
-              <Link href="/home/appointments" className="text-gray-500 hover:underline">
+              <Link href="/home/appointments" className="text-muted-foreground hover:underline">
                 My Appointments (confirmed)
               </Link>
             </div>
           </div>
 
           {/* Quick health actions */}
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2.5">Quick Actions</h3>
+          <div className="bg-card rounded-xl border border-border p-4">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">Quick Actions</h3>
             <div className="grid grid-cols-2 gap-2">
               {[
                 { href: "/home/medications", label: "Medications", icon: Pill, color: "text-amber-500" },
@@ -2153,9 +2153,9 @@ function CitizenHome({
                 const Icon = a.icon;
                 return (
                   <Link key={a.href} href={a.href}
-                    className="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-gray-100 hover:border-impilo-200 hover:bg-impilo-50/50 transition-colors text-center">
+                    className="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-border hover:border-primary/25 hover:bg-primary-soft/50 transition-colors text-center">
                     <Icon className={`w-5 h-5 ${a.color}`} />
-                    <span className="text-[11px] font-medium text-gray-600">{a.label}</span>
+                    <span className="text-[11px] font-medium text-muted-foreground">{a.label}</span>
                   </Link>
                 );
               })}
@@ -2163,8 +2163,8 @@ function CitizenHome({
           </div>
 
           {/* Account */}
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2.5">Account</h3>
+          <div className="bg-card rounded-xl border border-border p-4">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">Account</h3>
             <div className="space-y-1">
               {[
                 { href: "/home/profile", label: "Profile" },
@@ -2173,7 +2173,7 @@ function CitizenHome({
                 { href: "/support", label: "Help & Support" },
               ].map((link) => (
                 <Link key={link.href} href={link.href}
-                  className="block px-2 py-1.5 rounded-md text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition-colors">
+                  className="block px-2 py-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-background transition-colors">
                   {link.label}
                 </Link>
               ))}
@@ -2213,12 +2213,12 @@ function TimelineComposer({ userName }: { userName: string }) {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div className="bg-card rounded-xl border border-border overflow-hidden">
       {/* Composer */}
       <div className="p-4">
         <div className="flex items-start gap-3">
-          <div className="h-10 w-10 rounded-full bg-impilo-100 flex items-center justify-center shrink-0 mt-0.5">
-            <User className="h-5 w-5 text-impilo-600" />
+          <div className="h-10 w-10 rounded-full bg-primary-soft flex items-center justify-center shrink-0 mt-0.5">
+            <User className="h-5 w-5 text-primary" />
           </div>
           <div className="flex-1">
             <textarea
@@ -2226,23 +2226,23 @@ function TimelineComposer({ userName }: { userName: string }) {
               onChange={(e) => setPostText(e.target.value)}
               placeholder={`What's on your mind, ${userName}?`}
               rows={2}
-              className="w-full resize-none border-0 bg-transparent text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-0"
+              className="w-full resize-none border-0 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-0"
             />
           </div>
         </div>
         {posted && (
-          <p className="text-xs text-impilo-500 mt-1 ml-[52px]">Posted to your timeline</p>
+          <p className="text-xs text-primary mt-1 ml-[52px]">Posted to your timeline</p>
         )}
       </div>
       {/* Action bar */}
-      <div className="flex items-center justify-between border-t border-gray-100 px-4 py-2">
-        <p className="text-[11px] text-gray-400 px-1">
+      <div className="flex items-center justify-between border-t border-border px-4 py-2">
+        <p className="text-[11px] text-muted-foreground px-1">
           Media and structured check-ins will appear here when those channels are enabled for citizen posts.
         </p>
         <button
           onClick={handlePost}
           disabled={!postText.trim() || posting}
-          className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-impilo-500 text-white text-xs font-medium hover:bg-impilo-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary text-white text-xs font-medium hover:bg-primary-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           <Send className="w-3.5 h-3.5" /> Post
         </button>
@@ -2327,14 +2327,14 @@ function TimelineFeed({ userId }: { userId?: string }) {
   ];
 
   const typeColors: Record<string, string> = {
-    announcement: "bg-red-50 text-red-600 border-red-100",
+    announcement: "bg-danger-soft text-red-600 border-red-100",
     health_tip: "bg-green-50 text-green-600 border-green-100",
-    update: "bg-blue-50 text-blue-600 border-blue-100",
-    milestone: "bg-amber-50 text-amber-600 border-amber-100",
+    update: "bg-info-soft text-primary border-blue-100",
+    milestone: "bg-warning-soft text-amber-600 border-amber-100",
   };
 
   const avatarColors: Record<string, string> = {
-    Y: "bg-impilo-100 text-impilo-700",
+    Y: "bg-primary-soft text-primary-hover",
   };
 
   const livePosts = liveItems.length > 0 ? [
@@ -2361,41 +2361,41 @@ function TimelineFeed({ userId }: { userId?: string }) {
           <Video className="w-4 h-4" /> Video call
         </Link>
         <Link href="/telemedicine?mode=audio"
-          className="flex items-center justify-center gap-2 py-3 bg-blue-50 border border-blue-200 rounded-xl text-sm font-medium text-blue-700 hover:bg-blue-100 transition-colors">
+          className="flex items-center justify-center gap-2 py-3 bg-info-soft border border-info/25 rounded-xl text-sm font-medium text-primary-hover hover:bg-blue-100 transition-colors">
           <Phone className="w-4 h-4" /> Voice call
         </Link>
         <Link href="/scheduling"
-          className="flex items-center justify-center gap-2 py-3 bg-impilo-50 border border-impilo-200 rounded-xl text-sm font-medium text-impilo-700 hover:bg-impilo-100 transition-colors">
+          className="flex items-center justify-center gap-2 py-3 bg-primary-soft border border-primary/25 rounded-xl text-sm font-medium text-primary-hover hover:bg-primary-soft transition-colors">
           <Calendar className="w-4 h-4" /> Book visit
         </Link>
       </div>
 
       {/* Timeline posts */}
       {isLoading && (
-        <div className="rounded-xl border border-gray-200 bg-white px-4 py-8 text-center text-sm text-gray-500">
+        <div className="rounded-xl border border-border bg-card px-4 py-8 text-center text-sm text-muted-foreground">
           Loading your citizen timeline…
         </div>
       )}
       {!isLoading && livePosts.length === 0 && (
-        <div className="rounded-xl border border-gray-200 bg-white px-4 py-8 text-center">
-          <p className="text-sm font-medium text-gray-900">No timeline posts yet</p>
-          <p className="mt-1 text-xs text-gray-500">
+        <div className="rounded-xl border border-border bg-card px-4 py-8 text-center">
+          <p className="text-sm font-medium text-foreground">No timeline posts yet</p>
+          <p className="mt-1 text-xs text-muted-foreground">
             Your home feed will populate when the citizen feed service returns real posts for this account.
           </p>
         </div>
       )}
       {livePosts.map((post) => (
-        <article key={post.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <article key={post.id} className="bg-card rounded-xl border border-border overflow-hidden">
           {/* Post header */}
           <div className="flex items-center gap-3 px-4 pt-4 pb-2">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${avatarColors[post.avatar] ?? "bg-gray-100 text-gray-600"}`}>
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${avatarColors[post.avatar] ?? "bg-neutral-100 text-muted-foreground"}`}>
               {post.avatar}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-gray-900 truncate">{post.author}</p>
+              <p className="text-sm font-semibold text-foreground truncate">{post.author}</p>
               <div className="mt-0.5 flex items-center gap-2">
-                <p className="text-xs text-gray-400">{post.time}</p>
-                <span className={`rounded-full border px-1.5 py-0.5 text-[10px] font-medium ${typeColors[post.type] ?? "bg-gray-50 text-gray-600 border-gray-100"}`}>
+                <p className="text-xs text-muted-foreground">{post.time}</p>
+                <span className={`rounded-full border px-1.5 py-0.5 text-[10px] font-medium ${typeColors[post.type] ?? "bg-background text-muted-foreground border-border"}`}>
                   {post.type.replace("_", " ")}
                 </span>
               </div>
@@ -2403,22 +2403,22 @@ function TimelineFeed({ userId }: { userId?: string }) {
           </div>
           {/* Post body */}
           <div className="px-4 pb-3">
-            <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{post.body}</p>
+            <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">{post.body}</p>
           </div>
           {/* Engagement bar */}
-          <div className="flex items-center justify-between border-t border-gray-100 px-4 py-2">
-            <span className="text-xs text-gray-400">{post.likes > 0 ? `${post.likes} likes` : ""}</span>
-            <span className="text-xs text-gray-400">{post.comments > 0 ? `${post.comments} comments` : ""}</span>
+          <div className="flex items-center justify-between border-t border-border px-4 py-2">
+            <span className="text-xs text-muted-foreground">{post.likes > 0 ? `${post.likes} likes` : ""}</span>
+            <span className="text-xs text-muted-foreground">{post.comments > 0 ? `${post.comments} comments` : ""}</span>
           </div>
           {/* Action buttons */}
-          <div className="flex border-t border-gray-100">
-            <button className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs text-gray-500 hover:bg-gray-50 transition-colors">
+          <div className="flex border-t border-border">
+            <button className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs text-muted-foreground hover:bg-background transition-colors">
               <ThumbsUp className="w-4 h-4" /> Like
             </button>
-            <button className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs text-gray-500 hover:bg-gray-50 transition-colors">
+            <button className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs text-muted-foreground hover:bg-background transition-colors">
               <MessageCircle className="w-4 h-4" /> Comment
             </button>
-            <button className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs text-gray-500 hover:bg-gray-50 transition-colors">
+            <button className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs text-muted-foreground hover:bg-background transition-colors">
               <Send className="w-4 h-4" /> Share
             </button>
           </div>
@@ -2439,7 +2439,7 @@ function AnnouncementsBanner() {
 
   if (items.length === 0) {
     return (
-      <div className="flex items-center gap-2 py-2 text-sm text-gray-400">
+      <div className="flex items-center gap-2 py-2 text-sm text-muted-foreground">
         <Clock className="w-4 h-4" />
         No active announcements
       </div>
@@ -2447,16 +2447,16 @@ function AnnouncementsBanner() {
   }
 
   const priorityColors: Record<string, string> = {
-    urgent: "bg-red-100 text-red-700 border-red-200",
+    urgent: "bg-red-100 text-danger border-danger/28",
     high: "bg-orange-100 text-orange-700 border-orange-200",
-    normal: "bg-impilo-100 text-impilo-600 border-impilo-200",
-    low: "bg-gray-100 text-gray-600 border-gray-200",
+    normal: "bg-primary-soft text-primary border-primary/25",
+    low: "bg-neutral-100 text-muted-foreground border-border",
   };
 
   return (
     <div className="space-y-2">
       {stats && (
-        <div className="flex items-center gap-4 text-xs text-gray-500">
+        <div className="flex items-center gap-4 text-xs text-muted-foreground">
           <span>{stats.total ?? 0} active</span>
           {(stats.pinned ?? 0) > 0 && <span className="text-amber-600">{stats.pinned} pinned</span>}
           {(stats.urgent ?? 0) > 0 && <span className="text-red-600">{stats.urgent} urgent</span>}
@@ -2467,7 +2467,7 @@ function AnnouncementsBanner() {
           key={a.id as string}
           href="/scheduling/noticeboard"
           className={`flex items-start gap-3 p-3 rounded-lg border text-left transition-colors hover:shadow-sm ${
-            a.priority === "urgent" ? "border-red-200 bg-red-50" : a.is_pinned ? "border-amber-200 bg-amber-50" : "border-gray-200 bg-gray-50"
+            a.priority === "urgent" ? "border-danger/28 bg-danger-soft" : a.is_pinned ? "border-warning/35 bg-warning-soft" : "border-border bg-background"
           }`}
         >
           <div className="shrink-0 mt-0.5">
@@ -2481,12 +2481,12 @@ function AnnouncementsBanner() {
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <p className="text-sm font-medium text-gray-900 truncate">{a.title as string}</p>
+              <p className="text-sm font-medium text-foreground truncate">{a.title as string}</p>
               <span className={`px-1.5 py-0.5 text-[10px] font-medium rounded ${priorityColors[(a.priority as string) ?? "normal"]}`}>
                 {a.priority as string}
               </span>
             </div>
-            <p className="text-xs text-gray-500 line-clamp-1 mt-0.5">{a.content as string}</p>
+            <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{a.content as string}</p>
           </div>
         </Link>
       ))}
@@ -2506,28 +2506,28 @@ function FeedSection() {
   const items = data?.data ?? [];
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-4">
+    <div className="bg-card rounded-lg border border-border p-6">
+      <h3 className="text-base font-semibold text-foreground flex items-center gap-2 mb-4">
         <Users className="w-5 h-5 text-purple-600" /> Community & Updates
       </h3>
       {items.length === 0 ? (
-        <p className="text-sm text-gray-400">No community updates yet.</p>
+        <p className="text-sm text-muted-foreground">No community updates yet.</p>
       ) : (
         <div className="space-y-3">
           {items.map((item) => (
-            <div key={item.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+            <div key={item.id} className="flex items-start gap-3 p-3 bg-background rounded-lg">
               <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
                 <FileText className="w-4 h-4 text-purple-500" />
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
+                <p className="text-sm font-medium text-foreground truncate">
                   {(item.attributes.title as string) ?? "Update"}
                 </p>
-                <p className="text-xs text-gray-500 line-clamp-2">
+                <p className="text-xs text-muted-foreground line-clamp-2">
                   {(item.attributes.body as string) ?? ""}
                 </p>
                 {typeof item.attributes.published_at === "string" && (
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     {new Date(item.attributes.published_at).toLocaleDateString()}
                   </p>
                 )}

@@ -16,25 +16,25 @@ import { PageShell } from "@/components/PageShell";
 import { useNhumeMissions, useNhumeIntegrations, useCreateMission, useCancelMission } from "@/hooks/useNhume";
 
 const MISSION_TONE: Record<string, string> = {
-  DRAFT: "bg-gray-100 text-gray-700 border-gray-200",
-  SUBMITTED: "bg-impilo-50 text-impilo-700 border-impilo-200",
-  ACCEPTED: "bg-indigo-50 text-indigo-700 border-indigo-200",
-  REJECTED: "bg-rose-50 text-rose-700 border-rose-200",
-  AWAITING_CLEARANCE: "bg-amber-50 text-amber-800 border-amber-200",
+  DRAFT: "bg-neutral-100 text-foreground border-border",
+  SUBMITTED: "bg-primary-soft text-primary-hover border-primary/25",
+  ACCEPTED: "bg-info-soft text-primary-hover border-info/25",
+  REJECTED: "bg-danger-soft text-danger border-danger/28",
+  AWAITING_CLEARANCE: "bg-warning-soft text-warning-foreground border-warning/35",
   SCHEDULED: "bg-sky-50 text-sky-700 border-sky-200",
   LAUNCH_READY: "bg-violet-50 text-violet-700 border-violet-200",
   LAUNCHED: "bg-violet-50 text-violet-700 border-violet-200",
   EN_ROUTE: "bg-violet-50 text-violet-700 border-violet-200",
-  HOLDING: "bg-amber-50 text-amber-800 border-amber-200",
+  HOLDING: "bg-warning-soft text-warning-foreground border-warning/35",
   ARRIVED: "bg-teal-50 text-teal-700 border-teal-200",
-  DELIVERED: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  DELIVERED: "bg-success-soft text-primary-hover border-success/25",
   RETURNING: "bg-sky-50 text-sky-700 border-sky-200",
   RETURNED: "bg-orange-50 text-orange-700 border-orange-200",
-  FAILED: "bg-rose-50 text-rose-700 border-rose-200",
-  CANCELLED: "bg-gray-100 text-gray-700 border-gray-200",
-  EMERGENCY_LANDING: "bg-rose-50 text-rose-700 border-rose-200",
-  MANUAL_INTERVENTION: "bg-amber-50 text-amber-800 border-amber-200",
-  COMPLETED: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  FAILED: "bg-danger-soft text-danger border-danger/28",
+  CANCELLED: "bg-neutral-100 text-foreground border-border",
+  EMERGENCY_LANDING: "bg-danger-soft text-danger border-danger/28",
+  MANUAL_INTERVENTION: "bg-warning-soft text-warning-foreground border-warning/35",
+  COMPLETED: "bg-success-soft text-primary-hover border-success/25",
 };
 
 export default function NhumeAutonomousPage() {
@@ -50,7 +50,7 @@ export default function NhumeAutonomousPage() {
         subtitle="Drone, robot, autonomous vehicle and smart-locker missions"
         icon={<Plane className="h-6 w-6" />}
       >
-        <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4 text-sm text-amber-900 mb-4">
+        <div className="rounded-2xl border border-amber-100 bg-warning-soft p-4 text-sm text-warning-foreground mb-4">
           <strong>Simulation note:</strong> providers flagged with simulation mode (e.g.
           <code> sim-drone-1</code>, <code>sim-robot-1</code>) execute deterministic state
           transitions for development and demos only. Real platforms are wired through their own
@@ -58,10 +58,10 @@ export default function NhumeAutonomousPage() {
         </div>
 
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-gray-900">Missions</h3>
+          <h3 className="font-semibold text-foreground">Missions</h3>
           <button
             onClick={() => setShowCreate((v) => !v)}
-            className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
+            className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary"
           >
             {showCreate ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
             {showCreate ? "Close" : "New mission"}
@@ -78,15 +78,15 @@ export default function NhumeAutonomousPage() {
         )}
 
         {missions.isPending && (
-          <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center text-gray-500">
+          <div className="rounded-2xl border border-border bg-card p-10 text-center text-muted-foreground">
             <Loader2 className="inline-block h-5 w-5 animate-spin text-teal-500 mr-2" /> Loading missions…
           </div>
         )}
 
         {missions.data && (
-          <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
+          <div className="rounded-2xl border border-border bg-card overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+              <thead className="bg-background text-xs uppercase tracking-wide text-muted-foreground">
                 <tr>
                   <th className="px-4 py-3 text-left">Mission</th>
                   <th className="px-4 py-3 text-left">Provider</th>
@@ -98,7 +98,7 @@ export default function NhumeAutonomousPage() {
               <tbody className="divide-y divide-gray-100">
                 {(missions.data.data ?? []).map((m, idx) => <MissionRow key={idx} m={m as Record<string, unknown>} />)}
                 {missions.data.data?.length === 0 && (
-                  <tr><td colSpan={5} className="px-4 py-8 text-center text-sm text-gray-500">No autonomous missions yet.</td></tr>
+                  <tr><td colSpan={5} className="px-4 py-8 text-center text-sm text-muted-foreground">No autonomous missions yet.</td></tr>
                 )}
               </tbody>
             </table>
@@ -115,17 +115,17 @@ function MissionRow({ m }: { m: Record<string, unknown> }) {
   const status = String(m.status ?? "DRAFT").toUpperCase();
   return (
     <tr>
-      <td className="px-4 py-3 font-medium text-gray-900">{String(m.mission_reference ?? id)}</td>
-      <td className="px-4 py-3 text-gray-700">{String(m.provider_code ?? "—")}</td>
+      <td className="px-4 py-3 font-medium text-foreground">{String(m.mission_reference ?? id)}</td>
+      <td className="px-4 py-3 text-foreground">{String(m.provider_code ?? "—")}</td>
       <td className="px-4 py-3">
         <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] ${MISSION_TONE[status] ?? MISSION_TONE.DRAFT}`}>{status}</span>
       </td>
-      <td className="px-4 py-3 text-xs text-gray-500">{m.updated_at ? new Date(String(m.updated_at)).toLocaleString() : ""}</td>
+      <td className="px-4 py-3 text-xs text-muted-foreground">{m.updated_at ? new Date(String(m.updated_at)).toLocaleString() : ""}</td>
       <td className="px-4 py-3 text-right">
         <button
           disabled={["DELIVERED", "CANCELLED", "FAILED", "RETURNED", "COMPLETED"].includes(status) || cancel.isPending}
           onClick={() => cancel.mutate({ reason: "operator cancel" })}
-          className="rounded-xl border border-gray-300 px-3 py-1 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+          className="rounded-xl border border-border px-3 py-1 text-xs text-foreground hover:bg-background disabled:opacity-50"
         >
           Cancel
         </button>
@@ -163,11 +163,11 @@ function MissionForm({
   }
 
   return (
-    <form onSubmit={submit} className="rounded-2xl border border-gray-200 bg-white p-5 mb-4 space-y-3">
+    <form onSubmit={submit} className="rounded-2xl border border-border bg-card p-5 mb-4 space-y-3">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <label className="block text-xs text-gray-600">
+        <label className="block text-xs text-muted-foreground">
           Provider
-          <select value={providerCode} onChange={(e) => setProviderCode(e.target.value)} className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
+          <select value={providerCode} onChange={(e) => setProviderCode(e.target.value)} className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm">
             {(providers.length === 0 ? [{ provider_code: "sim-drone-1", display_name: "Simulated drone" }] : providers).map((p, idx) => (
               <option key={idx} value={String(p.provider_code ?? "")}>
                 {String(p.display_name ?? p.provider_code)} ({String(p.provider_kind ?? "")})
@@ -175,26 +175,26 @@ function MissionForm({
             ))}
           </select>
         </label>
-        <label className="block text-xs text-gray-600">
+        <label className="block text-xs text-muted-foreground">
           Linked delivery ID (optional)
-          <input value={deliveryId} onChange={(e) => setDeliveryId(e.target.value)} className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" placeholder="UUID" />
+          <input value={deliveryId} onChange={(e) => setDeliveryId(e.target.value)} className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm" placeholder="UUID" />
         </label>
-        <label className="block text-xs text-gray-600">
+        <label className="block text-xs text-muted-foreground">
           Payload (kg)
-          <input value={payloadKg} onChange={(e) => setPayloadKg(e.target.value)} type="number" step="0.1" className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" />
+          <input value={payloadKg} onChange={(e) => setPayloadKg(e.target.value)} type="number" step="0.1" className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm" />
         </label>
-        <label className="block text-xs text-gray-600">
+        <label className="block text-xs text-muted-foreground">
           Launch site label
-          <input value={launchSite} onChange={(e) => setLaunchSite(e.target.value)} className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" />
+          <input value={launchSite} onChange={(e) => setLaunchSite(e.target.value)} className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm" />
         </label>
-        <label className="block text-xs text-gray-600">
+        <label className="block text-xs text-muted-foreground">
           Landing site label
-          <input value={landingSite} onChange={(e) => setLandingSite(e.target.value)} className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" />
+          <input value={landingSite} onChange={(e) => setLandingSite(e.target.value)} className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm" />
         </label>
       </div>
       <div className="flex justify-end gap-2">
-        <button type="button" onClick={onCancel} className="rounded-xl border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Cancel</button>
-        <button type="submit" disabled={isPending} className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50">
+        <button type="button" onClick={onCancel} className="rounded-xl border border-border px-4 py-2 text-sm text-foreground hover:bg-background">Cancel</button>
+        <button type="submit" disabled={isPending} className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary disabled:opacity-50">
           {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
           Create mission
         </button>

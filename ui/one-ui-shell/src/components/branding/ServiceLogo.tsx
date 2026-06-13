@@ -61,14 +61,14 @@ export function ServiceLogo({
       >
         <span
           className={joinClasses(
-            "inline-flex items-center justify-center rounded-md bg-slate-100 dark:bg-slate-800",
+            "inline-flex items-center justify-center rounded-md bg-neutral-100 dark:bg-neutral-900",
             sizeClass,
           )}
         >
-          <ShellIcon name={iconName} className={joinClasses(iconClass, "text-slate-700 dark:text-slate-200")} />
+          <ShellIcon name={iconName} className={joinClasses(iconClass, "text-foreground dark:text-foreground")} />
         </span>
         {showName && branding?.name ? (
-          <span className="truncate text-sm font-medium text-slate-800 dark:text-slate-100">{branding.name}</span>
+          <span className="truncate text-sm font-medium text-foreground dark:text-foreground">{branding.name}</span>
         ) : null}
       </span>
     );
@@ -87,7 +87,7 @@ export function ServiceLogo({
         onError={() => setFailed(true)}
       />
       {showName ? (
-        <span className="truncate text-sm font-medium text-slate-800 dark:text-slate-100">{branding.name}</span>
+        <span className="truncate text-sm font-medium text-foreground dark:text-foreground">{branding.name}</span>
       ) : null}
     </span>
   );

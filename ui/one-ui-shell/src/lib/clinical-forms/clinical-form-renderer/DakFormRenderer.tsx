@@ -17,14 +17,14 @@ function renderField(
 ) {
   const err = errors[field.id];
   const base = "mt-2 block w-full rounded-lg border px-3 py-2 text-sm";
-  const border = err ? "border-red-400" : "border-gray-300";
+  const border = err ? "border-red-400" : "border-border";
 
   switch (field.kind) {
     case "coded_single":
     case "segmented":
       return (
         <div key={field.id}>
-          <span className="text-xs font-medium text-gray-600">{field.label}</span>
+          <span className="text-xs font-medium text-muted-foreground">{field.label}</span>
           <select
             className={`${base} ${border} mt-1`}
             value={String(values[field.id] ?? "")}
@@ -59,11 +59,11 @@ function renderField(
       };
       return (
         <div key={field.id}>
-          <span className="text-xs font-medium text-gray-600">{field.label}</span>
+          <span className="text-xs font-medium text-muted-foreground">{field.label}</span>
           <div className="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-1">
             {(field.options ?? []).map((o) => (
-              <label key={o.code} className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                <input type="checkbox" checked={cur.includes(o.code)} onChange={() => toggle(o.code)} className="rounded border-gray-300" />
+              <label key={o.code} className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
+                <input type="checkbox" checked={cur.includes(o.code)} onChange={() => toggle(o.code)} className="rounded border-border" />
                 {o.display}
               </label>
             ))}
@@ -75,21 +75,21 @@ function renderField(
     case "numeric_with_unit":
       return (
         <label key={field.id} className="block">
-          <span className="text-xs font-medium text-gray-600">{field.label}</span>
+          <span className="text-xs font-medium text-muted-foreground">{field.label}</span>
           <input
             type="number"
             className={`${base} ${border} mt-1`}
             value={values[field.id] === undefined || values[field.id] === null ? "" : String(values[field.id])}
             onChange={(e) => setField(field.id, e.target.value === "" ? "" : Number(e.target.value))}
           />
-          {field.unit && <span className="ml-2 text-xs text-gray-400">{field.unit}</span>}
+          {field.unit && <span className="ml-2 text-xs text-muted-foreground">{field.unit}</span>}
           {err && <p className="mt-1 text-xs text-red-600">{err}</p>}
         </label>
       );
     case "date":
       return (
         <label key={field.id} className="block">
-          <span className="text-xs font-medium text-gray-600">{field.label}</span>
+          <span className="text-xs font-medium text-muted-foreground">{field.label}</span>
           <input
             type="date"
             className={`${base} ${border} mt-1`}
@@ -102,7 +102,7 @@ function renderField(
     case "text":
       return (
         <label key={field.id} className="block">
-          <span className="text-xs font-medium text-gray-600">{field.label}</span>
+          <span className="text-xs font-medium text-muted-foreground">{field.label}</span>
           <textarea
             className={`${base} ${border} mt-1`}
             rows={3}
@@ -114,7 +114,7 @@ function renderField(
       );
     default:
       return (
-        <div key={field.id} className="text-xs text-gray-500">
+        <div key={field.id} className="text-xs text-muted-foreground">
           Unsupported field kind: {field.kind}
         </div>
       );
@@ -173,21 +173,21 @@ export function DakFormRenderer(props: {
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-            <ClipboardList className="w-4 h-4 text-impilo-500" />
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <ClipboardList className="w-4 h-4 text-primary" />
             {form.title}
           </h3>
-          <p className="text-xs text-gray-500 mt-0.5">{form.description}</p>
-          <p className="text-[10px] text-gray-400 mt-1">Form {form.id} · v{form.version}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{form.description}</p>
+          <p className="text-[10px] text-muted-foreground mt-1">Form {form.id} · v{form.version}</p>
         </div>
         {showProgress && totalRequired > 0 && (
           <div className="text-right">
-            <p className="text-xs font-medium text-gray-700">
+            <p className="text-xs font-medium text-foreground">
               {completedRequired}/{totalRequired} required
             </p>
-            <div className="mt-1 h-1.5 w-28 rounded-full bg-gray-200 overflow-hidden">
+            <div className="mt-1 h-1.5 w-28 rounded-full bg-neutral-100 overflow-hidden">
               <div
-                className="h-full bg-impilo-500 transition-all"
+                className="h-full bg-primary transition-all"
                 style={{ width: `${Math.round((100 * completedRequired) / totalRequired)}%` }}
               />
             </div>
@@ -196,7 +196,7 @@ export function DakFormRenderer(props: {
       </div>
 
       {dirty && (
-        <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1">
+        <p className="text-xs text-warning-foreground bg-warning-soft border border-warning/35 rounded px-2 py-1">
           Draft autosaved locally in this browser.
           <button type="button" className="ml-2 underline" onClick={clearDraft}>
             Reset draft
@@ -211,10 +211,10 @@ export function DakFormRenderer(props: {
               key={a.id}
               className={`flex items-start gap-2 rounded-lg border px-2 py-1.5 text-xs ${
                 a.severity === "critical"
-                  ? "border-red-300 bg-red-50 text-red-900"
+                  ? "border-red-300 bg-danger-soft text-red-900"
                   : a.severity === "warning"
-                    ? "border-amber-300 bg-amber-50 text-amber-900"
-                    : "border-gray-200 bg-gray-50 text-gray-800"
+                    ? "border-amber-300 bg-warning-soft text-warning-foreground"
+                    : "border-border bg-background text-foreground"
               }`}
             >
               <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
@@ -228,9 +228,9 @@ export function DakFormRenderer(props: {
         const visFields = visibleFieldsForSection(sec.fields, runtime);
         if (!visFields.length) return null;
         return (
-          <div key={sec.id} className="rounded-lg border border-gray-200 p-3 space-y-2">
-            <h4 className="text-xs font-semibold text-gray-800 uppercase tracking-wide">{sec.title}</h4>
-            {sec.description && <p className="text-[11px] text-gray-500">{sec.description}</p>}
+          <div key={sec.id} className="rounded-lg border border-border p-3 space-y-2">
+            <h4 className="text-xs font-semibold text-foreground uppercase tracking-wide">{sec.title}</h4>
+            {sec.description && <p className="text-[11px] text-muted-foreground">{sec.description}</p>}
             <div className="space-y-3">{visFields.map((f) => renderField(f, values, setField, errors))}</div>
           </div>
         );
@@ -244,7 +244,7 @@ export function DakFormRenderer(props: {
 
       <button
         type="button"
-        className="text-xs text-gray-500 underline"
+        className="text-xs text-muted-foreground underline"
         onClick={() => setAttempted(true)}
       >
         Check validation

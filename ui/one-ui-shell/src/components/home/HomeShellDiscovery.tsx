@@ -12,11 +12,11 @@ export function HomeSearchCommandPrompt() {
   const focusSearch = () => useShellStore.getState().focusSearchPalette();
 
   return (
-    <div className="rounded-xl border border-impilo-200 bg-gradient-to-br from-impilo-50 to-white p-4 shadow-sm">
+    <div className="rounded-xl border border-primary/25 bg-gradient-to-br from-primary-soft to-card p-4 shadow-sm">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-gray-900">Search & commands</h3>
-          <p className="mt-1 text-xs text-gray-600">
+          <h3 className="text-sm font-semibold text-foreground">Search & commands</h3>
+          <p className="mt-1 text-xs text-muted-foreground">
             Patients, modules, facilities, tasks, appointments — or type a command. Same as the shell taskbar Search
             <span className="hidden sm:inline"> (Ctrl+K)</span>.
           </p>
@@ -24,11 +24,11 @@ export function HomeSearchCommandPrompt() {
         <button
           type="button"
           onClick={focusSearch}
-          className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-lg border border-impilo-300 bg-white px-4 py-2.5 text-sm font-medium text-impilo-700 shadow-sm transition hover:bg-impilo-50 sm:w-auto"
+          className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-lg border border-impilo-300 bg-card px-4 py-2.5 text-sm font-medium text-primary-hover shadow-sm transition hover:bg-primary-soft sm:w-auto"
         >
           <Search className="h-4 w-4" aria-hidden />
           Open search
-          <span className="hidden items-center gap-1 text-xs text-gray-500 sm:inline-flex" aria-hidden>
+          <span className="hidden items-center gap-1 text-xs text-muted-foreground sm:inline-flex" aria-hidden>
             <Keyboard className="h-3.5 w-3.5" />
             Ctrl+K
           </span>
@@ -43,9 +43,9 @@ export function HomeRecentFromShell() {
 
   if (recentItems.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50/80 p-4">
-        <h3 className="text-sm font-semibold text-gray-800">Continue where you left off</h3>
-        <p className="mt-1 text-xs text-gray-500">
+      <div className="rounded-xl border border-dashed border-border bg-background/80 p-4">
+        <h3 className="text-sm font-semibold text-foreground">Continue where you left off</h3>
+        <p className="mt-1 text-xs text-muted-foreground">
           Open a module or chart from Start or Search — recent places you visit will appear here on this device.
         </p>
       </div>
@@ -53,20 +53,20 @@ export function HomeRecentFromShell() {
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4">
+    <div className="rounded-xl border border-border bg-card p-4">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-900">Recent on this session</h3>
-        <span className="text-[10px] font-medium uppercase tracking-wide text-gray-400">Local</span>
+        <h3 className="text-sm font-semibold text-foreground">Recent on this session</h3>
+        <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Local</span>
       </div>
       <ul className="divide-y divide-gray-100">
         {recentItems.slice(0, 6).map((item) => (
           <li key={item.id}>
             <Link
               href={item.href}
-              className="flex flex-col gap-0.5 py-2.5 text-sm text-impilo-700 hover:text-impilo-900"
+              className="flex flex-col gap-0.5 py-2.5 text-sm text-primary-hover hover:text-impilo-900"
             >
               <span className="font-medium">{item.title}</span>
-              {item.subtitle ? <span className="text-xs text-gray-500">{item.subtitle}</span> : null}
+              {item.subtitle ? <span className="text-xs text-muted-foreground">{item.subtitle}</span> : null}
             </Link>
           </li>
         ))}
@@ -99,8 +99,8 @@ export function HomeAttentionFromData({
 }: HomeAttentionSignalsProps) {
   if (!enabled || !hasWorkContext) {
     return (
-      <div className="rounded-xl border border-gray-100 bg-slate-50 p-4 text-xs text-gray-600">
-        <p className="font-medium text-gray-800">Needs attention</p>
+      <div className="rounded-xl border border-border bg-background p-4 text-xs text-muted-foreground">
+        <p className="font-medium text-foreground">Needs attention</p>
         <p className="mt-1">
           Select a workplace to see live queue and encounter signals from your facility when the service is available.
         </p>
@@ -140,23 +140,23 @@ export function HomeAttentionFromData({
 
   if (items.length === 0) {
     return (
-      <div className="rounded-xl border border-gray-100 bg-slate-50 p-4 text-xs text-gray-600">
-        <p className="font-medium text-gray-800">Needs attention</p>
+      <div className="rounded-xl border border-border bg-background p-4 text-xs text-muted-foreground">
+        <p className="font-medium text-foreground">Needs attention</p>
         <p className="mt-1">No waiting queue backlog or in-progress encounters in the current snapshot.</p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4">
-      <h3 className="text-sm font-semibold text-amber-950">Needs attention</h3>
+    <div className="rounded-xl border border-warning/35 bg-warning-soft/60 p-4">
+      <h3 className="text-sm font-semibold text-warning-foreground">Needs attention</h3>
       <ul className="mt-2 space-y-2">
         {items.map((row) => (
           <li key={row.href + row.label}>
-            <Link href={row.href} className="block text-sm font-medium text-amber-900 hover:underline">
+            <Link href={row.href} className="block text-sm font-medium text-warning-foreground hover:underline">
               {row.label}
             </Link>
-            <p className="text-[11px] text-amber-800/80">{row.detail}</p>
+            <p className="text-[11px] text-warning-foreground/80">{row.detail}</p>
           </li>
         ))}
       </ul>

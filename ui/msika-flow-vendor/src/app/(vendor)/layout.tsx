@@ -27,7 +27,7 @@ export default function VendorLayout({
 
   return (
     <div className="min-h-screen flex">
-      <aside className="w-64 bg-white border-r border-neutral-200 flex flex-col">
+      <aside className="w-64 bg-card border-r border-neutral-200 flex flex-col">
         <div className="px-5 py-5 border-b border-neutral-200">
           <Link href="/queue" className="block">
             <h1 className="text-lg font-semibold text-brand-primary tracking-tight">

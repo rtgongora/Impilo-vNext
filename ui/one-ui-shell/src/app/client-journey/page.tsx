@@ -38,7 +38,7 @@ export default function ClientJourneyPage() {
             Person journey requests are trust-context aware through the global API client header set (tenant, pod,
             actor, purpose-of-use, and duty context where present).
           </div>
-          <div className="rounded-xl border border-fuchsia-200 bg-fuchsia-50 p-3 text-sm text-fuchsia-900">
+          <div className="rounded-xl border border-border bg-neutral-100 p-3 text-sm text-fuchsia-900">
             <div className="flex items-center gap-2">
               <FeatureMaturityBadge
                 status={transactions.length > 0 ? "live" : isError ? "partial" : "connected"}

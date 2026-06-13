@@ -76,9 +76,9 @@ export default function AssuranceChoicePage() {
         "Access wellness, communities, marketplace, and public health content.",
       detail: "No Health ID required.",
       color: "impilo",
-      borderColor: "border-impilo-200",
-      bgColor: "bg-impilo-50",
-      iconColor: "text-impilo-500",
+      borderColor: "border-primary/25",
+      bgColor: "bg-primary-soft",
+      iconColor: "text-primary",
       selectedBorder: "border-impilo-500 ring-2 ring-impilo-200",
     },
     {
@@ -89,8 +89,8 @@ export default function AssuranceChoicePage() {
         "Get a provisional Health ID for remote consultations, prescription collection, and basic health records.",
       detail: "Valid for 90 days — visit a facility to complete verification.",
       color: "amber",
-      borderColor: "border-amber-200",
-      bgColor: "bg-amber-50",
+      borderColor: "border-warning/35",
+      bgColor: "bg-warning-soft",
       iconColor: "text-amber-600",
       selectedBorder: "border-amber-500 ring-2 ring-amber-200",
     },
@@ -102,24 +102,24 @@ export default function AssuranceChoicePage() {
         "I have a Health ID or will complete in-person verification now.",
       detail: "Full access to all health services.",
       color: "emerald",
-      borderColor: "border-emerald-200",
-      bgColor: "bg-emerald-50",
-      iconColor: "text-emerald-600",
+      borderColor: "border-success/25",
+      bgColor: "bg-success-soft",
+      iconColor: "text-primary",
       selectedBorder: "border-emerald-500 ring-2 ring-emerald-200",
     },
   ];
 
   return (
     <AuthLayout>
-      <h2 className="text-xl font-semibold text-gray-900 mb-1">
+      <h2 className="text-xl font-semibold text-foreground mb-1">
         How would you like to get started?
       </h2>
-      <p className="text-sm text-gray-500 mb-6">
+      <p className="text-sm text-muted-foreground mb-6">
         Choose the level of access that suits you. You can upgrade at any time.
       </p>
 
       {upgradeError ? (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-danger/28 bg-danger-soft p-3 text-sm text-danger">
           {upgradeError}
         </div>
       ) : null}
@@ -144,19 +144,19 @@ export default function AssuranceChoicePage() {
                 <div
                   className={[
                     "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
-                    isSelected ? "bg-white shadow-sm" : "bg-white/80",
+                    isSelected ? "bg-card shadow-sm" : "bg-card/80",
                   ].join(" ")}
                 >
                   <Icon className={`h-5 w-5 ${tier.iconColor}`} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-gray-900">
+                  <p className="text-sm font-semibold text-foreground">
                     {tier.title}
                   </p>
-                  <p className="mt-1 text-xs text-gray-600 leading-relaxed">
+                  <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
                     {tier.description}
                   </p>
-                  <p className="mt-1 text-xs font-medium text-gray-500">
+                  <p className="mt-1 text-xs font-medium text-muted-foreground">
                     {tier.detail}
                   </p>
                 </div>
@@ -171,36 +171,36 @@ export default function AssuranceChoicePage() {
 
       {/* Temporary access — extra info collection */}
       {showTemporaryForm && selected === "TEMPORARY" && (
-        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50/50 p-4 space-y-3">
-          <p className="text-sm font-medium text-gray-700">
+        <div className="mt-4 rounded-xl border border-warning/35 bg-warning-soft/50 p-4 space-y-3">
+          <p className="text-sm font-medium text-foreground">
             We need a few more details for your provisional Health ID
           </p>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-foreground mb-1">
               Date of birth
             </label>
             <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
                 type="date"
                 value={dateOfBirth}
                 onChange={(e) => setDateOfBirth(e.target.value)}
-                className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                className="w-full pl-10 pr-3 py-3 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-foreground mb-1">
               National ID number
             </label>
             <div className="relative">
-              <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
                 type="text"
                 value={idNumber}
                 onChange={(e) => setIdNumber(e.target.value)}
                 placeholder="e.g. 63-123456-A-78"
-                className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                className="w-full pl-10 pr-3 py-3 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
               />
             </div>
           </div>
@@ -215,7 +215,7 @@ export default function AssuranceChoicePage() {
           submitting ||
           (selected === "TEMPORARY" && (!dateOfBirth || !idNumber))
         }
-        className="mt-6 w-full py-3 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+        className="mt-6 w-full py-3 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
       >
         {submitting ? (
           <>

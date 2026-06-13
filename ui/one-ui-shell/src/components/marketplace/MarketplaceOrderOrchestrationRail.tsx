@@ -33,14 +33,14 @@ export function MarketplaceOrderOrchestrationRail() {
         <div className="flex flex-wrap gap-2 text-xs">
           <Link
             href="/marketplace/orders"
-            className="inline-flex items-center gap-1 rounded-lg border border-violet-200 bg-white px-2.5 py-1.5 font-medium text-violet-900 hover:border-violet-300"
+            className="inline-flex items-center gap-1 rounded-lg border border-violet-200 bg-card px-2.5 py-1.5 font-medium text-violet-900 hover:border-violet-300"
           >
             <PackageCheck className="h-3.5 w-3.5" />
             Order history
           </Link>
           <Link
             href="/marketplace/catalog"
-            className="rounded-lg border border-violet-200 bg-white px-2.5 py-1.5 font-medium text-violet-900 hover:border-violet-300"
+            className="rounded-lg border border-violet-200 bg-card px-2.5 py-1.5 font-medium text-violet-900 hover:border-violet-300"
           >
             Browse catalog
           </Link>

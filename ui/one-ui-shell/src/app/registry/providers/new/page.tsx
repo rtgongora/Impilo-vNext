@@ -20,7 +20,7 @@ import {
 } from "@/hooks/queries/useProviderAdmin";
 
 const inputClass =
-  "w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
+  "w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
 
 function errorMessage(err: unknown): string {
   if (err && typeof err === "object" && "error" in err) {
@@ -100,19 +100,19 @@ export default function NewProviderPage() {
         <div className="mb-4">
           <Link
             href="/registry/providers"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to providers
           </Link>
         </div>
 
-        <div className="mb-6 inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1 text-xs font-medium">
+        <div className="mb-6 inline-flex rounded-lg border border-border bg-background p-1 text-xs font-medium">
           <button
             type="button"
             onClick={() => setMode("standalone")}
             className={`inline-flex items-center gap-1.5 rounded-md px-3 py-2 transition-colors ${
-              mode === "standalone" ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
+              mode === "standalone" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <UserPlus className="h-3.5 w-3.5" />
@@ -122,7 +122,7 @@ export default function NewProviderPage() {
             type="button"
             onClick={() => setMode("anchored")}
             className={`inline-flex items-center gap-1.5 rounded-md px-3 py-2 transition-colors ${
-              mode === "anchored" ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
+              mode === "anchored" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <Link2 className="h-3.5 w-3.5" />
@@ -133,7 +133,7 @@ export default function NewProviderPage() {
         {mode === "standalone" ? (
           <form
             onSubmit={handleSubmitStandalone}
-            className="max-w-2xl space-y-4 bg-white rounded-lg border border-gray-200 p-6"
+            className="max-w-2xl space-y-4 bg-card rounded-lg border border-border p-6"
           >
             <ProviderFields form={form} setForm={setForm} />
 
@@ -164,14 +164,14 @@ export default function NewProviderPage() {
         ) : (
           <form
             onSubmit={handleSubmitAnchored}
-            className="max-w-2xl space-y-4 bg-white rounded-lg border border-gray-200 p-6"
+            className="max-w-2xl space-y-4 bg-card rounded-lg border border-border p-6"
           >
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               The person must already exist in the Vito client registry. The BFF validates the anchor, then creates the
               Varapi profile with the same fields as a direct registration.
             </p>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Impilo Health ID (required)</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Impilo Health ID (required)</label>
               <input
                 type="text"
                 required
@@ -188,12 +188,12 @@ export default function NewProviderPage() {
             )}
 
             {anchoredResult != null && Object.keys(anchoredResult).length > 0 && (
-              <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
-                <p className="text-xs font-medium text-emerald-900 mb-2">Varapi response</p>
+              <div className="rounded-lg border border-success/25 bg-success-soft p-3">
+                <p className="text-xs font-medium text-primary-hover mb-2">Varapi response</p>
                 <JsonApiDataTable data={anchoredResult} columns={REGISTRY_ENTITY_COLUMNS} emptyTitle="Provider anchored" />
                 <button
                   type="button"
-                  className="mt-3 text-xs font-medium text-emerald-800 underline hover:text-emerald-950"
+                  className="mt-3 text-xs font-medium text-primary-hover underline hover:text-emerald-950"
                   onClick={() => router.push("/registry/providers")}
                 >
                   Go to provider list
@@ -205,7 +205,7 @@ export default function NewProviderPage() {
               <button
                 type="submit"
                 disabled={createAnchored.isPending}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-primary disabled:opacity-50 transition-colors"
               >
                 {createAnchored.isPending ? (
                   <>
@@ -246,7 +246,7 @@ function ProviderFields({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1">Given name</label>
+        <label className="block text-xs font-medium text-muted-foreground mb-1">Given name</label>
         <input
           type="text"
           required
@@ -256,7 +256,7 @@ function ProviderFields({
         />
       </div>
       <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1">Family name</label>
+        <label className="block text-xs font-medium text-muted-foreground mb-1">Family name</label>
         <input
           type="text"
           required
@@ -266,7 +266,7 @@ function ProviderFields({
         />
       </div>
       <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1">Profession</label>
+        <label className="block text-xs font-medium text-muted-foreground mb-1">Profession</label>
         <input
           type="text"
           required
@@ -276,7 +276,7 @@ function ProviderFields({
         />
       </div>
       <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1">Cadre</label>
+        <label className="block text-xs font-medium text-muted-foreground mb-1">Cadre</label>
         <input
           type="text"
           required
@@ -286,7 +286,7 @@ function ProviderFields({
         />
       </div>
       <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1">Date of birth</label>
+        <label className="block text-xs font-medium text-muted-foreground mb-1">Date of birth</label>
         <input
           type="date"
           required
@@ -296,7 +296,7 @@ function ProviderFields({
         />
       </div>
       <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1">Sex</label>
+        <label className="block text-xs font-medium text-muted-foreground mb-1">Sex</label>
         <select
           value={form.sex}
           onChange={(e) => setForm({ ...form, sex: e.target.value as ProviderSex })}
@@ -308,7 +308,7 @@ function ProviderFields({
         </select>
       </div>
       <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1">Council code</label>
+        <label className="block text-xs font-medium text-muted-foreground mb-1">Council code</label>
         <input
           type="text"
           required
@@ -318,7 +318,7 @@ function ProviderFields({
         />
       </div>
       <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1">Registration number</label>
+        <label className="block text-xs font-medium text-muted-foreground mb-1">Registration number</label>
         <input
           type="text"
           required

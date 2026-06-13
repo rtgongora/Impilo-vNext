@@ -66,32 +66,32 @@ export function FacilityWorkClusterRibbon({
   }
 
   return (
-    <div className="mb-6 rounded-xl border border-sky-200/90 bg-gradient-to-r from-sky-50 to-slate-50 px-4 py-3 text-sm text-slate-900 shadow-sm">
+    <div className="mb-6 rounded-xl border border-sky-200/90 bg-gradient-to-r from-sky-50 to-slate-50 px-4 py-3 text-sm text-foreground shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-2">
           <Layers className="mt-0.5 h-4 w-4 shrink-0 text-sky-700" aria-hidden />
           <div>
-            <p className="font-semibold text-slate-900">Facility Work focus</p>
-            <p className="text-xs text-slate-600">
+            <p className="font-semibold text-foreground">Facility Work focus</p>
+            <p className="text-xs text-muted-foreground">
               Same experience layer — sequencing stays{" "}
               <span className="font-medium">facility → workspace{shiftExpected ? " → shift" : ""}</span>
               . Queue and chart links require an active shift unless you are on an org-admin scheduling path.
             </p>
-            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
+            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1">
-                <Building2 className="h-3.5 w-3.5 text-slate-500" aria-hidden />
-                Facility: <span className="font-medium text-slate-800">{facility?.name ?? "Not selected"}</span>
+                <Building2 className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
+                Facility: <span className="font-medium text-foreground">{facility?.name ?? "Not selected"}</span>
               </span>
               <span className="inline-flex items-center gap-1">
-                <Layers className="h-3.5 w-3.5 text-slate-500" aria-hidden />
+                <Layers className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
                 Workspace:{" "}
-                <span className="font-medium text-slate-800">{workspace?.name ?? "Not selected"}</span>
+                <span className="font-medium text-foreground">{workspace?.name ?? "Not selected"}</span>
               </span>
               {shiftExpected && (
                 <span className="inline-flex items-center gap-1">
-                  <Clock className="h-3.5 w-3.5 text-slate-500" aria-hidden />
+                  <Clock className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
                   Shift:{" "}
-                  <span className="font-medium text-slate-800">{shift ? "Active" : "Not started"}</span>
+                  <span className="font-medium text-foreground">{shift ? "Active" : "Not started"}</span>
                 </span>
               )}
             </div>
@@ -111,7 +111,7 @@ export function FacilityWorkClusterRibbon({
               className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
                 active
                   ? "border-sky-600 bg-sky-600 text-white"
-                  : "border-slate-200 bg-white text-slate-700 hover:border-sky-300"
+                  : "border-border bg-card text-foreground hover:border-sky-300"
               }`}
             >
               {label}
@@ -120,16 +120,16 @@ export function FacilityWorkClusterRibbon({
         })}
       </div>
 
-      <div className="mt-4 rounded-lg border border-white/80 bg-white/70 px-3 py-2">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Next operational surface</p>
+      <div className="mt-4 rounded-lg border border-white/80 bg-card/70 px-3 py-2">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Next operational surface</p>
         <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm text-slate-800">
+          <p className="text-sm text-foreground">
             {resolved ? (
               <>
                 <span className="font-medium">{nav.shortLabel}:</span> {nav.nextCue}
               </>
             ) : (
-              <span className="text-slate-600">Pick a focus above — defaulting to supervisor queue view.</span>
+              <span className="text-muted-foreground">Pick a focus above — defaulting to supervisor queue view.</span>
             )}
           </p>
           <Link
@@ -140,7 +140,7 @@ export function FacilityWorkClusterRibbon({
           </Link>
         </div>
         {typeof activeEncounterCount === "number" && (
-          <p className="mt-2 text-xs text-amber-800">
+          <p className="mt-2 text-xs text-warning-foreground">
             Loop status: <span className="font-medium">{activeEncounterCount}</span> encounter(s) in progress on the
             queue — resolve or hand over before ending shift when possible.
           </p>

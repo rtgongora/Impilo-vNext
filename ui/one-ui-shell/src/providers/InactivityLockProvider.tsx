@@ -130,7 +130,7 @@ export function InactivityLockProvider({ children }: { children: ReactNode }) {
         <div className="hidden">{children}</div>
 
         {/* Lock screen */}
-        <div className="fixed inset-0 z-[9999] bg-gray-900/95 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[9999] bg-neutral-900/95 flex items-center justify-center p-4">
           <div className="w-full max-w-sm text-center">
             <div className="w-16 h-16 rounded-full bg-blue-600/20 flex items-center justify-center mx-auto mb-6">
               <Lock className="w-8 h-8 text-blue-400" />
@@ -139,7 +139,7 @@ export function InactivityLockProvider({ children }: { children: ReactNode }) {
             <h2 className="text-xl font-semibold text-white mb-2">
               Session Locked
             </h2>
-            <p className="text-sm text-gray-400 mb-6">
+            <p className="text-sm text-muted-foreground mb-6">
               Your session was locked due to inactivity to protect patient privacy.
             </p>
 
@@ -153,13 +153,13 @@ export function InactivityLockProvider({ children }: { children: ReactNode }) {
 
             <button
               onClick={handleLogout}
-              className="w-full py-2.5 text-sm text-gray-400 hover:text-gray-200 flex items-center justify-center gap-2 transition-colors"
+              className="w-full py-2.5 text-sm text-muted-foreground hover:text-foreground flex items-center justify-center gap-2 transition-colors"
             >
               <LogOut className="w-4 h-4" />
               Sign Out
             </button>
 
-            <p className="mt-4 text-xs text-gray-500">
+            <p className="mt-4 text-xs text-muted-foreground">
               Auto sign-out in {minutes}:{String(seconds).padStart(2, "0")}
             </p>
           </div>

@@ -84,7 +84,7 @@ export default function LabResultsPage() {
         </div>
 
         {!facility?.id ? (
-          <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          <div className="mb-4 rounded-lg border border-warning/35 bg-warning-soft p-4 text-sm text-warning-foreground">
             Select a facility to review resulted orders for this site.
           </div>
         ) : null}
@@ -93,18 +93,18 @@ export default function LabResultsPage() {
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div className="flex gap-3">
               <div className="relative w-80">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search results by patient or order..."
-                  className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                  className="w-full rounded-lg border border-border py-2 pl-10 pr-4 text-sm focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
                 />
               </div>
               <button
                 type="button"
-                className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-foreground hover:bg-background transition-colors"
               >
                 <Filter className="h-4 w-4" />
                 Filters
@@ -131,8 +131,8 @@ export default function LabResultsPage() {
             </p>
           ) : null}
 
-          <div className="rounded-lg border border-gray-200 bg-white">
-            <div className="border-b border-gray-200 px-4 py-3 grid grid-cols-6 gap-4 text-xs font-semibold text-gray-500 uppercase">
+          <div className="rounded-lg border border-border bg-card">
+            <div className="border-b border-border px-4 py-3 grid grid-cols-6 gap-4 text-xs font-semibold text-muted-foreground uppercase">
               <span>Select</span>
               <span>Order ID</span>
               <span>Patient CPID</span>
@@ -141,17 +141,17 @@ export default function LabResultsPage() {
               <span>Status</span>
             </div>
             {resultsQ.isLoading ? (
-              <div className="flex items-center justify-center gap-2 p-12 text-sm text-gray-500">
+              <div className="flex items-center justify-center gap-2 p-12 text-sm text-muted-foreground">
                 <Loader2 className="h-5 w-5 animate-spin" />
                 Loading results pending review…
               </div>
             ) : resultsQ.isError ? (
-              <div className="p-8 text-center text-sm text-red-700">
+              <div className="p-8 text-center text-sm text-danger">
                 Unable to load resulted orders from OROS.
               </div>
             ) : items.length === 0 ? (
               <div className="p-12 text-center">
-                <p className="text-sm text-gray-500">No results pending review</p>
+                <p className="text-sm text-muted-foreground">No results pending review</p>
               </div>
             ) : (
               <ul className="divide-y divide-gray-100">
@@ -165,10 +165,10 @@ export default function LabResultsPage() {
                         onChange={() => toggleSelected(id)}
                         aria-label={`Select order ${id}`}
                       />
-                      <span className="font-medium text-gray-900">{id}</span>
+                      <span className="font-medium text-foreground">{id}</span>
                       <span>{item.patientCpid ?? "—"}</span>
                       <span>{item.priority ?? "—"}</span>
-                      <span className="text-xs text-gray-500">{item.updatedAt ?? item.placedAt ?? "—"}</span>
+                      <span className="text-xs text-muted-foreground">{item.updatedAt ?? item.placedAt ?? "—"}</span>
                       <span>{item.status ?? "—"}</span>
                     </li>
                   );

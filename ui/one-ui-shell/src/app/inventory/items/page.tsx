@@ -10,9 +10,9 @@ import { useCreateInventoryItem, useInventoryItems } from "@/hooks/queries/useIn
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 
 const STATUS_STYLES: Record<string, string> = {
-  ACTIVE: "bg-emerald-100 text-emerald-800",
-  LOW_STOCK: "bg-amber-100 text-amber-900",
-  INACTIVE: "bg-slate-100 text-slate-700",
+  ACTIVE: "bg-emerald-100 text-primary-hover",
+  LOW_STOCK: "bg-amber-100 text-warning-foreground",
+  INACTIVE: "bg-neutral-100 text-foreground",
 };
 
 export default function InventoryItemsPage() {
@@ -81,7 +81,7 @@ export default function InventoryItemsPage() {
         subtitle="Search and maintain inventory items — codes, categories, units, on-hand, reorder levels, and status."
       >
         {!facility ? (
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
+          <div className="rounded-xl border border-warning/35 bg-warning-soft p-5 text-sm text-warning-foreground">
             Select a facility to load and create catalog items.
             <div className="mt-3">
               <Link href="/workspace" className="font-medium underline">
@@ -93,108 +93,108 @@ export default function InventoryItemsPage() {
           <div className="space-y-6">
             <SupplyPlaneContextBar />
             <div className="mb-2">
-              <Link href="/inventory" className="text-sm font-medium text-slate-600 hover:text-slate-900">
+              <Link href="/inventory" className="text-sm font-medium text-muted-foreground hover:text-foreground">
                 ← Inventory dashboard
               </Link>
             </div>
 
             <section className="grid gap-6 xl:grid-cols-[minmax(0,340px)_1fr]">
-              <form onSubmit={handleCreate} className="h-fit rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Add item</div>
-                <h2 className="mt-1 text-lg font-semibold text-slate-900">{facility.name}</h2>
-                <p className="mt-2 text-sm text-slate-600">Creates a catalog line via the inventory BFF (POST /internal/v1/inventory/items).</p>
+              <form onSubmit={handleCreate} className="h-fit rounded-2xl border border-border bg-card p-5 shadow-sm">
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Add item</div>
+                <h2 className="mt-1 text-lg font-semibold text-foreground">{facility.name}</h2>
+                <p className="mt-2 text-sm text-muted-foreground">Creates a catalog line via the inventory BFF (POST /internal/v1/inventory/items).</p>
                 <div className="mt-4 space-y-3">
                   <label className="block text-sm">
-                    <span className="mb-1 block font-medium text-slate-700">Item code</span>
+                    <span className="mb-1 block font-medium text-foreground">Item code</span>
                     <input
                       value={code}
                       onChange={(ev) => setCode(ev.target.value)}
                       required
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                      className="w-full rounded-lg border border-border px-3 py-2"
                       placeholder="e.g. GLV-100"
                     />
                   </label>
                   <label className="block text-sm">
-                    <span className="mb-1 block font-medium text-slate-700">Name</span>
+                    <span className="mb-1 block font-medium text-foreground">Name</span>
                     <input
                       value={name}
                       onChange={(ev) => setName(ev.target.value)}
                       required
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                      className="w-full rounded-lg border border-border px-3 py-2"
                       placeholder="Description"
                     />
                   </label>
                   <label className="block text-sm">
-                    <span className="mb-1 block font-medium text-slate-700">Category</span>
+                    <span className="mb-1 block font-medium text-foreground">Category</span>
                     <input
                       value={category}
                       onChange={(ev) => setCategory(ev.target.value)}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                      className="w-full rounded-lg border border-border px-3 py-2"
                       placeholder="Consumables, Pharmacy, …"
                     />
                   </label>
                   <label className="block text-sm">
-                    <span className="mb-1 block font-medium text-slate-700">Unit</span>
+                    <span className="mb-1 block font-medium text-foreground">Unit</span>
                     <input
                       value={unit}
                       onChange={(ev) => setUnit(ev.target.value)}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                      className="w-full rounded-lg border border-border px-3 py-2"
                     />
                   </label>
                   <label className="block text-sm">
-                    <span className="mb-1 block font-medium text-slate-700">Reorder level</span>
+                    <span className="mb-1 block font-medium text-foreground">Reorder level</span>
                     <input
                       value={reorder}
                       onChange={(ev) => setReorder(ev.target.value)}
                       type="number"
                       min={0}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                      className="w-full rounded-lg border border-border px-3 py-2"
                     />
                   </label>
                   <label className="block text-sm">
-                    <span className="mb-1 block font-medium text-slate-700">Starting on-hand (optional)</span>
+                    <span className="mb-1 block font-medium text-foreground">Starting on-hand (optional)</span>
                     <input
                       value={onHand}
                       onChange={(ev) => setOnHand(ev.target.value)}
                       type="number"
                       min={0}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                      className="w-full rounded-lg border border-border px-3 py-2"
                     />
                   </label>
                 </div>
                 <button
                   type="submit"
                   disabled={createItem.isPending}
-                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
                 >
                   {createItem.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                   Save item
                 </button>
                 {createItem.isError ? (
-                  <p className="mt-2 text-sm text-rose-700">Unable to create item — the API may not support POST yet.</p>
+                  <p className="mt-2 text-sm text-danger">Unable to create item — the API may not support POST yet.</p>
                 ) : null}
               </form>
 
-              <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-                <div className="border-b border-slate-200 p-4 sm:flex sm:items-end sm:justify-between sm:gap-4">
+              <div className="rounded-2xl border border-border bg-card shadow-sm">
+                <div className="border-b border-border p-4 sm:flex sm:items-end sm:justify-between sm:gap-4">
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900">Catalog</h3>
-                    <p className="text-sm text-slate-600">{filtered.length} row(s) after search / filter.</p>
+                    <h3 className="text-lg font-semibold text-foreground">Catalog</h3>
+                    <p className="text-sm text-muted-foreground">{filtered.length} row(s) after search / filter.</p>
                   </div>
                   <div className="mt-3 flex flex-col gap-3 sm:mt-0 sm:flex-row">
                     <div className="relative min-w-[200px] flex-1">
-                      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <input
                         value={search}
                         onChange={(ev) => setSearch(ev.target.value)}
                         placeholder="Search code, name, category…"
-                        className="w-full rounded-lg border border-slate-300 py-2 pl-9 pr-3 text-sm"
+                        className="w-full rounded-lg border border-border py-2 pl-9 pr-3 text-sm"
                       />
                     </div>
                     <select
                       value={categoryFilter}
                       onChange={(ev) => setCategoryFilter(ev.target.value)}
-                      className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                      className="rounded-lg border border-border px-3 py-2 text-sm"
                     >
                       <option value="">All categories</option>
                       {categories.map((c) => (
@@ -207,7 +207,7 @@ export default function InventoryItemsPage() {
                 </div>
 
                 {itemsQuery.isLoading ? (
-                  <div className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500">
+                  <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground">
                     <Loader2 className="h-5 w-5 animate-spin" />
                     Loading catalog…
                   </div>
@@ -217,11 +217,11 @@ export default function InventoryItemsPage() {
                     Failed to load items.
                   </div>
                 ) : filtered.length === 0 ? (
-                  <div className="p-12 text-center text-sm text-slate-500">No items match the current filters.</div>
+                  <div className="p-12 text-center text-sm text-muted-foreground">No items match the current filters.</div>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-[720px] text-sm">
-                      <thead className="bg-slate-50 text-left text-slate-600">
+                      <thead className="bg-background text-left text-muted-foreground">
                         <tr>
                           <th className="px-3 py-2 font-medium">Code</th>
                           <th className="px-3 py-2 font-medium">Name</th>
@@ -234,16 +234,16 @@ export default function InventoryItemsPage() {
                       </thead>
                       <tbody>
                         {filtered.map((it) => (
-                          <tr key={it.id} className="border-t border-slate-100">
-                            <td className="px-3 py-2 font-mono text-xs text-slate-700">{it.productCode}</td>
-                            <td className="px-3 py-2 font-medium text-slate-900">{it.productName}</td>
-                            <td className="px-3 py-2 text-slate-600">{it.category}</td>
-                            <td className="px-3 py-2 text-slate-600">{it.unit}</td>
-                            <td className="px-3 py-2 text-slate-800">{it.quantityOnHand}</td>
-                            <td className="px-3 py-2 text-slate-600">{it.reorderLevel}</td>
+                          <tr key={it.id} className="border-t border-border">
+                            <td className="px-3 py-2 font-mono text-xs text-foreground">{it.productCode}</td>
+                            <td className="px-3 py-2 font-medium text-foreground">{it.productName}</td>
+                            <td className="px-3 py-2 text-muted-foreground">{it.category}</td>
+                            <td className="px-3 py-2 text-muted-foreground">{it.unit}</td>
+                            <td className="px-3 py-2 text-foreground">{it.quantityOnHand}</td>
+                            <td className="px-3 py-2 text-muted-foreground">{it.reorderLevel}</td>
                             <td className="px-3 py-2">
                               <span
-                                className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_STYLES[it.status] ?? "bg-slate-100 text-slate-700"}`}
+                                className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_STYLES[it.status] ?? "bg-neutral-100 text-foreground"}`}
                               >
                                 {it.status}
                               </span>

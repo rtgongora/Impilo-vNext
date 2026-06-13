@@ -13,23 +13,23 @@ import { ArrowLeft, Trash2 } from "lucide-react";
 
 export default function AccountDeletionPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+      <header className="bg-card border-b border-border sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link
               href="/auth/login"
-              className="text-gray-500 hover:text-gray-700 transition-colors"
+              className="text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
-              <h1 className="text-lg font-semibold text-gray-900">Impilo</h1>
-              <p className="text-xs text-gray-500">Health Operating System</p>
+              <h1 className="text-lg font-semibold text-foreground">Impilo</h1>
+              <p className="text-xs text-muted-foreground">Health Operating System</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-xs text-gray-400">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Trash2 className="w-3.5 h-3.5" />
             <span>Account Deletion</span>
           </div>
@@ -38,24 +38,24 @@ export default function AccountDeletionPage() {
 
       {/* Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-10">
+        <div className="bg-card rounded-xl shadow-sm border border-border p-6 sm:p-10">
           <div className="mb-8">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
               Account Deletion Notice
             </h1>
-            <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-500">
+            <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground">
               <span>Effective Date: 11 April 2026</span>
               <span>Last Updated: 11 April 2026</span>
             </div>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Entity: Impilo Technologies Private Limited
             </p>
           </div>
 
-          <div className="prose prose-gray max-w-none prose-headings:text-gray-900 prose-p:text-gray-600 prose-li:text-gray-600 prose-a:text-blue-600">
+          <div className="prose prose-gray max-w-none prose-headings:text-foreground prose-p:text-muted-foreground prose-li:text-muted-foreground prose-a:text-primary">
             {/* How to request deletion */}
             <section className="mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+              <h3 className="text-lg font-semibold text-foreground mb-3">
                 How to Delete Your Account
               </h3>
               <p>
@@ -71,7 +71,7 @@ export default function AccountDeletionPage() {
               </p>
 
               {/* Step-by-step in-app */}
-              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="mt-4 p-4 bg-info-soft border border-info/25 rounded-lg">
                 <h4 className="text-sm font-semibold text-blue-900 mb-2">
                   In-App Deletion (Recommended)
                 </h4>
@@ -92,7 +92,7 @@ export default function AccountDeletionPage() {
 
             {/* What happens */}
             <section className="mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+              <h3 className="text-lg font-semibold text-foreground mb-3">
                 What Happens After a Deletion Request
               </h3>
               <p>
@@ -106,7 +106,7 @@ export default function AccountDeletionPage() {
 
             {/* Data retention */}
             <section className="mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+              <h3 className="text-lg font-semibold text-foreground mb-3">
                 Data That May Be Retained
               </h3>
               <p>
@@ -132,7 +132,7 @@ export default function AccountDeletionPage() {
 
             {/* Provider-held records */}
             <section className="mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+              <h3 className="text-lg font-semibold text-foreground mb-3">
                 Provider-Held Records
               </h3>
               <p>
@@ -147,7 +147,7 @@ export default function AccountDeletionPage() {
 
             {/* Technical process */}
             <section className="mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+              <h3 className="text-lg font-semibold text-foreground mb-3">
                 Deletion Process
               </h3>
               <p>
@@ -160,7 +160,7 @@ export default function AccountDeletionPage() {
 
             {/* Alternative methods */}
             <section className="mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+              <h3 className="text-lg font-semibold text-foreground mb-3">
                 Alternative Deletion Methods
               </h3>
               <p>
@@ -178,10 +178,10 @@ export default function AccountDeletionPage() {
 
             {/* Contact */}
             <section className="mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+              <h3 className="text-lg font-semibold text-foreground mb-3">
                 Contact Information
               </h3>
-              <address className="not-italic text-gray-600">
+              <address className="not-italic text-muted-foreground">
                 <strong>Impilo Technologies Private Limited</strong>
                 <br />
                 Suite 45, 18th Floor, Kaguvi Building
@@ -203,12 +203,12 @@ export default function AccountDeletionPage() {
               </address>
             </section>
 
-            <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-              <p className="text-xs text-gray-500">
+            <div className="mt-6 p-4 bg-background border border-border rounded-lg">
+              <p className="text-xs text-muted-foreground">
                 This standalone notice matches the account-deletion expectations reflected
                 in Google Play and Apple guidance for apps with account creation. For the
                 full privacy policy, see the{" "}
-                <Link href="/privacy" className="text-blue-600 hover:text-blue-800 underline">
+                <Link href="/privacy" className="text-primary hover:text-blue-800 underline">
                   Impilo Privacy Policy
                 </Link>
                 .
@@ -218,23 +218,23 @@ export default function AccountDeletionPage() {
         </div>
 
         {/* Footer */}
-        <footer className="mt-8 text-center text-xs text-gray-400 space-y-2">
+        <footer className="mt-8 text-center text-xs text-muted-foreground space-y-2">
           <div className="flex items-center justify-center gap-4">
-            <Link href="/terms" className="hover:text-gray-600 transition-colors">
+            <Link href="/terms" className="hover:text-muted-foreground transition-colors">
               Terms of Use
             </Link>
             <span>&middot;</span>
-            <Link href="/privacy" className="hover:text-gray-600 transition-colors">
+            <Link href="/privacy" className="hover:text-muted-foreground transition-colors">
               Privacy Policy
             </Link>
             <span>&middot;</span>
-            <span className="text-gray-300">Account Deletion</span>
+            <span className="text-muted-foreground">Account Deletion</span>
             <span>&middot;</span>
-            <Link href="/privacy/app-stores" className="hover:text-gray-600 transition-colors">
+            <Link href="/privacy/app-stores" className="hover:text-muted-foreground transition-colors">
               App Store Privacy
             </Link>
             <span>&middot;</span>
-            <Link href="/auth/login" className="hover:text-gray-600 transition-colors">
+            <Link href="/auth/login" className="hover:text-muted-foreground transition-colors">
               Sign In
             </Link>
           </div>

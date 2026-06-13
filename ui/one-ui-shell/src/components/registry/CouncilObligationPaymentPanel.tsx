@@ -26,15 +26,15 @@ function mushexIntentId(row: CouncilObligationRow): string | null {
 function statusBadgeClass(status: string): string {
   const normalized = status.toUpperCase();
   if (normalized === "SETTLED" || normalized === "PAID") {
-    return "bg-emerald-100 text-emerald-800";
+    return "bg-emerald-100 text-primary-hover";
   }
   if (normalized === "PENDING_PAYMENT" || normalized === "OPEN") {
-    return "bg-amber-100 text-amber-800";
+    return "bg-amber-100 text-warning-foreground";
   }
   if (normalized === "FAILED" || normalized === "CANCELLED" || normalized === "REFUNDED") {
     return "bg-red-100 text-red-800";
   }
-  return "bg-slate-100 text-slate-700";
+  return "bg-neutral-100 text-foreground";
 }
 
 interface CouncilObligationPaymentPanelProps {
@@ -54,7 +54,7 @@ export function CouncilObligationPaymentPanel({
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-2 text-sm text-gray-500" data-testid="council-obligation-payment-panel">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground" data-testid="council-obligation-payment-panel">
         <Loader2 className="h-4 w-4 animate-spin" /> Loading obligations…
       </div>
     );
@@ -62,7 +62,7 @@ export function CouncilObligationPaymentPanel({
 
   if (obligations.length === 0) {
     return (
-      <p className="text-sm text-gray-500" data-testid="council-obligation-payment-panel">
+      <p className="text-sm text-muted-foreground" data-testid="council-obligation-payment-panel">
         No council fee obligations for this provider.
       </p>
     );
@@ -80,15 +80,15 @@ export function CouncilObligationPaymentPanel({
         return (
           <div
             key={String(id ?? row.obligationType)}
-            className="rounded-lg border border-gray-200 bg-gray-50/80 p-3"
+            className="rounded-lg border border-border bg-background/80 p-3"
             data-testid={id ? `council-obligation-row-${id}` : undefined}
           >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className="text-sm font-medium text-gray-900">
+                <p className="text-sm font-medium text-foreground">
                   {String(row.obligationType ?? "Council fee")} · {amount} {currency}
                 </p>
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-muted-foreground">
                   Obligation #{id ?? "—"}
                   {row.dueDate ? ` · due ${row.dueDate}` : ""}
                 </p>
@@ -99,7 +99,7 @@ export function CouncilObligationPaymentPanel({
                 </span>
                 {intentId ? (
                   <p className="mt-2 text-xs text-violet-700">
-                    MusheX intent <code className="rounded bg-white px-1">{intentId}</code>
+                    MusheX intent <code className="rounded bg-card px-1">{intentId}</code>
                   </p>
                 ) : null}
               </div>
@@ -128,7 +128,7 @@ export function CouncilObligationPaymentPanel({
                       disabled={busy}
                       data-testid={`council-sync-payment-${id}`}
                       onClick={() => syncPayment.mutate(id)}
-                      className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                      className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-medium text-foreground hover:bg-background disabled:opacity-50"
                     >
                       {syncPayment.isPending ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -140,7 +140,7 @@ export function CouncilObligationPaymentPanel({
                     <Link
                       href={`/wallet?intentId=${encodeURIComponent(intentId)}`}
                       data-testid={`council-open-wallet-${id}`}
-                      className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-800 hover:bg-emerald-100"
+                      className="inline-flex items-center gap-1 rounded-lg border border-success/25 bg-success-soft px-2.5 py-1 text-xs font-medium text-primary-hover hover:bg-emerald-100"
                     >
                       <ExternalLink className="h-3.5 w-3.5" />
                       Open MusheX wallet

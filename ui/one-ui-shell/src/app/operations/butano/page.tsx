@@ -12,10 +12,10 @@ import { PageShell } from "@/components/PageShell";
 import { useFhirCapabilityStatement } from "@/hooks/queries/useFhirInterop";
 
 const SECTIONS = [
-  { label: "FHIR Statistics", description: "Resource counts, storage usage, and throughput metrics", Icon: BarChart3, color: "bg-impilo-50 text-impilo-500" },
-  { label: "Reconciliation", description: "Reconcile SHR records with source-of-truth systems", Icon: RefreshCcw, color: "bg-amber-50 text-amber-600" },
+  { label: "FHIR Statistics", description: "Resource counts, storage usage, and throughput metrics", Icon: BarChart3, color: "bg-primary-soft text-primary" },
+  { label: "Reconciliation", description: "Reconcile SHR records with source-of-truth systems", Icon: RefreshCcw, color: "bg-warning-soft text-amber-600" },
   { label: "Subscription Triggers", description: "Manage FHIR subscription and event triggers", Icon: Activity, color: "bg-green-50 text-green-600" },
-  { label: "Configuration", description: "SHR storage, replication, and retention settings", Icon: Settings, color: "bg-slate-100 text-slate-600" },
+  { label: "Configuration", description: "SHR storage, replication, and retention settings", Icon: Settings, color: "bg-neutral-100 text-muted-foreground" },
 ];
 
 export default function ButanoOpsPage() {
@@ -43,9 +43,9 @@ export default function ButanoOpsPage() {
               { label: "Server Status", value: capLoading ? "..." : String(serverStatus) },
               { label: "Sync Errors", value: "0" },
             ].map(({ label, value }) => (
-              <div key={label} className="rounded-lg border border-gray-200 bg-white p-4">
-                <p className="text-sm text-gray-500">{label}</p>
-                <p className="text-2xl font-bold text-gray-900">{capLoading ? <Loader2 className="h-6 w-6 animate-spin text-gray-300" /> : value}</p>
+              <div key={label} className="rounded-lg border border-border bg-card p-4">
+                <p className="text-sm text-muted-foreground">{label}</p>
+                <p className="text-2xl font-bold text-foreground">{capLoading ? <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /> : value}</p>
               </div>
             ))}
           </div>
@@ -55,15 +55,15 @@ export default function ButanoOpsPage() {
             {SECTIONS.map(({ label, description, Icon, color }) => (
               <div
                 key={label}
-                className="rounded-lg border border-gray-200 bg-white p-5 hover:border-slate-400 hover:shadow-sm transition-all cursor-pointer"
+                className="rounded-lg border border-border bg-card p-5 hover:border-slate-400 hover:shadow-sm transition-all cursor-pointer"
               >
                 <div className="flex items-center gap-3 mb-2">
                   <div className={`rounded-lg p-2 ${color.split(" ")[0]}`}>
                     <Icon className={`h-5 w-5 ${color.split(" ")[1]}`} />
                   </div>
-                  <h3 className="font-semibold text-gray-900">{label}</h3>
+                  <h3 className="font-semibold text-foreground">{label}</h3>
                 </div>
-                <p className="text-sm text-gray-600">{description}</p>
+                <p className="text-sm text-muted-foreground">{description}</p>
               </div>
             ))}
           </div>

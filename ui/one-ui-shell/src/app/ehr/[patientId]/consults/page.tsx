@@ -73,17 +73,17 @@ import { useQuery } from "@tanstack/react-query";
 
 const STATUS_STYLE: Record<string, string> = {
   PENDING: "bg-yellow-100 text-yellow-700",
-  ACCEPTED: "bg-impilo-100 text-impilo-600",
-  RESPONDED: "bg-purple-100 text-purple-700",
+  ACCEPTED: "bg-primary-soft text-primary",
+  RESPONDED: "bg-purple-100 text-warning-foreground",
   COMPLETED: "bg-green-100 text-green-700",
-  CANCELLED: "bg-gray-100 text-gray-600",
+  CANCELLED: "bg-neutral-100 text-muted-foreground",
   IN_PROGRESS: "bg-green-100 text-green-700",
-  SCHEDULED: "bg-impilo-100 text-impilo-600" };
+  SCHEDULED: "bg-primary-soft text-primary" };
 
 const URGENCY_STYLE: Record<string, string> = {
-  EMERGENCY: "bg-red-100 text-red-700",
+  EMERGENCY: "bg-red-100 text-danger",
   URGENT: "bg-orange-100 text-orange-700",
-  ROUTINE: "bg-impilo-100 text-impilo-600" };
+  ROUTINE: "bg-primary-soft text-primary" };
 
 const TAB_META: Record<
   ActiveTab,
@@ -544,36 +544,36 @@ export default function ConsultsPage() {
         <div className="space-y-5">
           {/* Patient Context Header — Lovable-aligned */}
           {patient && (
-            <div className="rounded-3xl border border-slate-200 bg-[linear-gradient(135deg,#f8fbff_0%,#eef6ff_50%,#f8fafc_100%)] p-5 shadow-sm">
+            <div className="rounded-3xl border border-border bg-[linear-gradient(135deg,#f8fbff_0%,#eef6ff_50%,#f8fafc_100%)] p-5 shadow-sm">
               <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
                 <div className="flex items-start gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-impilo-100 text-impilo-600">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-soft text-primary">
                     <Workflow className="w-5 h-5" />
                   </div>
                   <div>
-                    <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-xs font-medium text-slate-600">
-                      <Sparkles className="h-3.5 w-3.5 text-impilo-500" />
+                    <div className="inline-flex items-center gap-2 rounded-full bg-card/80 px-3 py-1 text-xs font-medium text-muted-foreground">
+                      <Sparkles className="h-3.5 w-3.5 text-primary" />
                       Unified consults workspace
                     </div>
-                    <h3 className="mt-3 text-xl font-semibold text-slate-900">{patientName}</h3>
-                    <p className="mt-1 text-sm text-slate-600">
+                    <h3 className="mt-3 text-xl font-semibold text-foreground">{patientName}</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">
                       Consultations, referrals, and teleconsults now run as one coordinated encounter surface.
                     </p>
                     <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-                      <span className="rounded-full bg-white px-3 py-1 font-medium text-slate-700 shadow-sm">
+                      <span className="rounded-full bg-card px-3 py-1 font-medium text-foreground shadow-sm">
                         {String(patient.attributes.cpid ?? patientId)}
                       </span>
                       {activeEncounter ? (
-                        <span className="rounded-full bg-emerald-100 px-3 py-1 font-medium text-emerald-700">
+                        <span className="rounded-full bg-emerald-100 px-3 py-1 font-medium text-primary-hover">
                           Active {activeEncounter.attributes.encounterType} encounter
                         </span>
                       ) : (
-                        <span className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-600">
+                        <span className="rounded-full bg-neutral-100 px-3 py-1 font-medium text-muted-foreground">
                           No active encounter
                         </span>
                       )}
                       {facility && (
-                        <span className="rounded-full bg-impilo-50 px-3 py-1 font-medium text-impilo-600">
+                        <span className="rounded-full bg-primary-soft px-3 py-1 font-medium text-primary">
                           {facility.name}
                         </span>
                       )}
@@ -583,30 +583,30 @@ export default function ConsultsPage() {
 
                 <div className="grid gap-3 sm:grid-cols-2 xl:w-[28rem]">
                   {dashboardCards.map((card) => (
-                    <div key={card.label} className="rounded-2xl border border-white/70 bg-white/80 p-4 shadow-sm">
-                      <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+                    <div key={card.label} className="rounded-2xl border border-white/70 bg-card/80 p-4 shadow-sm">
+                      <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
                         {card.label}
                       </p>
-                      <p className="mt-2 text-2xl font-semibold text-slate-900">{card.value}</p>
-                      <p className="mt-1 text-xs text-slate-500">{card.note}</p>
+                      <p className="mt-2 text-2xl font-semibold text-foreground">{card.value}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{card.note}</p>
                     </div>
                   ))}
                 </div>
               </div>
 
               <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(280px,1fr)]">
-                <div className="rounded-2xl border border-white/70 bg-white/80 p-4 shadow-sm">
+                <div className="rounded-2xl border border-white/70 bg-card/80 p-4 shadow-sm">
                   <div className="flex items-start gap-3">
                     <div className={`mt-0.5 flex h-9 w-9 items-center justify-center rounded-2xl ${
                       nextAction.tone === "emerald"
-                        ? "bg-emerald-100 text-emerald-700"
+                        ? "bg-emerald-100 text-primary-hover"
                         : nextAction.tone === "purple"
-                          ? "bg-purple-100 text-purple-700"
+                          ? "bg-purple-100 text-warning-foreground"
                           : nextAction.tone === "blue"
-                            ? "bg-impilo-100 text-impilo-600"
+                            ? "bg-primary-soft text-primary"
                             : nextAction.tone === "amber"
-                              ? "bg-amber-100 text-amber-700"
-                              : "bg-slate-100 text-slate-700"
+                              ? "bg-amber-100 text-warning-foreground"
+                              : "bg-neutral-100 text-foreground"
                     }`}>
                       {nextAction.tone === "purple" ? (
                         <CheckCircle2 className="h-4 w-4" />
@@ -619,11 +619,11 @@ export default function ConsultsPage() {
                       )}
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-semibold text-slate-900">{nextAction.title}</p>
-                      <p className="mt-1 text-sm text-slate-600">{nextAction.detail}</p>
+                      <p className="text-sm font-semibold text-foreground">{nextAction.title}</p>
+                      <p className="mt-1 text-sm text-muted-foreground">{nextAction.detail}</p>
                       <button
                         onClick={nextAction.onAction}
-                        className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800"
+                        className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
                       >
                         {nextAction.actionLabel}
                       </button>
@@ -631,12 +631,12 @@ export default function ConsultsPage() {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-white/70 bg-white/80 p-4 shadow-sm">
-                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+                <div className="rounded-2xl border border-white/70 bg-card/80 p-4 shadow-sm">
+                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
                     Orchestration Pulse
                   </p>
-                  <p className="mt-2 text-sm font-medium text-slate-900">{telemetryLine}</p>
-                  <p className="mt-2 text-xs leading-5 text-slate-500">
+                  <p className="mt-2 text-sm font-medium text-foreground">{telemetryLine}</p>
+                  <p className="mt-2 text-xs leading-5 text-muted-foreground">
                     Router state, encounter context, and downstream consult activity are all being surfaced from the same patient workspace instead of splitting across unrelated pages.
                   </p>
                 </div>
@@ -648,14 +648,14 @@ export default function ConsultsPage() {
           <div className="flex justify-end gap-2">
             <Link
               href="/queue/incoming-referrals"
-              className="inline-flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              className="inline-flex items-center gap-2 px-3 py-2 border border-border rounded-lg text-sm text-foreground hover:bg-background transition-colors"
             >
               <Activity className="w-4 h-4" />
               Incoming Worklist
             </Link>
             <Link
               href="/telemedicine"
-              className="inline-flex items-center gap-2 px-3 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 transition-colors"
+              className="inline-flex items-center gap-2 px-3 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover transition-colors"
             >
               <Video className="w-4 h-4" />
               Telemedicine Hub
@@ -663,7 +663,7 @@ export default function ConsultsPage() {
           </div>
 
           {/* Tab Navigation — Lovable 3-tab layout */}
-          <div className="border-b border-gray-200">
+          <div className="border-b border-border">
             <div className="grid grid-cols-3 gap-0">
               {tabs.map((tab) => (
                 <button
@@ -671,15 +671,15 @@ export default function ConsultsPage() {
                   onClick={() => setActiveTab(tab.key)}
                   className={`flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                     activeTab === tab.key
-                      ? "border-impilo-500 text-impilo-500"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      ? "border-impilo-500 text-primary"
+                      : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
                   }`}
                 >
                   {tab.icon}
                   {tab.label}
                   {tab.count > 0 && (
                     <span className={`px-1.5 py-0.5 text-xs rounded-full ${
-                      activeTab === tab.key ? "bg-impilo-100 text-impilo-600" : "bg-gray-100 text-gray-600"
+                      activeTab === tab.key ? "bg-primary-soft text-primary" : "bg-neutral-100 text-muted-foreground"
                     }`}>
                       {tab.count}
                     </span>
@@ -688,8 +688,8 @@ export default function ConsultsPage() {
               ))}
             </div>
             <div className="flex items-center justify-between gap-3 px-1 py-3">
-              <p className="text-sm text-slate-600">{TAB_META[activeTab].subtitle}</p>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+              <p className="text-sm text-muted-foreground">{TAB_META[activeTab].subtitle}</p>
+              <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-muted-foreground">
                 {tabs.find((tab) => tab.key === activeTab)?.count ?? 0} in view
               </span>
             </div>
@@ -697,8 +697,8 @@ export default function ConsultsPage() {
 
           {isLoading ? (
             <div className="flex items-center justify-center py-16">
-              <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-              <span className="ml-2 text-sm text-gray-500">Loading...</span>
+              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              <span className="ml-2 text-sm text-muted-foreground">Loading...</span>
             </div>
           ) : (
             <>
@@ -706,10 +706,10 @@ export default function ConsultsPage() {
               {activeTab === "consultations" && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-base font-semibold text-gray-900">Consultation Requests</h3>
+                    <h3 className="text-base font-semibold text-foreground">Consultation Requests</h3>
                     <button
                       onClick={() => setShowNewConsult((v) => !v)}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover transition-colors"
                     >
                       <Plus className="w-4 h-4" />
                       Request Consult
@@ -767,10 +767,10 @@ export default function ConsultsPage() {
               {activeTab === "referrals" && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-base font-semibold text-gray-900">Referral Tracking</h3>
+                    <h3 className="text-base font-semibold text-foreground">Referral Tracking</h3>
                     <button
                       onClick={() => setShowNewReferral((v) => !v)}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover transition-colors"
                     >
                       <Plus className="w-4 h-4" />
                       New Referral
@@ -778,14 +778,14 @@ export default function ConsultsPage() {
                   </div>
 
                   <div className="grid gap-3 xl:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))]">
-                    <div className="rounded-2xl border border-slate-200 bg-[linear-gradient(135deg,#fffaf0_0%,#ffffff_50%,#eff6ff_100%)] p-4 shadow-sm">
+                    <div className="rounded-2xl border border-border bg-[linear-gradient(135deg,#fffaf0_0%,#ffffff_50%,#eff6ff_100%)] p-4 shadow-sm">
                       <div className="flex items-start gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-100 text-warning-foreground">
                           <ArrowRightLeft className="h-4 w-4" />
                         </div>
                         <div className="flex-1">
-                          <p className="text-sm font-semibold text-slate-900">Referral orchestration</p>
-                          <p className="mt-1 text-sm text-slate-600">
+                          <p className="text-sm font-semibold text-foreground">Referral orchestration</p>
+                          <p className="mt-1 text-sm text-muted-foreground">
                             Receive the handoff, return specialist guidance, and close the loop without leaving this encounter.
                           </p>
                           <div className="mt-3 flex flex-wrap gap-2 text-xs">
@@ -793,7 +793,7 @@ export default function ConsultsPage() {
                               <button
                                 type="button"
                                 onClick={() => toggleReferralAction(receivableReferrals[0], "accept")}
-                                className="rounded-full bg-amber-100 px-3 py-1 font-medium text-amber-800 transition-colors hover:bg-amber-200"
+                                className="rounded-full bg-amber-100 px-3 py-1 font-medium text-warning-foreground transition-colors hover:bg-amber-200"
                               >
                                 Accept next handoff
                               </button>
@@ -802,7 +802,7 @@ export default function ConsultsPage() {
                               <button
                                 type="button"
                                 onClick={() => toggleReferralAction(acceptedInboundReferrals[0], "respond")}
-                                className="rounded-full bg-impilo-100 px-3 py-1 font-medium text-impilo-700 transition-colors hover:bg-impilo-200"
+                                className="rounded-full bg-primary-soft px-3 py-1 font-medium text-primary-hover transition-colors hover:bg-impilo-200"
                               >
                                 Draft response
                               </button>
@@ -841,29 +841,29 @@ export default function ConsultsPage() {
                         tone: "purple",
                       },
                     ].map((item) => (
-                      <div key={item.label} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                        <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">{item.label}</p>
+                      <div key={item.label} className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+                        <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">{item.label}</p>
                         <p className={`mt-2 text-2xl font-semibold ${
                           item.tone === "amber"
-                            ? "text-amber-700"
+                            ? "text-warning-foreground"
                             : item.tone === "blue"
-                              ? "text-impilo-600"
-                              : "text-purple-700"
+                              ? "text-primary"
+                              : "text-warning-foreground"
                         }`}>{item.value}</p>
-                        <p className="mt-1 text-xs leading-5 text-slate-500">{item.note}</p>
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">{item.note}</p>
                       </div>
                     ))}
                   </div>
 
                   {awaitingExternalResponseReferrals.length > 0 && (
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+                    <div className="rounded-2xl border border-border bg-background/80 p-4">
                       <div className="flex items-start gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-slate-200 text-slate-700">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-border text-foreground">
                           <ClipboardCheck className="h-4 w-4" />
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-slate-900">Waiting on external response</p>
-                          <p className="mt-1 text-sm text-slate-600">
+                          <p className="text-sm font-semibold text-foreground">Waiting on external response</p>
+                          <p className="mt-1 text-sm text-muted-foreground">
                             {awaitingExternalResponseReferrals.length} outbound referral{awaitingExternalResponseReferrals.length === 1 ? "" : "s"} are still with the receiving team. You can still launch a teleconsult from the card if the handoff needs synchronous support.
                           </p>
                         </div>
@@ -908,14 +908,14 @@ export default function ConsultsPage() {
                     <div className="space-y-5">
                       {referralWorkflowSections.map((section) => (
                         <div key={section.key} className="space-y-3">
-                          <div className="flex flex-col gap-1 rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3">
+                          <div className="flex flex-col gap-1 rounded-2xl border border-border bg-background/70 px-4 py-3">
                             <div className="flex items-center justify-between gap-3">
-                              <h4 className="text-sm font-semibold text-slate-900">{section.title}</h4>
-                              <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600">
+                              <h4 className="text-sm font-semibold text-foreground">{section.title}</h4>
+                              <span className="rounded-full bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
                                 {section.referrals.length}
                               </span>
                             </div>
-                            <p className="text-sm text-slate-600">{section.description}</p>
+                            <p className="text-sm text-muted-foreground">{section.description}</p>
                           </div>
 
                           {section.referrals.map((r) => (
@@ -964,7 +964,7 @@ export default function ConsultsPage() {
                   {/* Create new dashed card — Lovable pattern */}
                   <button
                     onClick={() => setShowNewReferral(true)}
-                    className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg text-center text-gray-400 hover:bg-gray-50 hover:border-gray-400 transition-colors"
+                    className="w-full p-4 border-2 border-dashed border-border rounded-lg text-center text-muted-foreground hover:bg-background hover:border-gray-400 transition-colors"
                   >
                     <Plus className="w-5 h-5 mx-auto mb-1" />
                     <span className="text-sm">Create new referral</span>
@@ -988,7 +988,7 @@ export default function ConsultsPage() {
                               </div>
                               <div>
                                 <p className="font-semibold text-green-800">Active Teleconsultation</p>
-                                <p className="text-sm text-gray-600">
+                                <p className="text-sm text-muted-foreground">
                                   {s.attributes.session_type} session
                                   {s.attributes.started_at && ` — started ${new Date(s.attributes.started_at).toLocaleTimeString()}`}
                                 </p>
@@ -1007,29 +1007,29 @@ export default function ConsultsPage() {
 
                   {/* Upcoming Sessions — Lovable pattern */}
                   {patientSessions.filter((s) => s.attributes.status === "SCHEDULED").length > 0 && (
-                    <div className="bg-impilo-50 border border-impilo-200 rounded-lg p-4 space-y-3">
-                      <h4 className="text-sm font-medium text-gray-900 flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-impilo-500" />
+                    <div className="bg-primary-soft border border-primary/25 rounded-lg p-4 space-y-3">
+                      <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-primary" />
                         Upcoming Sessions
                       </h4>
                       {patientSessions
                         .filter((s) => s.attributes.status === "SCHEDULED")
                         .map((s) => (
-                          <div key={s.id} className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                          <div key={s.id} className="flex items-center justify-between p-3 bg-card rounded-lg border">
                             <div className="flex items-center gap-3">
                               <div className="p-2 rounded-full bg-blue-100">
-                                <Video className="w-4 h-4 text-impilo-500" />
+                                <Video className="w-4 h-4 text-primary" />
                               </div>
                               <div>
                                 <p className="text-sm font-medium">{s.attributes.session_type} Teleconsult</p>
-                                <p className="text-xs text-gray-500">
+                                <p className="text-xs text-muted-foreground">
                                   {s.attributes.scheduled_at && new Date(s.attributes.scheduled_at).toLocaleString()}
                                 </p>
                               </div>
                             </div>
                             <Link
                               href={`/telemedicine/session/${s.id}`}
-                              className="px-3 py-1.5 bg-impilo-500 text-white text-xs font-medium rounded-lg hover:bg-impilo-600 transition-colors"
+                              className="px-3 py-1.5 bg-primary text-white text-xs font-medium rounded-lg hover:bg-primary-hover transition-colors"
                             >
                               Join
                             </Link>
@@ -1040,11 +1040,11 @@ export default function ConsultsPage() {
 
                   {/* All Teleconsultations */}
                   <div className="flex items-center justify-between">
-                    <h3 className="text-base font-semibold text-gray-900">Teleconsultation Sessions</h3>
+                    <h3 className="text-base font-semibold text-foreground">Teleconsultation Sessions</h3>
                     <button
                       onClick={() => openTeleconsultComposer("VIDEO")}
                       disabled={createSession.isPending || !facility}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-50 transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover disabled:opacity-50 transition-colors"
                     >
                       <Video className="w-4 h-4" />
                       Schedule Teleconsult
@@ -1052,18 +1052,18 @@ export default function ConsultsPage() {
                   </div>
 
                   {showTeleconsultComposer && (
-                    <div className="rounded-2xl border border-impilo-200 bg-impilo-50/70 p-4">
+                    <div className="rounded-2xl border border-primary/25 bg-primary-soft/70 p-4">
                       <div className="flex flex-col gap-4">
                         <div>
-                          <h4 className="text-sm font-semibold text-slate-900">Teleconsult launch</h4>
-                          <p className="mt-1 text-sm text-slate-600">
+                          <h4 className="text-sm font-semibold text-foreground">Teleconsult launch</h4>
+                          <p className="mt-1 text-sm text-muted-foreground">
                             Choose the mode, optionally schedule it, and link the session back to an open referral when needed.
                           </p>
                         </div>
 
                         <div className="grid gap-4 md:grid-cols-2">
                           <div>
-                            <label className="mb-1 block text-xs font-medium uppercase tracking-[0.14em] text-slate-500">
+                            <label className="mb-1 block text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
                               Mode
                             </label>
                             <div className="grid grid-cols-2 gap-2">
@@ -1080,8 +1080,8 @@ export default function ConsultsPage() {
                                   onClick={() => setTeleconsultMode(mode)}
                                   className={`rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${
                                     teleconsultMode === mode
-                                      ? "border-impilo-400 bg-impilo-500 text-white"
-                                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                                      ? "border-impilo-400 bg-primary text-white"
+                                      : "border-border bg-card text-foreground hover:bg-background"
                                   }`}
                                 >
                                   {mode.replace("_", " ")}
@@ -1091,7 +1091,7 @@ export default function ConsultsPage() {
                           </div>
 
                           <div>
-                            <label htmlFor="teleconsultScheduledAt" className="mb-1 block text-xs font-medium uppercase tracking-[0.14em] text-slate-500">
+                            <label htmlFor="teleconsultScheduledAt" className="mb-1 block text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
                               Scheduled time
                             </label>
                             <input
@@ -1099,9 +1099,9 @@ export default function ConsultsPage() {
                               type="datetime-local"
                               value={teleconsultScheduledAt}
                               onChange={(event) => setTeleconsultScheduledAt(event.target.value)}
-                              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                              className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-primary/40"
                             />
-                            <p className="mt-1 text-xs text-slate-500">
+                            <p className="mt-1 text-xs text-muted-foreground">
                               Leave blank to create a ready-to-start teleconsult now.
                             </p>
                           </div>
@@ -1109,14 +1109,14 @@ export default function ConsultsPage() {
 
                         <div className="grid gap-4 md:grid-cols-2">
                           <div>
-                            <label htmlFor="teleconsultReferralId" className="mb-1 block text-xs font-medium uppercase tracking-[0.14em] text-slate-500">
+                            <label htmlFor="teleconsultReferralId" className="mb-1 block text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
                               Linked referral
                             </label>
                             <select
                               id="teleconsultReferralId"
                               value={teleconsultReferralId}
                               onChange={(event) => setTeleconsultReferralId(event.target.value)}
-                              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                              className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-primary/40"
                             >
                               <option value="">No linked referral</option>
                               {teleconsultReferralOptions.map((referral) => (
@@ -1128,7 +1128,7 @@ export default function ConsultsPage() {
                           </div>
 
                           <div>
-                            <label htmlFor="teleconsultNotes" className="mb-1 block text-xs font-medium uppercase tracking-[0.14em] text-slate-500">
+                            <label htmlFor="teleconsultNotes" className="mb-1 block text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
                               Session brief
                             </label>
                             <textarea
@@ -1137,7 +1137,7 @@ export default function ConsultsPage() {
                               onChange={(event) => setTeleconsultNotes(event.target.value)}
                               rows={3}
                               placeholder="Clinical question, objectives, or prep notes..."
-                              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                              className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-primary/40"
                             />
                           </div>
                         </div>
@@ -1147,7 +1147,7 @@ export default function ConsultsPage() {
                             type="button"
                             onClick={() => handleScheduleTeleconsult(teleconsultMode)}
                             disabled={createSession.isPending || !facility}
-                            className="inline-flex items-center gap-2 rounded-xl bg-impilo-500 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-impilo-600 disabled:opacity-50"
+                            className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-50"
                           >
                             {createSession.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Video className="h-4 w-4" />}
                             {teleconsultScheduledAt ? "Schedule session" : "Create session"}
@@ -1155,7 +1155,7 @@ export default function ConsultsPage() {
                           <button
                             type="button"
                             onClick={resetTeleconsultComposer}
-                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-white hover:text-slate-900"
+                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-card hover:text-foreground"
                           >
                             Cancel
                           </button>
@@ -1178,31 +1178,31 @@ export default function ConsultsPage() {
                   )}
 
                   {/* Quick Connect — Lovable pattern */}
-                  <div className="pt-4 border-t border-gray-200">
-                    <p className="text-sm font-medium text-gray-900 mb-3">Quick Connect</p>
+                  <div className="pt-4 border-t border-border">
+                    <p className="text-sm font-medium text-foreground mb-3">Quick Connect</p>
                     <div className="grid grid-cols-5 gap-2">
                       <button onClick={() => openTeleconsultComposer("VIDEO")} disabled={createSession.isPending || !facility}
-                        className="flex flex-col items-center justify-center gap-1 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors">
+                        className="flex flex-col items-center justify-center gap-1 py-3 border border-border rounded-lg text-foreground hover:bg-background disabled:opacity-50 transition-colors">
                         <Video className="w-5 h-5" />
                         <span className="text-xs">Video</span>
                       </button>
                       <button onClick={() => openTeleconsultComposer("AUDIO")} disabled={createSession.isPending || !facility}
-                        className="flex flex-col items-center justify-center gap-1 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors">
+                        className="flex flex-col items-center justify-center gap-1 py-3 border border-border rounded-lg text-foreground hover:bg-background disabled:opacity-50 transition-colors">
                         <Phone className="w-5 h-5" />
                         <span className="text-xs">Audio</span>
                       </button>
                       <button onClick={() => openTeleconsultComposer("CHAT")} disabled={createSession.isPending || !facility}
-                        className="flex flex-col items-center justify-center gap-1 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors">
+                        className="flex flex-col items-center justify-center gap-1 py-3 border border-border rounded-lg text-foreground hover:bg-background disabled:opacity-50 transition-colors">
                         <MessageSquare className="w-5 h-5" />
                         <span className="text-xs">Chat</span>
                       </button>
                       <button onClick={() => openTeleconsultComposer("ASYNC_REVIEW")} disabled={createSession.isPending || !facility}
-                        className="flex flex-col items-center justify-center gap-1 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors">
+                        className="flex flex-col items-center justify-center gap-1 py-3 border border-border rounded-lg text-foreground hover:bg-background disabled:opacity-50 transition-colors">
                         <FileText className="w-5 h-5" />
                         <span className="text-xs">Async</span>
                       </button>
                       <button onClick={() => openTeleconsultComposer("CASE_REVIEW")} disabled={createSession.isPending || !facility}
-                        className="flex flex-col items-center justify-center gap-1 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors">
+                        className="flex flex-col items-center justify-center gap-1 py-3 border border-border rounded-lg text-foreground hover:bg-background disabled:opacity-50 transition-colors">
                         <Users className="w-5 h-5" />
                         <span className="text-xs">Board</span>
                       </button>
@@ -1226,10 +1226,10 @@ function EmptyState({ icon, label, actionLabel, onAction }: {
   icon: React.ReactNode; label: string; actionLabel: string; onAction: () => void;
 }) {
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-10 text-center">
-      <div className="text-gray-300 mx-auto mb-4 w-12 h-12 flex items-center justify-center">{icon}</div>
-      <p className="text-gray-400 text-sm">{label}</p>
-      <button onClick={onAction} className="mt-3 inline-flex items-center gap-1 px-3 py-1.5 border border-gray-300 text-sm text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
+    <div className="bg-card rounded-lg border border-border p-10 text-center">
+      <div className="text-muted-foreground mx-auto mb-4 w-12 h-12 flex items-center justify-center">{icon}</div>
+      <p className="text-muted-foreground text-sm">{label}</p>
+      <button onClick={onAction} className="mt-3 inline-flex items-center gap-1 px-3 py-1.5 border border-border text-sm text-muted-foreground rounded-lg hover:bg-background transition-colors">
         <Plus className="w-4 h-4" /> {actionLabel}
       </button>
     </div>
@@ -1272,8 +1272,8 @@ function ReferralCard({
   isActionOpen?: boolean;
 }) {
   const a = referral.attributes;
-  const statusStyle = STATUS_STYLE[a.status] ?? "bg-gray-100 text-gray-600";
-  const urgencyStyle = URGENCY_STYLE[a.urgency] ?? "bg-gray-100 text-gray-600";
+  const statusStyle = STATUS_STYLE[a.status] ?? "bg-neutral-100 text-muted-foreground";
+  const urgencyStyle = URGENCY_STYLE[a.urgency] ?? "bg-neutral-100 text-muted-foreground";
   const wf = getWorkflowStage(a.status);
   const hasResponse = a.response_notes || a.responseNotes;
   const coordinationMeta = parseConsultationCoordinationMeta(a.response_notes ?? a.responseNotes);
@@ -1285,17 +1285,17 @@ function ReferralCard({
 
   return (
     <div className={`rounded-2xl border p-4 shadow-sm transition-colors ${
-      isActionOpen ? "border-impilo-200 bg-impilo-50/40" : "border-gray-200 bg-white hover:bg-gray-50"
+      isActionOpen ? "border-primary/25 bg-primary-soft/40" : "border-border bg-card hover:bg-background"
     }`}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 space-y-2">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-full bg-impilo-50">
-              <Building2 className="w-4 h-4 text-impilo-500" />
+            <div className="p-2 rounded-full bg-primary-soft">
+              <Building2 className="w-4 h-4 text-primary" />
             </div>
             <div className="flex-1">
-              <h4 className="font-semibold text-sm text-gray-900">{a.specialty || a.referralType}</h4>
-              <p className="text-xs text-gray-500">{a.referredTo || "Pending assignment"}</p>
+              <h4 className="font-semibold text-sm text-foreground">{a.specialty || a.referralType}</h4>
+              <p className="text-xs text-muted-foreground">{a.referredTo || "Pending assignment"}</p>
             </div>
             <div className="flex items-center gap-2">
               <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${urgencyStyle}`}>{a.urgency}</span>
@@ -1305,36 +1305,36 @@ function ReferralCard({
 
           <div className={`ml-11 rounded-2xl border px-3 py-3 ${
             stageCopy.tone === "amber"
-              ? "border-amber-200 bg-amber-50"
+              ? "border-warning/35 bg-warning-soft"
               : stageCopy.tone === "blue"
-                ? "border-impilo-200 bg-impilo-50"
+                ? "border-primary/25 bg-primary-soft"
                 : stageCopy.tone === "purple"
-                  ? "border-purple-200 bg-purple-50"
+                  ? "border-warning/35 bg-warning-soft"
                   : stageCopy.tone === "green"
-                    ? "border-emerald-200 bg-emerald-50"
-                    : "border-slate-200 bg-slate-50"
+                    ? "border-success/25 bg-success-soft"
+                    : "border-border bg-background"
           }`}>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm font-semibold text-slate-900">{stageCopy.title}</span>
+              <span className="text-sm font-semibold text-foreground">{stageCopy.title}</span>
               <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
-                isReceivingContext ? "bg-white text-impilo-600" : "bg-white text-slate-700"
+                isReceivingContext ? "bg-card text-primary" : "bg-card text-foreground"
               }`}>
                 {isReceivingContext ? "Receiving side" : "Referring side"}
               </span>
             </div>
-            <p className="mt-1 text-sm text-slate-600">{stageCopy.detail}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{stageCopy.detail}</p>
           </div>
 
           {showWorkflowStage && (
             <div className="pl-11">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs text-gray-500">Workflow:</span>
-                <span className="text-xs font-medium text-gray-700">{wf.stage}/7 - {wf.label}</span>
+                <span className="text-xs text-muted-foreground">Workflow:</span>
+                <span className="text-xs font-medium text-foreground">{wf.stage}/7 - {wf.label}</span>
               </div>
               <div className="flex gap-0.5">
                 {[1, 2, 3, 4, 5, 6, 7].map((s) => (
                   <div key={s} className={`h-1.5 flex-1 rounded-full ${
-                    s <= wf.stage ? (s === wf.stage ? "bg-impilo-500" : "bg-green-500") : "bg-gray-200"
+                    s <= wf.stage ? (s === wf.stage ? "bg-primary" : "bg-green-500") : "bg-neutral-100"
                   }`} />
                 ))}
               </div>
@@ -1342,62 +1342,62 @@ function ReferralCard({
           )}
 
           <div className="pl-11 space-y-1">
-            <p className="text-sm text-gray-600">{a.reason}</p>
-            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-              <span className="rounded-full bg-slate-100 px-2.5 py-1 font-medium text-slate-700">
+            <p className="text-sm text-muted-foreground">{a.reason}</p>
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              <span className="rounded-full bg-neutral-100 px-2.5 py-1 font-medium text-foreground">
                 Destination: {referralFacility}
               </span>
               {a.referredByName && (
-                <span className="rounded-full bg-slate-100 px-2.5 py-1 font-medium text-slate-700">
+                <span className="rounded-full bg-neutral-100 px-2.5 py-1 font-medium text-foreground">
                   Requested by {a.referredByName}
                 </span>
               )}
               {patientId && (
-                <span className="rounded-full bg-slate-100 px-2.5 py-1 font-medium text-slate-700">
+                <span className="rounded-full bg-neutral-100 px-2.5 py-1 font-medium text-foreground">
                   Patient {patientId.slice(0, 8)}
                 </span>
               )}
             </div>
             {a.clinicalSummary && (
-              <div className="p-2.5 bg-gray-50 rounded-md border border-gray-100">
-                <p className="text-xs text-gray-500 mb-0.5">Clinical Summary:</p>
-                <p className="text-sm italic text-gray-700">{a.clinicalSummary}</p>
+              <div className="p-2.5 bg-background rounded-md border border-border">
+                <p className="text-xs text-muted-foreground mb-0.5">Clinical Summary:</p>
+                <p className="text-sm italic text-foreground">{a.clinicalSummary}</p>
               </div>
             )}
             {hasResponse && (
-              <div className="p-2.5 bg-purple-50 rounded-md border border-purple-200">
+              <div className="p-2.5 bg-warning-soft rounded-md border border-warning/35">
                 <div className="mb-1 flex flex-wrap items-center gap-2">
-                  <p className="text-xs font-semibold text-purple-700">
+                  <p className="text-xs font-semibold text-warning-foreground">
                     Specialist Response
                     {(a.receivingFacilityName || a.receiving_facility_name) && (
                       <span className="font-normal"> ({a.receivingFacilityName ?? a.receiving_facility_name})</span>
                     )}
                   </p>
                   {coordinationMeta.responseSentFromTeleconsult && (
-                    <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-medium text-purple-700">
+                    <span className="rounded-full bg-card px-2 py-0.5 text-[11px] font-medium text-warning-foreground">
                       {COORDINATION_COPY.returnedFromTeleconsult}
                     </span>
                   )}
                 </div>
                 <p className="text-sm text-purple-900">{a.response_notes ?? a.responseNotes}</p>
-                {a.outcome && <p className="text-xs text-purple-700 mt-1">Outcome: {a.outcome}</p>}
+                {a.outcome && <p className="text-xs text-warning-foreground mt-1">Outcome: {a.outcome}</p>}
                 {coordinationMeta.nextWorkspaceAction && (
-                  <p className="mt-1 text-xs text-purple-700">
+                  <p className="mt-1 text-xs text-warning-foreground">
                     Next: {coordinationMeta.nextWorkspaceAction}
                   </p>
                 )}
               </div>
             )}
-            <div className="flex items-center gap-4 text-xs text-gray-400">
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <span>Created: {new Date(a.createdAt).toLocaleDateString()}</span>
               {(a.acceptedAt || a.accepted_at) && (
-                <span className="text-impilo-500">Accepted: {new Date((a.acceptedAt ?? a.accepted_at)!).toLocaleDateString()}</span>
+                <span className="text-primary">Accepted: {new Date((a.acceptedAt ?? a.accepted_at)!).toLocaleDateString()}</span>
               )}
               {(a.respondedAt || a.responded_at) && (
                 <span className="text-purple-600">Responded: {new Date((a.respondedAt ?? a.responded_at)!).toLocaleDateString()}</span>
               )}
               {a.completedAt && (
-                <span className="text-emerald-600">Closed: {new Date(a.completedAt).toLocaleDateString()}</span>
+                <span className="text-primary">Closed: {new Date(a.completedAt).toLocaleDateString()}</span>
               )}
             </div>
           </div>
@@ -1405,7 +1405,7 @@ function ReferralCard({
       </div>
 
       {a.status !== "COMPLETED" && a.status !== "CANCELLED" && (
-        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-3">
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">
           {(a.status === "ACCEPTED" || a.status === "PENDING") && (
             <button
               onClick={onJoin}
@@ -1425,7 +1425,7 @@ function ReferralCard({
           {canRespond && (
             <button
               onClick={onRespond}
-              className="flex items-center gap-1 rounded-lg bg-impilo-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-impilo-600"
+              className="flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-primary-hover"
             >
               <MessageSquare className="w-3 h-3" /> Add Response
             </button>
@@ -1488,14 +1488,14 @@ function ReferralWorkflowPanel({
   const isComplete = actionType === "complete";
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
       <div className="flex items-start gap-3">
         <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${
           isAccept
-            ? "bg-amber-100 text-amber-700"
+            ? "bg-amber-100 text-warning-foreground"
             : isRespond
-              ? "bg-impilo-100 text-impilo-600"
-              : "bg-purple-100 text-purple-700"
+              ? "bg-primary-soft text-primary"
+              : "bg-purple-100 text-warning-foreground"
         }`}>
           {isAccept ? (
             <ArrowRightLeft className="h-4 w-4" />
@@ -1506,14 +1506,14 @@ function ReferralWorkflowPanel({
           )}
         </div>
         <div className="flex-1">
-          <p className="text-sm font-semibold text-slate-900">
+          <p className="text-sm font-semibold text-foreground">
             {isAccept
               ? "Confirm receiving handoff"
               : isRespond
                 ? "Document the specialist response"
                 : "Close the referral loop"}
           </p>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             {isAccept
               ? `Mark ${facilityName ?? "the current facility"} as the receiving team and optionally set the expected review time.`
               : isRespond
@@ -1528,7 +1528,7 @@ function ReferralWorkflowPanel({
           <>
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label htmlFor={`referral-scheduled-${referral.id}`} className="mb-1 block text-xs font-medium uppercase tracking-[0.14em] text-slate-500">
+                <label htmlFor={`referral-scheduled-${referral.id}`} className="mb-1 block text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
                   Planned review time
                 </label>
                 <input
@@ -1536,11 +1536,11 @@ function ReferralWorkflowPanel({
                   type="datetime-local"
                   value={scheduledAt}
                   onChange={(event) => onScheduledAtChange(event.target.value)}
-                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
                 />
               </div>
               <div>
-                <label htmlFor={`referral-handoff-${referral.id}`} className="mb-1 block text-xs font-medium uppercase tracking-[0.14em] text-slate-500">
+                <label htmlFor={`referral-handoff-${referral.id}`} className="mb-1 block text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
                   Receiving note
                 </label>
                 <textarea
@@ -1549,11 +1549,11 @@ function ReferralWorkflowPanel({
                   value={handoffNote}
                   onChange={(event) => onHandoffNoteChange(event.target.value)}
                   placeholder="Triage note, expected specialist, or preparation instructions..."
-                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
                 />
               </div>
             </div>
-            <div className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-800">
+            <div className="rounded-xl bg-warning-soft px-3 py-2 text-xs text-warning-foreground">
               Accepting here keeps the referral inside the active encounter workspace while updating the receiving facility context.
             </div>
           </>
@@ -1561,14 +1561,14 @@ function ReferralWorkflowPanel({
 
         {(isRespond || isComplete) && (
           <div>
-            <label htmlFor={`referral-outcome-${referral.id}`} className="mb-1 block text-xs font-medium uppercase tracking-[0.14em] text-slate-500">
+            <label htmlFor={`referral-outcome-${referral.id}`} className="mb-1 block text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
               Outcome
             </label>
             <select
               id={`referral-outcome-${referral.id}`}
               value={outcome}
               onChange={(event) => onOutcomeChange(event.target.value as ReferralOutcome)}
-              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
+              className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-primary/40"
             >
               <option value="">Select outcome...</option>
               <option value="TREATED">Treated - patient managed</option>
@@ -1582,7 +1582,7 @@ function ReferralWorkflowPanel({
 
         {isRespond && (
           <div>
-            <label htmlFor={`referral-response-${referral.id}`} className="mb-1 block text-xs font-medium uppercase tracking-[0.14em] text-slate-500">
+            <label htmlFor={`referral-response-${referral.id}`} className="mb-1 block text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
               Response notes
             </label>
             <textarea
@@ -1591,13 +1591,13 @@ function ReferralWorkflowPanel({
               value={responseNotes}
               onChange={(event) => onResponseNotesChange(event.target.value)}
               placeholder="Assessment findings, treatment provided, follow-up, or recommendations..."
-              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
+              className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-primary/40"
             />
           </div>
         )}
 
         {isComplete && (
-          <div className="rounded-xl bg-purple-50 px-3 py-3 text-sm text-purple-900">
+          <div className="rounded-xl bg-warning-soft px-3 py-3 text-sm text-purple-900">
             This marks the referral as clinically reviewed on the referring side so the loop is visibly closed in the chart.
           </div>
         )}
@@ -1619,7 +1619,7 @@ function ReferralWorkflowPanel({
               type="button"
               onClick={onRespond}
               disabled={isResponding || !responseNotes.trim()}
-              className="inline-flex items-center gap-2 rounded-xl bg-impilo-500 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-impilo-600 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-50"
             >
               {isResponding ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageSquare className="h-4 w-4" />}
               Send specialist response
@@ -1639,7 +1639,7 @@ function ReferralWorkflowPanel({
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-xl px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+            className="rounded-xl px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-neutral-100 hover:text-foreground"
           >
             Cancel
           </button>
@@ -1651,35 +1651,35 @@ function ReferralWorkflowPanel({
 
 function TeleconsultCard({ session }: { session: TelemedicineSession }) {
   const a = session.attributes;
-  const statusStyle = STATUS_STYLE[a.status] ?? "bg-gray-100 text-gray-600";
+  const statusStyle = STATUS_STYLE[a.status] ?? "bg-neutral-100 text-muted-foreground";
   const isJoinable = a.status === "SCHEDULED" || a.status === "IN_PROGRESS";
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 hover:bg-gray-50 transition-colors">
+    <div className="bg-card rounded-lg border border-border p-4 hover:bg-background transition-colors">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3 flex-1">
-          <div className={`p-2 rounded-full ${a.status === "IN_PROGRESS" ? "bg-green-100" : "bg-impilo-50"}`}>
-            <Video className={`w-4 h-4 ${a.status === "IN_PROGRESS" ? "text-green-600" : "text-impilo-500"}`} />
+          <div className={`p-2 rounded-full ${a.status === "IN_PROGRESS" ? "bg-green-100" : "bg-primary-soft"}`}>
+            <Video className={`w-4 h-4 ${a.status === "IN_PROGRESS" ? "text-green-600" : "text-primary"}`} />
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-900">{a.session_type} Teleconsult</span>
-              <span className="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600">{a.session_type}</span>
+              <span className="text-sm font-medium text-foreground">{a.session_type} Teleconsult</span>
+              <span className="px-2 py-0.5 text-xs rounded-full bg-neutral-100 text-muted-foreground">{a.session_type}</span>
               <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${statusStyle}`}>{a.status}</span>
             </div>
-            <div className="flex items-center gap-3 mt-0.5 text-xs text-gray-500">
+            <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
               {a.scheduled_at && (
                 <span className="flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
                   {new Date(a.scheduled_at).toLocaleString()}
                 </span>
               )}
-              {a.referral_id && <span className="text-impilo-500">Linked to referral</span>}
+              {a.referral_id && <span className="text-primary">Linked to referral</span>}
               {a.duration_seconds != null && a.duration_seconds > 0 && (
                 <span>{Math.round(a.duration_seconds / 60)} min</span>
               )}
             </div>
-            {a.notes && <p className="text-xs text-gray-500 mt-1">{a.notes}</p>}
+            {a.notes && <p className="text-xs text-muted-foreground mt-1">{a.notes}</p>}
           </div>
         </div>
         {isJoinable && (

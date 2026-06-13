@@ -46,16 +46,16 @@ export default function IncidentsPage() {
       <div className="bg-info/5 border border-info/20 rounded-lg p-4 mb-6">
         <p className="text-sm font-medium text-info mb-2">Runbook References</p>
         <div className="flex flex-wrap gap-3 text-xs">
-          <span className="px-2 py-1 bg-white rounded border border-info/20 text-neutral-700">
+          <span className="px-2 py-1 bg-card rounded border border-info/20 text-neutral-700">
             Ring-0 Failover: docs/dr/runbooks/ring0-failover.md
           </span>
-          <span className="px-2 py-1 bg-white rounded border border-info/20 text-neutral-700">
+          <span className="px-2 py-1 bg-card rounded border border-info/20 text-neutral-700">
             DB Restore: docs/dr/runbooks/db-restore.md
           </span>
-          <span className="px-2 py-1 bg-white rounded border border-info/20 text-neutral-700">
+          <span className="px-2 py-1 bg-card rounded border border-info/20 text-neutral-700">
             Kafka Recovery: docs/dr/runbooks/kafka-recovery.md
           </span>
-          <span className="px-2 py-1 bg-white rounded border border-info/20 text-neutral-700">
+          <span className="px-2 py-1 bg-card rounded border border-info/20 text-neutral-700">
             Partial Recovery: docs/dr/runbooks/partial-platform-recovery.md
           </span>
         </div>
@@ -93,25 +93,25 @@ export default function IncidentsPage() {
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-4">
+        <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-4">
           <p className="text-xs text-neutral-500 uppercase tracking-wide">Active Incidents</p>
           <p className="text-2xl font-semibold text-danger mt-1">
             {incidents.filter((i) => i.status === "OPEN" || i.status === "IN_PROGRESS").length}
           </p>
         </div>
-        <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-4">
+        <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-4">
           <p className="text-xs text-neutral-500 uppercase tracking-wide">Critical</p>
           <p className="text-2xl font-semibold text-danger mt-1">
             {incidents.filter((i) => i.priority === "CRITICAL").length}
           </p>
         </div>
-        <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-4">
+        <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-4">
           <p className="text-xs text-neutral-500 uppercase tracking-wide">Escalated L2+</p>
           <p className="text-2xl font-semibold text-warning mt-1">
             {escalated.filter((t) => t.escalationLevel >= 2).length}
           </p>
         </div>
-        <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-4">
+        <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-4">
           <p className="text-xs text-neutral-500 uppercase tracking-wide">Resolved Today</p>
           <p className="text-2xl font-semibold text-success mt-1">
             {incidents.filter((i) => i.status === "RESOLVED" && i.resolvedAt &&
@@ -121,7 +121,7 @@ export default function IncidentsPage() {
       </div>
 
       {/* Ticket list */}
-      <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100">
+      <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100">
         {loading ? (
           <div className="p-8 text-center text-sm text-neutral-500">Loading...</div>
         ) : activeList.length === 0 ? (

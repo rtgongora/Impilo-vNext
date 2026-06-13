@@ -24,9 +24,9 @@ export function FacilityLocationCapture({
     : [];
 
   return (
-    <section className="rounded-xl border border-emerald-200 bg-emerald-50/30 p-4" data-testid="facility-location-capture">
+    <section className="rounded-xl border border-success/25 bg-success-soft/30 p-4" data-testid="facility-location-capture">
       <p className="mb-2 text-sm font-medium text-emerald-950">{label}</p>
-      <p className="mb-3 text-xs text-emerald-900/80">
+      <p className="mb-3 text-xs text-primary-hover/80">
         Governed geocoding via Ndila — required for facility map surfaces and catchment intelligence.
       </p>
       <NdilaLocationPicker value={value} onChange={onChange} country="ZWE" purposeOfUse={purposeOfUse} />

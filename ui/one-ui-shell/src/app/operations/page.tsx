@@ -27,12 +27,12 @@ export default function OperationsPage() {
       <PageShell title="Operations" subtitle="System operations, asset governance, and service management" icon={<Settings2 className="h-6 w-6" />}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {SECTIONS.map(({ href, label, description, Icon }) => (
-            <Link key={href} href={href} className="rounded-lg border border-gray-200 bg-white p-5 hover:border-impilo-400 hover:shadow-sm transition-all">
+            <Link key={href} href={href} className="rounded-lg border border-border bg-card p-5 hover:border-impilo-400 hover:shadow-sm transition-all">
               <div className="flex items-center gap-3 mb-2">
-                <div className="rounded-lg bg-slate-100 p-2"><Icon className="h-5 w-5 text-slate-700" /></div>
-                <h3 className="font-semibold text-gray-900">{label}</h3>
+                <div className="rounded-lg bg-neutral-100 p-2"><Icon className="h-5 w-5 text-foreground" /></div>
+                <h3 className="font-semibold text-foreground">{label}</h3>
               </div>
-              <p className="text-sm text-gray-600">{description}</p>
+              <p className="text-sm text-muted-foreground">{description}</p>
             </Link>
           ))}
         </div>

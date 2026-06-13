@@ -10,12 +10,12 @@ import { ClientIntakeStatusBadges } from "@/components/registry/ClientIntakeStat
 import { useClientRegistryClients, useClientRegistryDashboard } from "@/hooks/queries/useClientRegistry";
 
 const STATUS_STYLES: Record<string, string> = {
-  ACTIVE: "bg-emerald-50 text-emerald-700 border border-emerald-200",
-  PROVISIONAL: "bg-amber-50 text-amber-700 border border-amber-200",
+  ACTIVE: "bg-success-soft text-primary-hover border border-success/25",
+  PROVISIONAL: "bg-warning-soft text-warning-foreground border border-warning/35",
   PENDING_VERIFICATION: "bg-sky-50 text-sky-700 border border-sky-200",
   PENDING_MATCH_REVIEW: "bg-orange-50 text-orange-700 border border-orange-200",
-  FLAGGED_FOR_REVIEW: "bg-rose-50 text-rose-700 border border-rose-200",
-  MERGED: "bg-slate-100 text-slate-600 border border-slate-200",
+  FLAGGED_FOR_REVIEW: "bg-danger-soft text-danger border border-danger/28",
+  MERGED: "bg-neutral-100 text-muted-foreground border border-border",
 };
 
 function labelize(value: string) {
@@ -41,7 +41,7 @@ export default function ClientRegistryPage() {
         title: "Total clients",
         value: dashboard.data?.data.totalClients ?? 0,
         icon: Users,
-        tone: "bg-slate-50 text-slate-700 border-slate-100",
+        tone: "bg-background text-foreground border-border",
       },
       {
         title: "Pending verification",
@@ -59,7 +59,7 @@ export default function ClientRegistryPage() {
         title: "Stewardship open",
         value: dashboard.data?.data.openStewardshipActions ?? 0,
         icon: BadgeAlert,
-        tone: "bg-rose-50 text-rose-700 border-rose-100",
+        tone: "bg-danger-soft text-danger border-rose-100",
       },
     ],
     [dashboard.data],
@@ -76,14 +76,14 @@ export default function ClientRegistryPage() {
         <div className="mb-4 flex items-center justify-between gap-3">
           <Link
             href="/registry"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 transition-colors hover:text-gray-700"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to registry hub
           </Link>
           <Link
             href="/operations/vito"
-            className="inline-flex items-center gap-2 rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-slate-400 hover:text-slate-900"
+            className="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-slate-400 hover:text-foreground"
           >
             Identity stewardship
             <ArrowUpRight className="h-4 w-4" />
@@ -100,7 +100,7 @@ export default function ClientRegistryPage() {
                     <p className="text-xs font-medium uppercase tracking-[0.2em] opacity-80">{metric.title}</p>
                     <p className="mt-3 text-3xl font-semibold">{metric.value}</p>
                   </div>
-                  <div className="rounded-2xl bg-white/70 p-3">
+                  <div className="rounded-2xl bg-card/70 p-3">
                     <Icon className="h-6 w-6" />
                   </div>
                 </div>
@@ -109,22 +109,22 @@ export default function ClientRegistryPage() {
           })}
         </div>
 
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-white p-4">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4">
           <div className="flex flex-1 flex-wrap items-center gap-3">
             <div className="relative min-w-[240px] flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search by name or Impilo ID"
-                className="w-full rounded-xl border border-gray-300 px-10 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500"
+                className="w-full rounded-xl border border-border px-10 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500"
               />
             </div>
             <select
               value={status}
               onChange={(event) => setStatus(event.target.value)}
-              className="rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500"
+              className="rounded-xl border border-border px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500"
             >
               <option value="">All lifecycle states</option>
               <option value="PROVISIONAL">Provisional</option>
@@ -137,7 +137,7 @@ export default function ClientRegistryPage() {
             <select
               value={verificationState}
               onChange={(event) => setVerificationState(event.target.value)}
-              className="rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500"
+              className="rounded-xl border border-border px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500"
             >
               <option value="">All verification states</option>
               <option value="UNVERIFIED">Unverified</option>
@@ -150,7 +150,7 @@ export default function ClientRegistryPage() {
           </div>
           <Link
             href="/registry/clients/new"
-            className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-700"
+            className="inline-flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-700"
           >
             <Plus className="h-4 w-4" />
             New registration
@@ -158,22 +158,22 @@ export default function ClientRegistryPage() {
         </div>
 
         {list.isLoading ? (
-          <div className="flex items-center justify-center py-16 text-gray-500">
+          <div className="flex items-center justify-center py-16 text-muted-foreground">
             <Loader2 className="mr-2 h-5 w-5 animate-spin" />
             Loading client registry...
           </div>
         ) : items.length === 0 ? (
-          <div className="rounded-2xl border border-gray-200 bg-white p-12 text-center">
-            <Users className="mx-auto mb-3 h-10 w-10 text-gray-300" />
-            <p className="text-sm text-gray-500">No clients matched the current filters.</p>
-            <p className="mx-auto mt-3 max-w-lg rounded-lg border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <div className="rounded-2xl border border-border bg-card p-12 text-center">
+            <Users className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">No clients matched the current filters.</p>
+            <p className="mx-auto mt-3 max-w-lg rounded-lg border border-amber-100 bg-warning-soft px-4 py-3 text-sm text-warning-foreground">
               {guidance}
             </p>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+          <div className="overflow-hidden rounded-2xl border border-border bg-card">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-left text-xs uppercase tracking-[0.18em] text-gray-500">
+              <thead className="bg-background text-left text-xs uppercase tracking-[0.18em] text-muted-foreground">
                 <tr>
                   <th className="px-4 py-3 font-medium">Client</th>
                   <th className="px-4 py-3 font-medium">Identifiers</th>
@@ -185,9 +185,9 @@ export default function ClientRegistryPage() {
               </thead>
               <tbody>
                 {items.map((client) => (
-                  <tr key={client.healthId} className="border-t border-gray-100 align-top hover:bg-gray-50/60">
+                  <tr key={client.healthId} className="border-t border-border align-top hover:bg-background/60">
                     <td className="px-4 py-4">
-                      <div className="font-medium text-gray-900">{client.displayName}</div>
+                      <div className="font-medium text-foreground">{client.displayName}</div>
                       <div className="mt-1.5">
                         <ClientIntakeStatusBadges
                           input={{
@@ -198,36 +198,36 @@ export default function ClientRegistryPage() {
                           }}
                         />
                       </div>
-                      <div className="mt-1 text-xs text-gray-500">
+                      <div className="mt-1 text-xs text-muted-foreground">
                         {client.latestRegistrationType ? labelize(client.latestRegistrationType) : "Registration pending"}{" "}
                         {client.latestRegistrationChannel ? `via ${labelize(client.latestRegistrationChannel)}` : ""}
                       </div>
                     </td>
-                    <td className="px-4 py-4 text-gray-600">
-                      <div className="font-mono text-xs text-gray-700">{client.impiloId ?? "No Impilo ID yet"}</div>
-                      <div className="mt-1 text-xs text-gray-500">CRID {client.crid.slice(0, 8)}</div>
+                    <td className="px-4 py-4 text-muted-foreground">
+                      <div className="font-mono text-xs text-foreground">{client.impiloId ?? "No Impilo ID yet"}</div>
+                      <div className="mt-1 text-xs text-muted-foreground">CRID {client.crid.slice(0, 8)}</div>
                     </td>
                     <td className="px-4 py-4">
                       <span
                         className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
-                          STATUS_STYLES[client.lifecycleStatus] ?? "bg-gray-100 text-gray-700 border border-gray-200"
+                          STATUS_STYLES[client.lifecycleStatus] ?? "bg-neutral-100 text-foreground border border-border"
                         }`}
                       >
                         {labelize(client.lifecycleStatus)}
                       </span>
                     </td>
-                    <td className="px-4 py-4 text-gray-600">
-                      <div className="text-xs text-gray-500">Assurance LOA {client.identityAssuranceLevel}</div>
-                      <div className="mt-1 text-xs text-gray-500">{labelize(client.verificationStatus)}</div>
+                    <td className="px-4 py-4 text-muted-foreground">
+                      <div className="text-xs text-muted-foreground">Assurance LOA {client.identityAssuranceLevel}</div>
+                      <div className="mt-1 text-xs text-muted-foreground">{labelize(client.verificationStatus)}</div>
                     </td>
-                    <td className="px-4 py-4 text-gray-600">
+                    <td className="px-4 py-4 text-muted-foreground">
                       <div>{client.openStewardshipActions} stewardship action(s)</div>
                       <div className="text-xs text-orange-600">{client.openMatches} active match candidate(s)</div>
                     </td>
                     <td className="px-4 py-4 text-right">
                       <Link
                         href={`/registry/clients/${client.healthId}`}
-                        className="inline-flex rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:border-slate-400 hover:text-slate-900"
+                        className="inline-flex rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-slate-400 hover:text-foreground"
                       >
                         Open workspace
                       </Link>

@@ -19,7 +19,7 @@ import {
 } from "@/hooks/queries/useProviderAdmin";
 
 const inputClass =
-  "w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
+  "w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
 
 function splitDisplayName(displayName: string): { given: string; family: string } {
   const parts = displayName.trim().split(/\s+/);
@@ -122,7 +122,7 @@ export default function EditProviderPage() {
         <div className="mb-4">
           <Link
             href={`/registry/providers/${id}`}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to provider profile
@@ -131,21 +131,21 @@ export default function EditProviderPage() {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading provider...</span>
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading provider...</span>
           </div>
         ) : error || !provider ? (
-          <div className="bg-red-50 rounded-lg border border-red-200 p-6 text-center text-sm text-red-600">
+          <div className="bg-danger-soft rounded-lg border border-danger/28 p-6 text-center text-sm text-red-600">
             Failed to load provider.
           </div>
         ) : (
           <form
             onSubmit={handleSubmit}
-            className="max-w-2xl space-y-4 bg-white rounded-lg border border-gray-200 p-6"
+            className="max-w-2xl space-y-4 bg-card rounded-lg border border-border p-6"
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
+                <label className="block text-xs font-medium text-muted-foreground mb-1">
                   Given name
                 </label>
                 <input
@@ -157,7 +157,7 @@ export default function EditProviderPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
+                <label className="block text-xs font-medium text-muted-foreground mb-1">
                   Family name
                 </label>
                 <input
@@ -169,7 +169,7 @@ export default function EditProviderPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
+                <label className="block text-xs font-medium text-muted-foreground mb-1">
                   Profession
                 </label>
                 <input
@@ -181,7 +181,7 @@ export default function EditProviderPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Cadre</label>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Cadre</label>
                 <input
                   type="text"
                   required
@@ -191,7 +191,7 @@ export default function EditProviderPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
+                <label className="block text-xs font-medium text-muted-foreground mb-1">
                   Date of birth
                 </label>
                 <input
@@ -202,7 +202,7 @@ export default function EditProviderPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Sex</label>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Sex</label>
                 <select
                   value={form.sex}
                   onChange={(e) => setForm({ ...form, sex: e.target.value as ProviderSex })}
@@ -214,7 +214,7 @@ export default function EditProviderPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
+                <label className="block text-xs font-medium text-muted-foreground mb-1">
                   Council code
                 </label>
                 <input
@@ -226,7 +226,7 @@ export default function EditProviderPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
+                <label className="block text-xs font-medium text-muted-foreground mb-1">
                   Registration number
                 </label>
                 <input

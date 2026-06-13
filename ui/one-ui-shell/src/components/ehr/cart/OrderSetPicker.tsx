@@ -11,7 +11,7 @@ import { ORDER_SETS, getOrderSetCategories } from "@/data/orderSets";
 import type { OrderSet, OrderSetItem } from "@/data/orderSets";
 
 const TYPE_DOT: Record<string, string> = {
-  INVESTIGATION: "bg-impilo-500",
+  INVESTIGATION: "bg-primary",
   MEDICATION: "bg-green-500",
   NURSING: "bg-amber-500",
   DIET: "bg-pink-400",
@@ -50,8 +50,8 @@ export function OrderSetPicker({ onUseSet }: OrderSetPickerProps) {
             onClick={() => setActiveCategory(cat)}
             className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
               activeCategory === cat
-                ? "bg-impilo-500 text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                ? "bg-primary text-white"
+                : "bg-neutral-100 text-muted-foreground hover:bg-neutral-100"
             }`}
           >
             {cat}
@@ -68,22 +68,22 @@ export function OrderSetPicker({ onUseSet }: OrderSetPickerProps) {
           return (
             <div
               key={os.id}
-              className="rounded-lg border border-gray-200 bg-white transition-shadow hover:shadow-sm"
+              className="rounded-lg border border-border bg-card transition-shadow hover:shadow-sm"
             >
               {/* Card header */}
               <div className="flex items-start gap-3 px-4 py-3">
                 <Package className="mt-0.5 h-5 w-5 flex-shrink-0 text-impilo-400" />
                 <div className="min-w-0 flex-1">
-                  <h4 className="text-sm font-semibold text-gray-900">{os.name}</h4>
-                  <p className="text-xs text-gray-500">{os.description}</p>
+                  <h4 className="text-sm font-semibold text-foreground">{os.name}</h4>
+                  <p className="text-xs text-muted-foreground">{os.description}</p>
                   {/* Item type badges */}
                   <div className="mt-1.5 flex flex-wrap gap-1.5">
                     {Object.entries(counts).map(([type, count]) => (
                       <span
                         key={type}
-                        className="inline-flex items-center gap-1 rounded-full bg-gray-50 px-2 py-0.5 text-[10px] text-gray-600"
+                        className="inline-flex items-center gap-1 rounded-full bg-background px-2 py-0.5 text-[10px] text-muted-foreground"
                       >
-                        <span className={`inline-block h-1.5 w-1.5 rounded-full ${TYPE_DOT[type] ?? "bg-gray-400"}`} />
+                        <span className={`inline-block h-1.5 w-1.5 rounded-full ${TYPE_DOT[type] ?? "bg-neutral-500"}`} />
                         {count} {type.toLowerCase()}
                       </span>
                     ))}
@@ -94,14 +94,14 @@ export function OrderSetPicker({ onUseSet }: OrderSetPickerProps) {
                 <div className="flex items-center gap-1.5">
                   <button
                     onClick={() => setExpandedId(isExpanded ? null : os.id)}
-                    className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                    className="rounded p-1 text-muted-foreground hover:bg-neutral-100 hover:text-muted-foreground"
                     title={isExpanded ? "Collapse" : "Preview items"}
                   >
                     {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </button>
                   <button
                     onClick={() => onUseSet(os.items)}
-                    className="inline-flex items-center gap-1 rounded-md bg-impilo-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-impilo-600 transition-colors"
+                    className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-primary-hover transition-colors"
                   >
                     <Plus className="h-3 w-3" />
                     Use This Set
@@ -111,20 +111,20 @@ export function OrderSetPicker({ onUseSet }: OrderSetPickerProps) {
 
               {/* Expandable preview */}
               {isExpanded && (
-                <div className="border-t border-gray-100 px-4 py-2">
+                <div className="border-t border-border px-4 py-2">
                   <div className="grid grid-cols-1 gap-1">
                     {os.items.map((item, idx) => (
-                      <div key={`${item.code}-${idx}`} className="flex items-center gap-2 text-xs text-gray-600">
-                        <span className={`inline-block h-1.5 w-1.5 rounded-full ${TYPE_DOT[item.type] ?? "bg-gray-400"}`} />
+                      <div key={`${item.code}-${idx}`} className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span className={`inline-block h-1.5 w-1.5 rounded-full ${TYPE_DOT[item.type] ?? "bg-neutral-500"}`} />
                         <span className="flex-1">{item.name}</span>
-                        {item.dose && <span className="text-gray-400">{item.dose} {item.route}</span>}
+                        {item.dose && <span className="text-muted-foreground">{item.dose} {item.route}</span>}
                         <span
                           className={`rounded-full px-1.5 py-0.5 text-[9px] font-medium ${
                             item.priority === "STAT"
-                              ? "bg-red-50 text-red-600"
+                              ? "bg-danger-soft text-red-600"
                               : item.priority === "URGENT"
                               ? "bg-orange-50 text-orange-600"
-                              : "bg-gray-50 text-gray-500"
+                              : "bg-background text-muted-foreground"
                           }`}
                         >
                           {item.priority}

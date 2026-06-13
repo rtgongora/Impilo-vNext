@@ -25,12 +25,12 @@ export default function VitoDashboardPage() {
   }, []);
 
   const STATUS_STYLES: Record<string, string> = {
-    ACTIVE: "bg-emerald-100 text-emerald-700",
-    VERIFIED: "bg-blue-100 text-blue-700",
-    PROVISIONAL: "bg-amber-100 text-amber-700",
+    ACTIVE: "bg-emerald-100 text-primary-hover",
+    VERIFIED: "bg-blue-100 text-primary-hover",
+    PROVISIONAL: "bg-amber-100 text-warning-foreground",
     INACTIVE: "bg-neutral-100 text-neutral-600",
     DECEASED: "bg-neutral-200 text-neutral-500",
-    MERGED: "bg-purple-100 text-purple-700",
+    MERGED: "bg-purple-100 text-warning-foreground",
   };
 
   return (
@@ -47,7 +47,7 @@ export default function VitoDashboardPage() {
       {/* Quick nav cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <Link href="/vito/match-queue" className="block">
-          <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6 hover:border-brand-primary/30 transition-colors">
+          <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6 hover:border-brand-primary/30 transition-colors">
             <h3 className="text-sm font-medium text-neutral-500">Identity Resolution</h3>
             <p className="text-2xl font-semibold text-neutral-900 mt-2">Match Queue</p>
             <p className="text-xs text-neutral-500 mt-1">
@@ -57,7 +57,7 @@ export default function VitoDashboardPage() {
         </Link>
 
         <Link href="/vito/cards" className="block">
-          <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6 hover:border-brand-primary/30 transition-colors">
+          <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6 hover:border-brand-primary/30 transition-colors">
             <h3 className="text-sm font-medium text-neutral-500">Card Management</h3>
             <p className="text-2xl font-semibold text-neutral-900 mt-2">SMART Cards</p>
             <p className="text-xs text-neutral-500 mt-1">
@@ -67,7 +67,7 @@ export default function VitoDashboardPage() {
         </Link>
 
         <Link href="/vito/config" className="block">
-          <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6 hover:border-brand-primary/30 transition-colors">
+          <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6 hover:border-brand-primary/30 transition-colors">
             <h3 className="text-sm font-medium text-neutral-500">Configuration</h3>
             <p className="text-2xl font-semibold text-neutral-900 mt-2">Registry Mode</p>
             <p className="text-xs text-neutral-500 mt-1">
@@ -78,7 +78,7 @@ export default function VitoDashboardPage() {
       </div>
 
       {/* Recent registrations — real data from VITO API */}
-      <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6">
+      <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-semibold text-neutral-900">
             Recent Registrations

@@ -48,15 +48,15 @@ export default function WardChartsPage() {
         {/* Active charts with recent entries */}
         {activeCharts.length > 0 && (
           <section className="mb-6">
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Active Charts</h2>
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Active Charts</h2>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {activeCharts.map((chart) => (
                 <Link key={chart.id} href={`/ehr/${patientId}/charts/${chart.id}`}
-                  className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm hover:bg-emerald-100 transition-colors">
-                  <div className="text-emerald-700">{CHART_ICONS[chart.id] ?? <FileText className="h-5 w-5" />}</div>
+                  className="flex items-center gap-3 rounded-xl border border-success/25 bg-success-soft px-4 py-3 text-sm hover:bg-emerald-100 transition-colors">
+                  <div className="text-primary-hover">{CHART_ICONS[chart.id] ?? <FileText className="h-5 w-5" />}</div>
                   <div className="min-w-0 flex-1">
-                    <div className="font-medium text-slate-900">{chart.shortName}</div>
-                    <div className="flex items-center gap-1 text-xs text-emerald-700">
+                    <div className="font-medium text-foreground">{chart.shortName}</div>
+                    <div className="flex items-center gap-1 text-xs text-primary-hover">
                       <Clock className="h-3 w-3" /> {formatActivity(String(activity[chart.id]))}
                     </div>
                   </div>
@@ -69,32 +69,32 @@ export default function WardChartsPage() {
         {/* Filter */}
         <div className="mb-4">
           <input type="text" placeholder="Filter charts..." value={filter} onChange={(e) => setFilter(e.target.value)}
-            className="w-full max-w-sm rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400" />
+            className="w-full max-w-sm rounded-lg border border-border px-3 py-2 text-sm focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400" />
         </div>
 
         {/* All chart types grid */}
         <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((chart) => (
-            <div key={chart.id} className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div key={chart.id} className="flex flex-col justify-between rounded-2xl border border-border bg-card p-5 shadow-sm">
               <div>
-                <div className="flex items-center gap-2 text-slate-700">
+                <div className="flex items-center gap-2 text-foreground">
                   {CHART_ICONS[chart.id] ?? <FileText className="h-5 w-5" />}
-                  <h3 className="text-base font-semibold text-slate-900">{chart.name}</h3>
+                  <h3 className="text-base font-semibold text-foreground">{chart.name}</h3>
                 </div>
-                <p className="mt-2 text-sm text-slate-600">{chart.description}</p>
-                <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-500">
-                  <span className="rounded-full bg-slate-100 px-2 py-0.5">{chart.frequency}</span>
-                  <span className="rounded-full bg-slate-100 px-2 py-0.5">{chart.recordedBy}</span>
+                <p className="mt-2 text-sm text-muted-foreground">{chart.description}</p>
+                <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                  <span className="rounded-full bg-neutral-100 px-2 py-0.5">{chart.frequency}</span>
+                  <span className="rounded-full bg-neutral-100 px-2 py-0.5">{chart.recordedBy}</span>
                 </div>
               </div>
               <Link href={`/ehr/${patientId}/charts/${chart.id}`}
-                className="mt-4 inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 transition-colors">
+                className="mt-4 inline-flex items-center justify-center rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover transition-colors">
                 Open Chart
               </Link>
             </div>
           ))}
           {filtered.length === 0 && (
-            <div className="col-span-full rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
+            <div className="col-span-full rounded-xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">
               No chart types match your filter.
             </div>
           )}

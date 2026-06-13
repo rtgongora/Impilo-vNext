@@ -116,9 +116,9 @@ export function ProviderLifecycleDashboard({
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Provider Lifecycle</h2>
         {hasIssues && (
-          <div className="flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1">
+          <div className="flex items-center gap-2 rounded-full bg-warning-soft px-3 py-1">
             <AlertTriangle className="h-4 w-4 text-amber-600" />
-            <span className="text-sm font-medium text-amber-700">
+            <span className="text-sm font-medium text-warning-foreground">
               {issueCount} issue{issueCount !== 1 ? "s" : ""} to address
             </span>
           </div>
@@ -156,7 +156,7 @@ export function ProviderLifecycleDashboard({
               {label}
               {key === "compliance" &&
                 (summary.outstandingCompliance?.length ?? 0) > 0 && (
-                  <span className="ml-1.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-xs text-amber-700">
+                  <span className="ml-1.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-xs text-warning-foreground">
                     {summary.outstandingCompliance?.length}
                   </span>
                 )}
@@ -182,7 +182,7 @@ export function ProviderLifecycleDashboard({
                 >
                   <div className="flex items-center gap-3">
                     {app.workflowState === "DECIDED_APPROVED" ? (
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                      <CheckCircle2 className="h-4 w-4 text-primary" />
                     ) : app.workflowState === "DECIDED_REJECTED" ? (
                       <XCircle className="h-4 w-4 text-red-600" />
                     ) : (
@@ -214,7 +214,7 @@ export function ProviderLifecycleDashboard({
                 >
                   <div className="flex items-center gap-3">
                     {qual.verificationStatus === "VERIFIED" ? (
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                      <CheckCircle2 className="h-4 w-4 text-primary" />
                     ) : (
                       <Loader2 className="h-4 w-4 text-amber-600" />
                     )}
@@ -235,7 +235,7 @@ export function ProviderLifecycleDashboard({
         {activeTab === "compliance" && (
           <div className="space-y-3">
             {(summary.outstandingCompliance?.length ?? 0) === 0 ? (
-              <div className="flex items-center gap-2 text-emerald-600">
+              <div className="flex items-center gap-2 text-primary">
                 <CheckCircle2 className="h-4 w-4" />
                 <p className="text-sm">All compliance requirements met</p>
               </div>
@@ -243,7 +243,7 @@ export function ProviderLifecycleDashboard({
               summary.outstandingCompliance?.map((action) => (
                 <div
                   key={action.id}
-                  className="flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 p-3"
+                  className="flex items-center justify-between rounded-lg border border-warning/35 bg-warning-soft p-3"
                 >
                   <div className="flex items-center gap-3">
                     <AlertTriangle className="h-4 w-4 text-amber-600" />

@@ -72,27 +72,27 @@ export default function BrowsePage() {
       </div>
 
       {loading ? (
-        <p className="text-gray-500">Searching...</p>
+        <p className="text-muted-foreground">Searching...</p>
       ) : results.length > 0 ? (
         <div className="space-y-3">
           {results.map(item => (
-            <div key={item.itemId} className="bg-white p-4 rounded shadow border">
+            <div key={item.itemId} className="bg-card p-4 rounded shadow border">
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="font-semibold">{item.displayName}</h3>
-                  <p className="text-xs font-mono text-gray-400">{item.canonicalCode}</p>
-                  {item.description && <p className="text-sm text-gray-600 mt-1">{item.description}</p>}
+                  <p className="text-xs font-mono text-muted-foreground">{item.canonicalCode}</p>
+                  {item.description && <p className="text-sm text-muted-foreground mt-1">{item.description}</p>}
                 </div>
-                <span className="px-2 py-0.5 rounded text-xs bg-gray-100">{item.kind}</span>
+                <span className="px-2 py-0.5 rounded text-xs bg-neutral-100">{item.kind}</span>
               </div>
               {item.product && (
-                <div className="mt-2 text-xs text-gray-500">
+                <div className="mt-2 text-xs text-muted-foreground">
                   {[item.product.form, item.product.strength, item.product.route].filter(Boolean).join(" | ")}
                   {item.product.barcode && ` | GTIN: ${item.product.barcode}`}
                 </div>
               )}
               {item.service && (
-                <div className="mt-2 text-xs text-gray-500">
+                <div className="mt-2 text-xs text-muted-foreground">
                   {item.service.serviceCategory} {item.service.durationMinutes && `| ${item.service.durationMinutes} min`}
                 </div>
               )}
@@ -100,9 +100,9 @@ export default function BrowsePage() {
           ))}
         </div>
       ) : searched ? (
-        <p className="text-gray-500">No results found.</p>
+        <p className="text-muted-foreground">No results found.</p>
       ) : (
-        <p className="text-gray-500">Enter a search term or select a kind to browse.</p>
+        <p className="text-muted-foreground">Enter a search term or select a kind to browse.</p>
       )}
     </div>
   );

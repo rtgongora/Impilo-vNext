@@ -38,7 +38,7 @@ import {
 import { PublicHealthOutreachOrchestrationPanel } from "@/components/public-health/PublicHealthOutreachOrchestrationPanel";
 
 const PACK_ICONS: Record<string, { Icon: typeof Building; color: string; activeIn: string }> = {
-  city_health: { Icon: Building, color: "bg-impilo-500", activeIn: "Urban municipalities" },
+  city_health: { Icon: Building, color: "bg-primary", activeIn: "Urban municipalities" },
   rdc_health: { Icon: TreePine, color: "bg-green-500", activeIn: "Rural district councils" },
   provincial: { Icon: Globe, color: "bg-purple-500", activeIn: "Provincial oversight" },
   national: { Icon: Shield, color: "bg-red-500", activeIn: "National" },
@@ -73,7 +73,7 @@ export default function PublicHealthPage() {
       label: p.label,
       description: p.description,
       Icon: PACK_ICONS[p.id]?.Icon ?? Building,
-      color: PACK_ICONS[p.id]?.color ?? "bg-impilo-500",
+      color: PACK_ICONS[p.id]?.color ?? "bg-primary",
       activeIn: PACK_ICONS[p.id]?.activeIn ?? p.description,
     })) ?? [];
 
@@ -117,12 +117,12 @@ export default function PublicHealthPage() {
         <PublicHealthOutreachOrchestrationPanel />
 
         {/* Jurisdiction Pack Selector */}
-        <div className="mb-6 rounded-lg border border-impilo-200 bg-impilo-50 p-4">
+        <div className="mb-6 rounded-lg border border-primary/25 bg-primary-soft p-4">
           <div className="flex items-center gap-2 mb-1">
-            <Settings className="h-4 w-4 text-impilo-500" />
+            <Settings className="h-4 w-4 text-primary" />
             <h3 className="text-sm font-semibold text-impilo-800">Active Jurisdiction Pack</h3>
           </div>
-          <p className="text-xs text-impilo-600 mb-3">
+          <p className="text-xs text-primary mb-3">
             Workspace context from <code className="text-[10px]">GET /public-health/context</code>
             {contextQ.data?.visibilityProfile ? ` · ${contextQ.data.visibilityProfile}` : ""}
           </p>
@@ -145,24 +145,24 @@ export default function PublicHealthPage() {
                 onClick={() => onSelectPack(pack.id)}
                 className={`p-3 rounded-lg border text-left transition-all ${
                   activePack === pack.id
-                    ? "border-impilo-400 bg-white ring-2 ring-impilo-200"
-                    : "border-gray-200 bg-white hover:border-impilo-200"
+                    ? "border-impilo-400 bg-card ring-2 ring-impilo-200"
+                    : "border-border bg-card hover:border-primary/25"
                 }`}
               >
                 <div className="flex items-center gap-2 mb-1">
                   <div className={`w-6 h-6 rounded ${pack.color} flex items-center justify-center`}>
                     <pack.Icon className="h-3.5 w-3.5 text-white" />
                   </div>
-                  <span className="text-xs font-medium text-gray-900">{pack.label}</span>
+                  <span className="text-xs font-medium text-foreground">{pack.label}</span>
                 </div>
-                <p className="text-[10px] text-gray-500 truncate">{pack.activeIn}</p>
+                <p className="text-[10px] text-muted-foreground truncate">{pack.activeIn}</p>
               </button>
             ))}
           </div>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex gap-1 mb-6 border-b border-gray-200 overflow-x-auto">
+        <div className="flex gap-1 mb-6 border-b border-border overflow-x-auto">
           {TABS.map((tab) => (
             <button
               key={tab.key}
@@ -170,7 +170,7 @@ export default function PublicHealthPage() {
               className={`flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === tab.key
                   ? "border-amber-600 text-amber-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
               <tab.Icon className="w-4 h-4" /> {tab.label}

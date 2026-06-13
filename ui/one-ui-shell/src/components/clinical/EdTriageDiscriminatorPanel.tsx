@@ -95,7 +95,7 @@ export function EdTriageDiscriminatorPanel({
   if (triageSystem === "IMPILO_5") return null;
 
   return (
-    <div className="rounded-lg border border-dashed border-gray-300 p-3 space-y-3">
+    <div className="rounded-lg border border-dashed border-border p-3 space-y-3">
       <h3 className="text-sm font-semibold">ESI / MTS discriminators</h3>
       <div className="grid gap-2 sm:grid-cols-2">
         {BOOL_FIELDS.map((f) => (
@@ -122,7 +122,7 @@ export function EdTriageDiscriminatorPanel({
         </label>
       </div>
       {preview && (
-        <div className="text-xs bg-gray-50 rounded p-2 space-y-1">
+        <div className="text-xs bg-background rounded p-2 space-y-1">
           {preview.esi && (
             <p>
               <strong>ESI {preview.esi.acuity}</strong> ({preview.esi.category}) — {preview.esi.rationale}
@@ -134,7 +134,7 @@ export function EdTriageDiscriminatorPanel({
             </p>
           )}
           {preview.recommended_acuity && (
-            <p className="text-red-700 font-medium">
+            <p className="text-danger font-medium">
               Recommended: acuity {preview.recommended_acuity} via {preview.recommended_system}
             </p>
           )}

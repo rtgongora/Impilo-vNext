@@ -18,7 +18,7 @@ const REVIEW_STYLES: Record<string, string> = {
   PENDING: "bg-yellow-100 text-yellow-700",
   REVIEWED: "bg-green-100 text-green-700",
   APPROVED: "bg-green-100 text-green-700",
-  FLAGGED: "bg-red-100 text-red-700",
+  FLAGGED: "bg-red-100 text-danger",
   ESCALATED: "bg-orange-100 text-orange-700",
 };
 
@@ -56,7 +56,7 @@ export default function BreakGlassPage() {
         <div className="mb-4">
           <Link
             href="/admin"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to administration
@@ -64,31 +64,31 @@ export default function BreakGlassPage() {
         </div>
 
         {error ? (
-          <div className="bg-white rounded-lg border border-red-200 p-12 text-center">
+          <div className="bg-card rounded-lg border border-danger/28 p-12 text-center">
             <AlertCircle className="w-10 h-10 text-red-300 mx-auto mb-3" />
             <p className="text-red-600 text-sm">Failed to load break glass events</p>
           </div>
         ) : isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading break glass events...</span>
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading break glass events...</span>
           </div>
         ) : events.length === 0 ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <AlertTriangle className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-400 text-sm">No break glass events</p>
+          <div className="bg-card rounded-lg border border-border p-12 text-center">
+            <AlertTriangle className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground text-sm">No break glass events</p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="bg-card rounded-lg border border-border overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-gray-50">
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">When</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Actor</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Reason</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Resource</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Review</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Actions</th>
+                <tr className="border-b bg-background">
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">When</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Actor</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Reason</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Resource</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Review</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -96,7 +96,7 @@ export default function BreakGlassPage() {
                   const reviewStatus =
                     readAttr(event, "reviewStatus", "review_status") || "PENDING_REVIEW";
                   const reviewStyle =
-                    REVIEW_STYLES[reviewStatus] ?? "bg-gray-100 text-gray-600";
+                    REVIEW_STYLES[reviewStatus] ?? "bg-neutral-100 text-muted-foreground";
                   const grantedAt =
                     readAttr(event, "grantedAt", "granted_at") ||
                     readAttr(event, "timestamp");
@@ -109,22 +109,22 @@ export default function BreakGlassPage() {
                   return (
                     <tr
                       key={event.id}
-                      className={`hover:bg-gray-50 transition-colors align-top ${
+                      className={`hover:bg-background transition-colors align-top ${
                         isHighlighted ? "bg-yellow-50 ring-2 ring-inset ring-yellow-300" : ""
                       }`}
                       data-testid={isHighlighted ? "break-glass-highlighted-row" : undefined}
                     >
-                      <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
+                      <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
                         {grantedAt ? new Date(grantedAt).toLocaleString() : "—"}
                       </td>
-                      <td className="px-4 py-3 font-medium text-gray-900">
+                      <td className="px-4 py-3 font-medium text-foreground">
                         {readAttr(event, "actorName", "actor_name") ||
                           readAttr(event, "actorId", "actor_id")}
                       </td>
-                      <td className="px-4 py-3 text-gray-600 max-w-xs">
+                      <td className="px-4 py-3 text-muted-foreground max-w-xs">
                         {readAttr(event, "reason")}
                       </td>
-                      <td className="px-4 py-3 text-gray-600">
+                      <td className="px-4 py-3 text-muted-foreground">
                         {readAttr(event, "resourceId", "resource_id") ||
                           readAttr(event, "patientId", "patient_id") ||
                           "—"}
@@ -148,7 +148,7 @@ export default function BreakGlassPage() {
                                 }))
                               }
                               placeholder="Review notes (optional)"
-                              className="w-full rounded border border-gray-200 px-2 py-1 text-xs"
+                              className="w-full rounded border border-border px-2 py-1 text-xs"
                             />
                             <div className="flex gap-1">
                               <button
@@ -183,7 +183,7 @@ export default function BreakGlassPage() {
                             </div>
                           </div>
                         ) : (
-                          <span className="text-xs text-gray-400">Reviewed</span>
+                          <span className="text-xs text-muted-foreground">Reviewed</span>
                         )}
                       </td>
                     </tr>

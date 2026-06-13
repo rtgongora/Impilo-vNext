@@ -394,7 +394,7 @@ export default function EncounterPage() {
         <div className="mb-4">
           <Link
             href={`/ehr/${patientId}`}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to patient chart
@@ -403,13 +403,13 @@ export default function EncounterPage() {
 
         {isLoadingEncounter ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading encounter...</span>
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading encounter...</span>
           </div>
         ) : !encounter ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <AlertCircle className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-400 text-sm">Encounter not found</p>
+          <div className="bg-card rounded-lg border border-border p-12 text-center">
+            <AlertCircle className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground text-sm">Encounter not found</p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -493,18 +493,18 @@ export default function EncounterPage() {
             />
 
             {isClinical && isActive && dakRuntime && (
-              <div className="rounded-lg border border-impilo-200 bg-white p-4 shadow-sm">
+              <div className="rounded-lg border border-primary/25 bg-card p-4 shadow-sm">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <p className="text-xs font-semibold text-gray-900">Structured clinical forms (WHO DAK pattern)</p>
-                    <p className="text-[11px] text-gray-500">
+                    <p className="text-xs font-semibold text-foreground">Structured clinical forms (WHO DAK pattern)</p>
+                    <p className="text-[11px] text-muted-foreground">
                       Antenatal first-contact exemplar â€” coded fields, decision-support hooks, indicator & FHIR mapping utilities.
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setStructuredFormFocus((v) => !v)}
-                    className="shrink-0 rounded-lg bg-impilo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-impilo-700"
+                    className="shrink-0 rounded-lg bg-primary-hover px-3 py-1.5 text-xs font-medium text-white hover:bg-impilo-700"
                   >
                     {structuredFormFocus ? "Exit focused entry" : "Focus ANC structured form"}
                   </button>
@@ -516,7 +516,7 @@ export default function EncounterPage() {
                       onRequestExit={() => setStructuredFormFocus(false)}
                       contextRail={
                         <div className="space-y-2">
-                          <p className="text-[10px] font-semibold uppercase text-gray-500">Patient context</p>
+                          <p className="text-[10px] font-semibold uppercase text-muted-foreground">Patient context</p>
                           <PatientJourneyContextPanel patientId={patientId} variant="compact" />
                         </div>
                       }
@@ -542,11 +542,11 @@ export default function EncounterPage() {
               </div>
             )}
 
-            <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+            <div className="rounded-3xl border border-border bg-background/70 p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
                 Encounter loop status
               </p>
-              <p className="mt-2 text-sm text-slate-800">
+              <p className="mt-2 text-sm text-foreground">
                 {!existingTriage
                   ? "The encounter is open, but triage is still the first closure dependency before the rest of the clinical work can be considered complete."
                   : respondedReferrals.length > 0
@@ -555,39 +555,39 @@ export default function EncounterPage() {
                       ? "This encounter is ready for ongoing documentation, orders, and a final visit outcome from the same workspace."
                       : "The encounter is closed; this page now serves as the longitudinal record of what happened in this clinical episode."}
               </p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Use Orders for outstanding investigations or prescriptions, Notes for narrative closure, Consults for referral follow-through, and Visit Outcome when the encounter is ready to close.
               </p>
             </div>
 
             {/* Encounter Context Bar */}
-            <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="bg-card rounded-lg border border-border p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <h2 className="text-base font-semibold text-gray-900">
+                  <h2 className="text-base font-semibold text-foreground">
                     {encounter.attributes.encounterType} Encounter
                   </h2>
                   <span
                     className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${
                       isActive
                         ? "bg-green-100 text-green-700"
-                        : "bg-gray-100 text-gray-600"
+                        : "bg-neutral-100 text-muted-foreground"
                     }`}
                   >
                     {encounter.attributes.status}
                   </span>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-muted-foreground">
                     Started: {new Date(encounter.attributes.startedAt).toLocaleString()}
                   </span>
                   {encounter.attributes.closedAt && (
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-muted-foreground">
                       Closed: {new Date(encounter.attributes.closedAt).toLocaleString()}
                     </span>
                   )}
                   {encounter.attributes.costa_bill_id && (
                     <Link
                       href={`/finance/billing/${encounter.attributes.costa_bill_id}?patientId=${patientId}&encounterId=${encounterId}&source=encounter`}
-                      className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
+                      className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-full bg-success-soft text-primary-hover hover:bg-emerald-100 transition-colors"
                     >
                       <Receipt className="w-3 h-3" />
                       Bill
@@ -599,7 +599,7 @@ export default function EncounterPage() {
                   <div className="flex gap-2">
                     <Link
                       href={`/ehr/${patientId}/orders?encounterId=${encounterId}`}
-                      className="px-3 py-1.5 bg-purple-50 text-purple-700 text-xs font-medium rounded-lg hover:bg-purple-100 transition-colors flex items-center gap-1"
+                      className="px-3 py-1.5 bg-warning-soft text-warning-foreground text-xs font-medium rounded-lg hover:bg-purple-100 transition-colors flex items-center gap-1"
                     >
                       <ClipboardList className="w-3 h-3" /> Orders
                     </Link>
@@ -619,7 +619,7 @@ export default function EncounterPage() {
                     </Link>
                     <Link
                       href={`/ehr/${patientId}/discharge?encounterId=${encounterId}`}
-                      className="px-3 py-1.5 bg-red-50 text-red-700 text-xs font-medium rounded-lg hover:bg-red-100 transition-colors flex items-center gap-1"
+                      className="px-3 py-1.5 bg-danger-soft text-danger text-xs font-medium rounded-lg hover:bg-red-100 transition-colors flex items-center gap-1"
                     >
                       <XCircle className="w-3 h-3" /> Discharge
                     </Link>
@@ -628,11 +628,11 @@ export default function EncounterPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="bg-card rounded-lg border border-border p-4">
               <div className="flex items-center justify-between gap-2">
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-900">Care pathway and protocol</h3>
-                  <p className="text-xs text-gray-500">
+                  <h3 className="text-sm font-semibold text-foreground">Care pathway and protocol</h3>
+                  <p className="text-xs text-muted-foreground">
                     Link this encounter to a clinical pathway/protocol reference. Decision-support execution remains owned by guidance/rules/clinical-knowledge services.
                   </p>
                 </div>
@@ -644,23 +644,23 @@ export default function EncounterPage() {
               </div>
               <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Pathway reference</label>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">Pathway reference</label>
                   <input
                     value={pathwayRef}
                     onChange={(e) => setPathwayRef(e.target.value)}
                     disabled={!isActive}
                     placeholder="e.g. PATH-SEPSIS-01"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 disabled:bg-gray-50 disabled:text-gray-400"
+                    className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:bg-background disabled:text-muted-foreground"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Protocol reference</label>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">Protocol reference</label>
                   <input
                     value={protocolRef}
                     onChange={(e) => setProtocolRef(e.target.value)}
                     disabled={!isActive}
                     placeholder="e.g. PROTO-CRIT-01"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 disabled:bg-gray-50 disabled:text-gray-400"
+                    className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:bg-background disabled:text-muted-foreground"
                   />
                 </div>
               </div>
@@ -669,7 +669,7 @@ export default function EncounterPage() {
                 <button
                   onClick={handleUpdatePathwayProtocol}
                   disabled={updatePathwayProtocol.isPending}
-                  className="mt-3 inline-flex items-center gap-2 px-3 py-2 bg-impilo-600 text-white text-xs font-medium rounded-lg hover:bg-impilo-700 disabled:opacity-50"
+                  className="mt-3 inline-flex items-center gap-2 px-3 py-2 bg-primary-hover text-white text-xs font-medium rounded-lg hover:bg-impilo-700 disabled:opacity-50"
                 >
                   {updatePathwayProtocol.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
                   Update pathway/protocol
@@ -680,11 +680,11 @@ export default function EncounterPage() {
             {/* Existing Triage Display â€” show when triage already recorded */}
             {existingTriage && (
               <div className={`rounded-lg border-2 p-4 ${
-                existingTriage.attributes.acuity === 1 ? "border-red-400 bg-red-50" :
+                existingTriage.attributes.acuity === 1 ? "border-red-400 bg-danger-soft" :
                 existingTriage.attributes.acuity === 2 ? "border-orange-400 bg-orange-50" :
                 existingTriage.attributes.acuity === 3 ? "border-yellow-400 bg-yellow-50" :
                 existingTriage.attributes.acuity === 4 ? "border-green-400 bg-green-50" :
-                "border-impilo-400 bg-impilo-50"
+                "border-impilo-400 bg-primary-soft"
               }`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -699,7 +699,7 @@ export default function EncounterPage() {
                         }
                       </span>
                       {typeof existingTriage.attributes.triaged_by_name === "string" && (
-                        <span className="text-xs text-gray-500 ml-2">
+                        <span className="text-xs text-muted-foreground ml-2">
                           by {String(existingTriage.attributes.triaged_by_name)}
                         </span>
                       )}
@@ -730,7 +730,7 @@ export default function EncounterPage() {
                     return present.length > 0 ? (
                       <div className="mt-2 flex flex-wrap gap-1">
                         {present.map((d) => (
-                          <span key={d.name} className="px-2 py-0.5 text-xs bg-red-100 text-red-700 rounded-full">{d.name}</span>
+                          <span key={d.name} className="px-2 py-0.5 text-xs bg-red-100 text-danger rounded-full">{d.name}</span>
                         ))}
                       </div>
                     ) : null;
@@ -741,11 +741,11 @@ export default function EncounterPage() {
 
             {/* Triage / Acuity â€” Lovable TriagePanel alignment */}
             {isActive && (
-              <div className="bg-white rounded-lg border border-gray-200 p-5">
+              <div className="bg-card rounded-lg border border-border p-5">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <AlertTriangle className="w-5 h-5 text-amber-500" />
-                    <h3 className="font-medium text-gray-900">Triage Assessment</h3>
+                    <h3 className="font-medium text-foreground">Triage Assessment</h3>
                   </div>
                   {triageSaved && (
                     <span className="text-xs text-green-600 flex items-center gap-1">
@@ -756,14 +756,14 @@ export default function EncounterPage() {
 
                 {/* Acuity Selection */}
                 <div className="mb-4">
-                  <label className="block text-xs font-medium text-gray-600 mb-2">Triage Category</label>
+                  <label className="block text-xs font-medium text-muted-foreground mb-2">Triage Category</label>
                   <div className="grid grid-cols-5 gap-2">
                     {[
-                      { level: 1, label: "Red", desc: "Resuscitation", color: "border-red-400 bg-red-50 text-red-700", active: "border-red-500 bg-red-100 ring-2 ring-red-300" },
+                      { level: 1, label: "Red", desc: "Resuscitation", color: "border-red-400 bg-danger-soft text-danger", active: "border-red-500 bg-red-100 ring-2 ring-red-300" },
                       { level: 2, label: "Orange", desc: "Emergency", color: "border-orange-400 bg-orange-50 text-orange-700", active: "border-orange-500 bg-orange-100 ring-2 ring-orange-300" },
                       { level: 3, label: "Yellow", desc: "Urgent", color: "border-yellow-400 bg-yellow-50 text-yellow-700", active: "border-yellow-500 bg-yellow-100 ring-2 ring-yellow-300" },
                       { level: 4, label: "Green", desc: "Standard", color: "border-green-400 bg-green-50 text-green-700", active: "border-green-500 bg-green-100 ring-2 ring-green-300" },
-                      { level: 5, label: "Blue", desc: "Non-urgent", color: "border-impilo-400 bg-impilo-50 text-impilo-600", active: "border-impilo-400 bg-blue-100 ring-2 ring-impilo-300" },
+                      { level: 5, label: "Blue", desc: "Non-urgent", color: "border-impilo-400 bg-primary-soft text-primary", active: "border-impilo-400 bg-blue-100 ring-2 ring-impilo-300" },
                     ].map((t) => (
                       <button
                         key={t.level}
@@ -782,7 +782,7 @@ export default function EncounterPage() {
 
                 {/* Danger Signs */}
                 <div className="mb-4">
-                  <label className="block text-xs font-medium text-gray-600 mb-2">Danger Signs Screening</label>
+                  <label className="block text-xs font-medium text-muted-foreground mb-2">Danger Signs Screening</label>
                   <div className="grid grid-cols-2 gap-2">
                     {DANGER_SIGNS.map((sign) => {
                       const present = dangerSigns[sign] ?? false;
@@ -792,8 +792,8 @@ export default function EncounterPage() {
                           onClick={() => setDangerSigns((prev) => ({ ...prev, [sign]: !prev[sign] }))}
                           className={`flex items-center gap-2 p-2 rounded-lg text-sm text-left transition-colors ${
                             present
-                              ? "bg-red-50 border border-red-200 text-red-700"
-                              : "bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100"
+                              ? "bg-danger-soft border border-danger/28 text-danger"
+                              : "bg-background border border-border text-muted-foreground hover:bg-neutral-100"
                           }`}
                         >
                           {present ? (
@@ -810,50 +810,50 @@ export default function EncounterPage() {
 
                 {/* Quick Triage Vitals */}
                 <div className="mb-4">
-                  <label className="block text-xs font-medium text-gray-600 mb-2">Triage Vitals</label>
+                  <label className="block text-xs font-medium text-muted-foreground mb-2">Triage Vitals</label>
                   <div className="grid grid-cols-3 gap-2">
                     <div>
-                      <label className="block text-[10px] text-gray-500 mb-0.5">Systolic</label>
+                      <label className="block text-[10px] text-muted-foreground mb-0.5">Systolic</label>
                       <input type="number" value={tvSystolic} onChange={(e) => setTvSystolic(e.target.value)} placeholder="mmHg"
-                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
+                        className="w-full px-2 py-1.5 border border-border rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
                     </div>
                     <div>
-                      <label className="block text-[10px] text-gray-500 mb-0.5">Diastolic</label>
+                      <label className="block text-[10px] text-muted-foreground mb-0.5">Diastolic</label>
                       <input type="number" value={tvDiastolic} onChange={(e) => setTvDiastolic(e.target.value)} placeholder="mmHg"
-                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
+                        className="w-full px-2 py-1.5 border border-border rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
                     </div>
                     <div>
-                      <label className="block text-[10px] text-gray-500 mb-0.5">Heart Rate</label>
+                      <label className="block text-[10px] text-muted-foreground mb-0.5">Heart Rate</label>
                       <input type="number" value={tvHR} onChange={(e) => setTvHR(e.target.value)} placeholder="bpm"
-                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
+                        className="w-full px-2 py-1.5 border border-border rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
                     </div>
                     <div>
-                      <label className="block text-[10px] text-gray-500 mb-0.5">Temperature</label>
+                      <label className="block text-[10px] text-muted-foreground mb-0.5">Temperature</label>
                       <input type="number" step="0.1" value={tvTemp} onChange={(e) => setTvTemp(e.target.value)} placeholder="Â°C"
-                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
+                        className="w-full px-2 py-1.5 border border-border rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
                     </div>
                     <div>
-                      <label className="block text-[10px] text-gray-500 mb-0.5">SpOâ‚‚</label>
+                      <label className="block text-[10px] text-muted-foreground mb-0.5">SpOâ‚‚</label>
                       <input type="number" value={tvSpO2} onChange={(e) => setTvSpO2(e.target.value)} placeholder="%"
-                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
+                        className="w-full px-2 py-1.5 border border-border rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
                     </div>
                     <div>
-                      <label className="block text-[10px] text-gray-500 mb-0.5">Resp Rate</label>
+                      <label className="block text-[10px] text-muted-foreground mb-0.5">Resp Rate</label>
                       <input type="number" value={tvRR} onChange={(e) => setTvRR(e.target.value)} placeholder="/min"
-                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
+                        className="w-full px-2 py-1.5 border border-border rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
                     </div>
                   </div>
                 </div>
 
                 {/* Triage Notes */}
                 <div className="mb-4">
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Triage Notes</label>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">Triage Notes</label>
                   <textarea
                     value={triageNotes}
                     onChange={(e) => setTriageNotes(e.target.value)}
                     rows={2}
                     placeholder="Clinical observations, mechanism of injury, relevant context..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
+                    className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
                   />
                 </div>
 
@@ -873,11 +873,11 @@ export default function EncounterPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Vitals Entry */}
-              <div className="bg-white rounded-lg border border-gray-200 p-5">
+              <div className="bg-card rounded-lg border border-border p-5">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <Activity className="w-5 h-5 text-red-500" />
-                    <h3 className="font-medium text-gray-900">Vitals</h3>
+                    <h3 className="font-medium text-foreground">Vitals</h3>
                   </div>
                   {vitalsSaved && (
                     <span className="text-xs text-green-600 flex items-center gap-1">
@@ -887,49 +887,49 @@ export default function EncounterPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Systolic (mmHg)</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Systolic (mmHg)</label>
                     <input type="number" value={systolic} onChange={(e) => setSystolic(e.target.value)} placeholder="120" disabled={!isActive}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 disabled:bg-gray-50 disabled:text-gray-400" />
+                      className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:bg-background disabled:text-muted-foreground" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Diastolic (mmHg)</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Diastolic (mmHg)</label>
                     <input type="number" value={diastolic} onChange={(e) => setDiastolic(e.target.value)} placeholder="80" disabled={!isActive}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 disabled:bg-gray-50 disabled:text-gray-400" />
+                      className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:bg-background disabled:text-muted-foreground" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Heart Rate (bpm)</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Heart Rate (bpm)</label>
                     <input type="number" value={heartRate} onChange={(e) => setHeartRate(e.target.value)} placeholder="72" disabled={!isActive}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 disabled:bg-gray-50 disabled:text-gray-400" />
+                      className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:bg-background disabled:text-muted-foreground" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Temperature (Â°C)</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Temperature (Â°C)</label>
                     <input type="number" step="0.1" value={temperature} onChange={(e) => setTemperature(e.target.value)} placeholder="36.5" disabled={!isActive}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 disabled:bg-gray-50 disabled:text-gray-400" />
+                      className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:bg-background disabled:text-muted-foreground" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Resp. Rate (/min)</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Resp. Rate (/min)</label>
                     <input type="number" value={respiratoryRate} onChange={(e) => setRespiratoryRate(e.target.value)} placeholder="16" disabled={!isActive}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 disabled:bg-gray-50 disabled:text-gray-400" />
+                      className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:bg-background disabled:text-muted-foreground" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">SpO2 (%)</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">SpO2 (%)</label>
                     <input type="number" value={oxygenSat} onChange={(e) => setOxygenSat(e.target.value)} placeholder="98" disabled={!isActive}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 disabled:bg-gray-50 disabled:text-gray-400" />
+                      className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:bg-background disabled:text-muted-foreground" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Weight (kg)</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Weight (kg)</label>
                     <input type="number" step="0.1" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="70" disabled={!isActive}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 disabled:bg-gray-50 disabled:text-gray-400" />
+                      className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:bg-background disabled:text-muted-foreground" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Height (cm)</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Height (cm)</label>
                     <input type="number" step="0.1" value={height} onChange={(e) => setHeight(e.target.value)} placeholder="170" disabled={!isActive}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 disabled:bg-gray-50 disabled:text-gray-400" />
+                      className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:bg-background disabled:text-muted-foreground" />
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Pain Score (0-10)</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Pain Score (0-10)</label>
                     <input type="number" min="0" max="10" value={painScore} onChange={(e) => setPainScore(e.target.value)} placeholder="0" disabled={!isActive}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 disabled:bg-gray-50 disabled:text-gray-400" />
+                      className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:bg-background disabled:text-muted-foreground" />
                   </div>
                 </div>
                 {vitalsError && <p className="mt-2 text-xs text-red-600">{vitalsError}</p>}
@@ -954,11 +954,11 @@ export default function EncounterPage() {
               </div>
 
               {/* Clinical Notes */}
-              <div className="bg-white rounded-lg border border-gray-200 p-5">
+              <div className="bg-card rounded-lg border border-border p-5">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <FileText className="w-5 h-5 text-indigo-500" />
-                    <h3 className="font-medium text-gray-900">Clinical Notes</h3>
+                    <h3 className="font-medium text-foreground">Clinical Notes</h3>
                   </div>
                   {noteSaved && (
                     <span className="text-xs text-green-600 flex items-center gap-1">
@@ -968,9 +968,9 @@ export default function EncounterPage() {
                 </div>
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Note Type</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Note Type</label>
                     <select value={noteType} onChange={(e) => setNoteType(e.target.value)} disabled={!isActive}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 disabled:bg-gray-50">
+                      className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:bg-background">
                       <option value="PROGRESS">Progress Note</option>
                       <option value="ASSESSMENT">Assessment</option>
                       <option value="DISCHARGE">Discharge Summary</option>
@@ -989,7 +989,7 @@ export default function EncounterPage() {
                 {noteError && <p className="mt-2 text-xs text-red-600">{noteError}</p>}
                 {isActive && (
                   <button onClick={handleSaveNote} disabled={noteSaving}
-                    className="mt-4 w-full py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors">
+                    className="mt-4 w-full py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-primary disabled:opacity-50 flex items-center justify-center gap-2 transition-colors">
                     {noteSaving ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</> : <><Save className="w-4 h-4" /> Save Note</>}
                   </button>
                 )}
@@ -998,11 +998,11 @@ export default function EncounterPage() {
 
             {/* Examination Findings â€” Lovable-aligned system-by-system capture */}
             {isActive && (
-              <div className="bg-white rounded-lg border border-gray-200 p-5">
+              <div className="bg-card rounded-lg border border-border p-5">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <Stethoscope className="w-5 h-5 text-teal-500" />
-                    <h3 className="font-medium text-gray-900">Examination Findings</h3>
+                    <h3 className="font-medium text-foreground">Examination Findings</h3>
                   </div>
                   {examSaved && (
                     <span className="text-xs text-green-600 flex items-center gap-1">
@@ -1019,13 +1019,13 @@ export default function EncounterPage() {
                     { key: "neuro", label: "Neurological", value: examNeuro, setter: setExamNeuro, placeholder: "GCS 15/15, pupils equal and reactive..." },
                   ].map((sys) => (
                     <div key={sys.key}>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">{sys.label}</label>
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">{sys.label}</label>
                       <textarea
                         value={sys.value}
                         onChange={(e) => sys.setter(e.target.value)}
                         rows={2}
                         placeholder={sys.placeholder}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
+                        className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
                       />
                     </div>
                   ))}
@@ -1033,7 +1033,7 @@ export default function EncounterPage() {
                 <button
                   onClick={handleSaveExamination}
                   disabled={examSaving}
-                  className="mt-4 w-full py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
+                  className="mt-4 w-full py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-primary disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
                 >
                   {examSaving ? (
                     <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
@@ -1046,14 +1046,14 @@ export default function EncounterPage() {
 
             {/* Linked Referrals & Outcomes */}
             {linkedReferrals.length > 0 && (
-              <div className="bg-white rounded-lg border border-gray-200 p-5">
+              <div className="bg-card rounded-lg border border-border p-5">
                 <div className="flex items-center gap-2 mb-4">
                   <ArrowUpRight className="w-5 h-5 text-orange-500" />
-                  <h3 className="font-medium text-gray-900">
+                  <h3 className="font-medium text-foreground">
                     Linked Referrals ({linkedReferrals.length})
                   </h3>
                   {respondedReferrals.length > 0 && (
-                    <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-purple-100 text-purple-700">
+                    <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-purple-100 text-warning-foreground">
                       {respondedReferrals.length} response{respondedReferrals.length !== 1 ? "s" : ""} received
                     </span>
                   )}
@@ -1070,42 +1070,42 @@ export default function EncounterPage() {
                       <div
                         key={ref.id}
                         className={`p-3 rounded-lg border ${
-                          hasResponse ? "border-purple-200 bg-purple-50" : "border-gray-200 bg-gray-50"
+                          hasResponse ? "border-warning/35 bg-warning-soft" : "border-border bg-background"
                         }`}
                       >
                         <div className="flex items-start justify-between">
                           <div>
                             <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium text-gray-900">
+                              <span className="text-sm font-medium text-foreground">
                                 {ref.attributes.specialty || ref.attributes.referralType}
                               </span>
                               <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
-                                ref.attributes.status === "RESPONDED" ? "bg-purple-100 text-purple-700" :
+                                ref.attributes.status === "RESPONDED" ? "bg-purple-100 text-warning-foreground" :
                                 ref.attributes.status === "COMPLETED" ? "bg-green-100 text-green-700" :
-                                ref.attributes.status === "ACCEPTED" ? "bg-impilo-100 text-impilo-600" :
+                                ref.attributes.status === "ACCEPTED" ? "bg-primary-soft text-primary" :
                                 "bg-yellow-100 text-yellow-700"
                               }`}>
                                 {ref.attributes.status}
                               </span>
                             </div>
-                            <p className="text-xs text-gray-500 mt-0.5">
+                            <p className="text-xs text-muted-foreground mt-0.5">
                               To: {ref.attributes.referredTo}
                               {ref.attributes.referredToFacility && ` at ${ref.attributes.referredToFacility}`}
                             </p>
                           </div>
                           <Link
                             href={`/ehr/${patientId}/referrals`}
-                            className="text-xs text-impilo-500 hover:text-impilo-700"
+                            className="text-xs text-primary hover:text-primary-hover"
                           >
                             View all
                           </Link>
                         </div>
                         {hasResponse && (
-                          <div className="mt-2 pt-2 border-t border-purple-200">
-                            <p className="text-xs font-semibold text-purple-700">Specialist Response:</p>
+                          <div className="mt-2 pt-2 border-t border-warning/35">
+                            <p className="text-xs font-semibold text-warning-foreground">Specialist Response:</p>
                             <p className="text-sm text-purple-900 mt-0.5">{responseText}</p>
                             {outcomeText && (
-                              <p className="text-xs text-purple-700 mt-1">
+                              <p className="text-xs text-warning-foreground mt-1">
                                 <span className="font-medium">Outcome:</span> {outcomeText}
                               </p>
                             )}
@@ -1125,7 +1125,7 @@ export default function EncounterPage() {
 
             {/* Close Encounter â€” clinical staff only */}
             {isActive && isClinical && (
-              <div className="bg-white rounded-lg border border-gray-200 p-5">
+              <div className="bg-card rounded-lg border border-border p-5">
                 {!showCloseConfirm ? (
                   <button
                     onClick={() => setShowCloseConfirm(true)}
@@ -1136,12 +1136,12 @@ export default function EncounterPage() {
                   </button>
                 ) : (
                   <div className="space-y-3">
-                    <p className="text-sm text-gray-700 text-center">
+                    <p className="text-sm text-foreground text-center">
                       Are you sure you want to close this encounter? This action cannot be undone.
                     </p>
                     <div className="flex gap-3">
                       <button onClick={() => setShowCloseConfirm(false)}
-                        className="flex-1 py-2.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">
+                        className="flex-1 py-2.5 bg-neutral-100 text-foreground text-sm font-medium rounded-lg hover:bg-neutral-100 transition-colors">
                         Cancel
                       </button>
                       <button onClick={handleClose} disabled={closeEncounter.isPending}

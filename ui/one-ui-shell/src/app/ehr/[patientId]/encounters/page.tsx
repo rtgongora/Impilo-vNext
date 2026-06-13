@@ -30,14 +30,14 @@ import { JourneyOrchestrationRail } from "@/components/queue/JourneyOrchestratio
 const STATUS_BADGE: Record<string, string> = {
   IN_PROGRESS: "bg-green-100 text-green-700",
   ACTIVE: "bg-green-100 text-green-700",
-  COMPLETED: "bg-gray-100 text-gray-600",
-  DISCHARGED: "bg-impilo-100 text-impilo-600",
-  ADMITTED: "bg-purple-100 text-purple-700",
-  TRANSFERRED: "bg-amber-100 text-amber-700",
-  REFERRED: "bg-indigo-100 text-indigo-700",
-  DECEASED: "bg-red-100 text-red-700",
-  LAMA: "bg-gray-200 text-gray-700",
-  CANCELLED: "bg-red-100 text-red-700" };
+  COMPLETED: "bg-neutral-100 text-muted-foreground",
+  DISCHARGED: "bg-primary-soft text-primary",
+  ADMITTED: "bg-purple-100 text-warning-foreground",
+  TRANSFERRED: "bg-amber-100 text-warning-foreground",
+  REFERRED: "bg-indigo-100 text-primary-hover",
+  DECEASED: "bg-red-100 text-danger",
+  LAMA: "bg-neutral-100 text-foreground",
+  CANCELLED: "bg-red-100 text-danger" };
 
 /* ------------------------------------------------------------------ */
 /*  Empty form state                                                   */
@@ -150,8 +150,8 @@ export default function EncountersPage() {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading encounters...</span>
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading encounters...</span>
           </div>
         ) : (
           <div className="space-y-6">
@@ -163,37 +163,37 @@ export default function EncountersPage() {
               />
             ) : null}
 
-            <div className="rounded-3xl border border-slate-200 bg-[linear-gradient(135deg,#f8fbff_0%,#eef6ff_45%,#fffaf5_100%)] p-5 shadow-sm">
+            <div className="rounded-3xl border border-border bg-[linear-gradient(135deg,#f8fbff_0%,#eef6ff_45%,#fffaf5_100%)] p-5 shadow-sm">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="space-y-2">
-                  <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-xs font-medium text-slate-600">
-                    <ArrowRightLeft className="h-3.5 w-3.5 text-impilo-500" />
+                  <div className="inline-flex items-center gap-2 rounded-full bg-card/80 px-3 py-1 text-xs font-medium text-muted-foreground">
+                    <ArrowRightLeft className="h-3.5 w-3.5 text-primary" />
                     Encounter coordination
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900">Encounter history now carries consult and teleconsult context</h3>
-                    <p className="mt-1 max-w-2xl text-sm text-slate-600">
+                    <h3 className="text-lg font-semibold text-foreground">Encounter history now carries consult and teleconsult context</h3>
+                    <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
                       Past and active encounters stay connected to open referrals, returned specialist guidance, and teleconsult activity so handoffs remain visible during chart review.
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2 pt-1">
                     <Link
                       href={`/ehr/${patientId}/consults?tab=referrals`}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800"
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
                     >
                       <ArrowRightLeft className="h-4 w-4" />
                       Consults
                     </Link>
                     <Link
                       href={`/ehr/${patientId}/consults?tab=teleconsults`}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-background"
                     >
                       <Video className="h-4 w-4" />
                       Teleconsults
                     </Link>
                     <Link
                       href={`/ehr/${patientId}/notes`}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-background"
                     >
                       <FileText className="h-4 w-4" />
                       Notes Evidence
@@ -202,31 +202,31 @@ export default function EncountersPage() {
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2 xl:w-[28rem]">
-                  <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
-                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Open referrals</p>
-                    <p className="mt-2 text-2xl font-semibold text-purple-700">{coordinationPulse.openReferrals}</p>
-                    <p className="mt-1 text-xs text-slate-500">Referrals still moving across encounter history.</p>
+                  <div className="rounded-2xl border border-white/70 bg-card/80 p-4">
+                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Open referrals</p>
+                    <p className="mt-2 text-2xl font-semibold text-warning-foreground">{coordinationPulse.openReferrals}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Referrals still moving across encounter history.</p>
                   </div>
-                  <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
-                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Receiving here</p>
-                    <p className="mt-2 text-2xl font-semibold text-impilo-600">{coordinationPulse.receivingHere}</p>
-                    <p className="mt-1 text-xs text-slate-500">Handoffs where this facility is the current receiver.</p>
+                  <div className="rounded-2xl border border-white/70 bg-card/80 p-4">
+                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Receiving here</p>
+                    <p className="mt-2 text-2xl font-semibold text-primary">{coordinationPulse.receivingHere}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Handoffs where this facility is the current receiver.</p>
                   </div>
-                  <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
-                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Teleconsult activity</p>
-                    <p className="mt-2 text-2xl font-semibold text-emerald-700">{coordinationPulse.teleconsultActivity}</p>
-                    <p className="mt-1 text-xs text-slate-500">Scheduled or live virtual sessions tied to this chart.</p>
+                  <div className="rounded-2xl border border-white/70 bg-card/80 p-4">
+                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Teleconsult activity</p>
+                    <p className="mt-2 text-2xl font-semibold text-primary-hover">{coordinationPulse.teleconsultActivity}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Scheduled or live virtual sessions tied to this chart.</p>
                   </div>
-                  <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
-                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Returned guidance</p>
-                    <p className="mt-2 text-2xl font-semibold text-indigo-700">{coordinationPulse.returnedGuidance}</p>
-                    <p className="mt-1 text-xs text-slate-500">Consultation notes with structured referral-loop updates.</p>
+                  <div className="rounded-2xl border border-white/70 bg-card/80 p-4">
+                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Returned guidance</p>
+                    <p className="mt-2 text-2xl font-semibold text-primary-hover">{coordinationPulse.returnedGuidance}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Consultation notes with structured referral-loop updates.</p>
                   </div>
                 </div>
               </div>
 
               {activeEncounter && (
-                <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                <div className="mt-4 rounded-2xl border border-success/25 bg-success-soft px-4 py-3 text-sm text-primary-hover">
                   Active encounter in progress: open the live encounter workspace for immediate charting, or stay here to review historical encounter context.
                 </div>
               )}
@@ -236,7 +236,7 @@ export default function EncountersPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <ClipboardList className="w-5 h-5 text-impilo-400" />
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 className="text-lg font-semibold text-foreground">
                   Encounters ({encounters.length})
                 </h2>
               </div>
@@ -244,7 +244,7 @@ export default function EncountersPage() {
               <button
                 type="button"
                 onClick={() => setShowForm((prev) => !prev)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 transition-colors"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 Start Encounter
@@ -254,12 +254,12 @@ export default function EncountersPage() {
 
             {/* Start Encounter form */}
             {showForm && (
-              <div className="bg-white rounded-lg border border-gray-200 p-5">
-                <h3 className="font-medium text-gray-900 mb-4">Start New Encounter</h3>
+              <div className="bg-card rounded-lg border border-border p-5">
+                <h3 className="font-medium text-foreground mb-4">Start New Encounter</h3>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
                         PCT Journey ID
                       </label>
                       <input
@@ -268,20 +268,20 @@ export default function EncountersPage() {
                         onChange={(e) => updateField("journey_id", e.target.value)}
                         placeholder="Required canonical journey id"
                         required
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                       />
-                      <p className="mt-1 text-xs text-gray-500">
+                      <p className="mt-1 text-xs text-muted-foreground">
                         Encounters start through PCT journey orchestration; direct patient-only encounter creation is not supported.
                       </p>
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
                         Encounter Type
                       </label>
                       <select
                         value={form.encounter_type}
                         onChange={(e) => updateField("encounter_type", e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                       >
                         <option value="OUTPATIENT">Outpatient</option>
                         <option value="INPATIENT">Inpatient</option>
@@ -291,7 +291,7 @@ export default function EncountersPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
                         Chief Complaint
                       </label>
                       <input
@@ -300,28 +300,28 @@ export default function EncountersPage() {
                         onChange={(e) => updateField("chief_complaint", e.target.value)}
                         placeholder="e.g. Chest pain, headache"
                         required
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
                         Context
                       </label>
                       <input
                         type="text"
                         value={form.encounter_context}
                         onChange={(e) => updateField("encounter_context", e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
                         Priority
                       </label>
                       <select
                         value={form.priority}
                         onChange={(e) => updateField("priority", e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                       >
                         <option value="ROUTINE">Routine</option>
                         <option value="URGENT">Urgent</option>
@@ -334,7 +334,7 @@ export default function EncountersPage() {
                     <button
                       type="submit"
                       disabled={createEncounter.isPending}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       {createEncounter.isPending && (
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -347,7 +347,7 @@ export default function EncountersPage() {
                         setForm({ ...EMPTY_FORM });
                         setShowForm(false);
                       }}
-                      className="px-4 py-2 text-sm font-medium text-gray-700 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+                      className="px-4 py-2 text-sm font-medium text-foreground rounded-lg border border-border hover:bg-background transition-colors"
                     >
                       Cancel
                     </button>
@@ -364,22 +364,22 @@ export default function EncountersPage() {
 
             {/* Encounters table */}
             {encounters.length === 0 ? (
-              <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-                <ClipboardList className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-400 text-sm">No encounters recorded yet</p>
+              <div className="bg-card rounded-lg border border-border p-12 text-center">
+                <ClipboardList className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                <p className="text-muted-foreground text-sm">No encounters recorded yet</p>
               </div>
             ) : (
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div className="bg-card rounded-lg border border-border overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-gray-200 bg-gray-50">
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">Type</th>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">Start Date</th>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">End Date</th>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">Chief Complaint</th>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">Bill</th>
+                      <tr className="border-b border-border bg-background">
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">Type</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">Start Date</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">End Date</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">Chief Complaint</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">Bill</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -388,7 +388,7 @@ export default function EncountersPage() {
                         return (
                           <tr
                             key={encounter.id}
-                            className="border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer"
+                            className="border-b border-border hover:bg-background transition-colors cursor-pointer"
                             onClick={() =>
                               router.push(
                                 `/ehr/${patientId}/encounter/${encounter.id}`,
@@ -398,7 +398,7 @@ export default function EncountersPage() {
                             <td className="px-4 py-3">
                               <Link
                                 href={`/ehr/${patientId}/encounter/${encounter.id}`}
-                                className="font-medium text-impilo-500 hover:text-impilo-700 hover:underline"
+                                className="font-medium text-primary hover:text-primary-hover hover:underline"
                               >
                                 {a.encounterType.replace(/_/g, " ")}
                               </Link>
@@ -406,21 +406,21 @@ export default function EncountersPage() {
                             <td className="px-4 py-3">
                               <span
                                 className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${
-                                  STATUS_BADGE[a.status] ?? "bg-gray-100 text-gray-600"
+                                  STATUS_BADGE[a.status] ?? "bg-neutral-100 text-muted-foreground"
                                 }`}
                               >
                                 {a.status.replace(/_/g, " ")}
                               </span>
                             </td>
-                            <td className="px-4 py-3 text-gray-700">
+                            <td className="px-4 py-3 text-foreground">
                               {new Date(a.startedAt).toLocaleString()}
                             </td>
-                            <td className="px-4 py-3 text-gray-700">
+                            <td className="px-4 py-3 text-foreground">
                               {a.closedAt
                                 ? new Date(a.closedAt).toLocaleString()
                                 : "—"}
                             </td>
-                            <td className="px-4 py-3 text-gray-700">
+                            <td className="px-4 py-3 text-foreground">
                               {(a as Record<string, unknown>).chiefComplaint as string ?? (a as Record<string, unknown>).chief_complaint as string ?? "—"}
                             </td>
                             <td className="px-4 py-3">
@@ -428,13 +428,13 @@ export default function EncountersPage() {
                                   <Link
                                   href={`/finance/billing/${a.costa_bill_id}?patientId=${patientId}&encounterId=${encounter.id}&source=encounters`}
                                     onClick={(e) => e.stopPropagation()}
-                                    className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
+                                    className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-success-soft text-primary-hover hover:bg-emerald-100 transition-colors"
                                 >
                                   <Receipt className="w-3 h-3" />
                                   View
                                 </Link>
                               ) : (
-                                <span className="text-xs text-gray-400">—</span>
+                                <span className="text-xs text-muted-foreground">—</span>
                               )}
                             </td>
                           </tr>

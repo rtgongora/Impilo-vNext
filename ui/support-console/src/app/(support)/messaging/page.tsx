@@ -86,7 +86,7 @@ export default function MessagingPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 bg-white rounded-[12px] shadow-subtle border border-neutral-100 min-h-[600px]">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 bg-card rounded-[12px] shadow-subtle border border-neutral-100 min-h-[600px]">
         {/* Ticket conversation list */}
         <div className="lg:col-span-1 border-r border-neutral-100">
           <div className="p-3 border-b border-neutral-100">
@@ -157,7 +157,7 @@ export default function MessagingPage() {
                           ? "bg-brand-primary/5 border border-brand-primary/10 ml-auto"
                           : m.senderType === "SYSTEM"
                           ? "bg-neutral-50 text-neutral-500 italic mx-auto text-center"
-                          : "bg-white border border-neutral-200"
+                          : "bg-card border border-neutral-200"
                       }`}
                     >
                       <div className="flex items-center gap-2 mb-1">

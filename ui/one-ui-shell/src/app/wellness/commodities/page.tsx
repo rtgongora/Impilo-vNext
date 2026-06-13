@@ -35,7 +35,7 @@ export default function WellnessCommoditiesPage() {
         </div>
 
         {!facility ? (
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
+          <div className="rounded-xl border border-warning/35 bg-warning-soft p-5 text-sm text-warning-foreground">
             Select a facility to scope commodity stock.
             <div className="mt-3">
               <Link href="/facility" className="font-medium underline">

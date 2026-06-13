@@ -15,13 +15,13 @@ export default function AttemptResultPage() {
   return (
     <AppLayout>
       <PageShell title="Attempt result" subtitle="Score and pass/fail outcome for submitted native assessment attempt.">
-        <div className="rounded border border-gray-200 bg-white p-4 text-sm">
+        <div className="rounded border border-border bg-card p-4 text-sm">
           <p>Attempt: {String(attempt.id ?? attemptId)}</p>
           <p>Score: {String(attempt.score ?? "PENDING")}</p>
           <p>Passed: {String(attempt.passed ?? "PENDING_MANUAL")}</p>
           <p>Submitted: {String(attempt.submittedAt ?? "-")}</p>
           {pendingManualReview ? (
-            <p className="mt-2 text-xs text-amber-700">
+            <p className="mt-2 text-xs text-warning-foreground">
               This attempt includes responses that require manual review before final grading.
             </p>
           ) : null}

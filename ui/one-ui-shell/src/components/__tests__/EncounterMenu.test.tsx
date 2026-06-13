@@ -123,8 +123,8 @@ describe("EncounterMenu", () => {
     render(<EncounterMenu />);
 
     const vitalsLink = getWizardNavLinkByHref("/ehr/P-001/vitals");
-    expect(vitalsLink.className).toContain("bg-impilo-100");
-    expect(vitalsLink.className).toContain("text-impilo-700");
+    expect(vitalsLink.className).toContain("bg-primary-soft");
+    expect(vitalsLink.className).toContain("text-primary-hover");
   });
 
   it("does not highlight non-active steps", () => {
@@ -134,7 +134,7 @@ describe("EncounterMenu", () => {
     render(<EncounterMenu />);
 
     const historyLink = getWizardNavLinkByHref("/ehr/P-001/history");
-    expect(historyLink.className).not.toContain("bg-impilo-100");
+    expect(historyLink.className).not.toContain("bg-primary-soft");
   });
 
   it("generates correct hrefs for wizard segments", () => {

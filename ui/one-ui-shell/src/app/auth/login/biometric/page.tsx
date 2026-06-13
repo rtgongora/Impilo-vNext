@@ -82,10 +82,10 @@ export default function BiometricLoginPage() {
   }, [login, returnTo, setAuth, router]);
 
   const stateStyles: Record<VerifyState, string> = {
-    idle: "border-gray-300 text-gray-400 bg-gray-50",
-    verifying: "border-impilo-400 text-impilo-400 bg-impilo-50 animate-pulse",
+    idle: "border-border text-muted-foreground bg-background",
+    verifying: "border-impilo-400 text-impilo-400 bg-primary-soft animate-pulse",
     success: "border-green-400 text-green-500 bg-green-50",
-    error: "border-red-400 text-red-500 bg-red-50",
+    error: "border-red-400 text-red-500 bg-danger-soft",
   };
 
   return (
@@ -93,22 +93,22 @@ export default function BiometricLoginPage() {
       <div className="mb-4">
         <Link
           href="/auth/login"
-          className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to sign in
         </Link>
       </div>
 
-      <h2 className="text-xl font-semibold text-gray-900 mb-1">
+      <h2 className="text-xl font-semibold text-foreground mb-1">
         Biometric Verification
       </h2>
-      <p className="text-sm text-gray-500 mb-6">
+      <p className="text-sm text-muted-foreground mb-6">
         Biometric verification is handled by your device
       </p>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-danger">
           {error}
         </div>
       )}
@@ -128,7 +128,7 @@ export default function BiometricLoginPage() {
           )}
         </div>
 
-        <p className="mt-4 text-sm text-gray-500 text-center">
+        <p className="mt-4 text-sm text-muted-foreground text-center">
           {verifyState === "idle" &&
             "Tap the button below to begin biometric verification"}
           {verifyState === "verifying" && "Verifying biometric..."}
@@ -136,7 +136,7 @@ export default function BiometricLoginPage() {
           {verifyState === "error" && "Verification failed. Please try again."}
         </p>
 
-        <p className="mt-2 text-xs text-gray-400 text-center">
+        <p className="mt-2 text-xs text-muted-foreground text-center">
           Biometric verification is handled by your device hardware
         </p>
       </div>
@@ -145,7 +145,7 @@ export default function BiometricLoginPage() {
         type="button"
         onClick={handleVerify}
         disabled={verifyState === "verifying" || verifyState === "success"}
-        className="w-full py-2.5 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+        className="w-full py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
       >
         {verifyState === "verifying" ? (
           <>

@@ -42,32 +42,32 @@ export default function NewDrivePage() {
   return (
     <AppLayout>
       <PageShell title="New Donation Drive" subtitle="Schedule a facility or outreach collection event" icon={<CalendarPlus className="h-6 w-6" />}>
-        <form onSubmit={handleSubmit} className="max-w-lg space-y-4 rounded-2xl border border-gray-200 bg-white p-6">
-          <label className="block text-sm font-medium text-gray-700">
+        <form onSubmit={handleSubmit} className="max-w-lg space-y-4 rounded-2xl border border-border bg-card p-6">
+          <label className="block text-sm font-medium text-foreground">
             Title
-            <input required value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" />
+            <input required value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm" />
           </label>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-foreground">
             Drive type
-            <select value={driveType} onChange={(e) => setDriveType(e.target.value)} className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm bg-white">
+            <select value={driveType} onChange={(e) => setDriveType(e.target.value)} className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm bg-card">
               <option value="COMMUNITY">Community</option>
               <option value="FACILITY">Facility</option>
               <option value="MOBILE">Mobile unit</option>
             </select>
           </label>
           <div className="grid grid-cols-2 gap-3">
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-foreground">
               Start
-              <input type="datetime-local" required value={startAt} onChange={(e) => setStartAt(e.target.value)} className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" />
+              <input type="datetime-local" required value={startAt} onChange={(e) => setStartAt(e.target.value)} className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm" />
             </label>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-foreground">
               End
-              <input type="datetime-local" required value={endAt} onChange={(e) => setEndAt(e.target.value)} className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" />
+              <input type="datetime-local" required value={endAt} onChange={(e) => setEndAt(e.target.value)} className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm" />
             </label>
           </div>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-foreground">
             Capacity
-            <input type="number" min={1} value={capacity} onChange={(e) => setCapacity(e.target.value)} className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" />
+            <input type="number" min={1} value={capacity} onChange={(e) => setCapacity(e.target.value)} className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm" />
           </label>
           <button type="submit" disabled={create.isPending} className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700 disabled:opacity-50">
             {create.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}

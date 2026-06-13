@@ -28,18 +28,18 @@ export function MusheXRailSafetyPanel() {
   });
 
   return (
-    <section className="rounded-xl border border-amber-200 bg-amber-50/70 p-5 shadow-sm">
+    <section className="rounded-xl border border-warning/35 bg-warning-soft/70 p-5 shadow-sm">
       <div className="flex flex-wrap items-start gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-800">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-warning-foreground">
           <Shield className="h-5 w-5" />
         </div>
         <div className="min-w-0 flex-1">
-          <h2 className="text-sm font-semibold text-slate-900">MusheX rail safety (operator)</h2>
-          <p className="mt-1 text-sm text-slate-700">
+          <h2 className="text-sm font-semibold text-foreground">MusheX rail safety (operator)</h2>
+          <p className="mt-1 text-sm text-foreground">
             Live money movement stays <strong>blocked</strong> until rail credentials and step-up auth are proven.
             Preview may enable the <strong>sandbox adapter</strong> for simulation-only payment attempts.
           </p>
-          <ul className="mt-3 list-disc space-y-1 pl-5 text-xs text-slate-600">
+          <ul className="mt-3 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
             <li>
               Initiate attempt only after loading a payment intent and confirming sandbox readiness below.
             </li>
@@ -49,7 +49,7 @@ export function MusheXRailSafetyPanel() {
             </li>
             <li>
               Full platform adapter matrix:{" "}
-              <Link href="/finance/mushex-platform" className="text-indigo-700 hover:underline">
+              <Link href="/finance/mushex-platform" className="text-primary-hover hover:underline">
                 MusheX platform admin
               </Link>
               .
@@ -60,7 +60,7 @@ export function MusheXRailSafetyPanel() {
           className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium ${
             sandboxReady
               ? "border-sky-200 bg-sky-50 text-sky-800"
-              : "border-amber-300 bg-white text-amber-900"
+              : "border-amber-300 bg-card text-warning-foreground"
           }`}
         >
           {sandboxReady ? (
@@ -75,11 +75,11 @@ export function MusheXRailSafetyPanel() {
         </span>
       </div>
       {adaptersQ.isError ? (
-        <p className="mt-3 text-xs text-red-700">
+        <p className="mt-3 text-xs text-danger">
           Could not load adapter readiness — deploy MusheX (wave 8 finance pilot) or check BFF upstream.
         </p>
       ) : null}
-      <p className="mt-3 text-xs text-slate-500">
+      <p className="mt-3 text-xs text-muted-foreground">
         Preview env: set <code className="text-[11px]">MUSHEX_SANDBOX_ENABLED=true</code> on{" "}
         <code className="text-[11px]">mushex-service</code> via{" "}
         <code className="text-[11px]">FULL_BOOT_MAX_WAVE=8</code> promote script.

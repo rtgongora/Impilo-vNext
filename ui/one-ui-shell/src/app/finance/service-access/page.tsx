@@ -84,7 +84,7 @@ export default function FinanceServiceAccessPage() {
         icon={<Shield className="h-6 w-6" />}
       >
         <div className="mb-4">
-          <Link href="/finance" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
+          <Link href="/finance" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-4 w-4" /> Finance dashboard
           </Link>
         </div>
@@ -92,9 +92,9 @@ export default function FinanceServiceAccessPage() {
         <div className="space-y-6">
           <BillingTimingDoctrineBanner />
 
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">Scope</h2>
-            <p className="mt-1 text-xs text-slate-500">
+          <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
+            <h2 className="text-sm font-semibold text-foreground">Scope</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
               GET/POST <code className="text-[10px]">/internal/v1/finance/service-access-decisions</code>
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
@@ -102,12 +102,12 @@ export default function FinanceServiceAccessPage() {
                 value={filterEncounter}
                 onChange={(e) => setFilterEncounter(e.target.value)}
                 placeholder="Encounter id (optional filter)"
-                className="min-w-[220px] flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm font-mono"
+                className="min-w-[220px] flex-1 rounded-lg border border-border px-3 py-2 text-sm font-mono"
                 aria-label="Encounter id filter"
               />
               <button
                 type="button"
-                className="rounded-lg border border-slate-200 px-4 py-2 text-sm hover:bg-slate-50"
+                className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-background"
                 onClick={() => void decisionsQ.refetch()}
               >
                 Refresh list
@@ -116,15 +116,15 @@ export default function FinanceServiceAccessPage() {
           </section>
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <section className="rounded-xl border border-amber-200 bg-amber-50/40 p-5">
-              <h2 className="text-sm font-semibold text-amber-950">Register exemption or deferred access</h2>
+            <section className="rounded-xl border border-warning/35 bg-warning-soft/40 p-5">
+              <h2 className="text-sm font-semibold text-warning-foreground">Register exemption or deferred access</h2>
               <div className="mt-3 grid gap-3">
-                <label className="text-xs text-slate-700">
+                <label className="text-xs text-foreground">
                   Access status
                   <select
                     value={accessStatus}
                     onChange={(e) => setAccessStatus(e.target.value)}
-                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                    className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm"
                   >
                     {EXEMPTION_DEFERRED_STATUSES.map((status) => (
                       <option key={status} value={status}>
@@ -133,12 +133,12 @@ export default function FinanceServiceAccessPage() {
                     ))}
                   </select>
                 </label>
-                <label className="text-xs text-slate-700">
+                <label className="text-xs text-foreground">
                   Billing timing
                   <select
                     value={timing}
                     onChange={(e) => setTiming(e.target.value as BillingTimingModeValue)}
-                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                    className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm"
                   >
                     {BILLING_TIMING_MODES.map((mode) => (
                       <option key={mode} value={mode}>
@@ -151,24 +151,24 @@ export default function FinanceServiceAccessPage() {
                   value={serviceName}
                   onChange={(e) => setServiceName(e.target.value)}
                   placeholder="Requested service name"
-                  className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                  className="rounded-lg border border-border px-3 py-2 text-sm"
                 />
                 <input
                   value={estimated}
                   onChange={(e) => setEstimated(e.target.value)}
                   placeholder="Estimated cost (optional)"
-                  className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                  className="rounded-lg border border-border px-3 py-2 text-sm"
                 />
                 <input
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   placeholder="Policy / exemption reason"
-                  className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                  className="rounded-lg border border-border px-3 py-2 text-sm"
                 />
               </div>
-              {submitErr ? <p className="mt-2 text-xs text-red-700">{submitErr}</p> : null}
+              {submitErr ? <p className="mt-2 text-xs text-danger">{submitErr}</p> : null}
               {register.isSuccess ? (
-                <p className="mt-2 text-xs text-emerald-700">Decision registered successfully.</p>
+                <p className="mt-2 text-xs text-primary-hover">Decision registered successfully.</p>
               ) : null}
               <button
                 type="button"
@@ -181,30 +181,30 @@ export default function FinanceServiceAccessPage() {
               </button>
             </section>
 
-            <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-              <h2 className="text-sm font-semibold text-slate-900">Decision history</h2>
-              <p className="mt-1 text-xs text-slate-500">
+            <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
+              <h2 className="text-sm font-semibold text-foreground">Decision history</h2>
+              <p className="mt-1 text-xs text-muted-foreground">
                 {exemptionDeferredRows.length} exemption/deferred/waiver row(s)
                 {filterEncounter.trim() ? ` for encounter ${filterEncounter.trim()}` : " (all scopes)"}.
               </p>
               {decisionsQ.isLoading ? (
-                <p className="mt-3 flex items-center gap-2 text-sm text-slate-500">
+                <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" /> Loading…
                 </p>
               ) : decisionsQ.isError ? (
-                <p className="mt-3 text-sm text-red-700">Could not load service access decisions.</p>
+                <p className="mt-3 text-sm text-danger">Could not load service access decisions.</p>
               ) : exemptionDeferredRows.length === 0 ? (
-                <p className="mt-3 text-sm text-slate-500">No exemption or deferred decisions on record.</p>
+                <p className="mt-3 text-sm text-muted-foreground">No exemption or deferred decisions on record.</p>
               ) : (
                 <ul className="mt-3 space-y-2 text-xs">
                   {exemptionDeferredRows.map((row) => (
                     <li
                       key={row.service_access_decision_id}
-                      className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2"
+                      className="rounded-lg border border-border bg-background px-3 py-2"
                     >
-                      <p className="font-medium text-slate-900">{formatDecisionRow(row)}</p>
+                      <p className="font-medium text-foreground">{formatDecisionRow(row)}</p>
                       {row.requested_service_name ? (
-                        <p className="text-slate-600">{row.requested_service_name}</p>
+                        <p className="text-muted-foreground">{row.requested_service_name}</p>
                       ) : null}
                     </li>
                   ))}

@@ -37,11 +37,11 @@ interface OperatorTelemetryPanelProps {
 function severityClasses(severity: OperatorTelemetryRow["severity"]): string {
   switch (severity) {
     case "critical":
-      return "border-rose-200 bg-rose-50 text-rose-700";
+      return "border-danger/28 bg-danger-soft text-danger";
     case "warning":
-      return "border-amber-200 bg-amber-50 text-amber-700";
+      return "border-warning/35 bg-warning-soft text-warning-foreground";
     default:
-      return "border-emerald-200 bg-emerald-50 text-emerald-700";
+      return "border-success/25 bg-success-soft text-primary-hover";
   }
 }
 
@@ -73,14 +73,14 @@ export function OperatorTelemetryPanel({
   return (
     <section className="impilo-surface-card p-4">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+        <h3 className="text-sm font-semibold text-foreground">{title}</h3>
         <FeatureMaturityBadge
           status={items.length > 0 ? "connected" : isError ? "partial" : "connected"}
           detail={detail}
         />
       </div>
 
-      <p className="mt-2 text-sm text-slate-700">
+      <p className="mt-2 text-sm text-foreground">
         {isLoading
           ? `Loading ${kind} telemetry...`
           : isError
@@ -95,7 +95,7 @@ export function OperatorTelemetryPanel({
           {activeFilters?.map((filter) => (
             <span
               key={`${filter.key}-${filter.value}`}
-              className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs text-slate-700"
+              className="rounded-full border border-border bg-background px-2 py-0.5 text-xs text-foreground"
             >
               {filter.key}: {filter.value}
             </span>
@@ -104,7 +104,7 @@ export function OperatorTelemetryPanel({
             <button
               type="button"
               onClick={onResetFilters}
-              className="rounded-full border border-slate-300 bg-white px-2 py-0.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+              className="rounded-full border border-border bg-card px-2 py-0.5 text-xs font-medium text-foreground hover:bg-background"
             >
               Reset
             </button>
@@ -113,7 +113,7 @@ export function OperatorTelemetryPanel({
       ) : null}
 
       {rows.length === 0 ? (
-        <p className="mt-3 text-sm text-slate-600">
+        <p className="mt-3 text-sm text-muted-foreground">
           {isLoading ? `Loading ${kind} timeline...` : isError ? `${title} timeline unavailable.` : emptyLabel}
         </p>
       ) : (
@@ -123,27 +123,27 @@ export function OperatorTelemetryPanel({
               key={`${row.id}-${index}`}
               className={`rounded-lg border p-2 ${
                 focusedRowId && row.id === focusedRowId
-                  ? "border-indigo-300 bg-indigo-50"
-                  : "border-slate-200 bg-slate-50"
+                  ? "border-indigo-300 bg-info-soft"
+                  : "border-border bg-background"
               }`}
             >
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{row.type}</p>
-                  <p className="text-sm font-medium text-slate-900">{row.id}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{row.type}</p>
+                  <p className="text-sm font-medium text-foreground">{row.id}</p>
                 </div>
                 <span className={`rounded-full border px-2 py-0.5 text-xs font-medium ${severityClasses(row.severity)}`}>
                   {row.severity}
                 </span>
               </div>
-              <p className="mt-1 text-sm text-slate-700">State: {row.transition}</p>
-              {row.assignee ? <p className="text-sm text-slate-700">Assignee: {row.assignee}</p> : null}
-              <p className="text-xs text-slate-500">{row.timestampLabel}</p>
+              <p className="mt-1 text-sm text-foreground">State: {row.transition}</p>
+              {row.assignee ? <p className="text-sm text-foreground">Assignee: {row.assignee}</p> : null}
+              <p className="text-xs text-muted-foreground">{row.timestampLabel}</p>
               {rowLinkBuilder ? (
                 <div className="mt-2">
                   <Link
                     href={rowLinkBuilder(row)}
-                    className="inline-flex rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                    className="inline-flex rounded-md border border-border bg-card px-2 py-1 text-xs font-medium text-foreground hover:bg-background"
                   >
                     {rowLinkLabel}
                   </Link>

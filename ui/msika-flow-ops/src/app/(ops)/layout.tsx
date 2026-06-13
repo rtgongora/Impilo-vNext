@@ -24,10 +24,10 @@ export default function OpsLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   return (
     <div className="min-h-screen flex">
-      <aside className="w-64 bg-white border-r border-neutral-200 flex flex-col">
+      <aside className="w-64 bg-card border-r border-neutral-200 flex flex-col">
         <div className="px-5 py-5 border-b border-neutral-200">
           <Link href="/orders" className="block">
-            <h1 className="text-lg font-semibold text-red-700 tracking-tight">MSIKA Flow</h1>
+            <h1 className="text-lg font-semibold text-danger tracking-tight">MSIKA Flow</h1>
             <p className="text-xs text-neutral-500 mt-0.5">Ops Console</p>
           </Link>
         </div>
@@ -47,7 +47,7 @@ export default function OpsLayout({ children }: { children: React.ReactNode }) {
                         href={href}
                         className={`block px-2 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                           isActive
-                            ? "bg-red-50 text-red-700"
+                            ? "bg-danger-soft text-danger"
                             : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100"
                         }`}
                       >

@@ -28,10 +28,10 @@ export default function ProviderStatusPage() {
     <AppLayout>
       <PageShell title={copy.title} subtitle="Provider ID status affects work access">
         <div className="max-w-xl mx-auto space-y-4">
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <div className="rounded-lg border border-warning/35 bg-warning-soft p-4">
             <div className="flex items-start gap-3">
               <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-              <div className="text-sm text-amber-900">
+              <div className="text-sm text-warning-foreground">
                 <p>{copy.body}</p>
                 {linkedProviderId && (
                   <p className="mt-2 font-mono text-xs">Provider ID: {linkedProviderId}</p>
@@ -44,7 +44,7 @@ export default function ProviderStatusPage() {
           </div>
 
           {user && (
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               Signed in as <strong>{user.displayName}</strong> (Health ID: {user.id.slice(0, 8)}…)
             </p>
           )}
@@ -53,7 +53,7 @@ export default function ProviderStatusPage() {
             {copy.canUpdate && (
               <Link
                 href="/professional"
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-impilo-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-impilo-600"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-hover"
               >
                 <RefreshCw className="h-4 w-4" />
                 Review professional profile
@@ -62,7 +62,7 @@ export default function ProviderStatusPage() {
             {copy.canContactSupport && (
               <Link
                 href="/support"
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground hover:bg-background"
               >
                 <ShieldCheck className="h-4 w-4" />
                 Contact support
@@ -72,7 +72,7 @@ export default function ProviderStatusPage() {
               <button
                 type="button"
                 onClick={handlePersonalHealth}
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground hover:bg-background"
               >
                 <Heart className="h-4 w-4" />
                 Switch to My Life / My Health

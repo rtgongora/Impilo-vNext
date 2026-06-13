@@ -284,11 +284,11 @@ export default function ImagingPage() {
             <ImagingOrderCorrelatePanel patientId={patientId} orderId={pendingOrderId} />
           ) : null}
 
-          <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
-            <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+          <div className="rounded-3xl border border-border bg-background/70 p-4">
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
               Imaging loop status
             </p>
-            <p className="mt-2 text-sm text-slate-800">
+            <p className="mt-2 text-sm text-foreground">
               {error
                 ? "The imaging viewer could not reach PACS, so the clinical next step is to stay in orders, results, and documents while the external service is unavailable."
                 : contextMode === "patient"
@@ -297,23 +297,23 @@ export default function ImagingPage() {
                     ? "PACS returned studies for the workspace, but none matched this chart's patient identifier. The study rail stays empty here so another patient's images are not shown in this chart; reconcile PatientID (or use Orders/Documents) before review."
                     : "No patient-matched studies are available yet. Continue from Orders or Documents until PACS metadata aligns with this chart."}
             </p>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-muted-foreground">
               Use Orders to place or reconcile imaging requests, Results for radiology outcome review, Documents for attached reports, and Notes for team communication or interpretation handoff.
             </p>
           </div>
 
           <div className="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)_260px]">
-            <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-              <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-4 py-3">
+            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+              <div className="flex items-center justify-between border-b border-border bg-background px-4 py-3">
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-700">Studies</h3>
-                  <p className="text-xs text-gray-500">
+                  <h3 className="text-sm font-semibold text-foreground">Studies</h3>
+                  <p className="text-xs text-muted-foreground">
                     {contextMode === "patient"
                       ? "Patient-matched imaging studies"
                       : "Patient-matched studies only (no cross-patient fallback)"}
                   </p>
                 </div>
-                <div className="rounded-full bg-impilo-50 px-2.5 py-1 text-xs font-medium text-impilo-600">
+                <div className="rounded-full bg-primary-soft px-2.5 py-1 text-xs font-medium text-primary">
                   {visibleStudies.length}
                 </div>
               </div>
@@ -322,27 +322,27 @@ export default function ImagingPage() {
                 {isLoading && (
                   <div className="flex items-center justify-center py-12">
                     <Loader2 className="h-6 w-6 animate-spin text-impilo-400" />
-                    <span className="ml-2 text-sm text-gray-500">Loading studies...</span>
+                    <span className="ml-2 text-sm text-muted-foreground">Loading studies...</span>
                   </div>
                 )}
 
                 {!isLoading && error && (
-                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-center">
+                  <div className="rounded-xl border border-warning/35 bg-warning-soft p-4 text-center">
                     <AlertCircle className="mx-auto mb-2 h-8 w-8 text-amber-500" />
-                    <p className="text-sm text-gray-700">PACS server unavailable</p>
-                    <p className="mt-1 text-xs text-gray-500">Orthanc may not be running.</p>
+                    <p className="text-sm text-foreground">PACS server unavailable</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Orthanc may not be running.</p>
                   </div>
                 )}
 
                 {!isLoading && !error && visibleStudies.length === 0 && (
-                  <div className="rounded-xl border border-dashed border-gray-200 p-6 text-center">
-                    <Search className="mx-auto mb-2 h-8 w-8 text-gray-300" />
-                    <p className="text-sm text-gray-500">
+                  <div className="rounded-xl border border-dashed border-border p-6 text-center">
+                    <Search className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">
                       {contextMode === "reconcile"
                         ? "No studies matched this patient in PACS"
                         : "No imaging studies found"}
                     </p>
-                    <p className="mt-1 text-xs text-gray-400">
+                    <p className="mt-1 text-xs text-muted-foreground">
                       {contextMode === "reconcile"
                         ? `Orthanc has ${studies.length} workspace study/studies, but DICOM PatientID did not match this chart. Reconcile identifiers or open imaging from Orders.`
                         : "Continue from Orders or Documents until PACS metadata arrives."}
@@ -351,14 +351,14 @@ export default function ImagingPage() {
                 )}
 
                 {!isLoading && !error && contextMode === "reconcile" && (
-                  <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
+                  <div className="rounded-xl border border-warning/35 bg-warning-soft px-3 py-2 text-xs text-warning-foreground">
                     Safety: unrelated patients&apos; studies are not listed in this chart. Align DICOM PatientID with `{patientId}` (or route via Orders) to populate the rail.
                   </div>
                 )}
 
                 {governedStudies.length > 0 && (
-                  <div className="mb-3 rounded-xl border border-impilo-100 bg-impilo-50/60 p-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-impilo-700">
+                  <div className="mb-3 rounded-xl border border-primary/20 bg-primary-soft/60 p-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-primary-hover">
                       Governed imaging (adapter)
                     </p>
                     <ul className="mt-2 space-y-2">
@@ -371,12 +371,12 @@ export default function ImagingPage() {
                           return (
                             <li
                               key={String(id)}
-                              className="flex flex-col gap-1 rounded-lg border border-white/60 bg-white/80 p-2 text-xs text-slate-700"
+                              className="flex flex-col gap-1 rounded-lg border border-white/60 bg-card/80 p-2 text-xs text-foreground"
                             >
-                              <span className="font-mono text-[11px] text-slate-500">{studyUid}</span>
+                              <span className="font-mono text-[11px] text-muted-foreground">{studyUid}</span>
                               <div className="flex flex-wrap gap-2">
                                 <Link
-                                  className="inline-flex items-center rounded-full bg-impilo-600 px-2.5 py-1 text-[11px] font-medium text-white hover:bg-impilo-700"
+                                  className="inline-flex items-center rounded-full bg-primary-hover px-2.5 py-1 text-[11px] font-medium text-white hover:bg-impilo-700"
                                   href={`/ehr/${encodeURIComponent(patientId)}/imaging/viewer?studyUid=${encodeURIComponent(
                                     studyUid,
                                   )}&governedStudyId=${encodeURIComponent(String(id))}`}
@@ -385,7 +385,7 @@ export default function ImagingPage() {
                                 </Link>
                                 <button
                                   type="button"
-                                  className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                                  className="rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-medium text-foreground hover:bg-background disabled:opacity-50"
                                   disabled={syncHierarchy.isPending}
                                   onClick={() => syncHierarchy.mutate({ studyId: String(id) })}
                                 >
@@ -413,24 +413,24 @@ export default function ImagingPage() {
                       }}
                       className={`w-full rounded-xl border p-3 text-left transition-colors ${
                         isSelected
-                          ? "border-impilo-400 bg-impilo-50"
-                          : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                          ? "border-impilo-400 bg-primary-soft"
+                          : "border-border hover:border-border hover:bg-background"
                       }`}
                     >
                       <div className="flex items-start gap-3">
-                        <Monitor className="mt-0.5 h-4 w-4 flex-shrink-0 text-impilo-500" />
+                        <Monitor className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-medium text-gray-800">
+                          <p className="truncate text-sm font-medium text-foreground">
                             {study.MainDicomTags?.StudyDescription || "Unnamed study"}
                           </p>
-                          <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
+                          <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
                             <Calendar className="h-3 w-3" />
                             <span>{formatDicomDate(study.MainDicomTags?.StudyDate)}</span>
                           </div>
-                          <p className="mt-1 text-xs text-gray-400">
+                          <p className="mt-1 text-xs text-muted-foreground">
                             Patient tag: {study.PatientMainDicomTags?.PatientID || "Unavailable"}
                           </p>
-                          <p className="mt-0.5 text-xs text-gray-400">
+                          <p className="mt-0.5 text-xs text-muted-foreground">
                             {study.Series?.length ?? 0} series
                           </p>
                         </div>
@@ -443,9 +443,9 @@ export default function ImagingPage() {
 
             <div
               ref={viewerRef}
-              className="overflow-hidden rounded-2xl border border-gray-200 bg-black shadow-sm"
+              className="overflow-hidden rounded-2xl border border-border bg-black shadow-sm"
             >
-              <div className="flex items-center justify-between border-b border-gray-700 bg-gray-900 px-3 py-2">
+              <div className="flex items-center justify-between border-b border-gray-700 bg-neutral-900 px-3 py-2">
                 <div className="flex items-center gap-1">
                   <ToolButton
                     icon={<ZoomIn className="h-4 w-4" />}
@@ -467,12 +467,12 @@ export default function ImagingPage() {
                     label="Reset view"
                     onClick={resetViewerControls}
                   />
-                  <span className="ml-2 text-xs text-gray-400">{zoom}%</span>
+                  <span className="ml-2 text-xs text-muted-foreground">{zoom}%</span>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1">
-                    <label className="text-xs text-gray-400">B</label>
+                    <label className="text-xs text-muted-foreground">B</label>
                     <input
                       type="range"
                       min="0"
@@ -484,7 +484,7 @@ export default function ImagingPage() {
                     />
                   </div>
                   <div className="flex items-center gap-1">
-                    <label className="text-xs text-gray-400">C</label>
+                    <label className="text-xs text-muted-foreground">C</label>
                     <input
                       type="range"
                       min="0"
@@ -507,9 +507,9 @@ export default function ImagingPage() {
                 <div className="flex-1 items-center justify-center overflow-hidden p-4">
                   {!selectedStudy && (
                     <div className="flex h-full flex-col items-center justify-center text-center">
-                      <Monitor className="mb-3 h-16 w-16 text-gray-600" />
-                      <p className="text-sm text-gray-400">Select a study to review imaging</p>
-                      <p className="mt-1 text-xs text-gray-600">
+                      <Monitor className="mb-3 h-16 w-16 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">Select a study to review imaging</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
                         The viewer keeps chart follow-up linked to PACS review.
                       </p>
                     </div>
@@ -541,20 +541,20 @@ export default function ImagingPage() {
                 </div>
 
                 {selectedStudy && selectedInstance && (
-                  <div className="border-t border-gray-700 bg-gray-900 px-4 py-2 text-xs text-gray-300">
+                  <div className="border-t border-gray-700 bg-neutral-900 px-4 py-2 text-xs text-muted-foreground">
                     Reviewing {selectedSeries?.label ?? "selected series"}. Use Documents or Notes to record interpretation handoff from this image review.
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-              <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
-                <h3 className="text-sm font-semibold text-gray-700">Study Details</h3>
+            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+              <div className="border-b border-border bg-background px-4 py-3">
+                <h3 className="text-sm font-semibold text-foreground">Study Details</h3>
               </div>
               <div className="space-y-3 p-4">
                 {!selectedStudy && (
-                  <div className="rounded-xl border border-dashed border-gray-200 p-4 text-sm text-gray-500">
+                  <div className="rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">
                     Select a study to see details, then continue into documents, results, or notes from the header actions.
                   </div>
                 )}
@@ -572,7 +572,7 @@ export default function ImagingPage() {
                     <InfoRow label="Orthanc ID" value={selectedStudy.ID} mono />
                     {selectedStudy.MainDicomTags?.StudyInstanceUID && (
                       <Link
-                        className="inline-flex w-full items-center justify-center rounded-xl bg-impilo-600 px-3 py-2 text-center text-xs font-semibold text-white hover:bg-impilo-700"
+                        className="inline-flex w-full items-center justify-center rounded-xl bg-primary-hover px-3 py-2 text-center text-xs font-semibold text-white hover:bg-impilo-700"
                         href={`/ehr/${encodeURIComponent(patientId)}/imaging/viewer?studyUid=${encodeURIComponent(
                           selectedStudy.MainDicomTags.StudyInstanceUID,
                         )}`}
@@ -580,7 +580,7 @@ export default function ImagingPage() {
                         Open DICOMweb viewer (study / series / instances)
                       </Link>
                     )}
-                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
+                    <div className="rounded-xl border border-border bg-background p-3 text-xs text-muted-foreground">
                       Patient context is aligned in PACS metadata for this study. Review findings here, then carry the outcome into results, documents, or notes.
                     </div>
                   </>
@@ -607,7 +607,7 @@ function SeriesBrowser({
     return (
       <div className="flex h-full flex-col items-center justify-center text-center">
         <Loader2 className="mb-2 h-8 w-8 animate-spin text-impilo-300" />
-        <p className="text-sm text-gray-400">Loading series...</p>
+        <p className="text-sm text-muted-foreground">Loading series...</p>
       </div>
     );
   }
@@ -615,8 +615,8 @@ function SeriesBrowser({
   if (series.length === 0) {
     return (
       <div className="flex h-full flex-col items-center justify-center text-center">
-        <Grid3X3 className="mb-2 h-10 w-10 text-gray-600" />
-        <p className="text-sm text-gray-400">No series available for this study</p>
+        <Grid3X3 className="mb-2 h-10 w-10 text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">No series available for this study</p>
       </div>
     );
   }
@@ -632,13 +632,13 @@ function SeriesBrowser({
               onSelectInstance(entry.instances[0]);
             }
           }}
-          className="rounded-xl border border-gray-700 bg-gray-800 p-3 text-left transition-colors hover:border-impilo-400"
+          className="rounded-xl border border-gray-700 bg-primary-hover p-3 text-left transition-colors hover:border-impilo-400"
         >
-          <div className="mb-2 flex aspect-square items-center justify-center rounded-lg bg-gray-900">
-            <ImageIcon className="h-8 w-8 text-gray-600" />
+          <div className="mb-2 flex aspect-square items-center justify-center rounded-lg bg-neutral-900">
+            <ImageIcon className="h-8 w-8 text-muted-foreground" />
           </div>
           <p className="truncate text-xs font-medium text-white">{entry.label}</p>
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-muted-foreground">
             {entry.modality} � {entry.instances.length} images
           </p>
         </button>
@@ -660,7 +660,7 @@ function ToolButton({
     <button
       type="button"
       onClick={onClick}
-      className="rounded p-1.5 text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
+      className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-gray-700 hover:text-white"
       title={label}
       aria-label={label}
     >
@@ -682,8 +682,8 @@ function InfoRow({
 
   return (
     <div>
-      <dt className="text-xs font-medium text-gray-500">{label}</dt>
-      <dd className={`mt-0.5 text-sm text-gray-800 ${mono ? "break-all font-mono text-xs" : ""}`}>
+      <dt className="text-xs font-medium text-muted-foreground">{label}</dt>
+      <dd className={`mt-0.5 text-sm text-foreground ${mono ? "break-all font-mono text-xs" : ""}`}>
         {value}
       </dd>
     </div>

@@ -141,7 +141,7 @@ export default function NotificationSettingsPage() {
         <div className="mb-4">
           <Link
             href="/settings"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to settings
@@ -149,14 +149,14 @@ export default function NotificationSettingsPage() {
         </div>
 
         {error ? (
-          <div className="bg-white rounded-lg border border-red-200 p-12 text-center">
+          <div className="bg-card rounded-lg border border-danger/28 p-12 text-center">
             <AlertCircle className="w-10 h-10 text-red-300 mx-auto mb-3" />
             <p className="text-red-600 text-sm">Failed to load notification settings</p>
           </div>
         ) : isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading notification settings...</span>
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading notification settings...</span>
           </div>
         ) : (
           <div className="max-w-3xl">
@@ -171,16 +171,16 @@ export default function NotificationSettingsPage() {
 
             <form onSubmit={handleSubmit}>
               {/* Channel legend */}
-              <div className="bg-white rounded-lg border border-gray-200 mb-4">
-                <div className="px-5 py-3 border-b bg-gray-50 flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-600">Category</span>
+              <div className="bg-card rounded-lg border border-border mb-4">
+                <div className="px-5 py-3 border-b bg-background flex items-center justify-between">
+                  <span className="text-sm font-medium text-muted-foreground">Category</span>
                   <div className="flex gap-8">
                     {(["email", "sms", "push"] as const).map((channel) => {
                       const Icon = CHANNEL_ICONS[channel];
                       return (
                         <div key={channel} className="flex items-center gap-1.5 w-16 justify-center">
-                          <Icon className="w-3.5 h-3.5 text-gray-500" />
-                          <span className="text-xs font-medium text-gray-500 uppercase">
+                          <Icon className="w-3.5 h-3.5 text-muted-foreground" />
+                          <span className="text-xs font-medium text-muted-foreground uppercase">
                             {channel}
                           </span>
                         </div>
@@ -196,8 +196,8 @@ export default function NotificationSettingsPage() {
                       className="px-5 py-4 flex items-center justify-between"
                     >
                       <div>
-                        <p className="text-sm font-medium text-gray-900">{category.label}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">{category.description}</p>
+                        <p className="text-sm font-medium text-foreground">{category.label}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{category.description}</p>
                       </div>
                       <div className="flex gap-8">
                         {(["email", "sms", "push"] as const).map((channel) => (
@@ -206,11 +206,11 @@ export default function NotificationSettingsPage() {
                               type="button"
                               onClick={() => toggleChannel(category.key, channel)}
                               className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                                category[channel] ? "bg-impilo-500" : "bg-gray-300"
+                                category[channel] ? "bg-primary" : "bg-gray-300"
                               }`}
                             >
                               <span
-                                className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                                className={`inline-block h-3.5 w-3.5 transform rounded-full bg-card transition-transform ${
                                   category[channel] ? "translate-x-4.5" : "translate-x-0.5"
                                 }`}
                               />
@@ -226,7 +226,7 @@ export default function NotificationSettingsPage() {
               <button
                 type="submit"
                 disabled={saveNotifications.isPending}
-                className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-impilo-500 rounded-lg hover:bg-impilo-600 transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50"
               >
                 {saveNotifications.isPending ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

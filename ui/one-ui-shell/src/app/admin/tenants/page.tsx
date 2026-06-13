@@ -36,8 +36,8 @@ function useTenants() {
 
 const STATUS_STYLES: Record<string, string> = {
   ACTIVE: "bg-green-100 text-green-700",
-  INACTIVE: "bg-gray-100 text-gray-600",
-  SUSPENDED: "bg-red-100 text-red-700",
+  INACTIVE: "bg-neutral-100 text-muted-foreground",
+  SUSPENDED: "bg-red-100 text-danger",
   PROVISIONING: "bg-yellow-100 text-yellow-700",
 };
 
@@ -55,7 +55,7 @@ export default function TenantsPage() {
         <div className="mb-4">
           <Link
             href="/admin"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to administration
@@ -63,42 +63,42 @@ export default function TenantsPage() {
         </div>
 
         {error ? (
-          <div className="bg-white rounded-lg border border-red-200 p-12 text-center">
+          <div className="bg-card rounded-lg border border-danger/28 p-12 text-center">
             <AlertCircle className="w-10 h-10 text-red-300 mx-auto mb-3" />
             <p className="text-red-600 text-sm">Failed to load tenants</p>
           </div>
         ) : isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading tenants...</span>
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading tenants...</span>
           </div>
         ) : tenants.length === 0 ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <Building className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-400 text-sm">No tenants configured</p>
+          <div className="bg-card rounded-lg border border-border p-12 text-center">
+            <Building className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground text-sm">No tenants configured</p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="bg-card rounded-lg border border-border overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-gray-50">
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Tenant Name</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Code</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Facilities</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Users</th>
+                <tr className="border-b bg-background">
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Tenant Name</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Code</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Facilities</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Users</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {tenants.map((tenant) => {
                   const statusStyle =
-                    STATUS_STYLES[tenant.attributes.status] ?? "bg-gray-100 text-gray-600";
+                    STATUS_STYLES[tenant.attributes.status] ?? "bg-neutral-100 text-muted-foreground";
                   return (
-                    <tr key={tenant.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3 font-medium text-gray-900">
+                    <tr key={tenant.id} className="hover:bg-background transition-colors">
+                      <td className="px-4 py-3 font-medium text-foreground">
                         {tenant.attributes.name}
                       </td>
-                      <td className="px-4 py-3 font-mono text-xs text-gray-600">
+                      <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
                         {tenant.attributes.code}
                       </td>
                       <td className="px-4 py-3">
@@ -108,10 +108,10 @@ export default function TenantsPage() {
                           {tenant.attributes.status}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-gray-600">
+                      <td className="px-4 py-3 text-muted-foreground">
                         {tenant.attributes.facilityCount}
                       </td>
-                      <td className="px-4 py-3 text-gray-600">
+                      <td className="px-4 py-3 text-muted-foreground">
                         {tenant.attributes.userCount}
                       </td>
                     </tr>

@@ -68,14 +68,14 @@ export default function OrganizationFacilityHubPage() {
         <div className="mb-4">
           <Link
             href="/organization-admin"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="h-4 w-4" /> Back to organization administration
           </Link>
         </div>
 
-        <p className="mb-4 text-sm text-gray-600">
-          This hub replaces a vague jump to <code className="rounded bg-gray-100 px-1 text-xs">/admin</code> alone.
+        <p className="mb-4 text-sm text-muted-foreground">
+          This hub replaces a vague jump to <code className="rounded bg-neutral-100 px-1 text-xs">/admin</code> alone.
           Pick the subsystem you need; all destinations require admin roles (see route registry).
         </p>
 
@@ -86,16 +86,16 @@ export default function OrganizationFacilityHubPage() {
               <Link
                 key={d.href}
                 href={`${d.href}?from=organization-admin`}
-                className="group flex flex-col rounded-2xl border border-violet-200 bg-white p-5 shadow-sm transition hover:border-violet-400 hover:shadow-md"
+                className="group flex flex-col rounded-2xl border border-violet-200 bg-card p-5 shadow-sm transition hover:border-violet-400 hover:shadow-md"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-100 text-violet-800">
                     <Icon className="h-5 w-5" />
                   </div>
-                  <ArrowUpRight className="h-4 w-4 text-gray-400 group-hover:text-violet-700" />
+                  <ArrowUpRight className="h-4 w-4 text-muted-foreground group-hover:text-violet-700" />
                 </div>
-                <h3 className="mt-3 font-medium text-gray-900 group-hover:text-violet-900">{d.title}</h3>
-                <p className="mt-1 text-sm text-gray-600">{d.description}</p>
+                <h3 className="mt-3 font-medium text-foreground group-hover:text-violet-900">{d.title}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{d.description}</p>
               </Link>
             );
           })}

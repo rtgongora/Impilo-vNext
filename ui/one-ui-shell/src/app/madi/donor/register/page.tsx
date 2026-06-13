@@ -42,29 +42,29 @@ export default function DonorRegisterPage() {
         subtitle="Voluntary registration — your identity is protected"
         icon={<Droplet className="h-6 w-6" />}
       >
-        <form onSubmit={handleSubmit} className="max-w-md space-y-4 rounded-2xl border border-gray-200 bg-white p-6">
-          <p className="text-sm text-gray-600">
+        <form onSubmit={handleSubmit} className="max-w-md space-y-4 rounded-2xl border border-border bg-card p-6">
+          <p className="text-sm text-muted-foreground">
             Registering links your Health ID to a donor profile. Only share blood group information
             you already know from a prior test; a nurse will confirm at screening.
           </p>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-foreground">
             Blood group
             <select
               value={bloodGroup}
               onChange={(e) => setBloodGroup(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm bg-white"
+              className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm bg-card"
             >
               {BLOOD_GROUPS.map((g) => (
                 <option key={g} value={g}>{g}</option>
               ))}
             </select>
           </label>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-foreground">
             Rh factor
             <select
               value={rhFactor}
               onChange={(e) => setRhFactor(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm bg-white"
+              className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm bg-card"
             >
               {RH_FACTORS.map((r) => (
                 <option key={r} value={r}>{r === "POSITIVE" ? "Rh+" : "Rh−"}</option>
@@ -72,7 +72,7 @@ export default function DonorRegisterPage() {
             </select>
           </label>
           <div className="flex gap-3 pt-2">
-            <Link href="/madi/donor" className="flex-1 rounded-xl border border-gray-300 py-2 text-center text-sm font-medium text-gray-700 hover:bg-gray-50">
+            <Link href="/madi/donor" className="flex-1 rounded-xl border border-border py-2 text-center text-sm font-medium text-foreground hover:bg-background">
               Cancel
             </Link>
             <button

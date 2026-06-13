@@ -32,20 +32,20 @@ export function SocialCommunityOrchestrationRail() {
         <div className="flex flex-wrap gap-2 text-xs">
           <Link
             href="/social/drafts"
-            className="rounded-lg border border-sky-200 bg-white px-2.5 py-1.5 font-medium text-sky-900 hover:border-sky-300"
+            className="rounded-lg border border-sky-200 bg-card px-2.5 py-1.5 font-medium text-sky-900 hover:border-sky-300"
           >
             Drafts
           </Link>
           <Link
             href="/public-health?tab=surveillance"
-            className="inline-flex items-center gap-1 rounded-lg border border-sky-200 bg-white px-2.5 py-1.5 font-medium text-sky-900 hover:border-sky-300"
+            className="inline-flex items-center gap-1 rounded-lg border border-sky-200 bg-card px-2.5 py-1.5 font-medium text-sky-900 hover:border-sky-300"
           >
             <ShieldAlert className="h-3.5 w-3.5" />
             Surveillance
           </Link>
           <Link
             href="/social/moderation"
-            className="inline-flex items-center gap-1 rounded-lg border border-sky-200 bg-white px-2.5 py-1.5 font-medium text-sky-900 hover:border-sky-300"
+            className="inline-flex items-center gap-1 rounded-lg border border-sky-200 bg-card px-2.5 py-1.5 font-medium text-sky-900 hover:border-sky-300"
           >
             <Megaphone className="h-3.5 w-3.5" />
             Moderation

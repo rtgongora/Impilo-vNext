@@ -22,9 +22,9 @@ export default function FundoStudioPage() {
     >
       <div className="grid gap-3 md:grid-cols-3">
         {cards.map((card) => (
-          <Link key={card.label} href={card.href} className="rounded-lg border border-gray-200 bg-white p-4 hover:border-teal-300">
-            <p className="text-sm text-gray-500">{card.label}</p>
-            <p className="mt-1 text-2xl font-semibold text-gray-900">{isLoading ? "..." : card.value}</p>
+          <Link key={card.label} href={card.href} className="rounded-lg border border-border bg-card p-4 hover:border-teal-300">
+            <p className="text-sm text-muted-foreground">{card.label}</p>
+            <p className="mt-1 text-2xl font-semibold text-foreground">{isLoading ? "..." : card.value}</p>
           </Link>
         ))}
       </div>

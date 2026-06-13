@@ -39,24 +39,24 @@ export function VisibilityContextBar() {
 
   return (
     <div
-      className="pointer-events-none fixed left-0 right-0 z-[9975] border-t border-slate-200/80 bg-slate-50/95 px-4 py-1.5 text-[11px] text-slate-600 backdrop-blur-sm dark:border-slate-700/80 dark:bg-slate-900/90 dark:text-slate-300"
+      className="pointer-events-none fixed left-0 right-0 z-[9975] border-t border-border/80 bg-background/95 px-4 py-1.5 text-[11px] text-muted-foreground backdrop-blur-sm dark:border-border/80 dark:bg-neutral-900/90 dark:text-muted-foreground"
       style={{ bottom: "var(--shell-taskbar-height, 0px)" }}
       role="status"
       aria-live="polite"
     >
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-1">
-        <span className="font-medium text-slate-700 dark:text-slate-200">{headline}</span>
-        <span className="font-mono text-slate-500 dark:text-slate-400">
+        <span className="font-medium text-foreground dark:text-foreground">{headline}</span>
+        <span className="font-mono text-muted-foreground dark:text-muted-foreground">
           tier={tier} · pii={pii} · clinical={clinical} · export={exportPol}
           {aggregate ? " · aggregateOnly" : ""}
         </span>
       </div>
       {emphasis ? (
-        <div className="mx-auto mt-0.5 max-w-6xl text-[10px] text-amber-800/90 dark:text-amber-200/90">
+        <div className="mx-auto mt-0.5 max-w-6xl text-[10px] text-warning-foreground/90 dark:text-warning-foreground/90">
           {emphasis}{" "}
           <Link
             href="/workspace/aggregate"
-            className="pointer-events-auto font-medium text-amber-900 underline underline-offset-2 hover:no-underline dark:text-amber-100"
+            className="pointer-events-auto font-medium text-warning-foreground underline underline-offset-2 hover:no-underline dark:text-amber-100"
           >
             Open aggregate workspace
           </Link>

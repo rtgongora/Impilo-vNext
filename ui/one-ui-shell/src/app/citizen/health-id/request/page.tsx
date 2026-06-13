@@ -65,7 +65,7 @@ export default function CitizenRequestHealthIdPage() {
             setSubmitted(false);
             setForm(INITIAL_FORM);
           }}
-          className="mt-4 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-200"
+          className="mt-4 bg-neutral-100 text-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-neutral-100"
         >
           Submit another
         </button>
@@ -74,48 +74,48 @@ export default function CitizenRequestHealthIdPage() {
   }
 
   return (
-    <div className="max-w-lg mx-auto bg-white rounded-xl border border-gray-200 p-6">
-      <h1 className="text-xl font-semibold text-gray-900 mb-1">Request Health ID</h1>
-      <p className="text-sm text-gray-500 mb-6">New or replacement health identity document.</p>
+    <div className="max-w-lg mx-auto bg-card rounded-xl border border-border p-6">
+      <h1 className="text-xl font-semibold text-foreground mb-1">Request Health ID</h1>
+      <p className="text-sm text-muted-foreground mb-6">New or replacement health identity document.</p>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="type" className="block text-sm font-medium text-foreground mb-1">
             Request type
           </label>
           <select
             id="type"
             value={form.type}
             onChange={(e) => update("type", e.target.value as RequestType)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="w-full px-3 py-2 border border-border rounded-lg text-sm"
           >
             <option value="NEW">New ID</option>
             <option value="REPLACEMENT">Replacement</option>
           </select>
         </div>
         <div>
-          <label htmlFor="givenName" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="givenName" className="block text-sm font-medium text-foreground mb-1">
             Given name
           </label>
           <input
             id="givenName"
             value={form.givenName}
             onChange={(e) => update("givenName", e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="w-full px-3 py-2 border border-border rounded-lg text-sm"
           />
         </div>
         <div>
-          <label htmlFor="familyName" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="familyName" className="block text-sm font-medium text-foreground mb-1">
             Family name
           </label>
           <input
             id="familyName"
             value={form.familyName}
             onChange={(e) => update("familyName", e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="w-full px-3 py-2 border border-border rounded-lg text-sm"
           />
         </div>
         <div>
-          <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="dateOfBirth" className="block text-sm font-medium text-foreground mb-1">
             Date of birth
           </label>
           <input
@@ -123,18 +123,18 @@ export default function CitizenRequestHealthIdPage() {
             type="date"
             value={form.dateOfBirth}
             onChange={(e) => update("dateOfBirth", e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="w-full px-3 py-2 border border-border rounded-lg text-sm"
           />
         </div>
         <div>
-          <label htmlFor="sex" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="sex" className="block text-sm font-medium text-foreground mb-1">
             Sex
           </label>
           <select
             id="sex"
             value={form.sex}
             onChange={(e) => update("sex", e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="w-full px-3 py-2 border border-border rounded-lg text-sm"
           >
             <option value="">Select</option>
             <option value="M">Male</option>
@@ -143,14 +143,14 @@ export default function CitizenRequestHealthIdPage() {
           </select>
         </div>
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-            <p className="text-sm text-red-700">{error}</p>
+          <div className="bg-danger-soft border border-danger/28 rounded-lg p-3">
+            <p className="text-sm text-danger">{error}</p>
           </div>
         )}
         <button
           type="submit"
           disabled={submitting}
-          className="w-full bg-impilo-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-impilo-600 disabled:opacity-50"
+          className="w-full bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-hover disabled:opacity-50"
         >
           {submitting ? "Submitting…" : "Submit request"}
         </button>

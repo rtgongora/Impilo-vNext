@@ -70,7 +70,7 @@ export function AnaesthesiaPreopPanel({
 
   const anaesthesiaAssessment = episodeId && !anaesthesiaDone ? (
     <div className="space-y-4">
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-muted-foreground">
         Procedure: <strong>{procedureName}</strong> — choose which scoring tools to apply. Suggested tools are highlighted.
       </p>
 
@@ -86,9 +86,9 @@ export function AnaesthesiaPreopPanel({
                 type="button"
                 onClick={() => toggleTool(key)}
                 className={`rounded-full px-3 py-1 text-xs border ${
-                  active ? "bg-impilo-500 text-white border-impilo-500"
-                    : isSuggested ? "border-amber-400 bg-amber-50 text-amber-900"
-                    : "border-gray-200 text-gray-600"
+                  active ? "bg-primary text-white border-impilo-500"
+                    : isSuggested ? "border-amber-400 bg-warning-soft text-warning-foreground"
+                    : "border-border text-muted-foreground"
                 }`}
               >
                 {label}{isSuggested ? " ★" : ""}
@@ -98,7 +98,7 @@ export function AnaesthesiaPreopPanel({
       </div>
 
       {suggestions.length > 0 && (
-        <ul className="text-xs text-gray-600 space-y-1">
+        <ul className="text-xs text-muted-foreground space-y-1">
           {suggestions.filter((s) => s.recommended).map((s) => (
             <li key={s.score_type}>★ {s.reason}</li>
           ))}
@@ -199,7 +199,7 @@ export function AnaesthesiaPreopPanel({
             scores: buildExtraScores(),
           })
         }
-        className="rounded-lg bg-impilo-500 px-4 py-2 text-sm text-white disabled:opacity-50"
+        className="rounded-lg bg-primary px-4 py-2 text-sm text-white disabled:opacity-50"
       >
         Submit anaesthesia assessment & scores
       </button>
@@ -209,7 +209,7 @@ export function AnaesthesiaPreopPanel({
   return (
     <div className="rounded-xl border p-4 space-y-3">
       <h3 className="font-medium flex items-center gap-2">
-        <Stethoscope className="h-4 w-4 text-impilo-500" />
+        <Stethoscope className="h-4 w-4 text-primary" />
         Anaesthesia pre-op scoring
       </h3>
 
@@ -222,7 +222,7 @@ export function AnaesthesiaPreopPanel({
       )}
 
       {recordedScores.length > 0 && (
-        <ul className="text-xs text-gray-600 space-y-1 border-t pt-2">
+        <ul className="text-xs text-muted-foreground space-y-1 border-t pt-2">
           {recordedScores.map((s) => (
             <li key={s.id}>
               <span className="font-medium">{SCORE_TOOL_LABELS[s.score_type] ?? s.score_type}</span>

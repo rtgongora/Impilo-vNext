@@ -47,20 +47,20 @@ export function FundoLearningOrchestrationRail() {
         <div className="flex flex-wrap gap-2 text-xs">
           <Link
             href="/learning/catalog"
-            className="inline-flex items-center gap-1 rounded-lg border border-teal-200 bg-white px-2.5 py-1.5 font-medium text-teal-900 hover:border-teal-300"
+            className="inline-flex items-center gap-1 rounded-lg border border-teal-200 bg-card px-2.5 py-1.5 font-medium text-teal-900 hover:border-teal-300"
           >
             <PlayCircle className="h-3.5 w-3.5" />
             Browse catalog
           </Link>
           <Link
             href="/learning/my-learning"
-            className="rounded-lg border border-teal-200 bg-white px-2.5 py-1.5 font-medium text-teal-900 hover:border-teal-300"
+            className="rounded-lg border border-teal-200 bg-card px-2.5 py-1.5 font-medium text-teal-900 hover:border-teal-300"
           >
             My learning
           </Link>
           <Link
             href="/learning/certificates"
-            className="rounded-lg border border-teal-200 bg-white px-2.5 py-1.5 font-medium text-teal-900 hover:border-teal-300"
+            className="rounded-lg border border-teal-200 bg-card px-2.5 py-1.5 font-medium text-teal-900 hover:border-teal-300"
           >
             Certificates
           </Link>

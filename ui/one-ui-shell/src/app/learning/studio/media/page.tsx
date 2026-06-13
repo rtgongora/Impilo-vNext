@@ -49,26 +49,26 @@ export default function FundoStudioMediaPage() {
 
   return (
     <FundoStudioWorkspace title="Studio Media" subtitle="Manage uploads, recording metadata, voiceover drafts and media-to-lesson linking.">
-      <div className="rounded-lg border border-gray-200 bg-white p-4">
-        <p className="text-sm font-semibold text-gray-900">Screen recording foundation</p>
-        <p className="mt-1 text-xs text-gray-600">When storage adapters are unavailable, recording remains local preview + draft metadata.</p>
+      <div className="rounded-lg border border-border bg-card p-4">
+        <p className="text-sm font-semibold text-foreground">Screen recording foundation</p>
+        <p className="mt-1 text-xs text-muted-foreground">When storage adapters are unavailable, recording remains local preview + draft metadata.</p>
         <div className="mt-3 flex flex-wrap gap-2">
-          <button onClick={startRecording} disabled={recordingActive} className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700 disabled:opacity-60">Start recording</button>
-          <button onClick={stopRecording} disabled={!recordingActive} className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700 disabled:opacity-60">Stop recording</button>
+          <button onClick={startRecording} disabled={recordingActive} className="rounded border border-border px-3 py-1.5 text-sm text-foreground disabled:opacity-60">Start recording</button>
+          <button onClick={stopRecording} disabled={!recordingActive} className="rounded border border-border px-3 py-1.5 text-sm text-foreground disabled:opacity-60">Stop recording</button>
           <button onClick={saveRecordingDraft} disabled={!recordingUrl || createMedia.isPending} className="rounded bg-teal-600 px-3 py-1.5 text-sm text-white disabled:opacity-60">Save metadata draft</button>
         </div>
-        {recordingUrl ? <video className="mt-3 max-h-64 w-full rounded border border-gray-200" src={recordingUrl} controls /> : null}
+        {recordingUrl ? <video className="mt-3 max-h-64 w-full rounded border border-border" src={recordingUrl} controls /> : null}
         <div className="mt-3 flex gap-2 text-xs">
-          <Link href="/learning/studio/media/recordings" className="rounded border border-gray-300 px-2 py-1 text-gray-700">Recordings</Link>
-          <Link href="/learning/studio/media/scripts" className="rounded border border-gray-300 px-2 py-1 text-gray-700">Scripts</Link>
-          <Link href="/learning/studio/media/voiceovers" className="rounded border border-gray-300 px-2 py-1 text-gray-700">Voiceovers</Link>
+          <Link href="/learning/studio/media/recordings" className="rounded border border-border px-2 py-1 text-foreground">Recordings</Link>
+          <Link href="/learning/studio/media/scripts" className="rounded border border-border px-2 py-1 text-foreground">Scripts</Link>
+          <Link href="/learning/studio/media/voiceovers" className="rounded border border-border px-2 py-1 text-foreground">Voiceovers</Link>
         </div>
       </div>
-      <div className="mt-4 rounded-lg border border-gray-200 bg-white p-4">
-        <p className="text-sm font-semibold text-gray-900">Media assets</p>
+      <div className="mt-4 rounded-lg border border-border bg-card p-4">
+        <p className="text-sm font-semibold text-foreground">Media assets</p>
         <ul className="mt-2 space-y-2 text-sm">
           {items.map((m) => (
-            <li key={m.id} className="flex items-center justify-between rounded border border-gray-100 px-3 py-2">
+            <li key={m.id} className="flex items-center justify-between rounded border border-border px-3 py-2">
               <span>{m.title} · {m.mediaType ?? "VIDEO"} · {m.status ?? "DRAFT"}</span>
               <Link href={`/learning/studio/media/${m.id}`} className="text-teal-700 hover:underline">Open</Link>
             </li>

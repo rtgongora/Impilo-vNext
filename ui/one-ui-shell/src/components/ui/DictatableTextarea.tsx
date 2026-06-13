@@ -69,7 +69,7 @@ const DictatableTextarea = React.forwardRef<
       <div className="relative">
         <textarea
           ref={ref}
-          className={`w-full min-h-[80px] px-3 py-2 text-sm rounded-md border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent resize-y disabled:opacity-50 disabled:cursor-not-allowed ${dictation ? "pr-10" : ""} ${className || ""}`}
+          className={`w-full min-h-[80px] px-3 py-2 text-sm rounded-md border border-border bg-card focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent resize-y disabled:opacity-50 disabled:cursor-not-allowed ${dictation ? "pr-10" : ""} ${className || ""}`}
           value={value}
           onChange={onChange}
           disabled={disabled}

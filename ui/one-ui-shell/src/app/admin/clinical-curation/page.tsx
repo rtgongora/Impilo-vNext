@@ -48,27 +48,27 @@ export default function ClinicalCurationPage() {
         title="Clinical Knowledge Curation"
         subtitle="National review queue for EDLIZ-aligned knowledge proposals. This replaces the standalone knowledge-admin sidecar with the same Experience BFF contract."
       >
-        <div className="mb-4 flex flex-wrap items-center gap-3 text-sm text-gray-500">
-          <Link href="/admin" className="inline-flex items-center gap-1 hover:text-gray-700">
+        <div className="mb-4 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+          <Link href="/admin" className="inline-flex items-center gap-1 hover:text-foreground">
             <ArrowLeft className="h-4 w-4" /> Administration
           </Link>
-          <Link href="/admin/sidecar-retirement" className="inline-flex items-center gap-1 text-impilo-600 hover:text-impilo-700">
+          <Link href="/admin/sidecar-retirement" className="inline-flex items-center gap-1 text-primary hover:text-primary-hover">
             Sidecar retirement ledger
           </Link>
         </div>
 
         <div className="space-y-6">
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h2 className="text-sm font-semibold text-slate-900">EDLIZ source ingestion baseline</h2>
-                <p className="mt-1 text-xs text-slate-500">
+                <h2 className="text-sm font-semibold text-foreground">EDLIZ source ingestion baseline</h2>
+                <p className="mt-1 text-xs text-muted-foreground">
                   Uses the same Experience BFF source-ingestion rails as the clinical knowledge dock. This keeps the curation queue grounded in the canonical source document state.
                 </p>
               </div>
               <button
                 type="button"
-                className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm hover:bg-slate-50 disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-background disabled:opacity-50"
                 disabled={ingestM.isPending || !defaultDocumentId}
                 onClick={() => {
                   if (!defaultDocumentId) return;
@@ -81,46 +81,46 @@ export default function ClinicalCurationPage() {
             </div>
 
             <dl className="mt-4 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-lg border border-slate-100 bg-slate-50 p-3">
-                <dt className="text-xs uppercase tracking-wide text-slate-500">Default document</dt>
-                <dd className="mt-1 font-mono text-xs text-slate-800">{defaultDocumentId ?? "Unavailable"}</dd>
+              <div className="rounded-lg border border-border bg-background p-3">
+                <dt className="text-xs uppercase tracking-wide text-muted-foreground">Default document</dt>
+                <dd className="mt-1 font-mono text-xs text-foreground">{defaultDocumentId ?? "Unavailable"}</dd>
               </div>
-              <div className="rounded-lg border border-slate-100 bg-slate-50 p-3">
-                <dt className="text-xs uppercase tracking-wide text-slate-500">PDF-derived sections</dt>
-                <dd className="mt-1 text-lg font-semibold text-slate-900">
+              <div className="rounded-lg border border-border bg-background p-3">
+                <dt className="text-xs uppercase tracking-wide text-muted-foreground">PDF-derived sections</dt>
+                <dd className="mt-1 text-lg font-semibold text-foreground">
                   {summaryQ.data?.data?.pdf_derived_section_count ?? "—"}
                 </dd>
               </div>
-              <div className="rounded-lg border border-slate-100 bg-slate-50 p-3">
-                <dt className="text-xs uppercase tracking-wide text-slate-500">Total indexed sections</dt>
-                <dd className="mt-1 text-lg font-semibold text-slate-900">
+              <div className="rounded-lg border border-border bg-background p-3">
+                <dt className="text-xs uppercase tracking-wide text-muted-foreground">Total indexed sections</dt>
+                <dd className="mt-1 text-lg font-semibold text-foreground">
                   {summaryQ.data?.data?.total_section_count ?? "—"}
                 </dd>
               </div>
             </dl>
 
             {defaultDocQ.isError || summaryQ.isError ? (
-              <p className="mt-3 text-sm text-amber-700">
+              <p className="mt-3 text-sm text-warning-foreground">
                 Source-ingestion metadata could not be loaded. The curation queue still works, but the source baseline is unavailable right now.
               </p>
             ) : null}
           </section>
 
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h2 className="text-sm font-semibold text-slate-900">Review queue</h2>
-                <p className="mt-1 text-xs text-slate-500">
+                <h2 className="text-sm font-semibold text-foreground">Review queue</h2>
+                <p className="mt-1 text-xs text-muted-foreground">
                   BFF route: <code className="text-[11px]">/internal/v1/clinical/curation/review-items</code>. Decisions write reviewer identity from the current Experience session.
                 </p>
               </div>
 
-              <label className="text-xs text-slate-600">
+              <label className="text-xs text-muted-foreground">
                 Status
                 <select
                   value={status}
                   onChange={(event) => setStatus(event.target.value as ClinicalCurationStatus)}
-                  className="mt-1 block rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                  className="mt-1 block rounded-lg border border-border px-3 py-2 text-sm"
                   aria-label="Curation status"
                 >
                   {STATUS_OPTIONS.map((option) => (
@@ -133,13 +133,13 @@ export default function ClinicalCurationPage() {
             </div>
 
             {queueQ.isLoading ? (
-              <p className="mt-4 flex items-center gap-2 text-sm text-slate-500">
+              <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" /> Loading curation queue…
               </p>
             ) : queueQ.isError ? (
-              <p className="mt-4 text-sm text-red-700">Clinical curation queue request failed.</p>
+              <p className="mt-4 text-sm text-danger">Clinical curation queue request failed.</p>
             ) : reviewItems.length === 0 ? (
-              <p className="mt-4 text-sm text-slate-500">No {status} items in the queue.</p>
+              <p className="mt-4 text-sm text-muted-foreground">No {status} items in the queue.</p>
             ) : (
               <ul className="mt-4 space-y-4">
                 {reviewItems.map((item) => {
@@ -149,13 +149,13 @@ export default function ClinicalCurationPage() {
                       : undefined;
 
                   return (
-                    <li key={item.id} className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+                    <li key={item.id} className="rounded-xl border border-border bg-background/70 p-4">
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div>
-                          <p className="font-mono text-xs text-slate-500">{item.id}</p>
-                          <h3 className="mt-1 text-sm font-semibold text-slate-900">{summarisePayload(payload)}</h3>
-                          <p className="mt-1 text-xs text-slate-500">
-                            Status: <span className="font-semibold text-slate-700">{String(item.review_status)}</span>
+                          <p className="font-mono text-xs text-muted-foreground">{item.id}</p>
+                          <h3 className="mt-1 text-sm font-semibold text-foreground">{summarisePayload(payload)}</h3>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Status: <span className="font-semibold text-foreground">{String(item.review_status)}</span>
                           </p>
                         </div>
 
@@ -174,7 +174,7 @@ export default function ClinicalCurationPage() {
                             <button
                               type="button"
                               disabled={decideM.isPending}
-                              className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 disabled:opacity-50"
+                              className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-sm text-foreground hover:bg-neutral-100 disabled:opacity-50"
                               onClick={() =>
                                 decideM.mutate({ id: item.id, decision: "REJECTED", reviewer })
                               }
@@ -185,8 +185,8 @@ export default function ClinicalCurationPage() {
                         ) : null}
                       </div>
 
-                      <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3">
-                        <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      <div className="mt-3 rounded-lg border border-border bg-card p-3">
+                        <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                           <BookHeart className="h-4 w-4" />
                           Proposed payload
                         </div>
@@ -199,10 +199,10 @@ export default function ClinicalCurationPage() {
             )}
 
             {decideM.isError ? (
-              <p className="mt-3 text-sm text-red-700">Decision request failed.</p>
+              <p className="mt-3 text-sm text-danger">Decision request failed.</p>
             ) : null}
             {decideM.isSuccess ? (
-              <p className="mt-3 text-sm text-emerald-700">Decision recorded and queue refreshed.</p>
+              <p className="mt-3 text-sm text-primary-hover">Decision recorded and queue refreshed.</p>
             ) : null}
           </section>
         </div>

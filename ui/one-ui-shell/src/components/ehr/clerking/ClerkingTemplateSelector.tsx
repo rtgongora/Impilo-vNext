@@ -37,7 +37,7 @@ const specialtyIcons: Record<Specialty, React.ComponentType<{ className?: string
 };
 
 const specialtyColors: Record<Specialty, string> = {
-  'general-medicine': 'bg-impilo-500/10 text-impilo-500 border-impilo-400/30',
+  'general-medicine': 'bg-primary/10 text-primary border-impilo-400/30',
   'surgery': 'bg-red-500/10 text-red-600 border-red-500/30',
   'obstetrics-gynecology': 'bg-pink-500/10 text-pink-600 border-pink-500/30',
   'pediatrics': 'bg-green-500/10 text-green-600 border-green-500/30',
@@ -77,14 +77,14 @@ export function ClerkingTemplateSelector({ onSelect, onCancel }: ClerkingTemplat
         <div className="flex items-center gap-4">
           <button
             type="button"
-            className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+            className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-neutral-100 rounded-md transition-colors"
             onClick={() => setStep('template')}
           >
             &larr; Back
           </button>
           <div>
             <h2 className="text-lg font-semibold">Select Your Role</h2>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               Choose your clinical role for {selectedTemplate.name}
             </p>
           </div>
@@ -96,8 +96,8 @@ export function ClerkingTemplateSelector({ onSelect, onCancel }: ClerkingTemplat
               key={cadre.value}
               className={`flex items-center space-x-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
                 selectedCadre === cadre.value
-                  ? 'border-impilo-500 bg-impilo-50'
-                  : 'border-gray-200 hover:border-impilo-200'
+                  ? 'border-impilo-500 bg-primary-soft'
+                  : 'border-border hover:border-primary/25'
               }`}
               onClick={() => setSelectedCadre(cadre.value)}
             >
@@ -107,7 +107,7 @@ export function ClerkingTemplateSelector({ onSelect, onCancel }: ClerkingTemplat
                 value={cadre.value}
                 checked={selectedCadre === cadre.value}
                 onChange={() => setSelectedCadre(cadre.value)}
-                className="h-4 w-4 text-impilo-500 focus:ring-impilo-400"
+                className="h-4 w-4 text-primary focus:ring-primary/40"
               />
               <div className="flex-1">
                 <label
@@ -116,9 +116,9 @@ export function ClerkingTemplateSelector({ onSelect, onCancel }: ClerkingTemplat
                 >
                   {cadre.label}
                 </label>
-                <p className="text-sm text-gray-500">{cadre.description}</p>
+                <p className="text-sm text-muted-foreground">{cadre.description}</p>
               </div>
-              <GraduationCap className="w-5 h-5 text-gray-400" />
+              <GraduationCap className="w-5 h-5 text-muted-foreground" />
             </div>
           ))}
         </div>
@@ -127,7 +127,7 @@ export function ClerkingTemplateSelector({ onSelect, onCancel }: ClerkingTemplat
           {onCancel && (
             <button
               type="button"
-              className="px-4 py-2 text-sm font-medium border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+              className="px-4 py-2 text-sm font-medium border border-border rounded-md text-foreground hover:bg-background transition-colors"
               onClick={onCancel}
             >
               Cancel
@@ -135,7 +135,7 @@ export function ClerkingTemplateSelector({ onSelect, onCancel }: ClerkingTemplat
           )}
           <button
             type="button"
-            className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-impilo-500 rounded-md hover:bg-impilo-600 transition-colors"
+            className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-hover transition-colors"
             onClick={handleConfirm}
           >
             Start Clerking
@@ -150,7 +150,7 @@ export function ClerkingTemplateSelector({ onSelect, onCancel }: ClerkingTemplat
     <div className="space-y-6 p-6">
       <div>
         <h2 className="text-lg font-semibold">Select Clerking Template</h2>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-muted-foreground">
           Choose the appropriate template for this patient encounter
         </p>
       </div>
@@ -164,10 +164,10 @@ export function ClerkingTemplateSelector({ onSelect, onCancel }: ClerkingTemplat
             return (
               <div
                 key={template.id}
-                className={`cursor-pointer rounded-lg border bg-white p-0 transition-all hover:border-impilo-500 hover:shadow-md ${
+                className={`cursor-pointer rounded-lg border bg-card p-0 transition-all hover:border-impilo-500 hover:shadow-md ${
                   selectedTemplate?.id === template.id
                     ? 'border-impilo-500 ring-2 ring-impilo-500/20'
-                    : 'border-gray-200'
+                    : 'border-border'
                 }`}
                 onClick={() => handleTemplateSelect(template)}
               >
@@ -178,27 +178,27 @@ export function ClerkingTemplateSelector({ onSelect, onCancel }: ClerkingTemplat
                     </div>
                     <div>
                       <h3 className="text-base font-semibold">{template.name}</h3>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         {template.sections.length} sections
                       </p>
                     </div>
                   </div>
                 </div>
                 <div className="px-4 pb-4">
-                  <p className="text-sm text-gray-500 mb-3">
+                  <p className="text-sm text-muted-foreground mb-3">
                     {template.description}
                   </p>
                   <div className="flex flex-wrap gap-1">
                     {template.sections.slice(0, 4).map((section) => (
                       <span
                         key={section.id}
-                        className="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700"
+                        className="inline-flex items-center rounded-md bg-neutral-100 px-2 py-0.5 text-xs font-medium text-foreground"
                       >
                         {section.title}
                       </span>
                     ))}
                     {template.sections.length > 4 && (
-                      <span className="inline-flex items-center rounded-md border border-gray-200 px-2 py-0.5 text-xs font-medium text-gray-500">
+                      <span className="inline-flex items-center rounded-md border border-border px-2 py-0.5 text-xs font-medium text-muted-foreground">
                         +{template.sections.length - 4} more
                       </span>
                     )}
@@ -214,7 +214,7 @@ export function ClerkingTemplateSelector({ onSelect, onCancel }: ClerkingTemplat
         {onCancel && (
           <button
             type="button"
-            className="px-4 py-2 text-sm font-medium border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+            className="px-4 py-2 text-sm font-medium border border-border rounded-md text-foreground hover:bg-background transition-colors"
             onClick={onCancel}
           >
             Cancel

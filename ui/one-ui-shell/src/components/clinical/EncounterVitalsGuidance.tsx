@@ -37,15 +37,15 @@ export function EncounterVitalsGuidance(props: EncounterVitalsGuidanceProps) {
   if (!msgs.length) return null;
 
   return (
-    <div className="mt-2 space-y-1 rounded-lg border border-amber-200 bg-amber-50/80 p-2 text-xs text-amber-950">
-      <p className="font-medium text-amber-900">Vitals reference checks</p>
+    <div className="mt-2 space-y-1 rounded-lg border border-warning/35 bg-warning-soft/80 p-2 text-xs text-warning-foreground">
+      <p className="font-medium text-warning-foreground">Vitals reference checks</p>
       <ul className="list-disc pl-4 space-y-0.5">
         {msgs.map((m, i) => (
           <li key={`${m.vitalId}-${i}`}>{m.message}</li>
         ))}
       </ul>
       {msgs.some((m) => m.requiresOverrideReason) && (
-        <p className="text-[10px] text-amber-900/90 mt-1">
+        <p className="text-[10px] text-warning-foreground/90 mt-1">
           Implausible values require documented override before save (wire to save path in a follow-up).
         </p>
       )}

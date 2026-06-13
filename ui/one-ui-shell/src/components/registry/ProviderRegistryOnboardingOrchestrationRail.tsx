@@ -32,26 +32,26 @@ export function ProviderRegistryOnboardingOrchestrationRail() {
 
   return (
     <section
-      className="mb-4 rounded-2xl border border-indigo-200 bg-indigo-50/80 p-4"
+      className="mb-4 rounded-2xl border border-info/25 bg-info-soft/80 p-4"
       data-testid="provider-registry-onboarding-orchestration-rail"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="flex items-center gap-2 text-sm font-semibold text-indigo-900">
+          <p className="flex items-center gap-2 text-sm font-semibold text-primary-hover">
             <Users className="h-4 w-4" />
             Provider registry onboarding orchestration
           </p>
-          <p className="mt-1 text-xs text-indigo-800" data-testid="registry-provider-kpi-strip">
+          <p className="mt-1 text-xs text-primary-hover" data-testid="registry-provider-kpi-strip">
             {providersQ.isLoading
               ? "Loading VARAPI provider registry…"
               : `${providers.length} provider row(s) in current search scope`}
           </p>
-          <p className="mt-1 text-xs text-indigo-700" data-testid="registry-reconciliation-probe">
+          <p className="mt-1 text-xs text-primary-hover" data-testid="registry-reconciliation-probe">
             {reconciliationQ.isLoading
               ? "Reconciliation queue: probing VARAPI…"
               : `${queueCount} reconciliation case(s) awaiting council review`}
           </p>
-          <p className="mt-1 text-xs text-indigo-700" data-testid="registry-pending-providers-probe">
+          <p className="mt-1 text-xs text-primary-hover" data-testid="registry-pending-providers-probe">
             {pendingQ.isLoading
               ? "Pending providers: loading…"
               : `${pendingProviders.length} provider application(s) awaiting verification`}
@@ -60,7 +60,7 @@ export function ProviderRegistryOnboardingOrchestrationRail() {
         <div className="flex flex-wrap gap-2 text-xs">
           <Link
             href="/registry/providers/new"
-            className="inline-flex items-center gap-1 rounded-lg border border-indigo-200 bg-white px-2.5 py-1.5 font-medium text-indigo-900 hover:border-indigo-300"
+            className="inline-flex items-center gap-1 rounded-lg border border-info/25 bg-card px-2.5 py-1.5 font-medium text-primary-hover hover:border-indigo-300"
             data-testid="registry-provider-apply-link"
           >
             <UserCheck className="h-3.5 w-3.5" />
@@ -68,7 +68,7 @@ export function ProviderRegistryOnboardingOrchestrationRail() {
           </Link>
           <Link
             href="/registry/providers/verification"
-            className="inline-flex items-center gap-1 rounded-lg border border-indigo-200 bg-white px-2.5 py-1.5 font-medium text-indigo-900 hover:border-indigo-300"
+            className="inline-flex items-center gap-1 rounded-lg border border-info/25 bg-card px-2.5 py-1.5 font-medium text-primary-hover hover:border-indigo-300"
             data-testid="registry-provider-verify-queue-link"
           >
             <CheckCircle2 className="h-3.5 w-3.5" />
@@ -76,7 +76,7 @@ export function ProviderRegistryOnboardingOrchestrationRail() {
           </Link>
           <Link
             href="/registry"
-            className="rounded-lg border border-indigo-200 bg-white px-2.5 py-1.5 font-medium text-indigo-900 hover:border-indigo-300"
+            className="rounded-lg border border-info/25 bg-card px-2.5 py-1.5 font-medium text-primary-hover hover:border-indigo-300"
           >
             Registry hub
           </Link>
@@ -91,7 +91,7 @@ export function ProviderRegistryOnboardingOrchestrationRail() {
             return (
               <li
                 key={provider.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-indigo-100 bg-white px-3 py-2 text-xs text-indigo-900"
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-indigo-100 bg-card px-3 py-2 text-xs text-primary-hover"
               >
                 <span>{name}</span>
                 <div className="flex gap-1">
@@ -105,14 +105,14 @@ export function ProviderRegistryOnboardingOrchestrationRail() {
                         reason: "Provider verified from registry onboarding rail",
                       })
                     }
-                    className="rounded border border-emerald-200 px-2 py-1 text-emerald-800 hover:bg-emerald-50 disabled:opacity-50"
+                    className="rounded border border-success/25 px-2 py-1 text-primary-hover hover:bg-success-soft disabled:opacity-50"
                     data-testid={`registry-provider-verify-${provider.id}`}
                   >
                     Verify
                   </button>
                   <Link
                     href={`/registry/providers/${encodeURIComponent(provider.id)}`}
-                    className="rounded border border-indigo-200 px-2 py-1 text-indigo-800 hover:bg-indigo-50"
+                    className="rounded border border-info/25 px-2 py-1 text-primary-hover hover:bg-info-soft"
                   >
                     Review
                   </Link>
@@ -132,7 +132,7 @@ export function ProviderRegistryOnboardingOrchestrationRail() {
             return (
               <li
                 key={caseId}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-indigo-100 bg-white px-3 py-2 text-xs text-indigo-900"
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-indigo-100 bg-card px-3 py-2 text-xs text-primary-hover"
               >
                 <span>{label}</span>
                 <div className="flex gap-1">
@@ -140,7 +140,7 @@ export function ProviderRegistryOnboardingOrchestrationRail() {
                     type="button"
                     disabled={decide.isPending}
                     onClick={() => decide.mutate({ caseId, action: "ACCEPT", reason: "Council import accepted from rail" })}
-                    className="rounded border border-emerald-200 px-2 py-1 text-emerald-800 hover:bg-emerald-50 disabled:opacity-50"
+                    className="rounded border border-success/25 px-2 py-1 text-primary-hover hover:bg-success-soft disabled:opacity-50"
                   >
                     Accept
                   </button>
@@ -148,7 +148,7 @@ export function ProviderRegistryOnboardingOrchestrationRail() {
                     type="button"
                     disabled={decide.isPending}
                     onClick={() => decide.mutate({ caseId, action: "REJECT", reason: "Council import rejected from rail" })}
-                    className="rounded border border-rose-200 px-2 py-1 text-rose-800 hover:bg-rose-50 disabled:opacity-50"
+                    className="rounded border border-danger/28 px-2 py-1 text-rose-800 hover:bg-danger-soft disabled:opacity-50"
                   >
                     Reject
                   </button>
@@ -159,7 +159,7 @@ export function ProviderRegistryOnboardingOrchestrationRail() {
         </ul>
       )}
       {(providersQ.isLoading || reconciliationQ.isLoading || pendingQ.isLoading) && (
-        <div className="mt-2 flex items-center gap-2 text-xs text-indigo-700">
+        <div className="mt-2 flex items-center gap-2 text-xs text-primary-hover">
           <Loader2 className="h-3.5 w-3.5 animate-spin" />
           Binding registry → council reconciliation chain…
         </div>

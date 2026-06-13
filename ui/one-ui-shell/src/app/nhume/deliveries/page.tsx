@@ -48,7 +48,7 @@ export default function NhumeDeliveriesPage() {
       >
         <div className="flex flex-wrap items-center gap-3 mb-4">
           <div className="relative flex-1 min-w-[240px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               value={draftQ}
               onChange={(e) => setDraftQ(e.target.value)}
@@ -57,13 +57,13 @@ export default function NhumeDeliveriesPage() {
               }}
               onBlur={() => setQ(draftQ)}
               placeholder="Search by reference, recipient, item…"
-              className="w-full rounded-xl border border-gray-300 py-2 pl-10 pr-4 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+              className="w-full rounded-xl border border-border py-2 pl-10 pr-4 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
             />
           </div>
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="rounded-xl border border-gray-300 px-3 py-2 text-sm bg-white"
+            className="rounded-xl border border-border px-3 py-2 text-sm bg-card"
           >
             {STATUSES.map((s) => (
               <option key={s || "any"} value={s}>
@@ -74,7 +74,7 @@ export default function NhumeDeliveriesPage() {
           <select
             value={priority}
             onChange={(e) => setPriority(e.target.value)}
-            className="rounded-xl border border-gray-300 px-3 py-2 text-sm bg-white"
+            className="rounded-xl border border-border px-3 py-2 text-sm bg-card"
           >
             {PRIORITIES.map((p) => (
               <option key={p || "any"} value={p}>
@@ -84,7 +84,7 @@ export default function NhumeDeliveriesPage() {
           </select>
           <Link
             href="/nhume/deliveries/new"
-            className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 transition-colors ml-auto"
+            className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary transition-colors ml-auto"
           >
             <PackagePlus className="h-4 w-4" />
             New Delivery
@@ -92,14 +92,14 @@ export default function NhumeDeliveriesPage() {
         </div>
 
         {isPending && (
-          <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center text-gray-500">
+          <div className="rounded-2xl border border-border bg-card p-10 text-center text-muted-foreground">
             <Loader2 className="inline-block h-5 w-5 animate-spin text-teal-500 mr-2" />
             Loading deliveries…
           </div>
         )}
 
         {isError && (
-          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 flex items-center gap-2">
+          <div className="rounded-2xl border border-danger/28 bg-danger-soft p-4 text-sm text-rose-800 flex items-center gap-2">
             <AlertTriangle className="h-4 w-4" />
             Deliveries could not be loaded.{" "}
             {(error as { error?: { message?: string } })?.error?.message ?? "Please retry shortly."}
@@ -107,17 +107,17 @@ export default function NhumeDeliveriesPage() {
         )}
 
         {!isPending && !isError && rows.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-12 text-center">
-            <ListChecks className="mx-auto h-10 w-10 text-gray-400" />
-            <h3 className="mt-3 font-semibold text-gray-900">No deliveries match your filters</h3>
-            <p className="mt-1 text-sm text-gray-600">Adjust the filters or create a new delivery request.</p>
+          <div className="rounded-2xl border border-dashed border-border bg-background p-12 text-center">
+            <ListChecks className="mx-auto h-10 w-10 text-muted-foreground" />
+            <h3 className="mt-3 font-semibold text-foreground">No deliveries match your filters</h3>
+            <p className="mt-1 text-sm text-muted-foreground">Adjust the filters or create a new delivery request.</p>
           </div>
         )}
 
         {!isPending && !isError && rows.length > 0 && (
-          <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
+          <div className="rounded-2xl border border-border bg-card overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+              <thead className="bg-background text-xs uppercase tracking-wide text-muted-foreground">
                 <tr>
                   <th className="px-4 py-3 text-left">Reference</th>
                   <th className="px-4 py-3 text-left">Type</th>
@@ -129,7 +129,7 @@ export default function NhumeDeliveriesPage() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {rows.map((d) => (
-                  <tr key={d.delivery_id} className="hover:bg-gray-50">
+                  <tr key={d.delivery_id} className="hover:bg-background">
                     <td className="px-4 py-3">
                       <Link
                         href={`/nhume/deliveries/${d.delivery_id}`}
@@ -138,24 +138,24 @@ export default function NhumeDeliveriesPage() {
                         {d.reference}
                       </Link>
                       {d.is_demo && (
-                        <span className="ml-2 inline-flex items-center rounded bg-gray-100 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-gray-600">
+                        <span className="ml-2 inline-flex items-center rounded bg-neutral-100 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
                           demo
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-gray-700">{d.delivery_type ?? "—"}</td>
+                    <td className="px-4 py-3 text-foreground">{d.delivery_type ?? "—"}</td>
                     <td className="px-4 py-3">
                       <NhumePriorityChip priority={String(d.priority ?? "")} />
                     </td>
                     <td className="px-4 py-3">
                       <NhumeStatusChip status={String(d.status)} />
                     </td>
-                    <td className="px-4 py-3 text-gray-700">
-                      <span className="text-gray-900">{d.origin_label ?? "—"}</span>
-                      <span className="mx-1 text-gray-400">→</span>
+                    <td className="px-4 py-3 text-foreground">
+                      <span className="text-foreground">{d.origin_label ?? "—"}</span>
+                      <span className="mx-1 text-muted-foreground">→</span>
                       <span>{d.destination_label ?? "—"}</span>
                     </td>
-                    <td className="px-4 py-3 text-xs text-gray-500">
+                    <td className="px-4 py-3 text-xs text-muted-foreground">
                       {d.sla_due_at ? new Date(d.sla_due_at).toLocaleString() : "—"}
                     </td>
                   </tr>

@@ -113,13 +113,13 @@ export default function CartPage() {
       </p>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-red-800">
           {error}
         </div>
       )}
 
       {paymentResult && (
-        <div className="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-sm text-emerald-800">
+        <div className="mb-4 p-3 rounded-lg bg-success-soft border border-success/25 text-sm text-primary-hover">
           {paymentResult}
         </div>
       )}
@@ -154,9 +154,9 @@ export default function CartPage() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">Order Summary</h2>
               <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                orderStatus === "COMPLETED" ? "bg-emerald-100 text-emerald-700" :
-                orderStatus === "CANCELLED" ? "bg-red-100 text-red-700" :
-                "bg-blue-100 text-blue-700"
+                orderStatus === "COMPLETED" ? "bg-emerald-100 text-primary-hover" :
+                orderStatus === "CANCELLED" ? "bg-red-100 text-danger" :
+                "bg-blue-100 text-primary-hover"
               }`}>
                 {orderStatus}
               </span>
@@ -187,7 +187,7 @@ export default function CartPage() {
                       </div>
                       <div className="text-right">
                         <span className="text-sm font-semibold">{line.lineTotal}</span>
-                        <span className={`ml-2 text-xs ${line.state === "PRICED" ? "text-emerald-600" : "text-neutral-400"}`}>
+                        <span className={`ml-2 text-xs ${line.state === "PRICED" ? "text-primary" : "text-neutral-400"}`}>
                           {line.state}
                         </span>
                       </div>

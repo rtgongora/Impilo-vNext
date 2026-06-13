@@ -33,10 +33,10 @@ export default function RootLayout({
       <body className="min-h-screen bg-neutral-50 text-neutral-900 antialiased">
         <QueryClientProvider client={queryClient}>
           {/* Top nav bar */}
-          <header className="bg-white border-b border-neutral-200">
+          <header className="bg-card border-b border-neutral-200">
             <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-14">
               <Link href="/" className="flex items-center gap-2">
-                <h1 className="text-lg font-semibold text-emerald-700 tracking-tight">
+                <h1 className="text-lg font-semibold text-primary-hover tracking-tight">
                   MUSHEX
                 </h1>
                 <span className="text-xs text-neutral-400">Payer Portal</span>
@@ -54,7 +54,7 @@ export default function RootLayout({
                       href={href}
                       className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                         isActive
-                          ? "bg-emerald-50 text-emerald-700"
+                          ? "bg-success-soft text-primary-hover"
                           : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100"
                       }`}
                       aria-current={isActive ? "page" : undefined}

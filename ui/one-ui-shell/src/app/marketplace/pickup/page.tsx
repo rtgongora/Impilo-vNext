@@ -26,7 +26,7 @@ export default function MarketplacePickupPage() {
         icon={<Ticket className="h-6 w-6" />}
       >
         <div className="mb-4">
-          <Link href="/marketplace" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
+          <Link href="/marketplace" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-4 w-4" /> Back to marketplace
           </Link>
         </div>
@@ -41,17 +41,17 @@ export default function MarketplacePickupPage() {
         </div>
 
         <div className="grid gap-6 xl:grid-cols-2">
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">Issue pickup token</h2>
-            <p className="mt-1 text-xs text-slate-500">
+          <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
+            <h2 className="text-sm font-semibold text-foreground">Issue pickup token</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
               POST <code className="text-[11px]">/internal/v1/commerce/orders/{"{orderId}"}/pickup/issue</code>
             </p>
-            <label className="mt-3 block text-xs text-slate-600">
+            <label className="mt-3 block text-xs text-muted-foreground">
               Order id
               <input
                 value={orderId}
                 onChange={(event) => setOrderId(event.target.value)}
-                className="mt-1 block w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-mono"
+                className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm font-mono"
                 placeholder="order-123"
                 aria-label="Pickup order id"
               />
@@ -59,7 +59,7 @@ export default function MarketplacePickupPage() {
             <button
               type="button"
               disabled={issueM.isPending || !orderId.trim()}
-              className="mt-3 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+              className="mt-3 rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover disabled:opacity-50"
               onClick={() => issueM.mutate(orderId.trim())}
             >
               {issueM.isPending ? (
@@ -75,23 +75,23 @@ export default function MarketplacePickupPage() {
             ) : null}
           </section>
 
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">Claim pickup</h2>
-            <p className="mt-1 text-xs text-slate-500">
+          <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
+            <h2 className="text-sm font-semibold text-foreground">Claim pickup</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
               POST <code className="text-[11px]">/internal/v1/commerce/pickup/claim</code> with the upstream claim payload.
             </p>
             <textarea
               value={claimJson}
               onChange={(event) => setClaimJson(event.target.value)}
               rows={9}
-              className="mt-3 block w-full rounded-lg border border-slate-200 p-3 font-mono text-xs"
+              className="mt-3 block w-full rounded-lg border border-border p-3 font-mono text-xs"
               aria-label="Pickup claim JSON"
             />
-            {claimError ? <p className="mt-2 text-xs text-red-700">{claimError}</p> : null}
+            {claimError ? <p className="mt-2 text-xs text-danger">{claimError}</p> : null}
             <button
               type="button"
               disabled={claimM.isPending}
-              className="mt-3 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+              className="mt-3 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary disabled:opacity-50"
               onClick={() => {
                 try {
                   const body = JSON.parse(claimJson) as unknown;

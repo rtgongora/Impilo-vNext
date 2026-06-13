@@ -125,7 +125,7 @@ export default function KnowledgePage() {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2 border border-neutral-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
+          className="px-3 py-2 border border-neutral-200 rounded-lg text-sm bg-card focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
         >
           <option value="">All Statuses</option>
           {STATUS_OPTIONS.map((s) => (
@@ -137,7 +137,7 @@ export default function KnowledgePage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Article list */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100">
+          <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100">
             {loading ? (
               <div className="p-6 text-center text-sm text-neutral-500">Loading articles...</div>
             ) : filtered.length === 0 ? (
@@ -176,7 +176,7 @@ export default function KnowledgePage() {
         {/* Article detail / create form */}
         <div className="lg:col-span-2">
           {showCreate ? (
-            <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6">
+            <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6">
               <h2 className="text-lg font-semibold text-neutral-900 mb-4">Create Article</h2>
               <form onSubmit={handleCreate} className="space-y-4">
                 <div>
@@ -239,7 +239,7 @@ export default function KnowledgePage() {
               </form>
             </div>
           ) : selectedArticle ? (
-            <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6">
+            <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6">
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <h2 className="text-xl font-semibold text-neutral-900">{selectedArticle.title}</h2>
@@ -285,7 +285,7 @@ export default function KnowledgePage() {
               </div>
             </div>
           ) : (
-            <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-12 text-center">
+            <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-12 text-center">
               <p className="text-sm text-neutral-500">Select an article to view its contents</p>
             </div>
           )}

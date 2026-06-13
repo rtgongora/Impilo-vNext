@@ -62,12 +62,12 @@ export default function CustomReportsPage() {
       <PageShell title="Custom Report Builder" subtitle="Build reports with custom parameters and filters">
         <div className="max-w-2xl space-y-6">
           {/* Report Type */}
-          <div className="bg-white rounded-lg border border-gray-200 p-5">
-            <h3 className="font-medium text-gray-900 mb-3">Report Type</h3>
+          <div className="bg-card rounded-lg border border-border p-5">
+            <h3 className="font-medium text-foreground mb-3">Report Type</h3>
             <select
               value={reportType}
               onChange={(e) => setReportType(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+              className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
             >
               {REPORT_TYPES.map((rt) => (
                 <option key={rt.value} value={rt.value}>{rt.label}</option>
@@ -76,42 +76,42 @@ export default function CustomReportsPage() {
           </div>
 
           {/* Date Range */}
-          <div className="bg-white rounded-lg border border-gray-200 p-5">
-            <h3 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+          <div className="bg-card rounded-lg border border-border p-5">
+            <h3 className="font-medium text-foreground mb-3 flex items-center gap-2">
               <Calendar className="w-4 h-4" /> Date Range
             </h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm text-gray-600 mb-1">From</label>
+                <label className="block text-sm text-muted-foreground mb-1">From</label>
                 <input
                   type="date"
                   value={dateFrom}
                   onChange={(e) => setDateFrom(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                  className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">To</label>
+                <label className="block text-sm text-muted-foreground mb-1">To</label>
                 <input
                   type="date"
                   value={dateTo}
                   onChange={(e) => setDateTo(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                  className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                 />
               </div>
             </div>
           </div>
 
           {/* Parameters */}
-          <div className="bg-white rounded-lg border border-gray-200 p-5 space-y-4">
-            <h3 className="font-medium text-gray-900">Parameters</h3>
+          <div className="bg-card rounded-lg border border-border p-5 space-y-4">
+            <h3 className="font-medium text-foreground">Parameters</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Group By</label>
+                <label className="block text-sm text-muted-foreground mb-1">Group By</label>
                 <select
                   value={groupBy}
                   onChange={(e) => setGroupBy(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                  className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                 >
                   <option value="day">Day</option>
                   <option value="week">Week</option>
@@ -120,11 +120,11 @@ export default function CustomReportsPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Output Format</label>
+                <label className="block text-sm text-muted-foreground mb-1">Output Format</label>
                 <select
                   value={outputFormat}
                   onChange={(e) => setOutputFormat(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                  className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                 >
                   {OUTPUT_FORMATS.map((f) => (
                     <option key={f.value} value={f.value}>{f.label}</option>
@@ -132,7 +132,7 @@ export default function CustomReportsPage() {
                 </select>
               </div>
             </div>
-            <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+            <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
               <input
                 type="checkbox"
                 checked={includeCharts}
@@ -148,7 +148,7 @@ export default function CustomReportsPage() {
             <button
               onClick={handleGenerate}
               disabled={!dateFrom || !dateTo || generateReport.isPending}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-impilo-500 text-white rounded-lg text-sm font-medium hover:bg-impilo-600 disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-hover disabled:opacity-50"
             >
               {generateReport.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -160,7 +160,7 @@ export default function CustomReportsPage() {
           </div>
 
           {generateReport.isError && (
-            <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+            <div className="p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-danger">
               Failed to generate report. Please try again.
             </div>
           )}

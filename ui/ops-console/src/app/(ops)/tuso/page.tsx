@@ -53,7 +53,7 @@ export default function TusoDashboardPage() {
       {/* Quick nav cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <Link href="/tuso/workspaces" className="block">
-          <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6 hover:border-brand-primary/30 transition-colors">
+          <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6 hover:border-brand-primary/30 transition-colors">
             <h3 className="text-sm font-medium text-neutral-500">Operations</h3>
             <p className="text-xl font-semibold text-neutral-900 mt-2">Workspaces</p>
             <p className="text-xs text-neutral-500 mt-1">Manage workspaces, shifts, eligibility rules</p>
@@ -61,7 +61,7 @@ export default function TusoDashboardPage() {
         </Link>
 
         <Link href="/tuso/resources" className="block">
-          <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6 hover:border-brand-primary/30 transition-colors">
+          <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6 hover:border-brand-primary/30 transition-colors">
             <h3 className="text-sm font-medium text-neutral-500">Capacity</h3>
             <p className="text-xl font-semibold text-neutral-900 mt-2">Resources</p>
             <p className="text-xs text-neutral-500 mt-1">Beds, rooms, equipment, calendars, bookings</p>
@@ -69,7 +69,7 @@ export default function TusoDashboardPage() {
         </Link>
 
         <Link href="/tuso/config" className="block">
-          <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6 hover:border-brand-primary/30 transition-colors">
+          <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6 hover:border-brand-primary/30 transition-colors">
             <h3 className="text-sm font-medium text-neutral-500">Configuration</h3>
             <p className="text-xl font-semibold text-neutral-900 mt-2">Facility Config</p>
             <p className="text-xs text-neutral-500 mt-1">Feature flags, templates, workflow toggles</p>
@@ -77,7 +77,7 @@ export default function TusoDashboardPage() {
         </Link>
 
         <Link href="/tuso/control-tower" className="block">
-          <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6 hover:border-brand-primary/30 transition-colors">
+          <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6 hover:border-brand-primary/30 transition-colors">
             <h3 className="text-sm font-medium text-neutral-500">Oversight</h3>
             <p className="text-xl font-semibold text-neutral-900 mt-2">Control Tower</p>
             <p className="text-xs text-neutral-500 mt-1">Telemetry, alerts, occupancy, throughput</p>
@@ -86,7 +86,7 @@ export default function TusoDashboardPage() {
       </div>
 
       {/* Facility Search */}
-      <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6">
+      <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6">
         <h2 className="text-lg font-semibold text-neutral-900 mb-4">Facility Search</h2>
         <div className="flex gap-3 mb-4">
           <input
@@ -129,8 +129,8 @@ export default function TusoDashboardPage() {
                     <td className="py-3 px-2">{f.province || "-"}</td>
                     <td className="py-3 px-2">
                       <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
-                        f.status === "ACTIVE" ? "bg-emerald-50 text-emerald-700" :
-                        f.status === "CLOSED" ? "bg-red-50 text-red-700" :
+                        f.status === "ACTIVE" ? "bg-success-soft text-primary-hover" :
+                        f.status === "CLOSED" ? "bg-danger-soft text-danger" :
                         "bg-neutral-50 text-neutral-600"
                       }`}>
                         {f.status}

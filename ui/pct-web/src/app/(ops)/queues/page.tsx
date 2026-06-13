@@ -12,7 +12,7 @@ import { useSessionStore } from "@/stores/sessionStore";
 const STATUS_COLORS: Record<QueueItemStatus, string> = {
   WAITING: "bg-yellow-100 text-yellow-800",
   CALLED: "bg-blue-100 text-blue-800",
-  IN_SERVICE: "bg-emerald-100 text-emerald-800",
+  IN_SERVICE: "bg-emerald-100 text-primary-hover",
   COMPLETED: "bg-neutral-100 text-neutral-600",
   NO_SHOW: "bg-red-100 text-red-800",
   TRANSFERRED: "bg-purple-100 text-purple-800",
@@ -157,13 +157,13 @@ export default function QueuesPage() {
       </p>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-red-800">
           {error}
         </div>
       )}
 
       {successMessage && (
-        <div className="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-sm text-emerald-800">
+        <div className="mb-4 p-3 rounded-lg bg-success-soft border border-success/25 text-sm text-primary-hover">
           {successMessage}
         </div>
       )}
@@ -196,7 +196,7 @@ export default function QueuesPage() {
                 <span className="text-xs text-neutral-500 ml-1">waiting</span>
               </div>
               <div>
-                <span className="text-lg font-semibold text-emerald-600">
+                <span className="text-lg font-semibold text-primary">
                   {queue.inServiceCount}
                 </span>
                 <span className="text-xs text-neutral-500 ml-1">in service</span>
@@ -339,7 +339,7 @@ export default function QueuesPage() {
                         <button
                           onClick={() => handleUpdateStatus(item.id, "COMPLETED")}
                           disabled={actionLoading}
-                          className="text-xs text-emerald-600 hover:text-emerald-800 font-medium"
+                          className="text-xs text-primary hover:text-primary-hover font-medium"
                         >
                           Complete
                         </button>

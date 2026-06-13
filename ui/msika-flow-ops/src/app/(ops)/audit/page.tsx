@@ -4,14 +4,14 @@ import { useState, useEffect, useCallback } from "react";
 import { opsApi, type AuditEvent, type PagedResponse } from "@/lib/opsApi";
 
 const EVENT_STYLES: Record<string, string> = {
-  ORDER_CREATED: "bg-blue-100 text-blue-700",
-  ORDER_VALIDATED: "bg-indigo-100 text-indigo-700",
-  ORDER_PRICED: "bg-purple-100 text-purple-700",
-  ORDER_CANCELLED: "bg-red-100 text-red-700",
-  ORDER_COMPLETED: "bg-emerald-100 text-emerald-700",
+  ORDER_CREATED: "bg-blue-100 text-primary-hover",
+  ORDER_VALIDATED: "bg-indigo-100 text-primary-hover",
+  ORDER_PRICED: "bg-purple-100 text-warning-foreground",
+  ORDER_CANCELLED: "bg-red-100 text-danger",
+  ORDER_COMPLETED: "bg-emerald-100 text-primary-hover",
   REVIEW_APPROVED: "bg-green-100 text-green-700",
-  REVIEW_REJECTED: "bg-red-100 text-red-700",
-  VENDOR_SUSPENDED: "bg-amber-100 text-amber-700",
+  REVIEW_REJECTED: "bg-red-100 text-danger",
+  VENDOR_SUSPENDED: "bg-amber-100 text-warning-foreground",
   VENDOR_REINSTATED: "bg-teal-100 text-teal-700",
 };
 
@@ -79,7 +79,7 @@ export default function AuditPage() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-red-800">
           {error}
         </div>
       )}

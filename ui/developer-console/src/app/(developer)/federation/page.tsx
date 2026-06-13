@@ -133,7 +133,7 @@ function FederationPageContent() {
           </div>
 
           {/* Checklist */}
-          <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6">
+          <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6">
             <h3 className="text-lg font-semibold text-neutral-900 mb-4">Readiness Checklist</h3>
             <div className="space-y-3">
               {readiness.checklist.map((item, i) => (
@@ -164,7 +164,7 @@ function FederationPageContent() {
           </div>
 
           {/* Pod registration info */}
-          <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6">
+          <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6">
             <h3 className="text-lg font-semibold text-neutral-900 mb-4">Pod Registration Guide</h3>
             <div className="space-y-4 text-sm text-neutral-700">
               <div>

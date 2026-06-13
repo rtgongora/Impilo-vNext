@@ -136,7 +136,7 @@ export function HelpMenu({ variant = "icon", className }: HelpMenuProps) {
         return (
           <button
             onClick={() => setOpen(!open)}
-            className={`h-10 rounded-full shadow-impilo-card bg-[color:var(--primary-soft)] text-[color:var(--primary)] hover:bg-white border border-[color:var(--primary-muted)] px-4 flex items-center gap-2 text-xs font-medium backdrop-blur-sm ${className ?? ""}`}
+            className={`h-10 rounded-full shadow-impilo-card bg-[color:var(--primary-soft)] text-[color:var(--primary)] hover:bg-card border border-[color:var(--primary-muted)] px-4 flex items-center gap-2 text-xs font-medium backdrop-blur-sm ${className ?? ""}`}
           >
             <HelpCircle className="h-3.5 w-3.5" />
             <span>Need Help?</span>
@@ -170,7 +170,7 @@ export function HelpMenu({ variant = "icon", className }: HelpMenuProps) {
       {triggerButton}
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-[color:var(--border-soft)] rounded-3xl shadow-impilo-floating z-50">
+        <div className="absolute right-0 top-full mt-2 w-80 bg-card border border-[color:var(--border-soft)] rounded-3xl shadow-impilo-floating z-50">
           {/* Header */}
           <div className="p-3 pb-2">
             <h3 className="font-semibold text-sm text-[color:var(--text-primary)]">Help &amp; Resources</h3>
@@ -198,7 +198,7 @@ export function HelpMenu({ variant = "icon", className }: HelpMenuProps) {
           <div className="max-h-[320px] overflow-y-auto">
             {/* Quick Links */}
             <div className="p-2">
-              <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider px-2 mb-1">
+              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-2 mb-1">
                 Resources
               </p>
               {filteredLinks.map((link) => {
@@ -207,30 +207,30 @@ export function HelpMenu({ variant = "icon", className }: HelpMenuProps) {
                   <button
                     key={link.label}
                     onClick={() => handleNavigate(link.path, link.tab)}
-                    className="w-full flex items-center gap-3 px-2 py-2 rounded-md hover:bg-gray-50 transition-colors text-left"
+                    className="w-full flex items-center gap-3 px-2 py-2 rounded-md hover:bg-background transition-colors text-left"
                   >
-                    <div className="h-8 w-8 rounded-md bg-impilo-50 flex items-center justify-center shrink-0">
-                      <Icon className="h-4 w-4 text-impilo-500" />
+                    <div className="h-8 w-8 rounded-md bg-primary-soft flex items-center justify-center shrink-0">
+                      <Icon className="h-4 w-4 text-primary" />
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-medium leading-tight">
                         {link.label}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         {link.description}
                       </p>
                     </div>
-                    <ExternalLink className="h-3 w-3 text-gray-400 ml-auto shrink-0" />
+                    <ExternalLink className="h-3 w-3 text-muted-foreground ml-auto shrink-0" />
                   </button>
                 );
               })}
             </div>
 
-            <hr className="border-gray-100" />
+            <hr className="border-border" />
 
             {/* Contextual Tips */}
             <div className="p-2">
-              <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider px-2 mb-1">
+              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-2 mb-1">
                 Quick Tips
               </p>
               {contextualTips.map((tip, i) => (
@@ -241,55 +241,55 @@ export function HelpMenu({ variant = "icon", className }: HelpMenuProps) {
                   <Lightbulb className="h-3.5 w-3.5 text-amber-500 mt-0.5 shrink-0" />
                   <div>
                     <p className="text-xs font-medium">{tip.label}</p>
-                    <p className="text-xs text-gray-500">{tip.tip}</p>
+                    <p className="text-xs text-muted-foreground">{tip.tip}</p>
                   </div>
                 </div>
               ))}
             </div>
 
-            <hr className="border-gray-100" />
+            <hr className="border-border" />
 
             {/* Support */}
             <div className="p-2">
-              <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider px-2 mb-1">
+              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-2 mb-1">
                 Support
               </p>
               <button
                 onClick={() => handleNavigate("/help")}
-                className="w-full flex items-center gap-3 px-2 py-2 rounded-md hover:bg-gray-50 transition-colors text-left"
+                className="w-full flex items-center gap-3 px-2 py-2 rounded-md hover:bg-background transition-colors text-left"
               >
                 <div className="h-8 w-8 rounded-md bg-green-50 flex items-center justify-center shrink-0">
                   <MessageCircle className="h-4 w-4 text-green-600" />
                 </div>
                 <div>
                   <p className="text-sm font-medium">Contact Support</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     Get help from the team
                   </p>
                 </div>
               </button>
               <button
                 onClick={() => handleNavigate("/help")}
-                className="w-full flex items-center gap-3 px-2 py-2 rounded-md hover:bg-gray-50 transition-colors text-left"
+                className="w-full flex items-center gap-3 px-2 py-2 rounded-md hover:bg-background transition-colors text-left"
               >
-                <div className="h-8 w-8 rounded-md bg-impilo-50 flex items-center justify-center shrink-0">
-                  <Keyboard className="h-4 w-4 text-impilo-500" />
+                <div className="h-8 w-8 rounded-md bg-primary-soft flex items-center justify-center shrink-0">
+                  <Keyboard className="h-4 w-4 text-primary" />
                 </div>
                 <div>
                   <p className="text-sm font-medium">Keyboard Shortcuts</p>
-                  <p className="text-xs text-gray-500">View all shortcuts</p>
+                  <p className="text-xs text-muted-foreground">View all shortcuts</p>
                 </div>
               </button>
             </div>
           </div>
 
-          <hr className="border-gray-100" />
+          <hr className="border-border" />
 
           {/* Footer */}
           <div className="p-2">
             <button
               onClick={() => handleNavigate("/help")}
-              className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium border rounded-md border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+              className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium border rounded-md border-border text-foreground hover:bg-background transition-colors"
             >
               Open Full Help Center
               <ExternalLink className="h-3 w-3" />

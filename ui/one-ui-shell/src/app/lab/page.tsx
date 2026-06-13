@@ -78,13 +78,13 @@ export default function LabPage() {
       label: "Pending",
       value: String(summary?.pending_collection ?? 0),
       Icon: Clock,
-      color: "bg-amber-50 text-amber-600",
+      color: "bg-warning-soft text-amber-600",
     },
     {
       label: "In Progress",
       value: String(summary?.in_progress ?? 0),
       Icon: ListChecks,
-      color: "bg-impilo-50 text-impilo-500",
+      color: "bg-primary-soft text-primary",
     },
     {
       label: "Completed",
@@ -96,7 +96,7 @@ export default function LabPage() {
       label: "Urgent",
       value: String(summary?.urgent ?? 0),
       Icon: AlertCircle,
-      color: "bg-red-50 text-red-600",
+      color: "bg-danger-soft text-red-600",
     },
   ];
 
@@ -130,7 +130,7 @@ export default function LabPage() {
                 className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                   orderType === value
                     ? "bg-violet-600 text-white"
-                    : "border border-gray-300 text-gray-700 hover:bg-gray-50"
+                    : "border border-border text-foreground hover:bg-background"
                 }`}
               >
                 {label}
@@ -139,29 +139,29 @@ export default function LabPage() {
           </div>
 
           {!facility?.id ? (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
+            <div className="rounded-lg border border-warning/35 bg-warning-soft p-6 text-sm text-warning-foreground">
               Select a facility to load order worklist summaries for this shift.
             </div>
           ) : worklistQ.isLoading ? (
-            <div className="flex items-center gap-2 text-sm text-gray-500">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
               Loading {orderType} worklist summary…
             </div>
           ) : worklistQ.isError ? (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+            <div className="rounded-lg border border-danger/28 bg-danger-soft p-4 text-sm text-red-800">
               Unable to load worklist summary for {orderType} orders.
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               {summaryCards.map(({ label, value, Icon, color }) => (
-                <div key={label} className="rounded-lg border border-gray-200 bg-white p-4">
+                <div key={label} className="rounded-lg border border-border bg-card p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-gray-500">{label}</span>
+                    <span className="text-sm text-muted-foreground">{label}</span>
                     <div className={`rounded-lg p-1.5 ${color.split(" ")[0]}`}>
                       <Icon className={`h-4 w-4 ${color.split(" ")[1]}`} />
                     </div>
                   </div>
-                  <p className="text-2xl font-bold text-gray-900">{value}</p>
+                  <p className="text-2xl font-bold text-foreground">{value}</p>
                 </div>
               ))}
             </div>
@@ -172,15 +172,15 @@ export default function LabPage() {
               <Link
                 key={section.href}
                 href={sectionHref(section)}
-                className="rounded-lg border border-gray-200 bg-white p-5 hover:border-impilo-400 hover:shadow-sm transition-all"
+                className="rounded-lg border border-border bg-card p-5 hover:border-impilo-400 hover:shadow-sm transition-all"
               >
                 <div className="flex items-center gap-3 mb-2">
                   <div className="rounded-lg bg-violet-50 p-2">
                     <section.Icon className="h-5 w-5 text-violet-600" />
                   </div>
-                  <h3 className="font-semibold text-gray-900">{section.label}</h3>
+                  <h3 className="font-semibold text-foreground">{section.label}</h3>
                 </div>
-                <p className="text-sm text-gray-600">{section.description}</p>
+                <p className="text-sm text-muted-foreground">{section.description}</p>
               </Link>
             ))}
           </div>

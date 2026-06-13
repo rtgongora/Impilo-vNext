@@ -43,7 +43,7 @@ export function FeedScopeTabs({ active, onChange, scopes }: Props) {
           onClick={() => onChange(t.id)}
           className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
             active === t.id
-              ? "bg-[color:var(--primary)] text-white"
+              ? "bg-primary-soft text-primary-hover font-medium"
               : "text-[color:var(--text-secondary)] hover:bg-[color:var(--surface-soft)] hover:text-[color:var(--text-primary)]"
           }`}
         >

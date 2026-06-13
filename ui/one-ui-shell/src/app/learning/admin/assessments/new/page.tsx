@@ -51,23 +51,23 @@ export default function NewAssessmentPage() {
   return (
     <AppLayout>
       <PageShell title="New assessment" subtitle="Create assessment and add basic questions.">
-        <div className="max-w-xl space-y-2 rounded border border-gray-200 bg-white p-4">
-          <input className="w-full rounded border border-gray-300 px-2 py-1 text-sm" placeholder="Course ID" value={courseId} onChange={(e) => setCourseId(e.target.value)} />
-          <input className="w-full rounded border border-gray-300 px-2 py-1 text-sm" placeholder="Assessment title" value={title} onChange={(e) => setTitle(e.target.value)} />
-          <button onClick={createAssessment} className="rounded bg-teal-700 px-3 py-1.5 text-sm text-white">Create assessment</button>
-          {error ? <p className="text-xs text-rose-700">{error}</p> : null}
+        <div className="max-w-xl space-y-2 rounded border border-border bg-card p-4">
+          <input className="w-full rounded border border-border px-2 py-1 text-sm" placeholder="Course ID" value={courseId} onChange={(e) => setCourseId(e.target.value)} />
+          <input className="w-full rounded border border-border px-2 py-1 text-sm" placeholder="Assessment title" value={title} onChange={(e) => setTitle(e.target.value)} />
+          <button onClick={createAssessment} className="rounded bg-primary px-3 py-1.5 text-sm text-white">Create assessment</button>
+          {error ? <p className="text-xs text-danger">{error}</p> : null}
           {assessmentId ? (
             <>
-              <input className="w-full rounded border border-gray-300 px-2 py-1 text-sm" placeholder="Question prompt" value={prompt} onChange={(e) => setPrompt(e.target.value)} />
-              <select className="w-full rounded border border-gray-300 px-2 py-1 text-sm" value={questionType} onChange={(e) => setQuestionType(e.target.value)}>
+              <input className="w-full rounded border border-border px-2 py-1 text-sm" placeholder="Question prompt" value={prompt} onChange={(e) => setPrompt(e.target.value)} />
+              <select className="w-full rounded border border-border px-2 py-1 text-sm" value={questionType} onChange={(e) => setQuestionType(e.target.value)}>
                 <option value="TRUE_FALSE">TRUE_FALSE</option>
                 <option value="MULTIPLE_CHOICE">MULTIPLE_CHOICE</option>
                 <option value="SHORT_ANSWER">SHORT_ANSWER</option>
               </select>
-              <input className="w-full rounded border border-gray-300 px-2 py-1 text-sm" placeholder="Options CSV (for objective questions)" value={optionsCsv} onChange={(e) => setOptionsCsv(e.target.value)} />
-              <input className="w-full rounded border border-gray-300 px-2 py-1 text-sm" placeholder="Correct answer (for objective)" value={correctAnswer} onChange={(e) => setCorrectAnswer(e.target.value)} />
-              <textarea className="w-full rounded border border-gray-300 px-2 py-1 text-sm" placeholder="Rubric JSON (for short-answer/manual marking)" value={rubricJson} onChange={(e) => setRubricJson(e.target.value)} />
-              <button onClick={addQuestion} className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700">Add question</button>
+              <input className="w-full rounded border border-border px-2 py-1 text-sm" placeholder="Options CSV (for objective questions)" value={optionsCsv} onChange={(e) => setOptionsCsv(e.target.value)} />
+              <input className="w-full rounded border border-border px-2 py-1 text-sm" placeholder="Correct answer (for objective)" value={correctAnswer} onChange={(e) => setCorrectAnswer(e.target.value)} />
+              <textarea className="w-full rounded border border-border px-2 py-1 text-sm" placeholder="Rubric JSON (for short-answer/manual marking)" value={rubricJson} onChange={(e) => setRubricJson(e.target.value)} />
+              <button onClick={addQuestion} className="rounded border border-border px-3 py-1.5 text-sm text-foreground">Add question</button>
               <Link href={`/learning/admin/assessments/${assessmentId}/edit`} className="text-xs text-teal-700 hover:underline">
                 Continue to edit assessment
               </Link>

@@ -261,8 +261,8 @@ export default function DispatchOperationsPage() {
           <div className="grid gap-3 md:grid-cols-3">
             {dispatchMetrics.map((metric) => (
               <section key={metric.label} className="impilo-surface-card p-4">
-                <p className="text-xs uppercase tracking-wide text-slate-500">{metric.label}</p>
-                <p className="mt-1 text-2xl font-semibold text-slate-900">{String(metric.value)}</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">{metric.label}</p>
+                <p className="mt-1 text-2xl font-semibold text-foreground">{String(metric.value)}</p>
               </section>
             ))}
           </div>
@@ -276,11 +276,11 @@ export default function DispatchOperationsPage() {
 
           <div className="grid gap-3 md:grid-cols-2">
             <section className="impilo-surface-card p-4">
-              <h3 className="text-sm font-semibold text-slate-900">Dispatch backend datasets</h3>
-              <p className="mt-1 text-xs text-slate-600">
+              <h3 className="text-sm font-semibold text-foreground">Dispatch backend datasets</h3>
+              <p className="mt-1 text-xs text-muted-foreground">
                 Surfacing backend controllers beyond task feed: deliveries, fleet, couriers, missions, and console.
               </p>
-              <ul className="mt-3 space-y-1 text-sm text-slate-700">
+              <ul className="mt-3 space-y-1 text-sm text-foreground">
                 <li>Deliveries: {deliveries.isError ? "unavailable" : "connected"}</li>
                 <li>Fleet: {fleet.isError ? "unavailable" : "connected"}</li>
                 <li>Couriers: {couriers.isError ? "unavailable" : "connected"}</li>
@@ -289,26 +289,26 @@ export default function DispatchOperationsPage() {
               </ul>
             </section>
             <section className="impilo-surface-card p-4">
-              <h3 className="text-sm font-semibold text-slate-900">Create delivery command</h3>
-              <p className="mt-1 text-xs text-slate-600">
+              <h3 className="text-sm font-semibold text-foreground">Create delivery command</h3>
+              <p className="mt-1 text-xs text-muted-foreground">
                 Sends live command to <code>/internal/v1/dispatch/deliveries</code>. No demo mode.
               </p>
               <textarea
-                className="mt-3 h-32 w-full rounded-md border border-slate-300 bg-white p-2 font-mono text-xs text-slate-800"
+                className="mt-3 h-32 w-full rounded-md border border-border bg-card p-2 font-mono text-xs text-foreground"
                 value={payloadText}
                 onChange={(event) => setPayloadText(event.target.value)}
               />
               <div className="mt-2 flex items-center gap-2">
                 <button
                   type="button"
-                  className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                  className="rounded-md border border-border bg-card px-2 py-1 text-xs font-medium text-foreground hover:bg-background disabled:opacity-50"
                   onClick={submitCreateDelivery}
                   disabled={createDelivery.isPending}
                 >
                   {createDelivery.isPending ? "Submitting..." : "Submit delivery"}
                 </button>
                 {createFeedback ? (
-                  <span className="text-xs text-slate-700">{createFeedback}</span>
+                  <span className="text-xs text-foreground">{createFeedback}</span>
                 ) : null}
               </div>
             </section>
@@ -316,15 +316,15 @@ export default function DispatchOperationsPage() {
 
           <div className="grid gap-3 md:grid-cols-2">
             <section className="impilo-surface-card p-4">
-              <h3 className="text-sm font-semibold text-slate-900">Dispatch task command console</h3>
-              <p className="mt-1 text-xs text-slate-600">
+              <h3 className="text-sm font-semibold text-foreground">Dispatch task command console</h3>
+              <p className="mt-1 text-xs text-muted-foreground">
                 Uses live task commands: create, assign, and complete. No demo mode.
               </p>
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                <label className="text-xs text-slate-600">
+                <label className="text-xs text-muted-foreground">
                   Command
                   <select
-                    className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"
+                    className="mt-1 w-full rounded-md border border-border bg-card px-2 py-1 text-sm"
                     value={taskMode}
                     onChange={(event) => setTaskMode(event.target.value as TaskCommandMode)}
                   >
@@ -333,10 +333,10 @@ export default function DispatchOperationsPage() {
                     <option value="COMPLETE_TASK">Complete task</option>
                   </select>
                 </label>
-                <label className="text-xs text-slate-600">
+                <label className="text-xs text-muted-foreground">
                   Task id
                   <input
-                    className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-800"
+                    className="mt-1 w-full rounded-md border border-border bg-card px-2 py-1 text-sm text-foreground"
                     value={taskId}
                     onChange={(event) => setTaskId(event.target.value)}
                     placeholder="Required for assign/complete"
@@ -344,14 +344,14 @@ export default function DispatchOperationsPage() {
                 </label>
               </div>
               <textarea
-                className="mt-3 h-32 w-full rounded-md border border-slate-300 bg-white p-2 font-mono text-xs text-slate-800"
+                className="mt-3 h-32 w-full rounded-md border border-border bg-card p-2 font-mono text-xs text-foreground"
                 value={taskPayloadText}
                 onChange={(event) => setTaskPayloadText(event.target.value)}
               />
               <div className="mt-2 flex items-center gap-2">
                 <button
                   type="button"
-                  className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                  className="rounded-md border border-border bg-card px-2 py-1 text-xs font-medium text-foreground hover:bg-background disabled:opacity-50"
                   onClick={submitTaskCommand}
                   disabled={createTask.isPending || assignTask.isPending || completeTask.isPending}
                 >
@@ -359,29 +359,29 @@ export default function DispatchOperationsPage() {
                     ? "Submitting..."
                     : "Submit task command"}
                 </button>
-                {taskFeedback ? <span className="text-xs text-slate-700">{taskFeedback}</span> : null}
+                {taskFeedback ? <span className="text-xs text-foreground">{taskFeedback}</span> : null}
               </div>
             </section>
 
             <section className="impilo-surface-card p-4">
-              <h3 className="text-sm font-semibold text-slate-900">Delivery action command</h3>
-              <p className="mt-1 text-xs text-slate-600">
+              <h3 className="text-sm font-semibold text-foreground">Delivery action command</h3>
+              <p className="mt-1 text-xs text-muted-foreground">
                 Sends live action commands to <code>/internal/v1/dispatch/deliveries/:id/:action</code>.
               </p>
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                <label className="text-xs text-slate-600">
+                <label className="text-xs text-muted-foreground">
                   Delivery id
                   <input
-                    className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-800"
+                    className="mt-1 w-full rounded-md border border-border bg-card px-2 py-1 text-sm text-foreground"
                     value={deliveryActionId}
                     onChange={(event) => setDeliveryActionId(event.target.value)}
                     placeholder="Delivery UUID/reference"
                   />
                 </label>
-                <label className="text-xs text-slate-600">
+                <label className="text-xs text-muted-foreground">
                   Action
                   <input
-                    className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-800"
+                    className="mt-1 w-full rounded-md border border-border bg-card px-2 py-1 text-sm text-foreground"
                     value={deliveryActionName}
                     onChange={(event) => setDeliveryActionName(event.target.value)}
                     placeholder="dispatch, cancel, complete..."
@@ -389,21 +389,21 @@ export default function DispatchOperationsPage() {
                 </label>
               </div>
               <textarea
-                className="mt-3 h-32 w-full rounded-md border border-slate-300 bg-white p-2 font-mono text-xs text-slate-800"
+                className="mt-3 h-32 w-full rounded-md border border-border bg-card p-2 font-mono text-xs text-foreground"
                 value={deliveryActionPayloadText}
                 onChange={(event) => setDeliveryActionPayloadText(event.target.value)}
               />
               <div className="mt-2 flex items-center gap-2">
                 <button
                   type="button"
-                  className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                  className="rounded-md border border-border bg-card px-2 py-1 text-xs font-medium text-foreground hover:bg-background disabled:opacity-50"
                   onClick={submitDeliveryAction}
                   disabled={deliveryAction.isPending || !deliveryActionId.trim() || !deliveryActionName.trim()}
                 >
                   {deliveryAction.isPending ? "Submitting..." : "Submit delivery action"}
                 </button>
                 {deliveryActionFeedback ? (
-                  <span className="text-xs text-slate-700">{deliveryActionFeedback}</span>
+                  <span className="text-xs text-foreground">{deliveryActionFeedback}</span>
                 ) : null}
               </div>
             </section>
@@ -419,10 +419,10 @@ export default function DispatchOperationsPage() {
             emptyLabel="No dispatch events available."
             maxItems={12}
             controls={
-              <label className="text-xs text-slate-600">
+              <label className="text-xs text-muted-foreground">
                 Dispatch status
                 <select
-                  className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"
+                  className="mt-1 w-full rounded-md border border-border bg-card px-2 py-1 text-sm"
                   value={status}
                   onChange={(event) => setFilter({ status: event.target.value })}
                 >
@@ -440,14 +440,14 @@ export default function DispatchOperationsPage() {
           />
 
           <section className="impilo-surface-card p-4">
-            <h3 className="text-sm font-semibold text-slate-900">Console preview</h3>
-            <p className="mt-1 text-xs text-slate-600">
+            <h3 className="text-sm font-semibold text-foreground">Console preview</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
               Top records from dispatcher console payload for rapid backend visibility.
             </p>
             {consoleView.isLoading ? (
-              <p className="mt-3 text-sm text-slate-600">Loading console payload...</p>
+              <p className="mt-3 text-sm text-muted-foreground">Loading console payload...</p>
             ) : consoleView.isError ? (
-              <p className="mt-3 text-sm text-rose-700">Dispatcher console unavailable.</p>
+              <p className="mt-3 text-sm text-danger">Dispatcher console unavailable.</p>
             ) : (
               <ol className="mt-3 space-y-2">
                 {(
@@ -459,12 +459,12 @@ export default function DispatchOperationsPage() {
                     const id = readOperatorString(entry, ["id", "deliveryId", "reference"], `delivery-${index + 1}`);
                     const state = readOperatorString(entry, ["status", "state"], "UNKNOWN");
                     return (
-                      <li key={`${id}-${index}`} className="rounded-md border border-slate-200 bg-slate-50 p-2">
-                        <p className="text-sm font-medium text-slate-900">{id}</p>
-                        <p className="text-xs text-slate-600">State: {state}</p>
+                      <li key={`${id}-${index}`} className="rounded-md border border-border bg-background p-2">
+                        <p className="text-sm font-medium text-foreground">{id}</p>
+                        <p className="text-xs text-muted-foreground">State: {state}</p>
                         <button
                           type="button"
-                          className="mt-2 rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                          className="mt-2 rounded-md border border-border bg-card px-2 py-1 text-xs font-medium text-foreground hover:bg-neutral-100"
                           onClick={() => setDeliveryActionId(id)}
                         >
                           Use for delivery action

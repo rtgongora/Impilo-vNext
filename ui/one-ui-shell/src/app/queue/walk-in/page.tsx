@@ -131,7 +131,7 @@ export default function WalkInPage() {
 
           <Link
             href="/queue"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to queue
@@ -139,48 +139,48 @@ export default function WalkInPage() {
 
           <div className="max-w-2xl space-y-6">
             {selectedPatient ? (
-              <div className="rounded-3xl border border-impilo-200 bg-impilo-50 p-4 text-sm text-impilo-800">
+              <div className="rounded-3xl border border-primary/25 bg-primary-soft p-4 text-sm text-impilo-800">
                 <p className="font-medium">Selected patient</p>
                 <p className="mt-1">{getPatientDisplayName(selectedPatient)}</p>
-                <p className="mt-1 text-xs text-impilo-700">{getPatientQueueSummary(selectedPatient)}</p>
+                <p className="mt-1 text-xs text-primary-hover">{getPatientQueueSummary(selectedPatient)}</p>
               </div>
             ) : null}
 
             {/* Patient Search */}
-            <div className="bg-white rounded-lg border border-gray-200 p-5">
-              <h3 className="font-medium text-gray-900 mb-3">Search Existing Patient</h3>
+            <div className="bg-card rounded-lg border border-border p-5">
+              <h3 className="font-medium text-foreground mb-3">Search Existing Patient</h3>
               <form onSubmit={handleSearch} className="flex gap-2">
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Search by name, ID, or date of birth..."
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                    className="w-full pl-10 pr-4 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                   />
                 </div>
                 <button
                   type="submit"
-                  className="px-4 py-2.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                  className="px-4 py-2.5 bg-neutral-100 text-foreground text-sm font-medium rounded-lg hover:bg-neutral-100 transition-colors"
                 >
                   Search
                 </button>
               </form>
 
               {isSearching && (
-                <div className="flex items-center gap-2 mt-4 text-sm text-gray-500">
+                <div className="flex items-center gap-2 mt-4 text-sm text-muted-foreground">
                   <Loader2 className="w-4 h-4 animate-spin" />
                   Searching...
                 </div>
               )}
 
               {searchSubmitted && !isSearching && patients.length === 0 && (
-                <div className="mt-4 p-3 bg-gray-50 rounded-lg text-center">
-                  <p className="text-sm text-gray-500">No patients found</p>
+                <div className="mt-4 p-3 bg-background rounded-lg text-center">
+                  <p className="text-sm text-muted-foreground">No patients found</p>
                   <button
                     onClick={() => setShowNewPatient(true)}
-                    className="mt-2 text-sm text-impilo-500 hover:text-impilo-700"
+                    className="mt-2 text-sm text-primary hover:text-primary-hover"
                   >
                     Register new client (Vito-backed wizard)
                   </button>
@@ -198,16 +198,16 @@ export default function WalkInPage() {
                       }}
                       className={`w-full flex items-center gap-3 p-3 rounded-lg border text-left transition-colors ${
                         selectedPatient?.id === patient.id
-                          ? "border-impilo-400 bg-impilo-50"
-                          : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                          ? "border-impilo-400 bg-primary-soft"
+                          : "border-border hover:border-border hover:bg-background"
                       }`}
                     >
-                      <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                        <User className="w-4 h-4 text-gray-500" />
+                      <div className="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center">
+                        <User className="w-4 h-4 text-muted-foreground" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-900">{getPatientDisplayName(patient)}</p>
-                        <p className="text-xs text-gray-500">{getPatientQueueSummary(patient)}</p>
+                        <p className="text-sm font-medium text-foreground">{getPatientDisplayName(patient)}</p>
+                        <p className="text-xs text-muted-foreground">{getPatientQueueSummary(patient)}</p>
                       </div>
                     </button>
                   ))}
@@ -216,9 +216,9 @@ export default function WalkInPage() {
             </div>
 
             {showNewPatient && (
-              <div className="bg-white rounded-lg border border-gray-200 p-5 space-y-3">
-                <h3 className="font-medium text-gray-900">Vito-backed client registration</h3>
-                <p className="text-xs text-gray-600">
+              <div className="bg-card rounded-lg border border-border p-5 space-y-3">
+                <h3 className="font-medium text-foreground">Vito-backed client registration</h3>
+                <p className="text-xs text-muted-foreground">
                   Uses registry templates and controlled value sets. Duplicate search is mandatory before create in
                   production Tshepo policy — enforced here as a workflow step in the wizard.
                 </p>
@@ -235,14 +235,14 @@ export default function WalkInPage() {
             )}
 
             {error && (
-              <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">{error}</div>
+              <div className="p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-danger">{error}</div>
             )}
 
             {selectedPatient && (
               <button
                 onClick={() => void handleCreateEntry()}
                 disabled={isSubmitting}
-                className="w-full py-2.5 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+                className="w-full py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
               >
                 {isSubmitting ? (
                   <>

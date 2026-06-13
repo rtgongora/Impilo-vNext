@@ -120,7 +120,7 @@ export default function IssuanceQueuePage() {
             onClick={() => setActiveTab(tab.key)}
             className={`px-4 py-2 text-sm font-medium rounded-[8px] transition-colors ${
               activeTab === tab.key
-                ? "bg-white text-neutral-900 shadow-subtle"
+                ? "bg-card text-neutral-900 shadow-subtle"
                 : "text-neutral-500 hover:text-neutral-900"
             }`}
           >
@@ -131,7 +131,7 @@ export default function IssuanceQueuePage() {
 
       {/* Rejection reason dialog */}
       {rejectingId !== null && (
-        <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6 mb-4">
+        <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6 mb-4">
           <h2 className="text-base font-semibold text-neutral-900 mb-3">
             Reject Issuance Request #{rejectingId}
           </h2>
@@ -143,7 +143,7 @@ export default function IssuanceQueuePage() {
             onChange={(e) => setRejectionReason(e.target.value)}
             placeholder="Enter rejection reason..."
             rows={3}
-            className="w-full px-4 py-2.5 text-sm border border-neutral-200 rounded-[8px] bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary placeholder:text-neutral-400 resize-none"
+            className="w-full px-4 py-2.5 text-sm border border-neutral-200 rounded-[8px] bg-card focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary placeholder:text-neutral-400 resize-none"
           />
           <div className="flex gap-2 mt-3">
             <button
@@ -164,7 +164,7 @@ export default function IssuanceQueuePage() {
       )}
 
       {/* Queue table */}
-      <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 overflow-hidden">
+      <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-neutral-100 bg-neutral-50">

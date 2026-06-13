@@ -66,7 +66,7 @@ export default function CardsPage() {
             onClick={() => setActiveTab(tab.key)}
             className={`px-4 py-2 text-sm font-medium rounded-[8px] transition-colors ${
               activeTab === tab.key
-                ? "bg-white text-neutral-900 shadow-subtle"
+                ? "bg-card text-neutral-900 shadow-subtle"
                 : "text-neutral-500 hover:text-neutral-900"
             }`}
           >
@@ -75,7 +75,7 @@ export default function CardsPage() {
         ))}
       </div>
 
-      <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 overflow-hidden">
+      <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-neutral-100 bg-neutral-50">

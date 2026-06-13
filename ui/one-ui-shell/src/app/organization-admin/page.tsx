@@ -86,7 +86,7 @@ export default function OrganizationAdminLandingPage() {
         <div className="space-y-6">
           <Link
             href="/home"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="h-4 w-4" /> Back to home
           </Link>
@@ -107,10 +107,10 @@ export default function OrganizationAdminLandingPage() {
           </PlaneTrustBanner>
 
           {isFinanceOnlyOperator(roles) && (
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50/90 px-4 py-3 text-sm text-emerald-950">
+            <div className="rounded-xl border border-success/25 bg-success-soft/90 px-4 py-3 text-sm text-emerald-950">
               <strong>Finance-focused entry:</strong> admin routes that require{" "}
-              <code className="rounded bg-white/80 px-1">FACILITY_ADMIN</code> or{" "}
-              <code className="rounded bg-white/80 px-1">SYSTEM_ADMIN</code> are hidden below. Use{" "}
+              <code className="rounded bg-card/80 px-1">FACILITY_ADMIN</code> or{" "}
+              <code className="rounded bg-card/80 px-1">SYSTEM_ADMIN</code> are hidden below. Use{" "}
               <Link href="/finance" className="font-medium underline">
                 Finance
               </Link>{" "}
@@ -119,8 +119,8 @@ export default function OrganizationAdminLandingPage() {
           )}
 
           <div>
-            <h3 className="text-sm font-semibold text-gray-900">Administrative surfaces</h3>
-            <p className="mt-1 text-xs text-gray-500">
+            <h3 className="text-sm font-semibold text-foreground">Administrative surfaces</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
               Each card opens a live route or hub backed by existing APIs. Your surface focus is remembered for this
               session (
               <button
@@ -146,7 +146,7 @@ export default function OrganizationAdminLandingPage() {
                     onClick={() =>
                       useOperationalContextStore.getState().setOrganizationAdminSurface(card.surface)
                     }
-                    className="group flex flex-col rounded-2xl border border-violet-200/80 bg-white p-5 shadow-sm transition hover:border-violet-400 hover:shadow-md"
+                    className="group flex flex-col rounded-2xl border border-violet-200/80 bg-card p-5 shadow-sm transition hover:border-violet-400 hover:shadow-md"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-start gap-3">
@@ -154,11 +154,11 @@ export default function OrganizationAdminLandingPage() {
                           <Icon className="h-5 w-5" />
                         </div>
                         <div>
-                          <h4 className="font-medium text-gray-900 group-hover:text-violet-900">{card.title}</h4>
-                          <p className="mt-1 text-sm text-gray-600">{card.description}</p>
+                          <h4 className="font-medium text-foreground group-hover:text-violet-900">{card.title}</h4>
+                          <p className="mt-1 text-sm text-muted-foreground">{card.description}</p>
                         </div>
                       </div>
-                      <ArrowUpRight className="h-4 w-4 shrink-0 text-gray-400 group-hover:text-violet-700" />
+                      <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-violet-700" />
                     </div>
                   </Link>
                 );

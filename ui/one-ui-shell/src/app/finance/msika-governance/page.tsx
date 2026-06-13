@@ -115,10 +115,10 @@ function stringifyJson(payload: unknown) {
 }
 
 function statusTone(status: string) {
-  if (status === "PUBLISHED") return "bg-emerald-100 text-emerald-800";
+  if (status === "PUBLISHED") return "bg-emerald-100 text-primary-hover";
   if (status === "APPROVED") return "bg-teal-100 text-teal-800";
-  if (status === "REVIEW") return "bg-amber-100 text-amber-800";
-  return "bg-slate-100 text-slate-700";
+  if (status === "REVIEW") return "bg-amber-100 text-warning-foreground";
+  return "bg-neutral-100 text-foreground";
 }
 
 export default function MsikaGovernancePage() {
@@ -148,24 +148,24 @@ export default function MsikaGovernancePage() {
         subtitle="Catalog governance, mapping decisions, publishing, and CSV import now run in Experience instead of the standalone MSIKA governance sidecar."
         icon={<DatabaseZap className="h-6 w-6" />}
       >
-        <div className="mb-4 flex flex-wrap items-center gap-3 text-sm text-gray-500">
-          <Link href="/finance" className="inline-flex items-center gap-1 hover:text-gray-700">
+        <div className="mb-4 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+          <Link href="/finance" className="inline-flex items-center gap-1 hover:text-foreground">
             <ArrowLeft className="h-4 w-4" /> Finance dashboard
           </Link>
-          <Link href="/finance/commerce-integrations" className="inline-flex items-center gap-1 text-impilo-600 hover:text-impilo-700">
+          <Link href="/finance/commerce-integrations" className="inline-flex items-center gap-1 text-primary hover:text-primary-hover">
             Commerce & payer stack
           </Link>
         </div>
 
         <div className="space-y-6">
-          <section className="rounded-xl border border-indigo-200 bg-indigo-50/60 p-5">
+          <section className="rounded-xl border border-info/25 bg-info-soft/60 p-5">
             <div className="flex items-start gap-3">
-              <div className="rounded-lg bg-indigo-100 p-2 text-indigo-700">
+              <div className="rounded-lg bg-indigo-100 p-2 text-primary-hover">
                 <ShieldCheck className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-sm font-semibold text-slate-900">Governance scope</h2>
-                <p className="mt-1 text-sm text-slate-700">
+                <h2 className="text-sm font-semibold text-foreground">Governance scope</h2>
+                <p className="mt-1 text-sm text-foreground">
                   This workspace consumes <code className="text-[11px]">/internal/v1/msika/*</code> through the
                   Experience BFF. Catalog creation, review, mapping approval, publishing, and CSV import are part of the
                   accepted Experience shell now.
@@ -174,11 +174,11 @@ export default function MsikaGovernancePage() {
             </div>
           </section>
 
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h2 className="text-sm font-semibold text-slate-900">Catalog lifecycle</h2>
-                <p className="mt-1 text-xs text-slate-500">
+                <h2 className="text-sm font-semibold text-foreground">Catalog lifecycle</h2>
+                <p className="mt-1 text-xs text-muted-foreground">
                   GET/POST <code className="text-[11px]">/internal/v1/msika/catalogs</code>, then submit-review,
                   approve, and publish per catalog.
                 </p>
@@ -186,37 +186,37 @@ export default function MsikaGovernancePage() {
             </div>
 
             <div className="mt-4 grid gap-3 lg:grid-cols-[1.2fr_0.6fr_0.6fr_auto] lg:items-end">
-              <label className="text-xs text-slate-600">
+              <label className="text-xs text-muted-foreground">
                 Catalog name
                 <input
                   value={name}
                   onChange={(event) => setName(event.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                 />
               </label>
-              <label className="text-xs text-slate-600">
+              <label className="text-xs text-muted-foreground">
                 Scope
                 <select
                   value={scope}
                   onChange={(event) => setScope(event.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                 >
                   <option value="NATIONAL">NATIONAL</option>
                   <option value="TENANT">TENANT</option>
                 </select>
               </label>
-              <label className="text-xs text-slate-600">
+              <label className="text-xs text-muted-foreground">
                 Version
                 <input
                   value={version}
                   onChange={(event) => setVersion(event.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                 />
               </label>
               <button
                 type="button"
                 disabled={createCatalog.isPending || !name.trim()}
-                className="rounded-lg bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-800 disabled:opacity-50"
+                className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-indigo-800 disabled:opacity-50"
                 onClick={() =>
                   createCatalog.mutate(
                     { name: name.trim(), scope, version: version.trim() || "2025.1.0" },
@@ -234,46 +234,46 @@ export default function MsikaGovernancePage() {
             </div>
 
             {catalogsQ.isLoading ? (
-              <p className="mt-4 flex items-center gap-2 text-sm text-slate-500">
+              <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" /> Loading catalogs...
               </p>
             ) : catalogsQ.isError ? (
-              <p className="mt-4 text-sm text-red-700">Could not load MSIKA catalogs.</p>
+              <p className="mt-4 text-sm text-danger">Could not load MSIKA catalogs.</p>
             ) : catalogs.length > 0 ? (
-              <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200">
+              <div className="mt-4 overflow-x-auto rounded-xl border border-border">
                 <table className="w-full text-sm">
-                  <thead className="bg-slate-50 text-left">
+                  <thead className="bg-background text-left">
                     <tr>
-                      <th className="px-3 py-2 font-medium text-slate-700">Name</th>
-                      <th className="px-3 py-2 font-medium text-slate-700">Scope</th>
-                      <th className="px-3 py-2 font-medium text-slate-700">Version</th>
-                      <th className="px-3 py-2 font-medium text-slate-700">Status</th>
-                      <th className="px-3 py-2 font-medium text-slate-700">Items</th>
-                      <th className="px-3 py-2 font-medium text-slate-700">Actions</th>
+                      <th className="px-3 py-2 font-medium text-foreground">Name</th>
+                      <th className="px-3 py-2 font-medium text-foreground">Scope</th>
+                      <th className="px-3 py-2 font-medium text-foreground">Version</th>
+                      <th className="px-3 py-2 font-medium text-foreground">Status</th>
+                      <th className="px-3 py-2 font-medium text-foreground">Items</th>
+                      <th className="px-3 py-2 font-medium text-foreground">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {catalogs.map((catalog) => (
                       <tr key={catalog.catalogId}>
                         <td className="px-3 py-3 align-top">
-                          <p className="font-medium text-slate-900">{catalog.name}</p>
-                          <p className="mt-1 font-mono text-[11px] text-slate-500">{catalog.catalogId}</p>
+                          <p className="font-medium text-foreground">{catalog.name}</p>
+                          <p className="mt-1 font-mono text-[11px] text-muted-foreground">{catalog.catalogId}</p>
                         </td>
-                        <td className="px-3 py-3 align-top text-slate-700">{catalog.scope}</td>
-                        <td className="px-3 py-3 align-top font-mono text-xs text-slate-700">{catalog.version}</td>
+                        <td className="px-3 py-3 align-top text-foreground">{catalog.scope}</td>
+                        <td className="px-3 py-3 align-top font-mono text-xs text-foreground">{catalog.version}</td>
                         <td className="px-3 py-3 align-top">
                           <span className={`rounded-full px-2 py-1 text-xs font-medium ${statusTone(catalog.status)}`}>
                             {catalog.status}
                           </span>
                         </td>
-                        <td className="px-3 py-3 align-top text-slate-700">{String(catalog.itemCount)}</td>
+                        <td className="px-3 py-3 align-top text-foreground">{String(catalog.itemCount)}</td>
                         <td className="px-3 py-3 align-top">
                           <div className="flex flex-wrap gap-2">
                             {catalog.status === "DRAFT" ? (
                               <button
                                 type="button"
                                 disabled={submitReview.isPending}
-                                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs hover:bg-slate-50 disabled:opacity-50"
+                                className="rounded-lg border border-border px-3 py-1.5 text-xs hover:bg-background disabled:opacity-50"
                                 onClick={() => submitReview.mutate(catalog.catalogId)}
                               >
                                 Submit review
@@ -283,7 +283,7 @@ export default function MsikaGovernancePage() {
                               <button
                                 type="button"
                                 disabled={approveCatalog.isPending}
-                                className="rounded-lg border border-emerald-200 px-3 py-1.5 text-xs text-emerald-800 hover:bg-emerald-50 disabled:opacity-50"
+                                className="rounded-lg border border-success/25 px-3 py-1.5 text-xs text-primary-hover hover:bg-success-soft disabled:opacity-50"
                                 onClick={() => approveCatalog.mutate(catalog.catalogId)}
                               >
                                 Approve
@@ -293,7 +293,7 @@ export default function MsikaGovernancePage() {
                               <button
                                 type="button"
                                 disabled={publishCatalog.isPending}
-                                className="rounded-lg border border-indigo-200 px-3 py-1.5 text-xs text-indigo-800 hover:bg-indigo-50 disabled:opacity-50"
+                                className="rounded-lg border border-info/25 px-3 py-1.5 text-xs text-primary-hover hover:bg-info-soft disabled:opacity-50"
                                 onClick={() => publishCatalog.mutate(catalog.catalogId)}
                               >
                                 Publish
@@ -307,18 +307,18 @@ export default function MsikaGovernancePage() {
                 </table>
               </div>
             ) : (
-              <p className="mt-4 text-sm text-slate-500">No catalogs are available yet.</p>
+              <p className="mt-4 text-sm text-muted-foreground">No catalogs are available yet.</p>
             )}
           </section>
 
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
             <div className="flex items-start gap-3">
-              <div className="rounded-lg bg-slate-100 p-2 text-slate-700">
+              <div className="rounded-lg bg-neutral-100 p-2 text-foreground">
                 <Upload className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-sm font-semibold text-slate-900">CSV import</h2>
-                <p className="mt-1 text-xs text-slate-500">
+                <h2 className="text-sm font-semibold text-foreground">CSV import</h2>
+                <p className="mt-1 text-xs text-muted-foreground">
                   POST multipart <code className="text-[11px]">/internal/v1/msika/import</code> with{" "}
                   <code className="text-[11px]">catalogId</code> and <code className="text-[11px]">file</code>.
                 </p>
@@ -326,27 +326,27 @@ export default function MsikaGovernancePage() {
             </div>
 
             <div className="mt-4 grid gap-3 lg:grid-cols-[0.8fr_1fr_auto] lg:items-end">
-              <label className="text-xs text-slate-600">
+              <label className="text-xs text-muted-foreground">
                 Target catalog id
                 <input
                   value={importCatalogId}
                   onChange={(event) => setImportCatalogId(event.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-mono"
+                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm font-mono"
                 />
               </label>
-              <label className="text-xs text-slate-600">
+              <label className="text-xs text-muted-foreground">
                 CSV file
                 <input
                   type="file"
                   accept=".csv"
                   onChange={(event) => setImportFile(event.target.files?.[0] ?? null)}
-                  className="mt-1 block w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                 />
               </label>
               <button
                 type="button"
                 disabled={importCsv.isPending || !importCatalogId.trim() || !importFile}
-                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+                className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover disabled:opacity-50"
                 onClick={() => {
                   if (!importFile) return;
                   importCsv.mutate({ catalogId: importCatalogId.trim(), file: importFile });
@@ -357,48 +357,48 @@ export default function MsikaGovernancePage() {
             </div>
 
             {importCsv.isError ? (
-              <p className="mt-3 text-sm text-red-700">Import failed. Check the catalog id and CSV file.</p>
+              <p className="mt-3 text-sm text-danger">Import failed. Check the catalog id and CSV file.</p>
             ) : null}
             {importCsv.data != null ? (
-              <pre className="mt-3 max-h-64 overflow-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-800">
+              <pre className="mt-3 max-h-64 overflow-auto rounded-lg border border-border bg-background p-3 text-[11px] text-foreground">
                 {stringifyJson(importCsv.data)}
               </pre>
             ) : null}
           </section>
 
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">Pending mappings</h2>
-            <p className="mt-1 text-xs text-slate-500">
+          <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
+            <h2 className="text-sm font-semibold text-foreground">Pending mappings</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
               GET/POST <code className="text-[11px]">/internal/v1/msika/mappings/pending</code>, approve, and reject.
             </p>
 
             {mappingsQ.isLoading ? (
-              <p className="mt-4 flex items-center gap-2 text-sm text-slate-500">
+              <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" /> Loading pending mappings...
               </p>
             ) : mappingsQ.isError ? (
-              <p className="mt-4 text-sm text-red-700">Could not load pending mappings.</p>
+              <p className="mt-4 text-sm text-danger">Could not load pending mappings.</p>
             ) : mappings.length > 0 ? (
-              <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200">
+              <div className="mt-4 overflow-x-auto rounded-xl border border-border">
                 <table className="w-full text-sm">
-                  <thead className="bg-slate-50 text-left">
+                  <thead className="bg-background text-left">
                     <tr>
-                      <th className="px-3 py-2 font-medium text-slate-700">External code</th>
-                      <th className="px-3 py-2 font-medium text-slate-700">External name</th>
-                      <th className="px-3 py-2 font-medium text-slate-700">Mapped item</th>
-                      <th className="px-3 py-2 font-medium text-slate-700">Type</th>
-                      <th className="px-3 py-2 font-medium text-slate-700">Confidence</th>
-                      <th className="px-3 py-2 font-medium text-slate-700">Actions</th>
+                      <th className="px-3 py-2 font-medium text-foreground">External code</th>
+                      <th className="px-3 py-2 font-medium text-foreground">External name</th>
+                      <th className="px-3 py-2 font-medium text-foreground">Mapped item</th>
+                      <th className="px-3 py-2 font-medium text-foreground">Type</th>
+                      <th className="px-3 py-2 font-medium text-foreground">Confidence</th>
+                      <th className="px-3 py-2 font-medium text-foreground">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {mappings.map((mapping) => (
                       <tr key={mapping.id}>
-                        <td className="px-3 py-3 font-mono text-xs text-slate-700">{mapping.externalCode}</td>
-                        <td className="px-3 py-3 text-slate-700">{mapping.externalName}</td>
-                        <td className="px-3 py-3 font-mono text-xs text-slate-700">{mapping.internalItemId ?? "—"}</td>
-                        <td className="px-3 py-3 text-slate-700">{mapping.mapType ?? "—"}</td>
-                        <td className="px-3 py-3 text-slate-700">
+                        <td className="px-3 py-3 font-mono text-xs text-foreground">{mapping.externalCode}</td>
+                        <td className="px-3 py-3 text-foreground">{mapping.externalName}</td>
+                        <td className="px-3 py-3 font-mono text-xs text-foreground">{mapping.internalItemId ?? "—"}</td>
+                        <td className="px-3 py-3 text-foreground">{mapping.mapType ?? "—"}</td>
+                        <td className="px-3 py-3 text-foreground">
                           {typeof mapping.confidence === "number" ? `${(mapping.confidence * 100).toFixed(1)}%` : "—"}
                         </td>
                         <td className="px-3 py-3">
@@ -406,7 +406,7 @@ export default function MsikaGovernancePage() {
                             <button
                               type="button"
                               disabled={approveMapping.isPending}
-                              className="rounded-lg border border-emerald-200 px-3 py-1.5 text-xs text-emerald-800 hover:bg-emerald-50 disabled:opacity-50"
+                              className="rounded-lg border border-success/25 px-3 py-1.5 text-xs text-primary-hover hover:bg-success-soft disabled:opacity-50"
                               onClick={() => approveMapping.mutate(mapping.id)}
                             >
                               Approve
@@ -414,7 +414,7 @@ export default function MsikaGovernancePage() {
                             <button
                               type="button"
                               disabled={rejectMapping.isPending}
-                              className="rounded-lg border border-red-200 px-3 py-1.5 text-xs text-red-800 hover:bg-red-50 disabled:opacity-50"
+                              className="rounded-lg border border-danger/28 px-3 py-1.5 text-xs text-red-800 hover:bg-danger-soft disabled:opacity-50"
                               onClick={() => rejectMapping.mutate(mapping.id)}
                             >
                               Reject
@@ -427,7 +427,7 @@ export default function MsikaGovernancePage() {
                 </table>
               </div>
             ) : (
-              <p className="mt-4 text-sm text-slate-500">No pending mappings are waiting for review.</p>
+              <p className="mt-4 text-sm text-muted-foreground">No pending mappings are waiting for review.</p>
             )}
           </section>
         </div>

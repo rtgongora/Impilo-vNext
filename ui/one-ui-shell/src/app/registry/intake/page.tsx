@@ -162,7 +162,7 @@ export default function RegistryIntakePage() {
           />
           <Link
             href="/registry"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to registry hub
@@ -185,17 +185,17 @@ export default function RegistryIntakePage() {
         </div>
 
         <div className="mb-6 grid gap-4 md:grid-cols-2">
-          <div className="rounded-2xl border border-gray-200 bg-white p-5">
-            <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-              <Radar className="h-4 w-4 text-impilo-500" />
+          <div className="rounded-2xl border border-border bg-card p-5">
+            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <Radar className="h-4 w-4 text-primary" />
               Day-zero bootstrap snapshot
             </div>
-            <p className="mt-2 text-xs text-gray-500">
+            <p className="mt-2 text-xs text-muted-foreground">
               Read-only probes of downstream registry reachability (Vito, Varapi, Tuso, Indawo). Use with registry
               admin runbooks.
             </p>
             {bootstrap.isLoading ? (
-              <div className="mt-4 flex items-center gap-2 text-sm text-gray-500">
+              <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" /> Loading…
               </div>
             ) : (
@@ -215,18 +215,18 @@ export default function RegistryIntakePage() {
             )}
           </div>
 
-          <div className="rounded-2xl border border-gray-200 bg-white p-5">
-            <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-              <ClipboardList className="h-4 w-4 text-emerald-600" />
+          <div className="rounded-2xl border border-border bg-card p-5">
+            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <ClipboardList className="h-4 w-4 text-primary" />
               Guided intake session (shell)
             </div>
-            <p className="mt-2 text-xs text-gray-500">
+            <p className="mt-2 text-xs text-muted-foreground">
               Creates a Redis-backed intake session for progressive capture. Link to Vito/Varapi/Tuso flows from here in
               later UI passes.
             </p>
             <button
               type="button"
-              className="mt-4 inline-flex items-center rounded-lg bg-impilo-500 px-3 py-2 text-xs font-medium text-white hover:bg-impilo-600 disabled:opacity-50"
+              className="mt-4 inline-flex items-center rounded-lg bg-primary px-3 py-2 text-xs font-medium text-white hover:bg-primary-hover disabled:opacity-50"
               disabled={createSession.isPending}
               onClick={() =>
                 createSession.mutate({
@@ -241,18 +241,18 @@ export default function RegistryIntakePage() {
               {createSession.isPending ? "Starting…" : "Start sample client intake session"}
             </button>
             {createSession.data?.data && (
-              <p className="mt-2 text-xs text-emerald-700">
+              <p className="mt-2 text-xs text-primary-hover">
                 Session id: {(createSession.data as { data: { id: string } }).data.id}
               </p>
             )}
           </div>
 
-          <div className="rounded-2xl border border-gray-200 bg-white p-5">
-            <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+          <div className="rounded-2xl border border-border bg-card p-5">
+            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
               <LifeBuoy className="h-4 w-4 text-sky-600" />
               Self-help recovery ticket
             </div>
-            <p className="mt-2 text-xs text-gray-500">
+            <p className="mt-2 text-xs text-muted-foreground">
               Governed queue item for lost reference / resume / correction routing.
             </p>
             <button
@@ -277,19 +277,19 @@ export default function RegistryIntakePage() {
             )}
           </div>
 
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 md:col-span-2">
-            <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+          <div className="rounded-2xl border border-border bg-card p-5 md:col-span-2">
+            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
               <Upload className="h-4 w-4 text-amber-600" />
               Governed CSV import (preview + execute)
             </div>
-            <p className="mt-2 text-xs text-gray-500">{importHint}</p>
+            <p className="mt-2 text-xs text-muted-foreground">{importHint}</p>
 
             <div className="mt-3 flex flex-wrap items-center gap-3">
-              <label className="text-xs font-medium text-gray-600">Target registry</label>
+              <label className="text-xs font-medium text-muted-foreground">Target registry</label>
               <select
                 value={targetRegistry}
                 onChange={(e) => setTargetRegistry(e.target.value as "FACILITY" | "SITE")}
-                className="rounded-lg border border-gray-200 px-2 py-1.5 text-xs"
+                className="rounded-lg border border-border px-2 py-1.5 text-xs"
               >
                 <option value="FACILITY">Facility (Tuso)</option>
                 <option value="SITE">Site (Indawo)</option>
@@ -297,7 +297,7 @@ export default function RegistryIntakePage() {
             </div>
 
             <div className="mt-3 flex flex-wrap gap-4">
-              <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-gray-700">
+              <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-foreground">
                 <input
                   type="radio"
                   name="importSource"
@@ -306,7 +306,7 @@ export default function RegistryIntakePage() {
                 />
                 Inline CSV
               </label>
-              <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-gray-700">
+              <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-foreground">
                 <input
                   type="radio"
                   name="importSource"
@@ -316,7 +316,7 @@ export default function RegistryIntakePage() {
                 Landela document (UUID)
               </label>
               {targetRegistry === "FACILITY" ? (
-                <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-gray-700">
+                <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-foreground">
                   <input
                     type="radio"
                     name="importSource"
@@ -330,13 +330,13 @@ export default function RegistryIntakePage() {
 
             {importSource === "landela" ? (
               <div className="mt-3">
-                <label className="block text-xs font-medium text-gray-600 mb-1">Landela document UUID</label>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Landela document UUID</label>
                 <input
                   type="text"
                   value={landelaDocumentId}
                   onChange={(e) => setLandelaDocumentId(e.target.value)}
                   placeholder="e.g. 8b7c… (document stored in Landela; BFF downloads UTF-8 text)"
-                  className="w-full rounded-lg border border-gray-200 p-2 font-mono text-xs"
+                  className="w-full rounded-lg border border-border p-2 font-mono text-xs"
                 />
                 <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px]">
                   {isLikelyLandelaDocumentUuid(landelaDocumentId) ? (
@@ -348,19 +348,19 @@ export default function RegistryIntakePage() {
                         <ExternalLink className="h-3 w-3" />
                         Open in Landela workspace
                       </Link>
-                      <span className="text-gray-400">|</span>
+                      <span className="text-muted-foreground">|</span>
                       <Link
                         href={registryIntakeLandelaPrefillHref(landelaDocumentId)}
-                        className="text-gray-600 hover:text-gray-900 hover:underline"
+                        className="text-muted-foreground hover:text-foreground hover:underline"
                       >
                         Shareable link (prefills this form)
                       </Link>
                     </>
                   ) : (
-                    <span className="text-gray-500">Enter a valid UUID to open the document workspace.</span>
+                    <span className="text-muted-foreground">Enter a valid UUID to open the document workspace.</span>
                   )}
                 </div>
-                <p className="mt-1 text-[11px] text-gray-500">
+                <p className="mt-1 text-[11px] text-muted-foreground">
                   The document body must be CSV text. Large files are fetched server-side from Landela (not pasted in
                   the browser).
                 </p>
@@ -369,7 +369,7 @@ export default function RegistryIntakePage() {
               <textarea
                 value={csvText}
                 onChange={(e) => setCsvText(e.target.value)}
-                className="mt-3 w-full rounded-lg border border-gray-200 p-3 font-mono text-xs"
+                className="mt-3 w-full rounded-lg border border-border p-3 font-mono text-xs"
                 rows={5}
               />
             )}
@@ -385,7 +385,7 @@ export default function RegistryIntakePage() {
               </button>
               <button
                 type="button"
-                className="rounded-lg border border-amber-200 px-3 py-2 text-xs font-medium text-amber-900 hover:bg-amber-50 disabled:opacity-50"
+                className="rounded-lg border border-warning/35 px-3 py-2 text-xs font-medium text-warning-foreground hover:bg-warning-soft disabled:opacity-50"
                 disabled={!importJobId || executeImport.isPending}
                 onClick={() => importJobId && executeImport.mutate({ jobId: importJobId, dryRun: true })}
               >
@@ -393,7 +393,7 @@ export default function RegistryIntakePage() {
               </button>
               <button
                 type="button"
-                className="rounded-lg border border-rose-200 px-3 py-2 text-xs font-medium text-rose-900 hover:bg-rose-50 disabled:opacity-50"
+                className="rounded-lg border border-danger/28 px-3 py-2 text-xs font-medium text-danger hover:bg-danger-soft disabled:opacity-50"
                 disabled={!importJobId || executeImport.isPending}
                 onClick={() => importJobId && executeImport.mutate({ jobId: importJobId, dryRun: false })}
               >
@@ -401,7 +401,7 @@ export default function RegistryIntakePage() {
               </button>
               <button
                 type="button"
-                className="rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                className="rounded-lg border border-border px-3 py-2 text-xs font-medium text-foreground hover:bg-background disabled:opacity-50"
                 disabled={!importJobId || cancelImport.isPending}
                 onClick={() =>
                   importJobId &&
@@ -420,27 +420,27 @@ export default function RegistryIntakePage() {
               </p>
             )}
             {createImport.data?.data && (
-              <p className="mt-2 text-xs text-amber-900">
+              <p className="mt-2 text-xs text-warning-foreground">
                 Job id: {(createImport.data as { data: { id: string } }).data.id}
               </p>
             )}
             {executeImport.data?.data && (
-              <p className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+              <p className="mt-3 rounded-lg border border-success/25 bg-success-soft px-3 py-2 text-xs text-primary-hover">
                 Import job executed. Refresh recent jobs for updated status.
               </p>
             )}
-            <div className="mt-5 rounded-xl border border-gray-100 bg-gray-50 p-3">
+            <div className="mt-5 rounded-xl border border-border bg-background p-3">
               <div className="flex items-center justify-between gap-2">
-                <p className="text-xs font-semibold text-gray-800">Recent import jobs</p>
+                <p className="text-xs font-semibold text-foreground">Recent import jobs</p>
                 <button
                   type="button"
-                  className="text-xs font-medium text-gray-600 hover:text-gray-900"
+                  className="text-xs font-medium text-muted-foreground hover:text-foreground"
                   onClick={() => void importJobs.refetch()}
                 >
                   Refresh
                 </button>
               </div>
-              {importJobs.isLoading ? <p className="mt-2 text-xs text-gray-500">Loading import jobs...</p> : null}
+              {importJobs.isLoading ? <p className="mt-2 text-xs text-muted-foreground">Loading import jobs...</p> : null}
               {importJobs.data?.data?.length ? (
                 <div className="mt-2 grid gap-2">
                   {importJobs.data.data.slice(0, 5).map((job) => (
@@ -448,59 +448,59 @@ export default function RegistryIntakePage() {
                       key={String(job.id)}
                       type="button"
                       onClick={() => setImportJobId(String(job.id))}
-                      className="rounded-lg border border-gray-200 bg-white p-2 text-left text-xs hover:border-amber-300"
+                      className="rounded-lg border border-border bg-card p-2 text-left text-xs hover:border-amber-300"
                     >
-                      <span className="font-mono font-semibold text-gray-900">{String(job.id)}</span>
-                      <span className="ml-2 text-gray-600">{String(job.status ?? "UNKNOWN")}</span>
-                      <span className="ml-2 text-gray-500">{String(job.targetRegistry ?? "")}</span>
+                      <span className="font-mono font-semibold text-foreground">{String(job.id)}</span>
+                      <span className="ml-2 text-muted-foreground">{String(job.status ?? "UNKNOWN")}</span>
+                      <span className="ml-2 text-muted-foreground">{String(job.targetRegistry ?? "")}</span>
                     </button>
                   ))}
                 </div>
               ) : !importJobs.isLoading ? (
-                <p className="mt-2 text-xs text-gray-500">No recent import jobs.</p>
+                <p className="mt-2 text-xs text-muted-foreground">No recent import jobs.</p>
               ) : null}
             </div>
           </div>
 
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 md:col-span-2">
-            <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+          <div className="rounded-2xl border border-border bg-card p-5 md:col-span-2">
+            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
               <MapPin className="h-4 w-4 text-violet-600" />
               Indawo site search (operator)
             </div>
-            <p className="mt-2 text-xs text-gray-500">
+            <p className="mt-2 text-xs text-muted-foreground">
               Lists a page of sites from Indawo, then optionally filters names containing your query (client-side on
               that page).
             </p>
             <div className="mt-3 flex flex-wrap items-end gap-3">
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Name contains</label>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Name contains</label>
                 <input
                   type="text"
                   value={indawoQ}
                   onChange={(e) => setIndawoQ(e.target.value)}
-                  className="w-48 rounded-lg border border-gray-200 px-2 py-1.5 text-xs"
+                  className="w-48 rounded-lg border border-border px-2 py-1.5 text-xs"
                   placeholder="optional"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Cursor</label>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Cursor</label>
                 <input
                   type="number"
                   min={0}
                   value={indawoCursor}
                   onChange={(e) => setIndawoCursor(Number(e.target.value) || 0)}
-                  className="w-20 rounded-lg border border-gray-200 px-2 py-1.5 text-xs"
+                  className="w-20 rounded-lg border border-border px-2 py-1.5 text-xs"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Limit</label>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Limit</label>
                 <input
                   type="number"
                   min={1}
                   max={200}
                   value={indawoLimit}
                   onChange={(e) => setIndawoLimit(Math.min(200, Math.max(1, Number(e.target.value) || 50)))}
-                  className="w-20 rounded-lg border border-gray-200 px-2 py-1.5 text-xs"
+                  className="w-20 rounded-lg border border-border px-2 py-1.5 text-xs"
                 />
               </div>
               <button
@@ -535,23 +535,23 @@ export default function RegistryIntakePage() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-4 text-xs text-gray-600">
-          <p className="font-medium text-gray-800">Entry points</p>
+        <div className="rounded-2xl border border-dashed border-border bg-background p-4 text-xs text-muted-foreground">
+          <p className="font-medium text-foreground">Entry points</p>
           <ul className="mt-2 list-disc space-y-1 pl-5">
             <li>
-              <Link className="text-impilo-600 hover:underline" href="/registry/clients/new">
+              <Link className="text-primary hover:underline" href="/registry/clients/new">
                 Register new client
               </Link>{" "}
               (Vito issuance + client registry)
             </li>
             <li>
-              <Link className="text-impilo-600 hover:underline" href="/registry/providers/new">
+              <Link className="text-primary hover:underline" href="/registry/providers/new">
                 Register new provider
               </Link>{" "}
               (Varapi — or anchor on Impilo Health ID from that page)
             </li>
             <li>
-              <Link className="text-impilo-600 hover:underline" href="/registry/facilities/new">
+              <Link className="text-primary hover:underline" href="/registry/facilities/new">
                 Register new facility
               </Link>{" "}
               (Tuso)

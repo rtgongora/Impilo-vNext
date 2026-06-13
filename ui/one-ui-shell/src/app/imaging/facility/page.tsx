@@ -28,13 +28,13 @@ export default function FacilityImagingDashboardPage() {
       >
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <FeatureMaturityBadge status="live" detail="OROS imaging worklist + facility context" />
-          <Link href="/imaging/worklist" className="text-sm font-medium text-impilo-600 hover:underline">
+          <Link href="/imaging/worklist" className="text-sm font-medium text-primary hover:underline">
             Open full worklist →
           </Link>
         </div>
 
         {!facility?.id ? (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
+          <div className="rounded-lg border border-warning/35 bg-warning-soft p-6 text-sm text-warning-foreground">
             Select a facility to load imaging operations.
           </div>
         ) : (
@@ -46,30 +46,30 @@ export default function FacilityImagingDashboardPage() {
                 { label: "Completed", value: summary?.completed ?? 0 },
                 { label: "Urgent", value: summary?.urgent ?? 0 },
               ].map((card) => (
-                <div key={card.label} className="rounded-2xl border border-slate-200 bg-white p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{card.label}</p>
-                  <p className="mt-2 text-3xl font-semibold text-slate-900">{card.value}</p>
+                <div key={card.label} className="rounded-2xl border border-border bg-card p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{card.label}</p>
+                  <p className="mt-2 text-3xl font-semibold text-foreground">{card.value}</p>
                 </div>
               ))}
             </div>
 
-            <section className="rounded-2xl border border-slate-200 bg-white p-5">
-              <h2 className="text-sm font-semibold text-slate-900">Recent imaging orders</h2>
+            <section className="rounded-2xl border border-border bg-card p-5">
+              <h2 className="text-sm font-semibold text-foreground">Recent imaging orders</h2>
               {worklistQ.isLoading ? (
-                <div className="mt-4 flex items-center gap-2 text-sm text-slate-500">
+                <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" /> Loading…
                 </div>
               ) : worklistQ.isError ? (
                 <p className="mt-4 text-sm text-red-600">Could not load imaging worklist.</p>
               ) : items.length === 0 ? (
-                <p className="mt-4 text-sm text-slate-500">No imaging orders in scope.</p>
+                <p className="mt-4 text-sm text-muted-foreground">No imaging orders in scope.</p>
               ) : (
                 <ul className="mt-4 divide-y divide-slate-100">
                   {items.map((item) => (
                     <li key={String(item.orderId ?? item.id)} className="flex items-center justify-between py-2 text-sm">
-                      <span className="font-mono text-slate-800">{String(item.orderId ?? item.id)}</span>
-                      <span className="text-slate-600">{item.patientCpid ?? "—"}</span>
-                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs">{item.status ?? "—"}</span>
+                      <span className="font-mono text-foreground">{String(item.orderId ?? item.id)}</span>
+                      <span className="text-muted-foreground">{item.patientCpid ?? "—"}</span>
+                      <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs">{item.status ?? "—"}</span>
                     </li>
                   ))}
                 </ul>

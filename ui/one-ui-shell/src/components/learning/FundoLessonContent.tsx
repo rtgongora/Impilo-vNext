@@ -46,9 +46,9 @@ function StructuredBlocks({ blocks }: { blocks: Array<Record<string, unknown>> }
       {blocks.map((block, idx) => (
         <div key={`${String(block.type ?? "block")}-${idx}`}>
           {String(block.type) === "heading" ? (
-            <h3 className="text-sm font-semibold text-gray-900">{String(block.text ?? "")}</h3>
+            <h3 className="text-sm font-semibold text-foreground">{String(block.text ?? "")}</h3>
           ) : (
-            <p className="text-sm whitespace-pre-wrap text-gray-700">{String(block.text ?? "")}</p>
+            <p className="text-sm whitespace-pre-wrap text-foreground">{String(block.text ?? "")}</p>
           )}
         </div>
       ))}
@@ -61,7 +61,7 @@ function VideoLesson({ refUrl, title }: { refUrl: string; title: string }) {
   if (embedUrl && (embedUrl.includes("youtube.com/embed") || embedUrl.includes("vimeo.com/video"))) {
     return (
       <div className="space-y-2" data-testid="fundo-lesson-video-embed">
-        <div className="aspect-video overflow-hidden rounded-lg border border-gray-200 bg-black">
+        <div className="aspect-video overflow-hidden rounded-lg border border-border bg-black">
           <iframe
             title={title}
             src={embedUrl}
@@ -78,14 +78,14 @@ function VideoLesson({ refUrl, title }: { refUrl: string; title: string }) {
   }
   if (embedUrl) {
     return (
-      <video controls className="w-full rounded-lg border border-gray-200" data-testid="fundo-lesson-video-native">
+      <video controls className="w-full rounded-lg border border-border" data-testid="fundo-lesson-video-native">
         <source src={embedUrl} />
         Your browser does not support inline video playback.
       </video>
     );
   }
   return (
-    <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900" data-testid="fundo-lesson-video-link">
+    <div className="rounded-lg border border-warning/35 bg-warning-soft p-3 text-sm text-warning-foreground" data-testid="fundo-lesson-video-link">
       <p className="flex items-center gap-2 font-medium">
         <Play className="h-4 w-4" /> Video lesson
       </p>
@@ -103,16 +103,16 @@ function PracticalTaskLesson({ body, taskRef }: { body: string; taskRef: string 
 
   return (
     <div className="space-y-3" data-testid="fundo-lesson-practical">
-      <p className="flex items-center gap-2 text-sm font-medium text-gray-900">
+      <p className="flex items-center gap-2 text-sm font-medium text-foreground">
         <Wrench className="h-4 w-4 text-teal-700" /> Practical competency checklist
       </p>
       {steps.length === 0 ? (
-        <p className="text-sm text-gray-600">Complete the supervised practical task described by your trainer.</p>
+        <p className="text-sm text-muted-foreground">Complete the supervised practical task described by your trainer.</p>
       ) : (
         <ul className="space-y-2">
           {steps.map((step, idx) => (
             <li key={`${idx}-${step}`}>
-              <label className="flex cursor-pointer items-start gap-2 rounded border border-gray-200 bg-white p-2 text-sm text-gray-800">
+              <label className="flex cursor-pointer items-start gap-2 rounded border border-border bg-card p-2 text-sm text-foreground">
                 <input
                   type="checkbox"
                   checked={Boolean(checked[idx])}
@@ -125,10 +125,10 @@ function PracticalTaskLesson({ body, taskRef }: { body: string; taskRef: string 
           ))}
         </ul>
       )}
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-muted-foreground">
         {steps.length > 0 ? (
           <span className="inline-flex items-center gap-1">
-            {doneCount === steps.length ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> : <Circle className="h-3.5 w-3.5" />}
+            {doneCount === steps.length ? <CheckCircle2 className="h-3.5 w-3.5 text-primary" /> : <Circle className="h-3.5 w-3.5" />}
             {doneCount} of {steps.length} checklist items marked
           </span>
         ) : (
@@ -162,10 +162,10 @@ export function FundoLessonContent({ lesson }: { lesson: LessonRecord }) {
       {contentFormat !== "STRUCTURED_BLOCKS" || blocks.length === 0 ? (
         <>
           {contentType === "TEXT" ? (
-            <p className="text-sm whitespace-pre-wrap text-gray-700">{body || "No text content provided."}</p>
+            <p className="text-sm whitespace-pre-wrap text-foreground">{body || "No text content provided."}</p>
           ) : null}
           {contentType === "DOCUMENT" ? (
-            <div className="flex items-start gap-2 text-sm text-gray-700" data-testid="fundo-lesson-document">
+            <div className="flex items-start gap-2 text-sm text-foreground" data-testid="fundo-lesson-document">
               <FileText className="mt-0.5 h-4 w-4 text-teal-700" />
               <a className="text-teal-700 hover:underline" href={ref} target="_blank" rel="noreferrer">
                 {body || ref || "Open document"}
@@ -180,7 +180,7 @@ export function FundoLessonContent({ lesson }: { lesson: LessonRecord }) {
           {contentType === "VIDEO" ? <VideoLesson refUrl={ref || body} title={title} /> : null}
           {contentType === "PRACTICAL_TASK" ? <PracticalTaskLesson body={body} taskRef={ref} /> : null}
           {!["TEXT", "DOCUMENT", "LINK", "VIDEO", "PRACTICAL_TASK"].includes(contentType) ? (
-            <p className="text-sm text-gray-700">{body || ref || "Unsupported lesson type."}</p>
+            <p className="text-sm text-foreground">{body || ref || "Unsupported lesson type."}</p>
           ) : null}
         </>
       ) : null}

@@ -51,8 +51,8 @@ export function LiveKitConsultRoom({
 
   if (!normalizedServerUrl || !token) {
     return (
-      <div className="h-full w-full rounded-md bg-gray-950 text-gray-300 flex flex-col items-center justify-center gap-2 px-3 text-center">
-        <Shield className="h-8 w-8 text-gray-500" />
+      <div className="h-full w-full rounded-md bg-neutral-900 text-muted-foreground flex flex-col items-center justify-center gap-2 px-3 text-center">
+        <Shield className="h-8 w-8 text-muted-foreground" />
         <span className="text-xs">Waiting for governed LiveKit server URL and scoped media token.</span>
       </div>
     );
@@ -61,7 +61,7 @@ export function LiveKitConsultRoom({
   if (!isSupportedLiveKitServerUrl(normalizedServerUrl)) {
     onError?.("Invalid LiveKit server URL. Expected ws:// or wss:// endpoint from RTC Gateway.");
     return (
-      <div className="h-full w-full rounded-md bg-gray-950 text-amber-200 flex flex-col items-center justify-center gap-2 px-3 text-center">
+      <div className="h-full w-full rounded-md bg-neutral-900 text-warning-foreground flex flex-col items-center justify-center gap-2 px-3 text-center">
         <Shield className="h-8 w-8 text-amber-400" />
         <span className="text-xs">Governed media endpoint is invalid. Use async clinical workflow and alert platform support.</span>
       </div>
@@ -78,7 +78,7 @@ export function LiveKitConsultRoom({
       onConnected={onConnected}
       onDisconnected={onDisconnected}
       onError={(error) => onError?.(error.message)}
-      className="h-full w-full rounded-md overflow-hidden bg-gray-950 text-white"
+      className="h-full w-full rounded-md overflow-hidden bg-neutral-900 text-white"
     >
       <div className="h-full w-full flex flex-col">
         <div className="flex items-center gap-2 px-2 py-1 text-[10px] text-emerald-100 bg-emerald-950/60">

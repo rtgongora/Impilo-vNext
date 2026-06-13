@@ -91,18 +91,18 @@ const EMPTY_FIELD_ACTIVITY: NewFieldActivity = {
 
 function EmptyOpsTable(title: string, detail: string) {
   return (
-    <div className="bg-white rounded-lg border border-gray-200">
+    <div className="bg-card rounded-lg border border-border">
       <div className="px-4 py-3 border-b flex items-center justify-between">
-        <h4 className="text-sm font-semibold text-gray-900">{title}</h4>
+        <h4 className="text-sm font-semibold text-foreground">{title}</h4>
         <button
           type="button"
           disabled
-          className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-200 text-gray-500 text-xs font-medium rounded-lg cursor-not-allowed"
+          className="inline-flex items-center gap-1 px-3 py-1.5 bg-neutral-100 text-muted-foreground text-xs font-medium rounded-lg cursor-not-allowed"
         >
           <Plus className="h-3.5 w-3.5" /> Not available
         </button>
       </div>
-      <div className="px-4 py-12 text-center text-sm text-gray-500">{detail}</div>
+      <div className="px-4 py-12 text-center text-sm text-muted-foreground">{detail}</div>
     </div>
   );
 }
@@ -171,10 +171,10 @@ export function FieldOperationsTab() {
       {/* Header + New Field Activity button */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-            <Navigation className="w-5 h-5 text-emerald-600" /> Field Operations
+          <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+            <Navigation className="w-5 h-5 text-primary" /> Field Operations
           </h3>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <p className="text-xs text-muted-foreground mt-0.5">
             Record, coordinate, and track field activities, community visits, and mobile health operations
           </p>
         </div>
@@ -197,59 +197,59 @@ export function FieldOperationsTab() {
 
       {/* ═══ NEW FIELD ACTIVITY FORM ═══ */}
       {showNewForm && (
-        <div className="bg-white rounded-xl border-2 border-red-200 p-6 space-y-6">
+        <div className="bg-card rounded-xl border-2 border-danger/28 p-6 space-y-6">
           <h4 className="text-sm font-semibold text-red-800 flex items-center gap-2">
             <Navigation className="w-4 h-4" /> New Field Activity Report
           </h4>
 
           {fieldError && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{fieldError}</div>
+            <div className="p-3 bg-danger-soft border border-danger/28 rounded-lg text-sm text-danger">{fieldError}</div>
           )}
 
           {/* Section 1: Activity Classification */}
           <fieldset className="space-y-3">
-            <legend className="text-xs font-semibold text-gray-500 uppercase tracking-wider">1. Activity Classification</legend>
+            <legend className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">1. Activity Classification</legend>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <label className="block">
-                <span className="text-sm font-medium text-gray-700">Activity Type *</span>
+                <span className="text-sm font-medium text-foreground">Activity Type *</span>
                 <select value={fieldForm.activityType} onChange={(e) => updateField("activityType", e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-red-400 focus:border-red-400">
+                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm focus:ring-2 focus:ring-red-400 focus:border-red-400">
                   <option value="">Select type...</option>
                   {FIELD_ACTIVITY_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
               </label>
               <label className="block">
-                <span className="text-sm font-medium text-gray-700">Status</span>
+                <span className="text-sm font-medium text-foreground">Status</span>
                 <select value={fieldForm.status} onChange={(e) => updateField("status", e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-red-400 focus:border-red-400">
+                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm focus:ring-2 focus:ring-red-400 focus:border-red-400">
                   <option value="">Select status...</option>
                   {FIELD_STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
                 </select>
               </label>
             </div>
             <label className="block">
-              <span className="text-sm font-medium text-gray-700">Activity Title *</span>
+              <span className="text-sm font-medium text-foreground">Activity Title *</span>
               <input value={fieldForm.activityTitle} onChange={(e) => updateField("activityTitle", e.target.value)}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="e.g. Mbare Ward 12 home visit — TB defaulter tracing" />
+                className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" placeholder="e.g. Mbare Ward 12 home visit — TB defaulter tracing" />
             </label>
             <label className="block">
-              <span className="text-sm font-medium text-gray-700">Description</span>
+              <span className="text-sm font-medium text-foreground">Description</span>
               <textarea value={fieldForm.description} onChange={(e) => updateField("description", e.target.value)} rows={3}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm resize-none" placeholder="Activity objectives, scope, and methodology..." />
+                className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm resize-none" placeholder="Activity objectives, scope, and methodology..." />
             </label>
           </fieldset>
 
           {/* Section 2: Location */}
           <fieldset className="space-y-3">
-            <legend className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+            <legend className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
               <MapPin className="w-3.5 h-3.5" /> 2. Location
             </legend>
             <label className="block">
-              <span className="text-sm font-medium text-gray-700">Linked Facility / Public Health Site {siteCount > 0 ? "*" : "(optional)"}</span>
+              <span className="text-sm font-medium text-foreground">Linked Facility / Public Health Site {siteCount > 0 ? "*" : "(optional)"}</span>
               <select
                 value={fieldForm.linkedSiteId}
                 onChange={(e) => updateField("linkedSiteId", e.target.value)}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
               >
                 <option value="">{siteCount > 0 ? "Select linked site..." : "No sites available"}</option>
                 {indawoSites.map((site) => (
@@ -261,9 +261,9 @@ export function FieldOperationsTab() {
             </label>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <label className="block">
-                <span className="text-sm font-medium text-gray-700">Province</span>
+                <span className="text-sm font-medium text-foreground">Province</span>
                 <select value={fieldForm.province} onChange={(e) => updateField("province", e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm">
                   <option value="">Select province...</option>
                   {["Harare Metropolitan", "Bulawayo Metropolitan", "Manicaland", "Mashonaland Central", "Mashonaland East", "Mashonaland West", "Masvingo", "Matabeleland North", "Matabeleland South", "Midlands"].map((p) => (
                     <option key={p} value={p}>{p}</option>
@@ -271,94 +271,94 @@ export function FieldOperationsTab() {
                 </select>
               </label>
               <label className="block">
-                <span className="text-sm font-medium text-gray-700">District</span>
+                <span className="text-sm font-medium text-foreground">District</span>
                 <input value={fieldForm.district} onChange={(e) => updateField("district", e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="e.g. Harare Urban" />
+                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" placeholder="e.g. Harare Urban" />
               </label>
               <label className="block">
-                <span className="text-sm font-medium text-gray-700">Ward / Village</span>
+                <span className="text-sm font-medium text-foreground">Ward / Village</span>
                 <input value={fieldForm.wardVillage} onChange={(e) => updateField("wardVillage", e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="e.g. Mbare Ward 12" />
+                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" placeholder="e.g. Mbare Ward 12" />
               </label>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <label className="block">
-                <span className="text-sm font-medium text-gray-700">GPS Latitude</span>
+                <span className="text-sm font-medium text-foreground">GPS Latitude</span>
                 <input value={fieldForm.gpsLat} onChange={(e) => updateField("gpsLat", e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="-17.83" />
+                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" placeholder="-17.83" />
               </label>
               <label className="block">
-                <span className="text-sm font-medium text-gray-700">GPS Longitude</span>
+                <span className="text-sm font-medium text-foreground">GPS Longitude</span>
                 <input value={fieldForm.gpsLng} onChange={(e) => updateField("gpsLng", e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="31.05" />
+                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" placeholder="31.05" />
               </label>
               <label className="block">
-                <span className="text-sm font-medium text-gray-700">Risk Assessment</span>
+                <span className="text-sm font-medium text-foreground">Risk Assessment</span>
                 <select value={fieldForm.riskAssessment} onChange={(e) => updateField("riskAssessment", e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm">
                   <option value="">Select risk...</option>
                   {RISK_LEVELS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
                 </select>
               </label>
               <label className="block">
-                <span className="text-sm font-medium text-gray-700">Households Targeted</span>
+                <span className="text-sm font-medium text-foreground">Households Targeted</span>
                 <input type="number" min="0" value={fieldForm.householdsTargeted} onChange={(e) => updateField("householdsTargeted", e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="0" />
+                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" placeholder="0" />
               </label>
             </div>
           </fieldset>
 
           {/* Section 3: Team & Schedule */}
           <fieldset className="space-y-3">
-            <legend className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+            <legend className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
               <Users className="w-3.5 h-3.5" /> 3. Team & Schedule
             </legend>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
               <label className="block">
-                <span className="text-sm font-medium text-gray-700">Team Leader Name *</span>
+                <span className="text-sm font-medium text-foreground">Team Leader Name *</span>
                 <input value={fieldForm.teamLeaderName} onChange={(e) => updateField("teamLeaderName", e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Full name" />
+                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" placeholder="Full name" />
               </label>
               <label className="block">
-                <span className="text-sm font-medium text-gray-700">Team Leader Phone</span>
+                <span className="text-sm font-medium text-foreground">Team Leader Phone</span>
                 <input value={fieldForm.teamLeaderPhone} onChange={(e) => updateField("teamLeaderPhone", e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="+263 7..." />
+                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" placeholder="+263 7..." />
               </label>
               <label className="block">
-                <span className="text-sm font-medium text-gray-700">Team Size</span>
+                <span className="text-sm font-medium text-foreground">Team Size</span>
                 <input type="number" min="1" value={fieldForm.teamSize} onChange={(e) => updateField("teamSize", e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="e.g. 5" />
+                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" placeholder="e.g. 5" />
               </label>
               <label className="block">
-                <span className="text-sm font-medium text-gray-700">Planned Duration</span>
+                <span className="text-sm font-medium text-foreground">Planned Duration</span>
                 <input value={fieldForm.plannedDuration} onChange={(e) => updateField("plannedDuration", e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="e.g. 4 hours, 2 days" />
+                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" placeholder="e.g. 4 hours, 2 days" />
               </label>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <label className="block">
-                <span className="text-sm font-medium text-gray-700">Activity Date</span>
+                <span className="text-sm font-medium text-foreground">Activity Date</span>
                 <input type="date" value={fieldForm.activityDate} onChange={(e) => updateField("activityDate", e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" />
               </label>
             </div>
           </fieldset>
 
           {/* Section 4: Equipment & Supplies */}
           <fieldset className="space-y-3">
-            <legend className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+            <legend className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
               <ClipboardList className="w-3.5 h-3.5" /> 4. Equipment & Supplies
             </legend>
             <label className="block">
-              <span className="text-sm font-medium text-gray-700">Equipment / Supplies Needed</span>
+              <span className="text-sm font-medium text-foreground">Equipment / Supplies Needed</span>
               <textarea value={fieldForm.equipmentSupplies} onChange={(e) => updateField("equipmentSupplies", e.target.value)} rows={3}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm resize-none" placeholder="e.g. Rapid test kits (50), BP monitors (3), health education pamphlets (200), PPE sets (10)..." />
+                className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm resize-none" placeholder="e.g. Rapid test kits (50), BP monitors (3), health education pamphlets (200), PPE sets (10)..." />
             </label>
           </fieldset>
 
           {/* Submit */}
           <div className="flex items-center justify-between pt-2 border-t">
-            <p className="text-xs text-gray-400">* Required fields</p>
+            <p className="text-xs text-muted-foreground">* Required fields</p>
             <button
               onClick={handleFieldSubmit}
               disabled={fieldSubmitting}
@@ -371,43 +371,43 @@ export function FieldOperationsTab() {
         </div>
       )}
 
-      <div className="rounded-lg border border-emerald-200 bg-emerald-50/80 p-4">
-        <h4 className="text-sm font-semibold text-emerald-900 flex items-center gap-2">
+      <div className="rounded-lg border border-success/25 bg-success-soft/80 p-4">
+        <h4 className="text-sm font-semibold text-primary-hover flex items-center gap-2">
           <MapPin className="h-4 w-4" /> Registered sites (Indawo, via BFF)
         </h4>
-        <p className="mt-1 text-xs text-emerald-800">
-          Live list from <code className="rounded bg-white/70 px-1">GET /internal/v1/public-health/sites</code> → indawo-service.
+        <p className="mt-1 text-xs text-primary-hover">
+          Live list from <code className="rounded bg-card/70 px-1">GET /internal/v1/public-health/sites</code> → indawo-service.
           Field team rosters, task boards, and GPS logs are not fabricated — they require workforce / ops APIs on the BFF.
         </p>
         {sitesLoading && (
-          <div className="mt-3 flex items-center gap-2 text-sm text-gray-600">
+          <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" /> Loading sites…
           </div>
         )}
         {sitesError && (
-          <p className="mt-3 text-sm text-red-700">Could not load Indawo sites (service unreachable or empty).</p>
+          <p className="mt-3 text-sm text-danger">Could not load Indawo sites (service unreachable or empty).</p>
         )}
         {!sitesLoading && !sitesError && siteCount === 0 && (
-          <p className="mt-3 text-sm text-gray-600">No sites returned for this tenant.</p>
+          <p className="mt-3 text-sm text-muted-foreground">No sites returned for this tenant.</p>
         )}
         {!sitesLoading && !sitesError && siteCount > 0 && (
-          <div className="mt-3 overflow-x-auto rounded-md border border-emerald-100 bg-white">
+          <div className="mt-3 overflow-x-auto rounded-md border border-emerald-100 bg-card">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b bg-gray-50 text-left">
-                  <th className="px-3 py-2 font-medium text-gray-600">Site ID</th>
-                  <th className="px-3 py-2 font-medium text-gray-600">Name</th>
-                  <th className="px-3 py-2 font-medium text-gray-600">Type</th>
-                  <th className="px-3 py-2 font-medium text-gray-600">Status</th>
+                <tr className="border-b bg-background text-left">
+                  <th className="px-3 py-2 font-medium text-muted-foreground">Site ID</th>
+                  <th className="px-3 py-2 font-medium text-muted-foreground">Name</th>
+                  <th className="px-3 py-2 font-medium text-muted-foreground">Type</th>
+                  <th className="px-3 py-2 font-medium text-muted-foreground">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {indawoSites.slice(0, 25).map((s) => (
-                  <tr key={s.id} className="border-b border-gray-100">
-                    <td className="px-3 py-2 font-mono text-gray-700">{s.id}</td>
-                    <td className="px-3 py-2 font-medium text-gray-900">{s.name}</td>
-                    <td className="px-3 py-2 text-gray-600">{s.siteType}</td>
-                    <td className="px-3 py-2 text-gray-600">{s.operationalStatus}</td>
+                  <tr key={s.id} className="border-b border-border">
+                    <td className="px-3 py-2 font-mono text-foreground">{s.id}</td>
+                    <td className="px-3 py-2 font-medium text-foreground">{s.name}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{s.siteType}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{s.operationalStatus}</td>
                   </tr>
                 ))}
               </tbody>
@@ -429,25 +429,25 @@ export function FieldOperationsTab() {
           { label: "Contacts traced (24h)", value: "—", Icon: Target, sub: "No aggregate API" },
           { label: "GPS check-ins (24h)", value: "—", Icon: Navigation, sub: "No telemetry API" },
         ].map((kpi, i) => (
-          <div key={i} className="bg-white rounded-lg border border-gray-200 p-3 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-impilo-50">
-              <kpi.Icon className="h-4 w-4 text-impilo-500" />
+          <div key={i} className="bg-card rounded-lg border border-border p-3 flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary-soft">
+              <kpi.Icon className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <p className="text-lg font-bold text-gray-900">{kpi.value}</p>
-              <p className="text-[10px] text-gray-500">{kpi.label}</p>
-              <p className="text-[9px] text-gray-400 mt-0.5">{kpi.sub}</p>
+              <p className="text-lg font-bold text-foreground">{kpi.value}</p>
+              <p className="text-[10px] text-muted-foreground">{kpi.label}</p>
+              <p className="text-[9px] text-muted-foreground mt-0.5">{kpi.sub}</p>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 flex items-center gap-2 text-xs text-gray-600">
+      <div className="rounded-lg border border-border bg-background px-3 py-2 flex items-center gap-2 text-xs text-muted-foreground">
         <Radio className="h-3.5 w-3.5 shrink-0" />
         Field operation submissions are live; roster/task/GPS dashboards still require dedicated workforce and telemetry APIs.
       </div>
 
-      <div className="flex gap-1 border-b border-gray-200">
+      <div className="flex gap-1 border-b border-border">
         {[
           { key: "teams" as const, label: "Field Teams" },
           { key: "tasks" as const, label: "Task Board" },
@@ -460,7 +460,7 @@ export function FieldOperationsTab() {
             className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
               activeSubTab === tab.key
                 ? "border-amber-600 text-amber-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
+                : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
             {tab.label}
@@ -475,20 +475,20 @@ export function FieldOperationsTab() {
         )}
 
       {activeSubTab === "tasks" && (
-        <div className="bg-white rounded-lg border border-gray-200">
+        <div className="bg-card rounded-lg border border-border">
           <div className="px-4 py-3 border-b">
-            <h4 className="text-sm font-semibold text-gray-900">Field task board</h4>
+            <h4 className="text-sm font-semibold text-foreground">Field task board</h4>
           </div>
           <div className="p-4 overflow-x-auto">
             {tasksLoading ? (
-              <div className="flex items-center gap-2 text-sm text-gray-500 py-6 justify-center">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground py-6 justify-center">
                 <Loader2 className="h-4 w-4 animate-spin" /> Loading tasks…
               </div>
             ) : fieldTasks.length === 0 ? (
-              <p className="text-sm text-gray-500 text-center py-6">No field tasks. Submit a field activity to create one.</p>
+              <p className="text-sm text-muted-foreground text-center py-6">No field tasks. Submit a field activity to create one.</p>
             ) : (
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 text-left text-xs text-gray-600">
+                <thead className="bg-background text-left text-xs text-muted-foreground">
                   <tr>
                     <th className="px-3 py-2">Title</th>
                     <th className="px-3 py-2">Type</th>
@@ -501,23 +501,23 @@ export function FieldOperationsTab() {
                   {fieldTasks.map((t) => {
                     const next = TASK_TRANSITIONS[t.status];
                     return (
-                      <tr key={t.id} className="border-t border-gray-100">
+                      <tr key={t.id} className="border-t border-border">
                         <td className="px-3 py-2 font-medium">{t.title}</td>
-                        <td className="px-3 py-2 text-gray-600">{t.taskType}</td>
-                        <td className="px-3 py-2"><span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">{t.status}</span></td>
-                        <td className="px-3 py-2 text-gray-500 text-xs">{t.assignedTo}</td>
+                        <td className="px-3 py-2 text-muted-foreground">{t.taskType}</td>
+                        <td className="px-3 py-2"><span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-primary-hover">{t.status}</span></td>
+                        <td className="px-3 py-2 text-muted-foreground text-xs">{t.assignedTo}</td>
                         <td className="px-3 py-2">
                           {next ? (
                             <button
                               type="button"
                               disabled={transitionTask.isPending}
                               onClick={() => transitionTask.mutate({ taskId: t.id, status: next })}
-                              className="text-[10px] text-impilo-600 hover:underline"
+                              className="text-[10px] text-primary hover:underline"
                             >
                               → {next}
                             </button>
                           ) : (
-                            <span className="text-[10px] text-gray-400">Done</span>
+                            <span className="text-[10px] text-muted-foreground">Done</span>
                           )}
                         </td>
                       </tr>

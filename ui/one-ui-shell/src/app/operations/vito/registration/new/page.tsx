@@ -65,9 +65,9 @@ function Stepper({ currentStep }: { currentStep: WizardStep }) {
                   isCompleted
                     ? "bg-emerald-500 text-white"
                     : isActive
-                    ? "bg-impilo-600 text-white"
+                    ? "bg-primary-hover text-white"
                     : isPending
-                    ? "border-2 border-gray-200 bg-white text-gray-400"
+                    ? "border-2 border-border bg-card text-muted-foreground"
                     : ""
                 }`}
               >
@@ -75,7 +75,7 @@ function Stepper({ currentStep }: { currentStep: WizardStep }) {
               </div>
               <span
                 className={`hidden text-xs font-medium sm:block ${
-                  isActive ? "text-impilo-700" : isCompleted ? "text-emerald-600" : "text-gray-400"
+                  isActive ? "text-primary-hover" : isCompleted ? "text-primary" : "text-muted-foreground"
                 }`}
               >
                 {step.label}
@@ -84,7 +84,7 @@ function Stepper({ currentStep }: { currentStep: WizardStep }) {
             {!isLast && (
               <div
                 className={`mx-1 h-0.5 flex-1 transition-colors ${
-                  step.num < currentStep ? "bg-emerald-300" : "bg-gray-200"
+                  step.num < currentStep ? "bg-emerald-300" : "bg-neutral-100"
                 }`}
               />
             )}
@@ -98,8 +98,8 @@ function Stepper({ currentStep }: { currentStep: WizardStep }) {
 function Field({ label, value }: { label: string; value: string | null | undefined }) {
   return (
     <div className="space-y-0.5">
-      <p className="text-xs font-medium uppercase tracking-wider text-gray-400">{label}</p>
-      <p className="text-sm text-gray-900">{value ?? "—"}</p>
+      <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="text-sm text-foreground">{value ?? "—"}</p>
     </div>
   );
 }
@@ -312,18 +312,18 @@ export default function NewRegistrationPage() {
           <div className="flex flex-wrap items-center gap-3">
             <Link
               href="/operations/vito/registration"
-              className="text-sm text-gray-600 underline-offset-2 hover:text-gray-900 hover:underline"
+              className="text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
             >
               ← Client registrations
             </Link>
           </div>
 
-          <div className="rounded-2xl border border-gray-200 bg-white p-5">
+          <div className="rounded-2xl border border-border bg-card p-5">
             <Stepper currentStep={step} />
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="flex items-center gap-2 rounded-2xl border border-danger/28 bg-danger-soft px-4 py-3 text-sm text-danger">
               <AlertTriangle className="h-4 w-4 flex-shrink-0" />
               <span>{error}</span>
               <button
@@ -340,49 +340,49 @@ export default function NewRegistrationPage() {
           {step === 1 && (
             <form
               onSubmit={handleStep1Submit}
-              className="rounded-2xl border border-gray-200 bg-white p-5 space-y-5"
+              className="rounded-2xl border border-border bg-card p-5 space-y-5"
             >
-              <h2 className="text-sm font-semibold text-gray-900">Step 1 — Demographics</h2>
+              <h2 className="text-sm font-semibold text-foreground">Step 1 — Demographics</h2>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
+                <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
                   Given name *
                   <input
                     required
                     value={form1.firstName}
                     onChange={(e) => updateForm1("firstName", e.target.value)}
-                    className="rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300"
+                    className="rounded-xl border border-border px-3 py-2 text-sm text-foreground focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300"
                     placeholder="Given name"
                   />
                 </label>
 
-                <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
+                <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
                   Family name *
                   <input
                     required
                     value={form1.lastName}
                     onChange={(e) => updateForm1("lastName", e.target.value)}
-                    className="rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300"
+                    className="rounded-xl border border-border px-3 py-2 text-sm text-foreground focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300"
                     placeholder="Family name"
                   />
                 </label>
 
-                <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
+                <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
                   Date of birth
                   <input
                     type="date"
                     value={form1.dateOfBirth}
                     onChange={(e) => updateForm1("dateOfBirth", e.target.value)}
-                    className="rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300"
+                    className="rounded-xl border border-border px-3 py-2 text-sm text-foreground focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300"
                   />
                 </label>
 
-                <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
+                <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
                   Sex
                   <select
                     value={form1.sex}
                     onChange={(e) => updateForm1("sex", e.target.value)}
-                    className="rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300"
+                    className="rounded-xl border border-border px-3 py-2 text-sm text-foreground focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300"
                   >
                     {SEX_OPTIONS.map((s) => (
                       <option key={s} value={s}>
@@ -392,43 +392,43 @@ export default function NewRegistrationPage() {
                   </select>
                 </label>
 
-                <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
+                <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
                   Nationality
                   <input
                     value={form1.nationality}
                     onChange={(e) => updateForm1("nationality", e.target.value)}
-                    className="rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300"
+                    className="rounded-xl border border-border px-3 py-2 text-sm text-foreground focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300"
                     placeholder="e.g. ZWE"
                   />
                 </label>
 
-                <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
+                <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
                   Phone number
                   <input
                     type="tel"
                     value={form1.phone}
                     onChange={(e) => updateForm1("phone", e.target.value)}
-                    className="rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300"
+                    className="rounded-xl border border-border px-3 py-2 text-sm text-foreground focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300"
                     placeholder="+263…"
                   />
                 </label>
 
-                <label className="flex flex-col gap-1 text-xs font-medium text-gray-600 sm:col-span-2">
+                <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground sm:col-span-2">
                   Address
                   <input
                     value={form1.addressLine1}
                     onChange={(e) => updateForm1("addressLine1", e.target.value)}
-                    className="rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300"
+                    className="rounded-xl border border-border px-3 py-2 text-sm text-foreground focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300"
                     placeholder="Address line 1"
                   />
                 </label>
 
-                <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
+                <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
                   ID document type
                   <select
                     value={form1.idDocumentType}
                     onChange={(e) => updateForm1("idDocumentType", e.target.value)}
-                    className="rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300"
+                    className="rounded-xl border border-border px-3 py-2 text-sm text-foreground focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300"
                   >
                     {ID_DOC_TYPES.map((t) => (
                       <option key={t} value={t}>
@@ -438,24 +438,24 @@ export default function NewRegistrationPage() {
                   </select>
                 </label>
 
-                <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
+                <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
                   ID document number
                   <input
                     value={form1.idDocumentNumber}
                     onChange={(e) => updateForm1("idDocumentNumber", e.target.value)}
-                    className="rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300"
+                    className="rounded-xl border border-border px-3 py-2 text-sm text-foreground focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300"
                     placeholder="Document number"
                   />
                 </label>
 
-                <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
+                <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
                   Registration type
                   <select
                     value={form1.registrationType}
                     onChange={(e) =>
                       updateForm1("registrationType", e.target.value as ClientRegistrationType)
                     }
-                    className="rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300"
+                    className="rounded-xl border border-border px-3 py-2 text-sm text-foreground focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300"
                   >
                     {REGISTRATION_TYPES.map((t) => (
                       <option key={t} value={t}>
@@ -465,12 +465,12 @@ export default function NewRegistrationPage() {
                   </select>
                 </label>
 
-                <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
+                <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
                   Channel
                   <select
                     value={form1.initiatedChannel}
                     onChange={(e) => updateForm1("initiatedChannel", e.target.value)}
-                    className="rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300"
+                    className="rounded-xl border border-border px-3 py-2 text-sm text-foreground focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300"
                   >
                     {INITIATED_CHANNELS.map((c) => (
                       <option key={c} value={c}>
@@ -480,13 +480,13 @@ export default function NewRegistrationPage() {
                   </select>
                 </label>
 
-                <label className="flex flex-col gap-1 text-xs font-medium text-gray-600 sm:col-span-2">
+                <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground sm:col-span-2">
                   Notes
                   <textarea
                     rows={2}
                     value={form1.notes}
                     onChange={(e) => updateForm1("notes", e.target.value)}
-                    className="rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300 resize-none"
+                    className="rounded-xl border border-border px-3 py-2 text-sm text-foreground focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300 resize-none"
                     placeholder="Optional notes"
                   />
                 </label>
@@ -502,7 +502,7 @@ export default function NewRegistrationPage() {
                 <button
                   type="submit"
                   disabled={createRegistration.isPending}
-                  className="inline-flex items-center gap-2 rounded-xl bg-impilo-600 px-5 py-2 text-sm font-medium text-white hover:bg-impilo-700 disabled:opacity-50"
+                  className="inline-flex items-center gap-2 rounded-xl bg-primary-hover px-5 py-2 text-sm font-medium text-white hover:bg-impilo-700 disabled:opacity-50"
                 >
                   {createRegistration.isPending ? "Saving draft…" : "Next — Review & Evidence"}
                 </button>
@@ -512,8 +512,8 @@ export default function NewRegistrationPage() {
 
           {step === 2 && profile && (
             <div className="space-y-5">
-              <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
-                <h2 className="text-sm font-semibold text-gray-900">Step 2 — Draft summary</h2>
+              <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
+                <h2 className="text-sm font-semibold text-foreground">Step 2 — Draft summary</h2>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   <Field label="Given name" value={profile.master?.firstName} />
                   <Field label="Family name" value={profile.master?.lastName} />
@@ -523,31 +523,31 @@ export default function NewRegistrationPage() {
                   <Field label="Status" value={profile.master?.lifecycleStatus} />
                 </div>
                 {registrationId && (
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-muted-foreground">
                     Registration ID:{" "}
                     <span className="font-mono">{registrationId}</span>
                   </p>
                 )}
               </div>
 
-              <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
+              <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
                 <div className="flex items-center gap-2">
-                  <Plus className="h-4 w-4 text-gray-500" />
-                  <h2 className="text-sm font-semibold text-gray-900">Add evidence</h2>
+                  <Plus className="h-4 w-4 text-muted-foreground" />
+                  <h2 className="text-sm font-semibold text-foreground">Add evidence</h2>
                 </div>
                 <form onSubmit={handleAddEvidence} className="space-y-3">
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
+                    <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
                       Evidence type *
                       <input
                         required
                         value={step2.evidenceType}
                         onChange={(e) => setStep2((p) => ({ ...p, evidenceType: e.target.value }))}
-                        className="rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300"
+                        className="rounded-xl border border-border px-3 py-2 text-sm text-foreground focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300"
                         placeholder="e.g. NATIONAL_ID_SCAN"
                       />
                     </label>
-                    <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
+                    <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
                       Document URL / reference *
                       <input
                         required
@@ -555,18 +555,18 @@ export default function NewRegistrationPage() {
                         onChange={(e) =>
                           setStep2((p) => ({ ...p, evidenceReference: e.target.value }))
                         }
-                        className="rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300"
+                        className="rounded-xl border border-border px-3 py-2 text-sm text-foreground focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300"
                         placeholder="URL or base64 reference"
                       />
                     </label>
-                    <label className="flex flex-col gap-1 text-xs font-medium text-gray-600 sm:col-span-2">
+                    <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground sm:col-span-2">
                       Notes
                       <input
                         value={step2.evidenceNotes}
                         onChange={(e) =>
                           setStep2((p) => ({ ...p, evidenceNotes: e.target.value }))
                         }
-                        className="rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300"
+                        className="rounded-xl border border-border px-3 py-2 text-sm text-foreground focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300"
                         placeholder="Optional notes"
                       />
                     </label>
@@ -574,26 +574,26 @@ export default function NewRegistrationPage() {
                   <button
                     type="submit"
                     disabled={addEvidence.isPending}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:border-gray-400 hover:bg-gray-50 disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:border-gray-400 hover:bg-background disabled:opacity-50"
                   >
                     <Plus className="h-4 w-4" />
                     {addEvidence.isPending ? "Adding…" : "Add evidence"}
                   </button>
                   {addEvidence.isSuccess && (
-                    <p className="text-xs text-emerald-600">Evidence added successfully.</p>
+                    <p className="text-xs text-primary">Evidence added successfully.</p>
                   )}
                 </form>
 
                 {profile.evidence && profile.evidence.length > 0 && (
                   <div className="space-y-2">
-                    <p className="text-xs font-medium text-gray-500">Attached evidence</p>
+                    <p className="text-xs font-medium text-muted-foreground">Attached evidence</p>
                     {profile.evidence.map((ev) => (
                       <div
                         key={ev.evidenceId}
-                        className="flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-3 py-2 text-xs text-gray-700"
+                        className="flex items-center justify-between rounded-xl border border-border bg-background px-3 py-2 text-xs text-foreground"
                       >
                         <span className="font-medium">{ev.evidenceType}</span>
-                        <span className="text-gray-400 truncate max-w-[200px]">
+                        <span className="text-muted-foreground truncate max-w-[200px]">
                           {ev.evidenceReference}
                         </span>
                       </div>
@@ -606,7 +606,7 @@ export default function NewRegistrationPage() {
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+                  className="rounded-xl border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:border-border hover:bg-background"
                 >
                   ← Back
                 </button>
@@ -614,7 +614,7 @@ export default function NewRegistrationPage() {
                   type="button"
                   disabled={submitRegistration.isPending}
                   onClick={handleSubmitForReview}
-                  className="inline-flex items-center gap-2 rounded-xl bg-impilo-600 px-5 py-2 text-sm font-medium text-white hover:bg-impilo-700 disabled:opacity-50"
+                  className="inline-flex items-center gap-2 rounded-xl bg-primary-hover px-5 py-2 text-sm font-medium text-white hover:bg-impilo-700 disabled:opacity-50"
                 >
                   {submitRegistration.isPending ? "Submitting…" : "Submit for review →"}
                 </button>
@@ -624,11 +624,11 @@ export default function NewRegistrationPage() {
 
           {step === 3 && (
             <div className="space-y-5">
-              <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
-                <h2 className="text-sm font-semibold text-gray-900">Step 3 — Verification</h2>
+              <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
+                <h2 className="text-sm font-semibold text-foreground">Step 3 — Verification</h2>
 
                 {profileQuery.isLoading ? (
-                  <p className="text-sm text-gray-400">Loading profile…</p>
+                  <p className="text-sm text-muted-foreground">Loading profile…</p>
                 ) : liveProfile ? (
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     <Field label="Health ID" value={liveProfile.master?.healthId} />
@@ -642,23 +642,23 @@ export default function NewRegistrationPage() {
                 ) : null}
               </div>
 
-              <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
-                <h2 className="text-sm font-semibold text-gray-900">Record verification review</h2>
+              <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
+                <h2 className="text-sm font-semibold text-foreground">Record verification review</h2>
                 <form onSubmit={handleVerificationReview} className="space-y-4">
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
+                    <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
                       Review type
                       <input
                         value={step3Form.reviewType}
                         onChange={(e) =>
                           setStep3Form((p) => ({ ...p, reviewType: e.target.value }))
                         }
-                        className="rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300"
+                        className="rounded-xl border border-border px-3 py-2 text-sm text-foreground focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300"
                         placeholder="e.g. IDENTITY_VERIFICATION"
                       />
                     </label>
 
-                    <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
+                    <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
                       Outcome *
                       <select
                         required
@@ -666,7 +666,7 @@ export default function NewRegistrationPage() {
                         onChange={(e) =>
                           setStep3Form((p) => ({ ...p, decision: e.target.value }))
                         }
-                        className="rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300"
+                        className="rounded-xl border border-border px-3 py-2 text-sm text-foreground focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300"
                       >
                         {REVIEW_DECISIONS.map((d) => (
                           <option key={d} value={d}>
@@ -676,7 +676,7 @@ export default function NewRegistrationPage() {
                       </select>
                     </label>
 
-                    <label className="flex flex-col gap-1 text-xs font-medium text-gray-600 sm:col-span-2">
+                    <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground sm:col-span-2">
                       Notes
                       <textarea
                         rows={2}
@@ -684,7 +684,7 @@ export default function NewRegistrationPage() {
                         onChange={(e) =>
                           setStep3Form((p) => ({ ...p, reviewNotes: e.target.value }))
                         }
-                        className="rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300 resize-none"
+                        className="rounded-xl border border-border px-3 py-2 text-sm text-foreground focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-300 resize-none"
                         placeholder="Optional reviewer notes"
                       />
                     </label>
@@ -700,21 +700,21 @@ export default function NewRegistrationPage() {
                 </form>
               </div>
 
-              <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
+              <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-sm font-semibold text-gray-900">Identity match check</h2>
+                  <h2 className="text-sm font-semibold text-foreground">Identity match check</h2>
                   <button
                     type="button"
                     disabled={triggerMatch.isPending || !healthId}
                     onClick={handleTriggerMatch}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:border-gray-400 hover:bg-gray-50 disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:border-gray-400 hover:bg-background disabled:opacity-50"
                   >
                     {triggerMatch.isPending ? "Matching…" : "Trigger match check"}
                   </button>
                 </div>
 
                 {triggerMatch.isSuccess && matchCandidates.length === 0 && (
-                  <div className="flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                  <div className="flex items-center gap-2 rounded-xl bg-success-soft px-4 py-3 text-sm text-primary-hover">
                     <CheckCircle className="h-4 w-4 flex-shrink-0" />
                     No duplicate matches found.
                   </div>
@@ -722,20 +722,20 @@ export default function NewRegistrationPage() {
 
                 {matchCandidates.length > 0 && (
                   <div className="space-y-2">
-                    <p className="text-xs font-medium text-amber-700">
+                    <p className="text-xs font-medium text-warning-foreground">
                       {matchCandidates.length} potential match{matchCandidates.length !== 1 ? "es" : ""} found — review each candidate:
                     </p>
                     {matchCandidates.map((candidate) => (
                       <div
                         key={candidate.matchId}
-                        className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"
+                        className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-warning/35 bg-warning-soft px-4 py-3"
                       >
                         <div className="space-y-0.5 text-xs">
-                          <p className="font-medium text-gray-900">
+                          <p className="font-medium text-foreground">
                             Candidate:{" "}
                             <span className="font-mono">{candidate.candidateHealthId}</span>
                           </p>
-                          <p className="text-gray-500">
+                          <p className="text-muted-foreground">
                             Score: {candidate.matchScore}
                             {candidate.matchReasonSummary && ` — ${candidate.matchReasonSummary}`}
                           </p>
@@ -747,7 +747,7 @@ export default function NewRegistrationPage() {
                             onClick={() =>
                               handleReviewCandidate(candidate.matchId, "CONFIRMED_DISTINCT")
                             }
-                            className="rounded-xl border border-emerald-200 bg-white px-3 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
+                            className="rounded-xl border border-success/25 bg-card px-3 py-1 text-xs font-medium text-primary-hover hover:bg-success-soft disabled:opacity-50"
                           >
                             Not a duplicate
                           </button>
@@ -757,7 +757,7 @@ export default function NewRegistrationPage() {
                             onClick={() =>
                               handleReviewCandidate(candidate.matchId, "CONFIRMED_DUPLICATE")
                             }
-                            className="rounded-xl border border-red-200 bg-white px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+                            className="rounded-xl border border-danger/28 bg-card px-3 py-1 text-xs font-medium text-danger hover:bg-danger-soft disabled:opacity-50"
                           >
                             Confirmed duplicate
                           </button>
@@ -772,7 +772,7 @@ export default function NewRegistrationPage() {
                 <button
                   type="button"
                   onClick={() => setStep(2)}
-                  className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+                  className="rounded-xl border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:border-border hover:bg-background"
                 >
                   ← Back
                 </button>
@@ -782,15 +782,15 @@ export default function NewRegistrationPage() {
 
           {step === 4 && (
             <div className="space-y-5">
-              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 space-y-3">
+              <div className="rounded-2xl border border-success/25 bg-success-soft p-5 space-y-3">
                 <div className="flex items-center gap-3">
-                  <CheckCircle className="h-6 w-6 text-emerald-600" />
-                  <h2 className="text-base font-semibold text-emerald-900">
+                  <CheckCircle className="h-6 w-6 text-primary" />
+                  <h2 className="text-base font-semibold text-primary-hover">
                     Registration complete
                   </h2>
                 </div>
                 {healthId && (
-                  <p className="text-sm text-emerald-800">
+                  <p className="text-sm text-primary-hover">
                     Health ID:{" "}
                     <span className="font-mono font-semibold">{healthId}</span>
                   </p>
@@ -798,8 +798,8 @@ export default function NewRegistrationPage() {
               </div>
 
               {liveProfile && (
-                <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
-                  <h2 className="text-sm font-semibold text-gray-900">Final profile</h2>
+                <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
+                  <h2 className="text-sm font-semibold text-foreground">Final profile</h2>
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     <Field label="Health ID" value={liveProfile.master?.healthId} />
                     <Field
@@ -827,26 +827,26 @@ export default function NewRegistrationPage() {
                 </div>
               )}
 
-              <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-3">
-                <h2 className="text-sm font-semibold text-gray-900">Next steps</h2>
+              <div className="rounded-2xl border border-border bg-card p-5 space-y-3">
+                <h2 className="text-sm font-semibold text-foreground">Next steps</h2>
                 <div className="flex flex-wrap gap-3">
                   {healthId && (
                     <Link
                       href={`/operations/vito/cards?healthId=${encodeURIComponent(healthId)}`}
-                      className="inline-flex items-center gap-2 rounded-xl border border-impilo-200 bg-impilo-50 px-4 py-2 text-sm font-medium text-impilo-800 hover:border-impilo-300"
+                      className="inline-flex items-center gap-2 rounded-xl border border-primary/25 bg-primary-soft px-4 py-2 text-sm font-medium text-impilo-800 hover:border-impilo-300"
                     >
                       Request smart card →
                     </Link>
                   )}
                   <Link
                     href="/operations/vito/issuance"
-                    className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+                    className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:border-border hover:bg-background"
                   >
                     Go to issuance queue →
                   </Link>
                   <Link
                     href="/operations/vito/registration/new"
-                    className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+                    className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:border-border hover:bg-background"
                     onClick={() => {
                       setStep(1);
                       setProfile(null);

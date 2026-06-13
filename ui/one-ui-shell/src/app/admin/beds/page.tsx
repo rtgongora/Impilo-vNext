@@ -76,11 +76,11 @@ export default function AdminBedsPage() {
     <AppLayout>
       <PageShell title="Bed & Ward Administration" subtitle="Manage wards and bed inventory">
         <div className="mb-4 flex items-center justify-between">
-          <Link href="/admin" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
+          <Link href="/admin" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-4 h-4" /> Back to Admin
           </Link>
           <button onClick={() => setShowForm(!showForm)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600">
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover">
             <Plus className="w-4 h-4" /> Add Ward
           </button>
         </div>
@@ -119,39 +119,39 @@ export default function AdminBedsPage() {
             ]}
           />
 
-          <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
-            <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+          <div className="rounded-3xl border border-border bg-background/70 p-4">
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
               Capacity loop status
             </p>
-            <p className="mt-2 text-sm text-slate-800">
+            <p className="mt-2 text-sm text-foreground">
               {source === "discharge"
                 ? "This admin capacity view was reached from encounter outcome, so the loop here is confirming that ward configuration supports the linked admission or transfer handoff."
                 : "This workspace manages bed configuration, but it should still connect cleanly back to live bed operations and the source encounter when context exists."}
             </p>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-muted-foreground">
               Update capacity in place here, then move back to bed operations, the encounter, or the chart when the next action depends on live assignment rather than setup.
             </p>
           </div>
 
         {showForm && (
-          <div className="bg-white rounded-lg border border-gray-200 p-5 mb-4">
-            <h3 className="font-medium text-gray-900 mb-3">New Ward</h3>
+          <div className="bg-card rounded-lg border border-border p-5 mb-4">
+            <h3 className="font-medium text-foreground mb-3">New Ward</h3>
             <div className="grid grid-cols-3 gap-3">
               <input type="text" placeholder="Ward name" value={wardName} onChange={(e) => setWardName(e.target.value)}
-                className="px-3 py-2 text-sm border border-gray-300 rounded-lg" />
+                className="px-3 py-2 text-sm border border-border rounded-lg" />
               <select value={wardType} onChange={(e) => setWardType(e.target.value)}
-                className="px-3 py-2 text-sm border border-gray-300 rounded-lg">
+                className="px-3 py-2 text-sm border border-border rounded-lg">
                 <option value="GENERAL">General</option><option value="MEDICAL">Medical</option>
                 <option value="SURGICAL">Surgical</option><option value="ICU">ICU</option>
                 <option value="MATERNITY">Maternity</option><option value="PEDIATRIC">Pediatric</option>
                 <option value="EMERGENCY">Emergency</option>
               </select>
               <input type="number" min="1" max="50" value={totalBeds} onChange={(e) => setTotalBeds(Number(e.target.value))}
-                className="px-3 py-2 text-sm border border-gray-300 rounded-lg" />
+                className="px-3 py-2 text-sm border border-border rounded-lg" />
             </div>
             <button onClick={() => createWard.mutate({ name: wardName, wardType, totalBeds, facilityId: facility?.id })}
               disabled={!wardName || createWard.isPending}
-              className="mt-3 px-4 py-2 bg-impilo-500 text-white text-sm rounded-lg hover:bg-impilo-600 disabled:opacity-50">
+              className="mt-3 px-4 py-2 bg-primary text-white text-sm rounded-lg hover:bg-primary-hover disabled:opacity-50">
               {createWard.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Create Ward & Beds"}
             </button>
           </div>
@@ -159,31 +159,31 @@ export default function AdminBedsPage() {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>
         ) : wards.length === 0 ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <Bed className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-400 text-sm">No wards configured. {facility ? "Add a ward to get started." : "Select a facility first."}</p>
+          <div className="bg-card rounded-lg border border-border p-12 text-center">
+            <Bed className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground text-sm">No wards configured. {facility ? "Add a ward to get started." : "Select a facility first."}</p>
           </div>
         ) : (
           <div className="space-y-3">
             {wards.map((ward) => {
               const a = ward.attributes;
               return (
-                <div key={ward.id} className="bg-white rounded-lg border border-gray-200 p-4 flex items-center justify-between">
+                <div key={ward.id} className="bg-card rounded-lg border border-border p-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Building2 className="w-5 h-5 text-gray-400" />
+                    <Building2 className="w-5 h-5 text-muted-foreground" />
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{a.name as string}</p>
-                      <p className="text-xs text-gray-500">{a.wardType as string} · Floor: {(a.floor as string) || "—"}</p>
+                      <p className="text-sm font-medium text-foreground">{a.name as string}</p>
+                      <p className="text-xs text-muted-foreground">{a.wardType as string} · Floor: {(a.floor as string) || "—"}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4 text-xs">
                     <span className="text-green-600 font-medium">{a.availableBeds as number} available</span>
-                    <span className="text-impilo-500 font-medium">{a.occupiedBeds as number} occupied</span>
-                    <span className="text-gray-500">{a.totalBeds as number} total</span>
-                    <Link href="/beds" className="text-impilo-500 hover:text-impilo-700 font-medium">Manage →</Link>
+                    <span className="text-primary font-medium">{a.occupiedBeds as number} occupied</span>
+                    <span className="text-muted-foreground">{a.totalBeds as number} total</span>
+                    <Link href="/beds" className="text-primary hover:text-primary-hover font-medium">Manage →</Link>
                   </div>
                 </div>
               );

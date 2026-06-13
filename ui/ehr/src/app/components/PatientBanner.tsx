@@ -7,7 +7,7 @@ export function PatientBanner({ patient }: { patient: Patient }) {
   const age = calculateAge(patient.dateOfBirth);
 
   return (
-    <div className="bg-white border-b px-6 py-3 flex items-center justify-between">
+    <div className="bg-card border-b px-6 py-3 flex items-center justify-between">
       <div className="flex items-center gap-6">
         <div className="w-12 h-12 rounded-full bg-impilo-primary text-white flex items-center justify-center font-semibold text-lg">
           {patient.firstName[0]}
@@ -17,7 +17,7 @@ export function PatientBanner({ patient }: { patient: Patient }) {
           <h2 className="font-semibold text-lg">
             {patient.lastName}, {patient.firstName}
           </h2>
-          <div className="text-sm text-gray-600 flex gap-4">
+          <div className="text-sm text-muted-foreground flex gap-4">
             <span>{patient.gender}</span>
             <span>{age} years</span>
             <span>DOB: {patient.dateOfBirth}</span>

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { mushexApi, type AdapterConfig, type AdapterType } from "@/lib/mushexApi";
 
 const ADAPTER_TYPE_BADGE: Record<AdapterType, string> = {
-  MOBILE_MONEY: "bg-emerald-100 text-emerald-800",
+  MOBILE_MONEY: "bg-emerald-100 text-primary-hover",
   BANK_TRANSFER: "bg-blue-100 text-blue-800",
   CARD_GATEWAY: "bg-purple-100 text-purple-800",
   SANDBOX: "bg-neutral-100 text-neutral-600",
@@ -42,7 +42,7 @@ export default function AdaptersPage() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-red-800">
           {error}
         </div>
       )}
@@ -82,7 +82,7 @@ export default function AdaptersPage() {
                   <td className="px-4 py-3">
                     <span className={`badge ${
                       adapter.enabled
-                        ? "bg-emerald-100 text-emerald-800"
+                        ? "bg-emerald-100 text-primary-hover"
                         : "bg-red-100 text-red-800"
                     }`}>
                       {adapter.enabled ? "ENABLED" : "DISABLED"}

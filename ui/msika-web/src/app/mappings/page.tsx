@@ -48,18 +48,18 @@ export default function MappingsPage() {
       <h2 className="text-xl font-bold mb-4">Mapping Approval Queue</h2>
 
       {stepUp && (
-        <div className="bg-amber-50 border border-amber-300 text-amber-800 px-4 py-3 rounded mb-4">
+        <div className="bg-warning-soft border border-amber-300 text-warning-foreground px-4 py-3 rounded mb-4">
           Step-up authentication required for mapping approval. Please re-authenticate.
         </div>
       )}
 
       {loading ? (
-        <p className="text-gray-500">Loading...</p>
+        <p className="text-muted-foreground">Loading...</p>
       ) : mappings.length === 0 ? (
-        <p className="text-gray-500">No pending mappings to review.</p>
+        <p className="text-muted-foreground">No pending mappings to review.</p>
       ) : (
-        <table className="w-full bg-white rounded shadow text-sm">
-          <thead className="bg-gray-50">
+        <table className="w-full bg-card rounded shadow text-sm">
+          <thead className="bg-background">
             <tr>
               <th className="text-left px-4 py-3">External Code</th>
               <th className="text-left px-4 py-3">External Name</th>
@@ -71,11 +71,11 @@ export default function MappingsPage() {
           </thead>
           <tbody>
             {mappings.map(m => (
-              <tr key={m.id} className="border-t hover:bg-gray-50">
+              <tr key={m.id} className="border-t hover:bg-background">
                 <td className="px-4 py-3 font-mono text-xs">{m.externalCode}</td>
                 <td className="px-4 py-3">{m.externalName}</td>
                 <td className="px-4 py-3 font-mono text-xs">{m.internalItemId || "—"}</td>
-                <td className="px-4 py-3"><span className="px-2 py-0.5 rounded text-xs bg-gray-100">{m.mapType}</span></td>
+                <td className="px-4 py-3"><span className="px-2 py-0.5 rounded text-xs bg-neutral-100">{m.mapType}</span></td>
                 <td className="px-4 py-3">{(m.confidence * 100).toFixed(1)}%</td>
                 <td className="px-4 py-3 space-x-2">
                   <button onClick={() => action(m.id, "approve")}

@@ -92,53 +92,53 @@ export default function ScheduledQueuePage() {
 
           {isLoading ? (
             <div className="flex items-center justify-center py-16">
-              <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
-              <span className="ml-2 text-sm text-slate-500">Loading scheduled appointments...</span>
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              <span className="ml-2 text-sm text-muted-foreground">Loading scheduled appointments...</span>
             </div>
           ) : error ? (
-            <div className="rounded-3xl border border-red-200 bg-red-50 p-6 text-center">
+            <div className="rounded-3xl border border-danger/28 bg-danger-soft p-6 text-center">
               <AlertTriangle className="mx-auto mb-2 h-8 w-8 text-red-400" />
-              <p className="text-sm text-red-700">Failed to load appointments.</p>
+              <p className="text-sm text-danger">Failed to load appointments.</p>
             </div>
           ) : entries.length === 0 ? (
-            <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-sm">
-              <CalendarClock className="mx-auto mb-3 h-10 w-10 text-slate-300" />
-              <p className="text-sm text-slate-500">No scheduled appointments for this facility.</p>
+            <div className="rounded-3xl border border-border bg-card p-12 text-center shadow-sm">
+              <CalendarClock className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">No scheduled appointments for this facility.</p>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-gray-50">
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Patient</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Appointment Time</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Type</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Provider</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">Action</th>
+                <tr className="border-b bg-background">
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Patient</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Appointment Time</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Type</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Provider</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
+                  <th className="text-right px-4 py-3 font-medium text-muted-foreground">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {entries.map((entry) => {
                   const status = getAppointmentStatus(entry);
-                  const statusStyle = QUEUE_STATUS_STYLES[status] ?? "bg-gray-100 text-gray-700";
+                  const statusStyle = QUEUE_STATUS_STYLES[status] ?? "bg-neutral-100 text-foreground";
                   const patientId = getAppointmentPatientId(entry);
                   const appointmentTime = getAppointmentTime(entry);
                   return (
-                    <tr key={entry.id} className="border-b last:border-b-0 hover:bg-gray-50">
-                      <td className="px-4 py-3 font-medium text-gray-900">
+                    <tr key={entry.id} className="border-b last:border-b-0 hover:bg-background">
+                      <td className="px-4 py-3 font-medium text-foreground">
                         {patientId || "Patient not linked"}
                       </td>
-                      <td className="px-4 py-3 text-gray-600">
+                      <td className="px-4 py-3 text-muted-foreground">
                         {formatQueueDateTime(appointmentTime)}
                       </td>
-                      <td className="px-4 py-3 text-gray-600">
+                      <td className="px-4 py-3 text-muted-foreground">
                         <div>
                           <p>{getAppointmentType(entry)}</p>
-                          <p className="mt-1 text-xs text-slate-500">{getAppointmentReason(entry)}</p>
+                          <p className="mt-1 text-xs text-muted-foreground">{getAppointmentReason(entry)}</p>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-gray-600">
+                      <td className="px-4 py-3 text-muted-foreground">
                         {getAppointmentProvider(entry)}
                       </td>
                       <td className="px-4 py-3">
@@ -151,7 +151,7 @@ export default function ScheduledQueuePage() {
                           {patientId ? (
                             <Link
                               href={`/ehr/${patientId}`}
-                              className="rounded-xl bg-impilo-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-impilo-600"
+                              className="rounded-xl bg-primary px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-primary-hover"
                             >
                               Open Chart
                             </Link>
@@ -171,7 +171,7 @@ export default function ScheduledQueuePage() {
                               type="button"
                               onClick={() => confirmAppointment.mutate(entry.id)}
                               disabled={confirmAppointment.isPending}
-                              className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50"
+                              className="rounded-xl border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-background disabled:opacity-50"
                             >
                               Confirm
                             </button>
@@ -186,7 +186,7 @@ export default function ScheduledQueuePage() {
                                 })
                               }
                               disabled={cancelAppointment.isPending}
-                              className="rounded-xl border border-rose-200 bg-white px-3 py-1.5 text-xs font-medium text-rose-600 transition-colors hover:bg-rose-50 disabled:opacity-50"
+                              className="rounded-xl border border-danger/28 bg-card px-3 py-1.5 text-xs font-medium text-rose-600 transition-colors hover:bg-danger-soft disabled:opacity-50"
                             >
                               Cancel
                             </button>
@@ -195,7 +195,7 @@ export default function ScheduledQueuePage() {
                             <button
                               type="button"
                               onClick={() => router.push("/queue/search")}
-                              className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                              className="rounded-xl border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-background"
                             >
                               Find Patient
                             </button>

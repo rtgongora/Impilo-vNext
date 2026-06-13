@@ -87,27 +87,27 @@ export function ReportingDashboardOrchestrationPanel() {
           </button>
           <Link
             href="/reports/custom"
-            className="inline-flex items-center gap-1 rounded-lg border border-violet-300 bg-white px-3 py-1.5 text-xs font-medium text-violet-900 hover:bg-violet-50"
+            className="inline-flex items-center gap-1 rounded-lg border border-violet-300 bg-card px-3 py-1.5 text-xs font-medium text-violet-900 hover:bg-violet-50"
           >
             Custom reports
           </Link>
           <Link
             href="/ndila"
-            className="inline-flex items-center gap-1 rounded-lg border border-violet-300 bg-white px-3 py-1.5 text-xs font-medium text-violet-900 hover:bg-violet-50"
+            className="inline-flex items-center gap-1 rounded-lg border border-violet-300 bg-card px-3 py-1.5 text-xs font-medium text-violet-900 hover:bg-violet-50"
           >
             <Map className="h-3.5 w-3.5" />
             Ndila map
           </Link>
           <Link
             href="/data-intelligence/pipelines"
-            className="inline-flex items-center gap-1 rounded-lg border border-violet-300 bg-white px-3 py-1.5 text-xs font-medium text-violet-900 hover:bg-violet-50"
+            className="inline-flex items-center gap-1 rounded-lg border border-violet-300 bg-card px-3 py-1.5 text-xs font-medium text-violet-900 hover:bg-violet-50"
           >
             <Database className="h-3.5 w-3.5" />
             NDR pipelines
           </Link>
           <Link
             href="/data-intelligence"
-            className="inline-flex items-center gap-1 rounded-lg border border-violet-300 bg-white px-3 py-1.5 text-xs font-medium text-violet-900 hover:bg-violet-50"
+            className="inline-flex items-center gap-1 rounded-lg border border-violet-300 bg-card px-3 py-1.5 text-xs font-medium text-violet-900 hover:bg-violet-50"
           >
             Data &amp; intelligence
           </Link>

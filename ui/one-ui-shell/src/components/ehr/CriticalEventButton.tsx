@@ -43,7 +43,7 @@ export function CriticalEventButton({ isCriticalEventActive = false, onActivate 
   return (
     <>
       <button onClick={() => setOpen(true)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-50 border border-red-300 text-red-700 hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors">
+        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-danger-soft border border-red-300 text-danger hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors">
         <AlertTriangle className="w-4 h-4" />
         <span className="text-sm font-medium">Critical Event</span>
       </button>
@@ -51,18 +51,18 @@ export function CriticalEventButton({ isCriticalEventActive = false, onActivate 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)} />
-          <div className="relative bg-white rounded-xl shadow-2xl w-[440px]">
+          <div className="relative bg-card rounded-xl shadow-2xl w-[440px]">
             <div className="px-6 py-4 border-b flex items-center justify-between">
-              <h2 className="text-base font-semibold text-red-700 flex items-center gap-2"><AlertTriangle className="w-5 h-5" /> Activate Critical Event</h2>
-              <button onClick={() => setOpen(false)} className="p-1 rounded hover:bg-gray-100"><X className="w-4 h-4" /></button>
+              <h2 className="text-base font-semibold text-danger flex items-center gap-2"><AlertTriangle className="w-5 h-5" /> Activate Critical Event</h2>
+              <button onClick={() => setOpen(false)} className="p-1 rounded hover:bg-neutral-100"><X className="w-4 h-4" /></button>
             </div>
-            <p className="px-6 pt-3 text-sm text-gray-500">Select the type of critical event to activate emergency protocols.</p>
+            <p className="px-6 pt-3 text-sm text-muted-foreground">Select the type of critical event to activate emergency protocols.</p>
             <div className="p-6 space-y-3">
               {CRITICAL_EVENT_TYPES.map(event => (
                 <button key={event.id} onClick={() => handleActivate(event.id)}
-                  className="w-full flex items-start gap-3 p-4 border-2 rounded-lg text-left hover:border-red-400 hover:bg-red-50 transition-colors">
+                  className="w-full flex items-start gap-3 p-4 border-2 rounded-lg text-left hover:border-red-400 hover:bg-danger-soft transition-colors">
                   <Zap className="w-5 h-5 text-red-500 mt-0.5 shrink-0" />
-                  <div><p className="font-semibold text-gray-900">{event.label}</p><p className="text-sm text-gray-500">{event.description}</p></div>
+                  <div><p className="font-semibold text-foreground">{event.label}</p><p className="text-sm text-muted-foreground">{event.description}</p></div>
                 </button>
               ))}
             </div>

@@ -34,16 +34,16 @@ export default function LessonPlayerPage() {
   return (
     <AppLayout>
       <PageShell title={String(currentLesson.title ?? "Lesson player")} subtitle="Native Fundo lesson player with text, media, documents, and practical tasks.">
-        <div className="rounded border border-gray-200 bg-white p-4">
-          <p className="text-sm text-gray-600">Lesson ID: {lessonId}</p>
-          <p className="mt-2 text-xs text-gray-500" data-testid="fundo-lesson-progress">Current progress: {currentPercent}%</p>
-          <div className="mt-3 rounded border border-gray-100 bg-gray-50 p-3">
+        <div className="rounded border border-border bg-card p-4">
+          <p className="text-sm text-muted-foreground">Lesson ID: {lessonId}</p>
+          <p className="mt-2 text-xs text-muted-foreground" data-testid="fundo-lesson-progress">Current progress: {currentPercent}%</p>
+          <div className="mt-3 rounded border border-border bg-background p-3">
             <FundoLessonContent lesson={currentLesson} />
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
             <button
               onClick={() => lessonId && enrolmentId && openMutation.mutate({ lessonId, enrolmentId })}
-              className="rounded bg-teal-700 px-3 py-1.5 text-sm text-white"
+              className="rounded bg-primary px-3 py-1.5 text-sm text-white"
               data-testid="fundo-lesson-open"
             >
               Open lesson
@@ -54,7 +54,7 @@ export default function LessonPlayerPage() {
                 lessonId &&
                 progressMutation.mutate({ enrolmentId, lessonId, progressPercent: 100 })
               }
-              className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700"
+              className="rounded border border-border px-3 py-1.5 text-sm text-foreground"
               data-testid="fundo-lesson-mark-complete"
             >
               Mark complete
@@ -67,10 +67,10 @@ export default function LessonPlayerPage() {
                   Previous lesson
                 </Link>
               ) : (
-                <span className="text-gray-400">Previous lesson</span>
+                <span className="text-muted-foreground">Previous lesson</span>
               )}
             </div>
-            <Link href={`/learning/enrolments/${enrolmentId}`} className="text-gray-600 hover:underline" data-testid="fundo-lesson-back-enrolment">
+            <Link href={`/learning/enrolments/${enrolmentId}`} className="text-muted-foreground hover:underline" data-testid="fundo-lesson-back-enrolment">
               Back to course player
             </Link>
             <div>
@@ -79,7 +79,7 @@ export default function LessonPlayerPage() {
                   Next lesson
                 </Link>
               ) : (
-                <span className="text-gray-400">Next lesson</span>
+                <span className="text-muted-foreground">Next lesson</span>
               )}
             </div>
           </div>

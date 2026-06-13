@@ -26,10 +26,10 @@ interface PrescriptionResource {
 }
 
 const STATUS_BADGE: Record<string, string> = {
-  PENDING: "bg-impilo-100 text-impilo-600",
+  PENDING: "bg-primary-soft text-primary",
   ACTIVE: "bg-green-100 text-green-700",
-  DISPENSED: "bg-purple-100 text-purple-700",
-  CANCELLED: "bg-gray-100 text-gray-600",
+  DISPENSED: "bg-purple-100 text-warning-foreground",
+  CANCELLED: "bg-neutral-100 text-muted-foreground",
 };
 
 const ROUTES = [
@@ -155,7 +155,7 @@ export default function MedicationsPage() {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>
         ) : (
           <div className="space-y-5">
@@ -199,7 +199,7 @@ export default function MedicationsPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Pill className="w-5 h-5 text-green-500" />
-                <h2 className="text-sm font-semibold text-gray-900">
+                <h2 className="text-sm font-semibold text-foreground">
                   Prescriptions ({prescriptions.length})
                 </h2>
               </div>
@@ -216,71 +216,71 @@ export default function MedicationsPage() {
 
             {/* Prescribing Form */}
             {showForm && (
-              <form onSubmit={handleSubmit} className="bg-white rounded-lg border border-gray-200 p-5 space-y-4">
-                <h3 className="text-sm font-medium text-gray-900 flex items-center gap-2">
+              <form onSubmit={handleSubmit} className="bg-card rounded-lg border border-border p-5 space-y-4">
+                <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
                   <Pill className="w-4 h-4 text-green-500" />
                   New Prescription
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Medication Name *</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Medication Name *</label>
                     <input type="text" required value={form.medication_name} onChange={(e) => updateField("medication_name", e.target.value)}
                       placeholder="e.g. Amoxicillin 500mg"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+                      className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Generic Name</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Generic Name</label>
                     <input type="text" value={form.generic_name} onChange={(e) => updateField("generic_name", e.target.value)}
                       placeholder="e.g. Amoxicillin"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+                      className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Dosage *</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Dosage *</label>
                     <input type="text" required value={form.dosage} onChange={(e) => updateField("dosage", e.target.value)}
                       placeholder="e.g. 500mg, 10ml"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+                      className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Route</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Route</label>
                     <select value={form.route} onChange={(e) => updateField("route", e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+                      className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
                       {ROUTES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Frequency</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Frequency</label>
                     <select value={form.frequency} onChange={(e) => updateField("frequency", e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+                      className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
                       {FREQUENCIES.map((f) => <option key={f} value={f}>{f}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Duration</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Duration</label>
                     <input type="text" value={form.duration} onChange={(e) => updateField("duration", e.target.value)}
                       placeholder="e.g. 5 days, 2 weeks"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+                      className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Quantity</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Quantity</label>
                     <input type="number" min={1} value={form.quantity} onChange={(e) => updateField("quantity", parseInt(e.target.value) || 1)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+                      className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Indication</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Indication</label>
                     <input type="text" value={form.indication} onChange={(e) => updateField("indication", e.target.value)}
                       placeholder="e.g. UTI, Hypertension"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+                      className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Special Instructions</label>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">Special Instructions</label>
                   <textarea value={form.instructions} onChange={(e) => updateField("instructions", e.target.value)}
                     rows={2} placeholder="e.g. Take with food, complete full course"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none" />
+                    className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none" />
                 </div>
                 <div className="flex gap-3">
                   <button type="button" onClick={() => setShowForm(false)}
-                    className="flex-1 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">
+                    className="flex-1 py-2 bg-neutral-100 text-foreground text-sm font-medium rounded-lg hover:bg-neutral-100 transition-colors">
                     Cancel
                   </button>
                   <button type="submit" disabled={submitting}
@@ -293,42 +293,42 @@ export default function MedicationsPage() {
 
             {/* Prescription List */}
             {prescriptions.length === 0 ? (
-              <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-                <Pill className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-400 text-sm">No prescriptions for this patient</p>
+              <div className="bg-card rounded-lg border border-border p-12 text-center">
+                <Pill className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                <p className="text-muted-foreground text-sm">No prescriptions for this patient</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {prescriptions.map((rx) => {
                   const a = rx.attributes;
-                  const statusStyle = STATUS_BADGE[String(a.status)] ?? "bg-gray-100 text-gray-600";
+                  const statusStyle = STATUS_BADGE[String(a.status)] ?? "bg-neutral-100 text-muted-foreground";
                   const isPending = a.status === "PENDING" || a.status === "ACTIVE";
 
                   return (
-                    <div key={rx.id} className="bg-white rounded-lg border border-gray-200 p-4">
+                    <div key={rx.id} className="bg-card rounded-lg border border-border p-4">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="text-sm font-semibold text-gray-900">
+                            <span className="text-sm font-semibold text-foreground">
                               {String(a.medication_name ?? a.medicationName ?? "")}
                             </span>
                             <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${statusStyle}`}>
                               {String(a.status)}
                             </span>
                           </div>
-                          <div className="flex items-center gap-3 text-xs text-gray-500">
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground">
                             {typeof a.dosage === "string" && <span>{String(a.dosage)}</span>}
                             {typeof a.route === "string" && <span className="capitalize">{String(a.route)}</span>}
                             {typeof a.frequency === "string" && <span>{String(a.frequency)}</span>}
                             {typeof a.duration === "string" && <span>{String(a.duration)}</span>}
                           </div>
                           {typeof a.instructions === "string" && (
-                            <p className="text-xs text-gray-500 mt-1 italic">{String(a.instructions)}</p>
+                            <p className="text-xs text-muted-foreground mt-1 italic">{String(a.instructions)}</p>
                           )}
                           {typeof a.indication === "string" && (
-                            <p className="text-xs text-gray-400 mt-0.5">Indication: {String(a.indication)}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">Indication: {String(a.indication)}</p>
                           )}
-                          <p className="text-xs text-gray-400 mt-1">
+                          <p className="text-xs text-muted-foreground mt-1">
                             Prescribed by: {String(a.prescribed_by ?? a.prescribedBy ?? "")}
                             {typeof a.created_at === "string" && ` · ${new Date(String(a.created_at ?? a.createdAt)).toLocaleDateString()}`}
                           </p>
@@ -344,7 +344,7 @@ export default function MedicationsPage() {
                             <button
                               onClick={() => handleDispense(rx.id)}
                               disabled={dispensing === rx.id}
-                              className="px-3 py-1.5 bg-purple-100 text-purple-700 text-xs font-medium rounded-lg hover:bg-purple-200 disabled:opacity-50 transition-colors flex items-center gap-1"
+                              className="px-3 py-1.5 bg-purple-100 text-warning-foreground text-xs font-medium rounded-lg hover:bg-purple-200 disabled:opacity-50 transition-colors flex items-center gap-1"
                             >
                               {dispensing === rx.id ? (
                                 <Loader2 className="w-3 h-3 animate-spin" />
@@ -360,7 +360,7 @@ export default function MedicationsPage() {
                                   queryClient.invalidateQueries({ queryKey: ["prescriptions", { patientId }] });
                                 } catch { /* handled */ }
                               }}
-                              className="px-3 py-1.5 bg-red-50 text-red-600 text-xs font-medium rounded-lg hover:bg-red-100 transition-colors"
+                              className="px-3 py-1.5 bg-danger-soft text-red-600 text-xs font-medium rounded-lg hover:bg-red-100 transition-colors"
                             >
                               Cancel
                             </button>

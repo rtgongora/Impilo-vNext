@@ -28,8 +28,8 @@ export default function MaternityMonitoringPage() {
         title="Maternity Monitoring"
         subtitle="Canonical maternity surface for partograph and CTG monitoring. Legacy labour rows stay on Vitals as compatibility-only."
       >
-        <div className="mb-4 flex flex-wrap items-center gap-3 text-sm text-gray-500">
-          <Link href={`/ehr/${encodeURIComponent(patientId)}/vitals`} className="inline-flex items-center gap-1 hover:text-gray-700">
+        <div className="mb-4 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+          <Link href={`/ehr/${encodeURIComponent(patientId)}/vitals`} className="inline-flex items-center gap-1 hover:text-foreground">
             <HeartPulse className="h-4 w-4" /> Back to vitals
           </Link>
           <span className="inline-flex items-center gap-1">
@@ -38,9 +38,9 @@ export default function MaternityMonitoringPage() {
           </span>
         </div>
 
-        <section className="rounded-lg border border-pink-200/90 bg-white p-5">
-          <h2 className="text-lg font-semibold text-gray-900">Partograph & CTG</h2>
-          <p className="mt-1 text-xs text-gray-500">
+        <section className="rounded-lg border border-pink-200/90 bg-card p-5">
+          <h2 className="text-lg font-semibold text-foreground">Partograph & CTG</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
             This route reuses the same maternity feature modules mounted on Vitals, so promotion to a first-class
             maternity workflow keeps the BFF contract and UI behavior aligned.
           </p>

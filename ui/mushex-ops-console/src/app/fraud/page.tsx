@@ -97,7 +97,7 @@ export default function FraudPage() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-red-800">
           {error}
         </div>
       )}
@@ -153,8 +153,8 @@ export default function FraudPage() {
                     <td className="px-4 py-3">
                       <span className={`badge ${
                         flag.status === "OPEN" ? "bg-red-100 text-red-800" :
-                        flag.status === "INVESTIGATING" ? "bg-amber-100 text-amber-800" :
-                        flag.status === "RESOLVED" ? "bg-emerald-100 text-emerald-800" :
+                        flag.status === "INVESTIGATING" ? "bg-amber-100 text-warning-foreground" :
+                        flag.status === "RESOLVED" ? "bg-emerald-100 text-primary-hover" :
                         flag.status === "DISMISSED" ? "bg-neutral-100 text-neutral-600" :
                         "bg-neutral-100 text-neutral-600"
                       }`}>

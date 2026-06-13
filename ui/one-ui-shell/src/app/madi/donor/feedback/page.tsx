@@ -27,8 +27,8 @@ export default function DonorFeedbackPage() {
     <AppLayout>
       <PageShell title="Donor Feedback" subtitle="Help us improve the donation experience" icon={<MessageSquare className="h-6 w-6" />}>
         {!donor && (
-          <div className="rounded-2xl border border-dashed border-gray-300 p-8 text-center">
-            <p className="text-sm text-gray-600">Register and donate before leaving feedback.</p>
+          <div className="rounded-2xl border border-dashed border-border p-8 text-center">
+            <p className="text-sm text-muted-foreground">Register and donate before leaving feedback.</p>
             <Link href="/madi/donor/register" className="mt-3 inline-block text-sm text-rose-600">Register →</Link>
           </div>
         )}
@@ -40,8 +40,8 @@ export default function DonorFeedbackPage() {
         )}
 
         {donor && !submitted && (
-          <form onSubmit={handleSubmit} className="max-w-md space-y-4 rounded-2xl border border-gray-200 bg-white p-6">
-            <label className="block text-sm font-medium text-gray-700">
+          <form onSubmit={handleSubmit} className="max-w-md space-y-4 rounded-2xl border border-border bg-card p-6">
+            <label className="block text-sm font-medium text-foreground">
               Rating (1–5)
               <input
                 type="number"
@@ -49,16 +49,16 @@ export default function DonorFeedbackPage() {
                 max={5}
                 value={rating}
                 onChange={(e) => setRating(Number(e.target.value))}
-                className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm"
               />
             </label>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-foreground">
               Comments (optional)
               <textarea
                 value={comments}
                 onChange={(e) => setComments(e.target.value)}
                 rows={4}
-                className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm resize-none"
+                className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm resize-none"
                 placeholder="What went well? What could be better?"
               />
             </label>

@@ -45,7 +45,7 @@ export default function PrintQueuePage() {
         {["", "QUEUED", "RENDERING", "RENDERED", "PRINTING", "PRINTED", "COLLECTED", "FAILED"].map((s) => (
           <button key={s} onClick={() => setStatusFilter(s)}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-              statusFilter === s ? "bg-brand-primary text-white" : "bg-white text-neutral-600 border border-neutral-300 hover:bg-neutral-50"
+              statusFilter === s ? "bg-brand-primary text-white" : "bg-card text-neutral-600 border border-neutral-300 hover:bg-neutral-50"
             }`}>
             {s || "All"}
           </button>

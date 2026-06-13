@@ -42,15 +42,15 @@ export default function HaemovigilancePage() {
     <AppLayout>
       <PageShell title="Haemovigilance" subtitle="Report and investigate transfusion reactions" icon={<ShieldAlert className="h-6 w-6" />}>
         <HaemovigilancePolicyOrchestrationRail />
-        <form onSubmit={handleReport} className="max-w-lg space-y-4 rounded-2xl border border-gray-200 bg-white p-6 mb-6">
-          <label className="block text-sm font-medium text-gray-700">
+        <form onSubmit={handleReport} className="max-w-lg space-y-4 rounded-2xl border border-border bg-card p-6 mb-6">
+          <label className="block text-sm font-medium text-foreground">
             Transfusion episode ID
-            <input required value={episodeId} onChange={(e) => setEpisodeId(e.target.value)} className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm font-mono" />
+            <input required value={episodeId} onChange={(e) => setEpisodeId(e.target.value)} className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm font-mono" />
           </label>
           <div className="grid grid-cols-2 gap-3">
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-foreground">
               Reaction type
-              <select value={reactionType} onChange={(e) => setReactionType(e.target.value)} className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm bg-white">
+              <select value={reactionType} onChange={(e) => setReactionType(e.target.value)} className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm bg-card">
                 <option value="FEVER">Fever</option>
                 <option value="URTICARIA">Urticaria</option>
                 <option value="ANAPHYLAXIS">Anaphylaxis</option>
@@ -58,18 +58,18 @@ export default function HaemovigilancePage() {
                 <option value="OTHER">Other</option>
               </select>
             </label>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-foreground">
               Severity
-              <select value={severity} onChange={(e) => setSeverity(e.target.value)} className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm bg-white">
+              <select value={severity} onChange={(e) => setSeverity(e.target.value)} className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm bg-card">
                 <option value="MILD">Mild</option>
                 <option value="MODERATE">Moderate</option>
                 <option value="SEVERE">Severe</option>
               </select>
             </label>
           </div>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-foreground">
             Description
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm resize-none" />
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm resize-none" />
           </label>
           <button type="submit" disabled={report.isPending} className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">
             {report.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
@@ -84,7 +84,7 @@ export default function HaemovigilancePage() {
               type="button"
               onClick={() => openCase.mutate({ reaction_id: reactionId })}
               disabled={openCase.isPending}
-              className="rounded-xl bg-gray-800 px-3 py-2 text-sm text-white disabled:opacity-50"
+              className="rounded-xl bg-primary-hover px-3 py-2 text-sm text-white disabled:opacity-50"
             >
               Open investigation case
             </button>
@@ -93,7 +93,7 @@ export default function HaemovigilancePage() {
 
         <div className="mt-4 flex flex-wrap gap-4 text-sm">
           <Link href="/madi/transfusion" className="text-rose-600 hover:underline">← Transfusion workspace</Link>
-          <Link href="/madi/haemovigilance/national" className="text-gray-700 hover:text-rose-600">
+          <Link href="/madi/haemovigilance/national" className="text-foreground hover:text-rose-600">
             National supervisory dashboard →
           </Link>
         </div>

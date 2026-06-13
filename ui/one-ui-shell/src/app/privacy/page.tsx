@@ -13,23 +13,23 @@ import { ArrowLeft, Shield } from "lucide-react";
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+      <header className="bg-card border-b border-border sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link
               href="/auth/login"
-              className="text-gray-500 hover:text-gray-700 transition-colors"
+              className="text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
-              <h1 className="text-lg font-semibold text-gray-900">Impilo</h1>
-              <p className="text-xs text-gray-500">Health Operating System</p>
+              <h1 className="text-lg font-semibold text-foreground">Impilo</h1>
+              <p className="text-xs text-muted-foreground">Health Operating System</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-xs text-gray-400">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Shield className="w-3.5 h-3.5" />
             <span>Privacy Policy</span>
           </div>
@@ -38,21 +38,21 @@ export default function PrivacyPolicyPage() {
 
       {/* Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-10">
+        <div className="bg-card rounded-xl shadow-sm border border-border p-6 sm:p-10">
           <div className="mb-8">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
               Impilo Privacy Policy
             </h1>
-            <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-500">
+            <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground">
               <span>Effective Date: 11 April 2026</span>
               <span>Last Updated: 11 April 2026</span>
             </div>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Entity: Impilo Technologies Private Limited (&ldquo;Impilo,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;)
             </p>
           </div>
 
-          <div className="prose prose-gray max-w-none prose-headings:text-gray-900 prose-p:text-gray-600 prose-li:text-gray-600 prose-a:text-blue-600">
+          <div className="prose prose-gray max-w-none prose-headings:text-foreground prose-p:text-muted-foreground prose-li:text-muted-foreground prose-a:text-primary">
             <Section number="1" title="Introduction">
               <p>
                 Impilo is a digital health platform designed to support health service delivery, health system operations,
@@ -425,7 +425,7 @@ export default function PrivacyPolicyPage() {
               <p>
                 For privacy questions, requests, complaints, or account deletion requests, contact:
               </p>
-              <address className="not-italic text-gray-600">
+              <address className="not-italic text-muted-foreground">
                 <strong>Impilo Technologies Private Limited</strong>
                 <br />
                 Suite 45, 18th Floor, Kaguvi Building
@@ -450,23 +450,23 @@ export default function PrivacyPolicyPage() {
         </div>
 
         {/* Footer */}
-        <footer className="mt-8 text-center text-xs text-gray-400 space-y-2">
+        <footer className="mt-8 text-center text-xs text-muted-foreground space-y-2">
           <div className="flex items-center justify-center gap-4 flex-wrap">
-            <Link href="/terms" className="hover:text-gray-600 transition-colors">
+            <Link href="/terms" className="hover:text-muted-foreground transition-colors">
               Terms of Use
             </Link>
             <span>&middot;</span>
-            <span className="text-gray-300">Privacy Policy</span>
+            <span className="text-muted-foreground">Privacy Policy</span>
             <span>&middot;</span>
-            <Link href="/account-deletion" className="hover:text-gray-600 transition-colors">
+            <Link href="/account-deletion" className="hover:text-muted-foreground transition-colors">
               Account Deletion
             </Link>
             <span>&middot;</span>
-            <Link href="/privacy/app-stores" className="hover:text-gray-600 transition-colors">
+            <Link href="/privacy/app-stores" className="hover:text-muted-foreground transition-colors">
               App Store Privacy
             </Link>
             <span>&middot;</span>
-            <Link href="/auth/login" className="hover:text-gray-600 transition-colors">
+            <Link href="/auth/login" className="hover:text-muted-foreground transition-colors">
               Sign In
             </Link>
           </div>
@@ -492,7 +492,7 @@ function Section({
 }) {
   return (
     <section className="mb-8">
-      <h3 className="text-lg font-semibold text-gray-900 mb-3">
+      <h3 className="text-lg font-semibold text-foreground mb-3">
         {number}. {title}
       </h3>
       {children}

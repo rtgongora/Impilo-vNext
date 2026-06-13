@@ -35,11 +35,11 @@ export default function ActivationApprovalsPage() {
         subtitle="Governance queue for marketplace activation requests — review purpose, scope, data access and clinical safety before approving."
       >
         <div className="space-y-5">
-          <Link href="/marketplace/apps" className="inline-flex items-center gap-1 text-sm text-impilo-700 hover:underline">
+          <Link href="/marketplace/apps" className="inline-flex items-center gap-1 text-sm text-primary-hover hover:underline">
             <ChevronLeft className="h-4 w-4" /> Back to marketplace
           </Link>
 
-          <section className="flex flex-wrap items-center gap-2 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+          <section className="flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-card p-3 shadow-sm">
             {STATUS_FILTERS.map((s) => (
               <button
                 key={s}
@@ -47,8 +47,8 @@ export default function ActivationApprovalsPage() {
                 onClick={() => setStatus(s)}
                 className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
                   status === s
-                    ? "bg-impilo-600 text-white"
-                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                    ? "bg-primary-hover text-white"
+                    : "bg-neutral-100 text-foreground hover:bg-primary-soft"
                 }`}
               >
                 {s.replace("_", " ")}
@@ -56,9 +56,9 @@ export default function ActivationApprovalsPage() {
             ))}
           </section>
 
-          <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
             <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <thead className="bg-background text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 <tr>
                   <th className="px-4 py-2">Request</th>
                   <th className="px-4 py-2">Requester</th>
@@ -71,34 +71,34 @@ export default function ActivationApprovalsPage() {
               <tbody className="divide-y divide-slate-100">
                 {requestsQuery.isLoading ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-6 text-center text-slate-500">
+                    <td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">
                       <Loader2 className="mx-auto h-4 w-4 animate-spin" />
                     </td>
                   </tr>
                 ) : list.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-6 text-center text-slate-500">
+                    <td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">
                       No requests in this state.
                     </td>
                   </tr>
                 ) : (
                   list.map((req) => (
                     <tr key={req.id} className="align-top">
-                      <td className="px-4 py-3 font-mono text-xs text-slate-600">
+                      <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
                         <div>{req.id.slice(0, 8)}</div>
-                        <div className="mt-0.5 text-[10px] text-slate-400">
+                        <div className="mt-0.5 text-[10px] text-muted-foreground">
                           {new Date(req.createdAt).toLocaleString()}
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-xs text-slate-700">
+                      <td className="px-4 py-3 text-xs text-foreground">
                         <div>{req.requesterActorId}</div>
-                        <div className="text-[10px] text-slate-500">
+                        <div className="text-[10px] text-muted-foreground">
                           {req.requesterTenantId}
                           {req.requesterFacilityId ? ` · ${req.requesterFacilityId}` : ""}
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-xs text-slate-700">{req.purposeOfUse}</td>
-                      <td className="px-4 py-3 text-sm text-slate-700">{req.justification}</td>
+                      <td className="px-4 py-3 text-xs text-foreground">{req.purposeOfUse}</td>
+                      <td className="px-4 py-3 text-sm text-foreground">{req.justification}</td>
                       <td className="px-4 py-3">
                         <StatusBadge value={req.status} />
                       </td>
@@ -111,7 +111,7 @@ export default function ActivationApprovalsPage() {
                                 setReasonById((m) => ({ ...m, [req.id]: e.target.value }))
                               }
                               placeholder="Reason (optional)"
-                              className="w-44 rounded-lg border border-slate-200 px-2 py-1 text-xs"
+                              className="w-44 rounded-lg border border-border px-2 py-1 text-xs"
                             />
                             <div className="flex gap-1">
                               <button
@@ -145,7 +145,7 @@ export default function ActivationApprovalsPage() {
                             </div>
                           </div>
                         ) : (
-                          <span className="text-[10px] text-slate-500">{req.decisionReason ?? "—"}</span>
+                          <span className="text-[10px] text-muted-foreground">{req.decisionReason ?? "—"}</span>
                         )}
                       </td>
                     </tr>
@@ -162,15 +162,15 @@ export default function ActivationApprovalsPage() {
 
 function StatusBadge({ value }: { value: ActivationRequest["status"] }) {
   const tone: Record<string, string> = {
-    REQUESTED: "bg-amber-50 text-amber-700",
-    IN_REVIEW: "bg-blue-50 text-blue-700",
-    APPROVED: "bg-emerald-50 text-emerald-700",
-    REJECTED: "bg-rose-50 text-rose-700",
+    REQUESTED: "bg-warning-soft text-warning-foreground",
+    IN_REVIEW: "bg-info-soft text-primary-hover",
+    APPROVED: "bg-success-soft text-primary-hover",
+    REJECTED: "bg-danger-soft text-danger",
     CHANGES_REQUESTED: "bg-violet-50 text-violet-700",
   };
   return (
     <span
-      className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tone[value] ?? "bg-slate-100 text-slate-700"}`}
+      className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tone[value] ?? "bg-neutral-100 text-foreground"}`}
     >
       {value.replace("_", " ")}
     </span>

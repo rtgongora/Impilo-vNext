@@ -161,43 +161,43 @@ export default function CatalogPage() {
     <AppLayout>
       <PageShell title="Marketplace Catalog" subtitle="Real marketplace service and supply listings available across the operating network.">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <div className="inline-flex rounded-lg border border-slate-200 bg-white p-1 text-xs">
+          <div className="inline-flex rounded-lg border border-border bg-card p-1 text-xs">
             <button
               type="button"
               onClick={() => setMode("facility_marketplace")}
-              className={`rounded-md px-3 py-1.5 font-medium ${mode === "facility_marketplace" ? "bg-slate-900 text-white" : "text-slate-700 hover:bg-slate-50"}`}
+              className={`rounded-md px-3 py-1.5 font-medium ${mode === "facility_marketplace" ? "bg-neutral-900 text-white" : "text-foreground hover:bg-background"}`}
             >
               Facility marketplace
             </button>
             <button
               type="button"
               onClick={() => setMode("product_registry")}
-              className={`rounded-md px-3 py-1.5 font-medium ${mode === "product_registry" ? "bg-slate-900 text-white" : "text-slate-700 hover:bg-slate-50"}`}
+              className={`rounded-md px-3 py-1.5 font-medium ${mode === "product_registry" ? "bg-neutral-900 text-white" : "text-foreground hover:bg-background"}`}
             >
               Product registry (MSIKA)
             </button>
           </div>
-          <Link href="/finance/commerce-integrations" className="text-xs font-medium text-indigo-700 hover:underline">
+          <Link href="/finance/commerce-integrations" className="text-xs font-medium text-primary-hover hover:underline">
             Commerce & payer integration map
           </Link>
         </div>
 
         <div className="mb-6 flex flex-col gap-3 sm:flex-row">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
               type="text"
               placeholder={mode === "product_registry" ? "Search MSIKA registry (q)..." : "Search services or supplies..."}
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
-              className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+              className="w-full rounded-lg border border-border py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
             />
           </div>
           {mode === "facility_marketplace" ? (
             <select
               value={category}
               onChange={(event) => setCategory(event.target.value)}
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+              className="rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
             >
               {CATEGORIES.map((value) => <option key={value} value={value}>{value}</option>)}
             </select>
@@ -206,34 +206,34 @@ export default function CatalogPage() {
 
         {mode === "facility_marketplace" ? (
           catalogQuery.isLoading ? (
-            <div className="flex items-center justify-center py-16 text-sm text-gray-500">
+            <div className="flex items-center justify-center py-16 text-sm text-muted-foreground">
               <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Loading catalog...
             </div>
           ) : items.length === 0 ? (
-            <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
-              <ShoppingBag className="mx-auto mb-3 h-10 w-10 text-gray-300" />
-              <p className="text-sm text-gray-500">No marketplace listings matched the current search.</p>
+            <div className="rounded-lg border border-border bg-card p-12 text-center">
+              <ShoppingBag className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">No marketplace listings matched the current search.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
               {items.map((item) => (
-                <div key={item.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                  <div className="mb-3 flex h-32 items-center justify-center rounded-xl bg-slate-100">
-                    <Package className="h-10 w-10 text-slate-300" />
+                <div key={item.id} className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+                  <div className="mb-3 flex h-32 items-center justify-center rounded-xl bg-neutral-100">
+                    <Package className="h-10 w-10 text-muted-foreground" />
                   </div>
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <h3 className="text-sm font-semibold text-slate-900">{item.name}</h3>
-                      <p className="mt-1 text-xs text-slate-500">{item.category} � {item.facilityName}</p>
+                      <h3 className="text-sm font-semibold text-foreground">{item.name}</h3>
+                      <p className="mt-1 text-xs text-muted-foreground">{item.category} � {item.facilityName}</p>
                     </div>
-                    <span className={`rounded-full px-2 py-1 text-xs font-semibold ${item.availability === "AVAILABLE" ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-700"}`}>
+                    <span className={`rounded-full px-2 py-1 text-xs font-semibold ${item.availability === "AVAILABLE" ? "bg-emerald-100 text-primary-hover" : "bg-neutral-100 text-foreground"}`}>
                       {item.availability}
                     </span>
                   </div>
-                  <p className="mt-3 text-sm text-slate-600">{item.description}</p>
+                  <p className="mt-3 text-sm text-muted-foreground">{item.description}</p>
                   <div className="mt-4 flex items-center justify-between text-sm">
-                    <span className="font-semibold text-slate-900">{item.currency} {item.price.toFixed(2)}</span>
-                    <span className="text-slate-500">{item.rating ? `${item.rating.toFixed(1)} rating` : "No rating yet"}</span>
+                    <span className="font-semibold text-foreground">{item.currency} {item.price.toFixed(2)}</span>
+                    <span className="text-muted-foreground">{item.rating ? `${item.rating.toFixed(1)} rating` : "No rating yet"}</span>
                   </div>
                 </div>
               ))}
@@ -241,19 +241,19 @@ export default function CatalogPage() {
           )
         ) : (
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h2 className="text-lg font-semibold text-slate-900">Registry lookup (real)</h2>
-                  <p className="mt-1 text-sm text-slate-600">
+                  <h2 className="text-lg font-semibold text-foreground">Registry lookup (real)</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
                     Backed by <code className="text-xs">GET /internal/v1/product-registry/search</code>.
                   </p>
                 </div>
-                {registryQ.isLoading ? <Loader2 className="h-4 w-4 animate-spin text-slate-400" /> : null}
+                {registryQ.isLoading ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : null}
               </div>
 
               {registryQ.isError ? (
-                <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+                <div className="mt-4 rounded-lg border border-danger/28 bg-danger-soft p-4 text-sm text-red-800">
                   <div className="flex items-center gap-2 font-medium">
                     <AlertTriangle className="h-4 w-4" /> Could not reach product registry
                   </div>
@@ -262,8 +262,8 @@ export default function CatalogPage() {
                   </p>
                 </div>
               ) : registryItems.length === 0 ? (
-                <div className="mt-6 rounded-lg border border-gray-200 bg-white p-10 text-center text-sm text-gray-500">
-                  <ShoppingBag className="mx-auto mb-3 h-10 w-10 text-gray-300" />
+                <div className="mt-6 rounded-lg border border-border bg-card p-10 text-center text-sm text-muted-foreground">
+                  <ShoppingBag className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
                   No registry items returned for this search.
                 </div>
               ) : (
@@ -272,16 +272,16 @@ export default function CatalogPage() {
                     const code = extractRegistryCode(it);
                     const name = extractRegistryName(it);
                     return (
-                      <div key={`${code}-${idx}`} className="flex items-start justify-between gap-3 rounded-xl border border-slate-200 p-3">
+                      <div key={`${code}-${idx}`} className="flex items-start justify-between gap-3 rounded-xl border border-border p-3">
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold text-slate-900 truncate">{name}</p>
-                          <p className="mt-0.5 text-xs text-slate-500 break-all">{code || "No code field on this row"}</p>
+                          <p className="text-sm font-semibold text-foreground truncate">{name}</p>
+                          <p className="mt-0.5 text-xs text-muted-foreground break-all">{code || "No code field on this row"}</p>
                         </div>
                         <button
                           type="button"
                           disabled={!code}
                           onClick={() => addToCart(it)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
+                          className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-background disabled:opacity-50"
                         >
                           <ShoppingCart className="h-3.5 w-3.5" /> Add
                         </button>
@@ -292,37 +292,37 @@ export default function CatalogPage() {
               )}
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <h2 className="text-lg font-semibold text-slate-900">Cart to procurement order (MSIKA Flow)</h2>
-              <p className="mt-1 text-sm text-slate-600">
+            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+              <h2 className="text-lg font-semibold text-foreground">Cart to procurement order (MSIKA Flow)</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
                 Validate via <code className="text-xs">POST /internal/v1/commerce/cart/validate</code> and create via{" "}
                 <code className="text-xs">POST /internal/v1/commerce/orders</code>.
               </p>
 
               <div className="mt-4 space-y-3">
                 <label className="block text-sm">
-                  <span className="mb-1 block font-medium text-slate-700">Order type</span>
-                  <input value={orderType} onChange={(e) => setOrderType(e.target.value)} className="w-full rounded-lg border border-slate-300 px-3 py-2" />
+                  <span className="mb-1 block font-medium text-foreground">Order type</span>
+                  <input value={orderType} onChange={(e) => setOrderType(e.target.value)} className="w-full rounded-lg border border-border px-3 py-2" />
                 </label>
 
                 {cart.length === 0 ? (
-                  <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+                  <p className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-muted-foreground">
                     Add registry items to build a cart. Nothing is simulated.
                   </p>
                 ) : (
-                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Cart lines</p>
+                  <div className="rounded-lg border border-border bg-background p-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Cart lines</p>
                     <div className="mt-2 space-y-2 text-sm">
                       {cart.map((c) => (
                         <div key={c.msikaCoreCode} className="flex items-center justify-between gap-2">
                           <div className="min-w-0">
-                            <p className="font-medium text-slate-900 truncate">{c.name}</p>
-                            <p className="text-[11px] text-slate-500 break-all">{c.msikaCoreCode} - Qty {c.qty}</p>
+                            <p className="font-medium text-foreground truncate">{c.name}</p>
+                            <p className="text-[11px] text-muted-foreground break-all">{c.msikaCoreCode} - Qty {c.qty}</p>
                           </div>
                           <button
                             type="button"
                             onClick={() => setCart((prev) => prev.filter((x) => x.msikaCoreCode !== c.msikaCoreCode))}
-                            className="text-xs font-medium text-slate-600 hover:text-slate-900"
+                            className="text-xs font-medium text-muted-foreground hover:text-foreground"
                           >
                             Remove
                           </button>
@@ -332,14 +332,14 @@ export default function CatalogPage() {
                   </div>
                 )}
 
-                {cartError ? <p className="text-sm text-red-700">{cartError}</p> : null}
+                {cartError ? <p className="text-sm text-danger">{cartError}</p> : null}
 
                 <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
                   <button
                     type="button"
                     onClick={() => void runValidate()}
                     disabled={validateCart.isPending}
-                    className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
+                    className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-background disabled:opacity-50"
                   >
                     {validateCart.isPending ? "Validating..." : "Validate cart"}
                   </button>
@@ -347,7 +347,7 @@ export default function CatalogPage() {
                     type="button"
                     onClick={() => void runCreateOrder()}
                     disabled={createOrder.isPending}
-                    className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                    className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
                   >
                     {createOrder.isPending ? "Creating..." : "Create order"}
                   </button>

@@ -43,7 +43,7 @@ export default function DashboardPage() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-red-800">
           {error}
         </div>
       )}
@@ -61,7 +61,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-3 gap-6 mb-8">
           <Link href="/fraud" className="card p-6 hover:border-red-300 transition-colors">
             <h3 className="text-sm font-semibold text-neutral-600 mb-1">Fraud Flags</h3>
-            <p className="text-3xl font-bold text-red-700">
+            <p className="text-3xl font-bold text-danger">
               {fraudCount ?? "---"}
             </p>
             <p className="text-xs text-neutral-500 mt-1">Active fraud flags</p>
@@ -69,7 +69,7 @@ export default function DashboardPage() {
 
           <Link href="/reviews" className="card p-6 hover:border-amber-300 transition-colors">
             <h3 className="text-sm font-semibold text-neutral-600 mb-1">Pending Reviews</h3>
-            <p className="text-3xl font-bold text-amber-700">
+            <p className="text-3xl font-bold text-warning-foreground">
               {reviewCount ?? "---"}
             </p>
             <p className="text-xs text-neutral-500 mt-1">Awaiting operator action</p>
@@ -77,7 +77,7 @@ export default function DashboardPage() {
 
           <Link href="/adapters" className="card p-6 hover:border-blue-300 transition-colors">
             <h3 className="text-sm font-semibold text-neutral-600 mb-1">Adapters</h3>
-            <p className="text-3xl font-bold text-blue-700">---</p>
+            <p className="text-3xl font-bold text-primary-hover">---</p>
             <p className="text-xs text-neutral-500 mt-1">Payment adapter status</p>
           </Link>
         </div>

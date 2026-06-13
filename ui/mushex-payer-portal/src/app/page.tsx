@@ -87,7 +87,7 @@ export default function DashboardPage() {
         </div>
 
         {error && (
-          <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+          <div className="p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-red-800">
             {error}
           </div>
         )}
@@ -111,7 +111,7 @@ export default function DashboardPage() {
               </div>
               <div>
                 <span className="text-neutral-500">Paid</span>
-                <p className="font-semibold font-mono text-emerald-700">
+                <p className="font-semibold font-mono text-primary-hover">
                   {intent.currency} {Number(intent.amountPaid).toFixed(2)}
                 </p>
               </div>

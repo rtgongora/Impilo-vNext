@@ -51,7 +51,7 @@ export default function MyQrPage() {
   if (status === "loading") {
     return (
       <div className="max-w-lg mx-auto">
-        <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 text-center">
+        <div className="bg-card rounded-xl shadow-sm border border-neutral-200 p-6 text-center">
           <div className="animate-pulse space-y-3">
             <div className="h-4 bg-neutral-200 rounded w-1/3 mx-auto" />
             <div className="h-32 bg-neutral-100 rounded-lg" />
@@ -69,7 +69,7 @@ export default function MyQrPage() {
   if (status === "not-registered") {
     return (
       <div className="max-w-lg mx-auto">
-        <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 text-center">
+        <div className="bg-card rounded-xl shadow-sm border border-neutral-200 p-6 text-center">
           <h1 className="text-xl font-semibold text-neutral-900 mb-2">
             My Health ID QR
           </h1>
@@ -91,12 +91,12 @@ export default function MyQrPage() {
   if (status === "error") {
     return (
       <div className="max-w-lg mx-auto">
-        <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 text-center">
+        <div className="bg-card rounded-xl shadow-sm border border-neutral-200 p-6 text-center">
           <h1 className="text-xl font-semibold text-neutral-900 mb-2">
             My Health ID QR
           </h1>
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 my-4">
-            <p className="text-sm text-red-700">{error}</p>
+          <div className="bg-danger-soft border border-danger/28 rounded-lg p-4 my-4">
+            <p className="text-sm text-danger">{error}</p>
           </div>
           <button
             type="button"
@@ -113,7 +113,7 @@ export default function MyQrPage() {
   // Registered — show QR
   return (
     <div className="max-w-lg mx-auto">
-      <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
+      <div className="bg-card rounded-xl shadow-sm border border-neutral-200 p-6">
         <h1 className="text-xl font-semibold text-neutral-900 mb-1 text-center">
           My Health ID QR
         </h1>
@@ -158,7 +158,7 @@ export default function MyQrPage() {
             <p className="text-xs text-neutral-500 mb-2 text-center">
               Signed QR Token
             </p>
-            <div className="bg-white border border-neutral-300 rounded-lg p-4 break-all font-mono text-xs text-neutral-800 leading-relaxed max-h-48 overflow-y-auto">
+            <div className="bg-card border border-neutral-300 rounded-lg p-4 break-all font-mono text-xs text-neutral-800 leading-relaxed max-h-48 overflow-y-auto">
               {qrToken}
             </div>
             <p className="text-xs text-neutral-400 mt-2 text-center">

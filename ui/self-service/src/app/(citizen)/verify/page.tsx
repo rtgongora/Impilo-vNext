@@ -69,7 +69,7 @@ export default function VerifyPage() {
 
       {error && (
         <Card className="max-w-xl mb-6">
-          <div className="p-4 text-red-800 bg-red-50 rounded-lg text-sm">{error}</div>
+          <div className="p-4 text-red-800 bg-danger-soft rounded-lg text-sm">{error}</div>
         </Card>
       )}
 
@@ -79,12 +79,12 @@ export default function VerifyPage() {
             <div className={`text-center mb-6 p-4 rounded-lg ${
               result.status === "VALID" ? "bg-green-50 border border-green-200" :
               result.status === "EXPIRED" ? "bg-yellow-50 border border-yellow-200" :
-              "bg-red-50 border border-red-200"
+              "bg-danger-soft border border-danger/28"
             }`}>
               <span className={`text-3xl font-bold ${
                 result.status === "VALID" ? "text-green-700" :
                 result.status === "EXPIRED" ? "text-yellow-700" :
-                "text-red-700"
+                "text-danger"
               }`}>{result.status}</span>
             </div>
             <dl className="space-y-3 text-sm">

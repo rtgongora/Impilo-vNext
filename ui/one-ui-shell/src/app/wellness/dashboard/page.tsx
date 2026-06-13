@@ -118,20 +118,20 @@ function SectionCard({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-      <div className="flex items-center gap-2 border-b border-gray-100 px-4 py-3 bg-gray-50/80">
+    <section className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+      <div className="flex items-center gap-2 border-b border-border px-4 py-3 bg-background/80">
         {icon}
-        <h2 className="text-sm font-semibold text-gray-800">{title}</h2>
+        <h2 className="text-sm font-semibold text-foreground">{title}</h2>
       </div>
       <div className="p-4">
         {isLoading && (
-          <div className="flex items-center gap-2 text-gray-600 py-6 text-sm">
+          <div className="flex items-center gap-2 text-muted-foreground py-6 text-sm">
             <Loader2 className="h-5 w-5 animate-spin shrink-0" />
             Loading…
           </div>
         )}
         {!isLoading && isError && (
-          <p className="text-sm text-red-700 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+          <p className="text-sm text-danger bg-danger-soft border border-red-100 rounded-lg px-3 py-2">
             Could not load this section.
           </p>
         )}
@@ -225,14 +225,14 @@ export default function WellnessDashboardPage() {
         <div className="mb-4">
           <Link
             href="/wellness"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
             ← Back to Wellness Hub
           </Link>
         </div>
 
         {!authId && (
-          <p className="mb-4 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+          <p className="mb-4 text-xs text-warning-foreground bg-warning-soft border border-warning/35 rounded-lg px-3 py-2">
             Sign in to load your person-linked wellness profile and activity history.
           </p>
         )}
@@ -245,16 +245,16 @@ export default function WellnessDashboardPage() {
             isError={profileQ.isError}
           >
             {!profile && !profileQ.isFetching ? (
-              <p className="text-sm text-gray-500">No profile data returned for this person.</p>
+              <p className="text-sm text-muted-foreground">No profile data returned for this person.</p>
             ) : profile ? (
               <div className="space-y-2 text-sm">
-                <p className="text-gray-700">
-                  <span className="font-medium text-gray-900">Goals: </span>
+                <p className="text-foreground">
+                  <span className="font-medium text-foreground">Goals: </span>
                   {goalsSummary || "—"}
                 </p>
-                <p className="flex items-center gap-2 text-gray-700">
+                <p className="flex items-center gap-2 text-foreground">
                   <Flame className="h-4 w-4 text-orange-500" />
-                  <span className="font-medium text-gray-900">Active streak: </span>
+                  <span className="font-medium text-foreground">Active streak: </span>
                   {streak} day{streak === 1 ? "" : "s"}
                 </p>
               </div>
@@ -263,27 +263,27 @@ export default function WellnessDashboardPage() {
 
           <SectionCard
             title="Activity Summary"
-            icon={<Activity className="h-4 w-4 text-blue-600" />}
+            icon={<Activity className="h-4 w-4 text-primary" />}
             isLoading={activitiesQ.isLoading}
             isError={activitiesQ.isError}
           >
             {recentActivities.length === 0 ? (
-              <p className="text-sm text-gray-500">No activity logged in the last 7 days.</p>
+              <p className="text-sm text-muted-foreground">No activity logged in the last 7 days.</p>
             ) : (
               <div className="space-y-3">
                 <div className="flex flex-wrap gap-6 text-sm">
                   <span>
-                    <strong className="text-gray-900">{totalSteps.toLocaleString()}</strong>{" "}
+                    <strong className="text-foreground">{totalSteps.toLocaleString()}</strong>{" "}
                     steps (7d)
                   </span>
                   <span>
-                    <strong className="text-gray-900">{Math.round(totalCalories)}</strong> kcal
+                    <strong className="text-foreground">{Math.round(totalCalories)}</strong> kcal
                     burned (7d)
                   </span>
                 </div>
-                <ul className="divide-y divide-gray-100 border border-gray-100 rounded-lg max-h-48 overflow-y-auto text-xs">
+                <ul className="divide-y divide-gray-100 border border-border rounded-lg max-h-48 overflow-y-auto text-xs">
                   {recentActivities.slice(0, 14).map((a, i) => (
-                    <li key={i} className="flex justify-between px-3 py-2 text-gray-700">
+                    <li key={i} className="flex justify-between px-3 py-2 text-foreground">
                       <span>{rowDate(a)}</span>
                       <span>
                         {Number(a.steps ?? a.stepCount ?? 0).toLocaleString()} steps ·{" "}
@@ -303,17 +303,17 @@ export default function WellnessDashboardPage() {
             isError={sleepQ.isError}
           >
             {!lastNight && sleepLast7.length === 0 ? (
-              <p className="text-sm text-gray-500">No sleep segments recorded.</p>
+              <p className="text-sm text-muted-foreground">No sleep segments recorded.</p>
             ) : (
-              <div className="text-sm text-gray-700 space-y-2">
+              <div className="text-sm text-foreground space-y-2">
                 <p>
-                  <span className="font-medium text-gray-900">Last night: </span>
+                  <span className="font-medium text-foreground">Last night: </span>
                   {lastNight
                     ? `${sleepHours(lastNight).toFixed(1)} h (${rowDate(lastNight)})`
                     : "—"}
                 </p>
                 <p>
-                  <span className="font-medium text-gray-900">7-day average: </span>
+                  <span className="font-medium text-foreground">7-day average: </span>
                   {weeklySleepAvg > 0 ? `${weeklySleepAvg.toFixed(1)} h` : "—"}
                 </p>
               </div>
@@ -327,15 +327,15 @@ export default function WellnessDashboardPage() {
             isError={dietQ.isError}
           >
             {todayMeals.length === 0 ? (
-              <p className="text-sm text-gray-500">No meals logged for today.</p>
+              <p className="text-sm text-muted-foreground">No meals logged for today.</p>
             ) : (
               <div className="space-y-2 text-sm">
-                <p className="text-gray-700">
-                  <span className="font-medium text-gray-900">Today: </span>
+                <p className="text-foreground">
+                  <span className="font-medium text-foreground">Today: </span>
                   {todayMeals.length} entr{todayMeals.length === 1 ? "y" : "ies"} ·{" "}
                   <strong>{Math.round(dietCalories)}</strong> kcal
                 </p>
-                <p className="text-xs text-gray-600">
+                <p className="text-xs text-muted-foreground">
                   Macros — P: {Math.round(protein)}g · C: {Math.round(carbs)}g · F: {Math.round(fat)}g
                 </p>
               </div>
@@ -349,7 +349,7 @@ export default function WellnessDashboardPage() {
             isError={moodQ.isError}
           >
             {moodSorted.length === 0 ? (
-              <p className="text-sm text-gray-500">No mood entries in the last week.</p>
+              <p className="text-sm text-muted-foreground">No mood entries in the last week.</p>
             ) : (
               <div className="flex items-end gap-2">
                 {moodSorted.map((m, i) => {
@@ -360,7 +360,7 @@ export default function WellnessDashboardPage() {
                         title={`Score ${score}`}
                         className={`h-8 w-8 rounded-full ${moodColor(score)} shadow-sm ring-2 ring-white`}
                       />
-                      <span className="text-[10px] text-gray-500">{rowDate(m).slice(5)}</span>
+                      <span className="text-[10px] text-muted-foreground">{rowDate(m).slice(5)}</span>
                     </div>
                   );
                 })}
@@ -375,7 +375,7 @@ export default function WellnessDashboardPage() {
             isError={goalsQ.isError}
           >
             {goals.length === 0 ? (
-              <p className="text-sm text-gray-500">No active goals.</p>
+              <p className="text-sm text-muted-foreground">No active goals.</p>
             ) : (
               <ul className="space-y-3">
                 {goals.map((g, i) => {
@@ -384,11 +384,11 @@ export default function WellnessDashboardPage() {
                   const pct = progressPercent(g);
                   return (
                     <li key={id}>
-                      <div className="flex justify-between text-xs text-gray-600 mb-1">
-                        <span className="font-medium text-gray-800">{label}</span>
+                      <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                        <span className="font-medium text-foreground">{label}</span>
                         <span>{pct}%</span>
                       </div>
-                      <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
+                      <div className="h-2 rounded-full bg-neutral-100 overflow-hidden">
                         <div
                           className="h-full rounded-full bg-teal-500 transition-all"
                           style={{ width: `${pct}%` }}
@@ -408,11 +408,11 @@ export default function WellnessDashboardPage() {
             isError={clubsQ.isError}
           >
             {clubs.length === 0 ? (
-              <p className="text-sm text-gray-500">You are not in any clubs yet.</p>
+              <p className="text-sm text-muted-foreground">You are not in any clubs yet.</p>
             ) : (
               <ul className="divide-y divide-gray-100 text-sm">
                 {clubs.map((c, i) => (
-                  <li key={String(c.clubId ?? c.club_id ?? c.id ?? i)} className="py-2 text-gray-800">
+                  <li key={String(c.clubId ?? c.club_id ?? c.id ?? i)} className="py-2 text-foreground">
                     {String(c.name ?? c.title ?? "Club")}
                   </li>
                 ))}
@@ -427,7 +427,7 @@ export default function WellnessDashboardPage() {
             isError={challengesQ.isError}
           >
             {challenges.length === 0 ? (
-              <p className="text-sm text-gray-500">No active challenges.</p>
+              <p className="text-sm text-muted-foreground">No active challenges.</p>
             ) : (
               <ul className="space-y-3">
                 {challenges.map((ch, i) => {
@@ -436,11 +436,11 @@ export default function WellnessDashboardPage() {
                   const pct = progressPercent(ch);
                   return (
                     <li key={id}>
-                      <div className="flex justify-between text-xs text-gray-600 mb-1">
-                        <span className="font-medium text-gray-800">{label}</span>
+                      <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                        <span className="font-medium text-foreground">{label}</span>
                         <span>{pct}%</span>
                       </div>
-                      <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
+                      <div className="h-2 rounded-full bg-neutral-100 overflow-hidden">
                         <div
                           className="h-full rounded-full bg-amber-500 transition-all"
                           style={{ width: `${pct}%` }}

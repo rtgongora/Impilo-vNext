@@ -19,7 +19,7 @@ export default function CitizenLayout({
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="bg-white border-b border-neutral-200 sticky top-0 z-10">
+      <header className="bg-card border-b border-neutral-200 sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-14">
             <Link href="/verify" className="text-lg font-semibold text-brand-primary tracking-tight">

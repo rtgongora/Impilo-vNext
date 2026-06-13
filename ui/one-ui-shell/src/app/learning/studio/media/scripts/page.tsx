@@ -21,10 +21,10 @@ export default function FundoStudioMediaScriptsPage() {
 
   return (
     <FundoStudioWorkspace title="Media Scripts" subtitle="AI-assisted voiceover/facilitator script drafts with human review workflow.">
-      <div className="rounded border border-gray-200 bg-white p-4">
-        <input value={topic} onChange={(e) => setTopic(e.target.value)} className="w-full rounded border border-gray-300 px-3 py-2 text-sm" />
+      <div className="rounded border border-border bg-card p-4">
+        <input value={topic} onChange={(e) => setTopic(e.target.value)} className="w-full rounded border border-border px-3 py-2 text-sm" />
         <button onClick={onGenerate} className="mt-2 rounded bg-teal-600 px-3 py-2 text-sm text-white">Generate draft script</button>
-        {output ? <pre className="mt-3 whitespace-pre-wrap rounded bg-gray-50 p-3 text-xs text-gray-700">{output}</pre> : null}
+        {output ? <pre className="mt-3 whitespace-pre-wrap rounded bg-background p-3 text-xs text-foreground">{output}</pre> : null}
       </div>
     </FundoStudioWorkspace>
   );

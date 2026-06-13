@@ -20,7 +20,7 @@ const LINKS = [
 export function NhumeNav() {
   const pathname = usePathname();
   return (
-    <nav className="mb-4 flex flex-wrap gap-1 border-b border-slate-200 pb-2">
+    <nav className="mb-4 flex flex-wrap gap-1 border-b border-border pb-2">
       {LINKS.map((link) => {
         const active = pathname === link.href || (link.href !== "/nhume" && pathname.startsWith(link.href));
         return (
@@ -28,7 +28,7 @@ export function NhumeNav() {
             key={link.href}
             href={link.href}
             className={`rounded-full px-3 py-1 text-xs font-medium ${
-              active ? "bg-teal-700 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              active ? "bg-primary text-white" : "bg-neutral-100 text-foreground hover:bg-primary-soft"
             }`}
           >
             {link.label}

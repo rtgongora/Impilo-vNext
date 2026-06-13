@@ -53,11 +53,11 @@ interface AssistantState {
 // ── Severity styling ─────────────────────────────────────────────────
 
 const SEVERITY_STYLES: Record<string, { bg: string; border: string; icon: typeof AlertTriangle; iconColor: string }> = {
-  CRITICAL: { bg: "bg-red-50", border: "border-red-200", icon: AlertTriangle, iconColor: "text-red-600" },
-  HIGH: { bg: "bg-amber-50", border: "border-amber-200", icon: AlertTriangle, iconColor: "text-amber-600" },
-  MEDIUM: { bg: "bg-impilo-50", border: "border-impilo-200", icon: Info, iconColor: "text-impilo-500" },
-  LOW: { bg: "bg-gray-50", border: "border-gray-200", icon: Info, iconColor: "text-gray-500" },
-  INFO: { bg: "bg-emerald-50", border: "border-emerald-200", icon: Lightbulb, iconColor: "text-emerald-600" },
+  CRITICAL: { bg: "bg-danger-soft", border: "border-danger/28", icon: AlertTriangle, iconColor: "text-red-600" },
+  HIGH: { bg: "bg-warning-soft", border: "border-warning/35", icon: AlertTriangle, iconColor: "text-amber-600" },
+  MEDIUM: { bg: "bg-primary-soft", border: "border-primary/25", icon: Info, iconColor: "text-primary" },
+  LOW: { bg: "bg-background", border: "border-border", icon: Info, iconColor: "text-muted-foreground" },
+  INFO: { bg: "bg-success-soft", border: "border-success/25", icon: Lightbulb, iconColor: "text-primary" },
 };
 
 const TYPE_ICONS: Record<string, typeof Stethoscope> = {
@@ -181,7 +181,7 @@ export function ProactiveAssistant() {
       {/* Notification panel */}
       {state.isOpen && (
         <div
-          className="fixed right-6 z-40 w-96 max-h-[70vh] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col"
+          className="fixed right-6 z-40 w-96 max-h-[70vh] bg-card rounded-2xl shadow-2xl border border-border overflow-hidden flex flex-col"
           style={{ bottom: "calc(var(--shell-taskbar-height, 0px) + 6.5rem)" }}
         >
           {/* Header */}
@@ -193,13 +193,13 @@ export function ProactiveAssistant() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setChatOpen(!chatOpen)}
-                className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 transition"
+                className="p-1.5 rounded-lg bg-card/20 hover:bg-card/30 transition"
               >
                 <MessageCircle className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setState(prev => ({ ...prev, isOpen: false }))}
-                className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 transition"
+                className="p-1.5 rounded-lg bg-card/20 hover:bg-card/30 transition"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -211,14 +211,14 @@ export function ProactiveAssistant() {
             <div className="flex flex-col flex-1 min-h-[300px]">
               <div className="flex-1 overflow-y-auto p-3 space-y-2">
                 {chatMessages.length === 0 && (
-                  <p className="text-sm text-gray-400 text-center mt-8">
+                  <p className="text-sm text-muted-foreground text-center mt-8">
                     Ask me anything about your patients, schedule, guidelines, or the platform.
                   </p>
                 )}
                 {chatMessages.map((msg, i) => (
                   <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                     <div className={`max-w-[80%] rounded-xl px-3 py-2 text-sm ${
-                      msg.role === "user" ? "bg-violet-600 text-white" : "bg-gray-100 text-gray-800"
+                      msg.role === "user" ? "bg-violet-600 text-white" : "bg-neutral-100 text-foreground"
                     }`}>
                       {msg.text}
                     </div>
@@ -231,7 +231,7 @@ export function ProactiveAssistant() {
                   onChange={e => setChatInput(e.target.value)}
                   onKeyDown={e => e.key === "Enter" && handleChat()}
                   placeholder="Ask the assistant..."
-                  className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-violet-500 focus:ring-1 focus:ring-violet-500 outline-none"
+                  className="flex-1 rounded-lg border border-border px-3 py-2 text-sm focus:border-violet-500 focus:ring-1 focus:ring-violet-500 outline-none"
                 />
                 <button
                   onClick={handleChat}
@@ -247,7 +247,7 @@ export function ProactiveAssistant() {
               {state.notifications.length === 0 ? (
                 <div className="p-8 text-center">
                   <CheckCircle2 className="h-10 w-10 text-emerald-400 mx-auto mb-2" />
-                  <p className="text-sm text-gray-500">All clear — no alerts right now</p>
+                  <p className="text-sm text-muted-foreground">All clear — no alerts right now</p>
                 </div>
               ) : (
                 state.notifications.map(notification => {
@@ -260,10 +260,10 @@ export function ProactiveAssistant() {
                         <TypeIcon className={`h-5 w-5 ${style.iconColor}`} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900">{notification.title}</p>
-                        <p className="text-xs text-gray-600 mt-0.5">{notification.body}</p>
+                        <p className="text-sm font-medium text-foreground">{notification.title}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{notification.body}</p>
                         <div className="flex items-center gap-2 mt-1.5">
-                          <span className="text-[10px] text-gray-400">{notification.source}</span>
+                          <span className="text-[10px] text-muted-foreground">{notification.source}</span>
                           {notification.action && (
                             <a href={notification.action.href} className="text-xs text-violet-600 font-medium flex items-center gap-0.5">
                               {notification.action.label} <ChevronRight className="h-3 w-3" />
@@ -273,7 +273,7 @@ export function ProactiveAssistant() {
                       </div>
                       {notification.dismissible && (
                         <button onClick={() => dismiss(notification.id)} className="flex-shrink-0 p-1">
-                          <X className="h-3.5 w-3.5 text-gray-400" />
+                          <X className="h-3.5 w-3.5 text-muted-foreground" />
                         </button>
                       )}
                     </div>

@@ -71,13 +71,13 @@ export default function IntelligenceHubPage() {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-4">
+          <div className="space-y-4 rounded-lg border border-border bg-card p-4">
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Query type</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Query type</label>
               <select
                 value={queryType}
                 onChange={(e) => setQueryType(e.target.value as IntelligenceQueryType)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm"
               >
                 {PRESETS.map((p) => (
                   <option key={p.queryType} value={p.queryType}>
@@ -89,28 +89,28 @@ export default function IntelligenceHubPage() {
                 <option value="SUMMARY_CLIENT">Client identity summary</option>
                 <option value="ANOMALY_SCAN_OPERATIONS">Operational anomaly scan</option>
               </select>
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-muted-foreground">
                 {PRESETS.find((p) => p.queryType === queryType)?.hint ??
                   "Outputs are suggestions; sensitive actions remain human-governed."}
               </p>
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Text / issue</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Text / issue</label>
               <textarea
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 rows={3}
                 placeholder="Search text, issue description, or triage notes…"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm"
               />
             </div>
             {queryType === "SEARCH_FUSED" ? (
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Index rank mode</label>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Index rank mode</label>
                 <select
                   value={rankMode}
                   onChange={(e) => setRankMode(e.target.value as typeof rankMode)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                 >
                   <option value="recency">Recency (indexedAt)</option>
                   <option value="lexical">Lexical relevance (search-service)</option>
@@ -122,15 +122,15 @@ export default function IntelligenceHubPage() {
             {queryType === "HELP_DESK_ASSIST" ? (
               <div className="space-y-2">
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Learning issue type</label>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">Learning issue type</label>
                   <input
                     value={issueType}
                     onChange={(e) => setIssueType(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                     placeholder="e.g. ACCESS, BILLING, GENERAL"
                   />
                 </div>
-                <label className="flex items-center gap-2 text-xs text-gray-700">
+                <label className="flex items-center gap-2 text-xs text-foreground">
                   <input
                     type="checkbox"
                     checked={attachDags}
@@ -142,20 +142,20 @@ export default function IntelligenceHubPage() {
             ) : null}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Facility ID (optional)</label>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Facility ID (optional)</label>
                 <input
                   value={facilityId}
                   onChange={(e) => setFacilityId(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                   placeholder="UUID for queue / anomaly modes"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Subject ID (optional)</label>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Subject ID (optional)</label>
                 <input
                   value={subjectId}
                   onChange={(e) => setSubjectId(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                   placeholder="Provider id or Health ID"
                 />
               </div>
@@ -165,14 +165,14 @@ export default function IntelligenceHubPage() {
               type="button"
               onClick={() => void execute()}
               disabled={loading}
-              className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-60"
+              className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary disabled:opacity-60"
             >
               {loading ? "Running…" : "Run intelligence query"}
             </button>
           </div>
 
-          <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-            <h2 className="text-sm font-semibold text-gray-900 mb-2">Result</h2>
+          <div className="rounded-lg border border-border bg-background p-4">
+            <h2 className="text-sm font-semibold text-foreground mb-2">Result</h2>
             <IntelligenceResultPanel data={result} />
           </div>
         </div>

@@ -103,17 +103,17 @@ export default function ClaimsPage() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-red-800">
           {error}
         </div>
       )}
 
       {successMessage && (
-        <div className="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-sm text-emerald-800">
+        <div className="mb-4 p-3 rounded-lg bg-success-soft border border-success/25 text-sm text-primary-hover">
           {successMessage}
           <button
             onClick={() => setSuccessMessage(null)}
-            className="ml-2 text-emerald-600 hover:text-emerald-800 font-medium"
+            className="ml-2 text-primary hover:text-primary-hover font-medium"
           >
             Dismiss
           </button>
@@ -226,7 +226,7 @@ export default function ClaimsPage() {
           {/* Dispute form */}
           {showDispute && (
             <div className="card p-6 mb-4 border-red-300">
-              <h3 className="text-sm font-semibold text-red-700 mb-3">Dispute Claim</h3>
+              <h3 className="text-sm font-semibold text-danger mb-3">Dispute Claim</h3>
               <div className="flex gap-3">
                 <input
                   type="text"
@@ -271,7 +271,7 @@ export default function ClaimsPage() {
                     <tr key={event.id} className="hover:bg-neutral-50 transition-colors">
                       <td className="px-4 py-2 font-mono text-xs">{event.id}</td>
                       <td className="px-4 py-2">
-                        <span className="badge bg-indigo-100 text-indigo-800">{event.eventType}</span>
+                        <span className="badge bg-indigo-100 text-primary-hover">{event.eventType}</span>
                       </td>
                       <td className="px-4 py-2 text-xs text-neutral-500 max-w-xs truncate">
                         {event.payload || "---"}

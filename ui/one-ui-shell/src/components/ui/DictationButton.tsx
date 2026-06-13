@@ -96,7 +96,7 @@ export function DictationButton({
         className={`relative inline-flex items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${sizeClasses} ${
           isListening
             ? "bg-red-600 text-white hover:bg-red-700"
-            : "hover:bg-gray-100 text-gray-600"
+            : "hover:bg-neutral-100 text-muted-foreground"
         } ${className || ""}`}
         onClick={handleToggle}
         disabled={disabled}

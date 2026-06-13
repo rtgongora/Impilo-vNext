@@ -54,28 +54,28 @@ export function NdilaAddressSearchBox({
 
   return (
     <div className="relative">
-      <div className="flex items-center gap-1 rounded border border-gray-300 px-2 py-1">
-        <Search className="h-3.5 w-3.5 text-gray-400" />
+      <div className="flex items-center gap-1 rounded border border-border px-2 py-1">
+        <Search className="h-3.5 w-3.5 text-muted-foreground" />
         <input
           value={q} onChange={(e) => setQ(e.target.value)}
           placeholder="Search location (place, facility, address)…"
           className="flex-1 text-sm outline-none bg-transparent"
         />
-        {loading && <Loader2 className="h-3.5 w-3.5 animate-spin text-gray-400" />}
+        {loading && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
       </div>
-      <p className="text-[10px] text-gray-500 mt-0.5">{headerLabel}</p>
+      <p className="text-[10px] text-muted-foreground mt-0.5">{headerLabel}</p>
       {error && <p className="text-[10px] text-red-600 mt-0.5">{error}</p>}
       {results.length > 0 && (
-        <ul className="mt-1 max-h-56 overflow-y-auto rounded border border-gray-200 bg-white shadow-sm divide-y divide-gray-100">
+        <ul className="mt-1 max-h-56 overflow-y-auto rounded border border-border bg-card shadow-sm divide-y divide-gray-100">
           {results.map((r, idx) => (
             <li key={`${r.providerPlaceId ?? idx}`}>
               <button
                 type="button"
                 onClick={() => onSelect?.(r)}
-                className="block w-full px-2 py-1.5 text-left text-xs hover:bg-indigo-50"
+                className="block w-full px-2 py-1.5 text-left text-xs hover:bg-info-soft"
               >
-                <div className="font-medium text-gray-900">{r.name ?? r.address ?? "Result"}</div>
-                <div className="text-[10px] text-gray-500 tabular-nums">
+                <div className="font-medium text-foreground">{r.name ?? r.address ?? "Result"}</div>
+                <div className="text-[10px] text-muted-foreground tabular-nums">
                   {r.latitude.toFixed(4)}, {r.longitude.toFixed(4)}
                   {r.confidence !== undefined ? ` · confidence ${(r.confidence * 100).toFixed(0)}%` : ""}
                   {r.provider ? ` · ${r.provider}` : ""}

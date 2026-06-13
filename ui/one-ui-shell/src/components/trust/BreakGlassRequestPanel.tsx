@@ -55,16 +55,16 @@ export function BreakGlassRequestPanel({
 
   return (
     <section
-      className="rounded-xl border border-red-200 bg-red-50/60 p-4"
+      className="rounded-xl border border-danger/28 bg-danger-soft/60 p-4"
       data-testid="break-glass-request-panel"
     >
       <div className="flex items-start gap-2">
-        <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-red-700" aria-hidden />
+        <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-danger" aria-hidden />
         <div className="flex-1">
           <h3 className="text-sm font-semibold text-red-950">{title}</h3>
           <p className="mt-1 text-xs text-red-900/80">{description}</p>
           <p className="mt-1 text-[11px] text-red-800/70">
-            Posts to <code className="rounded bg-white/80 px-1">POST /internal/v1/trust/break-glass</code>
+            Posts to <code className="rounded bg-card/80 px-1">POST /internal/v1/trust/break-glass</code>
           </p>
         </div>
       </div>
@@ -80,17 +80,17 @@ export function BreakGlassRequestPanel({
           rows={3}
           required
           placeholder="Describe the emergency and why normal policy cannot be followed…"
-          className="w-full rounded-lg border border-red-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-400"
+          className="w-full rounded-lg border border-danger/28 bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-red-400"
         />
         {error ? (
-          <p className="flex items-center gap-1 text-xs text-red-700">
+          <p className="flex items-center gap-1 text-xs text-danger">
             <AlertTriangle className="h-3.5 w-3.5" />
             {error}
           </p>
         ) : null}
         {success ? (
           <div className="space-y-1">
-            <p className="text-xs text-emerald-800">{success}</p>
+            <p className="text-xs text-primary-hover">{success}</p>
             <Link
               href={requestId ? `/admin/break-glass?requestId=${encodeURIComponent(requestId)}` : "/admin/break-glass"}
               className="text-xs font-medium text-red-900 underline"

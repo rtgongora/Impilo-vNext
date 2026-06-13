@@ -56,7 +56,7 @@ export default function ClientsPage() {
       )}
 
       {!loading && !error && clients.length === 0 && (
-        <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-12 text-center">
+        <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-12 text-center">
           <p className="text-neutral-500 mb-4">No clients registered yet</p>
           <Link
             href="/clients/register"
@@ -68,7 +68,7 @@ export default function ClientsPage() {
       )}
 
       {!loading && !error && clients.length > 0 && (
-        <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100">
+        <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>

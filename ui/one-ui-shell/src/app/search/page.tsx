@@ -64,12 +64,12 @@ export default function SearchPage() {
       <PageShell title="Search" subtitle="Search health, wellness, lifestyle, and service knowledge" icon={<SearchIcon className="h-6 w-6" />}>
         <div className="max-w-2xl mx-auto space-y-6">
           <form onSubmit={handleSearch} className="relative">
-            <SearchIcon className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
+            <SearchIcon className="absolute left-4 top-3.5 h-5 w-5 text-muted-foreground" />
             <input
               value={draftQuery}
               onChange={(e) => setDraftQuery(e.target.value)}
               placeholder="Search for health topics, services, providers, conditions..."
-              className="w-full rounded-xl border border-gray-300 pl-12 pr-4 py-3 text-sm focus:outline-none focus:border-impilo-400 focus:ring-2 focus:ring-impilo-100"
+              className="w-full rounded-xl border border-border pl-12 pr-4 py-3 text-sm focus:outline-none focus:border-impilo-400 focus:ring-2 focus:ring-impilo-100"
             />
           </form>
 
@@ -81,8 +81,8 @@ export default function SearchPage() {
                 onClick={() => setDraftDomain(d.id)}
                 className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
                   draftDomain === d.id
-                    ? "bg-impilo-500 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    ? "bg-primary text-white"
+                    : "bg-neutral-100 text-foreground hover:bg-neutral-100"
                 }`}
               >
                 {d.label}
@@ -91,19 +91,19 @@ export default function SearchPage() {
           </div>
 
           {isFetching && (
-            <div className="flex items-center justify-center py-12 text-gray-500">
+            <div className="flex items-center justify-center py-12 text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin mr-2" /> Searching governed knowledge repositories…
             </div>
           )}
 
           {isError && (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            <div className="rounded-lg border border-danger/28 bg-danger-soft px-4 py-3 text-sm text-red-800">
               Search failed. Confirm the Experience BFF and search-service are running, then try again.
             </div>
           )}
 
           {!isFetching && !isError && committedQuery && results.length === 0 && (
-            <div className="text-center py-10 text-sm text-gray-500">
+            <div className="text-center py-10 text-sm text-muted-foreground">
               No indexed matches yet for this query
               {committedEntityType ? ` (type: ${committedEntityType})` : ""}. Results appear as platforms publish to the
               search index.
@@ -112,17 +112,17 @@ export default function SearchPage() {
 
           {!isFetching && !isError && results.length > 0 && (
             <div className="space-y-3">
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 {totalCount} {resultLabel}
               </p>
               <ul className="space-y-2">
                 {results.map((hit) => (
                   <li
                     key={hit.id}
-                    className="rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm"
+                    className="rounded-lg border border-border bg-card px-4 py-3 text-sm shadow-sm"
                   >
-                    <div className="font-medium text-gray-900">{hitTitle(hit)}</div>
-                    <div className="mt-1 text-xs text-gray-500">
+                    <div className="font-medium text-foreground">{hitTitle(hit)}</div>
+                    <div className="mt-1 text-xs text-muted-foreground">
                       {hit.entityType} · {hit.entityId}
                     </div>
                   </li>
@@ -132,8 +132,8 @@ export default function SearchPage() {
           )}
 
           {!isFetching && !committedQuery && (
-            <div className="text-center py-12 text-sm text-gray-400">
-              <SearchIcon className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+            <div className="text-center py-12 text-sm text-muted-foreground">
+              <SearchIcon className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
               <p>Search across health, wellness, diet, sleep, services, and marketplace knowledge.</p>
               <p className="text-xs mt-1">Results are governed by your role, context, and consent settings.</p>
             </div>

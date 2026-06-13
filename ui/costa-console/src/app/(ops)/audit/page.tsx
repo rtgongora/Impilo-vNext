@@ -52,7 +52,7 @@ export default function AuditPage() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-red-800">
           {error}
         </div>
       )}
@@ -112,7 +112,7 @@ export default function AuditPage() {
                 {audit.approvals.map((a) => (
                   <div key={a.id} className="flex items-center justify-between bg-neutral-50 rounded-lg p-3 text-xs">
                     <div className="flex items-center gap-3">
-                      <span className={`badge ${a.status === "APPROVED" ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-800"}`}>
+                      <span className={`badge ${a.status === "APPROVED" ? "bg-emerald-100 text-primary-hover" : "bg-red-100 text-red-800"}`}>
                         {a.status}
                       </span>
                       <span className="text-neutral-600">Step: {a.step}</span>
@@ -145,7 +145,7 @@ export default function AuditPage() {
                       <td className="px-3 py-2">{p.paymentType}</td>
                       <td className="px-3 py-2 text-right font-mono">{Number(p.amount).toFixed(2)}</td>
                       <td className="px-3 py-2">
-                        <span className="badge bg-emerald-100 text-emerald-800">{p.status}</span>
+                        <span className="badge bg-emerald-100 text-primary-hover">{p.status}</span>
                       </td>
                       <td className="px-3 py-2 font-mono text-neutral-500">{p.externalRef || "—"}</td>
                       <td className="px-3 py-2 text-neutral-500">{new Date(p.createdAt).toLocaleString()}</td>

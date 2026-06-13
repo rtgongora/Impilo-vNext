@@ -11,7 +11,7 @@ interface OpaPrecheckPanelProps {
 export function OpaPrecheckPanel({ result, isLoading, errorMessage }: OpaPrecheckPanelProps) {
   if (isLoading) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
+      <div className="rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
         Running OPA precheck…
       </div>
     );
@@ -19,7 +19,7 @@ export function OpaPrecheckPanel({ result, isLoading, errorMessage }: OpaPrechec
 
   if (errorMessage) {
     return (
-      <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+      <div className="rounded-xl border border-warning/35 bg-warning-soft px-4 py-3 text-sm text-warning-foreground">
         Precheck unavailable — backend integration pending. Do not submit until precheck is available.
       </div>
     );
@@ -34,10 +34,10 @@ export function OpaPrecheckPanel({ result, isLoading, errorMessage }: OpaPrechec
     <div
       className={`rounded-xl border px-4 py-3 text-sm ${
         result.status === "denied"
-          ? "border-rose-200 bg-rose-50 text-rose-950"
+          ? "border-danger/28 bg-danger-soft text-danger"
           : pending
-            ? "border-amber-200 bg-amber-50 text-amber-950"
-            : "border-emerald-200 bg-emerald-50 text-emerald-950"
+            ? "border-warning/35 bg-warning-soft text-warning-foreground"
+            : "border-success/25 bg-success-soft text-emerald-950"
       }`}
     >
       <p className="font-semibold">Policy precheck: {allowed ? "permitted" : result.status}</p>

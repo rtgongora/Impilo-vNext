@@ -28,10 +28,10 @@ function readStr(r: Record<string, unknown>, ...keys: string[]) {
 }
 
 const STATUS_BADGE: Record<string, string> = {
-  ACTIVE: "bg-emerald-100 text-emerald-800",
-  DRAFT: "bg-slate-100 text-slate-700",
+  ACTIVE: "bg-emerald-100 text-primary-hover",
+  DRAFT: "bg-neutral-100 text-foreground",
   PUBLISHED: "bg-cyan-100 text-cyan-800",
-  DEPRECATED: "bg-gray-200 text-gray-600",
+  DEPRECATED: "bg-neutral-100 text-muted-foreground",
 };
 
 export default function ClinicalFormBuilderPage() {
@@ -109,19 +109,19 @@ export default function ClinicalFormBuilderPage() {
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <Link
             href="/clinical-tools"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
             Clinical tools
           </Link>
-          <span className="text-gray-300">·</span>
+          <span className="text-muted-foreground">·</span>
           <Link href="/clinical-tools/rules" className="text-sm text-cyan-700 hover:underline">
             Rules engine
           </Link>
         </div>
 
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-gray-600">Lists forms from GET /internal/v1/extensions/forms.</p>
+          <p className="text-sm text-muted-foreground">Lists forms from GET /internal/v1/extensions/forms.</p>
           <button
             type="button"
             onClick={() => setShowCreate((s) => !s)}
@@ -136,26 +136,26 @@ export default function ClinicalFormBuilderPage() {
           <div className="mb-6 rounded-xl border-2 border-cyan-200 bg-cyan-50/40 p-4 space-y-3 text-sm">
             <div className="grid gap-3 sm:grid-cols-3">
               <label className="block">
-                <span className="text-xs font-medium text-gray-600">Name</span>
+                <span className="text-xs font-medium text-muted-foreground">Name</span>
                 <input
-                  className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2"
+                  className="mt-1 w-full rounded-lg border border-border px-3 py-2"
                   value={draftName}
                   onChange={(e) => setDraftName(e.target.value)}
                   placeholder="Triage intake v1"
                 />
               </label>
               <label className="block">
-                <span className="text-xs font-medium text-gray-600">Version</span>
+                <span className="text-xs font-medium text-muted-foreground">Version</span>
                 <input
-                  className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 font-mono text-xs"
+                  className="mt-1 w-full rounded-lg border border-border px-3 py-2 font-mono text-xs"
                   value={draftVersion}
                   onChange={(e) => setDraftVersion(e.target.value)}
                 />
               </label>
               <label className="block">
-                <span className="text-xs font-medium text-gray-600">Status</span>
+                <span className="text-xs font-medium text-muted-foreground">Status</span>
                 <select
-                  className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2"
+                  className="mt-1 w-full rounded-lg border border-border px-3 py-2"
                   value={draftStatus}
                   onChange={(e) => setDraftStatus(e.target.value)}
                 >
@@ -166,9 +166,9 @@ export default function ClinicalFormBuilderPage() {
               </label>
             </div>
             <label className="block">
-              <span className="text-xs font-medium text-gray-600">JSON Schema</span>
+              <span className="text-xs font-medium text-muted-foreground">JSON Schema</span>
               <textarea
-                className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 font-mono text-xs"
+                className="mt-1 w-full rounded-lg border border-border px-3 py-2 font-mono text-xs"
                 rows={12}
                 value={draftSchema}
                 onChange={(e) => setDraftSchema(e.target.value)}
@@ -178,7 +178,7 @@ export default function ClinicalFormBuilderPage() {
               <button
                 type="button"
                 onClick={() => setShowCreate(false)}
-                className="rounded-lg px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100"
+                className="rounded-lg px-3 py-1.5 text-sm text-muted-foreground hover:bg-neutral-100"
               >
                 Cancel
               </button>
@@ -191,9 +191,9 @@ export default function ClinicalFormBuilderPage() {
                 {createM.isPending ? "Saving…" : "Save form"}
               </button>
             </div>
-            {schemaParseError && <p className="text-xs text-red-700">{schemaParseError}</p>}
+            {schemaParseError && <p className="text-xs text-danger">{schemaParseError}</p>}
             {createM.isError && (
-              <p className="text-xs text-red-700">
+              <p className="text-xs text-danger">
                 Create failed — wire POST /internal/v1/extensions/forms on the BFF when ready.
               </p>
             )}
@@ -201,18 +201,18 @@ export default function ClinicalFormBuilderPage() {
         )}
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
             {formsQ.isLoading && (
-              <div className="flex items-center justify-center gap-2 py-16 text-gray-500">
+              <div className="flex items-center justify-center gap-2 py-16 text-muted-foreground">
                 <Loader2 className="h-5 w-5 animate-spin" /> Loading form schemas…
               </div>
             )}
             {formsQ.isError && (
-              <p className="p-6 text-sm text-red-700">Could not load forms from the BFF.</p>
+              <p className="p-6 text-sm text-danger">Could not load forms from the BFF.</p>
             )}
             {!formsQ.isLoading && !formsQ.isError && (
               <table className="min-w-full text-sm">
-                <thead className="border-b border-gray-100 bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                <thead className="border-b border-border bg-background text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3">Name</th>
                     <th className="px-4 py-3">Version</th>
@@ -222,7 +222,7 @@ export default function ClinicalFormBuilderPage() {
                 <tbody className="divide-y divide-gray-100">
                   {forms.length === 0 && (
                     <tr>
-                      <td colSpan={3} className="px-4 py-10 text-center text-gray-500">
+                      <td colSpan={3} className="px-4 py-10 text-center text-muted-foreground">
                         No form schemas returned. Create one locally once the API exists.
                       </td>
                     </tr>
@@ -239,7 +239,7 @@ export default function ClinicalFormBuilderPage() {
                         <td className="px-4 py-3 font-mono text-xs">{readStr(f, "version", "semver")}</td>
                         <td className="px-4 py-3">
                           <span
-                            className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_BADGE[st] ?? "bg-gray-100 text-gray-700"}`}
+                            className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_BADGE[st] ?? "bg-neutral-100 text-foreground"}`}
                           >
                             {st}
                           </span>
@@ -252,12 +252,12 @@ export default function ClinicalFormBuilderPage() {
             )}
           </div>
 
-          <div className="rounded-xl border border-gray-200 bg-gray-900 p-4 text-cyan-50 shadow-sm">
+          <div className="rounded-xl border border-border bg-neutral-900 p-4 text-cyan-50 shadow-sm">
             <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-white">
               <FileJson2 className="h-4 w-4 text-cyan-400" />
               JSON schema preview
             </h3>
-            <p className="mb-2 text-xs text-gray-400">Selected row or empty when no forms.</p>
+            <p className="mb-2 text-xs text-muted-foreground">Selected row or empty when no forms.</p>
             <pre className="max-h-[min(70vh,520px)] overflow-auto rounded-lg bg-black/40 p-3 text-xs leading-relaxed text-cyan-100">
               {previewJson || "// No schema in list response"}
             </pre>

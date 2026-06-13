@@ -113,17 +113,17 @@ export function MadiBedsideVerifyPanel({
   const patientVerified = preVerify.isSuccess || biometricOk;
 
   return (
-    <section className="rounded-2xl border border-rose-200 bg-rose-50/50 p-5 space-y-4">
-      <div className="flex items-center gap-2 text-sm font-semibold text-rose-900">
+    <section className="rounded-2xl border border-danger/28 bg-danger-soft/50 p-5 space-y-4">
+      <div className="flex items-center gap-2 text-sm font-semibold text-danger">
         <Fingerprint className="h-4 w-4" />
         Bedside verification (patient + unit)
       </div>
 
       <div className="flex flex-wrap gap-2 text-xs">
-        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 ${patientVerified ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"}`}>
+        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 ${patientVerified ? "bg-green-100 text-green-800" : "bg-neutral-100 text-muted-foreground"}`}>
           <CheckCircle2 className="h-3 w-3" /> Patient {patientVerified ? "verified" : "pending"}
         </span>
-        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 ${preVerify.isSuccess ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"}`}>
+        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 ${preVerify.isSuccess ? "bg-green-100 text-green-800" : "bg-neutral-100 text-muted-foreground"}`}>
           <ScanBarcode className="h-3 w-3" /> Unit {preVerify.isSuccess ? "verified" : "pending"}
         </span>
       </div>
@@ -132,16 +132,16 @@ export function MadiBedsideVerifyPanel({
         value={patientCpid}
         onChange={(e) => { setPatientCpid(e.target.value); setBiometricOk(false); }}
         placeholder="Patient CPID / Health ID"
-        className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm font-mono"
+        className="w-full rounded-xl border border-border px-3 py-2 text-sm font-mono"
       />
       <input
         value={bloodUnitId}
         onChange={(e) => setBloodUnitId(e.target.value)}
         placeholder="Blood unit UUID"
-        className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm font-mono"
+        className="w-full rounded-xl border border-border px-3 py-2 text-sm font-mono"
       />
 
-      <select value={patientMethod} onChange={(e) => setPatientMethod(e.target.value)} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm bg-white">
+      <select value={patientMethod} onChange={(e) => setPatientMethod(e.target.value)} className="w-full rounded-xl border border-border px-3 py-2 text-sm bg-card">
         {PATIENT_METHODS.map((m) => (
           <option key={m.value} value={m.value}>{m.label}</option>
         ))}
@@ -153,13 +153,13 @@ export function MadiBedsideVerifyPanel({
             type="button"
             onClick={handleBiometricCapture}
             disabled={biometricVerify.isPending || !patientCpid}
-            className="rounded-lg bg-gray-800 px-3 py-1.5 text-xs text-white disabled:opacity-50"
+            className="rounded-lg bg-primary-hover px-3 py-1.5 text-xs text-white disabled:opacity-50"
           >
             {biometricVerify.isPending ? <Loader2 className="h-3 w-3 animate-spin inline" /> : null}
             Verify with VITO biometric
           </button>
           {bioProfile?.data?.status === "NOT_ENROLLED" && (
-            <span className="text-xs text-amber-700">Patient not enrolled for biometrics</span>
+            <span className="text-xs text-warning-foreground">Patient not enrolled for biometrics</span>
           )}
           {biometricOk && <span className="text-xs text-green-700">Biometric match recorded</span>}
         </div>
@@ -170,11 +170,11 @@ export function MadiBedsideVerifyPanel({
           value={patientBiometricRef}
           onChange={(e) => setPatientBiometricRef(e.target.value)}
           placeholder={patientMethod === "BARCODE_SCAN" ? "Wristband scan value" : "Override documentation ref"}
-          className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+          className="w-full rounded-xl border border-border px-3 py-2 text-sm"
         />
       )}
 
-      <select value={unitMethod} onChange={(e) => setUnitMethod(e.target.value)} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm bg-white">
+      <select value={unitMethod} onChange={(e) => setUnitMethod(e.target.value)} className="w-full rounded-xl border border-border px-3 py-2 text-sm bg-card">
         {UNIT_METHODS.map((m) => (
           <option key={m.value} value={m.value}>{m.label}</option>
         ))}
@@ -183,10 +183,10 @@ export function MadiBedsideVerifyPanel({
         value={unitScanRef}
         onChange={(e) => setUnitScanRef(e.target.value)}
         placeholder="Unit barcode / scan reference"
-        className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+        className="w-full rounded-xl border border-border px-3 py-2 text-sm"
       />
 
-      {error && <p className="text-xs text-red-700">{error}</p>}
+      {error && <p className="text-xs text-danger">{error}</p>}
 
       <button
         type="button"

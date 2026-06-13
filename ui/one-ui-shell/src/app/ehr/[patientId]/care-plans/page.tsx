@@ -26,8 +26,8 @@ import { useFacilityStore } from "@/hooks/useFacilityStore";
 
 const STATUS_STYLES: Record<string, string> = {
   Active: "bg-green-100 text-green-700",
-  Completed: "bg-impilo-100 text-impilo-600",
-  Draft: "bg-gray-100 text-gray-600",
+  Completed: "bg-primary-soft text-primary",
+  Draft: "bg-neutral-100 text-muted-foreground",
 };
 
 export default function CarePlansPage() {
@@ -61,16 +61,16 @@ export default function CarePlansPage() {
       <PageShell title="Care Plans" subtitle="Active and historical care plan management">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading care plans...</span>
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading care plans...</span>
           </div>
         ) : isError ? (
           <div className="flex flex-col items-center justify-center gap-3 py-16">
-            <p className="text-sm text-gray-600">Unable to load care plans from the server.</p>
+            <p className="text-sm text-muted-foreground">Unable to load care plans from the server.</p>
             <button
               type="button"
               onClick={() => void refetch()}
-              className="rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white hover:bg-impilo-600"
+              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
             >
               Retry
             </button>
@@ -121,30 +121,30 @@ export default function CarePlansPage() {
               ]}
             />
 
-            <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+            <div className="rounded-3xl border border-border bg-background/70 p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
                 Care plan loop status
               </p>
-              <p className="mt-2 text-sm text-slate-800">
+              <p className="mt-2 text-sm text-foreground">
                 {pendingInterventions > 0
                   ? `${pendingInterventions} intervention${pendingInterventions === 1 ? " is" : "s are"} still open across active plans, so the next step should stay visible here before the encounter closes.`
                   : "The active plans are documented, and the next continuity step is keeping goals, care team, and notes aligned as the plan progresses."}
               </p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Use Goals to track outcome movement, Care Team to confirm ownership, and Notes to record execution or barriers without leaving the patient workspace.
               </p>
             </div>
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <ClipboardList className="h-5 w-5 text-impilo-500" />
-                <h2 className="text-lg font-semibold text-gray-900">Care Plans</h2>
-                <span className="text-sm text-gray-500">({carePlans.length})</span>
+                <ClipboardList className="h-5 w-5 text-primary" />
+                <h2 className="text-lg font-semibold text-foreground">Care Plans</h2>
+                <span className="text-sm text-muted-foreground">({carePlans.length})</span>
               </div>
               <button
                 type="button"
                 onClick={() => setShowForm((prev) => !prev)}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
               >
                 <Plus className="h-4 w-4" />
                 New Care Plan
@@ -152,10 +152,10 @@ export default function CarePlansPage() {
             </div>
 
             {showForm && (
-              <div className="rounded-lg border border-gray-200 bg-white p-5">
+              <div className="rounded-lg border border-border bg-card p-5">
                 <div className="mb-4 flex items-center justify-between">
-                  <h3 className="font-medium text-gray-900">New Care Plan</h3>
-                  <button type="button" onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600">
+                  <h3 className="font-medium text-foreground">New Care Plan</h3>
+                  <button type="button" onClick={() => setShowForm(false)} className="text-muted-foreground hover:text-muted-foreground">
                     <X className="h-4 w-4" />
                   </button>
                 </div>
@@ -176,12 +176,12 @@ export default function CarePlansPage() {
                 }} className="space-y-4">
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-600">Plan Title</label>
-                      <input type="text" value={formTitle} onChange={(e) => setFormTitle(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" placeholder="e.g. Diabetes Management" />
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Plan Title</label>
+                      <input type="text" value={formTitle} onChange={(e) => setFormTitle(e.target.value)} className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" placeholder="e.g. Diabetes Management" />
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-600">Category</label>
-                      <select value={formCategory} onChange={(e) => setFormCategory(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400">
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Category</label>
+                      <select value={formCategory} onChange={(e) => setFormCategory(e.target.value)} className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40">
                         <option value="">Select category</option>
                         <option value="Chronic Disease">Chronic Disease</option>
                         <option value="Cardiovascular">Cardiovascular</option>
@@ -191,45 +191,45 @@ export default function CarePlansPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-600">Target Date</label>
-                      <input type="date" value={formTargetDate} onChange={(e) => setFormTargetDate(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Target Date</label>
+                      <input type="date" value={formTargetDate} onChange={(e) => setFormTargetDate(e.target.value)} className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
                     </div>
                   </div>
                   {createPlan.isError && (
                     <p className="text-xs text-red-600">Failed to create care plan. Please try again.</p>
                   )}
                   <div className="flex items-center gap-3 pt-2">
-                    <button type="submit" disabled={createPlan.isPending || !formTitle} className="inline-flex items-center gap-1.5 rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600 disabled:opacity-50">
+                    <button type="submit" disabled={createPlan.isPending || !formTitle} className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-50">
                       {createPlan.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                       Create Plan
                     </button>
-                    <button type="button" onClick={() => setShowForm(false)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">Cancel</button>
+                    <button type="button" onClick={() => setShowForm(false)} className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-background">Cancel</button>
                   </div>
                 </form>
               </div>
             )}
 
             {carePlans.length === 0 ? (
-              <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
-                <ClipboardList className="mx-auto mb-3 h-10 w-10 text-gray-300" />
-                <p className="text-sm text-gray-400">No care plans created yet</p>
+              <div className="rounded-lg border border-border bg-card p-12 text-center">
+                <ClipboardList className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">No care plans created yet</p>
               </div>
             ) : (
               <div className="space-y-4">
                 {carePlans.map((plan) => {
                   const isExpanded = expandedPlan === plan.id;
                   return (
-                    <div key={plan.id} className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+                    <div key={plan.id} className="overflow-hidden rounded-lg border border-border bg-card">
                       <button
                         type="button"
                         onClick={() => setExpandedPlan(isExpanded ? null : plan.id)}
-                        className="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-gray-50"
+                        className="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-background"
                       >
                         <div className="flex items-center gap-3">
-                          <ClipboardList className="h-5 w-5 text-impilo-500" />
+                          <ClipboardList className="h-5 w-5 text-primary" />
                           <div>
-                            <div className="font-medium text-gray-900">{plan.title}</div>
-                            <div className="text-xs text-gray-500">
+                            <div className="font-medium text-foreground">{plan.title}</div>
+                            <div className="text-xs text-muted-foreground">
                               {plan.category} · {plan.author}
                             </div>
                           </div>
@@ -237,13 +237,13 @@ export default function CarePlansPage() {
                         <div className="flex items-center gap-3">
                           <span
                             className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                              STATUS_STYLES[plan.status] ?? "bg-gray-100 text-gray-600"
+                              STATUS_STYLES[plan.status] ?? "bg-neutral-100 text-muted-foreground"
                             }`}
                           >
                             {plan.status}
                           </span>
                           {plan.startDate && (
-                            <span className="text-xs text-gray-400">
+                            <span className="text-xs text-muted-foreground">
                               {plan.startDate}
                               {plan.targetDate ? ` → ${plan.targetDate}` : ""}
                             </span>
@@ -252,26 +252,26 @@ export default function CarePlansPage() {
                       </button>
 
                       {isExpanded && (
-                        <div className="space-y-4 border-t border-gray-100 p-4">
+                        <div className="space-y-4 border-t border-border p-4">
                           <div>
-                            <h4 className="mb-2 flex items-center gap-1.5 text-sm font-medium text-gray-700">
+                            <h4 className="mb-2 flex items-center gap-1.5 text-sm font-medium text-foreground">
                               <Target className="h-4 w-4 text-amber-600" /> Goals
                             </h4>
                             <div className="space-y-2">
                               {plan.goals.map((goal) => (
                                 <div key={goal.id} className="flex items-center gap-3">
-                                  <span className="w-48 truncate text-sm text-gray-700">{goal.description}</span>
-                                  <div className="h-2 flex-1 rounded-full bg-gray-100">
-                                    <div className="h-2 rounded-full bg-impilo-500 transition-all" style={{ width: `${goal.progress}%` }} />
+                                  <span className="w-48 truncate text-sm text-foreground">{goal.description}</span>
+                                  <div className="h-2 flex-1 rounded-full bg-neutral-100">
+                                    <div className="h-2 rounded-full bg-primary transition-all" style={{ width: `${goal.progress}%` }} />
                                   </div>
-                                  <span className="w-10 text-right text-xs text-gray-500">{goal.progress}%</span>
+                                  <span className="w-10 text-right text-xs text-muted-foreground">{goal.progress}%</span>
                                 </div>
                               ))}
                             </div>
                           </div>
 
                           <div>
-                            <h4 className="mb-2 flex items-center gap-1.5 text-sm font-medium text-gray-700">
+                            <h4 className="mb-2 flex items-center gap-1.5 text-sm font-medium text-foreground">
                               <CheckCircle2 className="h-4 w-4 text-green-600" /> Interventions
                             </h4>
                             <div className="space-y-1.5">
@@ -280,26 +280,26 @@ export default function CarePlansPage() {
                                   {item.completed ? (
                                     <CheckCircle2 className="h-4 w-4 text-green-500" />
                                   ) : (
-                                    <Circle className="h-4 w-4 text-gray-300" />
+                                    <Circle className="h-4 w-4 text-muted-foreground" />
                                   )}
-                                  <span className={item.completed ? "text-gray-500 line-through" : "text-gray-700"}>{item.label}</span>
+                                  <span className={item.completed ? "text-muted-foreground line-through" : "text-foreground"}>{item.label}</span>
                                 </div>
                               ))}
                             </div>
                           </div>
 
                           <div className="flex flex-wrap gap-2 pt-2">
-                            <a href={`/ehr/${patientId}/goals`} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">
+                            <a href={`/ehr/${patientId}/goals`} className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-background">
                               <Target className="h-3.5 w-3.5" /> Open goals
                             </a>
-                            <a href={`/ehr/${patientId}/care-team`} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">
+                            <a href={`/ehr/${patientId}/care-team`} className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-background">
                               <Users className="h-3.5 w-3.5" /> Confirm ownership
                             </a>
-                            <a href={`/ehr/${patientId}/notes`} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">
+                            <a href={`/ehr/${patientId}/notes`} className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-background">
                               <FileText className="h-3.5 w-3.5" /> Document progress
                             </a>
                             {plan.targetDate && (
-                              <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-700">
+                              <span className="inline-flex items-center gap-1 rounded-lg bg-warning-soft px-3 py-1.5 text-xs font-medium text-warning-foreground">
                                 <Clock className="h-3.5 w-3.5" /> Due {plan.targetDate}
                               </span>
                             )}

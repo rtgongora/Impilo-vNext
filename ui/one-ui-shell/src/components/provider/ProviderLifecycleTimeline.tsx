@@ -45,26 +45,26 @@ const eventTypeConfig: Record<
   LifecycleEventType,
   { icon: React.ElementType; color: string; label: string }
 > = {
-  application: { icon: FileText, color: "text-blue-600", label: "Application" },
-  license: { icon: FileText, color: "text-emerald-600", label: "License" },
+  application: { icon: FileText, color: "text-primary", label: "Application" },
+  license: { icon: FileText, color: "text-primary", label: "License" },
   certificate: { icon: Award, color: "text-purple-600", label: "Certificate" },
   affiliation: { icon: Building, color: "text-cyan-600", label: "Affiliation" },
   qualification: { icon: FileText, color: "text-indigo-600", label: "Qualification" },
   compliance: { icon: AlertTriangle, color: "text-amber-600", label: "Compliance" },
   pic_assignment: { icon: Users, color: "text-teal-600", label: "PIC Assignment" },
-  practice_context: { icon: Building, color: "text-slate-600", label: "Practice Context" },
+  practice_context: { icon: Building, color: "text-muted-foreground", label: "Practice Context" },
 };
 
 const statusConfig: Record<
   string,
   { icon: React.ElementType; color: string; bgColor: string }
 > = {
-  ACTIVE: { icon: CheckCircle2, color: "text-emerald-600", bgColor: "bg-emerald-100" },
+  ACTIVE: { icon: CheckCircle2, color: "text-primary", bgColor: "bg-emerald-100" },
   PENDING: { icon: Clock, color: "text-amber-600", bgColor: "bg-amber-100" },
-  APPROVED: { icon: CheckCircle2, color: "text-emerald-600", bgColor: "bg-emerald-100" },
-  SUBMITTED: { icon: RefreshCcw, color: "text-blue-600", bgColor: "bg-blue-100" },
+  APPROVED: { icon: CheckCircle2, color: "text-primary", bgColor: "bg-emerald-100" },
+  SUBMITTED: { icon: RefreshCcw, color: "text-primary", bgColor: "bg-blue-100" },
   REJECTED: { icon: XCircle, color: "text-red-600", bgColor: "bg-red-100" },
-  EXPIRED: { icon: Clock, color: "text-slate-600", bgColor: "bg-slate-100" },
+  EXPIRED: { icon: Clock, color: "text-muted-foreground", bgColor: "bg-neutral-100" },
   TERMINATED: { icon: XCircle, color: "text-red-600", bgColor: "bg-red-100" },
   EXEMPTED: { icon: AlertTriangle, color: "text-amber-600", bgColor: "bg-amber-100" },
   REVOKED: { icon: XCircle, color: "text-red-600", bgColor: "bg-red-100" },
@@ -73,8 +73,8 @@ const statusConfig: Record<
 function getStatusConfig(status: string) {
   return statusConfig[status] || {
     icon: Loader2,
-    color: "text-slate-600",
-    bgColor: "bg-slate-100",
+    color: "text-muted-foreground",
+    bgColor: "bg-neutral-100",
   };
 }
 

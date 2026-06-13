@@ -366,9 +366,9 @@ export default function VitalsPage() {
   function riskBadgeClass(level: string) {
     const u = level.toUpperCase();
     if (u === "HIGH") return "bg-red-100 text-red-800";
-    if (u === "MEDIUM") return "bg-amber-100 text-amber-900";
-    if (u === "LOW") return "bg-impilo-100 text-impilo-700";
-    return "bg-gray-100 text-gray-700";
+    if (u === "MEDIUM") return "bg-amber-100 text-warning-foreground";
+    if (u === "LOW") return "bg-primary-soft text-primary-hover";
+    return "bg-neutral-100 text-foreground";
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -412,8 +412,8 @@ export default function VitalsPage() {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading vitals...</span>
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading vitals...</span>
           </div>
         ) : (
           <div className="space-y-6">
@@ -421,7 +421,7 @@ export default function VitalsPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Activity className="w-5 h-5 text-red-600" />
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 className="text-lg font-semibold text-foreground">
                   Recorded Vitals
                 </h2>
               </div>
@@ -429,7 +429,7 @@ export default function VitalsPage() {
               <button
                 type="button"
                 onClick={() => setShowForm((prev) => !prev)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 transition-colors"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 Record Vitals
@@ -439,22 +439,22 @@ export default function VitalsPage() {
 
             {/* Maternity: partograph + CTG (same feature family) + legacy labour rows */}
             <section
-              className="rounded-lg border border-pink-200/90 bg-white p-5"
+              className="rounded-lg border border-pink-200/90 bg-card p-5"
               aria-labelledby="labour-monitoring-heading"
             >
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <HeartPulse className="h-5 w-5 text-pink-600" aria-hidden />
-                  <h2 id="labour-monitoring-heading" className="text-lg font-semibold text-gray-900">
+                  <h2 id="labour-monitoring-heading" className="text-lg font-semibold text-foreground">
                     Maternity: partograph, CTG & labour
                   </h2>
                 </div>
               </div>
-              <p className="mt-1 text-xs text-gray-500">
-                Partograph: <code className="rounded bg-gray-100 px-1">/internal/v1/maternity/partograph/sessions</code> (cervical
-                progress plot). CTG: <code className="rounded bg-gray-100 px-1">/internal/v1/maternity/ctg/sessions</code> with
-                polled trace chunks — <span className="font-medium text-gray-800">not a websocket stream</span>. Legacy flat rows
-                remain under the fold for <code className="rounded bg-gray-100 px-1">labour_monitoring_entries</code> only.
+              <p className="mt-1 text-xs text-muted-foreground">
+                Partograph: <code className="rounded bg-neutral-100 px-1">/internal/v1/maternity/partograph/sessions</code> (cervical
+                progress plot). CTG: <code className="rounded bg-neutral-100 px-1">/internal/v1/maternity/ctg/sessions</code> with
+                polled trace chunks — <span className="font-medium text-foreground">not a websocket stream</span>. Legacy flat rows
+                remain under the fold for <code className="rounded bg-neutral-100 px-1">labour_monitoring_entries</code> only.
               </p>
 
               <VitalsPartographSection
@@ -477,8 +477,8 @@ export default function VitalsPage() {
                 <summary className="cursor-pointer text-sm font-medium text-pink-950">
                   Legacy labour rows (<code className="text-xs">labour_monitoring_entries</code>) — compatibility only
                 </summary>
-                <p className="mt-2 text-xs text-gray-600">
-                  Flat table via <code className="rounded bg-gray-100 px-1">GET/POST /internal/v1/labour-monitoring</code>. Not
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Flat table via <code className="rounded bg-neutral-100 px-1">GET/POST /internal/v1/labour-monitoring</code>. Not
                   the canonical plotted record; prefer partograph sessions above.
                 </p>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -486,7 +486,7 @@ export default function VitalsPage() {
                     <button
                       type="button"
                       onClick={() => setLabourShowAllPatientHistory((p) => !p)}
-                      className="rounded-lg border border-pink-200 bg-white px-3 py-1.5 text-xs font-medium text-pink-900 hover:bg-pink-50"
+                      className="rounded-lg border border-pink-200 bg-card px-3 py-1.5 text-xs font-medium text-pink-900 hover:bg-pink-50"
                     >
                       {labourShowAllPatientHistory
                         ? "Show this encounter only"
@@ -504,17 +504,17 @@ export default function VitalsPage() {
                     </button>
                   )}
                 </div>
-                <p className="mt-2 text-xs text-gray-600">
+                <p className="mt-2 text-xs text-muted-foreground">
                   {activeEncounter ? (
                     labourShowAllPatientHistory ? (
                       <>
                         Showing <span className="font-medium">all legacy rows</span> for this patient (GET without{" "}
-                        <code className="rounded bg-gray-100 px-1">encounterId</code>).
+                        <code className="rounded bg-neutral-100 px-1">encounterId</code>).
                       </>
                     ) : (
                       <>
                         Filtered to <span className="font-medium">active encounter</span>{" "}
-                        <code className="rounded bg-gray-100 px-1">{encounterId}</code>.
+                        <code className="rounded bg-neutral-100 px-1">{encounterId}</code>.
                       </>
                     )
                   ) : (
@@ -525,7 +525,7 @@ export default function VitalsPage() {
                 </p>
 
               {labourError && (
-                <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+                <div className="mt-3 flex items-start gap-2 rounded-lg border border-warning/35 bg-warning-soft px-3 py-2 text-sm text-warning-foreground">
                   <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                   <div>
                     <p className="font-medium">Could not load labour monitoring</p>
@@ -537,14 +537,14 @@ export default function VitalsPage() {
               )}
 
               {showLabourForm && isClinical && (
-                <form onSubmit={handleLabourSubmit} className="mt-4 space-y-3 rounded-lg border border-gray-100 bg-gray-50/80 p-4">
+                <form onSubmit={handleLabourSubmit} className="mt-4 space-y-3 rounded-lg border border-border bg-background/80 p-4">
                   <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                    <label className="text-xs font-medium text-gray-600">
+                    <label className="text-xs font-medium text-muted-foreground">
                       Phase
                       <select
                         value={labourPhase}
                         onChange={(e) => setLabourPhase(e.target.value)}
-                        className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                       >
                         <option value="LATENT_LABOUR">Latent labour</option>
                         <option value="ACTIVE_LABOUR">Active labour</option>
@@ -552,63 +552,63 @@ export default function VitalsPage() {
                         <option value="POSTPARTUM">Postpartum monitoring</option>
                       </select>
                     </label>
-                    <label className="text-xs font-medium text-gray-600">
+                    <label className="text-xs font-medium text-muted-foreground">
                       Fetal heart bpm
-                      <input value={labourFetalHeart} onChange={(e) => setLabourFetalHeart(e.target.value)} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                      <input value={labourFetalHeart} onChange={(e) => setLabourFetalHeart(e.target.value)} className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" />
                     </label>
-                    <label className="text-xs font-medium text-gray-600">
+                    <label className="text-xs font-medium text-muted-foreground">
                       Contractions / 10 min
-                      <input value={labourContractions} onChange={(e) => setLabourContractions(e.target.value)} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                      <input value={labourContractions} onChange={(e) => setLabourContractions(e.target.value)} className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" />
                     </label>
-                    <label className="text-xs font-medium text-gray-600">
+                    <label className="text-xs font-medium text-muted-foreground">
                       Duration sec
-                      <input value={labourDuration} onChange={(e) => setLabourDuration(e.target.value)} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                      <input value={labourDuration} onChange={(e) => setLabourDuration(e.target.value)} className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" />
                     </label>
-                    <label className="text-xs font-medium text-gray-600">
+                    <label className="text-xs font-medium text-muted-foreground">
                       Cervical dilation cm
-                      <input value={labourCervix} onChange={(e) => setLabourCervix(e.target.value)} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                      <input value={labourCervix} onChange={(e) => setLabourCervix(e.target.value)} className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" />
                     </label>
-                    <label className="text-xs font-medium text-gray-600">
+                    <label className="text-xs font-medium text-muted-foreground">
                       Descent fifths
-                      <input value={labourDescent} onChange={(e) => setLabourDescent(e.target.value)} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                      <input value={labourDescent} onChange={(e) => setLabourDescent(e.target.value)} className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" />
                     </label>
-                    <label className="text-xs font-medium text-gray-600">
+                    <label className="text-xs font-medium text-muted-foreground">
                       Maternal pulse
-                      <input value={labourPulse} onChange={(e) => setLabourPulse(e.target.value)} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                      <input value={labourPulse} onChange={(e) => setLabourPulse(e.target.value)} className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" />
                     </label>
-                    <label className="text-xs font-medium text-gray-600">
+                    <label className="text-xs font-medium text-muted-foreground">
                       Temperature C
-                      <input value={labourTemperature} onChange={(e) => setLabourTemperature(e.target.value)} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                      <input value={labourTemperature} onChange={(e) => setLabourTemperature(e.target.value)} className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" />
                     </label>
-                    <label className="text-xs font-medium text-gray-600">
+                    <label className="text-xs font-medium text-muted-foreground">
                       Systolic BP
-                      <input value={labourSystolic} onChange={(e) => setLabourSystolic(e.target.value)} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                      <input value={labourSystolic} onChange={(e) => setLabourSystolic(e.target.value)} className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" />
                     </label>
-                    <label className="text-xs font-medium text-gray-600">
+                    <label className="text-xs font-medium text-muted-foreground">
                       Diastolic BP
-                      <input value={labourDiastolic} onChange={(e) => setLabourDiastolic(e.target.value)} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                      <input value={labourDiastolic} onChange={(e) => setLabourDiastolic(e.target.value)} className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" />
                     </label>
-                    <label className="text-xs font-medium text-gray-600">
+                    <label className="text-xs font-medium text-muted-foreground">
                       Liquor
-                      <select value={labourLiquor} onChange={(e) => setLabourLiquor(e.target.value)} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                      <select value={labourLiquor} onChange={(e) => setLabourLiquor(e.target.value)} className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm">
                         <option value="CLEAR">Clear</option>
                         <option value="MECONIUM">Meconium</option>
                         <option value="BLOOD_STAINED">Blood-stained</option>
                         <option value="ABSENT">Absent / drained</option>
                       </select>
                     </label>
-                    <label className="text-xs font-medium text-gray-600">
+                    <label className="text-xs font-medium text-muted-foreground">
                       Moulding
-                      <select value={labourMoulding} onChange={(e) => setLabourMoulding(e.target.value)} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                      <select value={labourMoulding} onChange={(e) => setLabourMoulding(e.target.value)} className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm">
                         <option value="NONE">None</option>
                         <option value="+">+</option>
                         <option value="++">++</option>
                         <option value="+++">+++</option>
                       </select>
                     </label>
-                    <label className="text-xs font-medium text-gray-600">
+                    <label className="text-xs font-medium text-muted-foreground">
                       Caput
-                      <select value={labourCaput} onChange={(e) => setLabourCaput(e.target.value)} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                      <select value={labourCaput} onChange={(e) => setLabourCaput(e.target.value)} className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm">
                         <option value="NONE">None</option>
                         <option value="+">+</option>
                         <option value="++">++</option>
@@ -616,9 +616,9 @@ export default function VitalsPage() {
                       </select>
                     </label>
                   </div>
-                  <label className="block text-xs font-medium text-gray-600">
+                  <label className="block text-xs font-medium text-muted-foreground">
                     Notes
-                    <textarea value={labourNotes} onChange={(e) => setLabourNotes(e.target.value)} rows={2} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Maternal condition, escalation, membrane status, augmentation notes..." />
+                    <textarea value={labourNotes} onChange={(e) => setLabourNotes(e.target.value)} rows={2} className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" placeholder="Maternal condition, escalation, membrane status, augmentation notes..." />
                   </label>
                   <button
                     type="submit"
@@ -635,18 +635,18 @@ export default function VitalsPage() {
               )}
 
               {labourLoading ? (
-                <div className="mt-4 flex items-center gap-2 text-sm text-gray-500">
+                <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Loading legacy labour rows…
                 </div>
               ) : labourRows.length === 0 ? (
-                <p className="mt-4 text-sm text-gray-500">No labour monitoring rows recorded for this patient yet.</p>
+                <p className="mt-4 text-sm text-muted-foreground">No labour monitoring rows recorded for this patient yet.</p>
               ) : (
                 <>
                   {latestLabour && (
-                    <div className="mt-4 rounded-xl border border-pink-100 bg-gradient-to-r from-pink-50/90 to-white px-4 py-3">
+                    <div className="mt-4 rounded-xl border border-pink-100 bg-gradient-to-r from-pink-50/90 to-card px-4 py-3">
                       <p className="text-xs font-semibold uppercase tracking-wide text-pink-900">Latest reading</p>
-                      <p className="mt-1 text-xs text-gray-600">
+                      <p className="mt-1 text-xs text-muted-foreground">
                         {latestLabour.recorded_at
                           ? new Date(String(latestLabour.recorded_at)).toLocaleString()
                           : "—"}
@@ -654,36 +654,36 @@ export default function VitalsPage() {
                         {latestLabour.derived_stage ? ` · derived ${latestLabour.derived_stage}` : ""}
                       </p>
                       <div className="mt-3 flex flex-wrap gap-2">
-                        <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-800 ring-1 ring-pink-100">
+                        <span className="rounded-full bg-card px-3 py-1 text-xs font-medium text-foreground ring-1 ring-pink-100">
                           FHR {latestLabour.fetal_heart_rate_bpm ?? "—"} bpm
                         </span>
-                        <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-800 ring-1 ring-pink-100">
+                        <span className="rounded-full bg-card px-3 py-1 text-xs font-medium text-foreground ring-1 ring-pink-100">
                           Cx {latestLabour.cervical_dilation_cm ?? "—"} cm
                         </span>
-                        <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-800 ring-1 ring-pink-100">
+                        <span className="rounded-full bg-card px-3 py-1 text-xs font-medium text-foreground ring-1 ring-pink-100">
                           Ctx {latestLabour.contraction_frequency_10min ?? "—"}/10 min
                         </span>
-                        <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-800 ring-1 ring-pink-100">
+                        <span className="rounded-full bg-card px-3 py-1 text-xs font-medium text-foreground ring-1 ring-pink-100">
                           BP{" "}
                           {latestLabour.systolic_bp != null || latestLabour.diastolic_bp != null
                             ? `${latestLabour.systolic_bp ?? "—"}/${latestLabour.diastolic_bp ?? "—"}`
                             : "—"}
                         </span>
-                        <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-800 ring-1 ring-pink-100">
+                        <span className="rounded-full bg-card px-3 py-1 text-xs font-medium text-foreground ring-1 ring-pink-100">
                           Temp {latestLabour.temperature_c ?? "—"} °C
                         </span>
                       </div>
                       {Array.isArray(latestLabour.alert_flags) && latestLabour.alert_flags.length > 0 ? (
-                        <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-900">
+                        <div className="mt-3 rounded-lg border border-danger/28 bg-danger-soft px-3 py-2 text-xs font-medium text-red-900">
                           Alerts: {latestLabour.alert_flags.join(", ")}
                         </div>
                       ) : null}
                     </div>
                   )}
-                  <div className="mt-4 overflow-x-auto rounded-lg border border-gray-100">
+                  <div className="mt-4 overflow-x-auto rounded-lg border border-border">
                     <table className="w-full min-w-[980px] text-sm">
                       <thead>
-                        <tr className="border-b border-gray-200 bg-gray-50 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                        <tr className="border-b border-border bg-background text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                           <th className="px-3 py-2">Recorded</th>
                           <th className="px-3 py-2">Phase</th>
                           <th className="px-3 py-2">Derived stage</th>
@@ -704,22 +704,22 @@ export default function VitalsPage() {
                           const when = rec ? new Date(rec).toLocaleString() : "—";
                           const alerts = Array.isArray(row.alert_flags) ? row.alert_flags : [];
                           return (
-                            <tr key={id} className="hover:bg-gray-50/80">
-                              <td className="px-3 py-2 text-gray-800">{when}</td>
-                              <td className="px-3 py-2 text-gray-700">{row.phase ?? "—"}</td>
-                              <td className="px-3 py-2 text-gray-700">{row.derived_stage ?? "—"}</td>
-                              <td className="px-3 py-2 text-gray-700">{row.fetal_heart_rate_bpm ?? "—"}</td>
-                              <td className="px-3 py-2 text-gray-700">{row.contraction_frequency_10min ?? "—"}</td>
-                              <td className="px-3 py-2 text-gray-700">{row.contraction_duration_sec ?? "—"}</td>
-                              <td className="px-3 py-2 text-gray-700">{row.cervical_dilation_cm ?? "—"}</td>
-                              <td className="px-3 py-2 text-gray-700">
+                            <tr key={id} className="hover:bg-background/80">
+                              <td className="px-3 py-2 text-foreground">{when}</td>
+                              <td className="px-3 py-2 text-foreground">{row.phase ?? "—"}</td>
+                              <td className="px-3 py-2 text-foreground">{row.derived_stage ?? "—"}</td>
+                              <td className="px-3 py-2 text-foreground">{row.fetal_heart_rate_bpm ?? "—"}</td>
+                              <td className="px-3 py-2 text-foreground">{row.contraction_frequency_10min ?? "—"}</td>
+                              <td className="px-3 py-2 text-foreground">{row.contraction_duration_sec ?? "—"}</td>
+                              <td className="px-3 py-2 text-foreground">{row.cervical_dilation_cm ?? "—"}</td>
+                              <td className="px-3 py-2 text-foreground">
                                 {row.systolic_bp != null || row.diastolic_bp != null
                                   ? `${row.systolic_bp ?? "—"}/${row.diastolic_bp ?? "—"}`
                                   : "—"}
                               </td>
-                              <td className="px-3 py-2 text-gray-700">{row.temperature_c ?? "—"}</td>
-                              <td className="px-3 py-2 text-gray-700">{row.liquor ?? "—"}</td>
-                              <td className="px-3 py-2 text-gray-700">
+                              <td className="px-3 py-2 text-foreground">{row.temperature_c ?? "—"}</td>
+                              <td className="px-3 py-2 text-foreground">{row.liquor ?? "—"}</td>
+                              <td className="px-3 py-2 text-foreground">
                                 {alerts.length === 0 ? "None" : alerts.join(", ")}
                               </td>
                             </tr>
@@ -734,30 +734,30 @@ export default function VitalsPage() {
             </section>
 
             {/* Early warning scores — existing /internal/v1/ews */}
-            <div className="rounded-lg border border-gray-200 bg-white p-5">
+            <div className="rounded-lg border border-border bg-card p-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="h-5 w-5 text-amber-600" aria-hidden />
-                  <h2 className="text-lg font-semibold text-gray-900">Early warning scores</h2>
+                  <h2 className="text-lg font-semibold text-foreground">Early warning scores</h2>
                 </div>
                 {isClinical && (
                   <button
                     type="button"
                     onClick={() => setShowEwsForm((p) => !p)}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-950 hover:bg-amber-100"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-warning/35 bg-warning-soft px-3 py-1.5 text-sm font-medium text-warning-foreground hover:bg-amber-100"
                   >
                     <Plus className="h-4 w-4" />
                     Record EWS
                   </button>
                 )}
               </div>
-              <p className="mt-1 text-xs text-gray-500">
-                Scores are stored per patient in <code className="rounded bg-gray-100 px-1">early_warning_scores</code> via the
+              <p className="mt-1 text-xs text-muted-foreground">
+                Scores are stored per patient in <code className="rounded bg-neutral-100 px-1">early_warning_scores</code> via the
                 experience BFF. Escalation flags follow server rules (score ≥ 7 → escalation).
               </p>
 
               {ewsError && (
-                <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+                <div className="mt-3 flex items-start gap-2 rounded-lg border border-warning/35 bg-warning-soft px-3 py-2 text-sm text-warning-foreground">
                   <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                   <div>
                     <p className="font-medium">Could not load EWS history</p>
@@ -769,9 +769,9 @@ export default function VitalsPage() {
               )}
 
               {showEwsForm && isClinical && (
-                <form onSubmit={handleEwsSubmit} className="mt-4 space-y-3 rounded-lg border border-gray-100 bg-gray-50/80 p-4">
+                <form onSubmit={handleEwsSubmit} className="mt-4 space-y-3 rounded-lg border border-border bg-background/80 p-4">
                   <div className="flex flex-wrap items-end gap-3">
-                    <label className="text-xs font-medium text-gray-600">
+                    <label className="text-xs font-medium text-muted-foreground">
                       Total score (NEWS2)
                       <input
                         type="number"
@@ -780,7 +780,7 @@ export default function VitalsPage() {
                         required
                         value={ewsTotal}
                         onChange={(e) => setEwsTotal(e.target.value)}
-                        className="mt-1 block w-32 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        className="mt-1 block w-32 rounded-lg border border-border px-3 py-2 text-sm"
                       />
                     </label>
                     <button
@@ -797,17 +797,17 @@ export default function VitalsPage() {
               )}
 
               {ewsLoading ? (
-                <div className="mt-4 flex items-center gap-2 text-sm text-gray-500">
+                <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Loading scores…
                 </div>
               ) : ewsRows.length === 0 ? (
-                <p className="mt-4 text-sm text-gray-500">No early warning scores recorded for this patient yet.</p>
+                <p className="mt-4 text-sm text-muted-foreground">No early warning scores recorded for this patient yet.</p>
               ) : (
-                <div className="mt-4 overflow-x-auto rounded-lg border border-gray-100">
+                <div className="mt-4 overflow-x-auto rounded-lg border border-border">
                   <table className="w-full min-w-[480px] text-sm">
                     <thead>
-                      <tr className="border-b border-gray-200 bg-gray-50 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                      <tr className="border-b border-border bg-background text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                         <th className="px-3 py-2">Recorded</th>
                         <th className="px-3 py-2">Type</th>
                         <th className="px-3 py-2">Score</th>
@@ -825,14 +825,14 @@ export default function VitalsPage() {
                         const esc = Boolean(row.escalation_required);
                         const st = row.score_type != null ? String(row.score_type) : "—";
                         return (
-                          <tr key={id} className="hover:bg-gray-50/80">
-                            <td className="px-3 py-2 text-gray-800">{when}</td>
-                            <td className="px-3 py-2 text-gray-700">{st}</td>
-                            <td className="px-3 py-2 font-medium text-gray-900">{score != null && !Number.isNaN(score) ? score : "—"}</td>
+                          <tr key={id} className="hover:bg-background/80">
+                            <td className="px-3 py-2 text-foreground">{when}</td>
+                            <td className="px-3 py-2 text-foreground">{st}</td>
+                            <td className="px-3 py-2 font-medium text-foreground">{score != null && !Number.isNaN(score) ? score : "—"}</td>
                             <td className="px-3 py-2">
                               <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${riskBadgeClass(risk)}`}>{risk}</span>
                             </td>
-                            <td className="px-3 py-2 text-gray-700">{esc ? "Yes" : "No"}</td>
+                            <td className="px-3 py-2 text-foreground">{esc ? "Yes" : "No"}</td>
                           </tr>
                         );
                       })}
@@ -843,32 +843,32 @@ export default function VitalsPage() {
             </div>
 
             {/* Neonatal APGAR — GET/POST /internal/v1/apgar (apgar_scores) */}
-            <div className="rounded-lg border border-rose-200/90 bg-white p-5">
+            <div className="rounded-lg border border-danger/28/90 bg-card p-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <Baby className="h-5 w-5 text-rose-600" aria-hidden />
-                  <h2 className="text-lg font-semibold text-gray-900">Neonatal APGAR</h2>
+                  <h2 className="text-lg font-semibold text-foreground">Neonatal APGAR</h2>
                 </div>
                 {isClinical && (
                   <button
                     type="button"
                     onClick={() => setShowApgarForm((p) => !p)}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-sm font-medium text-rose-950 hover:bg-rose-100"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-danger/28 bg-danger-soft px-3 py-1.5 text-sm font-medium text-danger hover:bg-rose-100"
                   >
                     <Plus className="h-4 w-4" />
                     Record APGAR
                   </button>
                 )}
               </div>
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Maternity monitoring slice supported here: scores persist in{" "}
-                <code className="rounded bg-gray-100 px-1">apgar_scores</code> via{" "}
-                <code className="rounded bg-gray-100 px-1">/internal/v1/apgar</code>. Labour monitoring rows now persist separately;
+                <code className="rounded bg-neutral-100 px-1">apgar_scores</code> via{" "}
+                <code className="rounded bg-neutral-100 px-1">/internal/v1/apgar</code>. Labour monitoring rows now persist separately;
                 CTG traces are still not in the experience BFF.
               </p>
 
               {apgarError && (
-                <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+                <div className="mt-3 flex items-start gap-2 rounded-lg border border-warning/35 bg-warning-soft px-3 py-2 text-sm text-warning-foreground">
                   <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                   <div>
                     <p className="font-medium">Could not load APGAR history</p>
@@ -880,9 +880,9 @@ export default function VitalsPage() {
               )}
 
               {showApgarForm && isClinical && (
-                <form onSubmit={handleApgarSubmit} className="mt-4 space-y-3 rounded-lg border border-gray-100 bg-gray-50/80 p-4">
+                <form onSubmit={handleApgarSubmit} className="mt-4 space-y-3 rounded-lg border border-border bg-background/80 p-4">
                   <div className="flex flex-wrap items-end gap-3">
-                    <label className="text-xs font-medium text-gray-600">
+                    <label className="text-xs font-medium text-muted-foreground">
                       Minute
                       <input
                         type="number"
@@ -891,10 +891,10 @@ export default function VitalsPage() {
                         required
                         value={apgarMinute}
                         onChange={(e) => setApgarMinute(e.target.value)}
-                        className="mt-1 block w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        className="mt-1 block w-24 rounded-lg border border-border px-3 py-2 text-sm"
                       />
                     </label>
-                    <label className="text-xs font-medium text-gray-600">
+                    <label className="text-xs font-medium text-muted-foreground">
                       Appearance (0–2)
                       <input
                         type="number"
@@ -903,10 +903,10 @@ export default function VitalsPage() {
                         required
                         value={apgarAppearance}
                         onChange={(e) => setApgarAppearance(e.target.value)}
-                        className="mt-1 block w-20 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        className="mt-1 block w-20 rounded-lg border border-border px-3 py-2 text-sm"
                       />
                     </label>
-                    <label className="text-xs font-medium text-gray-600">
+                    <label className="text-xs font-medium text-muted-foreground">
                       Pulse (0–2)
                       <input
                         type="number"
@@ -915,10 +915,10 @@ export default function VitalsPage() {
                         required
                         value={apgarPulse}
                         onChange={(e) => setApgarPulse(e.target.value)}
-                        className="mt-1 block w-20 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        className="mt-1 block w-20 rounded-lg border border-border px-3 py-2 text-sm"
                       />
                     </label>
-                    <label className="text-xs font-medium text-gray-600">
+                    <label className="text-xs font-medium text-muted-foreground">
                       Grimace (0–2)
                       <input
                         type="number"
@@ -927,10 +927,10 @@ export default function VitalsPage() {
                         required
                         value={apgarGrimace}
                         onChange={(e) => setApgarGrimace(e.target.value)}
-                        className="mt-1 block w-20 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        className="mt-1 block w-20 rounded-lg border border-border px-3 py-2 text-sm"
                       />
                     </label>
-                    <label className="text-xs font-medium text-gray-600">
+                    <label className="text-xs font-medium text-muted-foreground">
                       Activity (0–2)
                       <input
                         type="number"
@@ -939,10 +939,10 @@ export default function VitalsPage() {
                         required
                         value={apgarActivity}
                         onChange={(e) => setApgarActivity(e.target.value)}
-                        className="mt-1 block w-20 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        className="mt-1 block w-20 rounded-lg border border-border px-3 py-2 text-sm"
                       />
                     </label>
-                    <label className="text-xs font-medium text-gray-600">
+                    <label className="text-xs font-medium text-muted-foreground">
                       Respiration (0–2)
                       <input
                         type="number"
@@ -951,7 +951,7 @@ export default function VitalsPage() {
                         required
                         value={apgarRespiration}
                         onChange={(e) => setApgarRespiration(e.target.value)}
-                        className="mt-1 block w-20 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        className="mt-1 block w-20 rounded-lg border border-border px-3 py-2 text-sm"
                       />
                     </label>
                     <button
@@ -970,17 +970,17 @@ export default function VitalsPage() {
               )}
 
               {apgarLoading ? (
-                <div className="mt-4 flex items-center gap-2 text-sm text-gray-500">
+                <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Loading APGAR…
                 </div>
               ) : apgarRows.length === 0 ? (
-                <p className="mt-4 text-sm text-gray-500">No APGAR scores recorded for this patient yet.</p>
+                <p className="mt-4 text-sm text-muted-foreground">No APGAR scores recorded for this patient yet.</p>
               ) : (
-                <div className="mt-4 overflow-x-auto rounded-lg border border-gray-100">
+                <div className="mt-4 overflow-x-auto rounded-lg border border-border">
                   <table className="w-full min-w-[640px] text-sm">
                     <thead>
-                      <tr className="border-b border-gray-200 bg-gray-50 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                      <tr className="border-b border-border bg-background text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                         <th className="px-3 py-2">Recorded</th>
                         <th className="px-3 py-2">Min</th>
                         <th className="px-3 py-2">Ap</th>
@@ -1005,15 +1005,15 @@ export default function VitalsPage() {
                               Number(row.activity) +
                               Number(row.respiration);
                         return (
-                          <tr key={id} className="hover:bg-gray-50/80">
-                            <td className="px-3 py-2 text-gray-800">{when}</td>
-                            <td className="px-3 py-2 text-gray-700">{row.minute}</td>
-                            <td className="px-3 py-2 text-gray-700">{row.appearance}</td>
-                            <td className="px-3 py-2 text-gray-700">{row.pulse}</td>
-                            <td className="px-3 py-2 text-gray-700">{row.grimace}</td>
-                            <td className="px-3 py-2 text-gray-700">{row.activity}</td>
-                            <td className="px-3 py-2 text-gray-700">{row.respiration}</td>
-                            <td className="px-3 py-2 font-medium text-gray-900">{Number.isFinite(total) ? total : "—"}</td>
+                          <tr key={id} className="hover:bg-background/80">
+                            <td className="px-3 py-2 text-foreground">{when}</td>
+                            <td className="px-3 py-2 text-foreground">{row.minute}</td>
+                            <td className="px-3 py-2 text-foreground">{row.appearance}</td>
+                            <td className="px-3 py-2 text-foreground">{row.pulse}</td>
+                            <td className="px-3 py-2 text-foreground">{row.grimace}</td>
+                            <td className="px-3 py-2 text-foreground">{row.activity}</td>
+                            <td className="px-3 py-2 text-foreground">{row.respiration}</td>
+                            <td className="px-3 py-2 font-medium text-foreground">{Number.isFinite(total) ? total : "—"}</td>
                           </tr>
                         );
                       })}
@@ -1024,20 +1024,20 @@ export default function VitalsPage() {
             </div>
 
             {/* Fluid balance — existing /internal/v1/fluid-balance */}
-            <div className="rounded-lg border border-cyan-200/80 bg-white p-5">
+            <div className="rounded-lg border border-cyan-200/80 bg-card p-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <Droplets className="h-5 w-5 text-cyan-600" aria-hidden />
-                  <h2 className="text-lg font-semibold text-gray-900">Fluid balance</h2>
+                  <h2 className="text-lg font-semibold text-foreground">Fluid balance</h2>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <label className="text-xs font-medium text-gray-600">
+                  <label className="text-xs font-medium text-muted-foreground">
                     Day
                     <input
                       type="date"
                       value={fluidDate}
                       onChange={(e) => setFluidDate(e.target.value)}
-                      className="ml-2 rounded-lg border border-gray-300 px-2 py-1 text-sm"
+                      className="ml-2 rounded-lg border border-border px-2 py-1 text-sm"
                     />
                   </label>
                   {isClinical && (
@@ -1052,13 +1052,13 @@ export default function VitalsPage() {
                   )}
                 </div>
               </div>
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Intake and output volumes for the selected calendar day via{" "}
-                <code className="rounded bg-gray-100 px-1">fluid_balance_records</code>.
+                <code className="rounded bg-neutral-100 px-1">fluid_balance_records</code>.
               </p>
 
               {fluidError && (
-                <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+                <div className="mt-3 flex items-start gap-2 rounded-lg border border-warning/35 bg-warning-soft px-3 py-2 text-sm text-warning-foreground">
                   <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                   <div>
                     <p className="font-medium">Could not load fluid balance</p>
@@ -1070,24 +1070,24 @@ export default function VitalsPage() {
               )}
 
               <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                <div className="rounded-lg border border-gray-100 bg-cyan-50/50 px-3 py-2 text-sm">
-                  <p className="text-xs font-medium text-gray-500">Intake (ml)</p>
+                <div className="rounded-lg border border-border bg-cyan-50/50 px-3 py-2 text-sm">
+                  <p className="text-xs font-medium text-muted-foreground">Intake (ml)</p>
                   <p className="text-lg font-semibold text-cyan-900">{fluidSummary.totalIntake}</p>
                 </div>
-                <div className="rounded-lg border border-gray-100 bg-cyan-50/50 px-3 py-2 text-sm">
-                  <p className="text-xs font-medium text-gray-500">Output (ml)</p>
+                <div className="rounded-lg border border-border bg-cyan-50/50 px-3 py-2 text-sm">
+                  <p className="text-xs font-medium text-muted-foreground">Output (ml)</p>
                   <p className="text-lg font-semibold text-cyan-900">{fluidSummary.totalOutput}</p>
                 </div>
-                <div className="rounded-lg border border-gray-100 bg-cyan-50/50 px-3 py-2 text-sm">
-                  <p className="text-xs font-medium text-gray-500">Balance (ml)</p>
+                <div className="rounded-lg border border-border bg-cyan-50/50 px-3 py-2 text-sm">
+                  <p className="text-xs font-medium text-muted-foreground">Balance (ml)</p>
                   <p className="text-lg font-semibold text-cyan-900">{fluidSummary.balance}</p>
                 </div>
               </div>
 
               {showFluidForm && isClinical && (
-                <form onSubmit={handleFluidSubmit} className="mt-4 space-y-3 rounded-lg border border-gray-100 bg-gray-50/80 p-4">
+                <form onSubmit={handleFluidSubmit} className="mt-4 space-y-3 rounded-lg border border-border bg-background/80 p-4">
                   <div className="flex flex-wrap gap-3">
-                    <label className="text-xs font-medium text-gray-600">
+                    <label className="text-xs font-medium text-muted-foreground">
                       Type
                       <select
                         value={fluidEntryType}
@@ -1096,18 +1096,18 @@ export default function VitalsPage() {
                           setFluidEntryType(v);
                           setFluidCategory(v === "INTAKE" ? "ORAL" : "URINE");
                         }}
-                        className="mt-1 block rounded-lg border border-gray-300 px-2 py-2 text-sm"
+                        className="mt-1 block rounded-lg border border-border px-2 py-2 text-sm"
                       >
                         <option value="INTAKE">Intake</option>
                         <option value="OUTPUT">Output</option>
                       </select>
                     </label>
-                    <label className="text-xs font-medium text-gray-600">
+                    <label className="text-xs font-medium text-muted-foreground">
                       Category
                       <select
                         value={fluidCategory}
                         onChange={(e) => setFluidCategory(e.target.value)}
-                        className="mt-1 block min-w-[8rem] rounded-lg border border-gray-300 px-2 py-2 text-sm"
+                        className="mt-1 block min-w-[8rem] rounded-lg border border-border px-2 py-2 text-sm"
                       >
                         {fluidEntryType === "INTAKE" ? (
                           <>
@@ -1127,7 +1127,7 @@ export default function VitalsPage() {
                         )}
                       </select>
                     </label>
-                    <label className="text-xs font-medium text-gray-600">
+                    <label className="text-xs font-medium text-muted-foreground">
                       Volume (ml)
                       <input
                         type="number"
@@ -1135,16 +1135,16 @@ export default function VitalsPage() {
                         required
                         value={fluidVolume}
                         onChange={(e) => setFluidVolume(e.target.value)}
-                        className="mt-1 block w-28 rounded-lg border border-gray-300 px-2 py-2 text-sm"
+                        className="mt-1 block w-28 rounded-lg border border-border px-2 py-2 text-sm"
                       />
                     </label>
                   </div>
-                  <label className="block text-xs font-medium text-gray-600">
+                  <label className="block text-xs font-medium text-muted-foreground">
                     Note (optional)
                     <input
                       value={fluidDesc}
                       onChange={(e) => setFluidDesc(e.target.value)}
-                      className="mt-1 w-full max-w-md rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      className="mt-1 w-full max-w-md rounded-lg border border-border px-3 py-2 text-sm"
                     />
                   </label>
                   <div className="flex items-center gap-2">
@@ -1162,17 +1162,17 @@ export default function VitalsPage() {
               )}
 
               {fluidLoading ? (
-                <div className="mt-4 flex items-center gap-2 text-sm text-gray-500">
+                <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Loading fluid balance…
                 </div>
               ) : fluidRows.length === 0 ? (
-                <p className="mt-4 text-sm text-gray-500">No intake or output entries for this day.</p>
+                <p className="mt-4 text-sm text-muted-foreground">No intake or output entries for this day.</p>
               ) : (
-                <div className="mt-4 overflow-x-auto rounded-lg border border-gray-100">
+                <div className="mt-4 overflow-x-auto rounded-lg border border-border">
                   <table className="w-full min-w-[520px] text-sm">
                     <thead>
-                      <tr className="border-b border-gray-200 bg-gray-50 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                      <tr className="border-b border-border bg-background text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                         <th className="px-3 py-2">Time</th>
                         <th className="px-3 py-2">I/O</th>
                         <th className="px-3 py-2">Category</th>
@@ -1190,12 +1190,12 @@ export default function VitalsPage() {
                         const ml = row.volume_ml != null ? Number(row.volume_ml) : null;
                         const desc = row.description != null ? String(row.description) : "";
                         return (
-                          <tr key={id} className="hover:bg-gray-50/80">
-                            <td className="px-3 py-2 text-gray-800">{when}</td>
-                            <td className="px-3 py-2 font-medium text-gray-900">{et}</td>
-                            <td className="px-3 py-2 text-gray-700">{cat}</td>
-                            <td className="px-3 py-2 text-gray-900">{ml != null && !Number.isNaN(ml) ? ml : "—"}</td>
-                            <td className="px-3 py-2 text-gray-600">{desc || "—"}</td>
+                          <tr key={id} className="hover:bg-background/80">
+                            <td className="px-3 py-2 text-foreground">{when}</td>
+                            <td className="px-3 py-2 font-medium text-foreground">{et}</td>
+                            <td className="px-3 py-2 text-foreground">{cat}</td>
+                            <td className="px-3 py-2 text-foreground">{ml != null && !Number.isNaN(ml) ? ml : "—"}</td>
+                            <td className="px-3 py-2 text-muted-foreground">{desc || "—"}</td>
                           </tr>
                         );
                       })}
@@ -1206,11 +1206,11 @@ export default function VitalsPage() {
             </div>
 
             {/* Observation entries — GET/POST /internal/v1/observations */}
-            <div className="rounded-lg border border-violet-200/80 bg-white p-5">
+            <div className="rounded-lg border border-violet-200/80 bg-card p-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <ClipboardList className="h-5 w-5 text-violet-600" aria-hidden />
-                  <h2 className="text-lg font-semibold text-gray-900">Observation entries</h2>
+                  <h2 className="text-lg font-semibold text-foreground">Observation entries</h2>
                 </div>
                 {isClinical && (
                   <button
@@ -1223,12 +1223,12 @@ export default function VitalsPage() {
                   </button>
                 )}
               </div>
-              <p className="mt-1 text-xs text-gray-500">
-                Structured chart rows in <code className="rounded bg-gray-100 px-1">observation_entries</code>. Parameters are stored as JSON; free text is saved under{" "}
-                <code className="rounded bg-gray-100 px-1">summary</code>.
+              <p className="mt-1 text-xs text-muted-foreground">
+                Structured chart rows in <code className="rounded bg-neutral-100 px-1">observation_entries</code>. Parameters are stored as JSON; free text is saved under{" "}
+                <code className="rounded bg-neutral-100 px-1">summary</code>.
               </p>
               {obsError && (
-                <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+                <div className="mt-3 flex items-start gap-2 rounded-lg border border-warning/35 bg-warning-soft px-3 py-2 text-sm text-warning-foreground">
                   <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                   <div>
                     <p className="font-medium">Could not load observations</p>
@@ -1239,13 +1239,13 @@ export default function VitalsPage() {
                 </div>
               )}
               {showObsForm && isClinical && (
-                <form onSubmit={handleObsSubmit} className="mt-4 space-y-3 rounded-lg border border-gray-100 bg-gray-50/80 p-4">
-                  <label className="text-xs font-medium text-gray-600">
+                <form onSubmit={handleObsSubmit} className="mt-4 space-y-3 rounded-lg border border-border bg-background/80 p-4">
+                  <label className="text-xs font-medium text-muted-foreground">
                     Chart type
                     <select
                       value={obsChartType}
                       onChange={(e) => setObsChartType(e.target.value)}
-                      className="mt-1 block rounded-lg border border-gray-300 px-2 py-2 text-sm"
+                      className="mt-1 block rounded-lg border border-border px-2 py-2 text-sm"
                     >
                       <option value="VITALS">Vitals</option>
                       <option value="PAIN">Pain</option>
@@ -1253,14 +1253,14 @@ export default function VitalsPage() {
                       <option value="OTHER">Other</option>
                     </select>
                   </label>
-                  <label className="block text-xs font-medium text-gray-600">
+                  <label className="block text-xs font-medium text-muted-foreground">
                     Summary / note
                     <textarea
                       required
                       rows={2}
                       value={obsSummary}
                       onChange={(e) => setObsSummary(e.target.value)}
-                      className="mt-1 w-full max-w-lg rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      className="mt-1 w-full max-w-lg rounded-lg border border-border px-3 py-2 text-sm"
                       placeholder="What was observed"
                     />
                   </label>
@@ -1276,17 +1276,17 @@ export default function VitalsPage() {
                 </form>
               )}
               {obsLoading ? (
-                <div className="mt-4 flex items-center gap-2 text-sm text-gray-500">
+                <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Loading observations…
                 </div>
               ) : obsRows.length === 0 ? (
-                <p className="mt-4 text-sm text-gray-500">No observation entries for this patient yet.</p>
+                <p className="mt-4 text-sm text-muted-foreground">No observation entries for this patient yet.</p>
               ) : (
-                <div className="mt-4 overflow-x-auto rounded-lg border border-gray-100">
+                <div className="mt-4 overflow-x-auto rounded-lg border border-border">
                   <table className="w-full min-w-[520px] text-sm">
                     <thead>
-                      <tr className="border-b border-gray-200 bg-gray-50 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                      <tr className="border-b border-border bg-background text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                         <th className="px-3 py-2">Recorded</th>
                         <th className="px-3 py-2">Chart</th>
                         <th className="px-3 py-2">Parameters</th>
@@ -1301,11 +1301,11 @@ export default function VitalsPage() {
                         const ct = row.chart_type != null ? String(row.chart_type) : "—";
                         const by = row.recorded_by != null ? String(row.recorded_by) : "—";
                         return (
-                          <tr key={id} className="hover:bg-gray-50/80">
-                            <td className="px-3 py-2 text-gray-800">{when}</td>
-                            <td className="px-3 py-2 font-medium text-gray-900">{ct}</td>
-                            <td className="max-w-xs truncate px-3 py-2 font-mono text-xs text-gray-700">{formatParamsCell(row.parameters)}</td>
-                            <td className="px-3 py-2 text-gray-600">{by}</td>
+                          <tr key={id} className="hover:bg-background/80">
+                            <td className="px-3 py-2 text-foreground">{when}</td>
+                            <td className="px-3 py-2 font-medium text-foreground">{ct}</td>
+                            <td className="max-w-xs truncate px-3 py-2 font-mono text-xs text-foreground">{formatParamsCell(row.parameters)}</td>
+                            <td className="px-3 py-2 text-muted-foreground">{by}</td>
                           </tr>
                         );
                       })}
@@ -1316,28 +1316,28 @@ export default function VitalsPage() {
             </div>
 
             {/* Patient transfers — GET/POST /internal/v1/transfers */}
-            <div className="rounded-lg border border-slate-300 bg-white p-5">
+            <div className="rounded-lg border border-border bg-card p-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
-                  <Truck className="h-5 w-5 text-slate-600" aria-hidden />
-                  <h2 className="text-lg font-semibold text-gray-900">Transfers</h2>
+                  <Truck className="h-5 w-5 text-muted-foreground" aria-hidden />
+                  <h2 className="text-lg font-semibold text-foreground">Transfers</h2>
                 </div>
                 {isClinical && (
                   <button
                     type="button"
                     onClick={() => setShowXferForm((p) => !p)}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-900 hover:bg-slate-100"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground hover:bg-neutral-100"
                   >
                     <Plus className="h-4 w-4" />
                     Request transfer
                   </button>
                 )}
               </div>
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Internal transfer requests for this patient. Ward/bed UUIDs are optional in the API; this form logs clinical intent and notes only.
               </p>
               {xferError && (
-                <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+                <div className="mt-3 flex items-start gap-2 rounded-lg border border-warning/35 bg-warning-soft px-3 py-2 text-sm text-warning-foreground">
                   <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                   <div>
                     <p className="font-medium">Could not load transfers</p>
@@ -1348,13 +1348,13 @@ export default function VitalsPage() {
                 </div>
               )}
               {showXferForm && isClinical && (
-                <form onSubmit={handleXferSubmit} className="mt-4 space-y-3 rounded-lg border border-gray-100 bg-gray-50/80 p-4">
-                  <label className="text-xs font-medium text-gray-600">
+                <form onSubmit={handleXferSubmit} className="mt-4 space-y-3 rounded-lg border border-border bg-background/80 p-4">
+                  <label className="text-xs font-medium text-muted-foreground">
                     Reason
                     <select
                       value={xferReason}
                       onChange={(e) => setXferReason(e.target.value)}
-                      className="mt-1 block rounded-lg border border-gray-300 px-2 py-2 text-sm"
+                      className="mt-1 block rounded-lg border border-border px-2 py-2 text-sm"
                     >
                       <option value="CLINICAL">Clinical</option>
                       <option value="ADMIN">Administrative</option>
@@ -1362,21 +1362,21 @@ export default function VitalsPage() {
                       <option value="OTHER">Other</option>
                     </select>
                   </label>
-                  <label className="block text-xs font-medium text-gray-600">
+                  <label className="block text-xs font-medium text-muted-foreground">
                     Clinical notes
                     <textarea
                       required
                       rows={2}
                       value={xferNotes}
                       onChange={(e) => setXferNotes(e.target.value)}
-                      className="mt-1 w-full max-w-lg rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      className="mt-1 w-full max-w-lg rounded-lg border border-border px-3 py-2 text-sm"
                       placeholder="Where and why the patient should move"
                     />
                   </label>
                   <button
                     type="submit"
                     disabled={requestXfer.isPending}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-900 disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-primary-hover px-4 py-2 text-sm font-medium text-white hover:bg-neutral-900 disabled:opacity-50"
                   >
                     {requestXfer.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                     Submit request
@@ -1385,17 +1385,17 @@ export default function VitalsPage() {
                 </form>
               )}
               {xferLoading ? (
-                <div className="mt-4 flex items-center gap-2 text-sm text-gray-500">
+                <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Loading transfers…
                 </div>
               ) : xferRows.length === 0 ? (
-                <p className="mt-4 text-sm text-gray-500">No transfer records for this patient yet.</p>
+                <p className="mt-4 text-sm text-muted-foreground">No transfer records for this patient yet.</p>
               ) : (
-                <div className="mt-4 overflow-x-auto rounded-lg border border-gray-100">
+                <div className="mt-4 overflow-x-auto rounded-lg border border-border">
                   <table className="w-full min-w-[560px] text-sm">
                     <thead>
-                      <tr className="border-b border-gray-200 bg-gray-50 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                      <tr className="border-b border-border bg-background text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                         <th className="px-3 py-2">Requested</th>
                         <th className="px-3 py-2">Status</th>
                         <th className="px-3 py-2">Reason</th>
@@ -1415,14 +1415,14 @@ export default function VitalsPage() {
                         const cn = row.clinical_notes != null ? String(row.clinical_notes) : "";
                         const open = st.toUpperCase() === "REQUESTED";
                         return (
-                          <tr key={id} className="hover:bg-gray-50/80">
-                            <td className="px-3 py-2 text-gray-800">{when}</td>
+                          <tr key={id} className="hover:bg-background/80">
+                            <td className="px-3 py-2 text-foreground">{when}</td>
                             <td className="px-3 py-2">
-                              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-800">{st}</span>
+                              <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-foreground">{st}</span>
                             </td>
-                            <td className="px-3 py-2 text-gray-800">{reason}</td>
-                            <td className="px-3 py-2 text-gray-700">{tt}</td>
-                            <td className="max-w-[200px] truncate px-3 py-2 text-gray-600" title={cn}>
+                            <td className="px-3 py-2 text-foreground">{reason}</td>
+                            <td className="px-3 py-2 text-foreground">{tt}</td>
+                            <td className="max-w-[200px] truncate px-3 py-2 text-muted-foreground" title={cn}>
                               {cn || "—"}
                             </td>
                             <td className="px-3 py-2">
@@ -1437,12 +1437,12 @@ export default function VitalsPage() {
                                     })
                                   }
                                   disabled={acceptXfer.isPending}
-                                  className="text-xs font-medium text-impilo-600 underline disabled:opacity-50"
+                                  className="text-xs font-medium text-primary underline disabled:opacity-50"
                                 >
                                   Accept
                                 </button>
                               ) : (
-                                <span className="text-xs text-gray-400">—</span>
+                                <span className="text-xs text-muted-foreground">—</span>
                               )}
                             </td>
                           </tr>
@@ -1461,48 +1461,48 @@ export default function VitalsPage() {
 
             {/* New vitals form */}
             {showForm && (
-              <div className="bg-white rounded-lg border border-gray-200 p-5">
-                <h3 className="font-medium text-gray-900 mb-4">New Vitals Entry</h3>
+              <div className="bg-card rounded-lg border border-border p-5">
+                <h3 className="font-medium text-foreground mb-4">New Vitals Entry</h3>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
                         Systolic (mmHg)
                       </label>
                       <input
                         type="number"
                         value={systolic}
                         onChange={(e) => setSystolic(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                         placeholder="120"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
                         Diastolic (mmHg)
                       </label>
                       <input
                         type="number"
                         value={diastolic}
                         onChange={(e) => setDiastolic(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                         placeholder="80"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
                         Heart Rate (bpm)
                       </label>
                       <input
                         type="number"
                         value={heartRate}
                         onChange={(e) => setHeartRate(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                         placeholder="72"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
                         Temperature (°C)
                       </label>
                       <input
@@ -1510,36 +1510,36 @@ export default function VitalsPage() {
                         step="0.1"
                         value={temperature}
                         onChange={(e) => setTemperature(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                         placeholder="36.6"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
                         Resp. Rate (breaths/min)
                       </label>
                       <input
                         type="number"
                         value={respiratoryRate}
                         onChange={(e) => setRespiratoryRate(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                         placeholder="16"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
                         SpO2 (%)
                       </label>
                       <input
                         type="number"
                         value={oxygenSaturation}
                         onChange={(e) => setOxygenSaturation(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                         placeholder="98"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
                         Weight (kg)
                       </label>
                       <input
@@ -1547,12 +1547,12 @@ export default function VitalsPage() {
                         step="0.1"
                         value={weight}
                         onChange={(e) => setWeight(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                         placeholder="70"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
                         Height (cm)
                       </label>
                       <input
@@ -1560,12 +1560,12 @@ export default function VitalsPage() {
                         step="0.1"
                         value={height}
                         onChange={(e) => setHeight(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                         placeholder="170"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
                         Pain Score (0-10)
                       </label>
                       <input
@@ -1574,19 +1574,19 @@ export default function VitalsPage() {
                         max="10"
                         value={painScore}
                         onChange={(e) => setPainScore(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                         placeholder="0"
                       />
                     </div>
                     <div className="col-span-2 md:col-span-3 lg:col-span-5">
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
                         Notes
                       </label>
                       <textarea
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
                         rows={2}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
                         placeholder="Additional observations..."
                       />
                     </div>
@@ -1596,7 +1596,7 @@ export default function VitalsPage() {
                     <button
                       type="submit"
                       disabled={recordVitals.isPending}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       {recordVitals.isPending && (
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -1609,7 +1609,7 @@ export default function VitalsPage() {
                         resetForm();
                         setShowForm(false);
                       }}
-                      className="px-4 py-2 text-sm font-medium text-gray-700 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+                      className="px-4 py-2 text-sm font-medium text-foreground rounded-lg border border-border hover:bg-background transition-colors"
                     >
                       Cancel
                     </button>
@@ -1626,35 +1626,35 @@ export default function VitalsPage() {
 
             {/* Vitals table */}
             {vitals.length === 0 ? (
-              <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-                <Activity className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-400 text-sm">No vitals recorded yet</p>
+              <div className="bg-card rounded-lg border border-border p-12 text-center">
+                <Activity className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                <p className="text-muted-foreground text-sm">No vitals recorded yet</p>
               </div>
             ) : (
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div className="bg-card rounded-lg border border-border overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-gray-200 bg-gray-50">
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">
+                      <tr className="border-b border-border bg-background">
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">
                           Date
                         </th>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">
                           BP (mmHg)
                         </th>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">
                           HR (bpm)
                         </th>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">
                           Temp (°C)
                         </th>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">
                           RR (breaths/min)
                         </th>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">
                           SpO2 (%)
                         </th>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">
                           Weight (kg)
                         </th>
                       </tr>
@@ -1669,25 +1669,25 @@ export default function VitalsPage() {
                         return (
                           <tr
                             key={v.id}
-                            className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                            className="border-b border-border hover:bg-background transition-colors"
                           >
-                            <td className="px-4 py-3 text-gray-900">
+                            <td className="px-4 py-3 text-foreground">
                               {new Date(a.recordedAt).toLocaleString()}
                             </td>
-                            <td className="px-4 py-3 text-gray-700">{bp}</td>
-                            <td className="px-4 py-3 text-gray-700">
+                            <td className="px-4 py-3 text-foreground">{bp}</td>
+                            <td className="px-4 py-3 text-foreground">
                               {fmt(a.heartRate)}
                             </td>
-                            <td className="px-4 py-3 text-gray-700">
+                            <td className="px-4 py-3 text-foreground">
                               {fmt(a.temperature)}
                             </td>
-                            <td className="px-4 py-3 text-gray-700">
+                            <td className="px-4 py-3 text-foreground">
                               {fmt(a.respiratoryRate)}
                             </td>
-                            <td className="px-4 py-3 text-gray-700">
+                            <td className="px-4 py-3 text-foreground">
                               {fmt(a.oxygenSaturation)}
                             </td>
-                            <td className="px-4 py-3 text-gray-700">
+                            <td className="px-4 py-3 text-foreground">
                               {fmt(a.weight)}
                             </td>
                           </tr>

@@ -69,39 +69,39 @@ export function EncounterDischargePanel({
 
   return (
     <section
-      className="rounded-xl border border-emerald-200 bg-white p-4 shadow-sm"
+      className="rounded-xl border border-success/25 bg-card p-4 shadow-sm"
       data-testid="encounter-discharge-panel"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-          <h3 className="text-sm font-semibold text-slate-900">Discharge instructions</h3>
+          <CheckCircle2 className="h-4 w-4 text-primary" />
+          <h3 className="text-sm font-semibold text-foreground">Discharge instructions</h3>
         </div>
         <Link
           href={`/ehr/${patientId}/discharge?encounterId=${encodeURIComponent(encounterId)}`}
-          className="text-xs font-medium text-impilo-600 hover:underline"
+          className="text-xs font-medium text-primary hover:underline"
         >
           Full visit outcome
         </Link>
       </div>
 
-      <p className="mt-1 text-xs text-slate-600">
+      <p className="mt-1 text-xs text-muted-foreground">
         Inline orchestration posts to{" "}
-        <code className="rounded bg-slate-100 px-1">POST /internal/v1/encounters/{encounterId}/discharge</code> with
+        <code className="rounded bg-neutral-100 px-1">POST /internal/v1/encounters/{encounterId}/discharge</code> with
         instruction fields forwarded to PCT.
       </p>
 
       {!disabled ? (
         <form onSubmit={(e) => void handleSubmit(e)} className="mt-4 space-y-3">
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600" htmlFor="encounter-discharge-type">
+            <label className="mb-1 block text-xs font-medium text-muted-foreground" htmlFor="encounter-discharge-type">
               Outcome type
             </label>
             <select
               id="encounter-discharge-type"
               value={dischargeType}
               onChange={(e) => setDischargeType(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm"
             >
               <option value="DISCHARGE">Discharge home</option>
               <option value="ADMIT">Admit inpatient</option>
@@ -111,19 +111,19 @@ export function EncounterDischargePanel({
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600" htmlFor="encounter-discharge-diagnosis">
+            <label className="mb-1 block text-xs font-medium text-muted-foreground" htmlFor="encounter-discharge-diagnosis">
               Discharge diagnosis
             </label>
             <input
               id="encounter-discharge-diagnosis"
               value={diagnosis}
               onChange={(e) => setDiagnosis(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm"
               placeholder="Primary diagnosis at closure"
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600" htmlFor="encounter-discharge-followup">
+            <label className="mb-1 block text-xs font-medium text-muted-foreground" htmlFor="encounter-discharge-followup">
               Follow-up instructions
             </label>
             <textarea
@@ -131,12 +131,12 @@ export function EncounterDischargePanel({
               value={followUp}
               onChange={(e) => setFollowUp(e.target.value)}
               rows={2}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm"
               placeholder="Clinic review, labs, referrals…"
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600" htmlFor="encounter-discharge-instructions">
+            <label className="mb-1 block text-xs font-medium text-muted-foreground" htmlFor="encounter-discharge-instructions">
               Patient instructions
             </label>
             <textarea
@@ -144,7 +144,7 @@ export function EncounterDischargePanel({
               value={instructions}
               onChange={(e) => setInstructions(e.target.value)}
               rows={2}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm"
               placeholder="Medication, activity, warning signs…"
             />
           </div>
@@ -155,7 +155,7 @@ export function EncounterDischargePanel({
               {error}
             </p>
           ) : null}
-          {success ? <p className="text-xs text-emerald-700">{success}</p> : null}
+          {success ? <p className="text-xs text-primary-hover">{success}</p> : null}
 
           <button
             type="submit"
@@ -171,7 +171,7 @@ export function EncounterDischargePanel({
           </button>
         </form>
       ) : (
-        <p className="mt-3 text-xs text-slate-500">Encounter is closed — discharge panel read-only.</p>
+        <p className="mt-3 text-xs text-muted-foreground">Encounter is closed — discharge panel read-only.</p>
       )}
     </section>
   );

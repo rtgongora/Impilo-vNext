@@ -245,33 +245,33 @@ export function normalizeBookingMvumoStatus(payload: unknown): BookingMvumoStatu
 }
 
 export const BOOKING_STATUS_STYLES: Record<string, string> = {
-  DRAFT: "bg-gray-100 text-gray-600",
-  REQUESTED: "bg-amber-100 text-amber-700",
+  DRAFT: "bg-neutral-100 text-muted-foreground",
+  REQUESTED: "bg-amber-100 text-warning-foreground",
   PENDING_TRIAGE: "bg-orange-100 text-orange-700",
-  PENDING_CONSENT: "bg-purple-100 text-purple-700",
-  PENDING_AGREEMENT: "bg-purple-100 text-purple-700",
-  PENDING_AUTHORISATION: "bg-purple-100 text-purple-700",
+  PENDING_CONSENT: "bg-purple-100 text-warning-foreground",
+  PENDING_AGREEMENT: "bg-purple-100 text-warning-foreground",
+  PENDING_AUTHORISATION: "bg-purple-100 text-warning-foreground",
   PENDING_PAYMENT: "bg-yellow-100 text-yellow-800",
-  PENDING_APPROVAL: "bg-amber-100 text-amber-800",
-  RESERVED: "bg-blue-100 text-blue-700",
+  PENDING_APPROVAL: "bg-amber-100 text-warning-foreground",
+  RESERVED: "bg-blue-100 text-primary-hover",
   CONFIRMED: "bg-green-100 text-green-700",
-  WAITLISTED: "bg-slate-100 text-slate-700",
-  CANCELLED: "bg-gray-100 text-gray-500",
-  REJECTED: "bg-red-100 text-red-700",
-  EXPIRED: "bg-gray-100 text-gray-500",
-  FULFILLED: "bg-emerald-100 text-emerald-700",
+  WAITLISTED: "bg-neutral-100 text-foreground",
+  CANCELLED: "bg-neutral-100 text-muted-foreground",
+  REJECTED: "bg-red-100 text-danger",
+  EXPIRED: "bg-neutral-100 text-muted-foreground",
+  FULFILLED: "bg-emerald-100 text-primary-hover",
 };
 
 export const APPOINTMENT_STATUS_STYLES: Record<string, string> = {
-  SCHEDULED: "bg-impilo-100 text-impilo-700",
+  SCHEDULED: "bg-primary-soft text-primary-hover",
   CONFIRMED: "bg-green-100 text-green-700",
-  REMINDED: "bg-blue-100 text-blue-700",
-  CHECKED_IN: "bg-emerald-100 text-emerald-700",
-  IN_PROGRESS: "bg-impilo-100 text-impilo-700",
-  COMPLETED: "bg-purple-100 text-purple-700",
-  CANCELLED: "bg-gray-100 text-gray-600",
-  NO_SHOW: "bg-red-100 text-red-700",
-  RESCHEDULED: "bg-amber-100 text-amber-700",
+  REMINDED: "bg-blue-100 text-primary-hover",
+  CHECKED_IN: "bg-emerald-100 text-primary-hover",
+  IN_PROGRESS: "bg-primary-soft text-primary-hover",
+  COMPLETED: "bg-purple-100 text-warning-foreground",
+  CANCELLED: "bg-neutral-100 text-muted-foreground",
+  NO_SHOW: "bg-red-100 text-danger",
+  RESCHEDULED: "bg-amber-100 text-warning-foreground",
 };
 
 export const CONFIRMED_APPOINTMENT_STATUSES = new Set([

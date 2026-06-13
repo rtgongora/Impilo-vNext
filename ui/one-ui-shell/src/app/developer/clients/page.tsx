@@ -22,24 +22,24 @@ export default function ClientsPage() {
           {/* Actions bar */}
           <div className="flex items-center justify-between">
             <div className="relative w-72">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
                 type="text"
                 placeholder="Search clients..."
-                className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full rounded-lg border border-border py-2 pl-10 pr-4 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
             </div>
-            <button className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition-colors">
+            <button className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary transition-colors">
               <Plus className="h-4 w-4" />
               Register Client
             </button>
           </div>
 
           {/* Empty state */}
-          <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-12 text-center">
-            <Shield className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-4 text-sm font-semibold text-gray-900">No registered clients</h3>
-            <p className="mt-2 text-sm text-gray-600">
+          <div className="rounded-lg border border-dashed border-border bg-background p-12 text-center">
+            <Shield className="mx-auto h-12 w-12 text-muted-foreground" />
+            <h3 className="mt-4 text-sm font-semibold text-foreground">No registered clients</h3>
+            <p className="mt-2 text-sm text-muted-foreground">
               Register an API client to obtain credentials for programmatic access to Health OS services.
             </p>
           </div>

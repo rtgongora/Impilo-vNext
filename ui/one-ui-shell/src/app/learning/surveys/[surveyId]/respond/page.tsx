@@ -35,19 +35,19 @@ export default function LearningSurveyRespondPage({ params }: { params: { survey
   return (
     <AppLayout>
       <PageShell title="Respond to Survey" subtitle="Non-scored survey and feedback capture via Fundo interactive activities.">
-        <div className="mb-3 rounded-lg border border-indigo-200 bg-indigo-50 p-3 text-sm text-indigo-900">
+        <div className="mb-3 rounded-lg border border-info/25 bg-info-soft p-3 text-sm text-primary-hover">
           Responses are stored as learning feedback evidence. They do not auto-award CPD credits.
         </div>
-        <div className="rounded border border-gray-200 bg-white p-4" data-testid="fundo-survey-respond">
-          {activitiesQ.isLoading ? <p className="text-sm text-gray-600">Loading survey…</p> : null}
+        <div className="rounded border border-border bg-card p-4" data-testid="fundo-survey-respond">
+          {activitiesQ.isLoading ? <p className="text-sm text-muted-foreground">Loading survey…</p> : null}
           {!activitiesQ.isLoading && !activity ? (
-            <p className="text-sm text-amber-800">Survey activity {params.surveyId} was not found. You can still submit a free-text response.</p>
+            <p className="text-sm text-warning-foreground">Survey activity {params.surveyId} was not found. You can still submit a free-text response.</p>
           ) : null}
-          <p className="text-sm font-medium text-gray-900">{prompt}</p>
+          <p className="text-sm font-medium text-foreground">{prompt}</p>
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
-            className="mt-3 h-32 w-full rounded border border-gray-300 px-3 py-2 text-sm"
+            className="mt-3 h-32 w-full rounded border border-border px-3 py-2 text-sm"
             placeholder="Your feedback"
             data-testid="fundo-survey-response"
           />
@@ -60,12 +60,12 @@ export default function LearningSurveyRespondPage({ params }: { params: { survey
             >
               Submit response
             </button>
-            <Link href="/learning" className="rounded border border-gray-300 px-3 py-2 text-sm text-gray-700">
+            <Link href="/learning" className="rounded border border-border px-3 py-2 text-sm text-foreground">
               Back to Fundo
             </Link>
           </div>
           {submitted ? (
-            <p className="mt-3 text-sm text-emerald-700" data-testid="fundo-survey-success">
+            <p className="mt-3 text-sm text-primary-hover" data-testid="fundo-survey-success">
               Thank you — your response was recorded.
             </p>
           ) : null}

@@ -103,29 +103,29 @@ export function EdlizPrescribingPanel({
   }
 
   return (
-    <div className="rounded-lg border border-emerald-200 bg-emerald-50/40 p-4">
-      <div className="flex items-center gap-2 text-sm font-medium text-emerald-900">
+    <div className="rounded-lg border border-success/25 bg-success-soft/40 p-4">
+      <div className="flex items-center gap-2 text-sm font-medium text-primary-hover">
         <Pill className="h-4 w-4" />
         EDLIZ prescribing check
       </div>
-      <p className="mt-1 text-xs text-emerald-800/90">
+      <p className="mt-1 text-xs text-primary-hover/90">
         Evaluates national demo guidance + deterministic rules. Uses audited trace when you run a check.
       </p>
       <div className="mt-3 grid gap-2 sm:grid-cols-3">
         <input
-          className="rounded border border-emerald-200 bg-white px-2 py-1.5 text-sm"
+          className="rounded border border-success/25 bg-card px-2 py-1.5 text-sm"
           placeholder="Proposed generic (e.g. ceftriaxone)"
           value={generic}
           onChange={(e) => setGeneric(e.target.value)}
         />
         <input
-          className="rounded border border-emerald-200 bg-white px-2 py-1.5 text-sm"
+          className="rounded border border-success/25 bg-card px-2 py-1.5 text-sm"
           placeholder="Dose mg (optional)"
           value={doseMg}
           onChange={(e) => setDoseMg(e.target.value)}
         />
         <input
-          className="rounded border border-emerald-200 bg-white px-2 py-1.5 text-sm"
+          className="rounded border border-success/25 bg-card px-2 py-1.5 text-sm"
           placeholder="Days on therapy (optional)"
           value={days}
           onChange={(e) => setDays(e.target.value)}
@@ -141,10 +141,10 @@ export function EdlizPrescribingPanel({
         Run check
       </button>
       {alerts.length > 0 && (
-        <ul className="mt-3 space-y-2 text-sm text-amber-900">
+        <ul className="mt-3 space-y-2 text-sm text-warning-foreground">
           {alerts.map((a, i) => (
-            <li key={i} className="flex gap-2 rounded border border-amber-200 bg-amber-50/80 p-2">
-              <ShieldAlert className="h-4 w-4 shrink-0 text-amber-700" />
+            <li key={i} className="flex gap-2 rounded border border-warning/35 bg-warning-soft/80 p-2">
+              <ShieldAlert className="h-4 w-4 shrink-0 text-warning-foreground" />
               <span>{String(a.message ?? a.code ?? "Alert")}</span>
             </li>
           ))}
@@ -155,7 +155,7 @@ export function EdlizPrescribingPanel({
         <button
           type="button"
           onClick={emitOrderDraft}
-          className="mt-3 inline-flex items-center gap-2 rounded-md border border-emerald-300 bg-white px-3 py-1.5 text-xs font-medium text-emerald-900 hover:bg-emerald-50"
+          className="mt-3 inline-flex items-center gap-2 rounded-md border border-emerald-300 bg-card px-3 py-1.5 text-xs font-medium text-primary-hover hover:bg-success-soft"
         >
           <ClipboardCopy className="h-3.5 w-3.5" />
           Send summary to orders workspace

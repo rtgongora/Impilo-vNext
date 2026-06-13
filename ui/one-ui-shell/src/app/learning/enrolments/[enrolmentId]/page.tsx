@@ -45,7 +45,7 @@ export default function EnrolmentPlayerPage() {
         <div className="mb-3 flex flex-wrap gap-2">
           <button
             onClick={() => enrolmentId && startMutation.mutate(enrolmentId)}
-            className="rounded bg-teal-700 px-3 py-1.5 text-sm text-white"
+            className="rounded bg-primary px-3 py-1.5 text-sm text-white"
           >
             Start / Continue
           </button>
@@ -59,33 +59,33 @@ export default function EnrolmentPlayerPage() {
           ) : null}
           <button
             onClick={() => enrolmentId && canIssueCertificate && certMutation.mutate(enrolmentId)}
-            className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded border border-border px-3 py-1.5 text-sm text-foreground disabled:cursor-not-allowed disabled:opacity-50"
             disabled={!canIssueCertificate}
             data-testid="fundo-issue-certificate"
           >
             Issue certificate
           </button>
         </div>
-        <div className="rounded border border-gray-200 bg-white p-4">
-          <p className="text-sm text-gray-600">Progress</p>
-          <p className="text-lg font-semibold text-gray-900">{percent}%</p>
-          <div className="mt-2 h-2 rounded bg-gray-200">
+        <div className="rounded border border-border bg-card p-4">
+          <p className="text-sm text-muted-foreground">Progress</p>
+          <p className="text-lg font-semibold text-foreground">{percent}%</p>
+          <div className="mt-2 h-2 rounded bg-neutral-100">
             <div className="h-2 rounded bg-teal-600" style={{ width: `${Math.max(0, Math.min(100, percent))}%` }} />
           </div>
-          <p className="mt-2 text-xs text-gray-500">{completedCount} of {lessons.length} lessons completed</p>
-          {modules.length === 0 ? <p className="mt-2 text-sm text-gray-500">No course structure available yet.</p> : null}
+          <p className="mt-2 text-xs text-muted-foreground">{completedCount} of {lessons.length} lessons completed</p>
+          {modules.length === 0 ? <p className="mt-2 text-sm text-muted-foreground">No course structure available yet.</p> : null}
           <div className="mt-3 space-y-3">
             {modules.map((module: AnyRecord) => (
-              <div key={String(module.id)} className="rounded border border-gray-100 p-2">
-                <p className="text-sm font-medium text-gray-900">{String(module.title ?? "Module")}</p>
+              <div key={String(module.id)} className="rounded border border-border p-2">
+                <p className="text-sm font-medium text-foreground">{String(module.title ?? "Module")}</p>
                 <ul className="mt-2 space-y-1 text-sm">
                   {(((module.lessons as AnyRecord[]) ?? []).map((lesson: AnyRecord) => {
                     const lp = lessonProgress.get(String(lesson.id)) ?? 0;
                     return (
                       <li key={String(lesson.id)} className="flex items-center justify-between gap-3">
-                        <span className="text-gray-700">{String(lesson.title ?? "Lesson")}</span>
+                        <span className="text-foreground">{String(lesson.title ?? "Lesson")}</span>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-500">{lp}%</span>
+                          <span className="text-xs text-muted-foreground">{lp}%</span>
                           <Link className="text-teal-700 hover:underline" href={`/learning/enrolments/${enrolmentId}/lessons/${lesson.id}`}>
                             Open
                           </Link>
@@ -98,10 +98,10 @@ export default function EnrolmentPlayerPage() {
             ))}
           </div>
         </div>
-        <div className="mt-4 rounded border border-gray-200 bg-white p-4">
-          <p className="text-sm font-medium text-gray-900">Assessment prompts</p>
+        <div className="mt-4 rounded border border-border bg-card p-4">
+          <p className="text-sm font-medium text-foreground">Assessment prompts</p>
           {assessments.length === 0 ? (
-            <p className="mt-2 text-sm text-gray-500">No assessments linked to this course yet.</p>
+            <p className="mt-2 text-sm text-muted-foreground">No assessments linked to this course yet.</p>
           ) : (
             <ul className="mt-2 space-y-1 text-sm">
               {assessments.map((assessment) => (
@@ -115,9 +115,9 @@ export default function EnrolmentPlayerPage() {
             </ul>
           )}
           {canIssueCertificate ? (
-            <p className="mt-3 text-xs text-emerald-700">Completion criteria met. Certificate issuance is enabled.</p>
+            <p className="mt-3 text-xs text-primary-hover">Completion criteria met. Certificate issuance is enabled.</p>
           ) : (
-            <p className="mt-3 text-xs text-gray-500">Certificate can be issued only after completion.</p>
+            <p className="mt-3 text-xs text-muted-foreground">Certificate can be issued only after completion.</p>
           )}
         </div>
       </PageShell>

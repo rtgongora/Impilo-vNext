@@ -111,17 +111,17 @@ export default function ReviewsPage() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-red-800">
           {error}
         </div>
       )}
 
       {successMessage && (
-        <div className="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-sm text-emerald-800">
+        <div className="mb-4 p-3 rounded-lg bg-success-soft border border-success/25 text-sm text-primary-hover">
           {successMessage}
           <button
             onClick={() => setSuccessMessage(null)}
-            className="ml-2 text-emerald-600 hover:text-emerald-800 font-medium"
+            className="ml-2 text-primary hover:text-primary-hover font-medium"
           >
             Dismiss
           </button>
@@ -182,14 +182,14 @@ export default function ReviewsPage() {
                         <button
                           onClick={() => handleApprove(review.id)}
                           disabled={actionLoading === review.id}
-                          className="px-2 py-1 rounded text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors disabled:opacity-50"
+                          className="px-2 py-1 rounded text-xs font-medium text-primary-hover bg-success-soft hover:bg-emerald-100 transition-colors disabled:opacity-50"
                         >
                           Approve
                         </button>
                         <button
                           onClick={() => handleReject(review.id)}
                           disabled={actionLoading === review.id}
-                          className="px-2 py-1 rounded text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 transition-colors disabled:opacity-50"
+                          className="px-2 py-1 rounded text-xs font-medium text-danger bg-danger-soft hover:bg-red-100 transition-colors disabled:opacity-50"
                         >
                           Reject
                         </button>

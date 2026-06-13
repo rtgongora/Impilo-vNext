@@ -33,14 +33,14 @@ export default function MarketplacePage() {
       <PageShell title="Marketplace" subtitle="Procure services, track orders, and keep facility supply decisions inside the same operational experience layer." serviceSlug="msika">
         <div className="space-y-6">
           <MarketplaceOrderOrchestrationRail />
-          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div>
-                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Operational continuity</div>
-                <h2 className="mt-1 text-xl font-semibold text-slate-900">{facility ? `${facility.name} marketplace workflow` : "Marketplace across the same experience layer"}</h2>
-                <p className="mt-2 max-w-3xl text-sm text-slate-600">Marketplace now stays grounded in real service catalog, booking, partner, and order data. When a facility is in scope, ordering remains tied to that facility instead of becoming a detached admin task.</p>
-                <p className="mt-2 text-xs text-slate-500">
-                  <Link href="/finance/commerce-integrations" className="font-medium text-indigo-700 hover:underline">
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Operational continuity</div>
+                <h2 className="mt-1 text-xl font-semibold text-foreground">{facility ? `${facility.name} marketplace workflow` : "Marketplace across the same experience layer"}</h2>
+                <p className="mt-2 max-w-3xl text-sm text-muted-foreground">Marketplace now stays grounded in real service catalog, booking, partner, and order data. When a facility is in scope, ordering remains tied to that facility instead of becoming a detached admin task.</p>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  <Link href="/finance/commerce-integrations" className="font-medium text-primary-hover hover:underline">
                     Commerce & payer integration map
                   </Link>{" "}
                   — MSIKA registry + commerce rails are now available via{" "}
@@ -49,28 +49,28 @@ export default function MarketplacePage() {
                   canonical <code className="text-[10px]">/internal/v1/mushex/*</code> proxies land.
                 </p>
               </div>
-              <div className="grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
-                <Link href="/marketplace/orders" className="rounded-lg border border-slate-200 px-3 py-2 font-medium hover:bg-slate-50">Open orders</Link>
-                <Link href="/marketplace/catalog" className="rounded-lg border border-slate-200 px-3 py-2 font-medium hover:bg-slate-50">Browse catalog</Link>
-                <Link href="/marketplace/bookings" className="rounded-lg border border-slate-200 px-3 py-2 font-medium hover:bg-slate-50">Review bookings</Link>
-                <Link href="/inventory?source=marketplace" className="rounded-lg border border-slate-200 px-3 py-2 font-medium hover:bg-slate-50">Return to inventory</Link>
+              <div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
+                <Link href="/marketplace/orders" className="rounded-lg border border-border px-3 py-2 font-medium hover:bg-background">Open orders</Link>
+                <Link href="/marketplace/catalog" className="rounded-lg border border-border px-3 py-2 font-medium hover:bg-background">Browse catalog</Link>
+                <Link href="/marketplace/bookings" className="rounded-lg border border-border px-3 py-2 font-medium hover:bg-background">Review bookings</Link>
+                <Link href="/inventory?source=marketplace" className="rounded-lg border border-border px-3 py-2 font-medium hover:bg-background">Return to inventory</Link>
               </div>
             </div>
           </section>
 
-          <p className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-xs text-slate-600">
+          <p className="rounded-lg border border-border bg-background px-4 py-2 text-xs text-muted-foreground">
             Tiles below count only rows returned successfully from Experience BFF{" "}
             <code className="text-[10px]">/internal/v1/marketplace/*</code>. Failed requests show “—”, not zero — zeros are
             never used to imply a successful empty snapshot.
           </p>
 
           <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Open orders</div>
-              <div className="mt-3 text-3xl font-semibold text-slate-900">
+            <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Open orders</div>
+              <div className="mt-3 text-3xl font-semibold text-foreground">
                 {!facilityId ? "—" : ordersQuery.isLoading ? "…" : ordersQuery.isError ? "—" : openOrderCount}
               </div>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-1 text-sm text-muted-foreground">
                 {!facilityId
                   ? "Select a facility — orders are not requested without facility_id."
                   : ordersQuery.isError
@@ -80,51 +80,51 @@ export default function MarketplacePage() {
                       : "For the facility currently in scope."}
               </p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Catalog items</div>
-              <div className="mt-3 text-3xl font-semibold text-slate-900">
+            <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Catalog items</div>
+              <div className="mt-3 text-3xl font-semibold text-foreground">
                 {catalogQuery.isLoading ? "…" : catalogQuery.isError ? "—" : catalog.length}
               </div>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-1 text-sm text-muted-foreground">
                 {catalogQuery.isError ? "Could not load catalog from Experience BFF." : "Rows from GET /internal/v1/marketplace/catalog."}
               </p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Marketplace partners</div>
-              <div className="mt-3 text-3xl font-semibold text-slate-900">
+            <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Marketplace partners</div>
+              <div className="mt-3 text-3xl font-semibold text-foreground">
                 {partnersQuery.isLoading ? "…" : partnersQuery.isError ? "—" : partners.length}
               </div>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-1 text-sm text-muted-foreground">
                 {partnersQuery.isError ? "Could not load vendors from Experience BFF." : "Rows from GET /internal/v1/marketplace/vendors."}
               </p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Service bookings</div>
-              <div className="mt-3 text-3xl font-semibold text-slate-900">
+            <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Service bookings</div>
+              <div className="mt-3 text-3xl font-semibold text-foreground">
                 {bookingsQuery.isLoading ? "…" : bookingsQuery.isError ? "—" : bookings.length}
               </div>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-1 text-sm text-muted-foreground">
                 {bookingsQuery.isError ? "Could not load bookings from Experience BFF." : "Rows from GET /internal/v1/marketplace/bookings."}
               </p>
             </div>
           </section>
 
           <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900">Next action queue</h3>
-                  <p className="text-sm text-slate-600">Keep procurement decisions tied to active facility demand and existing bookings.</p>
+                  <h3 className="text-lg font-semibold text-foreground">Next action queue</h3>
+                  <p className="text-sm text-muted-foreground">Keep procurement decisions tied to active facility demand and existing bookings.</p>
                 </div>
-                <Link href="/marketplace/orders" className="inline-flex items-center gap-1 text-sm font-medium text-slate-700 hover:text-slate-900">
+                <Link href="/marketplace/orders" className="inline-flex items-center gap-1 text-sm font-medium text-foreground hover:text-foreground">
                   Open orders
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
               <div className="mt-4 space-y-3">
-                <div className="rounded-xl border border-slate-200 px-4 py-3">
-                  <div className="flex items-center gap-2 text-sm font-medium text-slate-900"><ShoppingBag className="h-4 w-4 text-sky-600" /> Order follow-through</div>
-                  <p className="mt-1 text-sm text-slate-600">
+                <div className="rounded-xl border border-border px-4 py-3">
+                  <div className="flex items-center gap-2 text-sm font-medium text-foreground"><ShoppingBag className="h-4 w-4 text-sky-600" /> Order follow-through</div>
+                  <p className="mt-1 text-sm text-muted-foreground">
                     {!facilityId
                       ? "Select a facility to load orders from the BFF."
                       : ordersQuery.isError
@@ -134,9 +134,9 @@ export default function MarketplacePage() {
                           : "No facility-scoped orders in this response. Raise the first order from the orders workspace."}
                   </p>
                 </div>
-                <div className="rounded-xl border border-slate-200 px-4 py-3">
-                  <div className="flex items-center gap-2 text-sm font-medium text-slate-900"><CalendarDays className="h-4 w-4 text-emerald-600" /> Booking continuity</div>
-                  <p className="mt-1 text-sm text-slate-600">
+                <div className="rounded-xl border border-border px-4 py-3">
+                  <div className="flex items-center gap-2 text-sm font-medium text-foreground"><CalendarDays className="h-4 w-4 text-primary" /> Booking continuity</div>
+                  <p className="mt-1 text-sm text-muted-foreground">
                     {bookingsQuery.isError
                       ? "Bookings request failed — check BFF connectivity."
                       : bookings[0]
@@ -144,9 +144,9 @@ export default function MarketplacePage() {
                         : "No bookings in this API response yet."}
                   </p>
                 </div>
-                <div className="rounded-xl border border-slate-200 px-4 py-3">
-                  <div className="flex items-center gap-2 text-sm font-medium text-slate-900"><Store className="h-4 w-4 text-violet-600" /> Partner availability</div>
-                  <p className="mt-1 text-sm text-slate-600">
+                <div className="rounded-xl border border-border px-4 py-3">
+                  <div className="flex items-center gap-2 text-sm font-medium text-foreground"><Store className="h-4 w-4 text-violet-600" /> Partner availability</div>
+                  <p className="mt-1 text-sm text-muted-foreground">
                     {partnersQuery.isError
                       ? "Partners request failed — check BFF connectivity."
                       : partners[0]
@@ -157,19 +157,19 @@ export default function MarketplacePage() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <h3 className="text-lg font-semibold text-slate-900">Cross-surface handoff</h3>
-              <div className="mt-4 space-y-4 text-sm text-slate-600">
-                <div className="rounded-xl border border-slate-200 p-4">
-                  <div className="flex items-center gap-2 font-medium text-slate-900"><PackageCheck className="h-4 w-4 text-amber-600" /> From inventory pressure</div>
+            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+              <h3 className="text-lg font-semibold text-foreground">Cross-surface handoff</h3>
+              <div className="mt-4 space-y-4 text-sm text-muted-foreground">
+                <div className="rounded-xl border border-border p-4">
+                  <div className="flex items-center gap-2 font-medium text-foreground"><PackageCheck className="h-4 w-4 text-amber-600" /> From inventory pressure</div>
                   <p className="mt-1">Low stock or an approved requisition can hand off into marketplace orders without losing facility context.</p>
                 </div>
-                <div className="rounded-xl border border-slate-200 p-4">
-                  <div className="font-medium text-slate-900">From org-admin oversight</div>
+                <div className="rounded-xl border border-border p-4">
+                  <div className="font-medium text-foreground">From org-admin oversight</div>
                   <p className="mt-1">Organization administration can review marketplace and booking throughput without forcing a clinical shift workflow.</p>
                 </div>
-                <div className="rounded-xl border border-slate-200 p-4">
-                  <div className="font-medium text-slate-900">What remains local</div>
+                <div className="rounded-xl border border-border p-4">
+                  <div className="font-medium text-foreground">What remains local</div>
                   <p className="mt-1">Order creation still requires a facility in scope, because procurement actions must resolve to a real operating site.</p>
                 </div>
               </div>

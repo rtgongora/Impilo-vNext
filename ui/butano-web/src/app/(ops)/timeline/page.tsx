@@ -25,10 +25,10 @@ const TYPE_COLORS: Record<string, string> = {
   Encounter: "bg-info/10 text-info",
   Observation: "bg-brand-primary/10 text-brand-primary",
   Condition: "bg-brand-accent-red/10 text-brand-accent-red",
-  MedicationRequest: "bg-purple-100 text-purple-700",
+  MedicationRequest: "bg-purple-100 text-warning-foreground",
   Immunization: "bg-success/10 text-success",
   AllergyIntolerance: "bg-warning/10 text-warning",
-  Procedure: "bg-indigo-100 text-indigo-700",
+  Procedure: "bg-indigo-100 text-primary-hover",
   DiagnosticReport: "bg-teal-100 text-teal-700",
   CarePlan: "bg-cyan-100 text-cyan-700",
 };
@@ -95,7 +95,7 @@ export default function TimelinePage() {
       </div>
 
       {/* Search form */}
-      <form onSubmit={handleSearch} className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6 mb-6">
+      <form onSubmit={handleSearch} className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <div>
             <label htmlFor="cpid" className="block text-sm font-medium text-neutral-700 mb-1">
@@ -148,7 +148,7 @@ export default function TimelinePage() {
                   className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors ${
                     isSelected
                       ? "bg-brand-primary text-white border-brand-primary"
-                      : "bg-white text-neutral-600 border-neutral-200 hover:border-brand-primary/40"
+                      : "bg-card text-neutral-600 border-neutral-200 hover:border-brand-primary/40"
                   }`}
                 >
                   {type}
@@ -175,7 +175,7 @@ export default function TimelinePage() {
           </div>
 
           {timeline.items.length === 0 ? (
-            <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-8 text-center text-neutral-500 text-sm">
+            <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-8 text-center text-neutral-500 text-sm">
               No timeline entries found for this CPID with the given filters.
             </div>
           ) : (
@@ -187,9 +187,9 @@ export default function TimelinePage() {
                 {timeline.items.map((item: TimelineItem, idx: number) => (
                   <div key={`${item.resourceId}-${idx}`} className="relative pl-10">
                     {/* Dot on timeline */}
-                    <div className="absolute left-2.5 top-4 w-3 h-3 rounded-full bg-white border-2 border-brand-primary" />
+                    <div className="absolute left-2.5 top-4 w-3 h-3 rounded-full bg-card border-2 border-brand-primary" />
 
-                    <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-4">
+                    <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-4">
                       <div className="flex items-center gap-2 mb-1">
                         <span
                           className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold ${
@@ -220,7 +220,7 @@ export default function TimelinePage() {
               <button
                 onClick={() => fetchTimeline(page - 1)}
                 disabled={page === 0 || loading}
-                className="px-3 py-1.5 text-xs font-medium text-neutral-600 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1.5 text-xs font-medium text-neutral-600 bg-card border border-neutral-200 rounded-lg hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Previous
               </button>
@@ -230,7 +230,7 @@ export default function TimelinePage() {
               <button
                 onClick={() => fetchTimeline(page + 1)}
                 disabled={!timeline.hasNext || loading}
-                className="px-3 py-1.5 text-xs font-medium text-neutral-600 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1.5 text-xs font-medium text-neutral-600 bg-card border border-neutral-200 rounded-lg hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Next
               </button>

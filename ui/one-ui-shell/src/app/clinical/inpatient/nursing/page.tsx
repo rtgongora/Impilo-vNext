@@ -96,7 +96,7 @@ export default function InpatientNursingPage() {
       <TrustContextBanner purposeOfUse="INPATIENT_NURSING" />
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-12 text-slate-500">
+        <div className="flex items-center justify-center py-12 text-muted-foreground">
           <Loader2 className="mr-2 h-5 w-5 animate-spin" />
           Loading assigned patients…
         </div>
@@ -125,39 +125,39 @@ export default function InpatientNursingPage() {
             const bed = String(attrs.bedNumber ?? attrs.bed ?? "—");
 
             return (
-              <article key={id} className="rounded-xl border border-slate-200 bg-white p-4">
+              <article key={id} className="rounded-xl border border-border bg-card p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <Link
                       href={`/clinical/inpatient/admissions/${id}`}
-                      className="text-sm font-semibold text-impilo-600 hover:underline"
+                      className="text-sm font-semibold text-primary hover:underline"
                     >
                       {patientLabel}
                     </Link>
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-xs text-muted-foreground">
                       Admission {id} · {ward} / bed {bed}
                     </p>
                   </div>
-                  <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+                  <span className="rounded-full bg-warning-soft px-2 py-0.5 text-[10px] font-medium text-warning-foreground">
                     {String(attrs.status ?? "ACTIVE")}
                   </span>
                 </div>
 
                 <div className="mt-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Admission tasks</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Admission tasks</p>
                   <ul className="mt-2 space-y-2">
                     {admissionTasks(row, id, cpid).map((task) => (
-                      <li key={task.id} className="flex items-center justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
+                      <li key={task.id} className="flex items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 py-2">
                         {task.href ? (
-                          <Link href={task.href} className="text-xs font-medium text-impilo-600 hover:underline">
+                          <Link href={task.href} className="text-xs font-medium text-primary hover:underline">
                             {task.label}
                           </Link>
                         ) : (
-                          <span className="text-xs text-slate-600">{task.label}</span>
+                          <span className="text-xs text-muted-foreground">{task.label}</span>
                         )}
                         <span
                           className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                            task.status === "DUE" ? "bg-rose-50 text-rose-700" : "bg-slate-100 text-slate-600"
+                            task.status === "DUE" ? "bg-danger-soft text-danger" : "bg-neutral-100 text-muted-foreground"
                           }`}
                         >
                           {task.status}
@@ -168,7 +168,7 @@ export default function InpatientNursingPage() {
                 </div>
 
                 {!cpid ? (
-                  <p className="mt-3 text-xs text-amber-700">
+                  <p className="mt-3 text-xs text-warning-foreground">
                     Patient CPID not returned — open the{" "}
                     <Link href={`/clinical/inpatient/admissions/${id}`} className="font-medium underline">
                       admission detail
@@ -183,10 +183,10 @@ export default function InpatientNursingPage() {
       )}
 
       <div className="mt-6 flex flex-wrap gap-2">
-        <Link href="/clinical/inpatient/ward-board" className="rounded-lg border px-3 py-2 text-sm hover:bg-slate-50">
+        <Link href="/clinical/inpatient/ward-board" className="rounded-lg border px-3 py-2 text-sm hover:bg-background">
           Ward board
         </Link>
-        <Link href="/shift/handover" className="rounded-lg border px-3 py-2 text-sm hover:bg-slate-50">
+        <Link href="/shift/handover" className="rounded-lg border px-3 py-2 text-sm hover:bg-background">
           Handover notes
         </Link>
       </div>

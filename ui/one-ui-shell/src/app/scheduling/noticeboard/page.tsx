@@ -32,7 +32,7 @@ const categoryIcons: Record<string, typeof Bell> = {
 
 const priorityColors: Record<string, string> = {
   low: "bg-gray-500",
-  normal: "bg-impilo-500",
+  normal: "bg-primary",
   high: "bg-orange-500",
   urgent: "bg-red-600",
 };
@@ -105,7 +105,7 @@ export default function ProviderNoticeboardPage() {
           <div className="mb-4">
             <Link
               href="/organization-admin/staffing?from=organization-admin"
-              className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+              className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="h-4 w-4" /> Back to staffing hub
             </Link>
@@ -114,14 +114,14 @@ export default function ProviderNoticeboardPage() {
         <FacilityWorkClusterRibbon shiftExpected={false} />
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <Link href="/home" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <ArrowLeft className="w-4 h-4 text-gray-500" />
+            <Link href="/home" className="p-2 hover:bg-neutral-100 rounded-lg transition-colors">
+              <ArrowLeft className="w-4 h-4 text-muted-foreground" />
             </Link>
-            <p className="text-sm text-gray-500">Announcements & updates for clinical staff</p>
+            <p className="text-sm text-muted-foreground">Announcements & updates for clinical staff</p>
           </div>
           <button
             onClick={() => setShowCreate(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-impilo-500 text-white rounded-lg hover:bg-impilo-600 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors"
           >
             <Plus className="w-4 h-4" />
             New Announcement
@@ -130,28 +130,28 @@ export default function ProviderNoticeboardPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
-            <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
-            <p className="text-sm text-gray-500">Total</p>
+          <div className="bg-card rounded-lg border border-border p-4 text-center">
+            <p className="text-3xl font-bold text-foreground">{stats.total}</p>
+            <p className="text-sm text-muted-foreground">Total</p>
           </div>
-          <div className="bg-white rounded-lg border border-amber-200 p-4 text-center">
+          <div className="bg-card rounded-lg border border-warning/35 p-4 text-center">
             <p className="text-3xl font-bold text-amber-600">{stats.pinned}</p>
-            <p className="text-sm text-gray-500">Pinned</p>
+            <p className="text-sm text-muted-foreground">Pinned</p>
           </div>
-          <div className="bg-white rounded-lg border border-red-200 p-4 text-center">
+          <div className="bg-card rounded-lg border border-danger/28 p-4 text-center">
             <p className="text-3xl font-bold text-red-600">{stats.urgent}</p>
-            <p className="text-sm text-gray-500">Urgent</p>
+            <p className="text-sm text-muted-foreground">Urgent</p>
           </div>
         </div>
 
         {/* Category Tabs */}
-        <div className="flex flex-wrap gap-1 bg-gray-100 rounded-lg p-1 mb-6">
+        <div className="flex flex-wrap gap-1 bg-neutral-100 rounded-lg p-1 mb-6">
           {[{ id: "all", label: "All" }, { id: "pinned", label: "Pinned", icon: Pin }, ...categories.map((c) => ({ id: c, label: c.charAt(0).toUpperCase() + c.slice(1) }))].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors capitalize ${
-                activeTab === tab.id ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                activeTab === tab.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               }`}
             >
               {tab.label}
@@ -163,16 +163,16 @@ export default function ProviderNoticeboardPage() {
         {isLoading ? (
           <div className="space-y-3">
             {[0, 1, 2].map((i) => (
-              <div key={i} className="bg-white rounded-lg border border-gray-200 p-4 animate-pulse">
-                <div className="h-16 bg-gray-100 rounded" />
+              <div key={i} className="bg-card rounded-lg border border-border p-4 animate-pulse">
+                <div className="h-16 bg-neutral-100 rounded" />
               </div>
             ))}
           </div>
         ) : announcements.length === 0 ? (
-          <div className="text-center py-16 bg-gray-50 rounded-lg border border-gray-200">
-            <Megaphone className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-600 mb-1">No announcements</h3>
-            <p className="text-sm text-gray-400">
+          <div className="text-center py-16 bg-background rounded-lg border border-border">
+            <Megaphone className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-muted-foreground mb-1">No announcements</h3>
+            <p className="text-sm text-muted-foreground">
               {activeTab === "all" ? "No announcements yet" : `No ${activeTab} announcements`}
             </p>
           </div>
@@ -184,27 +184,27 @@ export default function ProviderNoticeboardPage() {
                 <button
                   key={a.id}
                   onClick={() => setSelected(a)}
-                  className={`w-full text-left bg-white rounded-lg border p-4 transition-all hover:shadow-md ${
-                    a.is_pinned ? "border-amber-300 bg-amber-50/30" : a.priority === "urgent" ? "border-red-300" : "border-gray-200"
+                  className={`w-full text-left bg-card rounded-lg border p-4 transition-all hover:shadow-md ${
+                    a.is_pinned ? "border-amber-300 bg-warning-soft/30" : a.priority === "urgent" ? "border-red-300" : "border-border"
                   }`}
                 >
                   <div className="flex items-start gap-4">
                     <div className={`p-2 rounded-lg shrink-0 ${a.priority === "urgent" ? "bg-red-100" : "bg-blue-100"}`}>
-                      <Icon className={`w-5 h-5 ${a.priority === "urgent" ? "text-red-600" : "text-impilo-500"}`} />
+                      <Icon className={`w-5 h-5 ${a.priority === "urgent" ? "text-red-600" : "text-primary"}`} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
                         {a.is_pinned && <Pin className="w-4 h-4 text-amber-600" />}
-                        <h3 className="font-semibold text-gray-900 truncate">{a.title}</h3>
+                        <h3 className="font-semibold text-foreground truncate">{a.title}</h3>
                         <span className={`px-2 py-0.5 text-xs font-medium text-white rounded ${priorityColors[a.priority]}`}>
                           {a.priority}
                         </span>
-                        <span className="px-2 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded capitalize">
+                        <span className="px-2 py-0.5 text-xs font-medium text-muted-foreground bg-neutral-100 rounded capitalize">
                           {a.category}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600 line-clamp-2">{a.content}</p>
-                      <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
+                      <p className="text-sm text-muted-foreground line-clamp-2">{a.content}</p>
+                      <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Clock className="w-3 h-3" />
                           {timeAgo(a.published_at)}
@@ -228,42 +228,42 @@ export default function ProviderNoticeboardPage() {
         {/* Create Announcement Modal */}
         {showCreate && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 p-6">
+            <div className="bg-card rounded-xl shadow-xl max-w-lg w-full mx-4 p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold">Create Announcement</h3>
-                <button onClick={() => setShowCreate(false)} className="p-1 hover:bg-gray-100 rounded"><X className="w-5 h-5" /></button>
+                <button onClick={() => setShowCreate(false)} className="p-1 hover:bg-neutral-100 rounded"><X className="w-5 h-5" /></button>
               </div>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                  <label className="block text-sm font-medium text-foreground mb-1">Title *</label>
                   <input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
-                    placeholder="Announcement title" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                    placeholder="Announcement title" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Content *</label>
+                  <label className="block text-sm font-medium text-foreground mb-1">Content *</label>
                   <textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })}
-                    placeholder="Announcement content..." rows={4} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                    placeholder="Announcement content..." rows={4} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                    <label className="block text-sm font-medium text-foreground mb-1">Category</label>
                     <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm capitalize">
+                      className="w-full px-3 py-2 border border-border rounded-lg text-sm capitalize">
                       {categories.map((c) => <option key={c} value={c} className="capitalize">{c}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                    <label className="block text-sm font-medium text-foreground mb-1">Priority</label>
                     <select value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm capitalize">
+                      className="w-full px-3 py-2 border border-border rounded-lg text-sm capitalize">
                       {priorities.map((p) => <option key={p} value={p} className="capitalize">{p}</option>)}
                     </select>
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Expires In</label>
+                  <label className="block text-sm font-medium text-foreground mb-1">Expires In</label>
                   <select value={form.expiresInDays} onChange={(e) => setForm({ ...form, expiresInDays: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                    className="w-full px-3 py-2 border border-border rounded-lg text-sm">
                     <option value="">Never expires</option>
                     <option value="1">1 day</option>
                     <option value="7">1 week</option>
@@ -283,7 +283,7 @@ export default function ProviderNoticeboardPage() {
                 </div>
               </div>
               <div className="flex justify-end gap-3 mt-6">
-                <button onClick={() => setShowCreate(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Cancel</button>
+                <button onClick={() => setShowCreate(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground">Cancel</button>
                 <button
                   onClick={() => createMutation.mutate({
                     title: form.title, content: form.content, category: form.category,
@@ -292,7 +292,7 @@ export default function ProviderNoticeboardPage() {
                     expiresInDays: form.expiresInDays ? parseInt(form.expiresInDays) : null,
                   })}
                   disabled={!form.title || !form.content || createMutation.isPending}
-                  className="px-4 py-2 text-sm font-medium bg-impilo-500 text-white rounded-lg hover:bg-impilo-600 disabled:opacity-50"
+                  className="px-4 py-2 text-sm font-medium bg-primary text-white rounded-lg hover:bg-primary-hover disabled:opacity-50"
                 >
                   {createMutation.isPending ? (
                     <span className="flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" />Publishing...</span>
@@ -306,28 +306,28 @@ export default function ProviderNoticeboardPage() {
         {/* Detail Modal */}
         {selected && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 p-6">
+            <div className="bg-card rounded-xl shadow-xl max-w-lg w-full mx-4 p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   {selected.is_pinned && <Pin className="w-4 h-4 text-amber-600" />}
                   <span className={`px-2 py-0.5 text-xs font-medium text-white rounded ${priorityColors[selected.priority]}`}>
                     {selected.priority}
                   </span>
-                  <span className="px-2 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded capitalize">
+                  <span className="px-2 py-0.5 text-xs font-medium text-muted-foreground bg-neutral-100 rounded capitalize">
                     {selected.category}
                   </span>
                 </div>
-                <button onClick={() => setSelected(null)} className="p-1 hover:bg-gray-100 rounded"><X className="w-5 h-5" /></button>
+                <button onClick={() => setSelected(null)} className="p-1 hover:bg-neutral-100 rounded"><X className="w-5 h-5" /></button>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">{selected.title}</h3>
-              <p className="text-sm text-gray-500 mb-4">
+              <h3 className="text-lg font-semibold text-foreground mb-1">{selected.title}</h3>
+              <p className="text-sm text-muted-foreground mb-4">
                 Published {timeAgo(selected.published_at)} {selected.published_by && `by ${selected.published_by}`}
               </p>
-              <p className="text-sm text-gray-700 whitespace-pre-wrap mb-6">{selected.content}</p>
+              <p className="text-sm text-foreground whitespace-pre-wrap mb-6">{selected.content}</p>
               {selected.requires_acknowledgment && (
                 <button
                   onClick={() => { acknowledgeMutation.mutate(selected.id); setSelected(null); }}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium bg-impilo-500 text-white rounded-lg hover:bg-impilo-600 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors"
                 >
                   <CheckCircle className="w-4 h-4" />
                   Acknowledge

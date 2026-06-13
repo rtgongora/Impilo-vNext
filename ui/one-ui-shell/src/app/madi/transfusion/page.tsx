@@ -38,18 +38,18 @@ export default function TransfusionPage() {
   return (
     <AppLayout>
       <PageShell title="Record Transfusion" subtitle="Start a transfusion episode with observations" icon={<Activity className="h-6 w-6" />}>
-        <form onSubmit={handleSubmit} className="max-w-lg space-y-4 rounded-2xl border border-gray-200 bg-white p-6">
-          <label className="block text-sm font-medium text-gray-700">
+        <form onSubmit={handleSubmit} className="max-w-lg space-y-4 rounded-2xl border border-border bg-card p-6">
+          <label className="block text-sm font-medium text-foreground">
             Patient CPID
-            <input required value={patientCpid} onChange={(e) => setPatientCpid(e.target.value)} className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm font-mono" />
+            <input required value={patientCpid} onChange={(e) => setPatientCpid(e.target.value)} className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm font-mono" />
           </label>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-foreground">
             Order ID (optional)
-            <input value={orderId} onChange={(e) => setOrderId(e.target.value)} className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm font-mono" />
+            <input value={orderId} onChange={(e) => setOrderId(e.target.value)} className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm font-mono" />
           </label>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-foreground">
             Issue ID (optional)
-            <input value={issueId} onChange={(e) => setIssueId(e.target.value)} className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm font-mono" />
+            <input value={issueId} onChange={(e) => setIssueId(e.target.value)} className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm font-mono" />
           </label>
           <button type="submit" disabled={start.isPending} className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">
             {start.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}

@@ -146,27 +146,27 @@ export default function GrowthChartPage() {
       >
         {growthLoading || vitalsLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading growth review…</span>
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading growth review…</span>
           </div>
         ) : (
           <div className="space-y-6">
             {hasStructuredGrowth ? (
-              <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
+              <div className="rounded-lg border border-success/25 bg-success-soft p-4 text-sm text-emerald-950">
                 <p className="font-medium">Real path: WHO-backed structured growth measurements</p>
-                <p className="mt-1 text-emerald-900/80">
-                  This page now reads from <code className="rounded bg-white px-1">GET /internal/v1/growth?patient_id=…</code>{" "}
+                <p className="mt-1 text-primary-hover/80">
+                  This page now reads from <code className="rounded bg-card px-1">GET /internal/v1/growth?patient_id=…</code>{" "}
                   and computes under-5 z-scores from embedded WHO 2006 LMS standards. Head circumference is recorded here, not
                   inferred from generic vitals.
                 </p>
               </div>
             ) : (
-              <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+              <div className="rounded-lg border border-warning/35 bg-warning-soft p-4 text-sm text-warning-foreground">
                 <p className="font-medium">Legacy fallback: vitals-backed anthropometrics</p>
-                <p className="mt-1 text-amber-900/80">
+                <p className="mt-1 text-warning-foreground/80">
                   No structured growth measurements have been recorded yet, so the table below falls back to weight, height, and
                   BMI from{" "}
-                  <code className="rounded bg-white px-1">GET /internal/v1/vitals?patient_id=…</code>. Record a structured
+                  <code className="rounded bg-card px-1">GET /internal/v1/vitals?patient_id=…</code>. Record a structured
                   measurement here to populate head circumference and WHO-backed z-scores.
                 </p>
               </div>
@@ -244,18 +244,18 @@ export default function GrowthChartPage() {
             />
 
             {isClinical && whoSupported && (
-              <div id="record-growth" className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div id="record-growth" className="rounded-3xl border border-border bg-card p-5 shadow-sm">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Growth capture</p>
-                    <p className="mt-2 text-sm text-slate-700">
+                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Growth capture</p>
+                    <p className="mt-2 text-sm text-foreground">
                       Record weight, stature, and head circumference here to generate WHO-backed under-5 z-scores.
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setShowForm((prev) => !prev)}
-                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50"
+                    className="rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-background"
                   >
                     {showForm ? "Close" : "Record Measurement"}
                   </button>
@@ -263,48 +263,48 @@ export default function GrowthChartPage() {
 
                 {showForm && (
                   <form onSubmit={handleSubmit} className="mt-4 grid gap-4 md:grid-cols-2">
-                    <label className="text-sm text-slate-700">
+                    <label className="text-sm text-foreground">
                       Weight (kg)
                       <input
                         value={weightKg}
                         onChange={(event) => setWeightKg(event.target.value)}
-                        className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+                        className="mt-1 w-full rounded-lg border border-border px-3 py-2"
                         inputMode="decimal"
                       />
                     </label>
-                    <label className="text-sm text-slate-700">
+                    <label className="text-sm text-foreground">
                       Length (cm)
                       <input
                         value={lengthCm}
                         onChange={(event) => setLengthCm(event.target.value)}
-                        className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+                        className="mt-1 w-full rounded-lg border border-border px-3 py-2"
                         inputMode="decimal"
                       />
                     </label>
-                    <label className="text-sm text-slate-700">
+                    <label className="text-sm text-foreground">
                       Height (cm)
                       <input
                         value={heightCm}
                         onChange={(event) => setHeightCm(event.target.value)}
-                        className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+                        className="mt-1 w-full rounded-lg border border-border px-3 py-2"
                         inputMode="decimal"
                       />
                     </label>
-                    <label className="text-sm text-slate-700">
+                    <label className="text-sm text-foreground">
                       Head circumference (cm)
                       <input
                         value={headCircumferenceCm}
                         onChange={(event) => setHeadCircumferenceCm(event.target.value)}
-                        className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+                        className="mt-1 w-full rounded-lg border border-border px-3 py-2"
                         inputMode="decimal"
                       />
                     </label>
-                    <label className="text-sm text-slate-700 md:col-span-2">
+                    <label className="text-sm text-foreground md:col-span-2">
                       Notes
                       <textarea
                         value={notes}
                         onChange={(event) => setNotes(event.target.value)}
-                        className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+                        className="mt-1 w-full rounded-lg border border-border px-3 py-2"
                         rows={2}
                       />
                     </label>
@@ -325,58 +325,58 @@ export default function GrowthChartPage() {
               </div>
             )}
 
-            <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Growth review</p>
-              <p className="mt-2 text-sm text-slate-800">
+            <div className="rounded-3xl border border-border bg-background/70 p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Growth review</p>
+              <p className="mt-2 text-sm text-foreground">
                 Structured growth rows now live in the Experience BFF. WHO z-scores in this slice are authoritative for under-5
                 patients only; older ages remain honest unsupported territory until the 5–19 reference set is wired in.
               </p>
             </div>
 
             <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-emerald-600" />
-              <h2 className="text-lg font-semibold text-gray-900">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold text-foreground">
                 {hasStructuredGrowth ? "Structured growth measurements" : "Anthropometrics (legacy vitals fallback)"}
               </h2>
             </div>
 
             {!hasStructuredGrowth && legacyVitalsRows.length === 0 ? (
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted-foreground">
                 No growth measurements or vitals-backed anthropometrics yet.
               </p>
             ) : hasStructuredGrowth ? (
-              <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+              <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-gray-200 bg-gray-50">
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">Recorded</th>
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">Age (days)</th>
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">Weight (kg)</th>
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">Stature (cm)</th>
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">BMI</th>
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">Head circ. (cm)</th>
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">WFA z</th>
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">L/HFA z</th>
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">BFA z</th>
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">HCFA z</th>
+                      <tr className="border-b border-border bg-background">
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">Recorded</th>
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">Age (days)</th>
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">Weight (kg)</th>
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">Stature (cm)</th>
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">BMI</th>
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">Head circ. (cm)</th>
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">WFA z</th>
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">L/HFA z</th>
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">BFA z</th>
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">HCFA z</th>
                       </tr>
                     </thead>
                     <tbody>
                       {growthRows.map((row) => (
-                        <tr key={row.id} className="border-b border-gray-100 transition-colors hover:bg-gray-50">
-                          <td className="px-4 py-3 text-gray-900">{new Date(row.measuredAt).toLocaleString()}</td>
-                          <td className="px-4 py-3 text-gray-700">{row.derived.ageDays ?? "—"}</td>
-                          <td className="px-4 py-3 text-gray-700">{row.weightKg ?? "—"}</td>
-                          <td className="px-4 py-3 text-gray-700">
+                        <tr key={row.id} className="border-b border-border transition-colors hover:bg-background">
+                          <td className="px-4 py-3 text-foreground">{new Date(row.measuredAt).toLocaleString()}</td>
+                          <td className="px-4 py-3 text-foreground">{row.derived.ageDays ?? "—"}</td>
+                          <td className="px-4 py-3 text-foreground">{row.weightKg ?? "—"}</td>
+                          <td className="px-4 py-3 text-foreground">
                             {row.derived.normalizedStatureCm ?? row.lengthCm ?? row.heightCm ?? "—"}
                           </td>
-                          <td className="px-4 py-3 text-gray-700">{row.derived.bodyMassIndex ?? row.bmi ?? "—"}</td>
-                          <td className="px-4 py-3 text-gray-700">{row.headCircumferenceCm ?? "—"}</td>
-                          <td className="px-4 py-3 text-gray-700">{scoreLabel(row.derived.weightForAge?.zScore)}</td>
-                          <td className="px-4 py-3 text-gray-700">{scoreLabel(row.derived.lengthHeightForAge?.zScore)}</td>
-                          <td className="px-4 py-3 text-gray-700">{scoreLabel(row.derived.bodyMassIndexForAge?.zScore)}</td>
-                          <td className="px-4 py-3 text-gray-700">{scoreLabel(row.derived.headCircumferenceForAge?.zScore)}</td>
+                          <td className="px-4 py-3 text-foreground">{row.derived.bodyMassIndex ?? row.bmi ?? "—"}</td>
+                          <td className="px-4 py-3 text-foreground">{row.headCircumferenceCm ?? "—"}</td>
+                          <td className="px-4 py-3 text-foreground">{scoreLabel(row.derived.weightForAge?.zScore)}</td>
+                          <td className="px-4 py-3 text-foreground">{scoreLabel(row.derived.lengthHeightForAge?.zScore)}</td>
+                          <td className="px-4 py-3 text-foreground">{scoreLabel(row.derived.bodyMassIndexForAge?.zScore)}</td>
+                          <td className="px-4 py-3 text-foreground">{scoreLabel(row.derived.headCircumferenceForAge?.zScore)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -384,28 +384,28 @@ export default function GrowthChartPage() {
                 </div>
               </div>
             ) : (
-              <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+              <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-gray-200 bg-gray-50">
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">Recorded</th>
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">Age (mo, approx.)</th>
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">Weight (kg)</th>
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">Height (cm)</th>
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">BMI</th>
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">Head circ.</th>
+                      <tr className="border-b border-border bg-background">
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">Recorded</th>
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">Age (mo, approx.)</th>
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">Weight (kg)</th>
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">Height (cm)</th>
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">BMI</th>
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">Head circ.</th>
                       </tr>
                     </thead>
                     <tbody>
                       {legacyVitalsRows.map((row) => (
-                        <tr key={row.id} className="border-b border-gray-100 transition-colors hover:bg-gray-50">
-                          <td className="px-4 py-3 text-gray-900">{row.recordedAtDisplay}</td>
-                          <td className="px-4 py-3 text-gray-700">{row.ageMonths != null ? row.ageMonths : "—"}</td>
-                          <td className="px-4 py-3 text-gray-700">{row.weight ?? "—"}</td>
-                          <td className="px-4 py-3 text-gray-700">{row.height ?? "—"}</td>
-                          <td className="px-4 py-3 text-gray-700">{row.bmi != null ? row.bmi.toFixed(1) : "—"}</td>
-                          <td className="px-4 py-3 text-gray-500">Not in vitals API</td>
+                        <tr key={row.id} className="border-b border-border transition-colors hover:bg-background">
+                          <td className="px-4 py-3 text-foreground">{row.recordedAtDisplay}</td>
+                          <td className="px-4 py-3 text-foreground">{row.ageMonths != null ? row.ageMonths : "—"}</td>
+                          <td className="px-4 py-3 text-foreground">{row.weight ?? "—"}</td>
+                          <td className="px-4 py-3 text-foreground">{row.height ?? "—"}</td>
+                          <td className="px-4 py-3 text-foreground">{row.bmi != null ? row.bmi.toFixed(1) : "—"}</td>
+                          <td className="px-4 py-3 text-muted-foreground">Not in vitals API</td>
                         </tr>
                       ))}
                     </tbody>

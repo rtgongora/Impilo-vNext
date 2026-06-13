@@ -7,7 +7,7 @@ import { useClientRegistryClients } from "@/hooks/queries/useClientRegistry";
 import { useDedupCases, useMergeDedup, useScoreDedup } from "@/hooks/queries/useVitoDedup";
 
 const inputClass =
-  "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-500";
+  "w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-500";
 
 type WizardStep = "search" | "score" | "merge";
 
@@ -61,11 +61,11 @@ export function ClientIntakeDedupWizard({ compact = false }: { compact?: boolean
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+          <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
             <GitMerge className="h-4 w-4 text-violet-600" />
             Client intake deduplication
           </div>
-          <p className="mt-1 text-xs text-gray-600">
+          <p className="mt-1 text-xs text-muted-foreground">
             Search the client registry, score similarity via VITO dedup, then merge when stewardship confirms a duplicate.
           </p>
         </div>
@@ -74,12 +74,12 @@ export function ClientIntakeDedupWizard({ compact = false }: { compact?: boolean
         </Link>
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-2 text-[11px] font-medium uppercase tracking-wide text-gray-500">
+      <div className="mt-4 flex flex-wrap gap-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
         {(["search", "score", "merge"] as WizardStep[]).map((s) => (
           <span
             key={s}
             className={`rounded-full px-2.5 py-0.5 ${
-              step === s ? "bg-violet-600 text-white" : "bg-white text-gray-500 border border-gray-200"
+              step === s ? "bg-violet-600 text-white" : "bg-card text-muted-foreground border border-border"
             }`}
           >
             {s}
@@ -113,7 +113,7 @@ export function ClientIntakeDedupWizard({ compact = false }: { compact?: boolean
               Source record: <span className="font-mono font-semibold">{sourceHealthId}</span> — select a candidate below.
             </p>
           ) : (
-            <p className="text-xs text-gray-500">Select the intake record first, then pick a possible duplicate.</p>
+            <p className="text-xs text-muted-foreground">Select the intake record first, then pick a possible duplicate.</p>
           )}
 
           {clientsQ.isError ? (
@@ -121,7 +121,7 @@ export function ClientIntakeDedupWizard({ compact = false }: { compact?: boolean
           ) : null}
 
           {appliedQuery && !clientsQ.isLoading && candidates.length === 0 ? (
-            <p className="rounded-lg border border-dashed border-gray-300 bg-white p-4 text-xs text-gray-500">
+            <p className="rounded-lg border border-dashed border-border bg-card p-4 text-xs text-muted-foreground">
               No registry matches for &ldquo;{appliedQuery}&rdquo;. Proceed with new registration if no duplicate exists.
             </p>
           ) : null}
@@ -132,13 +132,13 @@ export function ClientIntakeDedupWizard({ compact = false }: { compact?: boolean
                 <button
                   type="button"
                   onClick={() => selectCandidate(client.healthId)}
-                  className="w-full rounded-xl border border-white bg-white p-3 text-left text-sm hover:border-violet-300"
+                  className="w-full rounded-xl border border-white bg-card p-3 text-left text-sm hover:border-violet-300"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-medium text-gray-900">{client.displayName}</span>
-                    <span className="font-mono text-xs text-gray-500">{client.healthId}</span>
+                    <span className="font-medium text-foreground">{client.displayName}</span>
+                    <span className="font-mono text-xs text-muted-foreground">{client.healthId}</span>
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     {client.lifecycleStatus} · {client.verificationStatus} · matches open: {client.openMatches}
                   </p>
                 </button>
@@ -149,21 +149,21 @@ export function ClientIntakeDedupWizard({ compact = false }: { compact?: boolean
       ) : null}
 
       {step === "score" || step === "merge" ? (
-        <div className="mt-4 space-y-3 rounded-xl border border-white bg-white p-4">
-          <p className="text-xs text-gray-600">
+        <div className="mt-4 space-y-3 rounded-xl border border-white bg-card p-4">
+          <p className="text-xs text-muted-foreground">
             Comparing <span className="font-mono">{sourceHealthId}</span> ↔{" "}
             <span className="font-mono">{targetHealthId}</span>
           </p>
 
           {score.isPending ? (
-            <div className="flex items-center gap-2 text-sm text-gray-500">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" /> Scoring…
             </div>
           ) : score.isError ? (
             <p className="text-xs text-red-600">Score request failed.</p>
           ) : scoreResult ? (
             <div className="space-y-2">
-              <p className="text-2xl font-bold text-gray-900">{scoreResult.score}</p>
+              <p className="text-2xl font-bold text-foreground">{scoreResult.score}</p>
               {scoreResult.conflictingFields && scoreResult.conflictingFields.length > 0 ? (
                 <ul className="text-xs text-red-600">
                   {scoreResult.conflictingFields.map((field) => (
@@ -171,7 +171,7 @@ export function ClientIntakeDedupWizard({ compact = false }: { compact?: boolean
                   ))}
                 </ul>
               ) : (
-                <p className="text-xs text-emerald-700">No conflicting demographic fields reported.</p>
+                <p className="text-xs text-primary-hover">No conflicting demographic fields reported.</p>
               )}
             </div>
           ) : null}
@@ -183,7 +183,7 @@ export function ClientIntakeDedupWizard({ compact = false }: { compact?: boolean
                 setStep("search");
                 setTargetHealthId("");
               }}
-              className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50"
+              className="rounded-lg border border-border px-3 py-1.5 text-xs text-foreground hover:bg-background"
             >
               Back to search
             </button>
@@ -209,7 +209,7 @@ export function ClientIntakeDedupWizard({ compact = false }: { compact?: boolean
                 {merge.isPending ? "Merging…" : "Merge pending case"}
               </button>
             ) : scoreResult && scoreResult.score >= 0.85 ? (
-              <span className="text-xs text-amber-700">
+              <span className="text-xs text-warning-foreground">
                 High score but no pending VITO case — escalate via{" "}
                 <Link href="/operations/vito/dedup" className="font-medium underline">
                   dedup management
@@ -217,7 +217,7 @@ export function ClientIntakeDedupWizard({ compact = false }: { compact?: boolean
                 .
               </span>
             ) : (
-              <span className="text-xs text-amber-700">Score below merge threshold — continue as new registration or escalate.</span>
+              <span className="text-xs text-warning-foreground">Score below merge threshold — continue as new registration or escalate.</span>
             )}
           </div>
 
@@ -230,7 +230,7 @@ export function ClientIntakeDedupWizard({ compact = false }: { compact?: boolean
           />
 
           {merge.isSuccess ? (
-            <p className="text-xs text-emerald-700">Merge accepted. Refresh client profile to confirm survivorship.</p>
+            <p className="text-xs text-primary-hover">Merge accepted. Refresh client profile to confirm survivorship.</p>
           ) : null}
           {merge.isError ? <p className="text-xs text-red-600">Merge failed — use the full dedup queue for governed merge cases.</p> : null}
         </div>

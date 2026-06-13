@@ -49,7 +49,7 @@ export default function VitoConfigPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Current Mode */}
-        <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6">
+        <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6">
           <h2 className="text-sm font-medium text-neutral-500 mb-4">Current Mode</h2>
           <div className="flex items-center gap-3">
             <span className={`w-3 h-3 rounded-full ${
@@ -69,7 +69,7 @@ export default function VitoConfigPage() {
         </div>
 
         {/* OpenCR Status */}
-        <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6">
+        <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6">
           <h2 className="text-sm font-medium text-neutral-500 mb-4">OpenCR Integration</h2>
           <div className="flex items-center gap-3">
             <span className={`w-3 h-3 rounded-full ${

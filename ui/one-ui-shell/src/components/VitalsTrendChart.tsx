@@ -43,11 +43,11 @@ export function VitalsTrendChart({
   const latest = data[data.length - 1];
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-3">
+    <div className="bg-card rounded-lg border border-border p-3">
       <div className="flex items-center justify-between mb-1">
-        <span className="text-xs font-medium text-gray-700">{label}</span>
+        <span className="text-xs font-medium text-foreground">{label}</span>
         <span className="text-sm font-bold" style={{ color }}>
-          {latest.value} <span className="text-xs font-normal text-gray-500">{unit}</span>
+          {latest.value} <span className="text-xs font-normal text-muted-foreground">{unit}</span>
         </span>
       </div>
       <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} className="overflow-visible">
@@ -67,7 +67,7 @@ export function VitalsTrendChart({
           <circle key={i} cx={p.x} cy={p.y} r="3" fill="white" stroke={color} strokeWidth="2" />
         ))}
       </svg>
-      <div className="flex justify-between mt-1 text-[9px] text-gray-400">
+      <div className="flex justify-between mt-1 text-[9px] text-muted-foreground">
         {data.length > 1 && (
           <>
             <span>{new Date(data[0].timestamp).toLocaleDateString()}</span>

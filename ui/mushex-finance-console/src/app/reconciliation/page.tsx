@@ -127,17 +127,17 @@ export default function ReconciliationPage() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-red-800">
           {error}
         </div>
       )}
 
       {successMessage && (
-        <div className="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-sm text-emerald-800">
+        <div className="mb-4 p-3 rounded-lg bg-success-soft border border-success/25 text-sm text-primary-hover">
           {successMessage}
           <button
             onClick={() => setSuccessMessage(null)}
-            className="ml-2 text-emerald-600 hover:text-emerald-800 font-medium"
+            className="ml-2 text-primary hover:text-primary-hover font-medium"
           >
             Dismiss
           </button>
@@ -278,7 +278,7 @@ export default function ReconciliationPage() {
                     {entry.status === "UNMATCHED" && (
                       <button
                         onClick={() => setMatchReconId(entry.id)}
-                        className="text-xs text-emerald-700 hover:text-emerald-800 font-medium"
+                        className="text-xs text-primary-hover hover:text-primary-hover font-medium"
                       >
                         Match
                       </button>

@@ -84,7 +84,7 @@ export default function BrowsePage() {
       <p className="text-sm text-neutral-500 mb-6">Search the MSIKA catalog to find health products and services.</p>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-red-800">
           {error}
         </div>
       )}
@@ -206,7 +206,7 @@ export default function BrowsePage() {
             </div>
           </div>
           {validationResult && (
-            <p className={`mt-3 text-sm ${validationResult.includes("success") ? "text-emerald-600" : "text-red-600"}`}>
+            <p className={`mt-3 text-sm ${validationResult.includes("success") ? "text-primary" : "text-red-600"}`}>
               {validationResult}
             </p>
           )}

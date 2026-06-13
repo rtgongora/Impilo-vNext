@@ -191,7 +191,7 @@ export function ClerkingFormEditor({
             value={textLikeValue}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
             placeholder={field.placeholder}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-400"
+            className="w-full rounded-md border border-border px-3 py-2 text-sm shadow-sm focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-primary/40"
           />
         );
 
@@ -202,7 +202,7 @@ export function ClerkingFormEditor({
             value={textLikeValue}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
             placeholder={field.placeholder}
-            className="w-full min-h-[100px] rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-400"
+            className="w-full min-h-[100px] rounded-md border border-border px-3 py-2 text-sm shadow-sm focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-primary/40"
           />
         );
 
@@ -214,7 +214,7 @@ export function ClerkingFormEditor({
             value={textLikeValue}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
             placeholder={field.placeholder}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-400"
+            className="w-full rounded-md border border-border px-3 py-2 text-sm shadow-sm focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-primary/40"
           />
         );
 
@@ -225,7 +225,7 @@ export function ClerkingFormEditor({
             type="date"
             value={textLikeValue}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-400"
+            className="w-full rounded-md border border-border px-3 py-2 text-sm shadow-sm focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-primary/40"
           />
         );
 
@@ -237,7 +237,7 @@ export function ClerkingFormEditor({
               type="checkbox"
               checked={checkedValue}
               onChange={(e) => handleFieldChange(field.id, e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300 text-impilo-500 focus:ring-impilo-400"
+              className="h-4 w-4 rounded border-border text-primary focus:ring-primary/40"
             />
             <label htmlFor={field.id} className="text-sm cursor-pointer">
               {field.label}
@@ -251,7 +251,7 @@ export function ClerkingFormEditor({
             id={field.id}
             value={textLikeValue}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-400"
+            className="w-full rounded-md border border-border px-3 py-2 text-sm shadow-sm focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-primary/40"
           >
             <option value="">Select {field.label.toLowerCase()}</option>
             {field.options?.map((option) => (
@@ -278,7 +278,7 @@ export function ClerkingFormEditor({
                       e.target.checked
                     )
                   }
-                  className="h-4 w-4 rounded border-gray-300 text-impilo-500 focus:ring-impilo-400"
+                  className="h-4 w-4 rounded border-border text-primary focus:ring-primary/40"
                 />
                 <label
                   htmlFor={`${field.id}-${option}`}
@@ -304,7 +304,7 @@ export function ClerkingFormEditor({
           className={`px-4 py-2 text-sm font-medium ${
             feedback.type === "success"
               ? "bg-green-50 text-green-800 border-b border-green-200"
-              : "bg-red-50 text-red-800 border-b border-red-200"
+              : "bg-danger-soft text-red-800 border-b border-danger/28"
           }`}
         >
           {feedback.message}
@@ -312,32 +312,32 @@ export function ClerkingFormEditor({
       )}
 
       {/* Header */}
-      <div className="p-4 border-b bg-white flex items-center justify-between">
+      <div className="p-4 border-b bg-card flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold">{template.name}</h2>
-          <p className="text-sm text-gray-500">{template.description}</p>
-          {encounterId && <p className="text-xs text-gray-400 mt-1">Encounter: {encounterId}</p>}
+          <p className="text-sm text-muted-foreground">{template.description}</p>
+          {encounterId && <p className="text-xs text-muted-foreground mt-1">Encounter: {encounterId}</p>}
         </div>
         <div className="flex items-center gap-4">
           <div className="text-right">
             <div className="flex items-center gap-2">
-              <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div className="w-32 h-2 bg-neutral-100 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-impilo-500 rounded-full transition-all"
+                  className="h-full bg-primary rounded-full transition-all"
                   style={{ width: `${completion}%` }}
                 />
               </div>
               <span className="text-sm font-medium">{completion}%</span>
             </div>
             {lastSaved && (
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 Last saved: {formatTime(lastSaved)}
               </p>
             )}
           </div>
           <button
             type="button"
-            className="inline-flex items-center px-4 py-2 text-sm font-medium border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center px-4 py-2 text-sm font-medium border border-border rounded-md text-foreground bg-card hover:bg-background transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleSave}
             disabled={isSaving}
           >
@@ -346,7 +346,7 @@ export function ClerkingFormEditor({
           </button>
           <button
             type="button"
-            className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-impilo-500 rounded-md hover:bg-impilo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleSign}
             disabled={completion < 100}
           >
@@ -374,11 +374,11 @@ export function ClerkingFormEditor({
             return (
               <div
                 key={section.id}
-                className="border border-gray-200 rounded-lg"
+                className="border border-border rounded-lg"
               >
                 <button
                   type="button"
-                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors rounded-t-lg"
+                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-background transition-colors rounded-t-lg"
                   onClick={() => toggleSection(section.id)}
                 >
                   <div className="flex items-center gap-3">
@@ -386,7 +386,7 @@ export function ClerkingFormEditor({
                       className={`p-2 rounded-lg ${
                         hasRequiredFields && !allRequiredFilled
                           ? "bg-amber-100 text-amber-600"
-                          : "bg-impilo-100 text-impilo-500"
+                          : "bg-primary-soft text-primary"
                       }`}
                     >
                       <Icon className="w-4 h-4" />
@@ -399,16 +399,16 @@ export function ClerkingFormEditor({
                       </span>
                     )}
                     {hasRequiredFields && !allRequiredFilled && (
-                      <span className="inline-flex items-center rounded-md border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
+                      <span className="inline-flex items-center rounded-md border border-amber-300 bg-warning-soft px-2 py-0.5 text-xs font-medium text-warning-foreground">
                         <AlertCircle className="w-3 h-3 mr-1" />
                         Required
                       </span>
                     )}
                   </div>
                   {isExpanded ? (
-                    <ChevronDown className="w-4 h-4 text-gray-500" />
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
                   ) : (
-                    <ChevronRight className="w-4 h-4 text-gray-500" />
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
                   )}
                 </button>
 

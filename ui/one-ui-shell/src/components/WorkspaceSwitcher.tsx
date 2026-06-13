@@ -149,7 +149,7 @@ export function WorkspaceSwitcher({ open, onClose }: WorkspaceSwitcherProps) {
       {open && (
         <button
           type="button"
-          className="fixed inset-0 z-[55] bg-slate-950/40 backdrop-blur-sm md:bg-transparent"
+          className="fixed inset-0 z-[55] bg-card/40 backdrop-blur-sm md:bg-transparent"
           onClick={onClose}
           aria-label="Close workspace switcher"
         />
@@ -158,7 +158,7 @@ export function WorkspaceSwitcher({ open, onClose }: WorkspaceSwitcherProps) {
       {/* Slide-out panel */}
       <div
         className={[
-          "fixed inset-y-0 left-0 z-[56] flex w-[320px] flex-col border-r border-slate-200 bg-[linear-gradient(180deg,#0f172a_0%,#111827_100%)] text-slate-200 shadow-2xl transition-transform duration-300 ease-in-out",
+          "fixed inset-y-0 left-0 z-[56] flex w-[320px] flex-col border-r border-border bg-[linear-gradient(180deg,#0f172a_0%,#111827_100%)] text-slate-200 shadow-2xl transition-transform duration-300 ease-in-out",
           open ? "translate-x-0" : "-translate-x-full",
         ].join(" ")}
       >
@@ -171,7 +171,7 @@ export function WorkspaceSwitcher({ open, onClose }: WorkspaceSwitcherProps) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl border border-white/10 p-2 text-slate-400 transition hover:bg-white/5 hover:text-white"
+            className="rounded-xl border border-white/10 p-2 text-muted-foreground transition hover:bg-card/5 hover:text-white"
             aria-label="Close"
           >
             <X className="h-4 w-4" />
@@ -184,7 +184,7 @@ export function WorkspaceSwitcher({ open, onClose }: WorkspaceSwitcherProps) {
           <button
             type="button"
             onClick={handlePersonalProfile}
-            className="group w-full rounded-2xl border border-white/10 bg-white/5 p-4 text-left transition hover:border-impilo-400/30 hover:bg-impilo-500/10"
+            className="group w-full rounded-2xl border border-white/10 bg-card/5 p-4 text-left transition hover:border-impilo-400/30 hover:bg-primary/10"
           >
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-500/20">
@@ -192,7 +192,7 @@ export function WorkspaceSwitcher({ open, onClose }: WorkspaceSwitcherProps) {
               </div>
               <div>
                 <p className="text-sm font-semibold text-white">Personal Profile</p>
-                <p className="mt-1 text-xs leading-5 text-slate-400">
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">
                   Your health, wellness, and personal services
                 </p>
               </div>
@@ -204,7 +204,7 @@ export function WorkspaceSwitcher({ open, onClose }: WorkspaceSwitcherProps) {
             <button
               type="button"
               onClick={handleProfessionalProfile}
-              className="group w-full rounded-2xl border border-white/10 bg-white/5 p-4 text-left transition hover:border-impilo-400/30 hover:bg-impilo-500/10"
+              className="group w-full rounded-2xl border border-white/10 bg-card/5 p-4 text-left transition hover:border-impilo-400/30 hover:bg-primary/10"
             >
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-500/20">
@@ -212,7 +212,7 @@ export function WorkspaceSwitcher({ open, onClose }: WorkspaceSwitcherProps) {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-white">Professional Profile</p>
-                  <p className="mt-1 text-xs leading-5 text-slate-400">
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
                     Registration, licences, affiliations
                   </p>
                 </div>
@@ -225,7 +225,7 @@ export function WorkspaceSwitcher({ open, onClose }: WorkspaceSwitcherProps) {
             <button
               type="button"
               onClick={handleStartWorkSession}
-              className="group w-full rounded-2xl border border-white/10 bg-white/5 p-4 text-left transition hover:border-impilo-400/30 hover:bg-impilo-500/10"
+              className="group w-full rounded-2xl border border-white/10 bg-card/5 p-4 text-left transition hover:border-impilo-400/30 hover:bg-primary/10"
             >
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20">
@@ -233,7 +233,7 @@ export function WorkspaceSwitcher({ open, onClose }: WorkspaceSwitcherProps) {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-white">Start Work Session</p>
-                  <p className="mt-1 text-xs leading-5 text-slate-400">
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
                     Select facility and role
                   </p>
                 </div>
@@ -245,11 +245,11 @@ export function WorkspaceSwitcher({ open, onClose }: WorkspaceSwitcherProps) {
           {shiftActive && facility && (
             <div className="mt-4">
               <div className="mb-2 flex items-center gap-2 px-1">
-                <div className="h-px flex-1 bg-white/10" />
-                <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                <div className="h-px flex-1 bg-card/10" />
+                <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
                   Active Session
                 </span>
-                <div className="h-px flex-1 bg-white/10" />
+                <div className="h-px flex-1 bg-card/10" />
               </div>
 
               <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/5 p-4">
@@ -262,7 +262,7 @@ export function WorkspaceSwitcher({ open, onClose }: WorkspaceSwitcherProps) {
                       {facility.name}
                     </p>
                     {workspace && (
-                      <p className="mt-0.5 truncate text-xs text-slate-400">
+                      <p className="mt-0.5 truncate text-xs text-muted-foreground">
                         {workspace.workspaceType?.replace(/_/g, " ") ?? "Workspace"} &middot; {workspace.name}
                       </p>
                     )}
@@ -292,10 +292,10 @@ export function WorkspaceSwitcher({ open, onClose }: WorkspaceSwitcherProps) {
           <button
             type="button"
             onClick={handleSignOut}
-            className="group flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left transition hover:border-red-400/30 hover:bg-red-500/10"
+            className="group flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-card/5 px-4 py-3 text-left transition hover:border-red-400/30 hover:bg-red-500/10"
           >
-            <LogOut className="h-5 w-5 text-slate-400 transition group-hover:text-red-400" />
-            <span className="text-sm font-medium text-slate-300 transition group-hover:text-red-300">
+            <LogOut className="h-5 w-5 text-muted-foreground transition group-hover:text-red-400" />
+            <span className="text-sm font-medium text-muted-foreground transition group-hover:text-red-300">
               Sign Out
             </span>
           </button>

@@ -36,9 +36,9 @@ export default function ImportPage() {
     <div>
       <h2 className="text-xl font-bold mb-4">Import Data</h2>
 
-      <div className="bg-white p-6 rounded shadow border mb-6">
+      <div className="bg-card p-6 rounded shadow border mb-6">
         <h3 className="font-semibold mb-3">CSV Import</h3>
-        <p className="text-sm text-gray-500 mb-4">
+        <p className="text-sm text-muted-foreground mb-4">
           Upload a CSV file with columns: canonical_code, display_name, kind, description, tags, form, strength, route, uom, pack_size, barcode, manufacturer, atc_code
         </p>
         <div className="grid grid-cols-2 gap-4 mb-4">
@@ -56,31 +56,31 @@ export default function ImportPage() {
       </div>
 
       {result && (
-        <div className="bg-white p-6 rounded shadow border">
+        <div className="bg-card p-6 rounded shadow border">
           <h3 className="font-semibold mb-3">Import Result</h3>
           <div className="grid grid-cols-5 gap-4 text-center">
-            <div className="p-3 bg-gray-50 rounded">
+            <div className="p-3 bg-background rounded">
               <div className="text-2xl font-bold">{result.totalRows}</div>
-              <div className="text-xs text-gray-500">Total</div>
+              <div className="text-xs text-muted-foreground">Total</div>
             </div>
             <div className="p-3 bg-green-50 rounded">
               <div className="text-2xl font-bold text-green-700">{result.importedRows}</div>
-              <div className="text-xs text-gray-500">Imported</div>
+              <div className="text-xs text-muted-foreground">Imported</div>
             </div>
-            <div className="p-3 bg-blue-50 rounded">
-              <div className="text-2xl font-bold text-blue-700">{result.validRows}</div>
-              <div className="text-xs text-gray-500">Valid</div>
+            <div className="p-3 bg-info-soft rounded">
+              <div className="text-2xl font-bold text-primary-hover">{result.validRows}</div>
+              <div className="text-xs text-muted-foreground">Valid</div>
             </div>
             <div className="p-3 bg-yellow-50 rounded">
               <div className="text-2xl font-bold text-yellow-700">{result.duplicateRows}</div>
-              <div className="text-xs text-gray-500">Duplicates</div>
+              <div className="text-xs text-muted-foreground">Duplicates</div>
             </div>
-            <div className="p-3 bg-red-50 rounded">
-              <div className="text-2xl font-bold text-red-700">{result.errorRows}</div>
-              <div className="text-xs text-gray-500">Errors</div>
+            <div className="p-3 bg-danger-soft rounded">
+              <div className="text-2xl font-bold text-danger">{result.errorRows}</div>
+              <div className="text-xs text-muted-foreground">Errors</div>
             </div>
           </div>
-          <p className="mt-3 text-xs text-gray-500">Job ID: {result.jobId} | Status: {result.status}</p>
+          <p className="mt-3 text-xs text-muted-foreground">Job ID: {result.jobId} | Status: {result.status}</p>
         </div>
       )}
     </div>

@@ -71,13 +71,13 @@ export function EncounterStepNav() {
   };
 
   return (
-    <div className="flex items-center justify-between border-t border-gray-200 bg-gray-50/60 px-5 py-3">
+    <div className="flex items-center justify-between border-t border-border bg-background/60 px-5 py-3">
       {/* Previous */}
       <div>
         {prev && (
           <button
             onClick={() => navigateTo(prev)}
-            className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-500 hover:text-gray-900 rounded-md hover:bg-gray-100 transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground rounded-md hover:bg-neutral-100 transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
             {SECTION_LABELS[prev]}
@@ -92,7 +92,7 @@ export function EncounterStepNav() {
         className={`flex items-center gap-2 px-4 py-1.5 text-sm rounded-md border transition-colors ${
           wizard.sectionStatuses[activeSection] === "completed"
             ? "border-green-300 bg-green-50 text-green-700 cursor-default"
-            : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+            : "border-border bg-card text-foreground hover:bg-background"
         }`}
       >
         <CheckCircle2 className="w-4 h-4" />
@@ -108,7 +108,7 @@ export function EncounterStepNav() {
           wizard.recommendedNext !== next && (
             <button
               onClick={() => navigateTo(wizard.recommendedNext!)}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm text-impilo-500 hover:bg-impilo-50 rounded-md transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 text-sm text-primary hover:bg-primary-soft rounded-md transition-colors"
             >
               <Sparkles className="w-4 h-4" />
               {SECTION_LABELS[wizard.recommendedNext]}
@@ -117,7 +117,7 @@ export function EncounterStepNav() {
         {next && (
           <button
             onClick={() => navigateTo(next)}
-            className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-500 hover:text-gray-900 rounded-md hover:bg-gray-100 transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground rounded-md hover:bg-neutral-100 transition-colors"
           >
             {SECTION_LABELS[next]}
             <ChevronRight className="w-4 h-4" />

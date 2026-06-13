@@ -32,7 +32,7 @@ export default function EhrPage() {
       </header>
 
       <main className="flex-1 flex">
-        <aside className="w-80 border-r bg-white p-4 overflow-y-auto">
+        <aside className="w-80 border-r bg-card p-4 overflow-y-auto">
           <PatientSearch />
           <button
             type="button"
@@ -61,14 +61,14 @@ export default function EhrPage() {
                   <ClinicalDashboard patient={activePatient} />
                 </div>
                 {activeEncounter && (
-                  <div className="w-96 border-l bg-white overflow-y-auto">
+                  <div className="w-96 border-l bg-card overflow-y-auto">
                     <EncounterPanel encounter={activeEncounter} />
                   </div>
                 )}
               </div>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-gray-400">
+            <div className="flex-1 flex items-center justify-center text-muted-foreground">
               <div className="text-center">
                 <p className="text-2xl mb-2">Select a patient</p>
                 <p>Search by name, NID, or CPID to begin</p>

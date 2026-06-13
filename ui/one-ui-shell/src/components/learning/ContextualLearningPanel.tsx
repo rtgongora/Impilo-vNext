@@ -74,7 +74,7 @@ export function ContextualLearningPanel(props: {
 
   if (isLoading) {
     return (
-      <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-4 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300">
+      <div className="rounded-lg border border-border bg-background/80 p-4 text-sm text-muted-foreground dark:border-border dark:bg-neutral-900/40 dark:text-muted-foreground">
         Loading contextual learning…
       </div>
     );
@@ -101,10 +101,10 @@ export function ContextualLearningPanel(props: {
       <div className="mb-3 flex items-center gap-2">
         <Sparkles className="h-5 w-5 text-teal-600 dark:text-teal-400" />
         <div>
-          <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+          <h3 className="text-sm font-semibold text-foreground dark:text-foreground">
             {props.title ?? "Learning & guidance"}
           </h3>
-          <p className="text-xs text-slate-600 dark:text-slate-400">
+          <p className="text-xs text-muted-foreground dark:text-muted-foreground">
             Role-aware resources from Impilo Fundo and internal SOPs — CPD credit stays governed in Varapi.
           </p>
         </div>
@@ -112,17 +112,17 @@ export function ContextualLearningPanel(props: {
 
       {hints.length > 0 ? (
         <div className="mb-3 space-y-2">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Hints</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Hints</p>
           <ul className="space-y-2">
             {hints.map((h, i) => {
               const hr = asRecord(h);
               const res = resourceFrom(hr?.resource);
               return (
-                <li key={i} className="rounded-md border border-slate-200 bg-white/90 p-3 text-sm dark:border-slate-700 dark:bg-slate-950/60">
-                  <p className="font-medium text-slate-900 dark:text-slate-100">
+                <li key={i} className="rounded-md border border-border bg-card/90 p-3 text-sm dark:border-border dark:bg-card/60">
+                  <p className="font-medium text-foreground dark:text-foreground">
                     {typeof hr?.hintType === "string" ? hr.hintType : "Hint"}
                   </p>
-                  <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+                  <p className="mt-1 text-xs text-muted-foreground dark:text-muted-foreground">
                     {typeof hr?.textSummary === "string" ? hr.textSummary : ""}
                   </p>
                   {res?.experienceHref ? (
@@ -140,7 +140,7 @@ export function ContextualLearningPanel(props: {
                           target="_blank"
                           rel="noreferrer"
                           onClick={() => track(res.id)}
-                          className="inline-flex items-center gap-1 text-xs font-medium text-slate-700 hover:underline dark:text-slate-200"
+                          className="inline-flex items-center gap-1 text-xs font-medium text-foreground hover:underline dark:text-foreground"
                         >
                           <ExternalLink className="h-3.5 w-3.5" /> Impilo Fundo
                         </a>
@@ -156,14 +156,14 @@ export function ContextualLearningPanel(props: {
 
       {links.length > 0 ? (
         <div className="mb-3 space-y-2">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Workflow links</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Workflow links</p>
           <ul className="space-y-2">
             {links.map((l, i) => {
               const lr = asRecord(l);
               const res = resourceFrom(lr?.resource);
               return (
-                <li key={i} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-slate-200 bg-white/90 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950/60">
-                  <span className="text-slate-800 dark:text-slate-100">{res?.title ?? "Resource"}</span>
+                <li key={i} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border bg-card/90 px-3 py-2 text-sm dark:border-border dark:bg-card/60">
+                  <span className="text-foreground dark:text-foreground">{res?.title ?? "Resource"}</span>
                   <div className="flex gap-2">
                     {res?.experienceHref ? (
                       <Link
@@ -180,7 +180,7 @@ export function ContextualLearningPanel(props: {
                         target="_blank"
                         rel="noreferrer"
                         onClick={() => track(res.id)}
-                        className="text-xs font-medium text-slate-700 hover:underline dark:text-slate-200"
+                        className="text-xs font-medium text-foreground hover:underline dark:text-foreground"
                       >
                         Fundo
                       </a>
@@ -195,17 +195,17 @@ export function ContextualLearningPanel(props: {
 
       {roleRecs.length > 0 ? (
         <div className="space-y-2">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">For your role</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">For your role</p>
           <ul className="space-y-2">
             {roleRecs.map((r, i) => {
               const rr = asRecord(r);
               const res = resourceFrom(rr?.resource);
               return (
-                <li key={i} className="rounded-md border border-slate-200 bg-white/90 p-2 text-xs dark:border-slate-700 dark:bg-slate-950/60">
-                  <span className="font-semibold text-slate-800 dark:text-slate-100">
+                <li key={i} className="rounded-md border border-border bg-card/90 p-2 text-xs dark:border-border dark:bg-card/60">
+                  <span className="font-semibold text-foreground dark:text-foreground">
                     {typeof rr?.requirementType === "string" ? rr.requirementType : "LEARNING"}
                   </span>
-                  {res?.title ? <span className="ml-2 text-slate-700 dark:text-slate-300">· {res.title}</span> : null}
+                  {res?.title ? <span className="ml-2 text-foreground dark:text-muted-foreground">· {res.title}</span> : null}
                   {res?.experienceHref ? (
                     <Link
                       href={res.experienceHref}

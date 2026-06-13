@@ -49,11 +49,11 @@ function formatLabel(value: string | null | undefined) {
 }
 
 function statusTone(status: string) {
-  if (status.includes("ACTIVE")) return "bg-emerald-50 text-emerald-700 border-emerald-200";
-  if (status.includes("PENDING")) return "bg-amber-50 text-amber-700 border-amber-200";
-  if (status.includes("RECTIFICATION") || status.includes("RESTRICTED")) return "bg-rose-50 text-rose-700 border-rose-200";
-  if (status.includes("SUSPENDED") || status.includes("CLOSED")) return "bg-red-50 text-red-700 border-red-200";
-  return "bg-gray-100 text-gray-700 border-gray-200";
+  if (status.includes("ACTIVE")) return "bg-success-soft text-primary-hover border-success/25";
+  if (status.includes("PENDING")) return "bg-warning-soft text-warning-foreground border-warning/35";
+  if (status.includes("RECTIFICATION") || status.includes("RESTRICTED")) return "bg-danger-soft text-danger border-danger/28";
+  if (status.includes("SUSPENDED") || status.includes("CLOSED")) return "bg-danger-soft text-danger border-danger/28";
+  return "bg-neutral-100 text-foreground border-border";
 }
 
 export default function FacilityDetailPage() {
@@ -179,7 +179,7 @@ export default function FacilityDetailPage() {
         subtitle="Registration, inspection, compliance, committee, certificate, and audit operations for one facility"
       >
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <Link href="/registry/facilities" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
+          <Link href="/registry/facilities" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-4 w-4" />
             Back to facility operations
           </Link>
@@ -187,28 +187,28 @@ export default function FacilityDetailPage() {
             <button
               type="button"
               onClick={() => launchMaterialChange("RENEWAL")}
-              className="rounded-xl border border-gray-300 px-3 py-2 text-xs font-medium text-gray-700 hover:border-emerald-300 hover:text-emerald-700"
+              className="rounded-xl border border-border px-3 py-2 text-xs font-medium text-foreground hover:border-emerald-300 hover:text-primary-hover"
             >
               Renewal workflow
             </button>
             <button
               type="button"
               onClick={() => launchMaterialChange("ADD_UNIT")}
-              className="rounded-xl border border-gray-300 px-3 py-2 text-xs font-medium text-gray-700 hover:border-emerald-300 hover:text-emerald-700"
+              className="rounded-xl border border-border px-3 py-2 text-xs font-medium text-foreground hover:border-emerald-300 hover:text-primary-hover"
             >
               Add unit
             </button>
             <button
               type="button"
               onClick={() => launchMaterialChange("CHANGE_OF_PRACTITIONER_IN_CHARGE")}
-              className="rounded-xl border border-gray-300 px-3 py-2 text-xs font-medium text-gray-700 hover:border-emerald-300 hover:text-emerald-700"
+              className="rounded-xl border border-border px-3 py-2 text-xs font-medium text-foreground hover:border-emerald-300 hover:text-primary-hover"
             >
               Change PIC
             </button>
             <button
               type="button"
               onClick={() => launchMaterialChange("CHANGE_OF_PREMISES")}
-              className="rounded-xl border border-gray-300 px-3 py-2 text-xs font-medium text-gray-700 hover:border-emerald-300 hover:text-emerald-700"
+              className="rounded-xl border border-border px-3 py-2 text-xs font-medium text-foreground hover:border-emerald-300 hover:text-primary-hover"
             >
               Change premises
             </button>
@@ -216,21 +216,21 @@ export default function FacilityDetailPage() {
         </div>
 
         {profileQuery.isLoading ? (
-          <div className="flex items-center justify-center py-16 text-gray-500">
+          <div className="flex items-center justify-center py-16 text-muted-foreground">
             <Loader2 className="mr-2 h-5 w-5 animate-spin" />
             Loading facility operations workspace...
           </div>
         ) : profileQuery.isError || !profile || !master ? (
-          <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-700">
+          <div className="rounded-2xl border border-danger/28 bg-danger-soft p-6 text-center text-sm text-danger">
             Facility lifecycle data could not be loaded.
           </div>
         ) : (
           <div className="space-y-6">
-            <div className="rounded-3xl border border-gray-200 bg-white p-6">
+            <div className="rounded-3xl border border-border bg-card p-6">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-2xl font-semibold text-gray-900">{master.name}</h2>
+                    <h2 className="text-2xl font-semibold text-foreground">{master.name}</h2>
                     <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${statusTone(master.regulatoryStatus)}`}>
                       {formatLabel(master.regulatoryStatus)}
                     </span>
@@ -240,22 +240,22 @@ export default function FacilityDetailPage() {
                       </span>
                     ) : null}
                   </div>
-                  <p className="mt-2 text-sm text-gray-500">
+                  <p className="mt-2 text-sm text-muted-foreground">
                     {master.facilityCode} • {master.facilityType} • {master.institutionFileNumber ?? "Institution file pending"}
                   </p>
                 </div>
                 <div className="grid gap-3 text-sm md:grid-cols-3">
-                  <div className="rounded-2xl bg-gray-50 p-4">
-                    <p className="text-xs uppercase tracking-[0.18em] text-gray-500">Applications</p>
-                    <p className="mt-2 text-2xl font-semibold text-gray-900">{profile.applications.length}</p>
+                  <div className="rounded-2xl bg-background p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Applications</p>
+                    <p className="mt-2 text-2xl font-semibold text-foreground">{profile.applications.length}</p>
                   </div>
-                  <div className="rounded-2xl bg-gray-50 p-4">
-                    <p className="text-xs uppercase tracking-[0.18em] text-gray-500">Inspections</p>
-                    <p className="mt-2 text-2xl font-semibold text-gray-900">{profile.inspections.length}</p>
+                  <div className="rounded-2xl bg-background p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Inspections</p>
+                    <p className="mt-2 text-2xl font-semibold text-foreground">{profile.inspections.length}</p>
                   </div>
-                  <div className="rounded-2xl bg-gray-50 p-4">
-                    <p className="text-xs uppercase tracking-[0.18em] text-gray-500">Open shortfalls</p>
-                    <p className="mt-2 text-2xl font-semibold text-gray-900">
+                  <div className="rounded-2xl bg-background p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Open shortfalls</p>
+                    <p className="mt-2 text-2xl font-semibold text-foreground">
                       {profile.complianceActions.filter((action) => !["VERIFIED", "COMPLETED"].includes(action.status)).length}
                     </p>
                   </div>
@@ -270,7 +270,7 @@ export default function FacilityDetailPage() {
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
                   className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                    activeTab === tab.id ? "bg-emerald-600 text-white" : "bg-white text-gray-600 hover:bg-emerald-50 hover:text-emerald-700"
+                    activeTab === tab.id ? "bg-emerald-600 text-white" : "bg-card text-muted-foreground hover:bg-success-soft hover:text-primary-hover"
                   }`}
                 >
                   {tab.label}
@@ -280,55 +280,55 @@ export default function FacilityDetailPage() {
 
             {activeTab === "master" ? (
               <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-                <div className="rounded-2xl border border-gray-200 bg-white p-5">
-                  <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-gray-500">Facility master</h3>
+                <div className="rounded-2xl border border-border bg-card p-5">
+                  <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">Facility master</h3>
                   <dl className="mt-4 grid gap-4 md:grid-cols-2">
                     <div>
-                      <dt className="text-xs text-gray-500">Ownership</dt>
-                      <dd className="mt-1 font-medium text-gray-900">{formatLabel(master.ownershipType)}</dd>
+                      <dt className="text-xs text-muted-foreground">Ownership</dt>
+                      <dd className="mt-1 font-medium text-foreground">{formatLabel(master.ownershipType)}</dd>
                     </div>
                     <div>
-                      <dt className="text-xs text-gray-500">Pathway</dt>
-                      <dd className="mt-1 font-medium text-gray-900">{formatLabel(master.registrationPathway)}</dd>
+                      <dt className="text-xs text-muted-foreground">Pathway</dt>
+                      <dd className="mt-1 font-medium text-foreground">{formatLabel(master.registrationPathway)}</dd>
                     </div>
                     <div>
-                      <dt className="text-xs text-gray-500">Facility class</dt>
-                      <dd className="mt-1 font-medium text-gray-900">{formatLabel(master.facilityClass)}</dd>
+                      <dt className="text-xs text-muted-foreground">Facility class</dt>
+                      <dd className="mt-1 font-medium text-foreground">{formatLabel(master.facilityClass)}</dd>
                     </div>
                     <div>
-                      <dt className="text-xs text-gray-500">Facility category</dt>
-                      <dd className="mt-1 font-medium text-gray-900">{formatLabel(master.facilityCategory)}</dd>
+                      <dt className="text-xs text-muted-foreground">Facility category</dt>
+                      <dd className="mt-1 font-medium text-foreground">{formatLabel(master.facilityCategory)}</dd>
                     </div>
                     <div>
-                      <dt className="text-xs text-gray-500">Legal status</dt>
-                      <dd className="mt-1 font-medium text-gray-900">{formatLabel(master.legalStatus)}</dd>
+                      <dt className="text-xs text-muted-foreground">Legal status</dt>
+                      <dd className="mt-1 font-medium text-foreground">{formatLabel(master.legalStatus)}</dd>
                     </div>
                     <div>
-                      <dt className="text-xs text-gray-500">Operational status</dt>
-                      <dd className="mt-1 font-medium text-gray-900">{formatLabel(master.operationalStatus)}</dd>
+                      <dt className="text-xs text-muted-foreground">Operational status</dt>
+                      <dd className="mt-1 font-medium text-foreground">{formatLabel(master.operationalStatus)}</dd>
                     </div>
                   </dl>
                 </div>
-                <div className="rounded-2xl border border-gray-200 bg-white p-5">
-                  <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-gray-500">Premises</h3>
-                  <p className="mt-4 text-sm text-gray-700">
+                <div className="rounded-2xl border border-border bg-card p-5">
+                  <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">Premises</h3>
+                  <p className="mt-4 text-sm text-foreground">
                     {[master.addressLine1, master.addressLine2, master.city, master.ward, master.district, master.province]
                       .filter(Boolean)
                       .join(", ") || "Address not yet populated"}
                   </p>
                   <div className="mt-4 grid gap-3 md:grid-cols-2">
-                    <div className="rounded-2xl bg-gray-50 p-4">
-                      <p className="text-xs uppercase tracking-[0.18em] text-gray-500">Facility status</p>
-                      <p className="mt-2 font-semibold text-gray-900">{formatLabel(master.status)}</p>
+                    <div className="rounded-2xl bg-background p-4">
+                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Facility status</p>
+                      <p className="mt-2 font-semibold text-foreground">{formatLabel(master.status)}</p>
                     </div>
-                    <div className="rounded-2xl bg-gray-50 p-4">
-                      <p className="text-xs uppercase tracking-[0.18em] text-gray-500">Created</p>
-                      <p className="mt-2 font-semibold text-gray-900">{new Date(master.createdAt).toLocaleDateString()}</p>
+                    <div className="rounded-2xl bg-background p-4">
+                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Created</p>
+                      <p className="mt-2 font-semibold text-foreground">{new Date(master.createdAt).toLocaleDateString()}</p>
                     </div>
                   </div>
                 </div>
-                <div className="rounded-2xl border border-gray-200 bg-white p-5">
-                  <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-gray-500">Facility map</h3>
+                <div className="rounded-2xl border border-border bg-card p-5">
+                  <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">Facility map</h3>
                   {master.latitude != null && master.longitude != null ? (
                     <div className="mt-4">
                       <NdilaMap
@@ -349,7 +349,7 @@ export default function FacilityDetailPage() {
                       />
                     </div>
                   ) : (
-                    <p className="mt-4 text-sm text-gray-600">
+                    <p className="mt-4 text-sm text-muted-foreground">
                       No coordinates on master profile yet — capture during registration or premises change application.
                     </p>
                   )}
@@ -359,15 +359,15 @@ export default function FacilityDetailPage() {
 
             {activeTab === "applications" ? (
               <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-                <div className="rounded-2xl border border-gray-200 bg-white p-5">
-                  <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-gray-500">Application queue</h3>
+                <div className="rounded-2xl border border-border bg-card p-5">
+                  <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">Application queue</h3>
                   <div className="mt-4 space-y-3">
                     {profile.applications.map((application) => (
-                      <div key={application.applicationId} className="rounded-2xl border border-gray-200 p-4">
+                      <div key={application.applicationId} className="rounded-2xl border border-border p-4">
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div>
-                            <p className="font-medium text-gray-900">{formatLabel(application.applicationType)}</p>
-                            <p className="mt-1 text-xs text-gray-500">
+                            <p className="font-medium text-foreground">{formatLabel(application.applicationType)}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">
                               {formatLabel(application.currentWorkflowState)} • Fee {formatLabel(application.feeState)}
                             </p>
                           </div>
@@ -381,7 +381,7 @@ export default function FacilityDetailPage() {
                                     facilityId: master.facilityId,
                                   })
                                 }
-                                className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:border-emerald-300 hover:text-emerald-700"
+                                className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:border-emerald-300 hover:text-primary-hover"
                               >
                                 Submit
                               </button>
@@ -397,7 +397,7 @@ export default function FacilityDetailPage() {
                                     facilityId: master.facilityId,
                                   })
                                 }
-                                className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:border-emerald-300 hover:text-emerald-700"
+                                className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:border-emerald-300 hover:text-primary-hover"
                               >
                                 Ready for inspection
                               </button>
@@ -405,7 +405,7 @@ export default function FacilityDetailPage() {
                           </div>
                         </div>
                         {application.workflowNotes ? (
-                          <p className="mt-3 text-sm text-gray-600">{application.workflowNotes}</p>
+                          <p className="mt-3 text-sm text-muted-foreground">{application.workflowNotes}</p>
                         ) : null}
                       </div>
                     ))}
@@ -413,8 +413,8 @@ export default function FacilityDetailPage() {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="rounded-2xl border border-gray-200 bg-white p-5">
-                    <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-gray-500">Upload evidence / dossier</h3>
+                  <div className="rounded-2xl border border-border bg-card p-5">
+                    <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">Upload evidence / dossier</h3>
                     <form
                       className="mt-4 space-y-3"
                       onSubmit={(event) => {
@@ -431,7 +431,7 @@ export default function FacilityDetailPage() {
                       <select
                         value={documentForm.applicationId}
                         onChange={(event) => setDocumentForm((current) => ({ ...current, applicationId: event.target.value }))}
-                        className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm"
+                        className="w-full rounded-xl border border-border px-3 py-2.5 text-sm"
                       >
                         <option value="">Attach to no specific application</option>
                         {openApplications.map((application) => (
@@ -443,20 +443,20 @@ export default function FacilityDetailPage() {
                       <input
                         value={documentForm.documentType}
                         onChange={(event) => setDocumentForm((current) => ({ ...current, documentType: event.target.value }))}
-                        className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm"
+                        className="w-full rounded-xl border border-border px-3 py-2.5 text-sm"
                         placeholder="Document type"
                       />
                       <input
                         value={documentForm.fileReference}
                         onChange={(event) => setDocumentForm((current) => ({ ...current, fileReference: event.target.value }))}
-                        className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm"
+                        className="w-full rounded-xl border border-border px-3 py-2.5 text-sm"
                         placeholder="Document store reference / URI"
                       />
                       <textarea
                         rows={3}
                         value={documentForm.notes}
                         onChange={(event) => setDocumentForm((current) => ({ ...current, notes: event.target.value }))}
-                        className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm"
+                        className="w-full rounded-xl border border-border px-3 py-2.5 text-sm"
                         placeholder="Verification or dossier notes"
                       />
                       <button className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700" type="submit">
@@ -465,8 +465,8 @@ export default function FacilityDetailPage() {
                     </form>
                   </div>
 
-                  <div className="rounded-2xl border border-gray-200 bg-white p-5">
-                    <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-gray-500">Committee decision capture</h3>
+                  <div className="rounded-2xl border border-border bg-card p-5">
+                    <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">Committee decision capture</h3>
                     <form
                       className="mt-4 space-y-3"
                       onSubmit={(event) => {
@@ -487,7 +487,7 @@ export default function FacilityDetailPage() {
                       <select
                         value={committeeForm.applicationId}
                         onChange={(event) => setCommitteeForm((current) => ({ ...current, applicationId: event.target.value }))}
-                        className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm"
+                        className="w-full rounded-xl border border-border px-3 py-2.5 text-sm"
                       >
                         <option value="">Select application</option>
                         {openApplications.map((application) => (
@@ -499,7 +499,7 @@ export default function FacilityDetailPage() {
                       <select
                         value={committeeForm.inspectionId}
                         onChange={(event) => setCommitteeForm((current) => ({ ...current, inspectionId: event.target.value }))}
-                        className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm"
+                        className="w-full rounded-xl border border-border px-3 py-2.5 text-sm"
                       >
                         <option value="">No linked inspection</option>
                         {profile.inspections.map((inspection) => (
@@ -511,7 +511,7 @@ export default function FacilityDetailPage() {
                       <select
                         value={committeeForm.decision}
                         onChange={(event) => setCommitteeForm((current) => ({ ...current, decision: event.target.value }))}
-                        className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm"
+                        className="w-full rounded-xl border border-border px-3 py-2.5 text-sm"
                       >
                         <option value="APPROVED">Approve</option>
                         <option value="DEFERRED">Defer</option>
@@ -521,7 +521,7 @@ export default function FacilityDetailPage() {
                         rows={3}
                         value={committeeForm.notes}
                         onChange={(event) => setCommitteeForm((current) => ({ ...current, notes: event.target.value }))}
-                        className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm"
+                        className="w-full rounded-xl border border-border px-3 py-2.5 text-sm"
                         placeholder="Committee resolution or rationale"
                       />
                       <button className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700" type="submit">
@@ -536,8 +536,8 @@ export default function FacilityDetailPage() {
             {activeTab === "inspections" ? (
               <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
                 <div className="space-y-4">
-                  <div className="rounded-2xl border border-gray-200 bg-white p-5">
-                    <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-gray-500">Schedule inspection</h3>
+                  <div className="rounded-2xl border border-border bg-card p-5">
+                    <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">Schedule inspection</h3>
                     <form
                       className="mt-4 space-y-3"
                       onSubmit={(event) => {
@@ -553,7 +553,7 @@ export default function FacilityDetailPage() {
                       <select
                         value={scheduleForm.applicationId}
                         onChange={(event) => setScheduleForm((current) => ({ ...current, applicationId: event.target.value }))}
-                        className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm"
+                        className="w-full rounded-xl border border-border px-3 py-2.5 text-sm"
                       >
                         <option value="">No linked application</option>
                         {openApplications.map((application) => (
@@ -565,7 +565,7 @@ export default function FacilityDetailPage() {
                       <select
                         value={scheduleForm.inspectionType}
                         onChange={(event) => setScheduleForm((current) => ({ ...current, inspectionType: event.target.value }))}
-                        className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm"
+                        className="w-full rounded-xl border border-border px-3 py-2.5 text-sm"
                       >
                         <option value="INITIAL">Initial</option>
                         <option value="ROUTINE">Routine</option>
@@ -579,7 +579,7 @@ export default function FacilityDetailPage() {
                         type="date"
                         value={scheduleForm.scheduledDate}
                         onChange={(event) => setScheduleForm((current) => ({ ...current, scheduledDate: event.target.value }))}
-                        className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm"
+                        className="w-full rounded-xl border border-border px-3 py-2.5 text-sm"
                       />
                       <button className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700" type="submit">
                         Schedule inspection
@@ -587,8 +587,8 @@ export default function FacilityDetailPage() {
                     </form>
                   </div>
 
-                  <div className="rounded-2xl border border-gray-200 bg-white p-5">
-                    <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-gray-500">Inspection queue</h3>
+                  <div className="rounded-2xl border border-border bg-card p-5">
+                    <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">Inspection queue</h3>
                     <div className="mt-4 space-y-3">
                       {profile.inspections.map((inspection) => (
                         <button
@@ -596,17 +596,17 @@ export default function FacilityDetailPage() {
                           type="button"
                           onClick={() => setSelectedInspectionId(inspection.inspectionId)}
                           className={`w-full rounded-2xl border p-4 text-left ${
-                            selectedInspection?.inspectionId === inspection.inspectionId ? "border-emerald-300 bg-emerald-50" : "border-gray-200"
+                            selectedInspection?.inspectionId === inspection.inspectionId ? "border-emerald-300 bg-success-soft" : "border-border"
                           }`}
                         >
                           <div className="flex items-center justify-between gap-3">
                             <div>
-                              <p className="font-medium text-gray-900">{formatLabel(inspection.inspectionType)}</p>
-                              <p className="mt-1 text-xs text-gray-500">
+                              <p className="font-medium text-foreground">{formatLabel(inspection.inspectionType)}</p>
+                              <p className="mt-1 text-xs text-muted-foreground">
                                 {formatLabel(inspection.status)} • {formatLabel(inspection.outcome)}
                               </p>
                             </div>
-                            <ClipboardList className="h-4 w-4 text-gray-400" />
+                            <ClipboardList className="h-4 w-4 text-muted-foreground" />
                           </div>
                         </button>
                       ))}
@@ -614,20 +614,20 @@ export default function FacilityDetailPage() {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-gray-200 bg-white p-5">
-                  <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-gray-500">Inspection workspace</h3>
+                <div className="rounded-2xl border border-border bg-card p-5">
+                  <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">Inspection workspace</h3>
                   {selectedInspection ? (
                     <form className="mt-4 space-y-4" onSubmit={handleInspectionRecordSubmit}>
-                      <div className="rounded-2xl bg-gray-50 p-4">
-                        <p className="text-sm font-medium text-gray-900">
+                      <div className="rounded-2xl bg-background p-4">
+                        <p className="text-sm font-medium text-foreground">
                           {formatLabel(selectedInspection.inspectionType)} inspection
                         </p>
-                        <p className="mt-1 text-xs text-gray-500">
+                        <p className="mt-1 text-xs text-muted-foreground">
                           Template: {selectedInspection.templateName ?? "No template linked"}
                         </p>
                       </div>
                       {checklistQuery.isLoading ? (
-                        <div className="flex items-center text-sm text-gray-500">
+                        <div className="flex items-center text-sm text-muted-foreground">
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           Loading checklist...
                         </div>
@@ -636,16 +636,16 @@ export default function FacilityDetailPage() {
                           const code = String(item.code ?? "");
                           const localState = findingStates[code] ?? { status: "PASS", comments: "" };
                           return (
-                            <div key={code} className="rounded-2xl border border-gray-200 p-4">
+                            <div key={code} className="rounded-2xl border border-border p-4">
                               <div className="flex flex-wrap items-center gap-2">
-                                <p className="text-sm font-medium text-gray-900">{String(item.requirement ?? "Requirement")}</p>
+                                <p className="text-sm font-medium text-foreground">{String(item.requirement ?? "Requirement")}</p>
                                 {item.critical ? (
-                                  <span className="rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-red-700">
+                                  <span className="rounded-full bg-danger-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-danger">
                                     Critical
                                   </span>
                                 ) : null}
                               </div>
-                              <p className="mt-1 text-xs text-gray-500">{String(item.section ?? "General")} • {code}</p>
+                              <p className="mt-1 text-xs text-muted-foreground">{String(item.section ?? "General")} • {code}</p>
                               <div className="mt-3 grid gap-3 md:grid-cols-[180px_1fr]">
                                 <select
                                   value={localState.status}
@@ -655,7 +655,7 @@ export default function FacilityDetailPage() {
                                       [code]: { ...localState, status: event.target.value },
                                     }))
                                   }
-                                  className="rounded-xl border border-gray-300 px-3 py-2.5 text-sm"
+                                  className="rounded-xl border border-border px-3 py-2.5 text-sm"
                                 >
                                   <option value="PASS">Pass</option>
                                   <option value="FAIL">Fail</option>
@@ -670,7 +670,7 @@ export default function FacilityDetailPage() {
                                       [code]: { ...localState, comments: event.target.value },
                                     }))
                                   }
-                                  className="rounded-xl border border-gray-300 px-3 py-2.5 text-sm"
+                                  className="rounded-xl border border-border px-3 py-2.5 text-sm"
                                   placeholder="Comments, observations, or shortfall note"
                                 />
                               </div>
@@ -678,7 +678,7 @@ export default function FacilityDetailPage() {
                           );
                         })
                       ) : (
-                        <div className="rounded-2xl border border-dashed border-gray-300 p-6 text-sm text-gray-500">
+                        <div className="rounded-2xl border border-dashed border-border p-6 text-sm text-muted-foreground">
                           No checklist template is available for this inspection yet.
                         </div>
                       )}
@@ -687,7 +687,7 @@ export default function FacilityDetailPage() {
                       </button>
                     </form>
                   ) : (
-                    <div className="rounded-2xl border border-dashed border-gray-300 p-8 text-center text-sm text-gray-500">
+                    <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
                       Select an inspection to capture checklist findings.
                     </div>
                   )}
@@ -697,37 +697,37 @@ export default function FacilityDetailPage() {
 
             {activeTab === "findings" ? (
               <div className="grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">
-                <div className="rounded-2xl border border-gray-200 bg-white p-5">
-                  <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-gray-500">Inspection findings</h3>
+                <div className="rounded-2xl border border-border bg-card p-5">
+                  <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">Inspection findings</h3>
                   <div className="mt-4 space-y-3">
                     {profile.findings.map((finding) => (
-                      <div key={finding.findingId} className="rounded-2xl border border-gray-200 p-4">
+                      <div key={finding.findingId} className="rounded-2xl border border-border p-4">
                         <div className="flex flex-wrap items-center gap-2">
-                          <p className="font-medium text-gray-900">{finding.requirementText}</p>
+                          <p className="font-medium text-foreground">{finding.requirementText}</p>
                           <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] ${
-                            finding.status === "FAIL" ? "bg-rose-50 text-rose-700" : "bg-emerald-50 text-emerald-700"
+                            finding.status === "FAIL" ? "bg-danger-soft text-danger" : "bg-success-soft text-primary-hover"
                           }`}>
                             {formatLabel(finding.status)}
                           </span>
                         </div>
-                        <p className="mt-1 text-xs text-gray-500">
+                        <p className="mt-1 text-xs text-muted-foreground">
                           {finding.checklistSection} • {finding.checklistItemCode} • Rectification {formatLabel(finding.rectificationStatus)}
                         </p>
-                        {finding.comments ? <p className="mt-2 text-sm text-gray-600">{finding.comments}</p> : null}
+                        {finding.comments ? <p className="mt-2 text-sm text-muted-foreground">{finding.comments}</p> : null}
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-gray-200 bg-white p-5">
-                  <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-gray-500">Shortfall tracker</h3>
+                <div className="rounded-2xl border border-border bg-card p-5">
+                  <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">Shortfall tracker</h3>
                   <div className="mt-4 space-y-3">
                     {profile.complianceActions.map((action) => (
-                      <div key={action.actionId} className="rounded-2xl border border-gray-200 p-4">
+                      <div key={action.actionId} className="rounded-2xl border border-border p-4">
                         <div className="flex flex-wrap items-center justify-between gap-3">
                           <div>
-                            <p className="font-medium text-gray-900">{formatLabel(action.actionType)}</p>
-                            <p className="mt-1 text-xs text-gray-500">
+                            <p className="font-medium text-foreground">{formatLabel(action.actionType)}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">
                               Due {action.dueDate} • Owner {action.ownerName ?? "Unassigned"} • {formatLabel(action.status)}
                             </p>
                           </div>
@@ -743,7 +743,7 @@ export default function FacilityDetailPage() {
                                     completionNotes: "Correction uploaded from facility workspace.",
                                   })
                                 }
-                                className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:border-emerald-300 hover:text-emerald-700"
+                                className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:border-emerald-300 hover:text-primary-hover"
                               >
                                 Mark completed
                               </button>
@@ -759,14 +759,14 @@ export default function FacilityDetailPage() {
                                     verificationNotes: "Verified by inspector in follow-up review.",
                                   })
                                 }
-                                className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:border-sky-300 hover:text-sky-700"
+                                className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:border-sky-300 hover:text-sky-700"
                               >
                                 Verify
                               </button>
                             ) : null}
                           </div>
                         </div>
-                        {action.completionNotes ? <p className="mt-3 text-sm text-gray-600">{action.completionNotes}</p> : null}
+                        {action.completionNotes ? <p className="mt-3 text-sm text-muted-foreground">{action.completionNotes}</p> : null}
                       </div>
                     ))}
                   </div>
@@ -776,42 +776,42 @@ export default function FacilityDetailPage() {
 
             {activeTab === "certificates" ? (
               <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
-                <div className="rounded-2xl border border-gray-200 bg-white p-5">
-                  <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-gray-500">Certificate register</h3>
+                <div className="rounded-2xl border border-border bg-card p-5">
+                  <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">Certificate register</h3>
                   <div className="mt-4 space-y-3">
                     {profile.certificates.map((certificate) => (
-                      <div key={certificate.certificateId} className="rounded-2xl border border-gray-200 p-4">
+                      <div key={certificate.certificateId} className="rounded-2xl border border-border p-4">
                         <div className="flex items-center justify-between gap-3">
                           <div>
-                            <p className="font-medium text-gray-900">{certificate.certificateNumber}</p>
-                            <p className="mt-1 text-xs text-gray-500">
+                            <p className="font-medium text-foreground">{certificate.certificateNumber}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">
                               {certificate.certificateType} • Issued {certificate.issueDate} • Expires {certificate.expiryDate ?? "Not set"}
                             </p>
                           </div>
-                          <Stamp className="h-5 w-5 text-gray-400" />
+                          <Stamp className="h-5 w-5 text-muted-foreground" />
                         </div>
-                        <p className="mt-3 text-sm text-gray-600">
+                        <p className="mt-3 text-sm text-muted-foreground">
                           Authority: {formatLabel(certificate.issuedUnderAuthority)} • Status {formatLabel(certificate.status)}
                         </p>
                       </div>
                     ))}
                   </div>
                 </div>
-                <div className="rounded-2xl border border-gray-200 bg-white p-5">
-                  <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-gray-500">Committee log</h3>
+                <div className="rounded-2xl border border-border bg-card p-5">
+                  <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">Committee log</h3>
                   <div className="mt-4 space-y-3">
                     {profile.committeeReviews.map((review) => (
-                      <div key={review.reviewId} className="rounded-2xl border border-gray-200 p-4">
+                      <div key={review.reviewId} className="rounded-2xl border border-border p-4">
                         <div className="flex items-center justify-between gap-3">
                           <div>
-                            <p className="font-medium text-gray-900">{formatLabel(review.decision)}</p>
-                            <p className="mt-1 text-xs text-gray-500">
+                            <p className="font-medium text-foreground">{formatLabel(review.decision)}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">
                               {review.committeeType} • {new Date(review.decidedAt).toLocaleDateString()}
                             </p>
                           </div>
-                          <BadgeCheck className="h-5 w-5 text-gray-400" />
+                          <BadgeCheck className="h-5 w-5 text-muted-foreground" />
                         </div>
-                        {review.notes ? <p className="mt-3 text-sm text-gray-600">{review.notes}</p> : null}
+                        {review.notes ? <p className="mt-3 text-sm text-muted-foreground">{review.notes}</p> : null}
                       </div>
                     ))}
                   </div>
@@ -822,23 +822,23 @@ export default function FacilityDetailPage() {
             {activeTab === "audit" ? (
               <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
                 <div className="space-y-4">
-                  <div className="rounded-2xl border border-gray-200 bg-white p-5">
-                    <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-gray-500">Lifecycle history</h3>
+                  <div className="rounded-2xl border border-border bg-card p-5">
+                    <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">Lifecycle history</h3>
                     <div className="mt-4 space-y-3">
                       {profile.statusHistory.map((entry) => (
-                        <div key={`${entry.changedAt}-${entry.regulatoryStatus}`} className="rounded-2xl border border-gray-200 p-4">
-                          <p className="font-medium text-gray-900">{formatLabel(entry.regulatoryStatus)}</p>
-                          <p className="mt-1 text-xs text-gray-500">
+                        <div key={`${entry.changedAt}-${entry.regulatoryStatus}`} className="rounded-2xl border border-border p-4">
+                          <p className="font-medium text-foreground">{formatLabel(entry.regulatoryStatus)}</p>
+                          <p className="mt-1 text-xs text-muted-foreground">
                             {new Date(entry.changedAt).toLocaleString()} • {entry.changedBy} • {formatLabel(entry.authorityContext)}
                           </p>
-                          {entry.reason ? <p className="mt-2 text-sm text-gray-600">{entry.reason}</p> : null}
+                          {entry.reason ? <p className="mt-2 text-sm text-muted-foreground">{entry.reason}</p> : null}
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-gray-200 bg-white p-5">
-                    <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-gray-500">Enforcement / closure recommendation</h3>
+                  <div className="rounded-2xl border border-border bg-card p-5">
+                    <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">Enforcement / closure recommendation</h3>
                     <form
                       className="mt-4 space-y-3"
                       onSubmit={(event) => {
@@ -856,12 +856,12 @@ export default function FacilityDetailPage() {
                       <input
                         value={enforcementForm.triggerType}
                         onChange={(event) => setEnforcementForm((current) => ({ ...current, triggerType: event.target.value }))}
-                        className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm"
+                        className="w-full rounded-xl border border-border px-3 py-2.5 text-sm"
                       />
                       <select
                         value={enforcementForm.status}
                         onChange={(event) => setEnforcementForm((current) => ({ ...current, status: event.target.value }))}
-                        className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm"
+                        className="w-full rounded-xl border border-border px-3 py-2.5 text-sm"
                       >
                         <option value="RECOMMENDED_RESTRICTION">Recommend restriction</option>
                         <option value="RECOMMENDED_SUSPENSION">Recommend suspension</option>
@@ -871,7 +871,7 @@ export default function FacilityDetailPage() {
                         rows={3}
                         value={enforcementForm.decisionDetails}
                         onChange={(event) => setEnforcementForm((current) => ({ ...current, decisionDetails: event.target.value }))}
-                        className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm"
+                        className="w-full rounded-xl border border-border px-3 py-2.5 text-sm"
                         placeholder="Authority route, findings summary, and recommended action"
                       />
                       <button className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700" type="submit">
@@ -881,21 +881,21 @@ export default function FacilityDetailPage() {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-gray-200 bg-white p-5">
-                  <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-gray-500">Audit trail</h3>
+                <div className="rounded-2xl border border-border bg-card p-5">
+                  <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">Audit trail</h3>
                   <div className="mt-4 space-y-3">
                     {profile.auditTrail.map((entry) => (
-                      <div key={entry.auditId} className="rounded-2xl border border-gray-200 p-4">
+                      <div key={entry.auditId} className="rounded-2xl border border-border p-4">
                         <div className="flex items-center justify-between gap-3">
                           <div>
-                            <p className="font-medium text-gray-900">{formatLabel(entry.action)}</p>
-                            <p className="mt-1 text-xs text-gray-500">
+                            <p className="font-medium text-foreground">{formatLabel(entry.action)}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">
                               {entry.actorId} • {formatLabel(entry.actorType)} • {new Date(entry.createdAt).toLocaleString()}
                             </p>
                           </div>
-                          <FileClock className="h-5 w-5 text-gray-400" />
+                          <FileClock className="h-5 w-5 text-muted-foreground" />
                         </div>
-                        <p className="mt-3 text-sm text-gray-600">
+                        <p className="mt-3 text-sm text-muted-foreground">
                           {entry.targetEntityType} {entry.targetEntityId}
                         </p>
                       </div>
@@ -907,37 +907,37 @@ export default function FacilityDetailPage() {
 
             {activeTab === "units" ? (
               <div className="grid gap-4 lg:grid-cols-2">
-                <div className="rounded-2xl border border-gray-200 bg-white p-5">
-                  <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-gray-500">Registered units / departments</h3>
+                <div className="rounded-2xl border border-border bg-card p-5">
+                  <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">Registered units / departments</h3>
                   <div className="mt-4 space-y-3">
                     {profile.units.map((unit) => (
-                      <div key={unit.unitId} className="rounded-2xl border border-gray-200 p-4">
+                      <div key={unit.unitId} className="rounded-2xl border border-border p-4">
                         <div className="flex items-center justify-between gap-3">
                           <div>
-                            <p className="font-medium text-gray-900">{unit.name}</p>
-                            <p className="mt-1 text-xs text-gray-500">
+                            <p className="font-medium text-foreground">{unit.name}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">
                               {formatLabel(unit.unitType)} • {formatLabel(unit.regulatoryStatus)}
                             </p>
                           </div>
-                          <LayoutGrid className="h-5 w-5 text-gray-400" />
+                          <LayoutGrid className="h-5 w-5 text-muted-foreground" />
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
-                <div className="rounded-2xl border border-gray-200 bg-white p-5">
-                  <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-gray-500">Practitioner in charge</h3>
+                <div className="rounded-2xl border border-border bg-card p-5">
+                  <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">Practitioner in charge</h3>
                   <div className="mt-4 space-y-3">
                     {profile.practitionerAssignments.map((assignment) => (
-                      <div key={assignment.assignmentId} className="rounded-2xl border border-gray-200 p-4">
+                      <div key={assignment.assignmentId} className="rounded-2xl border border-border p-4">
                         <div className="flex items-center justify-between gap-3">
                           <div>
-                            <p className="font-medium text-gray-900">{assignment.providerPublicId}</p>
-                            <p className="mt-1 text-xs text-gray-500">
+                            <p className="font-medium text-foreground">{assignment.providerPublicId}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">
                               {formatLabel(assignment.role)} • {formatLabel(assignment.approvalState)}
                             </p>
                           </div>
-                          <ShieldAlert className="h-5 w-5 text-gray-400" />
+                          <ShieldAlert className="h-5 w-5 text-muted-foreground" />
                         </div>
                       </div>
                     ))}
@@ -955,7 +955,7 @@ export default function FacilityDetailPage() {
               updateComplianceAction.isPending ||
               recordCommitteeDecision.isPending ||
               openEnforcementCase.isPending) ? (
-              <div className="fixed bottom-6 right-6 rounded-full bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-xl">
+              <div className="fixed bottom-6 right-6 rounded-full bg-neutral-900 px-4 py-2 text-sm font-medium text-white shadow-xl">
                 Working...
               </div>
             ) : null}

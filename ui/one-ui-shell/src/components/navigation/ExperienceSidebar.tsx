@@ -510,7 +510,7 @@ export function ExperienceSidebar() {
         data-sidebar
         className={[
           "fixed inset-y-0 left-0 z-50 flex h-screen flex-col border-r text-[color:var(--text-primary)] transition-transform duration-200 impilo-subtle-african-accent",
-          "border-[color:var(--border-soft)] bg-[linear-gradient(180deg,#f5fcf8_0%,#eef8f2_52%,#f7faf8_100%)]",
+          "border-[color:var(--border-soft)] bg-[linear-gradient(180deg,#E6F5EC_0%,#F5F6F5_52%,#F5F6F5_100%)]",
           shellClasses,
           navDrawerOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full pointer-events-none",
         ].join(" ")}
@@ -534,7 +534,7 @@ export function ExperienceSidebar() {
             <button
               type="button"
               onClick={() => setSwitcherOpen(true)}
-              className="inline-flex rounded-xl border border-[color:var(--border-soft)] bg-white p-2 text-[color:var(--text-secondary)] transition hover:bg-[color:var(--surface-soft)] hover:text-[color:var(--primary)]"
+              className="inline-flex rounded-xl border border-[color:var(--border-soft)] bg-card p-2 text-[color:var(--text-secondary)] transition hover:bg-[color:var(--surface-soft)] hover:text-[color:var(--primary)]"
               aria-label="Switch context"
               title="Switch context"
             >
@@ -543,14 +543,14 @@ export function ExperienceSidebar() {
             <button
               type="button"
               onClick={toggleCollapsed}
-              className="hidden rounded-xl border border-[color:var(--border-soft)] bg-white px-3 py-2 text-xs text-[color:var(--text-secondary)] transition hover:bg-[color:var(--surface-soft)] md:inline-flex"
+              className="hidden rounded-xl border border-[color:var(--border-soft)] bg-card px-3 py-2 text-xs text-[color:var(--text-secondary)] transition hover:bg-[color:var(--surface-soft)] md:inline-flex"
             >
               {collapsed ? "Expand" : "Collapse"}
             </button>
             <button
               type="button"
               onClick={closeDrawer}
-              className="inline-flex rounded-xl border border-[color:var(--border-soft)] bg-white p-2 text-[color:var(--text-secondary)] transition hover:bg-[color:var(--surface-soft)]"
+              className="inline-flex rounded-xl border border-[color:var(--border-soft)] bg-card p-2 text-[color:var(--text-secondary)] transition hover:bg-[color:var(--surface-soft)]"
               aria-label="Close navigation"
             >
               <X className="h-4 w-4" />
@@ -563,7 +563,7 @@ export function ExperienceSidebar() {
 
         {!collapsed && !citizenOnly && (
           <div className="border-b border-[color:var(--border-soft)] px-4 py-4">
-            <div className="rounded-3xl border border-[color:var(--border-soft)] bg-white p-4 shadow-impilo-card">
+            <div className="rounded-3xl border border-[color:var(--border-soft)] bg-card p-4 shadow-impilo-card">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-[11px] uppercase tracking-[0.24em] text-[color:var(--text-muted)]">
@@ -629,7 +629,7 @@ export function ExperienceSidebar() {
                   <Link
                     key={role}
                     href={role === "PROVIDER" ? "/provider/activate?returnTo=" + encodeURIComponent(pathname) : "/home"}
-                    className="text-[10px] rounded-full border border-[color:var(--border-soft)] px-2 py-1 text-[color:var(--text-secondary)] hover:bg-white hover:text-[color:var(--text-primary)] transition"
+                    className="text-[10px] rounded-full border border-[color:var(--border-soft)] px-2 py-1 text-[color:var(--text-secondary)] hover:bg-card hover:text-[color:var(--text-primary)] transition"
                   >
                     Switch to {role.charAt(0) + role.slice(1).toLowerCase()}
                   </Link>
@@ -642,7 +642,7 @@ export function ExperienceSidebar() {
         {!collapsed && !citizenOnly && (
           <div className="border-b border-[color:var(--border-soft)] px-4 py-4">
             <div className={`rounded-3xl border p-4 ${spotlight.tone}`}>
-              <p className="text-[11px] uppercase tracking-[0.24em] text-slate-400">
+              <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
                 Context Spotlight
               </p>
               {spotlight.serviceSlug ? (
@@ -660,7 +660,7 @@ export function ExperienceSidebar() {
                       key={action.href}
                       href={action.href}
                       onClick={closeDrawer}
-                      className="inline-flex items-center justify-between rounded-2xl border border-[color:var(--border-soft)] bg-white px-3 py-2 text-xs font-medium text-[color:var(--text-primary)] transition hover:bg-[color:var(--surface-soft)]"
+                      className="inline-flex items-center justify-between rounded-2xl border border-[color:var(--border-soft)] bg-card px-3 py-2 text-xs font-medium text-[color:var(--text-primary)] transition hover:bg-[color:var(--surface-soft)]"
                     >
                       <span className="inline-flex items-center gap-2">
                         <Icon className="h-3.5 w-3.5" />
@@ -680,11 +680,11 @@ export function ExperienceSidebar() {
             <section key={zone.id} className="mb-6">
               {!collapsed && (
                 <div className="mb-2 flex items-center justify-between px-2">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
                     {zone.label}
                   </p>
                   {activeZoneId === zone.id && (
-                    <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium text-slate-300">
+                    <span className="rounded-full bg-card/10 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
                       Active
                     </span>
                   )}
@@ -704,8 +704,8 @@ export function ExperienceSidebar() {
                       className={[
                         "group flex items-center gap-3 rounded-2xl px-3 py-3 text-sm transition",
                         active
-                          ? "bg-white text-[color:var(--text-primary)] shadow-impilo-card"
-                          : "text-[color:var(--text-secondary)] hover:bg-white hover:text-[color:var(--text-primary)]",
+                          ? "impilo-nav-active shadow-impilo-card font-medium"
+                          : "text-[color:var(--text-secondary)] hover:bg-primary-soft hover:text-[color:var(--primary-hover)]",
                         collapsed ? "justify-center" : "",
                       ].join(" ")}
                     >
@@ -721,7 +721,7 @@ export function ExperienceSidebar() {
 
         <div className="border-t border-[color:var(--border-soft)] px-4 py-4">
           {!collapsed ? (
-            <div className="space-y-2 rounded-3xl border border-[color:var(--border-soft)] bg-white p-4 shadow-impilo-card">
+            <div className="space-y-2 rounded-3xl border border-[color:var(--border-soft)] bg-card p-4 shadow-impilo-card">
               <div>
                 <p className="text-[11px] uppercase tracking-[0.24em] text-[color:var(--text-muted)]">
                   {citizenOnly ? "My Account" : "Active Context"}
@@ -783,14 +783,14 @@ export function ExperienceSidebar() {
             <div className="flex flex-col items-center gap-3">
               {!citizenOnly && (
               <>
-              <Link href="/facility" title={facility?.name ?? "Facility"} onClick={closeDrawer} className="rounded-2xl border border-[color:var(--border-soft)] bg-white p-3 text-[color:var(--text-secondary)] transition hover:bg-[color:var(--surface-soft)]">
+              <Link href="/facility" title={facility?.name ?? "Facility"} onClick={closeDrawer} className="rounded-2xl border border-[color:var(--border-soft)] bg-card p-3 text-[color:var(--text-secondary)] transition hover:bg-[color:var(--surface-soft)]">
                 <Building2 className="h-4 w-4" />
               </Link>
-              <Link href="/workspace" title={workspace?.name ?? "Workspace"} onClick={closeDrawer} className="rounded-2xl border border-[color:var(--border-soft)] bg-white p-3 text-[color:var(--text-secondary)] transition hover:bg-[color:var(--surface-soft)]">
+              <Link href="/workspace" title={workspace?.name ?? "Workspace"} onClick={closeDrawer} className="rounded-2xl border border-[color:var(--border-soft)] bg-card p-3 text-[color:var(--text-secondary)] transition hover:bg-[color:var(--surface-soft)]">
                 <BriefcaseBusiness className="h-4 w-4" />
               </Link>
               <div className={shiftActive ? "rounded-full bg-emerald-400 p-1" : "rounded-full bg-amber-400 p-1"}>
-                <Activity className="h-3 w-3 text-slate-950" />
+                <Activity className="h-3 w-3 text-foreground" />
               </div>
               </>
               )}

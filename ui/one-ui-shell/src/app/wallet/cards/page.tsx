@@ -73,11 +73,11 @@ function unwrapItems(v: unknown): unknown[] {
 function statusBadge(status: string) {
   const s = status.toUpperCase();
   if (s === "ACTIVE") return "bg-green-100 text-green-800";
-  if (s === "ISSUED") return "bg-impilo-100 text-impilo-700";
+  if (s === "ISSUED") return "bg-primary-soft text-primary-hover";
   if (s === "BLOCKED") return "bg-red-100 text-red-800";
-  if (s === "EXPIRED") return "bg-gray-100 text-gray-600";
-  if (s === "REPLACED") return "bg-amber-100 text-amber-800";
-  return "bg-gray-100 text-gray-700";
+  if (s === "EXPIRED") return "bg-neutral-100 text-muted-foreground";
+  if (s === "REPLACED") return "bg-amber-100 text-warning-foreground";
+  return "bg-neutral-100 text-foreground";
 }
 
 const CARD_TYPES = ["DUAL", "PAYMENT_ONLY", "HEALTH_ONLY"] as const;
@@ -153,26 +153,26 @@ export default function CardManagementPage() {
         <div className="mb-4">
           <Link
             href="/wallet"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" /> Back to wallet
           </Link>
         </div>
 
         {!cpid && (
-          <p className="text-sm text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+          <p className="text-sm text-warning-foreground bg-warning-soft border border-amber-100 rounded-lg px-3 py-2">
             Sign in to manage your cards.
           </p>
         )}
 
         {cpid && walletQ.isLoading && (
-          <div className="flex items-center gap-2 text-gray-600 text-sm py-8">
+          <div className="flex items-center gap-2 text-muted-foreground text-sm py-8">
             <Loader2 className="h-5 w-5 animate-spin" /> Loading...
           </div>
         )}
 
         {cpid && !walletQ.isLoading && !walletId && (
-          <p className="text-sm text-red-700 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+          <p className="text-sm text-danger bg-danger-soft border border-red-100 rounded-lg px-3 py-2">
             No wallet found. Please set up your wallet first.
           </p>
         )}
@@ -181,11 +181,11 @@ export default function CardManagementPage() {
           <div className="space-y-6">
             {/* Actions bar */}
             <div className="flex items-center justify-between">
-              <h2 className="text-base font-semibold text-gray-900">Your cards</h2>
+              <h2 className="text-base font-semibold text-foreground">Your cards</h2>
               <button
                 type="button"
                 onClick={() => setShowNewCardForm(!showNewCardForm)}
-                className="inline-flex items-center gap-2 rounded-lg bg-impilo-500 px-3 py-2 text-sm font-medium text-white hover:bg-impilo-600"
+                className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white hover:bg-primary-hover"
               >
                 <Plus className="h-4 w-4" /> Request New Card
               </button>
@@ -193,13 +193,13 @@ export default function CardManagementPage() {
 
             {/* New card form */}
             {showNewCardForm && (
-              <div className="rounded-xl border border-impilo-200 bg-impilo-50/40 p-4 space-y-3">
-                <h3 className="text-sm font-semibold text-gray-900">Request a new card</h3>
+              <div className="rounded-xl border border-primary/25 bg-primary-soft/40 p-4 space-y-3">
+                <h3 className="text-sm font-semibold text-foreground">Request a new card</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Card type</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Card type</label>
                     <select
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                       value={newCardType}
                       onChange={(e) => setNewCardType(e.target.value)}
                     >
@@ -209,9 +209,9 @@ export default function CardManagementPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Network</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Network</label>
                     <select
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                       value={newCardNetwork}
                       onChange={(e) => setNewCardNetwork(e.target.value)}
                     >
@@ -225,7 +225,7 @@ export default function CardManagementPage() {
                   <button
                     type="button"
                     onClick={() => setShowNewCardForm(false)}
-                    className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm"
+                    className="rounded-lg border border-border bg-card px-4 py-2 text-sm"
                   >
                     Cancel
                   </button>
@@ -233,7 +233,7 @@ export default function CardManagementPage() {
                     type="button"
                     onClick={submitNewCard}
                     disabled={issueCard.isPending}
-                    className="rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white hover:bg-impilo-600 disabled:opacity-50"
+                    className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover disabled:opacity-50"
                   >
                     {issueCard.isPending && <Loader2 className="h-4 w-4 animate-spin inline mr-1" />}
                     Request Card
@@ -247,25 +247,25 @@ export default function CardManagementPage() {
 
             {/* Cards table */}
             {cardsQ.isLoading && (
-              <div className="flex items-center gap-2 text-gray-600 text-sm py-8">
+              <div className="flex items-center gap-2 text-muted-foreground text-sm py-8">
                 <Loader2 className="h-5 w-5 animate-spin" /> Loading cards...
               </div>
             )}
             {cardsQ.isError && (
-              <p className="text-sm text-red-700 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+              <p className="text-sm text-danger bg-danger-soft border border-red-100 rounded-lg px-3 py-2">
                 Could not load cards.
               </p>
             )}
 
             {!cardsQ.isLoading && !cardsQ.isError && cards.length === 0 && (
-              <p className="text-sm text-gray-500">No cards issued yet. Request your first card above.</p>
+              <p className="text-sm text-muted-foreground">No cards issued yet. Request your first card above.</p>
             )}
 
             {!cardsQ.isLoading && !cardsQ.isError && cards.length > 0 && (
-              <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+              <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-sm">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b bg-gray-50 text-left text-gray-600">
+                    <tr className="border-b bg-background text-left text-muted-foreground">
                       <th className="px-3 py-2">Card number</th>
                       <th className="px-3 py-2">Type</th>
                       <th className="px-3 py-2">Network</th>
@@ -291,7 +291,7 @@ export default function CardManagementPage() {
                             <button
                               type="button"
                               onClick={() => setExpandedCardId(isExpanded ? null : cardId)}
-                              className="font-mono text-xs text-gray-900 hover:text-impilo-600"
+                              className="font-mono text-xs text-foreground hover:text-primary"
                             >
                               {masked || "****"}
                             </button>
@@ -303,7 +303,7 @@ export default function CardManagementPage() {
                               {status}
                             </span>
                           </td>
-                          <td className="px-3 py-2 text-xs text-gray-600">
+                          <td className="px-3 py-2 text-xs text-muted-foreground">
                             {healthUpdated ? new Date(healthUpdated).toLocaleDateString() : "Not synced"}
                           </td>
                           <td className="px-3 py-2 text-right">
@@ -324,7 +324,7 @@ export default function CardManagementPage() {
                                     type="button"
                                     onClick={() => handleBlock(cardId)}
                                     disabled={blockCard.isPending}
-                                    className="inline-flex items-center gap-1 text-xs font-medium text-red-700 hover:text-red-900 disabled:opacity-40"
+                                    className="inline-flex items-center gap-1 text-xs font-medium text-danger hover:text-red-900 disabled:opacity-40"
                                   >
                                     <Lock className="h-3 w-3" /> Block
                                   </button>
@@ -332,7 +332,7 @@ export default function CardManagementPage() {
                                     type="button"
                                     onClick={() => syncHealth.mutate({ cardId })}
                                     disabled={syncHealth.isPending}
-                                    className="inline-flex items-center gap-1 text-xs font-medium text-impilo-600 hover:text-impilo-800 disabled:opacity-40"
+                                    className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-impilo-800 disabled:opacity-40"
                                   >
                                     <RefreshCw className="h-3 w-3" /> Sync
                                   </button>
@@ -353,7 +353,7 @@ export default function CardManagementPage() {
                                   type="button"
                                   onClick={() => replaceCard.mutate({ cardId })}
                                   disabled={replaceCard.isPending}
-                                  className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 hover:text-amber-900 disabled:opacity-40"
+                                  className="inline-flex items-center gap-1 text-xs font-medium text-warning-foreground hover:text-warning-foreground disabled:opacity-40"
                                 >
                                   Replace
                                 </button>
@@ -370,11 +370,11 @@ export default function CardManagementPage() {
 
             {/* Expanded card detail */}
             {expandedCardId && (
-              <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4 space-y-3">
-                <h3 className="text-sm font-semibold text-gray-900">Card details</h3>
+              <div className="rounded-xl border border-border bg-card shadow-sm p-4 space-y-3">
+                <h3 className="text-sm font-semibold text-foreground">Card details</h3>
                 {(() => {
                   const card = cards.find((c) => readStr(c, "cardId", "card_id") === expandedCardId);
-                  if (!card) return <p className="text-sm text-gray-500">Card not found.</p>;
+                  if (!card) return <p className="text-sm text-muted-foreground">Card not found.</p>;
                   const pinTries = readNum(card, "pinTriesRemaining", "pin_tries_remaining");
                   const appletVersion = readStr(card, "healthAppletVersion", "health_applet_version");
                   const ipsVersion = readStr(card, "ipsVersion", "ips_version");
@@ -384,40 +384,40 @@ export default function CardManagementPage() {
                   const replacedBy = readStr(card, "replacedBy", "replaced_by");
                   return (
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs">
-                      <div className="rounded-lg bg-gray-50 p-2">
-                        <div className="text-gray-500">PIN tries remaining</div>
-                        <div className="font-medium text-gray-900">{pinTries}</div>
+                      <div className="rounded-lg bg-background p-2">
+                        <div className="text-muted-foreground">PIN tries remaining</div>
+                        <div className="font-medium text-foreground">{pinTries}</div>
                       </div>
-                      <div className="rounded-lg bg-gray-50 p-2">
-                        <div className="text-gray-500">Health applet version</div>
-                        <div className="font-medium text-gray-900">{appletVersion || "N/A"}</div>
+                      <div className="rounded-lg bg-background p-2">
+                        <div className="text-muted-foreground">Health applet version</div>
+                        <div className="font-medium text-foreground">{appletVersion || "N/A"}</div>
                       </div>
-                      <div className="rounded-lg bg-gray-50 p-2">
-                        <div className="text-gray-500">IPS version</div>
-                        <div className="font-medium text-gray-900">{ipsVersion || "N/A"}</div>
+                      <div className="rounded-lg bg-background p-2">
+                        <div className="text-muted-foreground">IPS version</div>
+                        <div className="font-medium text-foreground">{ipsVersion || "N/A"}</div>
                       </div>
                       {ipsUpdated && (
-                        <div className="rounded-lg bg-gray-50 p-2">
-                          <div className="text-gray-500">IPS updated</div>
-                          <div className="font-medium text-gray-900">{new Date(ipsUpdated).toLocaleString()}</div>
+                        <div className="rounded-lg bg-background p-2">
+                          <div className="text-muted-foreground">IPS updated</div>
+                          <div className="font-medium text-foreground">{new Date(ipsUpdated).toLocaleString()}</div>
                         </div>
                       )}
                       {activatedAt && (
-                        <div className="rounded-lg bg-gray-50 p-2">
-                          <div className="text-gray-500">Activated</div>
-                          <div className="font-medium text-gray-900">{new Date(activatedAt).toLocaleString()}</div>
+                        <div className="rounded-lg bg-background p-2">
+                          <div className="text-muted-foreground">Activated</div>
+                          <div className="font-medium text-foreground">{new Date(activatedAt).toLocaleString()}</div>
                         </div>
                       )}
                       {blockedReason && (
-                        <div className="rounded-lg bg-red-50 p-2">
+                        <div className="rounded-lg bg-danger-soft p-2">
                           <div className="text-red-600">Block reason</div>
                           <div className="font-medium text-red-800">{blockedReason}</div>
                         </div>
                       )}
                       {replacedBy && (
-                        <div className="rounded-lg bg-amber-50 p-2">
+                        <div className="rounded-lg bg-warning-soft p-2">
                           <div className="text-amber-600">Replaced by</div>
-                          <div className="font-mono font-medium text-amber-800">{replacedBy}</div>
+                          <div className="font-mono font-medium text-warning-foreground">{replacedBy}</div>
                         </div>
                       )}
                     </div>
@@ -426,21 +426,21 @@ export default function CardManagementPage() {
 
                 {/* Pending updates */}
                 <div>
-                  <h4 className="text-xs font-semibold text-gray-700 mb-2">Pending updates</h4>
+                  <h4 className="text-xs font-semibold text-foreground mb-2">Pending updates</h4>
                   {pendingUpdatesQ.isLoading && (
-                    <div className="flex items-center gap-2 text-gray-600 text-xs">
+                    <div className="flex items-center gap-2 text-muted-foreground text-xs">
                       <Loader2 className="h-3 w-3 animate-spin" /> Loading...
                     </div>
                   )}
                   {!pendingUpdatesQ.isLoading && pendingUpdates.length === 0 && (
-                    <p className="text-xs text-gray-500">No pending updates.</p>
+                    <p className="text-xs text-muted-foreground">No pending updates.</p>
                   )}
                   {!pendingUpdatesQ.isLoading && pendingUpdates.length > 0 && (
-                    <ul className="divide-y divide-gray-100 border border-gray-100 rounded-lg text-xs">
+                    <ul className="divide-y divide-gray-100 border border-border rounded-lg text-xs">
                       {pendingUpdates.map((upd, j) => (
                         <li key={readStr(upd, "queueId", "queue_id") || String(j)} className="px-3 py-2 flex justify-between">
-                          <span className="text-gray-800">{readStr(upd, "updateType", "update_type")}</span>
-                          <span className="text-gray-500">
+                          <span className="text-foreground">{readStr(upd, "updateType", "update_type")}</span>
+                          <span className="text-muted-foreground">
                             {readStr(upd, "status")} - Attempt {readNum(upd, "attempts")}
                           </span>
                         </li>
@@ -452,7 +452,7 @@ export default function CardManagementPage() {
                 <button
                   type="button"
                   onClick={() => setExpandedCardId(null)}
-                  className="text-xs font-medium text-gray-500 hover:text-gray-700"
+                  className="text-xs font-medium text-muted-foreground hover:text-foreground"
                 >
                   Close details
                 </button>

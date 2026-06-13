@@ -5,7 +5,7 @@ export default function LearningLibraryResourceDetailPage({ params }: { params: 
   return (
     <AppLayout>
       <PageShell title="Resource Detail" subtitle="Resource ownership, review status, versions and usage links.">
-        <div className="rounded border border-gray-200 bg-white p-4 text-sm text-gray-700">
+        <div className="rounded border border-border bg-card p-4 text-sm text-foreground">
           Resource reference: <span className="font-mono">{params.resourceId}</span>
         </div>
       </PageShell>

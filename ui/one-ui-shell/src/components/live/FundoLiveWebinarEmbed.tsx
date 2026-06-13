@@ -20,15 +20,15 @@ export function FundoLiveWebinarEmbed({ liveEventId, courseId, courseTitle }: Fu
 
   if (!liveEventId) {
     return (
-      <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600">
-        <p className="font-medium text-gray-800">Live webinar</p>
+      <div className="rounded-xl border border-dashed border-border bg-background p-4 text-sm text-muted-foreground">
+        <p className="font-medium text-foreground">Live webinar</p>
         <p className="mt-1">
           No Impilo Live session is linked to this course yet. Trainers schedule webinars from Fundo
           Studio; attendance and CPD remain in Fundo.
         </p>
         <Link
           href={`/learning/studio/courses/${courseId}`}
-          className="mt-3 inline-flex text-sm font-medium text-blue-700 hover:underline"
+          className="mt-3 inline-flex text-sm font-medium text-primary-hover hover:underline"
         >
           Open Fundo Studio
         </Link>
@@ -37,21 +37,21 @@ export function FundoLiveWebinarEmbed({ liveEventId, courseId, courseTitle }: Fu
   }
 
   return (
-    <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4">
+    <div className="rounded-xl border border-success/25 bg-success-soft/50 p-4">
       <div className="flex items-start gap-3">
-        <div className="rounded-lg bg-emerald-100 p-2 text-emerald-800">
+        <div className="rounded-lg bg-emerald-100 p-2 text-primary-hover">
           <Video className="h-5 w-5" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wide text-emerald-800">Fundo · Impilo Live</p>
-          <p className="mt-1 font-medium text-gray-900">
+          <p className="text-xs font-semibold uppercase tracking-wide text-primary-hover">Fundo · Impilo Live</p>
+          <p className="mt-1 font-medium text-foreground">
             {isLoading ? "Loading webinar…" : event?.title ?? "Course-linked webinar"}
           </p>
           {courseTitle ? (
-            <p className="text-sm text-gray-600 mt-0.5">{courseTitle}</p>
+            <p className="text-sm text-muted-foreground mt-0.5">{courseTitle}</p>
           ) : null}
           {event?.status ? (
-            <p className="mt-2 inline-flex items-center gap-1 text-xs text-emerald-900">
+            <p className="mt-2 inline-flex items-center gap-1 text-xs text-primary-hover">
               <Radio className="h-3 w-3" /> {event.status.replace(/_/g, " ")}
             </p>
           ) : null}
@@ -65,7 +65,7 @@ export function FundoLiveWebinarEmbed({ liveEventId, courseId, courseTitle }: Fu
             {(event?.status === "LIVE" || event?.status === "SCHEDULED") && (
               <Link
                 href={`/live/event/${liveEventId}/room`}
-                className="inline-flex items-center rounded-lg border border-emerald-700 px-3 py-1.5 text-sm font-medium text-emerald-800 hover:bg-emerald-100"
+                className="inline-flex items-center rounded-lg border border-emerald-700 px-3 py-1.5 text-sm font-medium text-primary-hover hover:bg-emerald-100"
               >
                 Join webinar
               </Link>
@@ -73,7 +73,7 @@ export function FundoLiveWebinarEmbed({ liveEventId, courseId, courseTitle }: Fu
             {event?.status === "PUBLISHED_REPLAY" || event?.status === "ENDED" ? (
               <Link
                 href={`/live/event/${liveEventId}/replay`}
-                className="inline-flex items-center rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-white"
+                className="inline-flex items-center rounded-lg border border-border px-3 py-1.5 text-sm text-foreground hover:bg-card"
               >
                 Watch replay
               </Link>

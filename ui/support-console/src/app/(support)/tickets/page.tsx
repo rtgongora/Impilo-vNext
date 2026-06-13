@@ -74,7 +74,7 @@ function TicketsListPageContent() {
         <select
           value={statusFilter}
           onChange={(e) => { setStatusFilter(e.target.value as TicketStatus | ""); setPage(0); }}
-          className="px-3 py-2 border border-neutral-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
+          className="px-3 py-2 border border-neutral-200 rounded-lg text-sm bg-card focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
         >
           <option value="">All Statuses</option>
           {STATUS_OPTIONS.map((s) => (
@@ -84,7 +84,7 @@ function TicketsListPageContent() {
         <select
           value={priorityFilter}
           onChange={(e) => { setPriorityFilter(e.target.value as TicketPriority | ""); setPage(0); }}
-          className="px-3 py-2 border border-neutral-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
+          className="px-3 py-2 border border-neutral-200 rounded-lg text-sm bg-card focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
         >
           <option value="">All Priorities</option>
           {PRIORITY_OPTIONS.map((p) => (
@@ -94,7 +94,7 @@ function TicketsListPageContent() {
         <select
           value={categoryFilter}
           onChange={(e) => { setCategoryFilter(e.target.value as TicketCategory | ""); setPage(0); }}
-          className="px-3 py-2 border border-neutral-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
+          className="px-3 py-2 border border-neutral-200 rounded-lg text-sm bg-card focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
         >
           <option value="">All Categories</option>
           {CATEGORY_OPTIONS.map((c) => (
@@ -118,7 +118,7 @@ function TicketsListPageContent() {
       )}
 
       {/* Table */}
-      <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100">
+      <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100">
         {loading ? (
           <div className="p-8 text-center text-sm text-neutral-500">Loading tickets...</div>
         ) : tickets.length === 0 ? (

@@ -52,10 +52,10 @@ interface BedResource {
 
 const BED_STATUS_STYLES: Record<string, { bg: string; icon: typeof CheckCircle }> = {
   AVAILABLE: { bg: "bg-green-100 border-green-300 text-green-700", icon: CheckCircle },
-  OCCUPIED: { bg: "bg-impilo-100 border-impilo-200 text-impilo-600", icon: User },
-  RESERVED: { bg: "bg-amber-100 border-amber-300 text-amber-700", icon: Clock },
-  MAINTENANCE: { bg: "bg-gray-100 border-gray-300 text-gray-600", icon: Wrench },
-  CLEANING: { bg: "bg-purple-100 border-purple-300 text-purple-700", icon: Sparkles },
+  OCCUPIED: { bg: "bg-primary-soft border-primary/25 text-primary", icon: User },
+  RESERVED: { bg: "bg-amber-100 border-amber-300 text-warning-foreground", icon: Clock },
+  MAINTENANCE: { bg: "bg-neutral-100 border-border text-muted-foreground", icon: Wrench },
+  CLEANING: { bg: "bg-purple-100 border-purple-300 text-warning-foreground", icon: Sparkles },
 };
 
 export default function BedManagementPage() {
@@ -135,17 +135,17 @@ export default function BedManagementPage() {
     <AppLayout>
       <PageShell title="Bed Management" subtitle={facility ? `${facility.name} — Ward & Bed Census` : "Select a facility first"}>
         {!facility ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <Bed className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-400 text-sm">Select a facility to view bed management</p>
-            <Link href="/home" className="mt-2 inline-block text-sm text-impilo-500 hover:text-impilo-700">
+          <div className="bg-card rounded-lg border border-border p-12 text-center">
+            <Bed className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground text-sm">Select a facility to view bed management</p>
+            <Link href="/home" className="mt-2 inline-block text-sm text-primary hover:text-primary-hover">
               Go to Home →
             </Link>
           </div>
         ) : isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading bed data...</span>
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading bed data...</span>
           </div>
         ) : (
           <div className="space-y-6">
@@ -187,45 +187,45 @@ export default function BedManagementPage() {
               ]}
             />
 
-            <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+            <div className="rounded-3xl border border-border bg-background/70 p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
                 Bed handoff status
               </p>
-              <p className="mt-2 text-sm text-slate-800">
+              <p className="mt-2 text-sm text-foreground">
                 {source === "discharge"
                   ? "This bed workspace was reached from visit outcome, so the loop here is reserving or selecting a bed without losing the encounter and chart handoff."
                   : "This workspace supports live bed operations at the current facility, with occupancy and turnover visible from the same surface."}
               </p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Use the quick actions below to reserve available beds, release discharged beds into cleaning, and move back to the encounter or chart when the handoff is complete.
               </p>
             </div>
 
             {/* Census Summary */}
             <div className="grid grid-cols-3 gap-4">
-              <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
-                <p className="text-2xl font-bold text-gray-900">{totalBeds}</p>
-                <p className="text-xs text-gray-500">Total Beds</p>
+              <div className="bg-card rounded-lg border border-border p-4 text-center">
+                <p className="text-2xl font-bold text-foreground">{totalBeds}</p>
+                <p className="text-xs text-muted-foreground">Total Beds</p>
               </div>
               <div className="bg-green-50 rounded-lg border border-green-200 p-4 text-center">
                 <p className="text-2xl font-bold text-green-700">{available}</p>
                 <p className="text-xs text-green-600">Available</p>
               </div>
-              <div className="bg-impilo-50 rounded-lg border border-impilo-200 p-4 text-center">
-                <p className="text-2xl font-bold text-impilo-600">{occupied}</p>
-                <p className="text-xs text-impilo-500">Occupied</p>
+              <div className="bg-primary-soft rounded-lg border border-primary/25 p-4 text-center">
+                <p className="text-2xl font-bold text-primary">{occupied}</p>
+                <p className="text-xs text-primary">Occupied</p>
               </div>
             </div>
 
             {/* Ward Filter */}
             <div className="flex flex-wrap gap-2">
               <button onClick={() => setSelectedWard(null)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${!selectedWard ? "bg-impilo-500 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+                className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${!selectedWard ? "bg-primary text-white" : "bg-neutral-100 text-muted-foreground hover:bg-neutral-100"}`}>
                 All Wards
               </button>
               {wards.map((ward) => (
                 <button key={ward.id} onClick={() => setSelectedWard(ward.id)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${selectedWard === ward.id ? "bg-impilo-500 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+                  className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${selectedWard === ward.id ? "bg-primary text-white" : "bg-neutral-100 text-muted-foreground hover:bg-neutral-100"}`}>
                   {ward.attributes.name} ({ward.attributes.availableBeds}/{ward.attributes.totalBeds})
                 </button>
               ))}
@@ -233,9 +233,9 @@ export default function BedManagementPage() {
 
             {/* Bed Grid */}
             {beds.length === 0 ? (
-              <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-                <Bed className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-400 text-sm">No beds configured for this facility</p>
+              <div className="bg-card rounded-lg border border-border p-12 text-center">
+                <Bed className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                <p className="text-muted-foreground text-sm">No beds configured for this facility</p>
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
@@ -257,7 +257,7 @@ export default function BedManagementPage() {
                             <span className={`text-[10px] px-1.5 py-0.5 rounded mt-1 inline-block ${
                               a.acuity === "CRITICAL" ? "bg-red-200 text-red-800"
                               : a.acuity === "HIGH" ? "bg-orange-200 text-orange-800"
-                              : "bg-gray-200 text-gray-700"
+                              : "bg-neutral-100 text-foreground"
                             }`}>{a.acuity}</span>
                           )}
                         </div>

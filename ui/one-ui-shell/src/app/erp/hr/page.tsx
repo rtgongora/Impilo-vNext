@@ -55,13 +55,13 @@ export default function ErpHrPage() {
     <AppLayout>
       <PageShell title="HR & payroll" subtitle="Employees, leave, attendance, and payroll via BFF">
         <div className="mb-4 flex flex-wrap items-center gap-3">
-          <Link href="/erp" className="text-sm text-impilo-500 hover:underline">
+          <Link href="/erp" className="text-sm text-primary hover:underline">
             ← ERP hub
           </Link>
-          <label className="flex items-center gap-2 text-sm text-slate-700">
+          <label className="flex items-center gap-2 text-sm text-foreground">
             Employee
             <select
-              className="rounded border border-slate-300 px-2 py-1 text-sm"
+              className="rounded border border-border px-2 py-1 text-sm"
               value={effEmp}
               onChange={(e) => setEmployeeId(e.target.value)}
             >
@@ -73,10 +73,10 @@ export default function ErpHrPage() {
                 ))}
             </select>
           </label>
-          <label className="flex items-center gap-2 text-sm text-slate-700">
+          <label className="flex items-center gap-2 text-sm text-foreground">
             Payroll run
             <select
-              className="rounded border border-slate-300 px-2 py-1 text-sm"
+              className="rounded border border-border px-2 py-1 text-sm"
               value={effRun}
               onChange={(e) => setRunId(e.target.value)}
             >
@@ -91,12 +91,12 @@ export default function ErpHrPage() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">Employees</h2>
+          <section className="rounded-xl border border-border bg-card p-4 shadow-sm">
+            <h2 className="text-sm font-semibold text-foreground">Employees</h2>
             <JsonApiDataTable data={employees.data} columns={empCols} isLoading={employees.isPending} error={employees.error as Error | null} emptyHint="No employees returned from hr-payroll-service." />
           </section>
-          <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">Payroll runs</h2>
+          <section className="rounded-xl border border-border bg-card p-4 shadow-sm">
+            <h2 className="text-sm font-semibold text-foreground">Payroll runs</h2>
             <JsonApiDataTable
               data={runs.data}
               columns={[
@@ -108,8 +108,8 @@ export default function ErpHrPage() {
               error={runs.error as Error | null}
             />
           </section>
-          <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">Contracts</h2>
+          <section className="rounded-xl border border-border bg-card p-4 shadow-sm">
+            <h2 className="text-sm font-semibold text-foreground">Contracts</h2>
             <JsonApiDataTable
               data={contracts.data}
               columns={[
@@ -122,8 +122,8 @@ export default function ErpHrPage() {
               error={contracts.error as Error | null}
             />
           </section>
-          <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">Payslips</h2>
+          <section className="rounded-xl border border-border bg-card p-4 shadow-sm">
+            <h2 className="text-sm font-semibold text-foreground">Payslips</h2>
             <JsonApiDataTable
               data={payslips.data}
               columns={[
@@ -136,8 +136,8 @@ export default function ErpHrPage() {
               error={payslips.error as Error | null}
             />
           </section>
-          <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">Leave types</h2>
+          <section className="rounded-xl border border-border bg-card p-4 shadow-sm">
+            <h2 className="text-sm font-semibold text-foreground">Leave types</h2>
             <JsonApiDataTable
               data={leaveTypes.data}
               columns={[
@@ -149,8 +149,8 @@ export default function ErpHrPage() {
               error={leaveTypes.error as Error | null}
             />
           </section>
-          <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">Deduction types</h2>
+          <section className="rounded-xl border border-border bg-card p-4 shadow-sm">
+            <h2 className="text-sm font-semibold text-foreground">Deduction types</h2>
             <JsonApiDataTable
               data={deductions.data}
               columns={[
@@ -162,8 +162,8 @@ export default function ErpHrPage() {
               error={deductions.error as Error | null}
             />
           </section>
-          <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:col-span-2">
-            <h2 className="text-sm font-semibold text-slate-900">Leave requests</h2>
+          <section className="rounded-xl border border-border bg-card p-4 shadow-sm md:col-span-2">
+            <h2 className="text-sm font-semibold text-foreground">Leave requests</h2>
             <JsonApiDataTable
               data={leaveReq.data}
               columns={[
@@ -177,8 +177,8 @@ export default function ErpHrPage() {
               error={leaveReq.error as Error | null}
             />
           </section>
-          <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:col-span-2">
-            <h2 className="text-sm font-semibold text-slate-900">Attendance</h2>
+          <section className="rounded-xl border border-border bg-card p-4 shadow-sm md:col-span-2">
+            <h2 className="text-sm font-semibold text-foreground">Attendance</h2>
             <JsonApiDataTable
               data={attendance.data}
               columns={[

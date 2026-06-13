@@ -33,7 +33,7 @@ export default function LiveEventDetailPage() {
     return (
       <AppLayout>
         <PageShell title="Live Event" subtitle="Loading event details…">
-          <p className="text-sm text-gray-500">Loading…</p>
+          <p className="text-sm text-muted-foreground">Loading…</p>
         </PageShell>
       </AppLayout>
     );
@@ -56,22 +56,22 @@ export default function LiveEventDetailPage() {
       <PageShell title={event.title} subtitle={event.description ?? "Live event details"}>
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-4">
-            <div className="rounded-2xl border border-gray-200 bg-white p-5">
+            <div className="rounded-2xl border border-border bg-card p-5">
               <div className="flex flex-wrap gap-2 mb-3">
                 <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-800">
                   {event.status}
                 </span>
-                <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700">
+                <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs text-foreground">
                   {event.eventType.replace(/_/g, " ")}
                 </span>
                 {event.cpdEnabled ? (
-                  <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs text-indigo-800">
+                  <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs text-primary-hover">
                     CPD {event.cpdPoints ? `· ${event.cpdPoints} pts` : ""}
                   </span>
                 ) : null}
               </div>
 
-              <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+              <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                 <span className="inline-flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
                   {event.startTime
@@ -112,7 +112,7 @@ export default function LiveEventDetailPage() {
                 {isEnded ? (
                   <Link
                     href={`/live/event/${eventId}/replay`}
-                    className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700"
+                    className="rounded-lg border border-border px-3 py-2 text-sm text-foreground"
                   >
                     Watch replay
                   </Link>
@@ -142,11 +142,11 @@ export default function LiveEventDetailPage() {
 
                 <Link
                   href={`/live/event/${eventId}/analytics`}
-                  className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700"
+                  className="rounded-lg border border-border px-3 py-2 text-sm text-foreground"
                 >
                   Analytics
                 </Link>
-                <Link href="/live" className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700">
+                <Link href="/live" className="rounded-lg border border-border px-3 py-2 text-sm text-foreground">
                   Hub
                 </Link>
               </div>

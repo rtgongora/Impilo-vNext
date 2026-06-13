@@ -44,25 +44,25 @@ export default function PublishPage() {
   return (
     <div>
       <h2 className="text-xl font-bold mb-4">Publish Catalogs</h2>
-      <p className="text-sm text-gray-500 mb-4">
+      <p className="text-sm text-muted-foreground mb-4">
         Publishing requires step-up authentication. Only APPROVED catalogs can be published.
       </p>
 
       {stepUp && (
-        <div className="bg-amber-50 border border-amber-300 text-amber-800 px-4 py-3 rounded mb-4">
+        <div className="bg-warning-soft border border-amber-300 text-warning-foreground px-4 py-3 rounded mb-4">
           Step-up authentication required. Please re-authenticate with elevated privileges to publish.
         </div>
       )}
 
       {loading ? (
-        <p className="text-gray-500">Loading...</p>
+        <p className="text-muted-foreground">Loading...</p>
       ) : (
         <div className="space-y-4">
           {catalogs.map(c => (
-            <div key={c.catalogId} className="bg-white p-4 rounded shadow border flex justify-between items-center">
+            <div key={c.catalogId} className="bg-card p-4 rounded shadow border flex justify-between items-center">
               <div>
-                <h3 className="font-semibold">{c.name} <span className="text-sm font-mono text-gray-400">v{c.version}</span></h3>
-                <p className="text-sm text-gray-500">{c.itemCount} items | {c.scope} | Checksum: {c.checksum || "pending"}</p>
+                <h3 className="font-semibold">{c.name} <span className="text-sm font-mono text-muted-foreground">v{c.version}</span></h3>
+                <p className="text-sm text-muted-foreground">{c.itemCount} items | {c.scope} | Checksum: {c.checksum || "pending"}</p>
               </div>
               <div className="flex items-center gap-3">
                 <span className={`px-3 py-1 rounded text-xs font-medium ${
@@ -77,7 +77,7 @@ export default function PublishPage() {
               </div>
             </div>
           ))}
-          {catalogs.length === 0 && <p className="text-gray-500">No catalogs ready for publishing.</p>}
+          {catalogs.length === 0 && <p className="text-muted-foreground">No catalogs ready for publishing.</p>}
         </div>
       )}
     </div>

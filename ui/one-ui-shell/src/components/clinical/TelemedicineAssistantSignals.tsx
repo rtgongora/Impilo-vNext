@@ -18,9 +18,9 @@ export function TelemedicineAssistantSignals() {
         <h3 className="text-sm font-semibold">Context signals (assistant)</h3>
       </div>
       <p className="mt-1 text-xs text-violet-800/90">
-        Aggregated from <code className="rounded bg-white/70 px-1">GET /internal/v1/assistant/notifications</code> using
+        Aggregated from <code className="rounded bg-card/70 px-1">GET /internal/v1/assistant/notifications</code> using
         your work mode, facility, and shift. Policy evaluation remains on Tshepo (
-        <code className="rounded bg-white/70 px-1">/api/v1/policies</code> via gateway).
+        <code className="rounded bg-card/70 px-1">/api/v1/policies</code> via gateway).
       </p>
       {isLoading ? (
         <div className="mt-3 flex items-center gap-2 text-xs text-violet-700">
@@ -28,7 +28,7 @@ export function TelemedicineAssistantSignals() {
           Loading signals…
         </div>
       ) : isError ? (
-        <p className="mt-3 text-xs text-amber-800">
+        <p className="mt-3 text-xs text-warning-foreground">
           Signals could not be loaded. Clinical work continues; retry from the shell notification tray when available.
         </p>
       ) : data.length === 0 ? (
@@ -38,9 +38,9 @@ export function TelemedicineAssistantSignals() {
       ) : (
         <ul className="mt-3 space-y-2">
           {data.slice(0, 5).map((n) => (
-            <li key={n.id} className="rounded-lg border border-violet-100 bg-white/80 px-3 py-2 text-xs text-slate-800">
-              <span className="font-medium text-slate-900">{n.title}</span>
-              <span className="block text-slate-600">{n.body}</span>
+            <li key={n.id} className="rounded-lg border border-violet-100 bg-card/80 px-3 py-2 text-xs text-foreground">
+              <span className="font-medium text-foreground">{n.title}</span>
+              <span className="block text-muted-foreground">{n.body}</span>
               {n.action?.href ? (
                 <Link href={n.action.href} className="mt-1 inline-block text-violet-700 underline">
                   {n.action.label}

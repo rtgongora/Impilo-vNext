@@ -46,15 +46,15 @@ export default function MonitoringAlertsPage() {
       >
         <div className="space-y-6">
           {!patientId && (
-            <p className="text-sm text-gray-500">Sign in to view monitoring alerts.</p>
+            <p className="text-sm text-muted-foreground">Sign in to view monitoring alerts.</p>
           )}
 
           {patientId && (
             <div className="grid grid-cols-3 gap-4">
               {[
-                { label: "Critical", count: counts.critical, color: "border-red-200 bg-red-50 text-red-700" },
-                { label: "Warning", count: counts.warning, color: "border-amber-200 bg-amber-50 text-amber-700" },
-                { label: "Info", count: counts.info, color: "border-impilo-200 bg-impilo-50 text-impilo-600" },
+                { label: "Critical", count: counts.critical, color: "border-danger/28 bg-danger-soft text-danger" },
+                { label: "Warning", count: counts.warning, color: "border-warning/35 bg-warning-soft text-warning-foreground" },
+                { label: "Info", count: counts.info, color: "border-primary/25 bg-primary-soft text-primary" },
               ].map(({ label, count, color }) => (
                 <div key={label} className={`rounded-lg border p-4 text-center ${color}`}>
                   <p className="text-2xl font-bold">{count}</p>
@@ -65,7 +65,7 @@ export default function MonitoringAlertsPage() {
           )}
 
           {patientId && isLoading && (
-            <div className="flex items-center gap-2 text-sm text-gray-500">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
               Loading alerts…
             </div>
@@ -76,10 +76,10 @@ export default function MonitoringAlertsPage() {
           )}
 
           {patientId && !isLoading && !isError && alerts.length === 0 && (
-            <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-12 text-center">
-              <AlertTriangle className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-4 text-sm font-semibold text-gray-900">No alerts</h3>
-              <p className="mt-2 text-sm text-gray-600">
+            <div className="rounded-lg border border-dashed border-border bg-background p-12 text-center">
+              <AlertTriangle className="mx-auto h-12 w-12 text-muted-foreground" />
+              <h3 className="mt-4 text-sm font-semibold text-foreground">No alerts</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
                 When vitals breach configured thresholds, alerts appear here from wellness remote monitoring.
               </p>
             </div>
@@ -88,19 +88,19 @@ export default function MonitoringAlertsPage() {
           {patientId && !isLoading && !isError && alerts.length > 0 && (
             <ul className="space-y-3">
               {alerts.map((alert) => (
-                <li key={alert.id} className="rounded-xl border border-gray-200 bg-white p-4">
+                <li key={alert.id} className="rounded-xl border border-border bg-card p-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="text-sm font-semibold text-gray-900">
+                      <p className="text-sm font-semibold text-foreground">
                         {alert.vitalType.replace(/_/g, " ")}
                         {alert.observedValue != null ? (
-                          <span className="font-normal text-gray-600">
+                          <span className="font-normal text-muted-foreground">
                             {" "}
                             · {alert.observedValue} {alert.unit}
                           </span>
                         ) : null}
                       </p>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         {fmtWhen(alert.measuredAt)} · {alert.severity} · {alert.status}
                       </p>
                     </div>
@@ -109,7 +109,7 @@ export default function MonitoringAlertsPage() {
                         type="button"
                         disabled={reviewAlert.isPending}
                         onClick={() => reviewAlert.mutate({ alertId: alert.id })}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-background"
                       >
                         <CheckCheck className="h-3.5 w-3.5" />
                         Acknowledge

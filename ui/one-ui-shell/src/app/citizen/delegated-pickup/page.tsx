@@ -80,10 +80,10 @@ export default function CitizenDelegatedPickupPage() {
   }
 
   return (
-    <div className="max-w-lg mx-auto bg-white rounded-xl border border-gray-200 p-6">
-      <h1 className="text-xl font-semibold text-gray-900 mb-1">Delegated pickup</h1>
-      <p className="text-sm text-gray-500 mb-6">Authorize collection or redeem a pickup (VITO portal contract).</p>
-      <div className="flex rounded-lg bg-gray-100 p-1 mb-6">
+    <div className="max-w-lg mx-auto bg-card rounded-xl border border-border p-6">
+      <h1 className="text-xl font-semibold text-foreground mb-1">Delegated pickup</h1>
+      <p className="text-sm text-muted-foreground mb-6">Authorize collection or redeem a pickup (VITO portal contract).</p>
+      <div className="flex rounded-lg bg-neutral-100 p-1 mb-6">
         <button
           type="button"
           onClick={() => {
@@ -91,7 +91,7 @@ export default function CitizenDelegatedPickupPage() {
             setError(null);
             setPickupResult(null);
           }}
-          className={`flex-1 px-3 py-2 rounded-md text-sm font-medium ${tab === "create" ? "bg-white shadow-sm" : "text-gray-600"}`}
+          className={`flex-1 px-3 py-2 rounded-md text-sm font-medium ${tab === "create" ? "bg-card shadow-sm" : "text-muted-foreground"}`}
         >
           Create
         </button>
@@ -102,13 +102,13 @@ export default function CitizenDelegatedPickupPage() {
             setError(null);
             setRedeemSuccess(false);
           }}
-          className={`flex-1 px-3 py-2 rounded-md text-sm font-medium ${tab === "redeem" ? "bg-white shadow-sm" : "text-gray-600"}`}
+          className={`flex-1 px-3 py-2 rounded-md text-sm font-medium ${tab === "redeem" ? "bg-card shadow-sm" : "text-muted-foreground"}`}
         >
           Redeem
         </button>
       </div>
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-sm text-red-700">{error}</div>
+        <div className="bg-danger-soft border border-danger/28 rounded-lg p-3 mb-4 text-sm text-danger">{error}</div>
       )}
       {tab === "create" && !pickupResult && (
         <form onSubmit={handleCreate} className="space-y-3 text-sm">
@@ -119,7 +119,7 @@ export default function CitizenDelegatedPickupPage() {
           <input value={delegateIdRef} onChange={(e) => setDelegateIdRef(e.target.value)} placeholder="Delegate ID ref (optional)" className="w-full border rounded px-3 py-2" />
           <input value={facilityId} onChange={(e) => setFacilityId(e.target.value)} placeholder="Facility ID" className="w-full border rounded px-3 py-2" required />
           <input value={expiryHours} onChange={(e) => setExpiryHours(e.target.value)} placeholder="Expiry hours (optional)" className="w-full border rounded px-3 py-2" type="number" />
-          <button type="submit" disabled={loading} className="w-full bg-impilo-500 text-white py-2 rounded-lg font-medium disabled:opacity-50">
+          <button type="submit" disabled={loading} className="w-full bg-primary text-white py-2 rounded-lg font-medium disabled:opacity-50">
             {loading ? "Creating…" : "Create pickup"}
           </button>
         </form>
@@ -129,8 +129,8 @@ export default function CitizenDelegatedPickupPage() {
           <p className="font-medium text-green-800">{pickupResult.message}</p>
           <p className="text-xs font-mono break-all">Token: {pickupResult.pickupToken}</p>
           <p className="text-xs">OTP: {pickupResult.otp}</p>
-          <p className="text-xs text-gray-600">Expires: {pickupResult.expiresAt}</p>
-          <button type="button" onClick={() => setPickupResult(null)} className="text-impilo-500 text-sm hover:underline">
+          <p className="text-xs text-muted-foreground">Expires: {pickupResult.expiresAt}</p>
+          <button type="button" onClick={() => setPickupResult(null)} className="text-primary text-sm hover:underline">
             Create another
           </button>
         </div>
@@ -139,7 +139,7 @@ export default function CitizenDelegatedPickupPage() {
         <form onSubmit={handleRedeem} className="space-y-3 text-sm">
           <input value={pickupToken} onChange={(e) => setPickupToken(e.target.value)} placeholder="Pickup token" className="w-full border rounded px-3 py-2" required />
           <input value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="OTP" className="w-full border rounded px-3 py-2" required />
-          <button type="submit" disabled={loading} className="w-full bg-impilo-500 text-white py-2 rounded-lg font-medium disabled:opacity-50">
+          <button type="submit" disabled={loading} className="w-full bg-primary text-white py-2 rounded-lg font-medium disabled:opacity-50">
             {loading ? "Redeeming…" : "Redeem"}
           </button>
         </form>

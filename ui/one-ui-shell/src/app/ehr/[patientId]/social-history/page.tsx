@@ -13,9 +13,9 @@ import { useFacilityStore } from "@/hooks/useFacilityStore";
 
 const RISK_STYLES: Record<string, string> = {
   Low: "bg-green-100 text-green-700",
-  Moderate: "bg-amber-100 text-amber-700",
-  High: "bg-red-100 text-red-700",
-  Unknown: "bg-gray-100 text-gray-600",
+  Moderate: "bg-amber-100 text-warning-foreground",
+  High: "bg-red-100 text-danger",
+  Unknown: "bg-neutral-100 text-muted-foreground",
 };
 
 export default function SocialHistoryPage() {
@@ -57,16 +57,16 @@ export default function SocialHistoryPage() {
       <PageShell title="Social History" subtitle="Social determinants of health and lifestyle factors">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading social history...</span>
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading social history...</span>
           </div>
         ) : isError ? (
           <div className="flex flex-col items-center justify-center gap-3 py-16">
-            <p className="text-sm text-gray-600">Unable to load social history for this patient.</p>
+            <p className="text-sm text-muted-foreground">Unable to load social history for this patient.</p>
             <button
               type="button"
               onClick={() => void refetch()}
-              className="rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white hover:bg-impilo-600"
+              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
             >
               Retry
             </button>
@@ -109,14 +109,14 @@ export default function SocialHistoryPage() {
               ]}
             />
 
-            <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Social continuity</p>
-              <p className="mt-2 text-sm text-slate-800">
+            <div className="rounded-3xl border border-border bg-background/70 p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Social continuity</p>
+              <p className="mt-2 text-sm text-foreground">
                 {highRiskCount > 0 || moderateRiskCount > 0
                   ? `${highRiskCount + moderateRiskCount} social factor${highRiskCount + moderateRiskCount === 1 ? " is" : "s are"} carrying some risk, so this surface should directly inform care plans, goals, and the documented next step.`
                   : "Current social context looks stable; the continuity need is keeping that support picture visible when plans, goals, or team decisions are updated elsewhere."}
               </p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Use Care Plans to assign interventions, Goals to reflect realistic targets, and Notes to explain how social context changes the care path.
               </p>
             </div>
@@ -124,19 +124,19 @@ export default function SocialHistoryPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Home className="h-5 w-5 text-teal-600" />
-                <h2 className="text-lg font-semibold text-gray-900">Social Determinants of Health</h2>
+                <h2 className="text-lg font-semibold text-foreground">Social Determinants of Health</h2>
               </div>
               <div className="flex items-center gap-2 text-xs">
-                {highRiskCount > 0 && <span className="rounded-full bg-red-100 px-2.5 py-1 font-medium text-red-700">{highRiskCount} High Risk</span>}
-                {moderateRiskCount > 0 && <span className="rounded-full bg-amber-100 px-2.5 py-1 font-medium text-amber-700">{moderateRiskCount} Moderate Risk</span>}
+                {highRiskCount > 0 && <span className="rounded-full bg-red-100 px-2.5 py-1 font-medium text-danger">{highRiskCount} High Risk</span>}
+                {moderateRiskCount > 0 && <span className="rounded-full bg-amber-100 px-2.5 py-1 font-medium text-warning-foreground">{moderateRiskCount} Moderate Risk</span>}
                 {highRiskCount === 0 && moderateRiskCount === 0 && <span className="rounded-full bg-green-100 px-2.5 py-1 font-medium text-green-700">All Low Risk</span>}
               </div>
             </div>
 
             {sections.length === 0 ? (
-              <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
-                <Home className="mx-auto mb-3 h-10 w-10 text-gray-300" />
-                <p className="text-sm text-gray-400">No social history recorded</p>
+              <div className="rounded-lg border border-border bg-card p-12 text-center">
+                <Home className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">No social history recorded</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -144,14 +144,14 @@ export default function SocialHistoryPage() {
                   const isEditing = editingId === section.id;
 
                   return (
-                    <div key={section.id} className="rounded-lg border border-gray-200 bg-white p-5">
+                    <div key={section.id} className="rounded-lg border border-border bg-card p-5">
                       <div className="flex items-start gap-4">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-teal-100 text-teal-600">
                           <Home className="h-5 w-5" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="mb-1 flex items-center justify-between">
-                            <h3 className="text-sm font-medium text-gray-900">{section.category}</h3>
+                            <h3 className="text-sm font-medium text-foreground">{section.category}</h3>
                             <div className="flex items-center gap-2">
                               <span
                                 className={`rounded-full px-2 py-0.5 text-xs font-medium ${
@@ -161,7 +161,7 @@ export default function SocialHistoryPage() {
                                 {section.riskLevel} Risk
                               </span>
                               {!isEditing && (
-                                <button onClick={() => startEdit(section)} className="p-1 text-gray-400 transition-colors hover:text-impilo-500">
+                                <button onClick={() => startEdit(section)} className="p-1 text-muted-foreground transition-colors hover:text-primary">
                                   <Edit3 className="h-3.5 w-3.5" />
                                 </button>
                               )}
@@ -171,25 +171,25 @@ export default function SocialHistoryPage() {
                           {isEditing ? (
                             <div className="mt-2 space-y-3">
                               <div>
-                                <label className="mb-1 block text-xs font-medium text-gray-600">Status</label>
-                                <input type="text" value={editStatus} onChange={(e) => setEditStatus(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
+                                <label className="mb-1 block text-xs font-medium text-muted-foreground">Status</label>
+                                <input type="text" value={editStatus} onChange={(e) => setEditStatus(e.target.value)} className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
                               </div>
                               <div>
-                                <label className="mb-1 block text-xs font-medium text-gray-600">Details</label>
-                                <textarea value={editDetail} onChange={(e) => setEditDetail(e.target.value)} rows={3} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400" />
+                                <label className="mb-1 block text-xs font-medium text-muted-foreground">Details</label>
+                                <textarea value={editDetail} onChange={(e) => setEditDetail(e.target.value)} rows={3} className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
                               </div>
                               <div className="flex items-center gap-2">
-                                <button className="inline-flex items-center gap-1 rounded-lg bg-impilo-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-impilo-600">
+                                <button className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-primary-hover">
                                   <Save className="h-3 w-3" /> Save
                                 </button>
-                                <button onClick={cancelEdit} className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50">Cancel</button>
+                                <button onClick={cancelEdit} className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-background">Cancel</button>
                               </div>
                             </div>
                           ) : (
                             <>
-                              <p className="text-sm font-medium text-gray-700">{section.status}</p>
-                              <p className="mt-1 text-xs text-gray-500">{section.detail}</p>
-                              <p className="mt-2 text-[10px] text-gray-400">Last updated: {section.lastUpdated}</p>
+                              <p className="text-sm font-medium text-foreground">{section.status}</p>
+                              <p className="mt-1 text-xs text-muted-foreground">{section.detail}</p>
+                              <p className="mt-2 text-[10px] text-muted-foreground">Last updated: {section.lastUpdated}</p>
                             </>
                           )}
                         </div>

@@ -42,13 +42,13 @@ export default function ErpGlPage() {
     <AppLayout>
       <PageShell title="General ledger" subtitle="Chart, periods, journals, and statements via BFF">
         <div className="mb-4 flex flex-wrap items-center gap-3">
-          <Link href="/erp" className="text-sm text-impilo-500 hover:underline">
+          <Link href="/erp" className="text-sm text-primary hover:underline">
             ← ERP hub
           </Link>
-          <label className="flex items-center gap-2 text-sm text-slate-700">
+          <label className="flex items-center gap-2 text-sm text-foreground">
             Period
             <select
-              className="rounded border border-slate-300 px-2 py-1 text-sm"
+              className="rounded border border-border px-2 py-1 text-sm"
               value={effectivePeriod}
               onChange={(e) => setPeriodId(e.target.value)}
             >
@@ -63,7 +63,7 @@ export default function ErpGlPage() {
           </label>
           <button
             type="button"
-            className="rounded bg-slate-800 px-3 py-1 text-sm text-white disabled:opacity-50"
+            className="rounded bg-primary-hover px-3 py-1 text-sm text-white disabled:opacity-50"
             disabled={seed.isPending}
             onClick={() => seed.mutate()}
           >
@@ -72,8 +72,8 @@ export default function ErpGlPage() {
         </div>
 
         <div className="space-y-6">
-          <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">Accounts</h2>
+          <section className="rounded-xl border border-border bg-card p-4 shadow-sm">
+            <h2 className="text-sm font-semibold text-foreground">Accounts</h2>
             <JsonApiDataTable
               data={accounts.data}
               columns={[
@@ -86,8 +86,8 @@ export default function ErpGlPage() {
               error={accounts.error as Error | null}
             />
           </section>
-          <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">Journals</h2>
+          <section className="rounded-xl border border-border bg-card p-4 shadow-sm">
+            <h2 className="text-sm font-semibold text-foreground">Journals</h2>
             <JsonApiDataTable
               data={journals.data}
               columns={[
@@ -100,8 +100,8 @@ export default function ErpGlPage() {
               error={journals.error as Error | null}
             />
           </section>
-          <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">Trial balance</h2>
+          <section className="rounded-xl border border-border bg-card p-4 shadow-sm">
+            <h2 className="text-sm font-semibold text-foreground">Trial balance</h2>
             <JsonApiDataTable
               data={trial.data}
               columns={[
@@ -113,8 +113,8 @@ export default function ErpGlPage() {
               error={trial.error as Error | null}
             />
           </section>
-          <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">Income statement</h2>
+          <section className="rounded-xl border border-border bg-card p-4 shadow-sm">
+            <h2 className="text-sm font-semibold text-foreground">Income statement</h2>
             <JsonApiDataTable
               data={income.data}
               columns={[
@@ -126,8 +126,8 @@ export default function ErpGlPage() {
               error={income.error as Error | null}
             />
           </section>
-          <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">Balance sheet</h2>
+          <section className="rounded-xl border border-border bg-card p-4 shadow-sm">
+            <h2 className="text-sm font-semibold text-foreground">Balance sheet</h2>
             <JsonApiDataTable
               data={balance.data}
               columns={[
@@ -139,8 +139,8 @@ export default function ErpGlPage() {
               error={balance.error as Error | null}
             />
           </section>
-          <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">Budgets ({fy})</h2>
+          <section className="rounded-xl border border-border bg-card p-4 shadow-sm">
+            <h2 className="text-sm font-semibold text-foreground">Budgets ({fy})</h2>
             <JsonApiDataTable
               data={budgets.data}
               columns={[

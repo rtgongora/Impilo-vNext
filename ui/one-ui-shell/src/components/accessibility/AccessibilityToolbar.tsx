@@ -91,7 +91,7 @@ export function AccessibilityToolbar() {
             "rounded-full border px-2.5 py-1 text-[11px] transition",
             state[toggle.key]
               ? "border-[color:var(--primary-muted)] bg-[color:var(--primary-soft)] text-[color:var(--primary-hover)]"
-              : "border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] text-[color:var(--text-secondary)] hover:bg-white",
+              : "border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] text-[color:var(--text-secondary)] hover:bg-card",
           ].join(" ")}
         >
           {toggle.label}
@@ -104,7 +104,7 @@ export function AccessibilityToolbar() {
           window.speechSynthesis?.cancel();
           window.speechSynthesis?.speak(new SpeechSynthesisUtterance(text));
         }}
-        className="inline-flex items-center gap-1 rounded-full border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-2.5 py-1 text-[11px] text-[color:var(--text-secondary)] hover:bg-white"
+        className="inline-flex items-center gap-1 rounded-full border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-2.5 py-1 text-[11px] text-[color:var(--text-secondary)] hover:bg-card"
       >
         <Volume2 className="h-3.5 w-3.5" />
         Read Aloud
@@ -112,14 +112,14 @@ export function AccessibilityToolbar() {
       <button
         type="button"
         onClick={() => focusSearchPalette()}
-        className="inline-flex items-center gap-1 rounded-full border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-2.5 py-1 text-[11px] text-[color:var(--text-secondary)] hover:bg-white"
+        className="inline-flex items-center gap-1 rounded-full border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-2.5 py-1 text-[11px] text-[color:var(--text-secondary)] hover:bg-card"
       >
         <Keyboard className="h-3.5 w-3.5" />
         Keyboard Hints
       </button>
       <Link
         href="/caregiving"
-        className="inline-flex items-center gap-1 rounded-full border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-2.5 py-1 text-[11px] text-[color:var(--text-secondary)] hover:bg-white"
+        className="inline-flex items-center gap-1 rounded-full border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-2.5 py-1 text-[11px] text-[color:var(--text-secondary)] hover:bg-card"
       >
         <Languages className="h-3.5 w-3.5" />
         Caregiver Assist

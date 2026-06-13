@@ -76,7 +76,7 @@ export default function OrganisationGovernanceDetailPage() {
         <div className="mb-6 flex items-center gap-3">
           <Link
             href="/organization-admin/governance"
-            className="inline-flex items-center gap-1 text-sm text-slate-600 hover:text-slate-900"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
             Organisations
@@ -84,42 +84,42 @@ export default function OrganisationGovernanceDetailPage() {
         </div>
 
         {loading ? (
-          <div className="text-sm text-slate-500">Loading…</div>
+          <div className="text-sm text-muted-foreground">Loading…</div>
         ) : error ? (
-          <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900">{error}</div>
+          <div className="rounded-md border border-danger/28 bg-danger-soft px-4 py-3 text-sm text-danger">{error}</div>
         ) : summary ? (
           <>
             <div className="flex items-start gap-4">
-              <Building2 className="h-10 w-10 text-slate-400" />
+              <Building2 className="h-10 w-10 text-muted-foreground" />
               <div>
-                <p className="text-sm text-slate-600">
+                <p className="text-sm text-muted-foreground">
                   {summary.organisationCode} · {summary.status}
                 </p>
               </div>
             </div>
 
             <dl className="mt-8 grid max-w-xl grid-cols-2 gap-4 text-sm">
-              <div className="rounded-lg border border-slate-200 bg-white p-4">
-                <dt className="text-slate-500">Organisation units</dt>
-                <dd className="mt-1 text-lg font-semibold text-slate-900">{summary.organisationUnitCount ?? 0}</dd>
+              <div className="rounded-lg border border-border bg-card p-4">
+                <dt className="text-muted-foreground">Organisation units</dt>
+                <dd className="mt-1 text-lg font-semibold text-foreground">{summary.organisationUnitCount ?? 0}</dd>
               </div>
-              <div className="rounded-lg border border-slate-200 bg-white p-4">
-                <dt className="text-slate-500">Linked facilities</dt>
-                <dd className="mt-1 text-lg font-semibold text-slate-900">{summary.linkedFacilityCount ?? 0}</dd>
+              <div className="rounded-lg border border-border bg-card p-4">
+                <dt className="text-muted-foreground">Linked facilities</dt>
+                <dd className="mt-1 text-lg font-semibold text-foreground">{summary.linkedFacilityCount ?? 0}</dd>
               </div>
-              <div className="rounded-lg border border-slate-200 bg-white p-4">
-                <dt className="text-slate-500">Linked Indawo sites</dt>
-                <dd className="mt-1 text-lg font-semibold text-slate-900">{summary.linkedSiteCount ?? 0}</dd>
+              <div className="rounded-lg border border-border bg-card p-4">
+                <dt className="text-muted-foreground">Linked Indawo sites</dt>
+                <dd className="mt-1 text-lg font-semibold text-foreground">{summary.linkedSiteCount ?? 0}</dd>
               </div>
-              <div className="rounded-lg border border-slate-200 bg-white p-4">
-                <dt className="text-slate-500">Assignments (org-scoped)</dt>
-                <dd className="mt-1 text-lg font-semibold text-slate-900">{summary.assignmentCount ?? 0}</dd>
+              <div className="rounded-lg border border-border bg-card p-4">
+                <dt className="text-muted-foreground">Assignments (org-scoped)</dt>
+                <dd className="mt-1 text-lg font-semibold text-foreground">{summary.assignmentCount ?? 0}</dd>
               </div>
             </dl>
 
-            <p className="mt-8 max-w-2xl text-xs text-slate-500">
+            <p className="mt-8 max-w-2xl text-xs text-muted-foreground">
               PIC lifecycle remains in Varapi with Tuso mirror; use assignment type{" "}
-              <code className="rounded bg-slate-100 px-1">PRACTITIONER_IN_CHARGE</code> in workforce governance for
+              <code className="rounded bg-neutral-100 px-1">PRACTITIONER_IN_CHARGE</code> in workforce governance for
               parallel governed scope where required.
             </p>
           </>

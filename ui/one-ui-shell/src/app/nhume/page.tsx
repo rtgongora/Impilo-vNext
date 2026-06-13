@@ -50,19 +50,19 @@ export default function NhumeHubPage() {
             <Link
               key={href}
               href={href}
-              className="rounded-2xl border border-gray-200 bg-white p-5 hover:border-teal-300 hover:shadow-sm transition-all"
+              className="rounded-2xl border border-border bg-card p-5 hover:border-teal-300 hover:shadow-sm transition-all"
             >
               <div className="flex items-center gap-3 mb-2">
                 <div className="rounded-xl bg-teal-50 p-2">
                   <Icon className="h-5 w-5 text-teal-600" />
                 </div>
-                <h3 className="font-semibold text-gray-900">{label}</h3>
+                <h3 className="font-semibold text-foreground">{label}</h3>
               </div>
-              <p className="text-sm text-gray-600">{description}</p>
+              <p className="text-sm text-muted-foreground">{description}</p>
             </Link>
           ))}
         </div>
-        <div className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+        <div className="mt-8 rounded-2xl border border-warning/35 bg-warning-soft p-4 text-sm text-warning-foreground">
           <strong className="block mb-1">About Nhume</strong>
           Nhume is the logistics nervous system of Impilo. It moves medicines, samples, vaccines,
           devices, blood products, documents, marketplace orders and programme commodities safely,

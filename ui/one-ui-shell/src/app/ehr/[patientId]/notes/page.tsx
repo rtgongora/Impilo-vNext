@@ -44,10 +44,10 @@ const EMPTY_FORM = {
 
 function formatEncounterStatus(status: unknown) {
   if (status === "ACTIVE" || status === "IN_PROGRESS") {
-    return "bg-emerald-100 text-emerald-700";
+    return "bg-emerald-100 text-primary-hover";
   }
 
-  return "bg-slate-100 text-slate-600";
+  return "bg-neutral-100 text-muted-foreground";
 }
 
 export default function ClinicalNotesPage() {
@@ -191,20 +191,20 @@ export default function ClinicalNotesPage() {
       >
         <div className="space-y-6">
           <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
-            <div className="rounded-3xl border border-slate-200 bg-[linear-gradient(135deg,#f8fbff_0%,#eef6ff_50%,#f8fafc_100%)] p-5 shadow-sm">
+            <div className="rounded-3xl border border-border bg-[linear-gradient(135deg,#f8fbff_0%,#eef6ff_50%,#f8fafc_100%)] p-5 shadow-sm">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="space-y-3">
-                  <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-xs font-medium text-slate-600">
+                  <div className="inline-flex items-center gap-2 rounded-full bg-card/80 px-3 py-1 text-xs font-medium text-muted-foreground">
                     <FileText className="h-3.5 w-3.5 text-indigo-500" />
                     Documentation workspace
                   </div>
                   <div>
-                    <h2 className="text-xl font-semibold text-slate-900">
+                    <h2 className="text-xl font-semibold text-foreground">
                       {activeEncounter
                         ? "Active encounter documentation is live"
                         : "Chart-level notes are available"}
                     </h2>
-                    <p className="mt-1 max-w-2xl text-sm text-slate-600">
+                    <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
                       {activeEncounter
                         ? "New notes will attach to the current encounter by default so the chart, encounter workspace, and downstream services stay in sync."
                         : "There is no active encounter right now, so notes created here will remain chart-level until a live visit is started."}
@@ -212,7 +212,7 @@ export default function ClinicalNotesPage() {
                   </div>
                   {activeEncounter && (
                     <div className="flex flex-wrap items-center gap-2 text-xs">
-                      <span className="rounded-full bg-white px-3 py-1 font-medium text-slate-700 shadow-sm">
+                      <span className="rounded-full bg-card px-3 py-1 font-medium text-foreground shadow-sm">
                         {String(activeEncounter.attributes.encounterType)} encounter
                       </span>
                       <span
@@ -222,7 +222,7 @@ export default function ClinicalNotesPage() {
                       >
                         {String(activeEncounter.attributes.status)}
                       </span>
-                      <span className="rounded-full bg-white px-3 py-1 text-slate-500 shadow-sm">
+                      <span className="rounded-full bg-card px-3 py-1 text-muted-foreground shadow-sm">
                         Started {new Date(activeEncounter.attributes.startedAt).toLocaleString()}
                       </span>
                     </div>
@@ -233,7 +233,7 @@ export default function ClinicalNotesPage() {
                   {activeEncounter && (
                     <Link
                       href={`/ehr/${patientId}/encounter/${activeEncounter.id}`}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800"
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
                     >
                       <Activity className="h-4 w-4" />
                       Resume Encounter
@@ -241,14 +241,14 @@ export default function ClinicalNotesPage() {
                   )}
                   <Link
                     href={`/ehr/${patientId}/summary`}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-background"
                   >
                     <ArrowUpRight className="h-4 w-4" />
                     Summary
                   </Link>
                   <Link
                     href={`/ehr/${patientId}/discharge`}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-background"
                   >
                     <ArrowUpRight className="h-4 w-4" />
                     Visit Outcome
@@ -257,57 +257,57 @@ export default function ClinicalNotesPage() {
               </div>
 
               <div className="mt-5 grid gap-3 sm:grid-cols-4">
-                <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
-                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+                <div className="rounded-2xl border border-white/70 bg-card/80 p-4">
+                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
                     Visible Notes
                   </p>
-                  <p className="mt-2 text-2xl font-semibold text-slate-900">{notes.length}</p>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-2 text-2xl font-semibold text-foreground">{notes.length}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
                     {scope === "current" && activeEncounter
                       ? "Filtered to the active encounter."
                       : "Across the patient chart."}
                   </p>
                 </div>
-                <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
-                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+                <div className="rounded-2xl border border-white/70 bg-card/80 p-4">
+                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
                     Draft Notes
                   </p>
-                  <p className="mt-2 text-2xl font-semibold text-slate-900">{draftCount}</p>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-2 text-2xl font-semibold text-foreground">{draftCount}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
                     Unsigned entries still need clinician sign-off.
                   </p>
                 </div>
-                <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
-                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+                <div className="rounded-2xl border border-white/70 bg-card/80 p-4">
+                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
                     Consultation Notes
                   </p>
-                  <p className="mt-2 text-2xl font-semibold text-slate-900">
+                  <p className="mt-2 text-2xl font-semibold text-foreground">
                     {consultationCount}
                   </p>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     Specialist and cross-team documentation on file.
                   </p>
                 </div>
-                <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
-                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+                <div className="rounded-2xl border border-white/70 bg-card/80 p-4">
+                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
                     Referral Handoffs
                   </p>
-                  <p className="mt-2 text-2xl font-semibold text-slate-900">
+                  <p className="mt-2 text-2xl font-semibold text-foreground">
                     {referralLoopUpdateCount}
                   </p>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     Consultation notes that include returned referral loop updates.
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
               <div className="flex items-center gap-2">
-                <Plus className="h-4 w-4 text-impilo-500" />
-                <h3 className="text-sm font-semibold text-slate-900">Quick start</h3>
+                <Plus className="h-4 w-4 text-primary" />
+                <h3 className="text-sm font-semibold text-foreground">Quick start</h3>
               </div>
-              <p className="mt-2 text-sm text-slate-600">
+              <p className="mt-2 text-sm text-muted-foreground">
                 Start the right note type without leaving the chart. The form will open
                 preselected and use the live encounter when one is active.
               </p>
@@ -317,19 +317,19 @@ export default function ClinicalNotesPage() {
                     key={noteType}
                     type="button"
                     onClick={() => handleStartNote(noteType)}
-                    className="flex items-center justify-between rounded-2xl border border-slate-200 px-4 py-3 text-left transition-colors hover:border-impilo-200 hover:bg-impilo-50"
+                    className="flex items-center justify-between rounded-2xl border border-border px-4 py-3 text-left transition-colors hover:border-primary/25 hover:bg-primary-soft"
                   >
-                    <span className="text-sm font-medium text-slate-900">{noteType}</span>
-                    <ArrowUpRight className="h-4 w-4 text-slate-400" />
+                    <span className="text-sm font-medium text-foreground">{noteType}</span>
+                    <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
                   </button>
                 ))}
               </div>
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex flex-col gap-3 rounded-3xl border border-border bg-card p-5 shadow-sm xl:flex-row xl:items-center xl:justify-between">
             <div className="flex flex-wrap items-center gap-2">
-              <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+              <div className="inline-flex items-center gap-2 rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-muted-foreground">
                 <Filter className="h-3.5 w-3.5" />
                 View
               </div>
@@ -339,8 +339,8 @@ export default function ClinicalNotesPage() {
                 disabled={!activeEncounter}
                 className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
                   scope === "current" && activeEncounter
-                    ? "bg-slate-900 text-white"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
+                    ? "bg-neutral-900 text-white"
+                    : "bg-neutral-100 text-muted-foreground hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50"
                 }`}
               >
                 Current encounter
@@ -350,8 +350,8 @@ export default function ClinicalNotesPage() {
                 onClick={() => setScope("all")}
                 className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
                   scope === "all" || !activeEncounter
-                    ? "bg-slate-900 text-white"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    ? "bg-neutral-900 text-white"
+                    : "bg-neutral-100 text-muted-foreground hover:bg-primary-soft"
                 }`}
               >
                 All notes
@@ -364,8 +364,8 @@ export default function ClinicalNotesPage() {
                 onClick={() => setFilterType("")}
                 className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
                   filterType === ""
-                    ? "bg-impilo-500 text-white"
-                    : "bg-impilo-50 text-impilo-600 hover:bg-impilo-100"
+                    ? "bg-primary text-white"
+                    : "bg-primary-soft text-primary hover:bg-primary-soft"
                 }`}
               >
                 All types
@@ -377,8 +377,8 @@ export default function ClinicalNotesPage() {
                   onClick={() => setFilterType(noteType)}
                   className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
                     filterType === noteType
-                      ? "bg-impilo-500 text-white"
-                      : "bg-impilo-50 text-impilo-600 hover:bg-impilo-100"
+                      ? "bg-primary text-white"
+                      : "bg-primary-soft text-primary hover:bg-primary-soft"
                   }`}
                 >
                   {noteType}
@@ -388,18 +388,18 @@ export default function ClinicalNotesPage() {
           </div>
 
           {showForm && (
-            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="flex flex-col gap-3 border-b border-slate-100 pb-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+              <div className="flex flex-col gap-3 border-b border-border pb-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900">New Clinical Note</h3>
-                  <p className="mt-1 text-sm text-slate-500">
+                  <h3 className="text-lg font-semibold text-foreground">New Clinical Note</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
                     {activeEncounter
                       ? `This note will be attached to encounter ${activeEncounter.id}.`
                       : "No active encounter is open, so this note will remain chart-level."}
                   </p>
                 </div>
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                  <p className="font-medium text-slate-900">Documentation target</p>
+                <div className="rounded-2xl border border-border bg-background px-4 py-3 text-sm text-muted-foreground">
+                  <p className="font-medium text-foreground">Documentation target</p>
                   <p className="mt-1">
                     {activeEncounter
                       ? `${String(activeEncounter.attributes.encounterType)} encounter`
@@ -410,7 +410,7 @@ export default function ClinicalNotesPage() {
 
               <form onSubmit={handleSubmit} className="mt-5 space-y-4">
                 <div>
-                  <label htmlFor="noteType" className="mb-1 block text-sm font-medium text-slate-700">
+                  <label htmlFor="noteType" className="mb-1 block text-sm font-medium text-foreground">
                     Note Type
                   </label>
                   <select
@@ -418,7 +418,7 @@ export default function ClinicalNotesPage() {
                     name="noteType"
                     value={form.noteType}
                     onChange={handleFieldChange}
-                    className="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                    className="w-full rounded-2xl border border-border px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-primary/40"
                   >
                     {NOTE_TYPES.map((noteType) => (
                       <option key={noteType} value={noteType}>
@@ -430,7 +430,7 @@ export default function ClinicalNotesPage() {
 
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div>
-                    <label htmlFor="subjective" className="mb-1 block text-sm font-medium text-slate-700">
+                    <label htmlFor="subjective" className="mb-1 block text-sm font-medium text-foreground">
                       Subjective
                     </label>
                     <textarea
@@ -440,11 +440,11 @@ export default function ClinicalNotesPage() {
                       onChange={handleFieldChange}
                       rows={4}
                       placeholder="Patient-reported symptoms, concerns, and history..."
-                      className="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                      className="w-full rounded-2xl border border-border px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-primary/40"
                     />
                   </div>
                   <div>
-                    <label htmlFor="objective" className="mb-1 block text-sm font-medium text-slate-700">
+                    <label htmlFor="objective" className="mb-1 block text-sm font-medium text-foreground">
                       Objective
                     </label>
                     <textarea
@@ -454,11 +454,11 @@ export default function ClinicalNotesPage() {
                       onChange={handleFieldChange}
                       rows={4}
                       placeholder="Observed findings, vitals, and measurable data..."
-                      className="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                      className="w-full rounded-2xl border border-border px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-primary/40"
                     />
                   </div>
                   <div>
-                    <label htmlFor="assessment" className="mb-1 block text-sm font-medium text-slate-700">
+                    <label htmlFor="assessment" className="mb-1 block text-sm font-medium text-foreground">
                       Assessment
                     </label>
                     <textarea
@@ -468,11 +468,11 @@ export default function ClinicalNotesPage() {
                       onChange={handleFieldChange}
                       rows={4}
                       placeholder="Clinical interpretation, diagnosis, and working impression..."
-                      className="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                      className="w-full rounded-2xl border border-border px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-primary/40"
                     />
                   </div>
                   <div>
-                    <label htmlFor="plan" className="mb-1 block text-sm font-medium text-slate-700">
+                    <label htmlFor="plan" className="mb-1 block text-sm font-medium text-foreground">
                       Plan
                     </label>
                     <textarea
@@ -482,13 +482,13 @@ export default function ClinicalNotesPage() {
                       onChange={handleFieldChange}
                       rows={4}
                       placeholder="Orders, follow-up, treatment, and coordination steps..."
-                      className="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                      className="w-full rounded-2xl border border-border px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-primary/40"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="body" className="mb-1 block text-sm font-medium text-slate-700">
+                  <label htmlFor="body" className="mb-1 block text-sm font-medium text-foreground">
                     Additional Notes
                   </label>
                   <textarea
@@ -498,13 +498,13 @@ export default function ClinicalNotesPage() {
                     onChange={handleFieldChange}
                     rows={4}
                     placeholder="Free-text details, coordination notes, or specialist context..."
-                    className="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                    className="w-full rounded-2xl border border-border px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-primary/40"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div>
-                    <label htmlFor="authorId" className="mb-1 block text-sm font-medium text-slate-700">
+                    <label htmlFor="authorId" className="mb-1 block text-sm font-medium text-foreground">
                       Author ID
                     </label>
                     <input
@@ -513,11 +513,11 @@ export default function ClinicalNotesPage() {
                       type="text"
                       value={form.authorId}
                       onChange={handleFieldChange}
-                      className="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                      className="w-full rounded-2xl border border-border px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-primary/40"
                     />
                   </div>
                   <div>
-                    <label htmlFor="authorName" className="mb-1 block text-sm font-medium text-slate-700">
+                    <label htmlFor="authorName" className="mb-1 block text-sm font-medium text-foreground">
                       Author Name
                     </label>
                     <input
@@ -526,7 +526,7 @@ export default function ClinicalNotesPage() {
                       type="text"
                       value={form.authorName}
                       onChange={handleFieldChange}
-                      className="w-full rounded-2xl border border-slate-300 px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                      className="w-full rounded-2xl border border-border px-3 py-2.5 text-sm focus:border-impilo-400 focus:outline-none focus:ring-2 focus:ring-primary/40"
                     />
                   </div>
                 </div>
@@ -535,7 +535,7 @@ export default function ClinicalNotesPage() {
                   <button
                     type="submit"
                     disabled={createNote.isPending}
-                    className="inline-flex items-center gap-2 rounded-xl bg-impilo-500 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-impilo-600 disabled:opacity-50"
+                    className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-50"
                   >
                     {createNote.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                     Save Note
@@ -546,7 +546,7 @@ export default function ClinicalNotesPage() {
                       setShowForm(false);
                       resetForm();
                     }}
-                    className="rounded-xl px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                    className="rounded-xl px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-neutral-100 hover:text-foreground"
                   >
                     Cancel
                   </button>
@@ -557,13 +557,13 @@ export default function ClinicalNotesPage() {
 
           {isLoading ? (
             <div className="flex items-center justify-center py-16">
-              <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
-              <span className="ml-2 text-sm text-slate-500">Loading clinical notes...</span>
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              <span className="ml-2 text-sm text-muted-foreground">Loading clinical notes...</span>
             </div>
           ) : notes.length === 0 ? (
-            <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-sm">
-              <FileText className="mx-auto mb-3 h-10 w-10 text-slate-300" />
-              <p className="text-sm text-slate-500">
+            <div className="rounded-3xl border border-border bg-card p-12 text-center shadow-sm">
+              <FileText className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">
                 {scope === "current" && activeEncounter
                   ? "No notes have been recorded for the active encounter yet."
                   : "No clinical notes have been recorded for this patient yet."}
@@ -571,7 +571,7 @@ export default function ClinicalNotesPage() {
               <button
                 type="button"
                 onClick={() => handleStartNote(noteTypeFilter ?? "PROGRESS")}
-                className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-impilo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600"
+                className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
               >
                 <Plus className="h-4 w-4" />
                 Start First Note
@@ -591,7 +591,7 @@ export default function ClinicalNotesPage() {
                 return (
                   <div
                     key={note.id}
-                    className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"
+                    className="rounded-3xl border border-border bg-card p-5 shadow-sm"
                   >
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div className="flex items-start gap-3">
@@ -600,12 +600,12 @@ export default function ClinicalNotesPage() {
                         </div>
                         <div>
                           <div className="flex flex-wrap items-center gap-2">
-                            <p className="text-sm font-semibold text-slate-900">{attrs.noteType}</p>
+                            <p className="text-sm font-semibold text-foreground">{attrs.noteType}</p>
                             <span
                               className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
                                 isDraft
-                                  ? "bg-amber-100 text-amber-700"
-                                  : "bg-emerald-100 text-emerald-700"
+                                  ? "bg-amber-100 text-warning-foreground"
+                                  : "bg-emerald-100 text-primary-hover"
                               }`}
                             >
                               {attrs.status}
@@ -614,8 +614,8 @@ export default function ClinicalNotesPage() {
                               <span
                                 className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
                                   isLinkedToActiveEncounter
-                                    ? "bg-impilo-100 text-impilo-600"
-                                    : "bg-slate-100 text-slate-600"
+                                    ? "bg-primary-soft text-primary"
+                                    : "bg-neutral-100 text-muted-foreground"
                                 }`}
                               >
                                 {isLinkedToActiveEncounter
@@ -623,18 +623,18 @@ export default function ClinicalNotesPage() {
                                   : "Encounter-linked"}
                               </span>
                             ) : (
-                              <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
+                              <span className="rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
                                 Chart-level
                               </span>
                             )}
                             {coordinationMeta.hasReferralLoopUpdate && (
-                              <span className="rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-700">
+                              <span className="rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-warning-foreground">
                                 Referral loop update
                               </span>
                             )}
                           </div>
-                          <p className="mt-1 text-xs text-slate-500">{attrs.authorName}</p>
-                          <p className="mt-1 text-xs text-slate-500">
+                          <p className="mt-1 text-xs text-muted-foreground">{attrs.authorName}</p>
+                          <p className="mt-1 text-xs text-muted-foreground">
                             {new Date(attrs.createdAt).toLocaleString()}
                             {attrs.signedAt && (
                               <span className="ml-2">
@@ -649,7 +649,7 @@ export default function ClinicalNotesPage() {
                         {attrs.encounterId && (
                           <Link
                             href={`/ehr/${patientId}/encounter/${attrs.encounterId}`}
-                            className="inline-flex items-center gap-1 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                            className="inline-flex items-center gap-1 rounded-xl border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-background"
                           >
                             <ArrowUpRight className="h-3.5 w-3.5" />
                             Encounter
@@ -674,38 +674,38 @@ export default function ClinicalNotesPage() {
                     </div>
 
                     {coordinationMeta.hasReferralLoopUpdate && (
-                      <div className="mt-4 rounded-2xl border border-purple-200 bg-purple-50 p-4">
+                      <div className="mt-4 rounded-2xl border border-warning/35 bg-warning-soft p-4">
                         <div className="flex flex-wrap items-center gap-2">
-                          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-purple-700">
+                          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-warning-foreground">
                             Consult Orchestration
                           </p>
                           {coordinationMeta.responseSentFromTeleconsult && (
-                            <span className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-purple-700">
+                            <span className="rounded-full bg-card px-2.5 py-1 text-xs font-medium text-warning-foreground">
                               {COORDINATION_COPY.returnedFromTeleconsult}
                             </span>
                           )}
                         </div>
                         <div className="mt-3 grid gap-3 md:grid-cols-3">
                           {coordinationMeta.linkedReferralId && (
-                            <div className="rounded-xl bg-white px-3 py-3">
-                              <p className="text-xs font-medium text-slate-500">Linked referral</p>
-                              <p className="mt-1 text-sm font-medium text-slate-900">
+                            <div className="rounded-xl bg-card px-3 py-3">
+                              <p className="text-xs font-medium text-muted-foreground">Linked referral</p>
+                              <p className="mt-1 text-sm font-medium text-foreground">
                                 {coordinationMeta.linkedReferralId}
                               </p>
                             </div>
                           )}
                           {coordinationMeta.linkedTeleconsult && (
-                            <div className="rounded-xl bg-white px-3 py-3">
-                              <p className="text-xs font-medium text-slate-500">Linked teleconsult</p>
-                              <p className="mt-1 text-sm font-medium text-slate-900">
+                            <div className="rounded-xl bg-card px-3 py-3">
+                              <p className="text-xs font-medium text-muted-foreground">Linked teleconsult</p>
+                              <p className="mt-1 text-sm font-medium text-foreground">
                                 {coordinationMeta.linkedTeleconsult}
                               </p>
                             </div>
                           )}
                           {coordinationMeta.nextWorkspaceAction && (
-                            <div className="rounded-xl bg-white px-3 py-3">
-                              <p className="text-xs font-medium text-slate-500">Next workspace action</p>
-                              <p className="mt-1 text-sm font-medium text-slate-900">
+                            <div className="rounded-xl bg-card px-3 py-3">
+                              <p className="text-xs font-medium text-muted-foreground">Next workspace action</p>
+                              <p className="mt-1 text-sm font-medium text-foreground">
                                 {coordinationMeta.nextWorkspaceAction}
                               </p>
                             </div>
@@ -717,36 +717,36 @@ export default function ClinicalNotesPage() {
                     {hasSoap && (
                       <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
                         {attrs.subjective && (
-                          <div className="rounded-2xl border border-slate-100 p-3">
-                            <p className="mb-1 text-xs font-medium text-slate-500">Subjective</p>
-                            <p className="text-sm text-slate-900">{attrs.subjective}</p>
+                          <div className="rounded-2xl border border-border p-3">
+                            <p className="mb-1 text-xs font-medium text-muted-foreground">Subjective</p>
+                            <p className="text-sm text-foreground">{attrs.subjective}</p>
                           </div>
                         )}
                         {attrs.objective && (
-                          <div className="rounded-2xl border border-slate-100 p-3">
-                            <p className="mb-1 text-xs font-medium text-slate-500">Objective</p>
-                            <p className="text-sm text-slate-900">{attrs.objective}</p>
+                          <div className="rounded-2xl border border-border p-3">
+                            <p className="mb-1 text-xs font-medium text-muted-foreground">Objective</p>
+                            <p className="text-sm text-foreground">{attrs.objective}</p>
                           </div>
                         )}
                         {attrs.assessment && (
-                          <div className="rounded-2xl border border-slate-100 p-3">
-                            <p className="mb-1 text-xs font-medium text-slate-500">Assessment</p>
-                            <p className="text-sm text-slate-900">{attrs.assessment}</p>
+                          <div className="rounded-2xl border border-border p-3">
+                            <p className="mb-1 text-xs font-medium text-muted-foreground">Assessment</p>
+                            <p className="text-sm text-foreground">{attrs.assessment}</p>
                           </div>
                         )}
                         {attrs.plan && (
-                          <div className="rounded-2xl border border-slate-100 p-3">
-                            <p className="mb-1 text-xs font-medium text-slate-500">Plan</p>
-                            <p className="text-sm text-slate-900">{attrs.plan}</p>
+                          <div className="rounded-2xl border border-border p-3">
+                            <p className="mb-1 text-xs font-medium text-muted-foreground">Plan</p>
+                            <p className="text-sm text-foreground">{attrs.plan}</p>
                           </div>
                         )}
                       </div>
                     )}
 
                     {attrs.body && (
-                      <div className="mt-4 rounded-2xl border border-slate-100 p-3">
-                        <p className="mb-1 text-xs font-medium text-slate-500">Additional Notes</p>
-                        <p className="whitespace-pre-wrap text-sm text-slate-900">{attrs.body}</p>
+                      <div className="mt-4 rounded-2xl border border-border p-3">
+                        <p className="mb-1 text-xs font-medium text-muted-foreground">Additional Notes</p>
+                        <p className="whitespace-pre-wrap text-sm text-foreground">{attrs.body}</p>
                       </div>
                     )}
                   </div>

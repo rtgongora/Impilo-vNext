@@ -9,11 +9,11 @@ export function PublicHealthMapPanel() {
   const markers = markersQ.data ?? [];
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-5">
-      <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2 mb-3">
+    <div className="bg-card rounded-lg border border-border p-5">
+      <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
         <MapPin className="h-4 w-4 text-indigo-600" /> Operations map
       </h3>
-      <p className="text-[10px] text-gray-500 mb-3">
+      <p className="text-[10px] text-muted-foreground mb-3">
         Geo markers from outbreaks and field tasks with recorded coordinates (Ndila MapLibre).
       </p>
       <NdilaPublicHealthRiskMap markers={markers} loading={markersQ.isPending} />

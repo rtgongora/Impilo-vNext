@@ -396,25 +396,25 @@ export function MedscapeTools({ open, onClose, toolId }: MedscapeToolsProps) {
     { id: "conditions", label: "Conditions", icon: BookOpen },
   ];
 
-  const severityColor = { major: "bg-red-100 text-red-700 border-red-200", moderate: "bg-amber-100 text-amber-700 border-amber-200", minor: "bg-impilo-100 text-impilo-600 border-impilo-200" };
+  const severityColor = { major: "bg-red-100 text-danger border-danger/28", moderate: "bg-amber-100 text-warning-foreground border-warning/35", minor: "bg-primary-soft text-primary border-primary/25" };
 
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-black/30" onClick={onClose} />
-      <div className="w-[520px] bg-white shadow-xl flex flex-col h-full">
+      <div className="w-[520px] bg-card shadow-xl flex flex-col h-full">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b">
           <div>
-            <h2 className="text-sm font-semibold text-gray-900">Clinical Tools</h2>
-            <p className="text-xs text-gray-500">Drug database, interactions & calculators</p>
+            <h2 className="text-sm font-semibold text-foreground">Clinical Tools</h2>
+            <p className="text-xs text-muted-foreground">Drug database, interactions & calculators</p>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100"><X className="w-4 h-4" /></button>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-neutral-100"><X className="w-4 h-4" /></button>
         </div>
 
         {/* Tabs */}
         <div className="flex border-b px-2 gap-1">
           {tabs.map(t => (
-            <button key={t.id} onClick={() => setActiveTab(t.id)} className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-colors ${activeTab === t.id ? "border-impilo-500 text-impilo-500" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
+            <button key={t.id} onClick={() => setActiveTab(t.id)} className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-colors ${activeTab === t.id ? "border-impilo-500 text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
               <t.icon className="w-3.5 h-3.5" /> {t.label}
             </button>
           ))}
@@ -426,20 +426,20 @@ export function MedscapeTools({ open, onClose, toolId }: MedscapeToolsProps) {
             <div className="p-4 space-y-3">
               {/* Patient Context Banners */}
               {currentMedications.length > 0 && (
-                <div className="p-2.5 rounded-lg bg-impilo-50 border border-impilo-100">
-                  <div className="flex items-center gap-1.5 mb-1"><User className="h-3.5 w-3.5 text-impilo-500" /><span className="text-[10px] font-semibold text-impilo-500 uppercase tracking-wider">Current Medications</span></div>
-                  <div className="flex flex-wrap gap-1">{currentMedications.map(m => <span key={m} className="px-2 py-0.5 bg-impilo-100 text-impilo-600 rounded text-[10px] font-medium">{m}</span>)}</div>
+                <div className="p-2.5 rounded-lg bg-primary-soft border border-primary/20">
+                  <div className="flex items-center gap-1.5 mb-1"><User className="h-3.5 w-3.5 text-primary" /><span className="text-[10px] font-semibold text-primary uppercase tracking-wider">Current Medications</span></div>
+                  <div className="flex flex-wrap gap-1">{currentMedications.map(m => <span key={m} className="px-2 py-0.5 bg-primary-soft text-primary rounded text-[10px] font-medium">{m}</span>)}</div>
                 </div>
               )}
               {allergies.length > 0 && (
-                <div className="p-2.5 rounded-lg bg-red-50 border border-red-100">
+                <div className="p-2.5 rounded-lg bg-danger-soft border border-red-100">
                   <div className="flex items-center gap-1.5 mb-1"><FileWarning className="h-3.5 w-3.5 text-red-600" /><span className="text-[10px] font-semibold text-red-600 uppercase tracking-wider">Known Allergies</span></div>
-                  <div className="flex flex-wrap gap-1">{allergies.map(a => <span key={a} className="px-2 py-0.5 bg-red-100 text-red-700 rounded text-[10px] font-medium">{a}</span>)}</div>
+                  <div className="flex flex-wrap gap-1">{allergies.map(a => <span key={a} className="px-2 py-0.5 bg-red-100 text-danger rounded text-[10px] font-medium">{a}</span>)}</div>
                 </div>
               )}
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input value={drugSearch} onChange={e => setDrugSearch(e.target.value)} placeholder="Search drugs by name or class..." className="w-full pl-10 pr-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-impilo-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input value={drugSearch} onChange={e => setDrugSearch(e.target.value)} placeholder="Search drugs by name or class..." className="w-full pl-10 pr-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40" />
               </div>
               {selectedDrug ? (
                 <DrugMonograph drug={selectedDrug} onBack={() => setSelectedDrug(null)} isCurrentMed={isCurrentMed(selectedDrug)} hasAllergyConflict={hasAllergyConflict(selectedDrug)} />
@@ -449,16 +449,16 @@ export function MedscapeTools({ open, onClose, toolId }: MedscapeToolsProps) {
                     const allergyFlag = hasAllergyConflict(d);
                     const currentMedFlag = isCurrentMed(d);
                     return (
-                    <button key={d.name} onClick={() => setSelectedDrug(d)} className={`w-full flex items-center justify-between p-3 rounded-lg text-left transition-colors ${allergyFlag ? "bg-red-50 border border-red-200 hover:bg-red-100" : "hover:bg-gray-50"}`}>
+                    <button key={d.name} onClick={() => setSelectedDrug(d)} className={`w-full flex items-center justify-between p-3 rounded-lg text-left transition-colors ${allergyFlag ? "bg-danger-soft border border-danger/28 hover:bg-red-100" : "hover:bg-background"}`}>
                       <div>
                         <div className="flex items-center gap-2">
-                          <p className="text-sm font-medium text-gray-900">{d.name}</p>
-                          {currentMedFlag && <span className="px-1.5 py-0 bg-impilo-100 text-impilo-600 rounded text-[9px] font-medium">CURRENT</span>}
-                          {allergyFlag && <span className="px-1.5 py-0 bg-red-100 text-red-700 rounded text-[9px] font-medium flex items-center gap-0.5"><AlertTriangle className="w-3 h-3" />ALLERGY</span>}
+                          <p className="text-sm font-medium text-foreground">{d.name}</p>
+                          {currentMedFlag && <span className="px-1.5 py-0 bg-primary-soft text-primary rounded text-[9px] font-medium">CURRENT</span>}
+                          {allergyFlag && <span className="px-1.5 py-0 bg-red-100 text-danger rounded text-[9px] font-medium flex items-center gap-0.5"><AlertTriangle className="w-3 h-3" />ALLERGY</span>}
                         </div>
-                        <p className="text-xs text-gray-500">{d.drugClass} &middot; {d.route}</p>
+                        <p className="text-xs text-muted-foreground">{d.drugClass} &middot; {d.route}</p>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-gray-400" />
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
                     </button>
                     );
                   })}
@@ -471,26 +471,26 @@ export function MedscapeTools({ open, onClose, toolId }: MedscapeToolsProps) {
             <div className="p-4 space-y-3">
               {/* Auto-load patient medications */}
               {currentMedications.length > 0 && interactionDrugs.length === 0 && (
-                <button onClick={() => { setInteractionDrugs([...currentMedications]); }} className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-impilo-50 border border-impilo-200 rounded-lg text-sm font-medium text-impilo-600 hover:bg-impilo-100 transition-colors">
+                <button onClick={() => { setInteractionDrugs([...currentMedications]); }} className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-primary-soft border border-primary/25 rounded-lg text-sm font-medium text-primary hover:bg-primary-soft transition-colors">
                   <User className="w-4 h-4" /> Load patient&apos;s {currentMedications.length} active medications
                 </button>
               )}
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input value={interactionSearch} onChange={e => setInteractionSearch(e.target.value)} placeholder="Add drug to check..." className="w-full pl-10 pr-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-impilo-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input value={interactionSearch} onChange={e => setInteractionSearch(e.target.value)} placeholder="Add drug to check..." className="w-full pl-10 pr-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40" />
               </div>
               {interactionSearch && (
                 <div className="border rounded-lg max-h-32 overflow-y-auto">
                   {DRUG_DATABASE.filter(d => d.name.toLowerCase().includes(interactionSearch.toLowerCase())).map(d => (
-                    <button key={d.name} onClick={() => addInteractionDrug(d.name)} className="w-full px-3 py-2 text-sm text-left hover:bg-gray-50 flex items-center gap-2">
-                      <Plus className="w-3 h-3 text-gray-400" /> {d.name}
+                    <button key={d.name} onClick={() => addInteractionDrug(d.name)} className="w-full px-3 py-2 text-sm text-left hover:bg-background flex items-center gap-2">
+                      <Plus className="w-3 h-3 text-muted-foreground" /> {d.name}
                     </button>
                   ))}
                 </div>
               )}
               <div className="flex flex-wrap gap-1">
                 {interactionDrugs.map(d => (
-                  <span key={d} className="inline-flex items-center gap-1 px-2 py-1 bg-impilo-50 text-impilo-600 rounded text-xs">
+                  <span key={d} className="inline-flex items-center gap-1 px-2 py-1 bg-primary-soft text-primary rounded text-xs">
                     {d} <button onClick={() => setInteractionDrugs(prev => prev.filter(x => x !== d))}><Trash2 className="w-3 h-3" /></button>
                   </span>
                 ))}
@@ -518,26 +518,26 @@ export function MedscapeTools({ open, onClose, toolId }: MedscapeToolsProps) {
             <div className="p-4 space-y-4">
               {/* BMI */}
               <div className="border rounded-lg p-3">
-                <h4 className="text-sm font-semibold text-gray-900 mb-2">BMI Calculator</h4>
+                <h4 className="text-sm font-semibold text-foreground mb-2">BMI Calculator</h4>
                 <div className="grid grid-cols-2 gap-2">
-                  <div><label className="text-[10px] text-gray-500">Weight (kg)</label><input value={calcWeight} onChange={e => setCalcWeight(e.target.value)} type="number" className="w-full px-2 py-1.5 text-sm border rounded" /></div>
-                  <div><label className="text-[10px] text-gray-500">Height (cm)</label><input value={calcHeight} onChange={e => setCalcHeight(e.target.value)} type="number" className="w-full px-2 py-1.5 text-sm border rounded" /></div>
+                  <div><label className="text-[10px] text-muted-foreground">Weight (kg)</label><input value={calcWeight} onChange={e => setCalcWeight(e.target.value)} type="number" className="w-full px-2 py-1.5 text-sm border rounded" /></div>
+                  <div><label className="text-[10px] text-muted-foreground">Height (cm)</label><input value={calcHeight} onChange={e => setCalcHeight(e.target.value)} type="number" className="w-full px-2 py-1.5 text-sm border rounded" /></div>
                 </div>
-                {bmi && <div className="mt-2 p-2 bg-impilo-50 rounded text-center"><span className="text-lg font-bold text-impilo-600">{bmi}</span><span className="text-xs text-impilo-500 ml-1">kg/m²</span><p className="text-[10px] text-impilo-400">{parseFloat(bmi) < 18.5 ? "Underweight" : parseFloat(bmi) < 25 ? "Normal" : parseFloat(bmi) < 30 ? "Overweight" : "Obese"}</p></div>}
+                {bmi && <div className="mt-2 p-2 bg-primary-soft rounded text-center"><span className="text-lg font-bold text-primary">{bmi}</span><span className="text-xs text-primary ml-1">kg/m²</span><p className="text-[10px] text-impilo-400">{parseFloat(bmi) < 18.5 ? "Underweight" : parseFloat(bmi) < 25 ? "Normal" : parseFloat(bmi) < 30 ? "Overweight" : "Obese"}</p></div>}
               </div>
               {/* eGFR */}
               <div className="border rounded-lg p-3">
-                <h4 className="text-sm font-semibold text-gray-900 mb-2">eGFR (CKD-EPI 2021)</h4>
+                <h4 className="text-sm font-semibold text-foreground mb-2">eGFR (CKD-EPI 2021)</h4>
                 <div className="grid grid-cols-3 gap-2">
-                  <div><label className="text-[10px] text-gray-500">Age</label><input value={calcAge} onChange={e => setCalcAge(e.target.value)} type="number" className="w-full px-2 py-1.5 text-sm border rounded" /></div>
-                  <div><label className="text-[10px] text-gray-500">Creatinine (mg/dL)</label><input value={calcCreatinine} onChange={e => setCalcCreatinine(e.target.value)} type="number" step="0.1" className="w-full px-2 py-1.5 text-sm border rounded" /></div>
-                  <div><label className="text-[10px] text-gray-500">Sex</label><select value={calcSex} onChange={e => setCalcSex(e.target.value as "male"|"female")} className="w-full px-2 py-1.5 text-sm border rounded"><option value="male">Male</option><option value="female">Female</option></select></div>
+                  <div><label className="text-[10px] text-muted-foreground">Age</label><input value={calcAge} onChange={e => setCalcAge(e.target.value)} type="number" className="w-full px-2 py-1.5 text-sm border rounded" /></div>
+                  <div><label className="text-[10px] text-muted-foreground">Creatinine (mg/dL)</label><input value={calcCreatinine} onChange={e => setCalcCreatinine(e.target.value)} type="number" step="0.1" className="w-full px-2 py-1.5 text-sm border rounded" /></div>
+                  <div><label className="text-[10px] text-muted-foreground">Sex</label><select value={calcSex} onChange={e => setCalcSex(e.target.value as "male"|"female")} className="w-full px-2 py-1.5 text-sm border rounded"><option value="male">Male</option><option value="female">Female</option></select></div>
                 </div>
-                {gfr !== null && <div className="mt-2 p-2 bg-impilo-50 rounded text-center"><span className="text-lg font-bold text-impilo-600">{gfr}</span><span className="text-xs text-impilo-500 ml-1">mL/min/1.73m²</span><p className="text-[10px] text-impilo-400">{gfr >= 90 ? "G1 Normal" : gfr >= 60 ? "G2 Mild" : gfr >= 45 ? "G3a Mild-Moderate" : gfr >= 30 ? "G3b Moderate-Severe" : gfr >= 15 ? "G4 Severe" : "G5 Kidney Failure"}</p></div>}
+                {gfr !== null && <div className="mt-2 p-2 bg-primary-soft rounded text-center"><span className="text-lg font-bold text-primary">{gfr}</span><span className="text-xs text-primary ml-1">mL/min/1.73m²</span><p className="text-[10px] text-impilo-400">{gfr >= 90 ? "G1 Normal" : gfr >= 60 ? "G2 Mild" : gfr >= 45 ? "G3a Mild-Moderate" : gfr >= 30 ? "G3b Moderate-Severe" : gfr >= 15 ? "G4 Severe" : "G5 Kidney Failure"}</p></div>}
               </div>
               {/* Wells DVT Score */}
               <div className="border rounded-lg p-3">
-                <h4 className="text-sm font-semibold text-gray-900 mb-2">Wells DVT Score</h4>
+                <h4 className="text-sm font-semibold text-foreground mb-2">Wells DVT Score</h4>
                 {[
                   { id: "cancer", label: "Active cancer (within 6 months)", pts: 1 },
                   { id: "paralysis", label: "Paralysis, paresis, or recent cast", pts: 1 },
@@ -550,16 +550,16 @@ export function MedscapeTools({ open, onClose, toolId }: MedscapeToolsProps) {
                   { id: "previous", label: "Previously documented DVT", pts: 1 },
                   { id: "alternative", label: "Alternative diagnosis equally likely", pts: -2 },
                 ].map(item => (
-                  <label key={item.id} className="flex items-center justify-between px-2 py-1.5 rounded hover:bg-gray-50 cursor-pointer">
-                    <div className="flex items-center gap-2"><input type="checkbox" checked={wellsItems.includes(item.id)} onChange={() => setWellsItems(prev => prev.includes(item.id) ? prev.filter(x => x !== item.id) : [...prev, item.id])} className="rounded border-gray-300 text-impilo-500" /><span className="text-xs text-gray-700">{item.label}</span></div>
-                    <span className="text-xs text-gray-400">{item.pts > 0 ? `+${item.pts}` : item.pts}</span>
+                  <label key={item.id} className="flex items-center justify-between px-2 py-1.5 rounded hover:bg-background cursor-pointer">
+                    <div className="flex items-center gap-2"><input type="checkbox" checked={wellsItems.includes(item.id)} onChange={() => setWellsItems(prev => prev.includes(item.id) ? prev.filter(x => x !== item.id) : [...prev, item.id])} className="rounded border-border text-primary" /><span className="text-xs text-foreground">{item.label}</span></div>
+                    <span className="text-xs text-muted-foreground">{item.pts > 0 ? `+${item.pts}` : item.pts}</span>
                   </label>
                 ))}
-                {wellsItems.length > 0 && (() => { const score = wellsItems.reduce((sum, id) => sum + ({ cancer: 1, paralysis: 1, bedridden: 1, tenderness: 1, swelling: 1, calf: 1, pitting: 1, collateral: 1, previous: 1, alternative: -2 }[id] || 0), 0); return <div className="mt-2 p-2 bg-impilo-50 rounded text-center"><span className="text-lg font-bold text-impilo-600">{score}</span><p className="text-[10px] text-impilo-400">{score >= 3 ? "High probability" : score >= 1 ? "Moderate probability" : "Low probability"}</p></div>; })()}
+                {wellsItems.length > 0 && (() => { const score = wellsItems.reduce((sum, id) => sum + ({ cancer: 1, paralysis: 1, bedridden: 1, tenderness: 1, swelling: 1, calf: 1, pitting: 1, collateral: 1, previous: 1, alternative: -2 }[id] || 0), 0); return <div className="mt-2 p-2 bg-primary-soft rounded text-center"><span className="text-lg font-bold text-primary">{score}</span><p className="text-[10px] text-impilo-400">{score >= 3 ? "High probability" : score >= 1 ? "Moderate probability" : "Low probability"}</p></div>; })()}
               </div>
               {/* CHA2DS2-VASc */}
               <div className="border rounded-lg p-3">
-                <h4 className="text-sm font-semibold text-gray-900 mb-2">CHA₂DS₂-VASc Score</h4>
+                <h4 className="text-sm font-semibold text-foreground mb-2">CHA₂DS₂-VASc Score</h4>
                 {[
                   { id: "chf", label: "CHF / LV dysfunction", pts: 1 },
                   { id: "htn", label: "Hypertension", pts: 1 },
@@ -570,16 +570,16 @@ export function MedscapeTools({ open, onClose, toolId }: MedscapeToolsProps) {
                   { id: "age65", label: "Age 65-74", pts: 1 },
                   { id: "female", label: "Sex category (female)", pts: 1 },
                 ].map(item => (
-                  <label key={item.id} className="flex items-center justify-between px-2 py-1.5 rounded hover:bg-gray-50 cursor-pointer">
-                    <div className="flex items-center gap-2"><input type="checkbox" checked={chadItems.includes(item.id)} onChange={() => setChadItems(prev => prev.includes(item.id) ? prev.filter(x => x !== item.id) : [...prev, item.id])} className="rounded border-gray-300 text-impilo-500" /><span className="text-xs text-gray-700">{item.label}</span></div>
-                    <span className="text-xs text-gray-400">+{item.pts}</span>
+                  <label key={item.id} className="flex items-center justify-between px-2 py-1.5 rounded hover:bg-background cursor-pointer">
+                    <div className="flex items-center gap-2"><input type="checkbox" checked={chadItems.includes(item.id)} onChange={() => setChadItems(prev => prev.includes(item.id) ? prev.filter(x => x !== item.id) : [...prev, item.id])} className="rounded border-border text-primary" /><span className="text-xs text-foreground">{item.label}</span></div>
+                    <span className="text-xs text-muted-foreground">+{item.pts}</span>
                   </label>
                 ))}
-                {chadItems.length > 0 && (() => { const pts: Record<string, number> = { chf: 1, htn: 1, age75: 2, dm: 1, stroke: 2, vasc: 1, age65: 1, female: 1 }; const score = chadItems.reduce((sum, id) => sum + (pts[id] || 0), 0); return <div className="mt-2 p-2 bg-impilo-50 rounded text-center"><span className="text-lg font-bold text-impilo-600">{score}</span><p className="text-[10px] text-impilo-400">{score >= 2 ? "Anticoagulation recommended" : score === 1 ? "Consider anticoagulation" : "No anticoagulation needed"}</p></div>; })()}
+                {chadItems.length > 0 && (() => { const pts: Record<string, number> = { chf: 1, htn: 1, age75: 2, dm: 1, stroke: 2, vasc: 1, age65: 1, female: 1 }; const score = chadItems.reduce((sum, id) => sum + (pts[id] || 0), 0); return <div className="mt-2 p-2 bg-primary-soft rounded text-center"><span className="text-lg font-bold text-primary">{score}</span><p className="text-[10px] text-impilo-400">{score >= 2 ? "Anticoagulation recommended" : score === 1 ? "Consider anticoagulation" : "No anticoagulation needed"}</p></div>; })()}
               </div>
               {/* CURB-65 */}
               <div className="border rounded-lg p-3">
-                <h4 className="text-sm font-semibold text-gray-900 mb-2">CURB-65 (Pneumonia Severity)</h4>
+                <h4 className="text-sm font-semibold text-foreground mb-2">CURB-65 (Pneumonia Severity)</h4>
                 {[
                   { id: "confusion", label: "Confusion (AMT ≤8 or new disorientation)", pts: 1 },
                   { id: "urea", label: "Urea >7 mmol/L", pts: 1 },
@@ -587,27 +587,27 @@ export function MedscapeTools({ open, onClose, toolId }: MedscapeToolsProps) {
                   { id: "bp", label: "BP: systolic <90 or diastolic ≤60", pts: 1 },
                   { id: "age65c", label: "Age ≥65", pts: 1 },
                 ].map(item => (
-                  <label key={item.id} className="flex items-center justify-between px-2 py-1.5 rounded hover:bg-gray-50 cursor-pointer">
-                    <div className="flex items-center gap-2"><input type="checkbox" checked={curbItems.includes(item.id)} onChange={() => setCurbItems(prev => prev.includes(item.id) ? prev.filter(x => x !== item.id) : [...prev, item.id])} className="rounded border-gray-300 text-impilo-500" /><span className="text-xs text-gray-700">{item.label}</span></div>
-                    <span className="text-xs text-gray-400">+1</span>
+                  <label key={item.id} className="flex items-center justify-between px-2 py-1.5 rounded hover:bg-background cursor-pointer">
+                    <div className="flex items-center gap-2"><input type="checkbox" checked={curbItems.includes(item.id)} onChange={() => setCurbItems(prev => prev.includes(item.id) ? prev.filter(x => x !== item.id) : [...prev, item.id])} className="rounded border-border text-primary" /><span className="text-xs text-foreground">{item.label}</span></div>
+                    <span className="text-xs text-muted-foreground">+1</span>
                   </label>
                 ))}
-                {curbItems.length > 0 && (() => { const score = curbItems.length; return <div className="mt-2 p-2 bg-impilo-50 rounded text-center"><span className="text-lg font-bold text-impilo-600">{score}</span><p className="text-[10px] text-impilo-400">{score >= 3 ? "Severe — consider ICU" : score === 2 ? "Moderate — consider admission" : "Mild — consider outpatient"}</p></div>; })()}
+                {curbItems.length > 0 && (() => { const score = curbItems.length; return <div className="mt-2 p-2 bg-primary-soft rounded text-center"><span className="text-lg font-bold text-primary">{score}</span><p className="text-[10px] text-impilo-400">{score >= 3 ? "Severe — consider ICU" : score === 2 ? "Moderate — consider admission" : "Mild — consider outpatient"}</p></div>; })()}
               </div>
               {/* qSOFA Score */}
               <div className="border rounded-lg p-3">
-                <h4 className="text-sm font-semibold text-gray-900 mb-2">qSOFA (Quick Sepsis Assessment)</h4>
+                <h4 className="text-sm font-semibold text-foreground mb-2">qSOFA (Quick Sepsis Assessment)</h4>
                 {[
                   { id: "sbp", label: "Systolic BP ≤100 mmHg", pts: 1 },
                   { id: "rr", label: "Respiratory rate ≥22/min", pts: 1 },
                   { id: "gcs", label: "Altered mental status (GCS <15)", pts: 1 },
                 ].map(item => (
-                  <label key={item.id} className="flex items-center justify-between px-2 py-1.5 rounded hover:bg-gray-50 cursor-pointer">
-                    <div className="flex items-center gap-2"><input type="checkbox" checked={qsofaItems.includes(item.id)} onChange={() => setQsofaItems(prev => prev.includes(item.id) ? prev.filter(x => x !== item.id) : [...prev, item.id])} className="rounded border-gray-300 text-impilo-500" /><span className="text-xs text-gray-700">{item.label}</span></div>
-                    <span className="text-xs text-gray-400">+1</span>
+                  <label key={item.id} className="flex items-center justify-between px-2 py-1.5 rounded hover:bg-background cursor-pointer">
+                    <div className="flex items-center gap-2"><input type="checkbox" checked={qsofaItems.includes(item.id)} onChange={() => setQsofaItems(prev => prev.includes(item.id) ? prev.filter(x => x !== item.id) : [...prev, item.id])} className="rounded border-border text-primary" /><span className="text-xs text-foreground">{item.label}</span></div>
+                    <span className="text-xs text-muted-foreground">+1</span>
                   </label>
                 ))}
-                {qsofaItems.length > 0 && <div className="mt-2 p-2 bg-impilo-50 rounded text-center"><span className="text-lg font-bold text-impilo-600">{qsofaItems.length}</span><p className="text-[10px] text-impilo-400">{qsofaItems.length >= 2 ? "Sepsis likely — assess organ dysfunction (full SOFA)" : "Low risk — monitor clinically"}</p></div>}
+                {qsofaItems.length > 0 && <div className="mt-2 p-2 bg-primary-soft rounded text-center"><span className="text-lg font-bold text-primary">{qsofaItems.length}</span><p className="text-[10px] text-impilo-400">{qsofaItems.length >= 2 ? "Sepsis likely — assess organ dysfunction (full SOFA)" : "Low risk — monitor clinically"}</p></div>}
               </div>
             </div>
           )}
@@ -615,14 +615,14 @@ export function MedscapeTools({ open, onClose, toolId }: MedscapeToolsProps) {
           {activeTab === "conditions" && (
             <div className="p-4 space-y-3">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input value={conditionSearch} onChange={e => setConditionSearch(e.target.value)} placeholder="Search ICD-10 conditions..." className="w-full pl-10 pr-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-impilo-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input value={conditionSearch} onChange={e => setConditionSearch(e.target.value)} placeholder="Search ICD-10 conditions..." className="w-full pl-10 pr-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40" />
               </div>
               <div className="space-y-1">
                 {filteredConditions.map(c => (
-                  <div key={c.code} className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50">
-                    <div><p className="text-sm font-medium text-gray-900">{c.display}</p><p className="text-xs text-gray-500">{c.code} &middot; {c.category}</p></div>
-                    <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs font-mono">{c.code}</span>
+                  <div key={c.code} className="flex items-center justify-between p-3 rounded-lg hover:bg-background">
+                    <div><p className="text-sm font-medium text-foreground">{c.display}</p><p className="text-xs text-muted-foreground">{c.code} &middot; {c.category}</p></div>
+                    <span className="px-2 py-0.5 bg-neutral-100 text-muted-foreground rounded text-xs font-mono">{c.code}</span>
                   </div>
                 ))}
               </div>
@@ -642,25 +642,25 @@ function DrugMonograph({ drug, onBack, isCurrentMed, hasAllergyConflict }: {
 
   return (
     <div className="p-4 space-y-4">
-      <button onClick={onBack} className="text-xs text-impilo-500 hover:underline">&larr; Back to results</button>
+      <button onClick={onBack} className="text-xs text-primary hover:underline">&larr; Back to results</button>
 
       {hasAllergyConflict && (
-        <div className="p-3 rounded-lg bg-red-50 border border-red-200 flex items-start gap-2">
+        <div className="p-3 rounded-lg bg-danger-soft border border-danger/28 flex items-start gap-2">
           <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5 shrink-0" />
-          <div><p className="text-sm font-semibold text-red-800">Allergy Alert</p><p className="text-xs text-red-700">This patient has a known allergy that may conflict with this medication. Review before prescribing.</p></div>
+          <div><p className="text-sm font-semibold text-red-800">Allergy Alert</p><p className="text-xs text-danger">This patient has a known allergy that may conflict with this medication. Review before prescribing.</p></div>
         </div>
       )}
 
       <div>
         <div className="flex items-center gap-2">
-          <h2 className="text-lg font-bold text-gray-900">{drug.name}</h2>
+          <h2 className="text-lg font-bold text-foreground">{drug.name}</h2>
           {isCurrentMed && <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-medium">Patient is on this medication</span>}
         </div>
-        <p className="text-sm text-gray-500">{drug.genericName}</p>
+        <p className="text-sm text-muted-foreground">{drug.genericName}</p>
         <div className="flex gap-2 mt-2">
-          <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-xs">{drug.drugClass}</span>
-          <span className="px-2 py-0.5 border border-gray-200 text-gray-600 rounded text-xs">{drug.schedule}</span>
-          <span className="px-2 py-0.5 border border-gray-200 text-gray-600 rounded text-[10px]">{drug.route}</span>
+          <span className="px-2 py-0.5 bg-neutral-100 text-foreground rounded text-xs">{drug.drugClass}</span>
+          <span className="px-2 py-0.5 border border-border text-muted-foreground rounded text-xs">{drug.schedule}</span>
+          <span className="px-2 py-0.5 border border-border text-muted-foreground rounded text-[10px]">{drug.route}</span>
         </div>
       </div>
 
@@ -668,39 +668,39 @@ function DrugMonograph({ drug, onBack, isCurrentMed, hasAllergyConflict }: {
       <div className="border-b">
         <div className="flex">
           {(["overview", "dosing", "safety", "interactions"] as const).map(tab => (
-            <button key={tab} onClick={() => setMonographTab(tab)} className={`px-3 py-2 text-xs font-medium border-b-2 capitalize transition-colors ${monographTab === tab ? "border-impilo-500 text-impilo-500" : "border-transparent text-gray-500 hover:text-gray-700"}`}>{tab}</button>
+            <button key={tab} onClick={() => setMonographTab(tab)} className={`px-3 py-2 text-xs font-medium border-b-2 capitalize transition-colors ${monographTab === tab ? "border-impilo-500 text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>{tab}</button>
           ))}
         </div>
       </div>
 
       {monographTab === "overview" && (
         <div className="space-y-3">
-          <div className="border rounded-lg p-3"><h4 className="text-sm font-semibold text-gray-900 mb-1">Indication</h4><p className="text-sm text-gray-700">{drug.indication}</p></div>
-          <div className="border rounded-lg p-3"><h4 className="text-sm font-semibold text-gray-900 mb-1">Pregnancy</h4><p className="text-sm text-gray-700">Category {drug.pregnancyCategory}</p></div>
-          <div className="border rounded-lg p-3"><h4 className="text-sm font-semibold text-gray-900 mb-1">Common Doses</h4><div className="flex flex-wrap gap-1">{drug.commonDoses.map(d => <span key={d} className="px-2 py-0.5 bg-impilo-50 text-impilo-600 rounded text-xs">{d}</span>)}</div></div>
+          <div className="border rounded-lg p-3"><h4 className="text-sm font-semibold text-foreground mb-1">Indication</h4><p className="text-sm text-foreground">{drug.indication}</p></div>
+          <div className="border rounded-lg p-3"><h4 className="text-sm font-semibold text-foreground mb-1">Pregnancy</h4><p className="text-sm text-foreground">Category {drug.pregnancyCategory}</p></div>
+          <div className="border rounded-lg p-3"><h4 className="text-sm font-semibold text-foreground mb-1">Common Doses</h4><div className="flex flex-wrap gap-1">{drug.commonDoses.map(d => <span key={d} className="px-2 py-0.5 bg-primary-soft text-primary rounded text-xs">{d}</span>)}</div></div>
         </div>
       )}
 
       {monographTab === "dosing" && (
-        <div className="border rounded-lg p-3"><h4 className="text-sm font-semibold text-gray-900 mb-2">Dosing</h4><p className="text-sm text-gray-700 whitespace-pre-line">{drug.dosing}</p></div>
+        <div className="border rounded-lg p-3"><h4 className="text-sm font-semibold text-foreground mb-2">Dosing</h4><p className="text-sm text-foreground whitespace-pre-line">{drug.dosing}</p></div>
       )}
 
       {monographTab === "safety" && (
         <div className="space-y-3">
           <div className="border rounded-lg p-3">
-            <h4 className="text-sm font-semibold text-gray-900 mb-2">Contraindications</h4>
+            <h4 className="text-sm font-semibold text-foreground mb-2">Contraindications</h4>
             <ul className="space-y-1">{drug.contraindications.map(c => <li key={c} className="text-sm flex items-start gap-2"><AlertTriangle className="h-3.5 w-3.5 text-red-500 mt-0.5 shrink-0" />{c}</li>)}</ul>
           </div>
           <div className="border rounded-lg p-3">
-            <h4 className="text-sm font-semibold text-gray-900 mb-2">Side Effects</h4>
-            <div className="flex flex-wrap gap-1.5">{drug.sideEffects.map(s => <span key={s} className="px-2 py-0.5 bg-amber-50 text-amber-700 rounded text-xs">{s}</span>)}</div>
+            <h4 className="text-sm font-semibold text-foreground mb-2">Side Effects</h4>
+            <div className="flex flex-wrap gap-1.5">{drug.sideEffects.map(s => <span key={s} className="px-2 py-0.5 bg-warning-soft text-warning-foreground rounded text-xs">{s}</span>)}</div>
           </div>
         </div>
       )}
 
       {monographTab === "interactions" && (
         <div className="border rounded-lg p-3">
-          <h4 className="text-sm font-semibold text-gray-900 mb-2">Known Interactions</h4>
+          <h4 className="text-sm font-semibold text-foreground mb-2">Known Interactions</h4>
           <ul className="space-y-1.5">{drug.interactions.map(i => <li key={i} className="text-sm flex items-start gap-2"><AlertCircle className="h-3.5 w-3.5 text-amber-500 mt-0.5 shrink-0" />{i}</li>)}</ul>
         </div>
       )}

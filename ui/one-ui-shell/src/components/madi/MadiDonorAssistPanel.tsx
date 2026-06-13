@@ -63,30 +63,30 @@ export function MadiDonorAssistPanel({
         <p className="text-xs text-violet-800/80 mb-2">{result.disclaimer}</p>
       )}
       {result?.fallbackUsed && (
-        <p className="text-xs text-amber-700 mb-2">Using offline-safe guidance until the assistant is back.</p>
+        <p className="text-xs text-warning-foreground mb-2">Using offline-safe guidance until the assistant is back.</p>
       )}
       {Array.isArray(result?.steps) && (
-        <ol className="list-decimal list-inside text-sm text-gray-700 space-y-1">
+        <ol className="list-decimal list-inside text-sm text-foreground space-y-1">
           {result.steps.map((s) => (
             <li key={s}>{s}</li>
           ))}
         </ol>
       )}
       {Array.isArray(result?.questions) && (
-        <ul className="space-y-2 text-sm text-gray-700">
+        <ul className="space-y-2 text-sm text-foreground">
           {result.questions.map((q) => (
             <li key={q.id}>
               <span className="font-medium">{q.label}</span>
-              {q.help ? <span className="block text-xs text-gray-500">{q.help}</span> : null}
+              {q.help ? <span className="block text-xs text-muted-foreground">{q.help}</span> : null}
             </li>
           ))}
         </ul>
       )}
       {typeof result?.content === "string" && (
-        <p className="text-sm text-gray-700">{result.content}</p>
+        <p className="text-sm text-foreground">{result.content}</p>
       )}
       {Array.isArray(result?.content) && (
-        <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+        <ul className="list-disc list-inside text-sm text-foreground space-y-1">
           {result.content.map((line) => (
             <li key={line}>{line}</li>
           ))}

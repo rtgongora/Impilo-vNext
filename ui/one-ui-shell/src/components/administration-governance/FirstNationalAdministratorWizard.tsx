@@ -39,11 +39,11 @@ export function FirstNationalAdministratorWizard() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <p className="text-sm text-slate-600">Checking bootstrap status…</p>;
-  if (error) return <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">{error}</div>;
+  if (loading) return <p className="text-sm text-muted-foreground">Checking bootstrap status…</p>;
+  if (error) return <div className="rounded-xl border border-warning/35 bg-warning-soft px-4 py-3 text-sm text-warning-foreground">{error}</div>;
   if (!status?.bootstrapOpen && status?.activeNationalAdminExists) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white px-4 py-6 text-sm text-slate-700">
+      <div className="rounded-xl border border-border bg-card px-4 py-6 text-sm text-foreground">
         Bootstrap Mode is closed. Use Administration & Governance for routine platform operations.
       </div>
     );
@@ -88,20 +88,20 @@ export function FirstNationalAdministratorWizard() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-indigo-100 bg-indigo-50/70 px-4 py-3 text-sm text-indigo-950">
+      <div className="rounded-xl border border-indigo-100 bg-info-soft/70 px-4 py-3 text-sm text-primary-hover">
         {status?.friendlyMessage}
       </div>
 
       {step === 1 ? (
         <section className="space-y-3">
-          <h3 className="font-semibold text-slate-900">1. Bootstrap method</h3>
+          <h3 className="font-semibold text-foreground">1. Bootstrap method</h3>
           {(status?.allowedBootstrapMethods ?? []).map((item) => (
             <label key={item} className="flex items-center gap-2 text-sm">
               <input type="radio" checked={method === item} onChange={() => setMethod(item)} />
               {item.replace(/_/g, " ")}
             </label>
           ))}
-          <button type="button" className="rounded-lg bg-indigo-700 px-4 py-2 text-sm text-white" onClick={() => setStep(2)}>
+          <button type="button" className="rounded-lg bg-primary px-4 py-2 text-sm text-white" onClick={() => setStep(2)}>
             Continue
           </button>
         </section>
@@ -109,9 +109,9 @@ export function FirstNationalAdministratorWizard() {
 
       {step === 2 ? (
         <section className="space-y-3">
-          <h3 className="font-semibold text-slate-900">2. Verify bootstrap credential</h3>
+          <h3 className="font-semibold text-foreground">2. Verify bootstrap credential</h3>
           <input className="w-full rounded-lg border px-3 py-2 text-sm" placeholder="Bootstrap token" value={token} onChange={(e) => setToken(e.target.value)} />
-          <button type="button" className="rounded-lg bg-indigo-700 px-4 py-2 text-sm text-white" onClick={() => void handleValidateToken()}>
+          <button type="button" className="rounded-lg bg-primary px-4 py-2 text-sm text-white" onClick={() => void handleValidateToken()}>
             Validate token
           </button>
         </section>
@@ -119,7 +119,7 @@ export function FirstNationalAdministratorWizard() {
 
       {step >= 3 && step < 4 ? (
         <section className="grid gap-3 md:grid-cols-2">
-          <h3 className="md:col-span-2 font-semibold text-slate-900">3. Nominated first national administrator</h3>
+          <h3 className="md:col-span-2 font-semibold text-foreground">3. Nominated first national administrator</h3>
           {[
             ["fullName", "Full name"],
             ["officialEmail", "Official email"],
@@ -132,7 +132,7 @@ export function FirstNationalAdministratorWizard() {
               <input className="mt-1 w-full rounded-lg border px-3 py-2" value={form[name] ?? ""} onChange={(e) => setForm((prev) => ({ ...prev, [name]: e.target.value }))} />
             </label>
           ))}
-          <button type="button" className="rounded-lg bg-indigo-700 px-4 py-2 text-sm text-white md:col-span-2 md:w-fit" onClick={() => void handleCreatePending()}>
+          <button type="button" className="rounded-lg bg-primary px-4 py-2 text-sm text-white md:col-span-2 md:w-fit" onClick={() => void handleCreatePending()}>
             Create pending bootstrap account
           </button>
         </section>
@@ -140,13 +140,13 @@ export function FirstNationalAdministratorWizard() {
 
       {step === 4 ? (
         <section className="space-y-3">
-          <h3 className="font-semibold text-slate-900">4. Activate with MFA</h3>
+          <h3 className="font-semibold text-foreground">4. Activate with MFA</h3>
           <input className="w-full rounded-lg border px-3 py-2 text-sm" type="password" placeholder="Set password" value={password} onChange={(e) => setPassword(e.target.value)} />
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={mfaConfigured} onChange={(e) => setMfaConfigured(e.target.checked)} />
             MFA configured
           </label>
-          <button type="button" className="rounded-lg bg-indigo-700 px-4 py-2 text-sm text-white" onClick={() => void handleActivate()}>
+          <button type="button" className="rounded-lg bg-primary px-4 py-2 text-sm text-white" onClick={() => void handleActivate()}>
             Activate and close bootstrap
           </button>
         </section>

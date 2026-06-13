@@ -16,7 +16,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="bg-white border-b border-neutral-200 px-6 py-3">
+      <header className="bg-card border-b border-neutral-200 px-6 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Link href="/browse" className="flex items-center gap-2">
             <h1 className="text-lg font-semibold text-brand-primary tracking-tight">MSIKA Flow</h1>

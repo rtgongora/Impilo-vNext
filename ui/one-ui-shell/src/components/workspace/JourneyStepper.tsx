@@ -33,7 +33,7 @@ export function JourneyStepper(props: {
             step.status === "complete"
               ? "text-success"
               : step.status === "current"
-                ? "text-impilo-600"
+                ? "text-primary"
                 : step.status === "blocked"
                   ? "text-[var(--text-muted)]"
                   : "text-[var(--border-strong)]";
@@ -62,7 +62,7 @@ export function JourneyStepper(props: {
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <p className="text-sm font-medium text-[var(--text-primary)] group-hover:text-impilo-700">
+                        <p className="text-sm font-medium text-[var(--text-primary)] group-hover:text-primary-hover">
                           {step.label}
                         </p>
                         <p className="text-xs text-[var(--text-secondary)]">{step.description}</p>
@@ -70,7 +70,7 @@ export function JourneyStepper(props: {
                           <p className="mt-1 text-xs text-[var(--text-muted)]">{step.statusNote}</p>
                         ) : null}
                       </div>
-                      <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-[var(--border-strong)] group-hover:text-impilo-600" />
+                      <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-[var(--border-strong)] group-hover:text-primary" />
                     </div>
                   </Link>
                 )}

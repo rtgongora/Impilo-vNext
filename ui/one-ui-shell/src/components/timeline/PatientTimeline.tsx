@@ -73,9 +73,9 @@ const eventTypeConfig: Record<
   TimelineEventType,
   { icon: React.ElementType; color: string; label: string }
 > = {
-  admission: { icon: BedDouble, color: "bg-impilo-500", label: "Admission" },
+  admission: { icon: BedDouble, color: "bg-primary", label: "Admission" },
   discharge: { icon: BedDouble, color: "bg-emerald-500", label: "Discharge" },
-  note: { icon: FileText, color: "bg-slate-500", label: "Note" },
+  note: { icon: FileText, color: "bg-neutral-500", label: "Note" },
   vitals: { icon: HeartPulse, color: "bg-pink-500", label: "Vitals" },
   medication: { icon: Pill, color: "bg-purple-500", label: "Medication" },
   lab: { icon: TestTube, color: "bg-indigo-500", label: "Lab" },
@@ -150,7 +150,7 @@ export function PatientTimeline({ patientId }: PatientTimelineProps) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-6 w-6 animate-spin text-impilo-500" />
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
         <span className="ml-2 text-sm text-[color:var(--text-secondary)]">Loading timeline...</span>
       </div>
     );
@@ -184,14 +184,14 @@ export function PatientTimeline({ patientId }: PatientTimelineProps) {
         <div className="relative" ref={filterRef}>
           <button
             onClick={() => setFilterOpen((prev) => !prev)}
-            className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-full border border-[color:var(--border-soft)] bg-white text-[color:var(--text-secondary)] hover:bg-[color:var(--surface-soft)] transition-colors"
+            className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-full border border-[color:var(--border-soft)] bg-card text-[color:var(--text-secondary)] hover:bg-[color:var(--surface-soft)] transition-colors"
           >
             <Filter className="h-4 w-4 mr-2" />
             Filter ({visibleTypes.length})
           </button>
 
           {filterOpen && (
-            <div className="absolute right-0 mt-1 w-48 rounded-2xl border border-[color:var(--border-soft)] bg-white shadow-impilo-floating z-50">
+            <div className="absolute right-0 mt-1 w-48 rounded-2xl border border-[color:var(--border-soft)] bg-card shadow-impilo-floating z-50">
               <div className="py-1">
                 {Object.entries(eventTypeConfig).map(([type, config]) => {
                   const isChecked = visibleTypes.includes(
@@ -201,18 +201,18 @@ export function PatientTimeline({ patientId }: PatientTimelineProps) {
                     <button
                       key={type}
                       onClick={() => toggleType(type as TimelineEventType)}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 transition-colors"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-neutral-100 transition-colors"
                     >
                       <input
                         type="checkbox"
                         checked={isChecked}
                         readOnly
-                        className="h-4 w-4 rounded border-gray-300 text-impilo-500 focus:ring-impilo-400"
+                        className="h-4 w-4 rounded border-border text-primary focus:ring-primary/40"
                       />
                       <div
                         className={`h-2 w-2 rounded-full ${config.color}`}
                       />
-                      <span className="text-gray-700">{config.label}</span>
+                      <span className="text-foreground">{config.label}</span>
                     </button>
                   );
                 })}
@@ -234,8 +234,8 @@ export function PatientTimeline({ patientId }: PatientTimelineProps) {
         {Object.entries(groupedEvents).map(([date, dateEvents]) => (
           <div key={date}>
             {/* Date header */}
-            <div className="sticky top-0 bg-white/95 backdrop-blur py-2 z-10">
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border border-[color:var(--border-soft)] bg-white text-[color:var(--text-secondary)]">
+            <div className="sticky top-0 bg-card/95 backdrop-blur py-2 z-10">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border border-[color:var(--border-soft)] bg-card text-[color:var(--text-secondary)]">
                 <Calendar className="h-3 w-3 mr-1" />
                 {date === new Date().toLocaleDateString() ? "Today" : date}
               </span>
@@ -259,7 +259,7 @@ export function PatientTimeline({ patientId }: PatientTimelineProps) {
 
                     {/* Event card */}
                     <div
-                      className={`rounded-2xl border bg-white p-4 transition-all hover:shadow-impilo-card ${
+                      className={`rounded-2xl border bg-card p-4 transition-all hover:shadow-impilo-card ${
                         event.isImportant
                           ? "ring-1 ring-[color:var(--primary-muted)] border-[color:var(--primary-muted)]"
                           : "border-[color:var(--border-soft)]"
@@ -268,30 +268,30 @@ export function PatientTimeline({ patientId }: PatientTimelineProps) {
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-medium text-sm text-gray-900">
+                            <h4 className="font-medium text-sm text-foreground">
                               {event.title}
                             </h4>
                             {event.isImportant && (
-                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-impilo-100 text-impilo-600">
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary-soft text-primary">
                                 Important
                               </span>
                             )}
                           </div>
-                          <p className="text-sm text-gray-500">
+                          <p className="text-sm text-muted-foreground">
                             {event.description}
                           </p>
 
                           {/* Expanded details */}
                           {event.details && isExpanded && (
-                            <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                            <div className="mt-3 p-3 bg-background rounded-lg">
                               <div className="grid grid-cols-2 gap-2 text-xs">
                                 {Object.entries(event.details).map(
                                   ([key, value]) => (
                                     <div key={key}>
-                                      <span className="text-gray-400">
+                                      <span className="text-muted-foreground">
                                         {key}:
                                       </span>
-                                      <span className="ml-1 font-medium text-gray-700">
+                                      <span className="ml-1 font-medium text-foreground">
                                         {value}
                                       </span>
                                     </div>
@@ -302,7 +302,7 @@ export function PatientTimeline({ patientId }: PatientTimelineProps) {
                           )}
 
                           {/* Meta: time, relative time, author */}
-                          <div className="flex items-center gap-3 mt-2 text-xs text-gray-400 flex-wrap">
+                          <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground flex-wrap">
                             <span className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />
                               {formatTime(event.timestamp)}
@@ -321,7 +321,7 @@ export function PatientTimeline({ patientId }: PatientTimelineProps) {
                         {event.details && (
                           <button
                             onClick={() => toggleExpand(event.id)}
-                            className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                            className="p-1 text-muted-foreground hover:text-muted-foreground hover:bg-neutral-100 rounded transition-colors"
                           >
                             {isExpanded ? (
                               <ChevronUp className="h-4 w-4" />

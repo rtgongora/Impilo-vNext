@@ -22,7 +22,7 @@ const TYPE_BADGE: Record<OrderType, string> = {
   IMAGING: "badge-type-imaging",
   PHARMACY: "badge-type-pharmacy",
   REFERRAL: "badge-type-referral",
-  PROCEDURE: "badge bg-amber-100 text-amber-800",
+  PROCEDURE: "badge bg-amber-100 text-warning-foreground",
   SUPPLY: "badge bg-neutral-100 text-neutral-700",
 };
 
@@ -139,17 +139,17 @@ export default function WorklistsPage() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-red-800">
           {error}
         </div>
       )}
 
       {successMessage && (
-        <div className="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-sm text-emerald-800">
+        <div className="mb-4 p-3 rounded-lg bg-success-soft border border-success/25 text-sm text-primary-hover">
           {successMessage}
           <button
             onClick={() => setSuccessMessage(null)}
-            className="ml-2 text-emerald-600 hover:text-emerald-800 font-medium"
+            className="ml-2 text-primary hover:text-primary-hover font-medium"
           >
             Dismiss
           </button>
@@ -164,7 +164,7 @@ export default function WorklistsPage() {
             onClick={() => setActiveTab(tab)}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
               activeTab === tab
-                ? "border-indigo-600 text-indigo-700"
+                ? "border-indigo-600 text-primary-hover"
                 : "border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300"
             }`}
           >
@@ -286,7 +286,7 @@ export default function WorklistsPage() {
                         <button
                           onClick={() => handleAccept(item.id)}
                           disabled={actionLoading}
-                          className="text-xs text-emerald-600 hover:text-emerald-800 font-medium"
+                          className="text-xs text-primary hover:text-primary-hover font-medium"
                         >
                           Accept
                         </button>

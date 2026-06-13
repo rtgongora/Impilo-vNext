@@ -22,10 +22,10 @@ const JOURNEY_STATE_COLORS: Record<string, string> = {
 };
 
 const BOTTLENECK_SEVERITY_COLORS: Record<string, string> = {
-  LOW: "bg-blue-100 text-blue-800 border-blue-200",
+  LOW: "bg-blue-100 text-blue-800 border-info/25",
   MEDIUM: "bg-yellow-100 text-yellow-800 border-yellow-200",
   HIGH: "bg-orange-100 text-orange-800 border-orange-200",
-  CRITICAL: "bg-red-100 text-red-800 border-red-200",
+  CRITICAL: "bg-red-100 text-red-800 border-danger/28",
 };
 
 const REFRESH_INTERVAL_MS = 30000;
@@ -130,7 +130,7 @@ export default function ControlTowerPage() {
       )}
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-red-800">
           {error}
         </div>
       )}
@@ -189,7 +189,7 @@ export default function ControlTowerPage() {
                 className={`text-3xl font-bold mt-1 ${
                   bottlenecks.filter((b) => !b.resolved).length > 0
                     ? "text-danger"
-                    : "text-emerald-600"
+                    : "text-primary"
                 }`}
               >
                 {bottlenecks.filter((b) => !b.resolved).length}
@@ -237,7 +237,7 @@ export default function ControlTowerPage() {
                           {qs.waitingCount}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-right text-emerald-600 font-medium">
+                      <td className="px-4 py-3 text-right text-primary font-medium">
                         {qs.inServiceCount}
                       </td>
                       <td className="px-4 py-3 text-right text-neutral-500">
@@ -375,7 +375,7 @@ export default function ControlTowerPage() {
                         <span className="text-xs font-semibold uppercase">
                           {b.severity}
                         </span>
-                        <span className="badge bg-white/50 text-inherit">
+                        <span className="badge bg-card/50 text-inherit">
                           {b.type.replace(/_/g, " ")}
                         </span>
                       </div>
@@ -388,7 +388,7 @@ export default function ControlTowerPage() {
                 ))}
               {bottlenecks.filter((b) => !b.resolved).length === 0 && (
                 <div className="card p-6 text-center">
-                  <p className="text-sm text-emerald-600 font-medium">
+                  <p className="text-sm text-primary font-medium">
                     No active bottlenecks detected.
                   </p>
                 </div>

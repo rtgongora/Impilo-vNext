@@ -36,14 +36,14 @@ export default function InpatientDischargePage() {
       <TrustContextBanner purposeOfUse="INPATIENT_DISCHARGE" />
 
       {isLoading ? (
-        <div className="flex items-center py-8 text-slate-500">
+        <div className="flex items-center py-8 text-muted-foreground">
           <Loader2 className="mr-2 h-5 w-5 animate-spin" />
           Loading admission…
         </div>
       ) : (
-        <div className="space-y-4 rounded-xl border border-slate-200 p-6">
-          <h3 className="text-sm font-semibold text-slate-900">Discharge checklist</h3>
-          <ul className="list-inside list-disc space-y-1 text-sm text-slate-600">
+        <div className="space-y-4 rounded-xl border border-border p-6">
+          <h3 className="text-sm font-semibold text-foreground">Discharge checklist</h3>
+          <ul className="list-inside list-disc space-y-1 text-sm text-muted-foreground">
             <li>Confirm discharge diagnosis and summary</li>
             <li>Issue discharge prescription via pharmacy</li>
             <li>Book follow-up or referral if needed</li>
@@ -60,14 +60,14 @@ export default function InpatientDischargePage() {
                   { onSuccess: () => router.push("/clinical/inpatient/admissions") },
                 );
               }}
-              className="rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white hover:bg-impilo-600 disabled:opacity-50"
+              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover disabled:opacity-50"
             >
               {discharge.isPending ? "Discharging…" : "Complete discharge (BFF)"}
             </button>
-            <Link href="/pharmacy/prescriptions" className="rounded-lg border px-4 py-2 text-sm hover:bg-slate-50">
+            <Link href="/pharmacy/prescriptions" className="rounded-lg border px-4 py-2 text-sm hover:bg-background">
               Discharge Rx
             </Link>
-            <Link href="/core-transaction" className="rounded-lg border px-4 py-2 text-sm hover:bg-slate-50">
+            <Link href="/core-transaction" className="rounded-lg border px-4 py-2 text-sm hover:bg-background">
               View audit trail
             </Link>
           </div>

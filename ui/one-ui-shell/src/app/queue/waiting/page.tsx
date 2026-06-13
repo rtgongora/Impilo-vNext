@@ -94,30 +94,30 @@ export default function WaitingListPage() {
 
           {isLoading ? (
             <div className="flex items-center justify-center py-16">
-              <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
-              <span className="ml-2 text-sm text-slate-500">Loading waiting list...</span>
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              <span className="ml-2 text-sm text-muted-foreground">Loading waiting list...</span>
             </div>
           ) : error ? (
-            <div className="rounded-3xl border border-red-200 bg-red-50 p-6 text-center">
+            <div className="rounded-3xl border border-danger/28 bg-danger-soft p-6 text-center">
               <AlertTriangle className="mx-auto mb-2 h-8 w-8 text-red-400" />
-              <p className="text-sm text-red-700">Failed to load the waiting list.</p>
+              <p className="text-sm text-danger">Failed to load the waiting list.</p>
             </div>
           ) : entries.length === 0 ? (
-            <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-sm">
-              <Users className="mx-auto mb-3 h-10 w-10 text-slate-300" />
-              <p className="text-sm text-slate-500">No patients are currently waiting at this facility.</p>
+            <div className="rounded-3xl border border-border bg-card p-12 text-center shadow-sm">
+              <Users className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">No patients are currently waiting at this facility.</p>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b bg-gray-50">
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Patient</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Priority</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Triage</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Wait Time</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-600">Queued At</th>
-                    <th className="text-right px-4 py-3 font-medium text-gray-600">Action</th>
+                  <tr className="border-b bg-background">
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Patient</th>
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Priority</th>
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Triage</th>
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Wait Time</th>
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Queued At</th>
+                    <th className="text-right px-4 py-3 font-medium text-muted-foreground">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -129,8 +129,8 @@ export default function WaitingListPage() {
                     const queuedAt = getQueueQueuedAt(entry);
 
                     return (
-                      <tr key={entry.id} className="border-b last:border-b-0 hover:bg-gray-50">
-                        <td className="px-4 py-3 font-medium text-gray-900">
+                      <tr key={entry.id} className="border-b last:border-b-0 hover:bg-background">
+                        <td className="px-4 py-3 font-medium text-foreground">
                           {getQueuePatientName(entry)}
                         </td>
                         <td className="px-4 py-3">
@@ -143,7 +143,7 @@ export default function WaitingListPage() {
                             <div className="flex items-center gap-2">
                               <span
                                 className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
-                                  QUEUE_TRIAGE_STYLES[triageCategory] ?? "bg-slate-200 text-slate-700"
+                                  QUEUE_TRIAGE_STYLES[triageCategory] ?? "bg-border text-foreground"
                                 }`}
                               >
                                 {triageCategory.charAt(0)}
@@ -153,18 +153,18 @@ export default function WaitingListPage() {
                               </span>
                             </div>
                           ) : (
-                            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+                            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-warning-foreground">
                               Triage first
                             </span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-gray-600">
+                        <td className="px-4 py-3 text-muted-foreground">
                           <span className="inline-flex items-center gap-1">
                             <Clock className="h-3.5 w-3.5" />
                             {formatQueueWaitTime(queuedAt)}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-gray-600">
+                        <td className="px-4 py-3 text-muted-foreground">
                           {formatQueueDateTime(queuedAt, { hour: "2-digit", minute: "2-digit" })}
                         </td>
                         <td className="px-4 py-3 text-right">
@@ -172,7 +172,7 @@ export default function WaitingListPage() {
                             <button
                               onClick={() => handleCall(entry.id, patientId)}
                               disabled={callPatient.isPending}
-                              className="rounded-xl bg-impilo-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-impilo-600 disabled:opacity-50"
+                              className="rounded-xl bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-primary-hover disabled:opacity-50"
                             >
                               {COORDINATION_COPY.startEncounterHandoff}
                             </button>
@@ -180,7 +180,7 @@ export default function WaitingListPage() {
                             <button
                               type="button"
                               onClick={() => router.push("/queue/triage")}
-                              className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                              className="rounded-xl border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-background"
                             >
                               Open Triage
                             </button>

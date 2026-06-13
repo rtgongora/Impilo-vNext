@@ -36,14 +36,14 @@ export function WorkspaceContextOrchestrationRail() {
         <div className="flex flex-wrap gap-2 text-xs">
           <Link
             href="/clinical/control-tower"
-            className="inline-flex items-center gap-1 rounded-lg border border-sky-200 bg-white px-2.5 py-1.5 font-medium text-sky-900 hover:border-sky-300"
+            className="inline-flex items-center gap-1 rounded-lg border border-sky-200 bg-card px-2.5 py-1.5 font-medium text-sky-900 hover:border-sky-300"
           >
             <Building2 className="h-3.5 w-3.5" />
             Control tower
           </Link>
           <Link
             href="/operations/facility-operations"
-            className="rounded-lg border border-sky-200 bg-white px-2.5 py-1.5 font-medium text-sky-900 hover:border-sky-300"
+            className="rounded-lg border border-sky-200 bg-card px-2.5 py-1.5 font-medium text-sky-900 hover:border-sky-300"
           >
             Facility ops
           </Link>

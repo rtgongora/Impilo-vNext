@@ -110,19 +110,19 @@ interface ReadinessChrome {
 function readinessChrome(status: AdapterReadinessRow["status"]): ReadinessChrome {
   switch (status) {
     case "READY_LIVE":
-      return { label: "Ready (live)", badgeClass: "bg-emerald-100 text-emerald-800 border-emerald-200" };
+      return { label: "Ready (live)", badgeClass: "bg-emerald-100 text-primary-hover border-success/25" };
     case "READY_SANDBOX":
       return { label: "Ready (sandbox)", badgeClass: "bg-sky-100 text-sky-800 border-sky-200" };
     case "CREDENTIALS_MISSING":
-      return { label: "Credentials missing", badgeClass: "bg-amber-100 text-amber-800 border-amber-200" };
+      return { label: "Credentials missing", badgeClass: "bg-amber-100 text-warning-foreground border-warning/35" };
     case "DISABLED":
-      return { label: "Disabled", badgeClass: "bg-slate-100 text-slate-700 border-slate-200" };
+      return { label: "Disabled", badgeClass: "bg-neutral-100 text-foreground border-border" };
     case "NOT_REGISTERED":
-      return { label: "Not registered", badgeClass: "bg-slate-100 text-slate-500 border-slate-200" };
+      return { label: "Not registered", badgeClass: "bg-neutral-100 text-muted-foreground border-border" };
     case "DEGRADED":
       return { label: "Degraded", badgeClass: "bg-orange-100 text-orange-800 border-orange-200" };
     default:
-      return { label: status, badgeClass: "bg-slate-100 text-slate-700 border-slate-200" };
+      return { label: status, badgeClass: "bg-neutral-100 text-foreground border-border" };
   }
 }
 
@@ -135,28 +135,28 @@ function renderCount(
 ) {
   if (isLoading) {
     return (
-      <p className="mt-3 flex items-center gap-2 text-xs text-slate-500">
+      <p className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
         <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading {label}…
       </p>
     );
   }
   if (isError) {
     return (
-      <p className="mt-3 flex items-center gap-2 text-xs text-red-700">
+      <p className="mt-3 flex items-center gap-2 text-xs text-danger">
         <AlertCircle className="h-3.5 w-3.5" /> {unavailableMessage}
       </p>
     );
   }
   if (count === null) {
     return (
-      <p className="mt-3 text-xs text-slate-500">
+      <p className="mt-3 text-xs text-muted-foreground">
         Upstream returned a payload but the row count could not be derived from a recognised
         envelope. Open the MusheX service log to inspect the response shape.
       </p>
     );
   }
   return (
-    <p className="mt-3 text-xs text-slate-700">
+    <p className="mt-3 text-xs text-foreground">
       <span className="font-medium">{count}</span> record{count === 1 ? "" : "s"} returned from the
       MusheX platform admin API.
     </p>
@@ -233,7 +233,7 @@ export default function FinanceMushexPlatformPage() {
         <div className="mb-4">
           <Link
             href="/finance"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to finance
@@ -281,14 +281,14 @@ export default function FinanceMushexPlatformPage() {
 
           <div className="grid gap-4 md:grid-cols-2">
             {/* ── Custodial wallets ─────────────────────────────────── */}
-            <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-primary-hover">
                   <Wallet className="h-5 w-5" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-sm font-semibold text-slate-900">Custodial wallets</h2>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <h2 className="text-sm font-semibold text-foreground">Custodial wallets</h2>
+                  <p className="mt-1 text-xs text-muted-foreground">
                     MusheX-managed custodial wallets backing tenant, facility, payer, sponsor, and
                     programme balances. Patient-facing wallets live under the wallet plane below.
                   </p>
@@ -299,7 +299,7 @@ export default function FinanceMushexPlatformPage() {
                     walletsCount,
                     "Could not load custodial wallets from MusheX.",
                   )}
-                  <p className="mt-2 text-[11px] text-slate-400">
+                  <p className="mt-2 text-[11px] text-muted-foreground">
                     BFF route:{" "}
                     <code className="text-[10px]">/internal/v1/finance/mushex-platform/wallets</code>
                   </p>
@@ -315,24 +315,24 @@ export default function FinanceMushexPlatformPage() {
                       placeholder="Wallet ID"
                       value={walletLookupId}
                       onChange={(e) => setWalletLookupId(e.target.value)}
-                      className="flex-1 rounded-md border border-slate-200 px-2 py-1 text-xs font-mono placeholder:font-sans placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-200"
+                      className="flex-1 rounded-md border border-border px-2 py-1 text-xs font-mono placeholder:font-sans placeholder:text-muted-foreground focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-200"
                       aria-label="Wallet ID"
                     />
                     <button
                       type="submit"
                       disabled={walletLookupId.trim().length === 0}
-                      className="inline-flex items-center gap-1 rounded-md border border-indigo-200 bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="inline-flex items-center gap-1 rounded-md border border-info/25 bg-info-soft px-2 py-1 text-xs font-medium text-primary-hover hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Open <ArrowRight className="h-3 w-3" />
                     </button>
                   </form>
-                  <p className="mt-1 text-[10px] text-slate-400">
+                  <p className="mt-1 text-[10px] text-muted-foreground">
                     Read-only detail: transactions + linked cards. No write actions surfaced.
                   </p>
 
                   <Link
                     href="/wallet"
-                    className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-indigo-700 hover:text-indigo-900"
+                    className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary-hover hover:text-primary-hover"
                   >
                     Open patient wallet surface →
                   </Link>
@@ -341,14 +341,14 @@ export default function FinanceMushexPlatformPage() {
             </section>
 
             {/* ── Remittance transfers ──────────────────────────────── */}
-            <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-primary-hover">
                   <Send className="h-5 w-5" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-sm font-semibold text-slate-900">Remittance transfers</h2>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <h2 className="text-sm font-semibold text-foreground">Remittance transfers</h2>
+                  <p className="mt-1 text-xs text-muted-foreground">
                     Payer-to-facility and facility-to-provider remittance flows orchestrated by
                     MusheX. Reconciliation files are matched in the reconciliation surface.
                   </p>
@@ -359,7 +359,7 @@ export default function FinanceMushexPlatformPage() {
                     remittanceCount,
                     "Could not load remittance transfers from MusheX.",
                   )}
-                  <p className="mt-2 text-[11px] text-slate-400">
+                  <p className="mt-2 text-[11px] text-muted-foreground">
                     BFF route:{" "}
                     <code className="text-[10px]">
                       /internal/v1/finance/mushex-platform/remittance-transfers
@@ -376,20 +376,20 @@ export default function FinanceMushexPlatformPage() {
                       placeholder="Transfer ID"
                       value={remittanceLookupId}
                       onChange={(e) => setRemittanceLookupId(e.target.value)}
-                      className="flex-1 rounded-md border border-slate-200 px-2 py-1 text-xs font-mono placeholder:font-sans placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-200"
+                      className="flex-1 rounded-md border border-border px-2 py-1 text-xs font-mono placeholder:font-sans placeholder:text-muted-foreground focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-200"
                       aria-label="Remittance transfer ID"
                     />
                     <button
                       type="submit"
                       disabled={remittanceLookupId.trim().length === 0}
-                      className="inline-flex items-center gap-1 rounded-md border border-indigo-200 bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="inline-flex items-center gap-1 rounded-md border border-info/25 bg-info-soft px-2 py-1 text-xs font-medium text-primary-hover hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Open <ArrowRight className="h-3 w-3" />
                     </button>
                   </form>
                   <Link
                     href="/finance/reconciliation"
-                    className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-indigo-700 hover:text-indigo-900"
+                    className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary-hover hover:text-primary-hover"
                   >
                     Open reconciliation →
                   </Link>
@@ -398,14 +398,14 @@ export default function FinanceMushexPlatformPage() {
             </section>
 
             {/* ── Card profiles ─────────────────────────────────────── */}
-            <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-warning-foreground">
                   <CreditCard className="h-5 w-5" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-sm font-semibold text-slate-900">Card profiles</h2>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <h2 className="text-sm font-semibold text-foreground">Card profiles</h2>
+                  <p className="mt-1 text-xs text-muted-foreground">
                     Tokenised card profiles registered with the accredited card acquirer adapter.
                     Card lifecycle changes (issue, suspend, retire) are backend-only in this stage.
                   </p>
@@ -416,7 +416,7 @@ export default function FinanceMushexPlatformPage() {
                     cardsCount,
                     "Could not load card profiles from MusheX.",
                   )}
-                  <p className="mt-2 text-[11px] text-slate-400">
+                  <p className="mt-2 text-[11px] text-muted-foreground">
                     BFF route:{" "}
                     <code className="text-[10px]">
                       /internal/v1/finance/mushex-platform/card-profiles
@@ -433,20 +433,20 @@ export default function FinanceMushexPlatformPage() {
                       placeholder="Card profile ID"
                       value={cardLookupId}
                       onChange={(e) => setCardLookupId(e.target.value)}
-                      className="flex-1 rounded-md border border-slate-200 px-2 py-1 text-xs font-mono placeholder:font-sans placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-200"
+                      className="flex-1 rounded-md border border-border px-2 py-1 text-xs font-mono placeholder:font-sans placeholder:text-muted-foreground focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-200"
                       aria-label="Card profile ID"
                     />
                     <button
                       type="submit"
                       disabled={cardLookupId.trim().length === 0}
-                      className="inline-flex items-center gap-1 rounded-md border border-indigo-200 bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="inline-flex items-center gap-1 rounded-md border border-info/25 bg-info-soft px-2 py-1 text-xs font-medium text-primary-hover hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Open <ArrowRight className="h-3 w-3" />
                     </button>
                   </form>
                   <Link
                     href="/finance/payer-ops"
-                    className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-indigo-700 hover:text-indigo-900"
+                    className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary-hover hover:text-primary-hover"
                   >
                     Open payer ops adapters →
                   </Link>
@@ -455,14 +455,14 @@ export default function FinanceMushexPlatformPage() {
             </section>
 
             {/* ── Reversal records ──────────────────────────────────── */}
-            <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-purple-100 text-purple-700">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-purple-100 text-warning-foreground">
                   <RotateCcw className="h-5 w-5" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-sm font-semibold text-slate-900">Reversal records</h2>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <h2 className="text-sm font-semibold text-foreground">Reversal records</h2>
+                  <p className="mt-1 text-xs text-muted-foreground">
                     Adapter-level reversals raised against MusheX `PaymentIntent`s. Refund execution
                     and credit-note issuance happen in the refunds and ledger surfaces.
                   </p>
@@ -473,7 +473,7 @@ export default function FinanceMushexPlatformPage() {
                     reversalsCount,
                     "Could not load reversal records from MusheX.",
                   )}
-                  <p className="mt-2 text-[11px] text-slate-400">
+                  <p className="mt-2 text-[11px] text-muted-foreground">
                     BFF route:{" "}
                     <code className="text-[10px]">/internal/v1/finance/mushex-platform/reversals</code>
                   </p>
@@ -488,20 +488,20 @@ export default function FinanceMushexPlatformPage() {
                       placeholder="Reversal ID"
                       value={reversalLookupId}
                       onChange={(e) => setReversalLookupId(e.target.value)}
-                      className="flex-1 rounded-md border border-slate-200 px-2 py-1 text-xs font-mono placeholder:font-sans placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-200"
+                      className="flex-1 rounded-md border border-border px-2 py-1 text-xs font-mono placeholder:font-sans placeholder:text-muted-foreground focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-200"
                       aria-label="Reversal ID"
                     />
                     <button
                       type="submit"
                       disabled={reversalLookupId.trim().length === 0}
-                      className="inline-flex items-center gap-1 rounded-md border border-indigo-200 bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="inline-flex items-center gap-1 rounded-md border border-info/25 bg-info-soft px-2 py-1 text-xs font-medium text-primary-hover hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Open <ArrowRight className="h-3 w-3" />
                     </button>
                   </form>
                   <Link
                     href="/finance/refunds"
-                    className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-indigo-700 hover:text-indigo-900"
+                    className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary-hover hover:text-primary-hover"
                   >
                     Open refunds workspace →
                   </Link>
@@ -511,16 +511,16 @@ export default function FinanceMushexPlatformPage() {
           </div>
 
           {/* ── Platform routing / gateway readiness (Phase 2 — read-only) ── */}
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-sky-700">
                 <Globe2 className="h-5 w-5" />
               </div>
               <div className="flex-1">
-                <h2 className="text-sm font-semibold text-slate-900">
+                <h2 className="text-sm font-semibold text-foreground">
                   Platform routing & gateway readiness
                 </h2>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-muted-foreground">
                   MusheX is gateway-neutral by design and gateway-capable by default. The readiness
                   snapshot below is derived from MusheX configuration and adapter registration only
                   — it never reads payment-provider credentials and never causes money movement.
@@ -529,27 +529,27 @@ export default function FinanceMushexPlatformPage() {
 
                 <div className="mt-4">
                   {readinessQ.isLoading && (
-                    <p className="flex items-center gap-2 text-xs text-slate-500">
+                    <p className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading adapter readiness…
                     </p>
                   )}
                   {readinessQ.isError && (
-                    <p className="flex items-center gap-2 text-xs text-red-700">
+                    <p className="flex items-center gap-2 text-xs text-danger">
                       <AlertCircle className="h-3.5 w-3.5" /> Could not load adapter readiness from
                       MusheX.
                     </p>
                   )}
                   {!readinessQ.isLoading && !readinessQ.isError && readinessQ.data?.length === 0 && (
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-muted-foreground">
                       MusheX returned an empty readiness snapshot. Check that the
                       <code className="ml-1 text-[10px]">/mushex/v1/platform/adapter-readiness</code>
                       {" "}endpoint is reachable.
                     </p>
                   )}
                   {!readinessQ.isLoading && !readinessQ.isError && (readinessQ.data?.length ?? 0) > 0 && (
-                    <div className="overflow-hidden rounded-lg border border-slate-200">
+                    <div className="overflow-hidden rounded-lg border border-border">
                       <table className="w-full text-xs">
-                        <thead className="bg-slate-50 text-slate-600">
+                        <thead className="bg-background text-muted-foreground">
                           <tr>
                             <th className="px-3 py-2 text-left font-medium">Rail</th>
                             <th className="px-3 py-2 text-left font-medium">Readiness</th>
@@ -566,8 +566,8 @@ export default function FinanceMushexPlatformPage() {
                                 ? "Sandbox only"
                                 : "Not available";
                             return (
-                              <tr key={row.adapterType} className="bg-white">
-                                <td className="px-3 py-2 font-mono text-[11px] text-slate-900">
+                              <tr key={row.adapterType} className="bg-card">
+                                <td className="px-3 py-2 font-mono text-[11px] text-foreground">
                                   {row.adapterType}
                                 </td>
                                 <td className="px-3 py-2">
@@ -577,8 +577,8 @@ export default function FinanceMushexPlatformPage() {
                                     {chrome.label}
                                   </span>
                                 </td>
-                                <td className="px-3 py-2 text-slate-700">{capability}</td>
-                                <td className="px-3 py-2 text-slate-600">{row.detail}</td>
+                                <td className="px-3 py-2 text-foreground">{capability}</td>
+                                <td className="px-3 py-2 text-muted-foreground">{row.detail}</td>
                               </tr>
                             );
                           })}
@@ -586,7 +586,7 @@ export default function FinanceMushexPlatformPage() {
                       </table>
                     </div>
                   )}
-                  <p className="mt-2 text-[11px] text-slate-400">
+                  <p className="mt-2 text-[11px] text-muted-foreground">
                     BFF route:{" "}
                     <code className="text-[10px]">
                       /internal/v1/finance/mushex-platform/adapter-readiness
@@ -594,15 +594,15 @@ export default function FinanceMushexPlatformPage() {
                   </p>
                 </div>
 
-                <ul className="mt-4 list-disc space-y-1 pl-5 text-xs text-slate-600">
+                <ul className="mt-4 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
                   <li>
-                    <span className="font-medium text-slate-800">Mode A</span> — orchestration
+                    <span className="font-medium text-foreground">Mode A</span> — orchestration
                     gateway: routes to a configured rail adapter (mobile money, bank transfer, card
                     acquirer) while MusheX owns the intent lifecycle. Rails marked
                     <span className="font-mono"> Ready (live)</span> are configuration-eligible.
                   </li>
                   <li>
-                    <span className="font-medium text-slate-800">Mode B</span> — direct/default
+                    <span className="font-medium text-foreground">Mode B</span> — direct/default
                     gateway: MusheX settles internally (wallet, sandbox, cash) when no preferred
                     rail is configured or available, so care is never blocked.
                   </li>
@@ -625,9 +625,9 @@ export default function FinanceMushexPlatformPage() {
           </section>
 
           {/* ── Controlled write: wallet credit (top-up) ─────────────── */}
-          <section className="rounded-xl border border-amber-200 bg-amber-50/40 p-5 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">Controlled action — wallet credit (top-up)</h2>
-            <p className="mt-1 text-xs text-slate-600">
+          <section className="rounded-xl border border-warning/35 bg-warning-soft/40 p-5 shadow-sm">
+            <h2 className="text-sm font-semibold text-foreground">Controlled action — wallet credit (top-up)</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
               POST{" "}
               <code className="text-[10px]">
                 /internal/v1/finance/mushex-platform/wallets/&#123;walletId&#125;/credit
@@ -636,18 +636,18 @@ export default function FinanceMushexPlatformPage() {
               by TSHEPO on the BFF.
             </p>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <label className="text-xs text-slate-600">
+              <label className="text-xs text-muted-foreground">
                 Wallet ID
                 <input
                   type="text"
                   value={creditWalletId}
                   onChange={(e) => setCreditWalletId(e.target.value)}
                   placeholder="custodial-wallet-id"
-                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-mono"
+                  className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm font-mono"
                   aria-label="Wallet ID for credit"
                 />
               </label>
-              <label className="text-xs text-slate-600">
+              <label className="text-xs text-muted-foreground">
                 Amount
                 <input
                   type="text"
@@ -655,7 +655,7 @@ export default function FinanceMushexPlatformPage() {
                   value={creditAmount}
                   onChange={(e) => setCreditAmount(e.target.value)}
                   placeholder="0.00"
-                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                  className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
                   aria-label="Credit amount"
                 />
               </label>
@@ -663,12 +663,12 @@ export default function FinanceMushexPlatformPage() {
             <input
               type="text"
               placeholder="Reason for this write (required)"
-              className="mt-3 w-full rounded-lg border border-slate-200 px-3 py-2 text-xs"
+              className="mt-3 w-full rounded-lg border border-border px-3 py-2 text-xs"
               value={creditReason}
               onChange={(e) => setCreditReason(e.target.value)}
               aria-label="Audit reason for wallet credit"
             />
-            <label className="mt-2 flex items-center gap-2 text-xs text-slate-700">
+            <label className="mt-2 flex items-center gap-2 text-xs text-foreground">
               <input
                 type="checkbox"
                 checked={creditConfirmed}
@@ -676,7 +676,7 @@ export default function FinanceMushexPlatformPage() {
               />
               I confirm this is an intentional operational wallet credit.
             </label>
-            {creditErr ? <p className="mt-2 text-xs text-red-700">{creditErr}</p> : null}
+            {creditErr ? <p className="mt-2 text-xs text-danger">{creditErr}</p> : null}
             <button
               type="button"
               disabled={
@@ -721,9 +721,9 @@ export default function FinanceMushexPlatformPage() {
           </section>
 
           {/* ── Related MusheX finance surfaces ─────────────────────── */}
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">Related MusheX finance surfaces</h2>
-            <p className="mt-1 text-xs text-slate-500">
+          <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
+            <h2 className="text-sm font-semibold text-foreground">Related MusheX finance surfaces</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
               Other canonical enterprise-plane finance-domain routes that consume or feed MusheX state.
             </p>
             <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -731,10 +731,10 @@ export default function FinanceMushexPlatformPage() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="rounded-lg border border-slate-200 bg-slate-50/60 px-3 py-2 text-xs hover:border-indigo-300 hover:bg-white transition-colors"
+                  className="rounded-lg border border-border bg-background/60 px-3 py-2 text-xs hover:border-indigo-300 hover:bg-card transition-colors"
                 >
-                  <div className="font-medium text-slate-900">{item.label}</div>
-                  <div className="text-slate-500 mt-0.5">{item.description}</div>
+                  <div className="font-medium text-foreground">{item.label}</div>
+                  <div className="text-muted-foreground mt-0.5">{item.description}</div>
                 </Link>
               ))}
             </div>

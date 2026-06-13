@@ -23,7 +23,7 @@ export function NompiloGlobalCommandBar() {
   const suggestions = useMemo(() => suggestionsForJourney(journey), [journey]);
 
   return (
-    <div className="rounded-[2rem] border border-[color:var(--nompilo)]/20 bg-gradient-to-r from-[color:var(--nompilo-soft)] via-white to-[color:var(--surface-warm)] p-3 shadow-impilo-nompilo">
+    <div className="rounded-[2rem] border border-[color:var(--nompilo)]/20 bg-gradient-to-r from-[color:var(--nompilo-soft)] via-card to-[color:var(--surface-warm)] p-3 shadow-impilo-nompilo">
       <div className="flex items-center gap-2">
         <Sparkles className="h-4 w-4 text-[color:var(--nompilo)]" />
         <span className="text-xs font-semibold uppercase tracking-wide text-[color:var(--nompilo)]">Nompilo Command Layer</span>
@@ -38,7 +38,7 @@ export function NompiloGlobalCommandBar() {
         <button
           type="button"
           onClick={() => focusSearchPalette()}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[color:var(--nompilo)]/20 bg-white text-[color:var(--nompilo)] hover:bg-[color:var(--nompilo-soft)]"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[color:var(--nompilo)]/20 bg-card text-[color:var(--nompilo)] hover:bg-[color:var(--nompilo-soft)]"
           aria-label="Open Nompilo command palette"
           title="Open Nompilo command palette"
         >
@@ -51,16 +51,16 @@ export function NompiloGlobalCommandBar() {
           placeholder="Ask Nompilo... Search services, providers, records, reports, learning, support"
           className="impilo-pill-input h-10 flex-1 border-[color:var(--nompilo)]/20 text-[color:var(--text-primary)]"
         />
-        <DictationButton value={draft} onValueChange={setDraft} className="h-10 rounded-full border border-[color:var(--nompilo)]/20 bg-white px-3 text-[color:var(--nompilo)]" />
+        <DictationButton value={draft} onValueChange={setDraft} className="h-10 rounded-full border border-[color:var(--nompilo)]/20 bg-card px-3 text-[color:var(--nompilo)]" />
         <Link
           href={pathname ? `/ask?from=${encodeURIComponent(pathname)}` : "/ask"}
-          className="inline-flex items-center gap-1 rounded-full bg-[color:var(--nompilo)] px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:opacity-95"
+          className="inline-flex items-center gap-1 rounded-full bg-[color:var(--nompilo)] px-3.5 py-2 text-xs font-semibold text-warning-foreground shadow-sm hover:opacity-95"
         >
           <Mic className="h-3.5 w-3.5" />
           Ask
         </Link>
       </div>
-      <p className="mt-1 text-[10px] text-slate-500">
+      <p className="mt-1 text-[10px] text-muted-foreground">
         Context: {journey.replace("_", " ")} journey
         {pathname ? ` · ${pathname}` : ""}
       </p>
@@ -73,7 +73,7 @@ export function NompiloGlobalCommandBar() {
               setDraft(suggestion);
               focusSearchPalette();
             }}
-            className="rounded-full border border-[color:var(--nompilo)]/18 bg-white px-2.5 py-1 text-[11px] text-[color:var(--nompilo)] hover:bg-[color:var(--nompilo-soft)]"
+            className="rounded-full border border-[color:var(--nompilo)]/18 bg-card px-2.5 py-1 text-[11px] text-[color:var(--nompilo)] hover:bg-[color:var(--nompilo-soft)]"
           >
             {suggestion}
           </button>

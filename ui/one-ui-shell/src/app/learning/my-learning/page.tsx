@@ -29,13 +29,13 @@ export default function MyLearningPage() {
             Open full learning record / transcript
           </Link>
         </div>
-        {isLoading ? <p className="text-sm text-gray-600">Loading…</p> : null}
+        {isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : null}
         <div className="grid gap-4 md:grid-cols-2">
           {sections.map(([title, items]) => (
-            <div key={title} className="rounded-lg border border-gray-200 bg-white p-4">
-              <p className="text-sm font-semibold text-gray-900">{title}</p>
+            <div key={title} className="rounded-lg border border-border bg-card p-4">
+              <p className="text-sm font-semibold text-foreground">{title}</p>
               {items.length === 0 ? (
-                <p className="mt-2 text-sm text-gray-500">None</p>
+                <p className="mt-2 text-sm text-muted-foreground">None</p>
               ) : (
                 <ul className="mt-2 space-y-1 text-sm">
                   {items.slice(0, 8).map((item) => (

@@ -74,10 +74,10 @@ export default function VitoBiometricsGovernancePage() {
 
   const outcomeBadge = useMemo(() => {
     const o = evaluate.data?.policyOutcome?.toUpperCase() ?? "";
-    if (o === "PROHIBITED") return "bg-red-50 text-red-800 border-red-100";
-    if (o === "REQUIRED") return "bg-amber-50 text-amber-900 border-amber-100";
+    if (o === "PROHIBITED") return "bg-danger-soft text-red-800 border-red-100";
+    if (o === "REQUIRED") return "bg-warning-soft text-warning-foreground border-amber-100";
     if (o === "RESTRICTED") return "bg-orange-50 text-orange-900 border-orange-100";
-    return "bg-emerald-50 text-emerald-900 border-emerald-100";
+    return "bg-success-soft text-primary-hover border-emerald-100";
   }, [evaluate.data?.policyOutcome]);
 
   function handleEnroll() {
@@ -128,7 +128,7 @@ export default function VitoBiometricsGovernancePage() {
           <div className="flex flex-wrap gap-3">
             <Link
               href="/operations/vito"
-              className="text-sm text-gray-600 hover:text-gray-900 underline-offset-2 hover:underline"
+              className="text-sm text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
             >
               ← Identity operations
             </Link>
@@ -136,13 +136,13 @@ export default function VitoBiometricsGovernancePage() {
 
           {/* ── Policy evaluation ── */}
           <div className="grid gap-6 lg:grid-cols-2">
-            <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
-              <h2 className="text-sm font-semibold text-gray-900">Evaluate policy</h2>
+            <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
+              <h2 className="text-sm font-semibold text-foreground">Evaluate policy</h2>
               <div className="grid gap-3 sm:grid-cols-2">
-                <label className="text-xs text-gray-500 flex flex-col gap-1">
+                <label className="text-xs text-muted-foreground flex flex-col gap-1">
                   Subject type
                   <select
-                    className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
+                    className="rounded-lg border border-border px-2 py-1.5 text-sm"
                     value={subjectType}
                     onChange={(e) => setSubjectType(e.target.value as (typeof SUBJECTS)[number])}
                   >
@@ -153,10 +153,10 @@ export default function VitoBiometricsGovernancePage() {
                     ))}
                   </select>
                 </label>
-                <label className="text-xs text-gray-500 flex flex-col gap-1">
+                <label className="text-xs text-muted-foreground flex flex-col gap-1">
                   Context
                   <select
-                    className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
+                    className="rounded-lg border border-border px-2 py-1.5 text-sm"
                     value={contextType}
                     onChange={(e) => setContextType(e.target.value as (typeof CONTEXTS)[number])}
                   >
@@ -167,27 +167,27 @@ export default function VitoBiometricsGovernancePage() {
                     ))}
                   </select>
                 </label>
-                <label className="text-xs text-gray-500 flex flex-col gap-1 sm:col-span-2">
+                <label className="text-xs text-muted-foreground flex flex-col gap-1 sm:col-span-2">
                   Workflow type
                   <input
-                    className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
+                    className="rounded-lg border border-border px-2 py-1.5 text-sm"
                     value={workflowType}
                     onChange={(e) => setWorkflowType(e.target.value)}
                     placeholder="e.g. POINT_OF_CARE, CLIENT_REGISTRATION, PROVIDER_STEP_UP"
                   />
                 </label>
-                <label className="text-xs text-gray-500 flex flex-col gap-1">
+                <label className="text-xs text-muted-foreground flex flex-col gap-1">
                   Modality (optional)
                   <input
-                    className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
+                    className="rounded-lg border border-border px-2 py-1.5 text-sm"
                     value={modality}
                     onChange={(e) => setModality(e.target.value)}
                   />
                 </label>
-                <label className="text-xs text-gray-500 flex flex-col gap-1">
+                <label className="text-xs text-muted-foreground flex flex-col gap-1">
                   Intent
                   <select
-                    className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
+                    className="rounded-lg border border-border px-2 py-1.5 text-sm"
                     value={biometricIntent}
                     onChange={(e) => setBiometricIntent(e.target.value as (typeof INTENTS)[number])}
                   >
@@ -201,7 +201,7 @@ export default function VitoBiometricsGovernancePage() {
               </div>
               <button
                 type="button"
-                className="inline-flex items-center gap-2 rounded-xl bg-impilo-600 px-4 py-2 text-sm font-medium text-white hover:bg-impilo-700 disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-xl bg-primary-hover px-4 py-2 text-sm font-medium text-white hover:bg-impilo-700 disabled:opacity-50"
                 disabled={evaluate.isPending}
                 onClick={() =>
                   evaluate.mutate({
@@ -234,7 +234,7 @@ export default function VitoBiometricsGovernancePage() {
               {evaluate.data ? (
                 <>
                   <p className="text-2xl font-bold tracking-tight">{evaluate.data.policyOutcome}</p>
-                  <ul className="text-xs space-y-1 text-gray-700">
+                  <ul className="text-xs space-y-1 text-foreground">
                     <li>Enrollment: {String(evaluate.data.enrollmentAllowed)}</li>
                     <li>Verification / step-up lane: {String(evaluate.data.verificationAllowed)}</li>
                     <li>Identification (1:N): {String(evaluate.data.identificationAllowed)}</li>
@@ -243,7 +243,7 @@ export default function VitoBiometricsGovernancePage() {
                     {evaluate.data.matchedRuleId != null && <li>Matched rule id: {evaluate.data.matchedRuleId}</li>}
                   </ul>
                   {evaluate.data.reasons?.length ? (
-                    <div className="text-xs text-gray-600 border-t border-black/5 pt-2 mt-2">
+                    <div className="text-xs text-muted-foreground border-t border-black/5 pt-2 mt-2">
                       {evaluate.data.reasons.map((r) => (
                         <p key={r}>{r}</p>
                       ))}
@@ -251,24 +251,24 @@ export default function VitoBiometricsGovernancePage() {
                   ) : null}
                 </>
               ) : (
-                <p className="text-sm text-gray-600">Run an evaluation to see Tshepo&apos;s decision for this slice.</p>
+                <p className="text-sm text-muted-foreground">Run an evaluation to see Tshepo&apos;s decision for this slice.</p>
               )}
             </div>
           </div>
 
           {/* ── Profile & Templates viewer ── */}
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
-            <h2 className="text-sm font-semibold text-gray-900">Profile &amp; templates viewer</h2>
+          <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
+            <h2 className="text-sm font-semibold text-foreground">Profile &amp; templates viewer</h2>
             <div className="flex gap-2">
               <input
-                className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm flex-1"
+                className="rounded-lg border border-border px-3 py-1.5 text-sm flex-1"
                 placeholder="Health ID"
                 value={lookupHealthId}
                 onChange={(e) => setLookupHealthId(e.target.value)}
               />
               <button
                 type="button"
-                className="rounded-xl bg-impilo-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-impilo-700 disabled:opacity-50"
+                className="rounded-xl bg-primary-hover px-4 py-1.5 text-sm font-medium text-white hover:bg-impilo-700 disabled:opacity-50"
                 disabled={!lookupHealthId.trim()}
                 onClick={() => setCommittedHealthId(lookupHealthId.trim())}
               >
@@ -278,11 +278,11 @@ export default function VitoBiometricsGovernancePage() {
             {committedHealthId && (
               <div className="grid gap-4 lg:grid-cols-2">
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Profile</p>
-                  {biometricProfile.isLoading && <p className="text-sm text-gray-500">Loading…</p>}
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Profile</p>
+                  {biometricProfile.isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
                   {biometricProfile.isError && <p className="text-sm text-red-600">Failed to load profile.</p>}
                   {biometricProfile.data?.data && (
-                    <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 text-xs space-y-1">
+                    <div className="rounded-xl border border-border bg-background p-4 text-xs space-y-1">
                       <p><span className="font-medium">Status:</span> {biometricProfile.data.data.status}</p>
                       <p><span className="font-medium">Enrolled:</span> {biometricProfile.data.data.enrollmentDate}</p>
                       {biometricProfile.data.data.lastVerifiedDate && (
@@ -296,14 +296,14 @@ export default function VitoBiometricsGovernancePage() {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Templates</p>
-                  {biometricTemplates.isLoading && <p className="text-sm text-gray-500">Loading…</p>}
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Templates</p>
+                  {biometricTemplates.isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
                   {biometricTemplates.isError && <p className="text-sm text-red-600">Failed to load templates.</p>}
                   {biometricTemplates.data?.data && biometricTemplates.data.data.length === 0 && (
-                    <p className="text-sm text-gray-500">No templates enrolled.</p>
+                    <p className="text-sm text-muted-foreground">No templates enrolled.</p>
                   )}
                   {biometricTemplates.data?.data?.map((t, idx) => (
-                    <div key={idx} className="rounded-xl border border-gray-100 bg-gray-50 p-3 text-xs space-y-0.5">
+                    <div key={idx} className="rounded-xl border border-border bg-background p-3 text-xs space-y-0.5">
                       <p><span className="font-medium">Position:</span> {t.position}</p>
                       <p><span className="font-medium">Type:</span> {t.type}</p>
                       <p><span className="font-medium">Format:</span> {t.format} v{t.version}</p>
@@ -315,22 +315,22 @@ export default function VitoBiometricsGovernancePage() {
           </div>
 
           {/* ── Enroll form ── */}
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
-            <h2 className="text-sm font-semibold text-gray-900">Enroll biometric</h2>
+          <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
+            <h2 className="text-sm font-semibold text-foreground">Enroll biometric</h2>
             <div className="grid gap-3 sm:grid-cols-2">
-              <label className="text-xs text-gray-500 flex flex-col gap-1 sm:col-span-2">
+              <label className="text-xs text-muted-foreground flex flex-col gap-1 sm:col-span-2">
                 Health ID
                 <input
-                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm"
+                  className="rounded-lg border border-border px-3 py-1.5 text-sm"
                   placeholder="Health ID"
                   value={enrollHealthId}
                   onChange={(e) => setEnrollHealthId(e.target.value)}
                 />
               </label>
-              <label className="text-xs text-gray-500 flex flex-col gap-1 sm:col-span-2">
+              <label className="text-xs text-muted-foreground flex flex-col gap-1 sm:col-span-2">
                 Templates (JSON array)
                 <textarea
-                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-mono h-32 resize-y"
+                  className="rounded-lg border border-border px-3 py-1.5 text-xs font-mono h-32 resize-y"
                   value={enrollTemplateJson}
                   onChange={(e) => setEnrollTemplateJson(e.target.value)}
                 />
@@ -338,10 +338,10 @@ export default function VitoBiometricsGovernancePage() {
             </div>
             {enrollError && <p className="text-sm text-red-600">{enrollError}</p>}
             {enroll.isError && <p className="text-sm text-red-600">Enroll request failed.</p>}
-            {enroll.isSuccess && <p className="text-sm text-emerald-600">Enrollment submitted successfully.</p>}
+            {enroll.isSuccess && <p className="text-sm text-primary">Enrollment submitted successfully.</p>}
             <button
               type="button"
-              className="inline-flex items-center gap-2 rounded-xl bg-impilo-600 px-4 py-2 text-sm font-medium text-white hover:bg-impilo-700 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-xl bg-primary-hover px-4 py-2 text-sm font-medium text-white hover:bg-impilo-700 disabled:opacity-50"
               disabled={enroll.isPending || !enrollHealthId.trim()}
               onClick={handleEnroll}
             >
@@ -351,21 +351,21 @@ export default function VitoBiometricsGovernancePage() {
 
           {/* ── Verify & Identify panels ── */}
           <div className="grid gap-6 lg:grid-cols-2">
-            <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
-              <h2 className="text-sm font-semibold text-gray-900">Verify (1:1)</h2>
-              <label className="text-xs text-gray-500 flex flex-col gap-1">
+            <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
+              <h2 className="text-sm font-semibold text-foreground">Verify (1:1)</h2>
+              <label className="text-xs text-muted-foreground flex flex-col gap-1">
                 Health ID
                 <input
-                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm"
+                  className="rounded-lg border border-border px-3 py-1.5 text-sm"
                   placeholder="Health ID"
                   value={verifyHealthId}
                   onChange={(e) => setVerifyHealthId(e.target.value)}
                 />
               </label>
-              <label className="text-xs text-gray-500 flex flex-col gap-1">
+              <label className="text-xs text-muted-foreground flex flex-col gap-1">
                 Template (JSON object)
                 <textarea
-                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-mono h-28 resize-y"
+                  className="rounded-lg border border-border px-3 py-1.5 text-xs font-mono h-28 resize-y"
                   value={verifyTemplateJson}
                   onChange={(e) => setVerifyTemplateJson(e.target.value)}
                 />
@@ -373,8 +373,8 @@ export default function VitoBiometricsGovernancePage() {
               {verifyError && <p className="text-sm text-red-600">{verifyError}</p>}
               {verify.isError && <p className="text-sm text-red-600">Verify request failed.</p>}
               {verify.data?.data && (
-                <div className="rounded-xl border border-gray-100 bg-gray-50 p-3 text-xs space-y-1">
-                  <p className={verify.data.data.verified ? "text-emerald-700 font-semibold" : "text-red-700 font-semibold"}>
+                <div className="rounded-xl border border-border bg-background p-3 text-xs space-y-1">
+                  <p className={verify.data.data.verified ? "text-primary-hover font-semibold" : "text-danger font-semibold"}>
                     {verify.data.data.verified ? "Verified ✓" : "Not verified ✗"}
                   </p>
                   <p>Score: {verify.data.data.score}</p>
@@ -382,7 +382,7 @@ export default function VitoBiometricsGovernancePage() {
               )}
               <button
                 type="button"
-                className="inline-flex items-center gap-2 rounded-xl bg-impilo-600 px-4 py-2 text-sm font-medium text-white hover:bg-impilo-700 disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-xl bg-primary-hover px-4 py-2 text-sm font-medium text-white hover:bg-impilo-700 disabled:opacity-50"
                 disabled={verify.isPending || !verifyHealthId.trim()}
                 onClick={handleVerify}
               >
@@ -390,21 +390,21 @@ export default function VitoBiometricsGovernancePage() {
               </button>
             </div>
 
-            <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
-              <h2 className="text-sm font-semibold text-gray-900">Identify (1:N)</h2>
-              <label className="text-xs text-gray-500 flex flex-col gap-1">
+            <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
+              <h2 className="text-sm font-semibold text-foreground">Identify (1:N)</h2>
+              <label className="text-xs text-muted-foreground flex flex-col gap-1">
                 Template (JSON object)
                 <textarea
-                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-mono h-28 resize-y"
+                  className="rounded-lg border border-border px-3 py-1.5 text-xs font-mono h-28 resize-y"
                   value={identifyTemplateJson}
                   onChange={(e) => setIdentifyTemplateJson(e.target.value)}
                 />
               </label>
-              <label className="text-xs text-gray-500 flex flex-col gap-1">
+              <label className="text-xs text-muted-foreground flex flex-col gap-1">
                 Top-N results
                 <input
                   type="number"
-                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm w-24"
+                  className="rounded-lg border border-border px-3 py-1.5 text-sm w-24"
                   value={identifyTopN}
                   onChange={(e) => setIdentifyTopN(e.target.value)}
                   min={1}
@@ -414,18 +414,18 @@ export default function VitoBiometricsGovernancePage() {
               {identifyError && <p className="text-sm text-red-600">{identifyError}</p>}
               {identify.isError && <p className="text-sm text-red-600">Identify request failed.</p>}
               {identify.data?.data && identify.data.data.length > 0 && (
-                <div className="rounded-xl border border-gray-100 bg-gray-50 p-3 text-xs space-y-1">
+                <div className="rounded-xl border border-border bg-background p-3 text-xs space-y-1">
                   {identify.data.data.map((r, idx) => (
                     <p key={idx}>{r.healthId} — score {r.score}</p>
                   ))}
                 </div>
               )}
               {identify.data?.data && identify.data.data.length === 0 && (
-                <p className="text-sm text-gray-500">No candidates found.</p>
+                <p className="text-sm text-muted-foreground">No candidates found.</p>
               )}
               <button
                 type="button"
-                className="inline-flex items-center gap-2 rounded-xl bg-impilo-600 px-4 py-2 text-sm font-medium text-white hover:bg-impilo-700 disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-xl bg-primary-hover px-4 py-2 text-sm font-medium text-white hover:bg-impilo-700 disabled:opacity-50"
                 disabled={identify.isPending}
                 onClick={handleIdentify}
               >
@@ -436,31 +436,31 @@ export default function VitoBiometricsGovernancePage() {
 
           {/* ── Dedup-assist & Exception panels ── */}
           <div className="grid gap-6 lg:grid-cols-2">
-            <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
-              <h2 className="text-sm font-semibold text-gray-900">Dedup assist</h2>
-              <label className="text-xs text-gray-500 flex flex-col gap-1">
+            <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
+              <h2 className="text-sm font-semibold text-foreground">Dedup assist</h2>
+              <label className="text-xs text-muted-foreground flex flex-col gap-1">
                 Source Health ID
                 <input
-                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm"
+                  className="rounded-lg border border-border px-3 py-1.5 text-sm"
                   placeholder="Health ID"
                   value={dedupHealthId}
                   onChange={(e) => setDedupHealthId(e.target.value)}
                 />
               </label>
-              <label className="text-xs text-gray-500 flex flex-col gap-1">
+              <label className="text-xs text-muted-foreground flex flex-col gap-1">
                 Candidate Health IDs (comma-separated)
                 <input
-                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm"
+                  className="rounded-lg border border-border px-3 py-1.5 text-sm"
                   placeholder="HID-001, HID-002"
                   value={dedupCandidates}
                   onChange={(e) => setDedupCandidates(e.target.value)}
                 />
               </label>
               {dedupAssist.isError && <p className="text-sm text-red-600">Dedup assist request failed.</p>}
-              {dedupAssist.isSuccess && <p className="text-sm text-emerald-600">Dedup assist submitted.</p>}
+              {dedupAssist.isSuccess && <p className="text-sm text-primary">Dedup assist submitted.</p>}
               <button
                 type="button"
-                className="inline-flex items-center gap-2 rounded-xl bg-impilo-600 px-4 py-2 text-sm font-medium text-white hover:bg-impilo-700 disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-xl bg-primary-hover px-4 py-2 text-sm font-medium text-white hover:bg-impilo-700 disabled:opacity-50"
                 disabled={dedupAssist.isPending || !dedupHealthId.trim() || !dedupCandidates.trim()}
                 onClick={() =>
                   dedupAssist.mutate({
@@ -476,40 +476,40 @@ export default function VitoBiometricsGovernancePage() {
               </button>
             </div>
 
-            <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
-              <h2 className="text-sm font-semibold text-gray-900">Exception reporting</h2>
-              <label className="text-xs text-gray-500 flex flex-col gap-1">
+            <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
+              <h2 className="text-sm font-semibold text-foreground">Exception reporting</h2>
+              <label className="text-xs text-muted-foreground flex flex-col gap-1">
                 Health ID
                 <input
-                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm"
+                  className="rounded-lg border border-border px-3 py-1.5 text-sm"
                   placeholder="Health ID"
                   value={exceptionHealthId}
                   onChange={(e) => setExceptionHealthId(e.target.value)}
                 />
               </label>
-              <label className="text-xs text-gray-500 flex flex-col gap-1">
+              <label className="text-xs text-muted-foreground flex flex-col gap-1">
                 Reason
                 <input
-                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm"
+                  className="rounded-lg border border-border px-3 py-1.5 text-sm"
                   placeholder="e.g. MISSING_DIGITS, UNABLE_TO_CAPTURE"
                   value={exceptionReason}
                   onChange={(e) => setExceptionReason(e.target.value)}
                 />
               </label>
-              <label className="text-xs text-gray-500 flex flex-col gap-1">
+              <label className="text-xs text-muted-foreground flex flex-col gap-1">
                 Evidence reference (optional)
                 <input
-                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm"
+                  className="rounded-lg border border-border px-3 py-1.5 text-sm"
                   placeholder="Document or case reference"
                   value={exceptionEvidence}
                   onChange={(e) => setExceptionEvidence(e.target.value)}
                 />
               </label>
               {exception.isError && <p className="text-sm text-red-600">Exception request failed.</p>}
-              {exception.isSuccess && <p className="text-sm text-emerald-600">Exception recorded.</p>}
+              {exception.isSuccess && <p className="text-sm text-primary">Exception recorded.</p>}
               <button
                 type="button"
-                className="inline-flex items-center gap-2 rounded-xl bg-impilo-600 px-4 py-2 text-sm font-medium text-white hover:bg-impilo-700 disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-xl bg-primary-hover px-4 py-2 text-sm font-medium text-white hover:bg-impilo-700 disabled:opacity-50"
                 disabled={exception.isPending || !exceptionHealthId.trim() || !exceptionReason.trim()}
                 onClick={() =>
                   exception.mutate({

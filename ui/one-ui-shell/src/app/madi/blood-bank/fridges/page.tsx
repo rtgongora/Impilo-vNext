@@ -10,8 +10,8 @@ import { useBloodFridges, useFridgeReadings, useSyncFridgeIot } from "@/hooks/qu
 import { getStoredBloodBankId } from "@/lib/madi-session";
 
 function alarmClass(status?: string) {
-  if (status === "ALARM" || status === "CRITICAL") return "border-red-300 bg-red-50 text-red-900";
-  if (status === "WARN") return "border-amber-300 bg-amber-50 text-amber-900";
+  if (status === "ALARM" || status === "CRITICAL") return "border-red-300 bg-danger-soft text-red-900";
+  if (status === "WARN") return "border-amber-300 bg-warning-soft text-warning-foreground";
   return "border-green-200 bg-green-50 text-green-900";
 }
 
@@ -35,7 +35,7 @@ export default function BloodFridgesPage() {
         icon={<Thermometer className="h-6 w-6" />}
       >
         {!bloodBankId && (
-          <p className="mb-4 text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-xl p-3">
+          <p className="mb-4 text-sm text-warning-foreground bg-warning-soft border border-warning/35 rounded-xl p-3">
             Register your blood bank on the{" "}
             <Link href="/madi/blood-bank" className="font-medium underline">
               blood bank hub
@@ -45,7 +45,7 @@ export default function BloodFridgesPage() {
         )}
 
         {isPending && (
-          <div className="flex items-center gap-2 text-gray-500 mb-4">
+          <div className="flex items-center gap-2 text-muted-foreground mb-4">
             <Loader2 className="h-4 w-4 animate-spin" /> Loading fridges…
           </div>
         )}
@@ -60,13 +60,13 @@ export default function BloodFridgesPage() {
                 type="button"
                 onClick={() => setSelectedFridge(id)}
                 className={`text-left rounded-2xl border p-4 transition ${
-                  selected ? "border-rose-400 ring-2 ring-rose-100" : "border-gray-200 bg-white hover:border-gray-300"
+                  selected ? "border-rose-400 ring-2 ring-rose-100" : "border-border bg-card hover:border-border"
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <p className="font-semibold text-gray-900">{fridge.fridgeCode ?? id.slice(0, 8)}</p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="font-semibold text-foreground">{fridge.fridgeCode ?? id.slice(0, 8)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
                       IoT: {fridge.iotDeviceRef ?? "not linked"}
                     </p>
                   </div>
@@ -74,10 +74,10 @@ export default function BloodFridgesPage() {
                     {fridge.alarmStatus ?? "OK"}
                   </span>
                 </div>
-                <p className="mt-3 text-2xl font-bold text-gray-900">
+                <p className="mt-3 text-2xl font-bold text-foreground">
                   {fridge.temperatureC != null ? `${fridge.temperatureC}°C` : "—"}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   Target {fridge.targetTempMinC ?? 2}–{fridge.targetTempMaxC ?? 6}°C
                   {fridge.lastReadingAt ? ` · ${new Date(fridge.lastReadingAt).toLocaleString()}` : ""}
                 </p>
@@ -87,18 +87,18 @@ export default function BloodFridgesPage() {
         </div>
 
         {fridges.length === 0 && bloodBankId && !isPending && (
-          <p className="text-sm text-gray-600">No fridges registered for this blood bank yet.</p>
+          <p className="text-sm text-muted-foreground">No fridges registered for this blood bank yet.</p>
         )}
 
         {selectedFridge && (
-          <section className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
+          <section className="rounded-2xl border border-border bg-card p-5 space-y-4">
             <div className="flex items-center justify-between gap-2">
-              <h2 className="text-sm font-semibold text-gray-900">Recent readings</h2>
+              <h2 className="text-sm font-semibold text-foreground">Recent readings</h2>
               <button
                 type="button"
                 onClick={() => sync.mutate()}
                 disabled={sync.isPending}
-                className="inline-flex items-center gap-1 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium hover:bg-gray-50 disabled:opacity-50"
+                className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-background disabled:opacity-50"
               >
                 {sync.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
                 Sync from IoT
@@ -106,13 +106,13 @@ export default function BloodFridgesPage() {
             </div>
 
             {readingsLoading && (
-              <div className="flex items-center gap-2 text-sm text-gray-500">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" /> Loading readings…
               </div>
             )}
 
             {readings.length === 0 && !readingsLoading && (
-              <p className="text-sm text-gray-600 flex items-center gap-2">
+              <p className="text-sm text-muted-foreground flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4" /> No readings yet — sync from IoT or wait for ingestion.
               </p>
             )}
@@ -122,9 +122,9 @@ export default function BloodFridgesPage() {
                 <li key={r.readingId ?? `${r.recordedAt}-${r.temperatureC}`} className="py-2 flex justify-between">
                   <span>
                     {r.temperatureC != null ? `${r.temperatureC}°C` : "—"}
-                    <span className="ml-2 text-xs text-gray-500">{r.alarmStatus}</span>
+                    <span className="ml-2 text-xs text-muted-foreground">{r.alarmStatus}</span>
                   </span>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-muted-foreground">
                     {r.recordedAt ? new Date(r.recordedAt).toLocaleString() : ""}
                   </span>
                 </li>

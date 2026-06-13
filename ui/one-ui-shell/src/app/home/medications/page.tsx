@@ -31,11 +31,11 @@ interface PrescriptionResource {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  PENDING: "bg-amber-100 text-amber-700",
+  PENDING: "bg-amber-100 text-warning-foreground",
   ACTIVE: "bg-green-100 text-green-700",
-  DISPENSED: "bg-impilo-100 text-impilo-600",
-  CANCELLED: "bg-gray-100 text-gray-600",
-  REFILL_REQUESTED: "bg-purple-100 text-purple-700",
+  DISPENSED: "bg-primary-soft text-primary",
+  CANCELLED: "bg-neutral-100 text-muted-foreground",
+  REFILL_REQUESTED: "bg-purple-100 text-warning-foreground",
 };
 
 function useMyPrescriptions() {
@@ -62,45 +62,45 @@ export default function MyMedicationsPage() {
     <AppLayout>
       <PageShell title="My Medications" subtitle="View your prescriptions and request refills">
         <div className="mb-4">
-          <Link href="/home" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors">
+          <Link href="/home" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="w-4 h-4" /> Back to Home
           </Link>
         </div>
 
         {error ? (
-          <div className="bg-white rounded-lg border border-red-200 p-12 text-center">
+          <div className="bg-card rounded-lg border border-danger/28 p-12 text-center">
             <AlertCircle className="w-10 h-10 text-red-300 mx-auto mb-3" />
             <p className="text-red-600 text-sm">Failed to load prescriptions</p>
           </div>
         ) : isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading prescriptions...</span>
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading prescriptions...</span>
           </div>
         ) : prescriptions.length === 0 ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <Pill className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-400 text-sm">No prescriptions on record</p>
+          <div className="bg-card rounded-lg border border-border p-12 text-center">
+            <Pill className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground text-sm">No prescriptions on record</p>
           </div>
         ) : (
           <div className="space-y-3">
             {prescriptions.map((rx) => {
               const a = rx.attributes;
-              const statusStyle = STATUS_STYLES[a.status] ?? "bg-gray-100 text-gray-600";
+              const statusStyle = STATUS_STYLES[a.status] ?? "bg-neutral-100 text-muted-foreground";
               const canRefill = a.status === "DISPENSED" || a.status === "ACTIVE";
               return (
-                <div key={rx.id} className="bg-white rounded-lg border border-gray-200 p-5">
+                <div key={rx.id} className="bg-card rounded-lg border border-border p-5">
                   <div className="flex items-start justify-between">
                     <div>
-                      <h3 className="text-sm font-semibold text-gray-900">{a.medication_name}</h3>
+                      <h3 className="text-sm font-semibold text-foreground">{a.medication_name}</h3>
                       {a.generic_name && (
-                        <p className="text-xs text-gray-500">{a.generic_name}</p>
+                        <p className="text-xs text-muted-foreground">{a.generic_name}</p>
                       )}
-                      <p className="text-xs text-gray-600 mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         {a.dosage} · {a.frequency}
                       </p>
                       {a.prescribed_by && (
-                        <p className="text-xs text-gray-400 mt-0.5">
+                        <p className="text-xs text-muted-foreground mt-0.5">
                           Prescribed by: {a.prescribed_by}
                         </p>
                       )}
@@ -113,7 +113,7 @@ export default function MyMedicationsPage() {
                         <button
                           onClick={() => requestRefill.mutate(rx.id)}
                           disabled={requestRefill.isPending}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-impilo-500 text-white rounded-lg hover:bg-impilo-600 disabled:opacity-50 transition-colors"
+                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-primary text-white rounded-lg hover:bg-primary-hover disabled:opacity-50 transition-colors"
                         >
                           {requestRefill.isPending
                             ? <Loader2 className="w-3 h-3 animate-spin" />

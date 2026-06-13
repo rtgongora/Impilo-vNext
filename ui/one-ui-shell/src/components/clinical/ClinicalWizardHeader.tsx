@@ -108,7 +108,7 @@ export function ClinicalWizardHeader({
         <div className="flex items-center gap-2 min-w-0">
           <Link
             href={`/ehr/${patientId}`}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground hover:bg-background"
             title="Patient overview"
           >
             <Home className="h-4 w-4" />
@@ -117,7 +117,7 @@ export function ClinicalWizardHeader({
             type="button"
             disabled={!canGoBack || pending !== null}
             onClick={() => void go("back")}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-foreground hover:bg-background disabled:opacity-40 disabled:pointer-events-none"
             title="Previous step"
           >
             {pending === "back" ? <Loader2 className="h-4 w-4 animate-spin" /> : <ChevronLeft className="h-5 w-5" />}
@@ -126,7 +126,7 @@ export function ClinicalWizardHeader({
             type="button"
             disabled={!canGoNext || pending !== null}
             onClick={() => void go("next")}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-impilo-200 bg-impilo-600 text-white hover:bg-impilo-700 disabled:opacity-40 disabled:pointer-events-none"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-primary/25 bg-primary-hover text-white hover:bg-impilo-700 disabled:opacity-40 disabled:pointer-events-none"
             title="Next step"
           >
             {pending === "next" ? <Loader2 className="h-4 w-4 animate-spin" /> : <ChevronRight className="h-5 w-5" />}
@@ -135,7 +135,7 @@ export function ClinicalWizardHeader({
             type="button"
             disabled={pending !== null}
             onClick={() => void save()}
-            className="hidden sm:inline-flex h-9 items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+            className="hidden sm:inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-xs font-medium text-foreground hover:bg-background disabled:opacity-40"
             title="Save draft or progress"
           >
             {pending === "save" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
@@ -144,7 +144,7 @@ export function ClinicalWizardHeader({
         </div>
 
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Encounter workflow</p>
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Encounter workflow</p>
           <div className="mt-1 flex gap-1 overflow-x-auto pb-1">
             {steps.map((step, stepIndex) => {
               const done = stepIndex < currentIdx;
@@ -154,9 +154,9 @@ export function ClinicalWizardHeader({
               const stepAllowed = isSectionVisible(section, roleFlags);
               const pillClass = [
                 "whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-medium border transition-colors",
-                active ? "border-impilo-400 bg-impilo-100 text-impilo-800"
-                : done ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                : "border-gray-200 bg-white text-gray-600 hover:border-impilo-200",
+                active ? "border-impilo-400 bg-primary-soft text-impilo-800"
+                : done ? "border-success/25 bg-success-soft text-primary-hover"
+                : "border-border bg-card text-muted-foreground hover:border-primary/25",
                 !stepAllowed ? "opacity-40 cursor-not-allowed pointer-events-none" : "",
               ].join(" ");
               if (!stepAllowed) {

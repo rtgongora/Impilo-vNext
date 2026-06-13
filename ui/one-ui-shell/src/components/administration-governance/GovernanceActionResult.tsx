@@ -13,14 +13,14 @@ interface GovernanceActionResultProps {
 export function GovernanceActionResult({ result, requestHref }: GovernanceActionResultProps) {
   const tone =
     result.status === "denied"
-      ? "border-rose-200 bg-rose-50 text-rose-950"
+      ? "border-danger/28 bg-danger-soft text-danger"
       : result.status === "pending_backend"
-        ? "border-amber-200 bg-amber-50 text-amber-950"
+        ? "border-warning/35 bg-warning-soft text-warning-foreground"
         : result.status === "pending"
-          ? "border-indigo-200 bg-indigo-50 text-indigo-950"
+          ? "border-info/25 bg-info-soft text-primary-hover"
           : result.status === "completed"
-            ? "border-emerald-200 bg-emerald-50 text-emerald-950"
-            : "border-slate-200 bg-slate-50 text-slate-900";
+            ? "border-success/25 bg-success-soft text-emerald-950"
+            : "border-border bg-background text-foreground";
 
   const invitation = normalizeInvitationView(
     (result.payload?.invitation as Record<string, unknown> | undefined) ??

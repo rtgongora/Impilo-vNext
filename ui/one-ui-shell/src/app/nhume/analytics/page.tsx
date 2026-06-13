@@ -25,7 +25,7 @@ export default function NhumeAnalyticsPage() {
     <AppLayout>
       <PageShell title="Nhume Analytics" subtitle="Operational counts, breakdowns and SLA signals" icon={<BarChart3 className="h-6 w-6" />}>
         {isPending ? (
-          <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center text-gray-500">
+          <div className="rounded-2xl border border-border bg-card p-10 text-center text-muted-foreground">
             <Loader2 className="inline-block h-5 w-5 animate-spin text-teal-500 mr-2" /> Loading…
           </div>
         ) : (
@@ -63,19 +63,19 @@ function Tally({ title, rollup }: { title: string; rollup: Record<string, number
   const entries = Object.entries(rollup).sort((a, b) => b[1] - a[1]);
   const max = entries.reduce((m, [, v]) => Math.max(m, v), 1);
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white">
-      <div className="border-b border-gray-100 px-5 py-3"><h3 className="font-semibold text-gray-900">{title}</h3></div>
+    <div className="rounded-2xl border border-border bg-card">
+      <div className="border-b border-border px-5 py-3"><h3 className="font-semibold text-foreground">{title}</h3></div>
       {entries.length === 0 ? (
-        <div className="px-5 py-8 text-sm text-gray-500 text-center">No data.</div>
+        <div className="px-5 py-8 text-sm text-muted-foreground text-center">No data.</div>
       ) : (
         <ul className="divide-y divide-gray-100">
           {entries.map(([key, value]) => (
             <li key={key} className="px-5 py-2">
               <div className="flex justify-between text-sm">
-                <span className="font-medium text-gray-800">{key}</span>
-                <span className="text-gray-500">{value}</span>
+                <span className="font-medium text-foreground">{key}</span>
+                <span className="text-muted-foreground">{value}</span>
               </div>
-              <div className="mt-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+              <div className="mt-1 h-1.5 rounded-full bg-neutral-100 overflow-hidden">
                 <div
                   className="h-full bg-teal-500"
                   style={{ width: `${(value / max) * 100}%` }}

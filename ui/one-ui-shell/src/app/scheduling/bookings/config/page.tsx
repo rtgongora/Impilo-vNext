@@ -64,25 +64,25 @@ export default function BookingConfigPage() {
       >
         <Link
           href="/scheduling/booking-requests"
-          className="mb-4 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+          className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" /> Booking requests
         </Link>
 
         {!facility?.id ? (
-          <p className="text-sm text-gray-500">Select a facility to manage booking configuration.</p>
+          <p className="text-sm text-muted-foreground">Select a facility to manage booking configuration.</p>
         ) : isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <div className="max-w-lg space-y-6 rounded-xl border border-gray-200 bg-white p-5">
-            <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-              <Shield className="h-4 w-4 text-impilo-500" />
+          <div className="max-w-lg space-y-6 rounded-xl border border-border bg-card p-5">
+            <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <Shield className="h-4 w-4 text-primary" />
               Mvumo gates — {facility.name}
             </h2>
 
-            <div className="space-y-3 text-sm text-gray-700">
+            <div className="space-y-3 text-sm text-foreground">
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
@@ -118,11 +118,11 @@ export default function BookingConfigPage() {
             </div>
 
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-600">Default booking channel</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Default booking channel</label>
               <select
                 value={defaultChannel}
                 onChange={(e) => setDefaultChannel(e.target.value as BookingChannel)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm"
               >
                 <option value="PHYSICAL">In person</option>
                 <option value="VIRTUAL">Virtual</option>
@@ -133,7 +133,7 @@ export default function BookingConfigPage() {
             </div>
 
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-600">
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
                 Availability window (days ahead)
               </label>
               <input
@@ -142,7 +142,7 @@ export default function BookingConfigPage() {
                 max={180}
                 value={windowDays}
                 onChange={(e) => setWindowDays(Number(e.target.value))}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm"
               />
             </div>
 
@@ -150,7 +150,7 @@ export default function BookingConfigPage() {
               type="button"
               onClick={() => void handleSave()}
               disabled={updateConfig.isPending}
-              className="inline-flex items-center gap-2 rounded-lg bg-impilo-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-impilo-600 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-hover disabled:opacity-50"
             >
               {updateConfig.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

@@ -25,8 +25,8 @@ interface ProductRow {
 
 const STATUS_STYLES: Record<string, string> = {
   ACTIVE: "bg-green-100 text-green-700",
-  INACTIVE: "bg-gray-100 text-gray-700",
-  DISCONTINUED: "bg-red-100 text-red-700",
+  INACTIVE: "bg-neutral-100 text-foreground",
+  DISCONTINUED: "bg-red-100 text-danger",
 };
 
 function unwrap(value: unknown): unknown {
@@ -86,65 +86,65 @@ export default function ProductRegistryPage() {
       <PageShell title="Product Registry" subtitle="Browse registered medical products">
         <div className="mb-6">
           <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
               placeholder="Search products..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && setSubmittedSearch(searchTerm)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+              className="w-full pl-10 pr-4 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
             />
           </div>
           <button
             type="button"
             onClick={() => setSubmittedSearch(searchTerm)}
-            className="mt-3 rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white hover:bg-impilo-600"
+            className="mt-3 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
           >
             Search MSIKA registry
           </button>
-          <p className="mt-2 text-xs text-gray-500">
+          <p className="mt-2 text-xs text-muted-foreground">
             Uses canonical <code>/internal/v1/product-registry/search</code>, not the legacy registry product alias.
           </p>
         </div>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading products...</span>
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading products...</span>
           </div>
         ) : error ? (
-          <div className="bg-red-50 rounded-lg border border-red-200 p-6 text-center">
+          <div className="bg-danger-soft rounded-lg border border-danger/28 p-6 text-center">
             <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-2" />
             <p className="text-red-600 text-sm">Failed to load products</p>
           </div>
         ) : products.length === 0 ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <Package className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-400 text-sm">No products found</p>
+          <div className="bg-card rounded-lg border border-border p-12 text-center">
+            <Package className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground text-sm">No products found</p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="bg-card rounded-lg border border-border overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-gray-50">
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Product Name</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Code</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Category</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Manufacturer</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">Action</th>
+                <tr className="border-b bg-background">
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Product Name</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Code</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Category</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Manufacturer</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
+                  <th className="text-right px-4 py-3 font-medium text-muted-foreground">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {products.map((product) => {
-                  const statusStyle = STATUS_STYLES[product.status] ?? "bg-gray-100 text-gray-700";
+                  const statusStyle = STATUS_STYLES[product.status] ?? "bg-neutral-100 text-foreground";
                   return (
-                    <tr key={product.id} className="border-b last:border-b-0 hover:bg-gray-50">
-                      <td className="px-4 py-3 font-medium text-gray-900">{product.name}</td>
-                      <td className="px-4 py-3 font-mono text-xs text-gray-600">{product.code}</td>
-                      <td className="px-4 py-3 text-gray-600">{product.category}</td>
-                      <td className="px-4 py-3 text-gray-600">{product.manufacturer}</td>
+                    <tr key={product.id} className="border-b last:border-b-0 hover:bg-background">
+                      <td className="px-4 py-3 font-medium text-foreground">{product.name}</td>
+                      <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{product.code}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{product.category}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{product.manufacturer}</td>
                       <td className="px-4 py-3">
                         <span className={`inline-block px-2 py-0.5 text-xs rounded-full font-medium ${statusStyle}`}>
                           {product.status}
@@ -153,7 +153,7 @@ export default function ProductRegistryPage() {
                       <td className="px-4 py-3 text-right">
                         <Link
                           href={`/registry/products/${product.id}`}
-                          className="text-xs text-impilo-500 hover:text-impilo-700 font-medium"
+                          className="text-xs text-primary hover:text-primary-hover font-medium"
                         >
                           View
                         </Link>

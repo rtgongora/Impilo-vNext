@@ -82,7 +82,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               </Link>
             )}
             {shiftActive && (
-              <span className="hidden shrink-0 rounded-full border border-[color:var(--warning)]/30 bg-[color:var(--warning-soft)] px-2.5 py-1 text-xs font-medium text-amber-700 xl:inline-flex">
+              <span className="hidden shrink-0 rounded-full border border-[color:var(--warning)]/30 bg-[color:var(--warning-soft)] px-2.5 py-1 text-xs font-medium text-warning-foreground xl:inline-flex">
                 Shift Active
               </span>
             )}

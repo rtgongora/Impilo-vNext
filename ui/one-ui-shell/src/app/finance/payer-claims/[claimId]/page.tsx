@@ -31,7 +31,7 @@ export default function FinancePayerClaimDetailPage() {
         icon={<FileText className="h-6 w-6" />}
       >
         <div className="mb-4">
-          <Link href="/finance/payer-claims" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
+          <Link href="/finance/payer-claims" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-4 w-4" /> Back to payer claims
           </Link>
         </div>
@@ -39,29 +39,29 @@ export default function FinancePayerClaimDetailPage() {
         <div className="max-w-4xl space-y-6">
           <FinancePayerOpsReconciliationNotice />
 
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">Claim detail</h2>
-            <p className="mt-1 text-xs text-slate-500">
+          <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
+            <h2 className="text-sm font-semibold text-foreground">Claim detail</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
               GET <code className="text-[11px]">/internal/v1/finance/payer-claims/{claimId}</code>
             </p>
             {claimQ.isLoading ? (
-              <p className="mt-3 flex items-center gap-2 text-sm text-slate-500">
+              <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" /> Loading claim...
               </p>
             ) : claimQ.isError ? (
-              <p className="mt-3 text-sm text-red-700">Could not load payer claim.</p>
+              <p className="mt-3 text-sm text-danger">Could not load payer claim.</p>
             ) : (
               <JsonApiDataTable data={claimQ.data} columns={COVERAGE_RESULT_COLUMNS} isLoading={claimQ.isPending} error={claimQ.error as Error | null} emptyTitle="No claim fields" />
             )}
           </section>
 
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">Claim actions</h2>
-            <p className="mt-1 text-xs text-slate-500">
+          <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
+            <h2 className="text-sm font-semibold text-foreground">Claim actions</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
               Submit/dispute writes are intentional operations. Confirm each action before sending it to the payer-ops API.
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
-              <label className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700">
+              <label className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs text-foreground">
                 <input
                   type="checkbox"
                   checked={submitConfirmed}
@@ -72,24 +72,24 @@ export default function FinancePayerClaimDetailPage() {
               <button
                 type="button"
                 disabled={submitM.isPending || !submitConfirmed}
-                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary disabled:opacity-50"
                 onClick={() => submitM.mutate(claimId)}
               >
                 Submit claim
               </button>
             </div>
 
-            <label className="mt-4 block text-xs text-slate-600">
+            <label className="mt-4 block text-xs text-muted-foreground">
               Dispute JSON
               <textarea
                 value={disputeJson}
                 onChange={(event) => setDisputeJson(event.target.value)}
                 rows={6}
-                className="mt-1 block w-full rounded-lg border border-slate-200 p-3 font-mono text-xs"
+                className="mt-1 block w-full rounded-lg border border-border p-3 font-mono text-xs"
                 aria-label="Payer claim dispute JSON"
               />
             </label>
-            <label className="mt-3 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700">
+            <label className="mt-3 inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs text-foreground">
               <input
                 type="checkbox"
                 checked={disputeConfirmed}
@@ -97,7 +97,7 @@ export default function FinancePayerClaimDetailPage() {
               />
               I confirm this dispute action is intentional
             </label>
-            {disputeError ? <p className="mt-2 text-xs text-red-700">{disputeError}</p> : null}
+            {disputeError ? <p className="mt-2 text-xs text-danger">{disputeError}</p> : null}
             <button
               type="button"
               disabled={disputeM.isPending || !disputeConfirmed}

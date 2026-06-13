@@ -76,16 +76,16 @@ export function OrganisationRegistryPanel() {
   }
 
   return (
-    <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
       <div>
-        <h3 className="text-base font-semibold text-slate-900">Organisation Registry</h3>
-        <p className="mt-1 text-sm text-slate-600">
+        <h3 className="text-base font-semibold text-foreground">Organisation Registry</h3>
+        <p className="mt-1 text-sm text-muted-foreground">
           Organisation records are sourced from workforce-governance. No fake persistence is shown when downstream is unavailable.
         </p>
       </div>
 
       {pendingMessage ? (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">{pendingMessage}</div>
+        <div className="rounded-xl border border-warning/35 bg-warning-soft px-4 py-3 text-sm text-warning-foreground">{pendingMessage}</div>
       ) : null}
 
       {isNew ? (
@@ -98,10 +98,10 @@ export function OrganisationRegistryPanel() {
             ["country", "Country"],
             ["registrationNumber", "Registration number"],
           ].map(([name, label]) => (
-            <label key={name} className="text-sm text-slate-700">
+            <label key={name} className="text-sm text-foreground">
               {label}
               <input
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+                className="mt-1 w-full rounded-lg border border-border px-3 py-2"
                 value={form[name] ?? ""}
                 onChange={(event) => setForm((prev) => ({ ...prev, [name]: event.target.value }))}
               />
@@ -110,26 +110,26 @@ export function OrganisationRegistryPanel() {
           <button
             type="button"
             onClick={() => void handleCreate()}
-            className="rounded-lg bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-800 md:col-span-2 md:w-fit"
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-indigo-800 md:col-span-2 md:w-fit"
           >
             Register organisation
           </button>
         </div>
       ) : (
         <>
-          {loading ? <p className="text-sm text-slate-600">Loading organisations…</p> : null}
+          {loading ? <p className="text-sm text-muted-foreground">Loading organisations…</p> : null}
           {!loading && items.length === 0 ? (
-            <p className="text-sm text-slate-600">No organisations returned for your scope.</p>
+            <p className="text-sm text-muted-foreground">No organisations returned for your scope.</p>
           ) : (
             <ul className="space-y-2">
               {items.map((item) => {
                 const id = orgId(item);
                 return (
-                  <li key={id} className="rounded-lg border border-slate-100 px-3 py-2 text-sm">
-                    <Link href={`/work/administration-governance/organisations/${id}`} className="font-medium text-indigo-700 hover:underline">
+                  <li key={id} className="rounded-lg border border-border px-3 py-2 text-sm">
+                    <Link href={`/work/administration-governance/organisations/${id}`} className="font-medium text-primary-hover hover:underline">
                       {item.legalName ?? item.name ?? id}
                     </Link>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-muted-foreground">
                       {item.organisationType ?? "organisation"} · {item.status ?? item.lifecycleStatus ?? "unknown status"}
                     </p>
                   </li>
@@ -138,13 +138,13 @@ export function OrganisationRegistryPanel() {
             </ul>
           )}
           {selected ? (
-            <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm">
-              <p className="font-medium text-slate-900">{selected.legalName ?? selected.name}</p>
-              <p className="text-slate-600">Status: {selected.status ?? selected.lifecycleStatus ?? "unknown"}</p>
+            <div className="rounded-xl border border-border bg-background px-4 py-3 text-sm">
+              <p className="font-medium text-foreground">{selected.legalName ?? selected.name}</p>
+              <p className="text-muted-foreground">Status: {selected.status ?? selected.lifecycleStatus ?? "unknown"}</p>
               <button
                 type="button"
                 onClick={() => void handleVerify()}
-                className="mt-3 rounded-lg border border-indigo-200 bg-white px-3 py-1.5 text-xs font-medium text-indigo-800"
+                className="mt-3 rounded-lg border border-info/25 bg-card px-3 py-1.5 text-xs font-medium text-primary-hover"
               >
                 Verify organisation
               </button>

@@ -68,15 +68,15 @@ export default function MvumoRegistryPage() {
         subtitle="Adaptive digital consent — templates, requests, and remote-session orchestration"
         serviceSlug="mvumo"
       >
-        <div className="prose prose-sm max-w-none text-gray-700 space-y-4">
+        <div className="prose prose-sm max-w-none text-foreground space-y-4">
           <p>
             <strong>Mvumo</strong> orchestrates consent requests and templates. FHIR evaluation remains in{" "}
             <strong>tshepo-consent-service</strong>. Platform policy acceptance lives at{" "}
-            <Link href="/consent" className="text-impilo-600 hover:underline">
+            <Link href="/consent" className="text-primary hover:underline">
               /consent
             </Link>
             ; trust directive reads at{" "}
-            <Link href="/admin/consent" className="text-impilo-600 hover:underline">
+            <Link href="/admin/consent" className="text-primary hover:underline">
               /admin/consent
             </Link>
             .
@@ -84,36 +84,36 @@ export default function MvumoRegistryPage() {
         </div>
 
         <div className="mt-6 space-y-6">
-          <section className="rounded-2xl border border-pink-100 bg-white p-5">
-            <h2 className="text-lg font-semibold text-gray-900">Template governance</h2>
-            <p className="mt-1 text-sm text-gray-600">
+          <section className="rounded-2xl border border-pink-100 bg-card p-5">
+            <h2 className="text-lg font-semibold text-foreground">Template governance</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
               Typed BFF: <code>/internal/v1/mvumo-admin/templates</code>
             </p>
 
             <div className="mt-4 grid gap-4 lg:grid-cols-2">
-              <div className="rounded-xl border border-gray-200 p-4">
-                <h3 className="text-sm font-semibold text-gray-900">Create template</h3>
+              <div className="rounded-xl border border-border p-4">
+                <h3 className="text-sm font-semibold text-foreground">Create template</h3>
                 <div className="mt-3 grid gap-3">
                   {[
                     ["templateKey", "Template key"],
                     ["consentType", "Consent type"],
                     ["title", "Title"],
                   ].map(([key, label]) => (
-                    <label key={key} className="text-xs font-medium text-gray-600">
+                    <label key={key} className="text-xs font-medium text-muted-foreground">
                       {label}
                       <input
                         value={templateForm[key as keyof typeof templateForm]}
                         onChange={(event) => setTemplateForm({ ...templateForm, [key]: event.target.value })}
-                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
                       />
                     </label>
                   ))}
-                  <label className="text-xs font-medium text-gray-600">
+                  <label className="text-xs font-medium text-muted-foreground">
                     Body markdown
                     <textarea
                       value={templateForm.bodyMarkdown}
                       onChange={(event) => setTemplateForm({ ...templateForm, bodyMarkdown: event.target.value })}
-                      className="mt-1 h-24 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      className="mt-1 h-24 w-full rounded-lg border border-border px-3 py-2 text-sm"
                     />
                   </label>
                 </div>
@@ -127,12 +127,12 @@ export default function MvumoRegistryPage() {
                 </button>
               </div>
 
-              <div className="rounded-xl border border-gray-200 p-4">
-                <h3 className="text-sm font-semibold text-gray-900">Update template</h3>
-                <label className="mt-3 block text-xs font-medium text-gray-600">
+              <div className="rounded-xl border border-border p-4">
+                <h3 className="text-sm font-semibold text-foreground">Update template</h3>
+                <label className="mt-3 block text-xs font-medium text-muted-foreground">
                   Select template
                   <select
-                    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
                     value={selectedTemplateKey}
                     onChange={(e) => {
                       setSelectedTemplateKey(e.target.value);
@@ -152,12 +152,12 @@ export default function MvumoRegistryPage() {
                     })}
                   </select>
                 </label>
-                <label className="mt-3 block text-xs font-medium text-gray-600">
+                <label className="mt-3 block text-xs font-medium text-muted-foreground">
                   Revised title
                   <input
                     value={updateTitle}
                     onChange={(e) => setUpdateTitle(e.target.value)}
-                    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
                   />
                 </label>
                 <button
@@ -176,8 +176,8 @@ export default function MvumoRegistryPage() {
               </div>
             </div>
 
-            <div className="mt-4 rounded-xl border border-gray-200 p-4">
-              <h3 className="text-sm font-semibold text-gray-900">Template inventory</h3>
+            <div className="mt-4 rounded-xl border border-border p-4">
+              <h3 className="text-sm font-semibold text-foreground">Template inventory</h3>
               <JsonApiDataTable
                 data={templateRows}
                 columns={GENERIC_RECORD_COLUMNS}
@@ -188,9 +188,9 @@ export default function MvumoRegistryPage() {
             </div>
           </section>
 
-          <section className="rounded-2xl border border-emerald-100 bg-white p-5">
-            <h2 className="text-lg font-semibold text-gray-900">Consent request initiation</h2>
-            <p className="mt-1 text-sm text-gray-600">
+          <section className="rounded-2xl border border-emerald-100 bg-card p-5">
+            <h2 className="text-lg font-semibold text-foreground">Consent request initiation</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
               POST <code>/internal/v1/mvumo-admin/consent-requests</code> — binds a subject to a governed template.
             </p>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -201,12 +201,12 @@ export default function MvumoRegistryPage() {
                 ["consentType", "Consent type"],
                 ["channel", "Channel"],
               ].map(([key, label]) => (
-                <label key={key} className="text-xs font-medium text-gray-600">
+                <label key={key} className="text-xs font-medium text-muted-foreground">
                   {label}
                   <input
                     value={consentForm[key as keyof typeof consentForm]}
                     onChange={(event) => setConsentForm({ ...consentForm, [key]: event.target.value })}
-                    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
                   />
                 </label>
               ))}
@@ -234,7 +234,7 @@ export default function MvumoRegistryPage() {
               Create consent request
             </button>
             {createdRequestId ? (
-              <p className="mt-3 text-sm text-emerald-800">
+              <p className="mt-3 text-sm text-primary-hover">
                 Consent request created. Review Tshepo directives at{" "}
                 <Link
                   href={`/admin/consent?subjectId=${encodeURIComponent(consentForm.subjectPatientRef)}`}
@@ -247,9 +247,9 @@ export default function MvumoRegistryPage() {
             ) : null}
           </section>
 
-          <section className="rounded-2xl border border-violet-100 bg-white p-5">
-            <h2 className="text-lg font-semibold text-gray-900">Remote-session admin</h2>
-            <p className="mt-1 text-sm text-gray-600">
+          <section className="rounded-2xl border border-violet-100 bg-card p-5">
+            <h2 className="text-lg font-semibold text-foreground">Remote-session admin</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
               Governed MVUMO remote consent sessions — <code>/internal/v1/mvumo/remote-sessions/*</code>
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
@@ -280,11 +280,11 @@ export default function MvumoRegistryPage() {
                 value={remoteSessionId}
                 onChange={(e) => setRemoteSessionId(e.target.value)}
                 placeholder="Session UUID"
-                className="min-w-[240px] rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono"
+                className="min-w-[240px] rounded-lg border border-border px-3 py-2 text-sm font-mono"
               />
             </div>
             {remoteSessionId ? (
-              <p className="mt-2 text-xs text-slate-600">
+              <p className="mt-2 text-xs text-muted-foreground">
                 Status: {String((remoteSessionQ.data?.data as Record<string, unknown> | undefined)?.status ?? "—")}
               </p>
             ) : null}
@@ -293,13 +293,13 @@ export default function MvumoRegistryPage() {
                 value={remoteToken}
                 onChange={(e) => setRemoteToken(e.target.value)}
                 placeholder="Verification token"
-                className="min-w-[200px] flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                className="min-w-[200px] flex-1 rounded-lg border border-border px-3 py-2 text-sm"
               />
               <button
                 type="button"
                 disabled={!remoteSessionId || verifyRemoteSession.isPending}
                 onClick={() => verifyRemoteSession.mutate({ sessionId: remoteSessionId, token: remoteToken || undefined })}
-                className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium hover:bg-gray-50 disabled:opacity-50"
+                className="rounded-lg border border-border px-3 py-2 text-xs font-medium hover:bg-background disabled:opacity-50"
               >
                 Verify
               </button>
@@ -316,7 +316,7 @@ export default function MvumoRegistryPage() {
 
           <Link
             href="https://github.com/rtgongora/Impilo-vNext/blob/claude/staging-ux-orchestration-remediation-Yypyl/docs/architecture/mvumo-consent-architecture.md"
-            className="inline-flex items-center gap-2 rounded-lg border border-impilo-200 bg-impilo-50 px-4 py-2 text-sm font-medium text-impilo-800 hover:bg-impilo-100"
+            className="inline-flex items-center gap-2 rounded-lg border border-primary/25 bg-primary-soft px-4 py-2 text-sm font-medium text-impilo-800 hover:bg-primary-soft"
           >
             <FileCheck className="h-4 w-4" /> Architecture doc
           </Link>

@@ -84,13 +84,13 @@ export default function LabReconciliationPage() {
       label: "Pending",
       value: String(summary?.pending ?? 0),
       Icon: AlertTriangle,
-      color: "bg-amber-50 text-amber-600",
+      color: "bg-warning-soft text-amber-600",
     },
     {
       label: "Resolved",
       value: String(summary?.resolved ?? 0),
       Icon: CheckCircle2,
-      color: "bg-impilo-50 text-impilo-500",
+      color: "bg-primary-soft text-primary",
     },
   ];
 
@@ -135,33 +135,33 @@ export default function LabReconciliationPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {summaryCards.map(({ label, value, Icon, color }) => (
-              <div key={label} className="rounded-lg border border-gray-200 bg-white p-4">
+              <div key={label} className="rounded-lg border border-border bg-card p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-500">{label}</span>
+                  <span className="text-sm text-muted-foreground">{label}</span>
                   <div className={`rounded-lg p-1.5 ${color.split(" ")[0]}`}>
                     <Icon className={`h-4 w-4 ${color.split(" ")[1]}`} />
                   </div>
                 </div>
-                <p className="text-2xl font-bold text-gray-900">{value}</p>
+                <p className="text-2xl font-bold text-foreground">{value}</p>
               </div>
             ))}
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by order ID or accession number..."
-                className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                className="w-full rounded-lg border border-border py-2 pl-10 pr-4 text-sm focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
               />
             </div>
             <button
               type="button"
               onClick={() => setShowFilters((v) => !v)}
-              className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-background transition-colors"
             >
               <Filter className="h-4 w-4" />
               Filters
@@ -177,13 +177,13 @@ export default function LabReconciliationPage() {
           </div>
 
           {showFilters ? (
-            <div className="rounded-lg border border-gray-200 bg-white p-4">
-              <label className="text-sm text-gray-600">
+            <div className="rounded-lg border border-border bg-card p-4">
+              <label className="text-sm text-muted-foreground">
                 Status
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="mt-1 block rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  className="mt-1 block rounded-lg border border-border px-3 py-2 text-sm"
                 >
                   <option value="">All statuses</option>
                   <option value="PENDING">Pending</option>
@@ -201,25 +201,25 @@ export default function LabReconciliationPage() {
           ) : null}
 
           {reconcileQ.isLoading ? (
-            <div className="flex items-center justify-center gap-2 py-16 text-sm text-gray-500">
+            <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin" />
               Loading reconciliation queue…
             </div>
           ) : reconcileQ.isError ? (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-sm text-red-800">
+            <div className="rounded-lg border border-danger/28 bg-danger-soft p-6 text-sm text-red-800">
               Unable to load reconciliation data. Confirm OROS is running and the BFF proxy is configured.
             </div>
           ) : items.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-12 text-center">
-              <RefreshCcw className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-4 text-sm font-semibold text-gray-900">No reconciliation data</h3>
-              <p className="mt-2 text-sm text-gray-600">
+            <div className="rounded-lg border border-dashed border-border bg-background p-12 text-center">
+              <RefreshCcw className="mx-auto h-12 w-12 text-muted-foreground" />
+              <h3 className="mt-4 text-sm font-semibold text-foreground">No reconciliation data</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
                 Hybrid-mode orders appear here when external LIS results need matching.
               </p>
             </div>
           ) : (
-            <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-              <div className="border-b border-gray-200 px-4 py-3 grid grid-cols-7 gap-3 text-xs font-semibold text-gray-500 uppercase">
+            <div className="rounded-lg border border-border bg-card overflow-hidden">
+              <div className="border-b border-border px-4 py-3 grid grid-cols-7 gap-3 text-xs font-semibold text-muted-foreground uppercase">
                 <span>Rec ID</span>
                 <span>External key</span>
                 <span>System</span>
@@ -234,12 +234,12 @@ export default function LabReconciliationPage() {
                   const canAct = String(item.status ?? "").toUpperCase() === "PENDING";
                   return (
                     <li key={id} className="px-4 py-3 grid grid-cols-7 gap-3 text-sm items-center">
-                      <span className="font-medium text-gray-900 truncate">{id || "—"}</span>
-                      <span className="text-gray-700 truncate">{item.externalKey ?? "—"}</span>
-                      <span className="text-gray-600">{item.externalSystem ?? "—"}</span>
-                      <span className="text-gray-700">{item.patientCpid ?? "—"}</span>
-                      <span className="text-gray-600">{item.orderId ?? "—"}</span>
-                      <span className="text-gray-600">{item.status ?? "—"}</span>
+                      <span className="font-medium text-foreground truncate">{id || "—"}</span>
+                      <span className="text-foreground truncate">{item.externalKey ?? "—"}</span>
+                      <span className="text-muted-foreground">{item.externalSystem ?? "—"}</span>
+                      <span className="text-foreground">{item.patientCpid ?? "—"}</span>
+                      <span className="text-muted-foreground">{item.orderId ?? "—"}</span>
+                      <span className="text-muted-foreground">{item.status ?? "—"}</span>
                       <div className="flex flex-wrap gap-2">
                         {canAct ? (
                           <>
@@ -262,14 +262,14 @@ export default function LabReconciliationPage() {
                                 setResolveNotes("");
                                 setActionError(null);
                               }}
-                              className="inline-flex items-center gap-1 rounded-md border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                              className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs font-medium text-foreground hover:bg-background"
                             >
                               <Check className="h-3 w-3" />
                               Resolve
                             </button>
                           </>
                         ) : (
-                          <span className="text-xs text-gray-400">No actions</span>
+                          <span className="text-xs text-muted-foreground">No actions</span>
                         )}
                       </div>
                       {matchingId === id ? (
@@ -279,7 +279,7 @@ export default function LabReconciliationPage() {
                             value={matchOrderId}
                             onChange={(e) => setMatchOrderId(e.target.value)}
                             placeholder="Order ID to match"
-                            className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                            className="flex-1 rounded-lg border border-border px-3 py-2 text-sm"
                           />
                           <button
                             type="button"
@@ -292,7 +292,7 @@ export default function LabReconciliationPage() {
                           <button
                             type="button"
                             onClick={() => setMatchingId(null)}
-                            className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                            className="rounded-lg border border-border px-3 py-2 text-sm text-foreground hover:bg-background"
                           >
                             Cancel
                           </button>
@@ -305,7 +305,7 @@ export default function LabReconciliationPage() {
                             value={resolveNotes}
                             onChange={(e) => setResolveNotes(e.target.value)}
                             placeholder="Resolution notes (optional)"
-                            className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                            className="flex-1 rounded-lg border border-border px-3 py-2 text-sm"
                           />
                           <button
                             type="button"
@@ -318,7 +318,7 @@ export default function LabReconciliationPage() {
                           <button
                             type="button"
                             onClick={() => setResolvingId(null)}
-                            className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                            className="rounded-lg border border-border px-3 py-2 text-sm text-foreground hover:bg-background"
                           >
                             Cancel
                           </button>

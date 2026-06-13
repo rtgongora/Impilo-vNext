@@ -71,7 +71,7 @@ export default function DashboardPage() {
           {STAT_CARDS.map(({ key, label, color }) => (
             <div
               key={key}
-              className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-5"
+              className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-5"
             >
               <div className="flex items-center gap-2 mb-2">
                 <div className={`w-2.5 h-2.5 rounded-full ${color}`} />
@@ -82,7 +82,7 @@ export default function DashboardPage() {
               <p className="text-2xl font-semibold text-neutral-900">{stats[key]}</p>
             </div>
           ))}
-          <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-5">
+          <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-5">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-2.5 h-2.5 rounded-full bg-neutral-500" />
               <span className="text-xs font-medium text-neutral-500 uppercase tracking-wide">
@@ -97,21 +97,21 @@ export default function DashboardPage() {
       {/* Quick actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <Link href="/clients/register" className="block">
-          <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6 hover:border-brand-primary/30 transition-colors">
+          <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6 hover:border-brand-primary/30 transition-colors">
             <h3 className="text-sm font-medium text-neutral-500">Onboarding</h3>
             <p className="text-xl font-semibold text-neutral-900 mt-2">Register Client</p>
             <p className="text-xs text-neutral-500 mt-1">Register a new partner or application client</p>
           </div>
         </Link>
         <Link href="/certification" className="block">
-          <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6 hover:border-success/30 transition-colors">
+          <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6 hover:border-success/30 transition-colors">
             <h3 className="text-sm font-medium text-neutral-500">Compliance</h3>
             <p className="text-xl font-semibold text-neutral-900 mt-2">Certification</p>
             <p className="text-xs text-neutral-500 mt-1">Run contract checks and view certification history</p>
           </div>
         </Link>
         <Link href="/catalog" className="block">
-          <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6 hover:border-info/30 transition-colors">
+          <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6 hover:border-info/30 transition-colors">
             <h3 className="text-sm font-medium text-neutral-500">Discovery</h3>
             <p className="text-xl font-semibold text-neutral-900 mt-2">API Catalog</p>
             <p className="text-xs text-neutral-500 mt-1">Browse APIs, schemas, and event contracts</p>
@@ -120,7 +120,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Onboarding checklist */}
-      <div className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6">
+      <div className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6">
         <h2 className="text-lg font-semibold text-neutral-900 mb-4">Onboarding Checklist</h2>
         <div className="space-y-3">
           {[

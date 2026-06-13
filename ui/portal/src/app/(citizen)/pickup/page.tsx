@@ -131,7 +131,7 @@ export default function PickupPage() {
 
   return (
     <div className="max-w-lg mx-auto">
-      <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
+      <div className="bg-card rounded-xl shadow-sm border border-neutral-200 p-6">
         <h1 className="text-xl font-semibold text-neutral-900 mb-1">
           Delegated Pickup
         </h1>
@@ -147,7 +147,7 @@ export default function PickupPage() {
             onClick={() => switchTab("create")}
             className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
               tab === "create"
-                ? "bg-white text-neutral-900 shadow-sm"
+                ? "bg-card text-neutral-900 shadow-sm"
                 : "text-neutral-600 hover:text-neutral-900"
             }`}
           >
@@ -158,7 +158,7 @@ export default function PickupPage() {
             onClick={() => switchTab("redeem")}
             className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
               tab === "redeem"
-                ? "bg-white text-neutral-900 shadow-sm"
+                ? "bg-card text-neutral-900 shadow-sm"
                 : "text-neutral-600 hover:text-neutral-900"
             }`}
           >
@@ -168,8 +168,8 @@ export default function PickupPage() {
 
         {/* Error display */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
-            <p className="text-sm text-red-700">{error}</p>
+          <div className="bg-danger-soft border border-danger/28 rounded-lg p-3 mb-4">
+            <p className="text-sm text-danger">{error}</p>
           </div>
         )}
 
@@ -177,8 +177,8 @@ export default function PickupPage() {
         {tab === "create" && !pickupResult && (
           <form onSubmit={handleCreate} className="space-y-4">
             {/* Step-up notice */}
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-              <p className="text-xs text-amber-700">
+            <div className="bg-warning-soft border border-warning/35 rounded-lg p-3">
+              <p className="text-xs text-warning-foreground">
                 Creating a delegated pickup requires step-up verification.
                 Provide your step-up token below.
               </p>
@@ -341,14 +341,14 @@ export default function PickupPage() {
             <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-4 space-y-3">
               <div>
                 <p className="text-xs text-neutral-500 mb-1">Pickup Token</p>
-                <p className="font-mono text-sm text-neutral-900 bg-white border border-neutral-300 rounded-lg p-2 break-all">
+                <p className="font-mono text-sm text-neutral-900 bg-card border border-neutral-300 rounded-lg p-2 break-all">
                   {pickupResult.pickupToken}
                 </p>
               </div>
 
               <div>
                 <p className="text-xs text-neutral-500 mb-1">OTP Code</p>
-                <p className="font-mono text-2xl font-bold text-neutral-900 text-center bg-white border border-neutral-300 rounded-lg p-3 tracking-widest">
+                <p className="font-mono text-2xl font-bold text-neutral-900 text-center bg-card border border-neutral-300 rounded-lg p-3 tracking-widest">
                   {pickupResult.otp}
                 </p>
               </div>
@@ -368,8 +368,8 @@ export default function PickupPage() {
               </div>
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <p className="text-xs text-blue-700">
+            <div className="bg-info-soft border border-info/25 rounded-lg p-3">
+              <p className="text-xs text-primary-hover">
                 Share the pickup token and OTP with your delegate. They will
                 need both to collect your document at the designated facility.
                 Do not share these with anyone else.

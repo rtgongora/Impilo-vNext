@@ -50,19 +50,19 @@ interface GenericResource {
 const SEVERITY_COLORS: Record<string, string> = {
   MILD: "bg-yellow-50 text-yellow-700 border-yellow-200",
   MODERATE: "bg-orange-50 text-orange-700 border-orange-200",
-  SEVERE: "bg-red-50 text-red-700 border-red-200",
+  SEVERE: "bg-danger-soft text-danger border-danger/28",
 };
 
 function consentChipClass(sev: string | undefined): string {
   switch (sev) {
     case "CRITICAL":
-      return "bg-red-50 text-red-900 border-red-200";
+      return "bg-danger-soft text-red-900 border-danger/28";
     case "HIGH":
-      return "bg-amber-50 text-amber-900 border-amber-200";
+      return "bg-warning-soft text-warning-foreground border-warning/35";
     case "MODERATE":
       return "bg-orange-50 text-orange-800 border-orange-200";
     default:
-      return "bg-slate-50 text-slate-700 border-slate-200";
+      return "bg-background text-foreground border-border";
   }
 }
 
@@ -130,8 +130,8 @@ export function PatientBanner() {
     attrs.gender === "female"
       ? "bg-pink-50 text-pink-600 border-pink-200"
       : attrs.gender === "male"
-        ? "bg-impilo-50 text-impilo-500 border-impilo-200"
-        : "bg-purple-50 text-purple-600 border-purple-200";
+        ? "bg-primary-soft text-primary border-primary/25"
+        : "bg-warning-soft text-purple-600 border-warning/35";
   const gChar = genderChar(attrs.gender);
 
   function toggleExpanded(next: boolean | ((current: boolean) => boolean)) {
@@ -143,24 +143,24 @@ export function PatientBanner() {
   }
 
   return (
-    <div className="bg-white border-b border-gray-200">
+    <div className="bg-card border-b border-border">
       {/* Compact Banner — Always Visible */}
       <div className="px-4 py-2">
         <div className="flex items-center justify-between gap-4">
           {/* Patient Identity */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-impilo-50 flex items-center justify-center border-2 border-impilo-200">
-              <User className="w-5 h-5 text-impilo-500" />
+            <div className="w-10 h-10 rounded-full bg-primary-soft flex items-center justify-center border-2 border-primary/25">
+              <User className="w-5 h-5 text-primary" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <Link
                   href={`/ehr/${patientId}`}
-                  className="text-base font-semibold text-gray-900 hover:text-impilo-600 transition-colors"
+                  className="text-base font-semibold text-foreground hover:text-primary transition-colors"
                 >
                   {maskName(attrs.displayName, privacyLevel)}
                 </Link>
-                <span className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 text-gray-600 rounded border border-gray-200">
+                <span className="px-1.5 py-0.5 text-xs font-mono bg-neutral-100 text-muted-foreground rounded border border-border">
                   {displayCpid(attrs.cpid)}
                 </span>
                 <span
@@ -170,7 +170,7 @@ export function PatientBanner() {
                   {age != null ? ` • ${age}y` : ""}
                 </span>
               </div>
-              <div className="flex items-center gap-3 text-xs text-gray-500 mt-0.5">
+              <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
                 {attrs.dateOfBirth && (
                   <span className="flex items-center gap-1">
                     <Calendar className="w-3 h-3" />
@@ -194,7 +194,7 @@ export function PatientBanner() {
                 onClick={() => toggleExpanded(true)}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border cursor-pointer transition-colors hover:opacity-80 ${
                   hasSevere
-                    ? "bg-red-50 border-red-200"
+                    ? "bg-danger-soft border-danger/28"
                     : "bg-yellow-50 border-yellow-200"
                 }`}
               >
@@ -205,11 +205,11 @@ export function PatientBanner() {
                 )}
                 <span className="text-sm">
                   <span
-                    className={`font-medium ${hasSevere ? "text-red-700" : "text-yellow-700"}`}
+                    className={`font-medium ${hasSevere ? "text-danger" : "text-yellow-700"}`}
                   >
                     Allergies:
                   </span>
-                  <span className="ml-1 text-gray-700">
+                  <span className="ml-1 text-foreground">
                     {activeAllergies
                       .slice(0, 3)
                       .map((a) => a.attributes.allergen)
@@ -262,13 +262,13 @@ export function PatientBanner() {
                 </div>
               </Link>
             ) : (
-              <span className="px-3 py-1.5 bg-gray-50 border border-gray-200 text-xs text-gray-500 rounded-lg">
+              <span className="px-3 py-1.5 bg-background border border-border text-xs text-muted-foreground rounded-lg">
                 No active encounter
               </span>
             )}
 
             {shift && (
-              <span className="px-2 py-1 bg-amber-50 text-amber-700 border border-amber-200 text-xs rounded-lg flex items-center gap-1">
+              <span className="px-2 py-1 bg-warning-soft text-warning-foreground border border-warning/35 text-xs rounded-lg flex items-center gap-1">
                 <Clock className="w-3 h-3" />
                 Shift Active
               </span>
@@ -277,27 +277,27 @@ export function PatientBanner() {
             <div className="hidden xl:flex items-center gap-2">
               <Link
                 href={`/ehr/${patientId}/emergency`}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-red-800 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-red-800 bg-danger-soft border border-danger/28 rounded-lg hover:bg-red-100 transition-colors"
               >
                 <Siren className="h-3.5 w-3.5" />
                 Emergency
               </Link>
               <Link
                 href={`/ehr/${patientId}/summary`}
-                className="px-2.5 py-1.5 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors"
+                className="px-2.5 py-1.5 text-xs font-medium text-muted-foreground bg-background border border-border rounded-lg hover:bg-neutral-100 transition-colors"
               >
                 Summary
               </Link>
               <Link
                 href={`/ehr/${patientId}/consults`}
-                className="px-2.5 py-1.5 text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors flex items-center gap-1"
+                className="px-2.5 py-1.5 text-xs font-medium text-primary-hover bg-info-soft border border-info/25 rounded-lg hover:bg-indigo-100 transition-colors flex items-center gap-1"
               >
                 <Video className="w-3 h-3" />
                 Consults
               </Link>
               <Link
                 href={`/ehr/${patientId}/notes`}
-                className="px-2.5 py-1.5 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-1"
+                className="px-2.5 py-1.5 text-xs font-medium text-muted-foreground bg-background border border-border rounded-lg hover:bg-neutral-100 transition-colors flex items-center gap-1"
               >
                 <FileText className="w-3 h-3" />
                 Notes
@@ -307,7 +307,7 @@ export function PatientBanner() {
             {/* Expand/Collapse */}
             <button
               onClick={() => toggleExpanded((v) => !v)}
-              className="px-2 py-1.5 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors flex items-center gap-1"
+              className="px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-neutral-100 rounded transition-colors flex items-center gap-1"
             >
               {expanded ? (
                 <>
@@ -323,8 +323,8 @@ export function PatientBanner() {
         </div>
 
         {bannerConsentFlags.length > 0 && (
-          <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-gray-100 pt-2">
-            <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+          <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-border pt-2">
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
               Consent / directives
             </span>
             {bannerConsentFlags.map((f) => (
@@ -348,7 +348,7 @@ export function PatientBanner() {
             {moreConsentFlags > 0 && (
               <Link
                 href={`/ehr/${patientId}/summary#consent-preferences`}
-                className="text-xs font-medium text-impilo-600 hover:text-impilo-800"
+                className="text-xs font-medium text-primary hover:text-impilo-800"
               >
                 +{moreConsentFlags} more
               </Link>
@@ -359,11 +359,11 @@ export function PatientBanner() {
 
       {/* Expanded Section */}
       {expanded && (
-        <div className="border-t border-gray-100 px-4 py-3">
+        <div className="border-t border-border px-4 py-3">
           <div className="grid grid-cols-3 gap-6">
             {/* Allergies Detail */}
             <div className="space-y-2">
-              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1.5">
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
                 <ShieldAlert className="w-3.5 h-3.5" /> Allergies (
                 {activeAllergies.length})
               </h4>
@@ -380,7 +380,7 @@ export function PatientBanner() {
                     const a = allergy.attributes;
                     const severityStyle =
                       SEVERITY_COLORS[a.severity] ??
-                      "bg-gray-50 text-gray-700 border-gray-200";
+                      "bg-background text-foreground border-border";
                     return (
                       <div
                         key={allergy.id}
@@ -414,12 +414,12 @@ export function PatientBanner() {
 
             {/* Active Conditions */}
             <div className="space-y-2">
-              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1.5">
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
                 <Stethoscope className="w-3.5 h-3.5" /> Active Conditions (
                 {activeConditions.length})
               </h4>
               {activeConditions.length === 0 ? (
-                <p className="text-sm text-gray-400 italic">
+                <p className="text-sm text-muted-foreground italic">
                   No active conditions
                 </p>
               ) : (
@@ -428,25 +428,25 @@ export function PatientBanner() {
                     const ca = cond.attributes;
                     const severityStyle =
                       ca.severity === "SEVERE"
-                        ? "border-red-200 bg-red-50"
+                        ? "border-danger/28 bg-danger-soft"
                         : ca.severity === "MODERATE"
                           ? "border-orange-200 bg-orange-50"
-                          : "border-gray-200 bg-gray-50";
+                          : "border-border bg-background";
                     return (
                       <div
                         key={cond.id}
                         className={`px-3 py-2 rounded-lg border ${severityStyle}`}
                       >
                         <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-900">
+                          <span className="text-sm font-medium text-foreground">
                             {String(ca.conditionName ?? ca.condition_name ?? "")}
                           </span>
-                          <span className="text-xs text-gray-500 capitalize">
+                          <span className="text-xs text-muted-foreground capitalize">
                             {String(ca.severity ?? "")}
                           </span>
                         </div>
                         {typeof ca.icdCode === "string" && (
-                          <span className="text-xs text-gray-400 font-mono">
+                          <span className="text-xs text-muted-foreground font-mono">
                             ICD: {String(ca.icdCode ?? ca.icd_code ?? "")}
                           </span>
                         )}
@@ -456,7 +456,7 @@ export function PatientBanner() {
                   {activeConditions.length > 5 && (
                     <Link
                       href={`/ehr/${patientId}/conditions`}
-                      className="text-xs text-impilo-500 hover:text-impilo-700"
+                      className="text-xs text-primary hover:text-primary-hover"
                     >
                       +{activeConditions.length - 5} more conditions
                     </Link>
@@ -467,26 +467,26 @@ export function PatientBanner() {
 
             {/* Encounter & Recent History */}
             <div className="space-y-2">
-              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1.5">
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
                 <Activity className="w-3.5 h-3.5" /> Encounter
               </h4>
               {activeEncounter ? (
                 <div className="space-y-1.5 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Type:</span>
-                    <span className="font-medium text-gray-900">
+                    <span className="text-muted-foreground">Type:</span>
+                    <span className="font-medium text-foreground">
                       {activeEncounter.attributes.encounterType}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Status:</span>
+                    <span className="text-muted-foreground">Status:</span>
                     <span className="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700">
                       {activeEncounter.attributes.status}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Started:</span>
-                    <span className="font-medium text-gray-900">
+                    <span className="text-muted-foreground">Started:</span>
+                    <span className="font-medium text-foreground">
                       {new Date(
                         activeEncounter.attributes.startedAt
                       ).toLocaleString()}
@@ -494,21 +494,21 @@ export function PatientBanner() {
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-gray-400 italic">
+                <p className="text-sm text-muted-foreground italic">
                   No active encounter
                 </p>
               )}
 
               {encounters.length > 0 && (
-                <div className="mt-3 pt-2 border-t border-gray-100">
-                  <p className="text-xs text-gray-400 mb-1.5">Recent:</p>
+                <div className="mt-3 pt-2 border-t border-border">
+                  <p className="text-xs text-muted-foreground mb-1.5">Recent:</p>
                   {encounters.slice(0, 3).map((enc) => (
                     <Link
                       key={enc.id}
                       href={`/ehr/${patientId}/encounter/${enc.id}`}
-                      className="flex items-center justify-between text-sm hover:bg-gray-50 rounded px-1 -mx-1 py-0.5 transition-colors"
+                      className="flex items-center justify-between text-sm hover:bg-background rounded px-1 -mx-1 py-0.5 transition-colors"
                     >
-                      <span className="text-gray-700">
+                      <span className="text-foreground">
                         {enc.attributes.encounterType}
                       </span>
                       <span
@@ -516,7 +516,7 @@ export function PatientBanner() {
                           enc.attributes.status === "IN_PROGRESS" ||
                           enc.attributes.status === "ACTIVE"
                             ? "bg-green-100 text-green-700"
-                            : "bg-gray-100 text-gray-600"
+                            : "bg-neutral-100 text-muted-foreground"
                         }`}
                       >
                         {enc.attributes.status}

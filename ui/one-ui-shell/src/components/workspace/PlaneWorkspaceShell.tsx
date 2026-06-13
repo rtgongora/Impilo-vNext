@@ -34,7 +34,7 @@ export function PlaneWorkspaceShell(props: {
     <AppLayout>
       <PageShell title={props.title} subtitle={props.subtitle} serviceSlug={props.serviceSlug}>
         <div className="mb-4 flex flex-wrap items-center gap-2">
-          <span className="impilo-chip bg-[var(--primary-soft)] text-impilo-700">{props.plane}</span>
+          <span className="impilo-chip bg-[var(--primary-soft)] text-primary-hover">{props.plane}</span>
           {props.maturity ? (
             <FeatureMaturityBadge status={props.maturity} detail={props.maturityDetail} />
           ) : null}
@@ -46,7 +46,7 @@ export function PlaneWorkspaceShell(props: {
               <Link
                 key={tab.href}
                 href={tab.href}
-                className="rounded-full px-3 py-1.5 text-sm font-medium text-[var(--text-secondary)] transition hover:bg-[var(--primary-soft)] hover:text-impilo-700"
+                className="rounded-full px-3 py-1.5 text-sm font-medium text-[var(--text-secondary)] transition hover:bg-[var(--primary-soft)] hover:text-primary-hover"
               >
                 {tab.label}
               </Link>

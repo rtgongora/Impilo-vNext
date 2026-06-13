@@ -15,7 +15,7 @@ import { usePolicyRules } from "@/hooks/queries/useTrustAdmin";
 
 const EFFECT_STYLES: Record<string, string> = {
   ALLOW: "bg-green-100 text-green-700",
-  DENY: "bg-red-100 text-red-700",
+  DENY: "bg-red-100 text-danger",
 };
 
 export default function PoliciesPage() {
@@ -35,7 +35,7 @@ export default function PoliciesPage() {
         <div className="mb-4">
           <Link
             href={fromOrgAdmin ? "/organization-admin" : "/admin"}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             {fromOrgAdmin ? "Back to organization administration" : "Back to administration"}
@@ -43,47 +43,47 @@ export default function PoliciesPage() {
         </div>
 
         {error ? (
-          <div className="bg-white rounded-lg border border-red-200 p-12 text-center">
+          <div className="bg-card rounded-lg border border-danger/28 p-12 text-center">
             <AlertCircle className="w-10 h-10 text-red-300 mx-auto mb-3" />
             <p className="text-red-600 text-sm">Failed to load policies</p>
           </div>
         ) : isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading policies...</span>
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading policies...</span>
           </div>
         ) : policies.length === 0 ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <ScrollText className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-400 text-sm">No policies configured</p>
+          <div className="bg-card rounded-lg border border-border p-12 text-center">
+            <ScrollText className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground text-sm">No policies configured</p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="bg-card rounded-lg border border-border overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-gray-50">
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Policy Name</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Resource Type</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Action</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Effect</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Conditions</th>
+                <tr className="border-b bg-background">
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Policy Name</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Resource Type</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Action</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Effect</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Conditions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {policies.map((policy) => {
                   const effectStyle =
-                    EFFECT_STYLES[policy.attributes.effect] ?? "bg-gray-100 text-gray-600";
+                    EFFECT_STYLES[policy.attributes.effect] ?? "bg-neutral-100 text-muted-foreground";
                   return (
-                    <tr key={policy.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3 font-medium text-gray-900">
+                    <tr key={policy.id} className="hover:bg-background transition-colors">
+                      <td className="px-4 py-3 font-medium text-foreground">
                         {policy.attributes.name}
                       </td>
-                      <td className="px-4 py-3 text-gray-600">
-                        <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-purple-100 text-purple-700">
+                      <td className="px-4 py-3 text-muted-foreground">
+                        <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-purple-100 text-warning-foreground">
                           {policy.attributes.resourceType}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-gray-600">
+                      <td className="px-4 py-3 text-muted-foreground">
                         {policy.attributes.action}
                       </td>
                       <td className="px-4 py-3">
@@ -93,7 +93,7 @@ export default function PoliciesPage() {
                           {policy.attributes.effect}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-gray-600">
+                      <td className="px-4 py-3 text-muted-foreground">
                         {policy.attributes.conditions?.length ?? 0} condition(s)
                       </td>
                     </tr>

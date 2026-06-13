@@ -33,7 +33,7 @@ const FINANCE_SECTIONS = [
     description: "Manage invoices and billing records",
     href: "/finance/billing",
     icon: Receipt,
-    color: "bg-impilo-100 text-impilo-500",
+    color: "bg-primary-soft text-primary",
   },
   {
     title: "Claims",
@@ -68,7 +68,7 @@ const FINANCE_SECTIONS = [
     description: "Govern catalogs, imports, mappings, and publication from Experience",
     href: "/finance/msika-governance",
     icon: DatabaseZap,
-    color: "bg-indigo-100 text-indigo-700",
+    color: "bg-indigo-100 text-primary-hover",
   },
   {
     title: "Financial reports",
@@ -82,14 +82,14 @@ const FINANCE_SECTIONS = [
     description: "General ledger, HR & payroll, procurement, and fixed assets",
     href: "/erp",
     icon: Landmark,
-    color: "bg-slate-100 text-slate-700",
+    color: "bg-neutral-100 text-foreground",
   },
   {
     title: "My healthcare account",
     description: "Your balances, payment history, plans, and tax or invoice documents",
     href: "/finance/my-account",
     icon: Wallet,
-    color: "bg-emerald-100 text-emerald-700",
+    color: "bg-emerald-100 text-primary-hover",
   },
 ] as const;
 
@@ -162,29 +162,29 @@ export default function FinancePage() {
             ]}
           />
 
-          <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
-            <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+          <div className="rounded-3xl border border-border bg-background/70 p-4">
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
               Revenue loop status
             </p>
-            <p className="mt-2 text-sm text-slate-800">
+            <p className="mt-2 text-sm text-foreground">
               {source === "discharge"
                 ? "This dashboard was reached from encounter outcome, so the loop here is keeping billing, claims, and payments connected to the same patient and encounter."
                 : "This dashboard anchors finance work, but each downstream surface should still preserve the originating patient and encounter context when it exists."}
             </p>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-muted-foreground">
               Open the next finance surface below, or move back to the encounter or chart when the revenue step needs clinical clarification.
             </p>
           </div>
 
-          <div className="rounded-xl border border-indigo-200 bg-indigo-50/60 p-4">
+          <div className="rounded-xl border border-info/25 bg-info-soft/60 p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-primary-hover">
                   <Layers className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-slate-900">Commerce & payer stack</h3>
-                  <p className="mt-1 text-xs text-slate-600 max-w-xl">
+                  <h3 className="text-sm font-semibold text-foreground">Commerce & payer stack</h3>
+                  <p className="mt-1 text-xs text-muted-foreground max-w-xl">
                     MSIKA, MusheX, and facility marketplace: canonical Experience routes, what legacy sidecars superseded,
                     and exact BFF gaps — no separate UI required for acceptance.
                   </p>
@@ -192,7 +192,7 @@ export default function FinancePage() {
               </div>
               <Link
                 href="/finance/commerce-integrations"
-                className="inline-flex shrink-0 items-center justify-center rounded-lg border border-indigo-300 bg-white px-4 py-2 text-sm font-medium text-indigo-800 hover:bg-indigo-50"
+                className="inline-flex shrink-0 items-center justify-center rounded-lg border border-indigo-300 bg-card px-4 py-2 text-sm font-medium text-primary-hover hover:bg-info-soft"
               >
                 Open integration map
               </Link>
@@ -206,7 +206,7 @@ export default function FinancePage() {
                 <Link
                   key={section.href}
                   href={withHandoff(section.href)}
-                  className="bg-white rounded-lg border border-gray-200 p-5 hover:border-impilo-200 hover:shadow-md transition-all group"
+                  className="bg-card rounded-lg border border-border p-5 hover:border-primary/25 hover:shadow-md transition-all group"
                 >
                   <div className="flex items-start gap-3">
                     <div
@@ -215,10 +215,10 @@ export default function FinancePage() {
                       <Icon className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="font-medium text-gray-900 text-sm group-hover:text-impilo-500 transition-colors">
+                      <h3 className="font-medium text-foreground text-sm group-hover:text-primary transition-colors">
                         {section.title}
                       </h3>
-                      <p className="text-xs text-gray-500 mt-0.5">{section.description}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{section.description}</p>
                     </div>
                   </div>
                 </Link>

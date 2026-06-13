@@ -367,17 +367,17 @@ export default function DicomViewerPage() {
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <Link
             href={`/ehr/${encodeURIComponent(patientId)}/imaging`}
-            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-sm text-foreground hover:bg-background"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to imaging workspace
           </Link>
-          <span className="text-xs text-slate-500">
-            Chart context: <span className="font-mono text-slate-700">{patientId}</span>
+          <span className="text-xs text-muted-foreground">
+            Chart context: <span className="font-mono text-foreground">{patientId}</span>
           </span>
         </div>
         {governedStudyId && (
-          <div className="mb-4 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700">
+          <div className="mb-4 rounded-xl border border-border bg-card px-3 py-2 text-xs text-foreground">
             Viewer engine{" "}
             <span className="font-semibold">
               {resolvedViewerEngine}
@@ -390,12 +390,12 @@ export default function DicomViewerPage() {
                   "ORTHANC",
               )}
             </span>
-            <span className="mx-2 text-slate-300">|</span>
+            <span className="mx-2 text-muted-foreground">|</span>
             <Link
               href={`/ehr/${encodeURIComponent(patientId)}/imaging/viewer?studyUid=${encodeURIComponent(
                 studyUid,
               )}${governedStudyId ? `&governedStudyId=${encodeURIComponent(governedStudyId)}` : ""}&viewerType=DICOMWEB_STACK`}
-              className={`mr-2 rounded px-2 py-1 ${resolvedViewerEngine === "DICOMWEB_STACK" ? "bg-slate-100 font-semibold" : "hover:bg-slate-50"}`}
+              className={`mr-2 rounded px-2 py-1 ${resolvedViewerEngine === "DICOMWEB_STACK" ? "bg-neutral-100 font-semibold" : "hover:bg-background"}`}
             >
               DICOMWEB_STACK
             </Link>
@@ -403,7 +403,7 @@ export default function DicomViewerPage() {
               href={`/ehr/${encodeURIComponent(patientId)}/imaging/viewer?studyUid=${encodeURIComponent(
                 studyUid,
               )}${governedStudyId ? `&governedStudyId=${encodeURIComponent(governedStudyId)}` : ""}&viewerType=OHIF`}
-              className={`rounded px-2 py-1 ${resolvedViewerEngine === "OHIF" ? "bg-slate-100 font-semibold" : "hover:bg-slate-50"}`}
+              className={`rounded px-2 py-1 ${resolvedViewerEngine === "OHIF" ? "bg-neutral-100 font-semibold" : "hover:bg-background"}`}
             >
               OHIF
             </Link>
@@ -411,7 +411,7 @@ export default function DicomViewerPage() {
         )}
 
         {useOhif && !ohifUrl && (
-          <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+          <div className="mb-4 rounded-2xl border border-warning/35 bg-warning-soft p-4 text-sm text-warning-foreground">
             OHIF engine selected, but no OHIF host is configured. Set{" "}
             <code className="font-mono">NEXT_PUBLIC_OHIF_BASE_URL</code> (dev default is{" "}
             <code className="font-mono">http://localhost:3005</code>), or switch to{" "}
@@ -420,39 +420,39 @@ export default function DicomViewerPage() {
         )}
 
         {useOhif && ohifUrl && (
-          <div className="mb-4 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+          <div className="mb-4 rounded-2xl border border-border bg-card p-2 shadow-sm">
             <iframe
               title="OHIF viewer"
               src={ohifUrl}
-              className="h-[78vh] w-full rounded-xl border border-slate-200"
+              className="h-[78vh] w-full rounded-xl border border-border"
               referrerPolicy="no-referrer"
             />
           </div>
         )}
 
         {!studyUid && (
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+          <div className="rounded-2xl border border-warning/35 bg-warning-soft p-4 text-sm text-warning-foreground">
             Missing <code className="font-mono">studyUid</code> query parameter. Open this viewer from the imaging
             workspace with a valid DICOM Study Instance UID.
           </div>
         )}
 
         {studyUid && loadingSeries && (
-          <div className="flex items-center gap-2 text-sm text-slate-600">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-5 w-5 animate-spin" /> Loading series (QIDO-RS)…
           </div>
         )}
 
         {studyUid && seriesError && (
-          <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-900">
+          <div className="rounded-2xl border border-danger/28 bg-danger-soft p-4 text-sm text-red-900">
             Could not load DICOMweb series. Ensure Orthanc is reachable and the study UID exists.
           </div>
         )}
 
         {!useOhif && studyUid && !loadingSeries && !seriesError && (
           <div className="grid gap-4 xl:grid-cols-[240px_minmax(0,1fr)]">
-            <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Series</p>
+            <div className="rounded-2xl border border-border bg-card p-3 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Series</p>
               <div className="mt-2 space-y-1 max-h-[70vh] overflow-y-auto">
                 {seriesList.map((s) => {
                   const selected = s.seriesUid === activeSeriesUid;
@@ -462,14 +462,14 @@ export default function DicomViewerPage() {
                       type="button"
                       onClick={() => setActiveSeriesUid(s.seriesUid)}
                       className={`w-full rounded-xl border px-2 py-2 text-left text-xs ${
-                        selected ? "border-impilo-400 bg-impilo-50" : "border-slate-100 hover:bg-slate-50"
+                        selected ? "border-impilo-400 bg-primary-soft" : "border-border hover:bg-background"
                       }`}
                     >
                       <div className="flex items-center gap-2">
-                        <Monitor className="h-3.5 w-3.5 text-impilo-500" />
+                        <Monitor className="h-3.5 w-3.5 text-primary" />
                         <span className="font-mono text-[11px] break-all">{s.seriesUid}</span>
                       </div>
-                      <div className="mt-1 text-slate-600">
+                      <div className="mt-1 text-muted-foreground">
                         {s.modality ?? "—"} {s.description ? `· ${s.description}` : ""}
                       </div>
                     </button>
@@ -479,7 +479,7 @@ export default function DicomViewerPage() {
             </div>
 
             <div className="space-y-3">
-              <div className="rounded-2xl border border-slate-200 bg-slate-900 p-3 text-slate-100">
+              <div className="rounded-2xl border border-border bg-neutral-900 p-3 text-foreground">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="text-xs font-mono break-all opacity-90">Study {studyUid}</div>
                   <div className="flex flex-wrap gap-1 rounded-lg border border-slate-600 p-0.5 text-[10px]">
@@ -493,7 +493,7 @@ export default function DicomViewerPage() {
                         setWindowWidth(256);
                       }}
                       className={`rounded-md px-2 py-1 ${
-                        viewMode === "rendered" ? "bg-slate-100 text-slate-900" : "text-slate-400 hover:text-slate-200"
+                        viewMode === "rendered" ? "bg-neutral-100 text-foreground" : "text-muted-foreground hover:text-slate-200"
                       }`}
                     >
                       Rendered
@@ -505,18 +505,18 @@ export default function DicomViewerPage() {
                         setImgUrl(null);
                       }}
                       className={`rounded-md px-2 py-1 ${
-                        viewMode === "native" ? "bg-slate-100 text-slate-900" : "text-slate-400 hover:text-slate-200"
+                        viewMode === "native" ? "bg-neutral-100 text-foreground" : "text-muted-foreground hover:text-slate-200"
                       }`}
                     >
                       Native WL
                     </button>
                   </div>
                   <div className="flex flex-wrap items-center gap-1">
-                    <span className="mr-1 text-[10px] uppercase text-slate-500">Instance</span>
+                    <span className="mr-1 text-[10px] uppercase text-muted-foreground">Instance</span>
                     <button
                       type="button"
                       onClick={prevInstance}
-                      className="rounded-lg border border-slate-600 px-2 py-1 hover:bg-slate-800"
+                      className="rounded-lg border border-slate-600 px-2 py-1 hover:bg-primary-hover"
                       aria-label="Previous instance"
                     >
                       <ChevronLeft className="h-4 w-4" />
@@ -524,18 +524,18 @@ export default function DicomViewerPage() {
                     <button
                       type="button"
                       onClick={nextInstance}
-                      className="rounded-lg border border-slate-600 px-2 py-1 hover:bg-slate-800"
+                      className="rounded-lg border border-slate-600 px-2 py-1 hover:bg-primary-hover"
                       aria-label="Next instance"
                     >
                       <ChevronRight className="h-4 w-4" />
                     </button>
                     {frameCount > 1 && (
                       <>
-                        <span className="ml-2 mr-1 text-[10px] uppercase text-slate-500">Frame</span>
+                        <span className="ml-2 mr-1 text-[10px] uppercase text-muted-foreground">Frame</span>
                         <button
                           type="button"
                           onClick={prevFrame}
-                          className="rounded-lg border border-slate-600 px-2 py-1 hover:bg-slate-800"
+                          className="rounded-lg border border-slate-600 px-2 py-1 hover:bg-primary-hover"
                           aria-label="Previous frame"
                         >
                           <ChevronLeft className="h-4 w-4" />
@@ -543,7 +543,7 @@ export default function DicomViewerPage() {
                         <button
                           type="button"
                           onClick={nextFrame}
-                          className="rounded-lg border border-slate-600 px-2 py-1 hover:bg-slate-800"
+                          className="rounded-lg border border-slate-600 px-2 py-1 hover:bg-primary-hover"
                           aria-label="Next frame"
                         >
                           <ChevronRight className="h-4 w-4" />
@@ -562,7 +562,7 @@ export default function DicomViewerPage() {
                   className="relative mt-2 flex min-h-[360px] cursor-grab touch-none items-center justify-center overflow-hidden rounded-xl bg-black active:cursor-grabbing"
                 >
                   {loadingInstances && viewMode === "rendered" && (
-                    <Loader2 className="h-8 w-8 animate-spin text-slate-300" />
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                   )}
                   {viewMode === "rendered" && !loadingInstances && imgUrl && (
                     <div
@@ -599,19 +599,19 @@ export default function DicomViewerPage() {
                     </div>
                   )}
                   {viewMode === "rendered" && !loadingInstances && !imgUrl && (
-                    <div className="flex flex-col items-center gap-2 p-6 text-center text-sm text-slate-400">
+                    <div className="flex flex-col items-center gap-2 p-6 text-center text-sm text-muted-foreground">
                       <ImageIcon className="h-10 w-10 opacity-50" />
                       No rendered frame for this instance (check WADO-RS / Orthanc).
                     </div>
                   )}
                   {viewMode === "native" && !nativeLayer && !nativeHint && (
-                    <Loader2 className="h-8 w-8 animate-spin text-slate-300" />
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                   )}
                   {viewMode === "native" && nativeHint && !nativeLayer && (
-                    <div className="max-w-md p-4 text-center text-sm text-amber-200">{nativeHint}</div>
+                    <div className="max-w-md p-4 text-center text-sm text-warning-foreground">{nativeHint}</div>
                   )}
                 </div>
-                <div className="mt-2 grid gap-2 text-xs text-slate-300 md:grid-cols-3">
+                <div className="mt-2 grid gap-2 text-xs text-muted-foreground md:grid-cols-3">
                   <label className="flex flex-col gap-1">
                     <span className="flex items-center gap-1">
                       <SunMedium className="h-4 w-4" />
@@ -652,16 +652,16 @@ export default function DicomViewerPage() {
                     />
                   </label>
                 </div>
-                <p className="mt-1 flex items-center gap-1 text-[10px] text-slate-500">
+                <p className="mt-1 flex items-center gap-1 text-[10px] text-muted-foreground">
                   <Move className="h-3 w-3" />
                   Drag the viewport to pan. Double-click resets pan, zoom, and window.
                 </p>
-                <div className="mt-2 text-[11px] font-mono text-slate-400 break-all">
+                <div className="mt-2 text-[11px] font-mono text-muted-foreground break-all">
                   Series {activeSeriesUid ?? "—"} · SOP {active?.sop ?? "—"} · Multi-frame{" "}
                   {subFrameIx + 1} / {frameCount} · Instance {instanceIx + 1} / {Math.max(1, instances.length)}
                 </div>
                 {nativeHint && (
-                  <p className="mt-1 text-[10px] text-amber-200/90">{nativeHint}</p>
+                  <p className="mt-1 text-[10px] text-warning-foreground/90">{nativeHint}</p>
                 )}
               </div>
             </div>

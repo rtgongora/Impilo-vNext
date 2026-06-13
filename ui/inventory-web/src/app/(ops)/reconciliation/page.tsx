@@ -22,8 +22,8 @@ const ACTION_LABELS: Record<AdjustmentAction, string> = {
 };
 
 function confidenceBadge(score: number): string {
-  if (score >= 0.9) return "badge bg-emerald-100 text-emerald-800";
-  if (score >= 0.7) return "badge bg-amber-100 text-amber-800";
+  if (score >= 0.9) return "badge bg-emerald-100 text-primary-hover";
+  if (score >= 0.7) return "badge bg-amber-100 text-warning-foreground";
   return "badge bg-red-100 text-red-800";
 }
 
@@ -114,17 +114,17 @@ export default function ReconciliationPage() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-red-800">
           {error}
         </div>
       )}
 
       {successMessage && (
-        <div className="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-sm text-emerald-800">
+        <div className="mb-4 p-3 rounded-lg bg-success-soft border border-success/25 text-sm text-primary-hover">
           {successMessage}
           <button
             onClick={() => setSuccessMessage(null)}
-            className="ml-2 text-emerald-600 hover:text-emerald-800 font-medium"
+            className="ml-2 text-primary hover:text-primary-hover font-medium"
           >
             Dismiss
           </button>
@@ -230,7 +230,7 @@ export default function ReconciliationPage() {
                   {item.externalQuantity}
                 </td>
                 <td className={`px-4 py-3 text-right font-medium ${
-                  item.variance === 0 ? "text-emerald-600" : "text-red-600"
+                  item.variance === 0 ? "text-primary" : "text-red-600"
                 }`}>
                   {item.variance > 0 ? `+${item.variance}` : item.variance}
                 </td>
@@ -252,7 +252,7 @@ export default function ReconciliationPage() {
                     <button
                       onClick={() => setResolvingId(item.id)}
                       disabled={actionLoading}
-                      className="text-xs text-amber-600 hover:text-amber-800 font-medium"
+                      className="text-xs text-amber-600 hover:text-warning-foreground font-medium"
                     >
                       Resolve
                     </button>

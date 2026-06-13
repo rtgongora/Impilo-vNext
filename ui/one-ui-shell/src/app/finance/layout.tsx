@@ -38,16 +38,16 @@ export default function FinanceLayout({ children }: { children: ReactNode }) {
   // If authenticated but lacks finance access, show access denied
   if (isAuthenticated && !hasFinanceAccess) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center">
-          <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-card rounded-xl shadow-lg p-8 text-center">
+          <div className="w-16 h-16 rounded-full bg-danger-soft flex items-center justify-center mx-auto mb-4">
             <ShieldAlert className="w-8 h-8 text-red-500" />
           </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
-          <p className="text-sm text-gray-500 mb-1">
+          <h2 className="text-xl font-semibold text-foreground mb-2">Access Denied</h2>
+          <p className="text-sm text-muted-foreground mb-1">
             You do not have permission to access the finance area.
           </p>
-          <p className="text-xs text-gray-400 mb-6">
+          <p className="text-xs text-muted-foreground mb-6">
             Required roles: System Admin, Facility Admin, or Finance.
             {user && (
               <span className="block mt-1">
@@ -58,13 +58,13 @@ export default function FinanceLayout({ children }: { children: ReactNode }) {
           <div className="flex gap-3 justify-center">
             <button
               onClick={() => router.back()}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-sm text-foreground bg-neutral-100 rounded-lg hover:bg-neutral-100 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" /> Go Back
             </button>
             <button
               onClick={() => router.push("/home")}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-sm text-white bg-impilo-500 rounded-lg hover:bg-impilo-600 transition-colors"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-sm text-white bg-primary rounded-lg hover:bg-primary-hover transition-colors"
             >
               <Home className="w-4 h-4" /> Home
             </button>

@@ -17,26 +17,26 @@ export default function LearningRecordPage() {
     <AppLayout>
       <PageShell title="Learning record / transcript" subtitle="Native Fundo learner transcript including completions, assessments and certificates.">
         <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded border border-gray-200 bg-white p-3">
-            <p className="text-xs text-gray-500">Completed courses</p>
-            <p className="text-xl font-semibold text-gray-900">{courseCompletions.length}</p>
+          <div className="rounded border border-border bg-card p-3">
+            <p className="text-xs text-muted-foreground">Completed courses</p>
+            <p className="text-xl font-semibold text-foreground">{courseCompletions.length}</p>
           </div>
-          <div className="rounded border border-gray-200 bg-white p-3">
-            <p className="text-xs text-gray-500">Assessment attempts</p>
-            <p className="text-xl font-semibold text-gray-900">{assessmentAttempts.length}</p>
+          <div className="rounded border border-border bg-card p-3">
+            <p className="text-xs text-muted-foreground">Assessment attempts</p>
+            <p className="text-xl font-semibold text-foreground">{assessmentAttempts.length}</p>
           </div>
-          <div className="rounded border border-gray-200 bg-white p-3">
-            <p className="text-xs text-gray-500">Certificates</p>
-            <p className="text-xl font-semibold text-gray-900">{certificates.length}</p>
+          <div className="rounded border border-border bg-card p-3">
+            <p className="text-xs text-muted-foreground">Certificates</p>
+            <p className="text-xl font-semibold text-foreground">{certificates.length}</p>
           </div>
         </div>
-        <div className="mt-4 rounded border border-gray-200 bg-white p-4">
-          <p className="text-sm font-medium text-gray-900">Recent course completions</p>
+        <div className="mt-4 rounded border border-border bg-card p-4">
+          <p className="text-sm font-medium text-foreground">Recent course completions</p>
           <ul className="mt-2 space-y-1 text-sm">
             {courseCompletions.slice(0, 20).map((c) => (
               <li key={String(c.id ?? c.courseId)}>{String(c.courseTitle ?? c.courseId ?? "-")} - {String(c.completedAt ?? "-")}</li>
             ))}
-            {courseCompletions.length === 0 ? <li className="text-gray-500">No completions yet.</li> : null}
+            {courseCompletions.length === 0 ? <li className="text-muted-foreground">No completions yet.</li> : null}
           </ul>
         </div>
       </PageShell>

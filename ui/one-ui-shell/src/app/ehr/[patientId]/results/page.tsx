@@ -23,8 +23,8 @@ import { apiClient } from "@/lib/api-client";
 
 const INTERPRETATION_STYLE: Record<string, string> = {
   NORMAL: "text-green-700 bg-green-50",
-  ABNORMAL: "text-red-700 bg-red-50",
-  CRITICAL: "text-red-700 bg-red-50 font-bold",
+  ABNORMAL: "text-danger bg-danger-soft",
+  CRITICAL: "text-danger bg-danger-soft font-bold",
 };
 
 interface ResultValue {
@@ -144,7 +144,7 @@ export default function ResultsPage() {
       <PageShell title="Results">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : (
           <div className="space-y-6">
@@ -187,18 +187,18 @@ export default function ResultsPage() {
               ]}
             />
 
-            <div className="rounded-3xl border border-amber-200 bg-amber-50/80 p-4">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-amber-700">
+            <div className="rounded-3xl border border-warning/35 bg-warning-soft/80 p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-warning-foreground">
                 Review loop status
               </p>
-              <p className="mt-2 text-sm text-amber-900">
+              <p className="mt-2 text-sm text-warning-foreground">
                 {criticalResults > 0
                   ? `${criticalResults} critical result${criticalResults === 1 ? "" : "s"} require immediate acknowledgement from this workspace.`
                   : awaitingReview > 0
                     ? `${awaitingReview} result${awaitingReview === 1 ? "" : "s"} are ready for acknowledgement here before you move back into notes or treatment changes.`
                     : "All visible results have already been acknowledged, and the remaining work is follow-through in notes, medications, or the patient summary."}
               </p>
-              <p className="mt-1 text-xs text-amber-800">
+              <p className="mt-1 text-xs text-warning-foreground">
                 {latestResultedAt
                   ? `Latest result posted ${latestResultedAt}. ${abnormalResults} result${abnormalResults === 1 ? "" : "s"} show abnormal or critical interpretation.`
                   : "Result timestamps are not available yet for this patient."}
@@ -206,20 +206,20 @@ export default function ResultsPage() {
             </div>
 
             {resultOrders.length === 0 ? (
-              <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
-                <TestTube2 className="mx-auto mb-3 h-10 w-10 text-gray-300" />
-                <p className="text-sm text-gray-400">No results available</p>
+              <div className="rounded-lg border border-border bg-card p-12 text-center">
+                <TestTube2 className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">No results available</p>
               </div>
             ) : (
               <>
                 <div className="flex items-center gap-2">
                   <TestTube2 className="h-5 w-5 text-indigo-500" />
-                  <h2 className="text-sm font-semibold text-gray-900">Results ({resultOrders.length})</h2>
+                  <h2 className="text-sm font-semibold text-foreground">Results ({resultOrders.length})</h2>
                 </div>
 
                 {Array.from(groupedResults.entries()).map(([dateLabel, orders]) => (
                   <div key={dateLabel} className="space-y-3">
-                    <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500">
+                    <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                       {dateLabel}
                     </h3>
 
@@ -233,13 +233,13 @@ export default function ResultsPage() {
                       const resultNotes = attrs.result_notes as string | null;
 
                       return (
-                        <div key={order.id} className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-                          <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+                        <div key={order.id} className="overflow-hidden rounded-lg border border-border bg-card">
+                          <div className="flex items-center justify-between border-b border-border px-4 py-3">
                             <div className="flex items-center gap-3">
                               <TestTube2 className="h-4 w-4 text-indigo-500" />
                               <div>
-                                <p className="text-sm font-medium text-gray-900">{order.attributes.testName}</p>
-                                <p className="text-xs text-gray-500">
+                                <p className="text-sm font-medium text-foreground">{order.attributes.testName}</p>
+                                <p className="text-xs text-muted-foreground">
                                   #{order.attributes.orderNumber} · {order.attributes.category}
                                 </p>
                               </div>
@@ -250,7 +250,7 @@ export default function ResultsPage() {
                                   type="button"
                                   onClick={() => handleAcknowledge(order.id)}
                                   disabled={acknowledgingId === order.id}
-                                  className="inline-flex items-center gap-1 rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                                  className="inline-flex items-center gap-1 rounded-lg bg-neutral-900 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
                                 >
                                   {acknowledgingId === order.id ? (
                                     <>
@@ -262,7 +262,7 @@ export default function ResultsPage() {
                                   )}
                                 </button>
                               ) : (
-                                <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-600">
+                                <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
                                   <CheckCircle2 className="h-3 w-3" />
                                   Reviewed
                                 </span>
@@ -281,7 +281,7 @@ export default function ResultsPage() {
                             </div>
                           </div>
 
-                          <div className="flex flex-wrap gap-x-5 bg-gray-50 px-4 py-2 text-xs text-gray-500">
+                          <div className="flex flex-wrap gap-x-5 bg-background px-4 py-2 text-xs text-muted-foreground">
                             <span>Ordered: {order.attributes.orderedByName}</span>
                             <span>
                               Resulted: {order.attributes.resultedAt ? new Date(order.attributes.resultedAt).toLocaleDateString() : "-"}
@@ -294,25 +294,25 @@ export default function ResultsPage() {
                           <div className="overflow-x-auto">
                             <table className="w-full text-sm">
                               <thead>
-                                <tr className="border-b bg-gray-50">
-                                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Test</th>
-                                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Value</th>
-                                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Unit</th>
-                                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Reference</th>
-                                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Status</th>
+                                <tr className="border-b bg-background">
+                                  <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Test</th>
+                                  <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Value</th>
+                                  <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Unit</th>
+                                  <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Reference</th>
+                                  <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Status</th>
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-gray-100">
                                 {resultValues.map((value, index) => (
-                                  <tr key={`${order.id}-${index}`} className="hover:bg-gray-50">
-                                    <td className="px-4 py-2 text-gray-900">{value.name}</td>
-                                    <td className="px-4 py-2 font-medium text-gray-900">{value.value}</td>
-                                    <td className="px-4 py-2 text-gray-500">{value.unit}</td>
-                                    <td className="px-4 py-2 text-gray-500">{value.referenceRange}</td>
+                                  <tr key={`${order.id}-${index}`} className="hover:bg-background">
+                                    <td className="px-4 py-2 text-foreground">{value.name}</td>
+                                    <td className="px-4 py-2 font-medium text-foreground">{value.value}</td>
+                                    <td className="px-4 py-2 text-muted-foreground">{value.unit}</td>
+                                    <td className="px-4 py-2 text-muted-foreground">{value.referenceRange}</td>
                                     <td className="px-4 py-2">
                                       <span
                                         className={`px-2 py-0.5 text-xs font-medium rounded-full ${
-                                          INTERPRETATION_STYLE[value.interpretation] ?? "text-gray-700 bg-gray-50"
+                                          INTERPRETATION_STYLE[value.interpretation] ?? "text-foreground bg-background"
                                         }`}
                                       >
                                         {value.interpretation}
@@ -325,8 +325,8 @@ export default function ResultsPage() {
                           </div>
 
                           {resultNotes && (
-                            <div className="px-4 py-2 border-t border-gray-100 bg-gray-50">
-                              <p className="text-xs text-gray-500">
+                            <div className="px-4 py-2 border-t border-border bg-background">
+                              <p className="text-xs text-muted-foreground">
                                 <span className="font-medium">Notes:</span> {resultNotes}
                               </p>
                             </div>

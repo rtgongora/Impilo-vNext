@@ -57,7 +57,7 @@ export default function CreateTicketPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-[12px] shadow-subtle border border-neutral-100 p-6 space-y-5">
+      <form onSubmit={handleSubmit} className="bg-card rounded-[12px] shadow-subtle border border-neutral-100 p-6 space-y-5">
         <div>
           <label htmlFor="title" className="block text-sm font-medium text-neutral-700 mb-1.5">
             Title <span className="text-danger">*</span>
@@ -97,7 +97,7 @@ export default function CreateTicketPage() {
               id="category"
               value={category}
               onChange={(e) => setCategory(e.target.value as TicketCategory)}
-              className="w-full px-4 py-2 border border-neutral-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
+              className="w-full px-4 py-2 border border-neutral-200 rounded-lg text-sm bg-card focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
             >
               {CATEGORY_OPTIONS.map((c) => (
                 <option key={c} value={c}>{c.replace("_", " ")}</option>
@@ -112,7 +112,7 @@ export default function CreateTicketPage() {
               id="priority"
               value={priority}
               onChange={(e) => setPriority(e.target.value as TicketPriority)}
-              className="w-full px-4 py-2 border border-neutral-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
+              className="w-full px-4 py-2 border border-neutral-200 rounded-lg text-sm bg-card focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
             >
               {PRIORITY_OPTIONS.map((p) => (
                 <option key={p} value={p}>{p}</option>

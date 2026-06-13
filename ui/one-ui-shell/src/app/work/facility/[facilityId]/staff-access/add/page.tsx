@@ -18,7 +18,7 @@ export default function FacilityStaffAccessAddPage() {
   return (
     <AdministrationGovernanceShell title="Assign Verified Provider / Worker" requireGovernanceEntry={false}>
       <div className="space-y-6">
-        <Link href={`/work/facility/${facilityId}/staff-access`} className="inline-flex items-center gap-1 text-sm text-slate-600 hover:text-slate-900">
+        <Link href={`/work/facility/${facilityId}/staff-access`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" />
           Staff & Access
         </Link>

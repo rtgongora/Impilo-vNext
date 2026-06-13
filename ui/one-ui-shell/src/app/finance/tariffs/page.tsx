@@ -73,9 +73,9 @@ function useLegacyLineTariffs() {
 
 const STATUS_STYLES: Record<string, string> = {
   ACTIVE: "bg-green-100 text-green-700",
-  INACTIVE: "bg-gray-100 text-gray-600",
+  INACTIVE: "bg-neutral-100 text-muted-foreground",
   DRAFT: "bg-yellow-100 text-yellow-700",
-  SUPERSEDED: "bg-impilo-100 text-impilo-600",
+  SUPERSEDED: "bg-primary-soft text-primary",
 };
 
 export default function TariffsPage() {
@@ -127,7 +127,7 @@ export default function TariffsPage() {
         <div className="mb-4">
           <Link
             href={withHandoff("/finance")}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to finance
@@ -135,14 +135,14 @@ export default function TariffsPage() {
         </div>
 
         {error && !listsQ.data ? (
-          <div className="bg-white rounded-lg border border-red-200 p-12 text-center">
+          <div className="bg-card rounded-lg border border-danger/28 p-12 text-center">
             <AlertCircle className="w-10 h-10 text-red-300 mx-auto mb-3" />
             <p className="text-red-600 text-sm">Failed to load tariff library from COSTA (check BFF and COSTA_BASE_URL)</p>
           </div>
         ) : isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading tariff library…</span>
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading tariff library…</span>
           </div>
         ) : (
           <div className="space-y-6">
@@ -176,18 +176,18 @@ export default function TariffsPage() {
               ]}
             />
 
-            <div className="rounded-lg border border-amber-200 bg-amber-50/80 p-4 text-sm text-amber-900">
+            <div className="rounded-lg border border-warning/35 bg-warning-soft/80 p-4 text-sm text-warning-foreground">
               <p className="font-medium flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 shrink-0" />
                 Reference tariffs
               </p>
-              <p className="mt-1 text-amber-800">{REFERENCE_TARIFF_WARNING}</p>
+              <p className="mt-1 text-warning-foreground">{REFERENCE_TARIFF_WARNING}</p>
             </div>
 
             {lists.length === 0 ? (
-              <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-                <BookOpen className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500 text-sm">No tariff lists returned. Run COSTA migrations (V007+) and ensure the BFF can reach costing-engine.</p>
+              <div className="bg-card rounded-lg border border-border p-12 text-center">
+                <BookOpen className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                <p className="text-muted-foreground text-sm">No tariff lists returned. Run COSTA migrations (V007+) and ensure the BFF can reach costing-engine.</p>
               </div>
             ) : (
               <div className="space-y-8">
@@ -203,8 +203,8 @@ export default function TariffsPage() {
                   return (
                     <section key={section.key} className="space-y-3">
                       <div>
-                        <h2 className="text-base font-semibold text-slate-900">{section.title}</h2>
-                        <p className="text-sm text-slate-500">{section.description}</p>
+                        <h2 className="text-base font-semibold text-foreground">{section.title}</h2>
+                        <p className="text-sm text-muted-foreground">{section.description}</p>
                       </div>
                       <div className="space-y-4">
                         {section.key === "uploaded_operational"
@@ -217,7 +217,7 @@ export default function TariffsPage() {
                               }
                               return Array.from(byChannel.entries()).map(([channel, rows]) => (
                                 <div key={channel}>
-                                  <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
+                                  <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
                                     {channel === "other" ? "Other uploads" : channel}
                                   </h3>
                                   <TariffListTable rows={rows.map((r) => r.list)} />
@@ -236,31 +236,31 @@ export default function TariffsPage() {
 
             {legacyRows.length > 0 ? (
               <div className="space-y-2">
-                <h2 className="text-sm font-semibold text-slate-800">Legacy line-item schedule (TariffEntity)</h2>
-                <p className="text-xs text-slate-500">From GET /internal/v1/finance/tariffs — older flat import; prefer tariff library lists above for pricing context.</p>
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <h2 className="text-sm font-semibold text-foreground">Legacy line-item schedule (TariffEntity)</h2>
+                <p className="text-xs text-muted-foreground">From GET /internal/v1/finance/tariffs — older flat import; prefer tariff library lists above for pricing context.</p>
+                <div className="bg-card rounded-lg border border-border overflow-hidden">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b bg-gray-50">
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">Service Code</th>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">Description</th>
-                        <th className="text-right px-4 py-3 font-medium text-gray-600">Amount</th>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">Effective</th>
-                        <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
+                      <tr className="border-b bg-background">
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">Service Code</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">Description</th>
+                        <th className="text-right px-4 py-3 font-medium text-muted-foreground">Amount</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">Effective</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                       {legacyRows.map((tariff) => {
-                        const statusStyle = STATUS_STYLES[tariff.attributes.status] ?? "bg-gray-100 text-gray-600";
+                        const statusStyle = STATUS_STYLES[tariff.attributes.status] ?? "bg-neutral-100 text-muted-foreground";
                         return (
-                          <tr key={tariff.id} className="hover:bg-gray-50 transition-colors">
-                            <td className="px-4 py-3 font-mono text-xs text-gray-900">{tariff.attributes.serviceCode}</td>
-                            <td className="px-4 py-3 text-gray-600">{tariff.attributes.description}</td>
-                            <td className="px-4 py-3 text-right font-mono text-gray-900">
+                          <tr key={tariff.id} className="hover:bg-background transition-colors">
+                            <td className="px-4 py-3 font-mono text-xs text-foreground">{tariff.attributes.serviceCode}</td>
+                            <td className="px-4 py-3 text-muted-foreground">{tariff.attributes.description}</td>
+                            <td className="px-4 py-3 text-right font-mono text-foreground">
                               {tariff.attributes.currency}{" "}
                               {tariff.attributes.tariffAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                             </td>
-                            <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
+                            <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
                               {new Date(tariff.attributes.effectiveDate).toLocaleDateString()}
                             </td>
                             <td className="px-4 py-3">
@@ -285,16 +285,16 @@ export default function TariffsPage() {
 
 function TariffListTable({ rows }: { rows: CostaTariffListRow[] }) {
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto">
+    <div className="bg-card rounded-lg border border-border overflow-x-auto">
       <table className="w-full text-sm min-w-[800px]">
         <thead>
-          <tr className="border-b bg-gray-50">
-            <th className="text-left px-4 py-3 font-medium text-gray-600">Name</th>
-            <th className="text-left px-4 py-3 font-medium text-gray-600">Code</th>
-            <th className="text-left px-4 py-3 font-medium text-gray-600">Type / family</th>
-            <th className="text-left px-4 py-3 font-medium text-gray-600">Operational / reference</th>
-            <th className="text-left px-4 py-3 font-medium text-gray-600">Currency & dates</th>
-            <th className="text-left px-4 py-3 font-medium text-gray-600">Validation</th>
+          <tr className="border-b bg-background">
+            <th className="text-left px-4 py-3 font-medium text-muted-foreground">Name</th>
+            <th className="text-left px-4 py-3 font-medium text-muted-foreground">Code</th>
+            <th className="text-left px-4 py-3 font-medium text-muted-foreground">Type / family</th>
+            <th className="text-left px-4 py-3 font-medium text-muted-foreground">Operational / reference</th>
+            <th className="text-left px-4 py-3 font-medium text-muted-foreground">Currency & dates</th>
+            <th className="text-left px-4 py-3 font-medium text-muted-foreground">Validation</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
@@ -302,46 +302,46 @@ function TariffListTable({ rows }: { rows: CostaTariffListRow[] }) {
             const meta = parseTariffMetadata(list.metadata);
             const isZwPoc = list.externalCode === "ZW-PLACEHOLDER-POC-V0.1";
             return (
-              <tr key={list.id} className="hover:bg-gray-50 align-top">
-                <td className="px-4 py-3 text-gray-900">
+              <tr key={list.id} className="hover:bg-background align-top">
+                <td className="px-4 py-3 text-foreground">
                   <div className="font-medium">{list.name}</div>
-                  {list.description ? <div className="text-xs text-slate-500 mt-0.5">{list.description}</div> : null}
+                  {list.description ? <div className="text-xs text-muted-foreground mt-0.5">{list.description}</div> : null}
                   {isZwPoc ? (
-                    <div className="text-xs text-amber-700 mt-1 border-l-2 border-amber-300 pl-2">{ZIMBABWE_POC_DISCLAIMER}</div>
+                    <div className="text-xs text-warning-foreground mt-1 border-l-2 border-amber-300 pl-2">{ZIMBABWE_POC_DISCLAIMER}</div>
                   ) : null}
                 </td>
-                <td className="px-4 py-3 font-mono text-xs text-gray-800">{list.externalCode}</td>
-                <td className="px-4 py-3 text-gray-600">
+                <td className="px-4 py-3 font-mono text-xs text-foreground">{list.externalCode}</td>
+                <td className="px-4 py-3 text-muted-foreground">
                   <div>{list.tariffType}</div>
-                  <div className="text-xs text-slate-500">{list.tariffFamily}</div>
+                  <div className="text-xs text-muted-foreground">{list.tariffFamily}</div>
                 </td>
                 <td className="px-4 py-3">
                   {list.referenceOnly ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 text-amber-800 px-2 py-0.5 text-xs">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 text-warning-foreground px-2 py-0.5 text-xs">
                       <AlertTriangle className="h-3 w-3" />
                       Reference only
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 text-emerald-800 px-2 py-0.5 text-xs">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 text-primary-hover px-2 py-0.5 text-xs">
                       Operational
                     </span>
                   )}
-                  <div className="text-xs text-slate-500 mt-1">
+                  <div className="text-xs text-muted-foreground mt-1">
                     Billing: {list.approvedForBilling ? "approved" : "not approved"}
                   </div>
                 </td>
-                <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+                <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
                   <div>{list.currency}</div>
-                  <div className="text-xs text-slate-500">
+                  <div className="text-xs text-muted-foreground">
                     {list.effectiveFrom ?? "—"} → {list.effectiveTo ?? "open"}
                   </div>
                   {meta?.provenance && typeof meta.provenance === "string" ? (
-                    <div className="text-xs text-slate-400 mt-1">Source: {meta.provenance}</div>
+                    <div className="text-xs text-muted-foreground mt-1">Source: {meta.provenance}</div>
                   ) : null}
                 </td>
-                <td className="px-4 py-3 text-xs text-gray-600">
+                <td className="px-4 py-3 text-xs text-muted-foreground">
                   <div>{list.validationStatus}</div>
-                  <div className="text-slate-500">{list.officialStatus}</div>
+                  <div className="text-muted-foreground">{list.officialStatus}</div>
                 </td>
               </tr>
             );

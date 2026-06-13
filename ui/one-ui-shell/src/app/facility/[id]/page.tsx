@@ -65,7 +65,7 @@ export default function FacilityDetailPage() {
         <div className="mb-4">
           <Link
             href="/facility"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="w-4 h-4" /> Back to Facilities
           </Link>
@@ -73,38 +73,38 @@ export default function FacilityDetailPage() {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading facility...</span>
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading facility...</span>
           </div>
         ) : error || !facility ? (
-          <div className="bg-red-50 rounded-lg border border-red-200 p-6 text-center">
+          <div className="bg-danger-soft rounded-lg border border-danger/28 p-6 text-center">
             <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-2" />
             <p className="text-red-600 text-sm">Failed to load facility</p>
           </div>
         ) : (
           <div className="max-w-3xl space-y-6">
             {/* Header */}
-            <div className="bg-white rounded-lg border border-gray-200 p-5">
+            <div className="bg-card rounded-lg border border-border p-5">
               <div className="flex items-start gap-4 mb-4">
-                <div className="w-12 h-12 rounded-lg bg-impilo-100 flex items-center justify-center shrink-0">
-                  <Building2 className="w-6 h-6 text-impilo-500" />
+                <div className="w-12 h-12 rounded-lg bg-primary-soft flex items-center justify-center shrink-0">
+                  <Building2 className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-medium text-gray-900">{facility.attributes.name}</h3>
-                  <p className="text-sm text-gray-500">
+                  <h3 className="text-lg font-medium text-foreground">{facility.attributes.name}</h3>
+                  <p className="text-sm text-muted-foreground">
                     {facility.attributes.code} &middot; {facility.attributes.facilityType}
                   </p>
                 </div>
               </div>
               <dl className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div>
-                  <dt className="text-gray-500">Status</dt>
+                  <dt className="text-muted-foreground">Status</dt>
                   <dd className="mt-0.5">
                     <span
                       className={`inline-block px-2 py-0.5 text-xs rounded-full font-medium ${
                         facility.attributes.status === "ACTIVE"
                           ? "bg-green-100 text-green-700"
-                          : "bg-gray-100 text-gray-700"
+                          : "bg-neutral-100 text-foreground"
                       }`}
                     >
                       {facility.attributes.status}
@@ -112,21 +112,21 @@ export default function FacilityDetailPage() {
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-gray-500">District</dt>
-                  <dd className="font-medium text-gray-900 mt-0.5">
+                  <dt className="text-muted-foreground">District</dt>
+                  <dd className="font-medium text-foreground mt-0.5">
                     {facility.attributes.district || "\u2014"}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-gray-500">Province</dt>
-                  <dd className="font-medium text-gray-900 mt-0.5">
+                  <dt className="text-muted-foreground">Province</dt>
+                  <dd className="font-medium text-foreground mt-0.5">
                     {facility.attributes.province || "\u2014"}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-gray-500">Staff</dt>
-                  <dd className="font-medium text-gray-900 mt-0.5 flex items-center gap-1">
-                    <Users className="w-4 h-4 text-gray-400" />
+                  <dt className="text-muted-foreground">Staff</dt>
+                  <dd className="font-medium text-foreground mt-0.5 flex items-center gap-1">
+                    <Users className="w-4 h-4 text-muted-foreground" />
                     {facility.attributes.staffCount ?? "\u2014"}
                   </dd>
                 </div>
@@ -135,48 +135,48 @@ export default function FacilityDetailPage() {
 
             {/* Capacity Stats */}
             <div className="grid grid-cols-3 gap-4">
-              <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
+              <div className="bg-card rounded-lg border border-border p-4 text-center">
                 <LayoutGrid className="w-6 h-6 text-impilo-400 mx-auto mb-1" />
-                <p className="text-xl font-bold text-gray-900">
+                <p className="text-xl font-bold text-foreground">
                   {facility.attributes.workspaceCount ?? 0}
                 </p>
-                <p className="text-xs text-gray-500">Workspaces</p>
+                <p className="text-xs text-muted-foreground">Workspaces</p>
               </div>
-              <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
+              <div className="bg-card rounded-lg border border-border p-4 text-center">
                 <Activity className="w-6 h-6 text-green-500 mx-auto mb-1" />
-                <p className="text-xl font-bold text-gray-900">
+                <p className="text-xl font-bold text-foreground">
                   {facility.attributes.bedCapacity ?? 0}
                 </p>
-                <p className="text-xs text-gray-500">Bed Capacity</p>
+                <p className="text-xs text-muted-foreground">Bed Capacity</p>
               </div>
-              <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
+              <div className="bg-card rounded-lg border border-border p-4 text-center">
                 <Users className="w-6 h-6 text-amber-500 mx-auto mb-1" />
-                <p className="text-xl font-bold text-gray-900">
+                <p className="text-xl font-bold text-foreground">
                   {facility.attributes.occupiedBeds ?? 0}
                 </p>
-                <p className="text-xs text-gray-500">Occupied Beds</p>
+                <p className="text-xs text-muted-foreground">Occupied Beds</p>
               </div>
             </div>
 
             {/* Workspaces */}
             {(facility.attributes.workspaces?.length ?? 0) > 0 && (
-              <div className="bg-white rounded-lg border border-gray-200 p-5">
-                <h3 className="font-medium text-gray-900 mb-3">Workspaces</h3>
+              <div className="bg-card rounded-lg border border-border p-5">
+                <h3 className="font-medium text-foreground mb-3">Workspaces</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                   {facility.attributes.workspaces.map((ws) => (
                     <Link
                       key={ws.id}
                       href={`/workspace/${ws.id}`}
-                      className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                      className="p-3 bg-background rounded-lg hover:bg-neutral-100 transition-colors"
                     >
-                      <p className="text-sm font-medium text-gray-900">{ws.name}</p>
+                      <p className="text-sm font-medium text-foreground">{ws.name}</p>
                       <div className="flex items-center justify-between mt-1">
-                        <span className="text-xs text-gray-500">{ws.workspaceType}</span>
+                        <span className="text-xs text-muted-foreground">{ws.workspaceType}</span>
                         <span
                           className={`inline-block px-1.5 py-0.5 text-xs rounded-full ${
                             ws.status === "ACTIVE"
                               ? "bg-green-100 text-green-700"
-                              : "bg-gray-100 text-gray-600"
+                              : "bg-neutral-100 text-muted-foreground"
                           }`}
                         >
                           {ws.status}
@@ -189,28 +189,28 @@ export default function FacilityDetailPage() {
             )}
 
             {/* Capabilities */}
-            <div className="bg-white rounded-lg border border-gray-200 p-5">
-              <h3 className="font-medium text-gray-900 mb-3">Capabilities</h3>
+            <div className="bg-card rounded-lg border border-border p-5">
+              <h3 className="font-medium text-foreground mb-3">Capabilities</h3>
               {facility.attributes.capabilities.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {facility.attributes.capabilities.map((cap) => (
                     <span
                       key={cap}
-                      className="inline-block px-3 py-1 text-xs rounded-full bg-impilo-50 text-impilo-600 font-medium"
+                      className="inline-block px-3 py-1 text-xs rounded-full bg-primary-soft text-primary font-medium"
                     >
                       {cap}
                     </span>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-gray-400">No capabilities listed</p>
+                <p className="text-sm text-muted-foreground">No capabilities listed</p>
               )}
             </div>
 
             {/* Services */}
             {(facility.attributes.services?.length ?? 0) > 0 && (
-              <div className="bg-white rounded-lg border border-gray-200 p-5">
-                <h3 className="font-medium text-gray-900 mb-3">Services</h3>
+              <div className="bg-card rounded-lg border border-border p-5">
+                <h3 className="font-medium text-foreground mb-3">Services</h3>
                 <div className="flex flex-wrap gap-2">
                   {facility.attributes.services.map((svc) => (
                     <span

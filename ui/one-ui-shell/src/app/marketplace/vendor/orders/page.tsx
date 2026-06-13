@@ -80,7 +80,7 @@ export default function MarketplaceVendorOrdersPage() {
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <Link
             href="/marketplace/vendor"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" /> Vendor workspace
           </Link>
@@ -88,51 +88,51 @@ export default function MarketplaceVendorOrdersPage() {
             type="button"
             disabled={!vendorId || ordersQ.isFetching}
             onClick={() => void ordersQ.refetch()}
-            className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-2 py-1 text-xs text-foreground hover:bg-background disabled:opacity-50"
           >
             <RefreshCw className="h-3.5 w-3.5" /> Refresh list
           </button>
         </div>
 
         {!vendorId ? (
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-5">
+          <div className="rounded-xl border border-warning/35 bg-warning-soft p-5">
             <div className="flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-amber-700 mt-0.5 shrink-0" />
-              <div className="text-sm text-amber-950">
+              <AlertTriangle className="h-5 w-5 text-warning-foreground mt-0.5 shrink-0" />
+              <div className="text-sm text-warning-foreground">
                 <p className="font-medium">Set a vendor ID first</p>
-                <p className="mt-1 text-amber-900/90">
+                <p className="mt-1 text-warning-foreground/90">
                   Use <code className="text-xs">?vendorId=…</code> on this URL or save a vendor ID on the vendor workspace
                   page. This keeps the scope explicit for Experience operators.
                 </p>
-                <Link href="/marketplace/vendor" className="mt-2 inline-block font-medium text-amber-950 hover:underline">
+                <Link href="/marketplace/vendor" className="mt-2 inline-block font-medium text-warning-foreground hover:underline">
                   Open vendor workspace
                 </Link>
               </div>
             </div>
           </div>
         ) : ordersQ.isLoading ? (
-          <div className="flex items-center justify-center py-16 text-sm text-gray-500">
+          <div className="flex items-center justify-center py-16 text-sm text-muted-foreground">
             <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Loading vendor orders…
           </div>
         ) : ordersQ.isError ? (
-          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-900">
+          <div className="rounded-lg border border-danger/28 bg-danger-soft p-4 text-sm text-red-900">
             Could not load orders for this vendor. Check the vendor ID and BFF connectivity.
           </div>
         ) : (
           <div className="space-y-4">
-            <p className="text-xs text-slate-500 break-all">
+            <p className="text-xs text-muted-foreground break-all">
               Vendor: <span className="font-mono">{vendorId}</span> —{" "}
               <code className="text-[11px]">GET /internal/v1/commerce/vendor/&#123;vendorId&#125;/orders</code>
             </p>
 
             {rows.length === 0 ? (
-              <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+              <div className="rounded-lg border border-border bg-background p-4 text-sm text-foreground">
                 No order rows parsed from the response (upstream shape may differ). Raw payload below.
               </div>
             ) : (
-              <div className="overflow-x-auto rounded-xl border border-slate-200">
+              <div className="overflow-x-auto rounded-xl border border-border">
                 <table className="w-full min-w-[640px] text-sm">
-                  <thead className="bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-600">
+                  <thead className="bg-background text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                     <tr>
                       <th className="px-3 py-2">Order</th>
                       <th className="px-3 py-2">Status</th>
@@ -150,23 +150,23 @@ export default function MarketplaceVendorOrdersPage() {
                             : "—";
                       const key = oid || `row-${idx}`;
                       return (
-                        <tr key={key} className="bg-white">
+                        <tr key={key} className="bg-card">
                           <td className="px-3 py-2 font-mono text-xs">
                             {oid ? (
-                              <Link href={`/marketplace/orders/${encodeURIComponent(oid)}`} className="text-impilo-600 hover:underline">
+                              <Link href={`/marketplace/orders/${encodeURIComponent(oid)}`} className="text-primary hover:underline">
                                 {oid}
                               </Link>
                             ) : (
-                              <span className="text-amber-700">(no id)</span>
+                              <span className="text-warning-foreground">(no id)</span>
                             )}
                           </td>
-                          <td className="px-3 py-2 text-slate-700">{status}</td>
+                          <td className="px-3 py-2 text-foreground">{status}</td>
                           <td className="px-3 py-2 text-right">
                             <div className="flex flex-wrap justify-end gap-1">
                               <button
                                 type="button"
                                 disabled={busy || !oid}
-                                className="rounded border border-slate-200 px-2 py-1 text-[11px] font-medium hover:bg-slate-50 disabled:opacity-40"
+                                className="rounded border border-border px-2 py-1 text-[11px] font-medium hover:bg-background disabled:opacity-40"
                                 onClick={() => acceptM.mutate({ vendorId, orderId: oid })}
                               >
                                 Accept
@@ -174,7 +174,7 @@ export default function MarketplaceVendorOrdersPage() {
                               <button
                                 type="button"
                                 disabled={busy || !oid}
-                                className="rounded border border-slate-200 px-2 py-1 text-[11px] font-medium hover:bg-slate-50 disabled:opacity-40"
+                                className="rounded border border-border px-2 py-1 text-[11px] font-medium hover:bg-background disabled:opacity-40"
                                 onClick={() => readyM.mutate({ orderId: oid })}
                               >
                                 Mark ready
@@ -182,7 +182,7 @@ export default function MarketplaceVendorOrdersPage() {
                               <button
                                 type="button"
                                 disabled={busy || !oid}
-                                className="rounded border border-slate-200 px-2 py-1 text-[11px] font-medium hover:bg-slate-50 disabled:opacity-40"
+                                className="rounded border border-border px-2 py-1 text-[11px] font-medium hover:bg-background disabled:opacity-40"
                                 onClick={() => deliveredM.mutate({ orderId: oid })}
                               >
                                 Mark delivered
@@ -190,7 +190,7 @@ export default function MarketplaceVendorOrdersPage() {
                               <button
                                 type="button"
                                 disabled={busy || !oid}
-                                className="rounded border border-indigo-200 px-2 py-1 text-[11px] font-medium text-indigo-800 hover:bg-indigo-50 disabled:opacity-40"
+                                className="rounded border border-info/25 px-2 py-1 text-[11px] font-medium text-primary-hover hover:bg-info-soft disabled:opacity-40"
                                 onClick={() => {
                                   setSubError(null);
                                   setSubOrderId(oid);
@@ -215,25 +215,25 @@ export default function MarketplaceVendorOrdersPage() {
 
         {subOrderId ? (
           <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/30 p-4 sm:items-center">
-            <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-slate-200 bg-white p-5 shadow-lg">
-              <h3 className="text-sm font-semibold text-slate-900">Propose Rx substitution</h3>
-              <p className="mt-1 text-xs text-slate-500 break-all">Order: {subOrderId}</p>
-              <p className="mt-1 text-xs text-slate-500">
+            <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-border bg-card p-5 shadow-lg">
+              <h3 className="text-sm font-semibold text-foreground">Propose Rx substitution</h3>
+              <p className="mt-1 text-xs text-muted-foreground break-all">Order: {subOrderId}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
                 POST JSON body to{" "}
                 <code className="text-[10px]">/internal/v1/commerce/vendor/rx/&#123;orderId&#125;/substitution/propose</code>.
                 Shape is defined by MSIKA Flow; edit the JSON to match your environment.
               </p>
               <textarea
-                className="mt-3 w-full min-h-[140px] rounded-lg border border-slate-200 p-2 font-mono text-xs"
+                className="mt-3 w-full min-h-[140px] rounded-lg border border-border p-2 font-mono text-xs"
                 value={subJson}
                 onChange={(e) => setSubJson(e.target.value)}
                 aria-label="Substitution JSON body"
               />
-              {subError ? <p className="mt-2 text-xs text-red-700">{subError}</p> : null}
+              {subError ? <p className="mt-2 text-xs text-danger">{subError}</p> : null}
               <div className="mt-3 flex justify-end gap-2">
                 <button
                   type="button"
-                  className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm"
+                  className="rounded-lg border border-border px-3 py-1.5 text-sm"
                   onClick={() => setSubOrderId(null)}
                 >
                   Cancel
@@ -241,7 +241,7 @@ export default function MarketplaceVendorOrdersPage() {
                 <button
                   type="button"
                   disabled={subM.isPending}
-                  className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                  className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-primary disabled:opacity-50"
                   onClick={() => {
                     let parsed: unknown;
                     try {

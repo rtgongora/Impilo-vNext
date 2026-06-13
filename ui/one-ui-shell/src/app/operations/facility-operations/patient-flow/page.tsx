@@ -39,14 +39,14 @@ function FlowColumn({
   empty: string;
 }) {
   return (
-    <div className={`rounded-2xl border bg-white ${tone}`}>
-      <div className="border-b border-slate-100 px-4 py-3">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-600">{title}</h3>
-        <p className="text-[11px] text-slate-400">{entries.length} entr{entries.length === 1 ? "y" : "ies"}</p>
+    <div className={`rounded-2xl border bg-card ${tone}`}>
+      <div className="border-b border-border px-4 py-3">
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</h3>
+        <p className="text-[11px] text-muted-foreground">{entries.length} entr{entries.length === 1 ? "y" : "ies"}</p>
       </div>
       <div className="max-h-[min(60vh,520px)] space-y-2 overflow-y-auto p-3">
         {entries.length === 0 ? (
-          <p className="px-1 py-6 text-center text-xs text-slate-500">{empty}</p>
+          <p className="px-1 py-6 text-center text-xs text-muted-foreground">{empty}</p>
         ) : (
           entries.map((e) => {
             const pid = getQueuePatientId(e);
@@ -55,21 +55,21 @@ function FlowColumn({
             const wait = at ? formatQueueWaitTime(at) : "â€”";
             const st = String(e.attributes.status ?? "");
             return (
-              <div key={e.id} className="rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2">
+              <div key={e.id} className="rounded-xl border border-border bg-background/80 px-3 py-2">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-semibold text-slate-900">{label}</span>
-                  <span className="text-[10px] font-mono text-slate-500">{st}</span>
+                  <span className="text-xs font-semibold text-foreground">{label}</span>
+                  <span className="text-[10px] font-mono text-muted-foreground">{st}</span>
                 </div>
-                <p className="mt-1 text-[11px] text-slate-600">Waiting {wait}</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">Waiting {wait}</p>
                 {pid ? (
                   <Link
                     href={`/ehr/${pid}`}
-                    className="mt-2 inline-block text-[11px] font-semibold text-impilo-700 underline"
+                    className="mt-2 inline-block text-[11px] font-semibold text-primary-hover underline"
                   >
                     Open chart
                   </Link>
                 ) : (
-                  <p className="mt-2 text-[10px] text-slate-500">Patient id not available on this entry.</p>
+                  <p className="mt-2 text-[10px] text-muted-foreground">Patient id not available on this entry.</p>
                 )}
               </div>
             );
@@ -130,21 +130,21 @@ export default function PatientFlowBoardPage() {
     if (!stats) return null;
     return (
       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div className="rounded-xl border border-slate-200 bg-white p-3">
-          <dt className="text-[10px] font-semibold uppercase text-slate-500">Waiting (stats)</dt>
-          <dd className="text-lg font-bold text-slate-900">{stats.waiting}</dd>
+        <div className="rounded-xl border border-border bg-card p-3">
+          <dt className="text-[10px] font-semibold uppercase text-muted-foreground">Waiting (stats)</dt>
+          <dd className="text-lg font-bold text-foreground">{stats.waiting}</dd>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-3">
-          <dt className="text-[10px] font-semibold uppercase text-slate-500">Called</dt>
-          <dd className="text-lg font-bold text-slate-900">{stats.called}</dd>
+        <div className="rounded-xl border border-border bg-card p-3">
+          <dt className="text-[10px] font-semibold uppercase text-muted-foreground">Called</dt>
+          <dd className="text-lg font-bold text-foreground">{stats.called}</dd>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-3">
-          <dt className="text-[10px] font-semibold uppercase text-slate-500">In service</dt>
-          <dd className="text-lg font-bold text-slate-900">{stats.inService}</dd>
+        <div className="rounded-xl border border-border bg-card p-3">
+          <dt className="text-[10px] font-semibold uppercase text-muted-foreground">In service</dt>
+          <dd className="text-lg font-bold text-foreground">{stats.inService}</dd>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-3">
-          <dt className="text-[10px] font-semibold uppercase text-slate-500">Appts today</dt>
-          <dd className="text-lg font-bold text-slate-900">
+        <div className="rounded-xl border border-border bg-card p-3">
+          <dt className="text-[10px] font-semibold uppercase text-muted-foreground">Appts today</dt>
+          <dd className="text-lg font-bold text-foreground">
             {appointmentsTodayQ.isLoading ? "â€¦" : (appointmentsTodayQ.data ?? "â€”")}
           </dd>
         </div>
@@ -161,7 +161,7 @@ export default function PatientFlowBoardPage() {
         <div className="mb-4">
           <Link
             href="/operations/facility-operations"
-            className="inline-flex items-center gap-1 text-xs font-semibold text-impilo-700 hover:text-impilo-900"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-primary-hover hover:text-impilo-900"
           >
             <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
             Facility operations hub
@@ -169,12 +169,12 @@ export default function PatientFlowBoardPage() {
         </div>
 
         {!fid ? (
-          <div className="rounded-xl border border-amber-200 bg-amber-50/80 p-6 text-sm text-amber-950">
+          <div className="rounded-xl border border-warning/35 bg-warning-soft/80 p-6 text-sm text-warning-foreground">
             Select a facility to load patient flow.
           </div>
         ) : loading ? (
-          <div className="flex items-center gap-2 py-16 text-sm text-slate-500">
-            <Activity className="h-5 w-5 animate-pulse text-impilo-500" aria-hidden />
+          <div className="flex items-center gap-2 py-16 text-sm text-muted-foreground">
+            <Activity className="h-5 w-5 animate-pulse text-primary" aria-hidden />
             Loading flow dataâ€¦
           </div>
         ) : (
@@ -189,7 +189,7 @@ export default function PatientFlowBoardPage() {
               />
               <FlowColumn
                 title="Called"
-                tone="border-impilo-100"
+                tone="border-primary/20"
                 entries={c}
                 empty="No CALLED entries â€” patients not currently paged."
               />
@@ -202,10 +202,10 @@ export default function PatientFlowBoardPage() {
             </div>
 
             <div>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 PCT journey lanes (waiting by queue type)
               </h3>
-              <p className="mt-1 text-[11px] text-slate-500">
+              <p className="mt-1 text-[11px] text-muted-foreground">
                 Each tile counts WAITING items for the queue type resolved by the BFF from PCT. Zeros are valid when no
                 queue exists for that lane.
               </p>
@@ -216,15 +216,15 @@ export default function PatientFlowBoardPage() {
                   { title: "Laboratory", n: laneLab.data?.data?.length ?? 0 },
                   { title: "Pharmacy", n: lanePharm.data?.data?.length ?? 0 },
                 ].map((lane) => (
-                  <div key={lane.title} className="rounded-xl border border-slate-200 bg-white p-3">
-                    <dt className="text-[10px] font-semibold uppercase text-slate-500">{lane.title}</dt>
-                    <dd className="text-lg font-bold text-slate-900">{lane.n}</dd>
+                  <div key={lane.title} className="rounded-xl border border-border bg-card p-3">
+                    <dt className="text-[10px] font-semibold uppercase text-muted-foreground">{lane.title}</dt>
+                    <dd className="text-lg font-bold text-foreground">{lane.n}</dd>
                   </div>
                 ))}
               </dl>
             </div>
 
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-muted-foreground">
               For per-patient PCT timeline composition (encounters, orders, referrals), use the chart timeline; this
               board stays queue-first. Pharmacy, imaging, and payment coverage still have dedicated work routes.
             </p>

@@ -131,7 +131,7 @@ export default function ClinicalHistoryPage() {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>
         ) : (
           <div className="space-y-5">
@@ -175,12 +175,12 @@ export default function ClinicalHistoryPage() {
             />
             {/* Presenting Complaint — from active encounter */}
             {activeEncounter && typeof (activeEncounter.attributes as Record<string, unknown>).chief_complaint === "string" && (
-              <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <div className="bg-card rounded-lg border border-border p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <FileText className="w-4 h-4 text-impilo-400" />
-                  <h3 className="text-sm font-medium text-gray-900">Presenting Complaint</h3>
+                  <h3 className="text-sm font-medium text-foreground">Presenting Complaint</h3>
                 </div>
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-foreground">
                   {String((activeEncounter.attributes as Record<string, unknown>).chief_complaint)}
                 </p>
               </div>
@@ -188,11 +188,11 @@ export default function ClinicalHistoryPage() {
 
             {/* History of Present Illness — capture */}
             {activeEncounter && (
-              <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <div className="bg-card rounded-lg border border-border p-4">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <FileText className="w-4 h-4 text-indigo-500" />
-                    <h3 className="text-sm font-medium text-gray-900">History of Present Illness</h3>
+                    <h3 className="text-sm font-medium text-foreground">History of Present Illness</h3>
                   </div>
                   {hpiSaved && (
                     <span className="text-xs text-green-600 flex items-center gap-1">
@@ -205,12 +205,12 @@ export default function ClinicalHistoryPage() {
                   onChange={(e) => setHpiText(e.target.value)}
                   rows={4}
                   placeholder="Document the history of presenting illness — onset, duration, character, associated symptoms, aggravating/relieving factors, previous treatments..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                  className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
                 />
                 <button
                   onClick={handleSaveHPI}
                   disabled={hpiSaving || !hpiText.trim()}
-                  className="mt-2 px-4 py-1.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2 transition-colors"
+                  className="mt-2 px-4 py-1.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-primary disabled:opacity-50 flex items-center gap-2 transition-colors"
                 >
                   {hpiSaving ? (
                     <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...</>
@@ -223,71 +223,71 @@ export default function ClinicalHistoryPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Past Medical History — active conditions */}
-              <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <div className="bg-card rounded-lg border border-border p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Stethoscope className="w-4 h-4 text-orange-500" />
-                  <h3 className="text-sm font-medium text-gray-900">Past Medical History ({activeConditions.length})</h3>
+                  <h3 className="text-sm font-medium text-foreground">Past Medical History ({activeConditions.length})</h3>
                 </div>
                 {activeConditions.length === 0 ? (
-                  <p className="text-sm text-gray-400">No active conditions recorded</p>
+                  <p className="text-sm text-muted-foreground">No active conditions recorded</p>
                 ) : (
                   <div className="space-y-1.5">
                     {activeConditions.map((c) => (
-                      <div key={c.id} className="flex items-center justify-between p-2 rounded bg-gray-50">
+                      <div key={c.id} className="flex items-center justify-between p-2 rounded bg-background">
                         <div>
-                          <span className="text-sm font-medium text-gray-900">
+                          <span className="text-sm font-medium text-foreground">
                             {String(c.attributes.condition_name ?? c.attributes.conditionName ?? "")}
                           </span>
                           {typeof c.attributes.icd_code === "string" && (
-                            <span className="text-xs text-gray-500 ml-2">
+                            <span className="text-xs text-muted-foreground ml-2">
                               ({String(c.attributes.icd_code ?? c.attributes.icdCode ?? "")})
                             </span>
                           )}
                         </div>
-                        <span className="text-xs text-gray-500 capitalize">
+                        <span className="text-xs text-muted-foreground capitalize">
                           {String(c.attributes.severity ?? "")}
                         </span>
                       </div>
                     ))}
                   </div>
                 )}
-                <Link href={`/ehr/${patientId}/conditions`} className="mt-2 inline-block text-xs text-impilo-500 hover:text-impilo-700">
+                <Link href={`/ehr/${patientId}/conditions`} className="mt-2 inline-block text-xs text-primary hover:text-primary-hover">
                   Manage conditions
                 </Link>
               </div>
 
               {/* Current Medications */}
-              <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <div className="bg-card rounded-lg border border-border p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Pill className="w-4 h-4 text-green-500" />
-                  <h3 className="text-sm font-medium text-gray-900">Current Medications ({activeMeds.length})</h3>
+                  <h3 className="text-sm font-medium text-foreground">Current Medications ({activeMeds.length})</h3>
                 </div>
                 {activeMeds.length === 0 ? (
-                  <p className="text-sm text-gray-400">No active medications</p>
+                  <p className="text-sm text-muted-foreground">No active medications</p>
                 ) : (
                   <div className="space-y-1.5">
                     {activeMeds.map((m) => (
-                      <div key={m.id} className="p-2 rounded bg-gray-50">
-                        <span className="text-sm font-medium text-gray-900">
+                      <div key={m.id} className="p-2 rounded bg-background">
+                        <span className="text-sm font-medium text-foreground">
                           {String(m.attributes.medication_name ?? m.attributes.medicationName ?? "")}
                         </span>
-                        <span className="text-xs text-gray-500 ml-2">
+                        <span className="text-xs text-muted-foreground ml-2">
                           {String(m.attributes.dosage ?? "")} {String(m.attributes.frequency ?? "")}
                         </span>
                       </div>
                     ))}
                   </div>
                 )}
-                <Link href={`/ehr/${patientId}/medications`} className="mt-2 inline-block text-xs text-impilo-500 hover:text-impilo-700">
+                <Link href={`/ehr/${patientId}/medications`} className="mt-2 inline-block text-xs text-primary hover:text-primary-hover">
                   Manage medications
                 </Link>
               </div>
 
               {/* Allergies */}
-              <div className={`bg-white rounded-lg border p-4 ${activeAllergies.some((a) => a.attributes.severity === "SEVERE") ? "border-red-200" : "border-gray-200"}`}>
+              <div className={`bg-card rounded-lg border p-4 ${activeAllergies.some((a) => a.attributes.severity === "SEVERE") ? "border-danger/28" : "border-border"}`}>
                 <div className="flex items-center gap-2 mb-3">
                   <ShieldAlert className={`w-4 h-4 ${activeAllergies.length > 0 ? "text-red-500" : "text-green-500"}`} />
-                  <h3 className="text-sm font-medium text-gray-900">Allergies ({activeAllergies.length})</h3>
+                  <h3 className="text-sm font-medium text-foreground">Allergies ({activeAllergies.length})</h3>
                 </div>
                 {activeAllergies.length === 0 ? (
                   <p className="text-sm text-green-600">No known allergies (NKDA)</p>
@@ -295,39 +295,39 @@ export default function ClinicalHistoryPage() {
                   <div className="space-y-1.5">
                     {activeAllergies.map((a) => (
                       <div key={a.id} className={`p-2 rounded ${
-                        a.attributes.severity === "SEVERE" ? "bg-red-50" : "bg-gray-50"
+                        a.attributes.severity === "SEVERE" ? "bg-danger-soft" : "bg-background"
                       }`}>
                         <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-900">{String(a.attributes.allergen)}</span>
+                          <span className="text-sm font-medium text-foreground">{String(a.attributes.allergen)}</span>
                           <span className={`text-xs capitalize ${
-                            a.attributes.severity === "SEVERE" ? "text-red-700" : "text-gray-500"
+                            a.attributes.severity === "SEVERE" ? "text-danger" : "text-muted-foreground"
                           }`}>{String(a.attributes.severity)}</span>
                         </div>
                         {typeof a.attributes.reaction === "string" && (
-                          <p className="text-xs text-gray-500 mt-0.5">{String(a.attributes.reaction)}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{String(a.attributes.reaction)}</p>
                         )}
                       </div>
                     ))}
                   </div>
                 )}
-                <Link href={`/ehr/${patientId}/allergies`} className="mt-2 inline-block text-xs text-impilo-500 hover:text-impilo-700">
+                <Link href={`/ehr/${patientId}/allergies`} className="mt-2 inline-block text-xs text-primary hover:text-primary-hover">
                   Manage allergies
                 </Link>
               </div>
 
               {/* Resolved Conditions */}
-              <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <div className="bg-card rounded-lg border border-border p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <AlertCircle className="w-4 h-4 text-green-500" />
-                  <h3 className="text-sm font-medium text-gray-900">Resolved Conditions ({resolvedConditions.length})</h3>
+                  <h3 className="text-sm font-medium text-foreground">Resolved Conditions ({resolvedConditions.length})</h3>
                 </div>
                 {resolvedConditions.length === 0 ? (
-                  <p className="text-sm text-gray-400">No resolved conditions</p>
+                  <p className="text-sm text-muted-foreground">No resolved conditions</p>
                 ) : (
                   <div className="space-y-1.5">
                     {resolvedConditions.slice(0, 5).map((c) => (
-                      <div key={c.id} className="flex items-center justify-between p-2 rounded bg-gray-50">
-                        <span className="text-sm text-gray-700">
+                      <div key={c.id} className="flex items-center justify-between p-2 rounded bg-background">
+                        <span className="text-sm text-foreground">
                           {String(c.attributes.condition_name ?? c.attributes.conditionName ?? "")}
                         </span>
                         <span className="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700">Resolved</span>
@@ -339,28 +339,28 @@ export default function ClinicalHistoryPage() {
             </div>
 
             {/* Past Encounters */}
-            <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="bg-card rounded-lg border border-border p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Clock className="w-4 h-4 text-cyan-500" />
-                <h3 className="text-sm font-medium text-gray-900">Past Encounters ({completedEncounters.length})</h3>
+                <h3 className="text-sm font-medium text-foreground">Past Encounters ({completedEncounters.length})</h3>
               </div>
               {completedEncounters.length === 0 ? (
-                <p className="text-sm text-gray-400">No completed encounters</p>
+                <p className="text-sm text-muted-foreground">No completed encounters</p>
               ) : (
                 <div className="space-y-1.5">
                   {completedEncounters.slice(0, 8).map((enc) => (
                     <Link
                       key={enc.id}
                       href={`/ehr/${patientId}/encounter/${enc.id}`}
-                      className="flex items-center justify-between p-2 rounded bg-gray-50 hover:bg-gray-100 transition-colors"
+                      className="flex items-center justify-between p-2 rounded bg-background hover:bg-neutral-100 transition-colors"
                     >
                       <div>
-                        <span className="text-sm font-medium text-gray-900">{enc.attributes.encounterType}</span>
-                        <span className="text-xs text-gray-500 ml-2">
+                        <span className="text-sm font-medium text-foreground">{enc.attributes.encounterType}</span>
+                        <span className="text-xs text-muted-foreground ml-2">
                           {new Date(enc.attributes.startedAt).toLocaleDateString()}
                         </span>
                       </div>
-                      <span className="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600">
+                      <span className="px-2 py-0.5 text-xs rounded-full bg-neutral-100 text-muted-foreground">
                         {enc.attributes.status}
                       </span>
                     </Link>
@@ -371,18 +371,18 @@ export default function ClinicalHistoryPage() {
 
             {/* Immunization History */}
             {immunizations.length > 0 && (
-              <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <div className="bg-card rounded-lg border border-border p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Syringe className="w-4 h-4 text-teal-500" />
-                  <h3 className="text-sm font-medium text-gray-900">Immunizations ({immunizations.length})</h3>
+                  <h3 className="text-sm font-medium text-foreground">Immunizations ({immunizations.length})</h3>
                 </div>
                 <div className="space-y-1.5">
                   {immunizations.slice(0, 8).map((imm) => (
-                    <div key={imm.id} className="flex items-center justify-between p-2 rounded bg-gray-50">
-                      <span className="text-sm text-gray-900">
+                    <div key={imm.id} className="flex items-center justify-between p-2 rounded bg-background">
+                      <span className="text-sm text-foreground">
                         {String(imm.attributes.vaccine_name ?? imm.attributes.vaccineName ?? "")}
                       </span>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-muted-foreground">
                         {imm.attributes.administered_at
                           ? new Date(String(imm.attributes.administered_at ?? imm.attributes.administeredAt)).toLocaleDateString()
                           : ""}
@@ -390,7 +390,7 @@ export default function ClinicalHistoryPage() {
                     </div>
                   ))}
                 </div>
-                <Link href={`/ehr/${patientId}/immunizations`} className="mt-2 inline-block text-xs text-impilo-500 hover:text-impilo-700">
+                <Link href={`/ehr/${patientId}/immunizations`} className="mt-2 inline-block text-xs text-primary hover:text-primary-hover">
                   View all immunizations
                 </Link>
               </div>

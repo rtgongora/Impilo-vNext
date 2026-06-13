@@ -93,13 +93,13 @@ export default function CentralBankPage() {
     <AppLayout>
       <PageShell title="Central Blood Bank" subtitle="National inventory and haemovigilance oversight" icon={<Landmark className="h-6 w-6" />}>
         {isPending && (
-          <div className="flex items-center gap-2 text-gray-500">
+          <div className="flex items-center gap-2 text-muted-foreground">
             <Loader2 className="h-5 w-5 animate-spin" /> Loading central metrics…
           </div>
         )}
 
         {isError && (
-          <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+          <div className="rounded-xl border border-danger/28 bg-danger-soft p-4 text-sm text-rose-800">
             Central metrics unavailable. Verify admin role and retry.
           </div>
         )}
@@ -111,28 +111,28 @@ export default function CentralBankPage() {
               { label: "Available units", value: data.availableUnits },
               { label: "Open haemovigilance cases", value: data.openHaemovigilanceCases },
             ].map(({ label, value }) => (
-              <div key={label} className="rounded-2xl border border-gray-200 bg-white p-5">
-                <p className="text-xs uppercase tracking-wide text-gray-500">{label}</p>
-                <p className="mt-2 text-3xl font-semibold text-gray-900">{String(value ?? 0)}</p>
+              <div key={label} className="rounded-2xl border border-border bg-card p-5">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+                <p className="mt-2 text-3xl font-semibold text-foreground">{String(value ?? 0)}</p>
               </div>
             ))}
           </div>
         )}
 
         {actionMessage ? (
-          <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+          <div className="mb-4 rounded-xl border border-success/25 bg-success-soft px-4 py-3 text-sm text-primary-hover">
             {actionMessage}
           </div>
         ) : null}
         {actionError ? (
-          <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+          <div className="mb-4 rounded-xl border border-danger/28 bg-danger-soft px-4 py-3 text-sm text-rose-800">
             {actionError}
           </div>
         ) : null}
 
-        <section className="rounded-2xl border border-rose-200 bg-rose-50/40 p-5 mb-6 space-y-4">
-          <h2 className="text-sm font-semibold text-rose-900">Emergency redistribution</h2>
-          <p className="text-xs text-gray-600">
+        <section className="rounded-2xl border border-danger/28 bg-danger-soft/40 p-5 mb-6 space-y-4">
+          <h2 className="text-sm font-semibold text-danger">Emergency redistribution</h2>
+          <p className="text-xs text-muted-foreground">
             Request governed emergency allocation between facilities. Approvals are audited and emitted to the MADI event stream.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -140,18 +140,18 @@ export default function CentralBankPage() {
               value={sourceFacilityId}
               onChange={(e) => setSourceFacilityId(e.target.value)}
               placeholder="Source facility UUID"
-              className="rounded-xl border border-gray-300 px-3 py-2 text-sm font-mono"
+              className="rounded-xl border border-border px-3 py-2 text-sm font-mono"
             />
             <input
               value={targetFacilityId}
               onChange={(e) => setTargetFacilityId(e.target.value)}
               placeholder="Target facility UUID"
-              className="rounded-xl border border-gray-300 px-3 py-2 text-sm font-mono"
+              className="rounded-xl border border-border px-3 py-2 text-sm font-mono"
             />
-            <select value={bloodGroup} onChange={(e) => setBloodGroup(e.target.value)} className="rounded-xl border border-gray-300 px-3 py-2 text-sm bg-white">
+            <select value={bloodGroup} onChange={(e) => setBloodGroup(e.target.value)} className="rounded-xl border border-border px-3 py-2 text-sm bg-card">
               {BLOOD_GROUPS.map((g) => <option key={g} value={g}>{g}</option>)}
             </select>
-            <select value={componentType} onChange={(e) => setComponentType(e.target.value)} className="rounded-xl border border-gray-300 px-3 py-2 text-sm bg-white">
+            <select value={componentType} onChange={(e) => setComponentType(e.target.value)} className="rounded-xl border border-border px-3 py-2 text-sm bg-card">
               {COMPONENT_TYPES.map((c) => <option key={c} value={c}>{c.replace(/_/g, " ")}</option>)}
             </select>
             <input
@@ -160,13 +160,13 @@ export default function CentralBankPage() {
               placeholder="Units requested"
               type="number"
               min={1}
-              className="rounded-xl border border-gray-300 px-3 py-2 text-sm"
+              className="rounded-xl border border-border px-3 py-2 text-sm"
             />
             <input
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="Emergency reason (e.g. mass casualty)"
-              className="rounded-xl border border-gray-300 px-3 py-2 text-sm"
+              className="rounded-xl border border-border px-3 py-2 text-sm"
             />
           </div>
           <button
@@ -180,26 +180,26 @@ export default function CentralBankPage() {
           </button>
         </section>
 
-        <section className="rounded-2xl border border-gray-200 bg-white p-5 space-y-3">
-          <h2 className="text-sm font-semibold text-gray-900">Active redistribution requests</h2>
-          {redistributions.isPending && <Loader2 className="h-4 w-4 animate-spin text-gray-400" />}
+        <section className="rounded-2xl border border-border bg-card p-5 space-y-3">
+          <h2 className="text-sm font-semibold text-foreground">Active redistribution requests</h2>
+          {redistributions.isPending && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
           {(redistributions.data ?? []).length === 0 && !redistributions.isPending ? (
-            <p className="text-sm text-gray-500">No emergency redistribution requests on record.</p>
+            <p className="text-sm text-muted-foreground">No emergency redistribution requests on record.</p>
           ) : (
             <ul className="space-y-3">
               {(redistributions.data ?? []).map((row) => (
-                <li key={row.redistributionId} className="rounded-xl border border-gray-100 p-3 text-sm flex flex-wrap items-center justify-between gap-2">
+                <li key={row.redistributionId} className="rounded-xl border border-border p-3 text-sm flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <p className="font-medium">
                       {row.bloodGroup} {String(row.componentType ?? "").replace(/_/g, " ")} — {row.unitsRequested} units
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       {row.sourceFacilityId} → {row.targetFacilityId} · {row.status}
                       {row.handoffStatus ? ` · handoff ${row.handoffStatus}` : ""}
                       {row.reason ? ` · ${row.reason}` : ""}
                     </p>
                     {row.handoffError && (
-                      <p className="text-xs text-amber-700 mt-1">{row.handoffError}</p>
+                      <p className="text-xs text-warning-foreground mt-1">{row.handoffError}</p>
                     )}
                     {row.nhumeDeepLinkPath && (
                       <Link href={row.nhumeDeepLinkPath} className="text-xs text-rose-600 hover:underline mt-1 inline-block">
@@ -223,7 +223,7 @@ export default function CentralBankPage() {
                         type="button"
                         onClick={() => handleRetryHandoff(row.redistributionId!)}
                         disabled={initiateHandoff.isPending}
-                        className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs text-amber-900 disabled:opacity-50"
+                        className="rounded-lg border border-amber-300 bg-warning-soft px-3 py-1.5 text-xs text-warning-foreground disabled:opacity-50"
                       >
                         Retry NHUME handoff
                       </button>

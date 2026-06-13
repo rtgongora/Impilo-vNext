@@ -149,12 +149,12 @@ export function ShellNotificationTray() {
           setOpen((v) => !v);
           if (!open) void refetch();
         }}
-        className="relative flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+        className="relative flex h-8 w-8 items-center justify-center rounded-md border border-border bg-card text-foreground shadow-sm hover:bg-background dark:border-border dark:bg-neutral-900 dark:text-foreground dark:hover:bg-neutral-900"
         aria-label={open ? "Close notifications" : "Open notifications"}
         title="Assistant, shell activity, and optional live stream"
       >
         {isLoading || isFetching ? (
-          <Loader2 className="h-4 w-4 animate-spin text-impilo-500" />
+          <Loader2 className="h-4 w-4 animate-spin text-primary" />
         ) : (
           <Bell className="h-4 w-4" />
         )}
@@ -167,20 +167,20 @@ export function ShellNotificationTray() {
 
       <button
         type="button"
-        className="relative flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+        className="relative flex h-8 w-8 items-center justify-center rounded-md border border-border bg-card text-foreground shadow-sm hover:bg-background dark:border-border dark:bg-neutral-900 dark:text-foreground dark:hover:bg-neutral-900"
         aria-label="Background data refresh activity"
         title="Background requests (React Query in-flight fetches)"
         onClick={() => router.push("/home")}
       >
-        <Activity className="h-4 w-4 text-slate-500" />
+        <Activity className="h-4 w-4 text-muted-foreground" />
         {pendingFetches > 0 ? (
-          <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-impilo-500" />
+          <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-primary" />
         ) : null}
       </button>
 
       {wsConfigured ? (
         <span
-          className="hidden h-8 items-center rounded-md border border-dashed border-slate-200 px-1.5 text-[9px] font-semibold uppercase tracking-wide text-slate-400 sm:inline-flex"
+          className="hidden h-8 items-center rounded-md border border-dashed border-border px-1.5 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground sm:inline-flex"
           title={`Optional WebSocket: ${process.env.NEXT_PUBLIC_EXP_NOTIFICATIONS_WS}`}
         >
           <Radio className="mr-0.5 h-3.5 w-3.5" />
@@ -190,14 +190,14 @@ export function ShellNotificationTray() {
 
       {open ? (
         <div
-          className="fixed right-4 z-[10002] w-[min(100vw-2rem,22rem)] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-950"
+          className="fixed right-4 z-[10002] w-[min(100vw-2rem,22rem)] overflow-hidden rounded-xl border border-border bg-card shadow-2xl dark:border-border dark:bg-card"
           style={{ bottom: `calc(${SHELL_TASKBAR_HEIGHT_PX}px + 10px)` }}
         >
-          <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2 dark:border-slate-800">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Notifications</p>
+          <div className="flex items-center justify-between border-b border-border px-3 py-2 dark:border-border">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Notifications</p>
             <button
               type="button"
-              className="rounded p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="rounded p-1 text-muted-foreground hover:bg-neutral-100 dark:hover:bg-neutral-900"
               aria-label="Close panel"
               onClick={() => setOpen(false)}
             >
@@ -208,7 +208,7 @@ export function ShellNotificationTray() {
             {isError ? (
               <p className="px-3 py-4 text-xs text-red-600">Could not load assistant notifications.</p>
             ) : items.length === 0 ? (
-              <p className="px-3 py-6 text-center text-xs text-slate-500">
+              <p className="px-3 py-6 text-center text-xs text-muted-foreground">
                 No alerts yet. Shell activity (pins, tasks, launches) appears here; set NEXT_PUBLIC_EXP_NOTIFICATIONS_WS
                 for optional live messages.
               </p>
@@ -220,10 +220,10 @@ export function ShellNotificationTray() {
               </ul>
             )}
           </div>
-          <div className="border-t border-slate-100 px-3 py-2 dark:border-slate-800">
+          <div className="border-t border-border px-3 py-2 dark:border-border">
             <Link
               href="/home/notifications"
-              className="text-xs font-medium text-impilo-600 hover:underline"
+              className="text-xs font-medium text-primary hover:underline"
               onClick={() => setOpen(false)}
             >
               View all in My Life →
@@ -238,20 +238,20 @@ export function ShellNotificationTray() {
 function TrayRow({ n, onDismiss }: { n: AssistantTrayNotification; onDismiss: () => void }) {
   const tone =
     n.severity === "CRITICAL"
-      ? "border-l-red-500 bg-red-50/80 dark:bg-red-950/30"
+      ? "border-l-red-500 bg-danger-soft/80 dark:bg-red-950/30"
       : n.severity === "HIGH"
-        ? "border-l-amber-500 bg-amber-50/80 dark:bg-amber-950/20"
-        : "border-l-slate-300 bg-slate-50/80 dark:bg-slate-900/40";
+        ? "border-l-amber-500 bg-warning-soft/80 dark:bg-amber-950/20"
+        : "border-l-slate-300 bg-background/80 dark:bg-neutral-900/40";
 
   return (
     <li className={`border-l-4 px-3 py-2.5 text-left ${tone}`}>
-      <p className="text-xs font-semibold text-slate-900 dark:text-slate-100">{n.title}</p>
-      <p className="mt-0.5 text-[11px] leading-snug text-slate-600 dark:text-slate-300">{n.body}</p>
+      <p className="text-xs font-semibold text-foreground dark:text-foreground">{n.title}</p>
+      <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground dark:text-muted-foreground">{n.body}</p>
       <div className="mt-1.5 flex flex-wrap items-center gap-2">
         {n.action?.href ? (
           <Link
             href={n.action.href}
-            className="text-[11px] font-medium text-impilo-600 hover:underline"
+            className="text-[11px] font-medium text-primary hover:underline"
             onClick={() => {
               /* shell popover closes via navigation */
             }}
@@ -260,7 +260,7 @@ function TrayRow({ n, onDismiss }: { n: AssistantTrayNotification; onDismiss: ()
           </Link>
         ) : null}
         {n.dismissible ? (
-          <button type="button" className="text-[10px] text-slate-400 hover:text-slate-600" onClick={onDismiss}>
+          <button type="button" className="text-[10px] text-muted-foreground hover:text-muted-foreground" onClick={onDismiss}>
             Dismiss
           </button>
         ) : null}

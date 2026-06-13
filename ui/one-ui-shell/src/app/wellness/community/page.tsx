@@ -50,7 +50,7 @@ function defaultTenantId(): string {
 
 const VISIT_STATUS_STYLES: Record<string, string> = {
   SCHEDULED: "bg-blue-100 text-blue-800",
-  IN_PROGRESS: "bg-amber-100 text-amber-800",
+  IN_PROGRESS: "bg-amber-100 text-warning-foreground",
   COMPLETED: "bg-green-100 text-green-800",
 };
 
@@ -156,7 +156,7 @@ export default function WellnessCommunityPage() {
   };
 
   const inputClass =
-    "w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500";
+    "w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500";
 
   return (
     <AppLayout>
@@ -168,20 +168,20 @@ export default function WellnessCommunityPage() {
         <div className="mb-4">
           <Link
             href="/wellness"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
             ← Back to Wellness Hub
           </Link>
         </div>
 
-        <div className="flex gap-1 mb-6 border-b border-gray-200">
+        <div className="flex gap-1 mb-6 border-b border-border">
           <button
             type="button"
             onClick={() => setTab("units")}
             className={`flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
               tab === "units"
                 ? "border-teal-600 text-teal-700"
-                : "border-transparent text-gray-500 hover:text-gray-700"
+                : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
             <Building2 className="w-4 h-4" /> Community Units
@@ -192,7 +192,7 @@ export default function WellnessCommunityPage() {
             className={`flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
               tab === "visits"
                 ? "border-teal-600 text-teal-700"
-                : "border-transparent text-gray-500 hover:text-gray-700"
+                : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
             <ClipboardList className="w-4 h-4" /> Outreach Visits
@@ -202,11 +202,11 @@ export default function WellnessCommunityPage() {
         {tab === "units" && (
           <div className="space-y-4">
             <div className="flex items-center justify-between gap-3 flex-wrap">
-              <h3 className="text-lg font-semibold text-gray-900">Community Units</h3>
+              <h3 className="text-lg font-semibold text-foreground">Community Units</h3>
               <button
                 type="button"
                 onClick={() => setShowUnitForm(!showUnitForm)}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-teal-600 text-white rounded-lg hover:bg-primary transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 {showUnitForm ? "Cancel" : "New Unit"}
@@ -214,8 +214,8 @@ export default function WellnessCommunityPage() {
             </div>
 
             {showUnitForm && (
-              <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-3">
-                <h4 className="text-sm font-semibold text-gray-700">Create community unit</h4>
+              <div className="bg-card rounded-lg border border-border p-4 space-y-3">
+                <h4 className="text-sm font-semibold text-foreground">Create community unit</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <input
                     type="text"
@@ -267,7 +267,7 @@ export default function WellnessCommunityPage() {
                     type="button"
                     onClick={handleCreateUnit}
                     disabled={createUnit.isPending || !unitForm.name.trim() || !unitForm.unitType.trim()}
-                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-teal-600 text-white rounded-lg disabled:opacity-50 hover:bg-teal-700"
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-teal-600 text-white rounded-lg disabled:opacity-50 hover:bg-primary"
                   >
                     {createUnit.isPending ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -284,29 +284,29 @@ export default function WellnessCommunityPage() {
             )}
 
             {unitsLoading ? (
-              <div className="flex items-center gap-2 text-gray-600 py-12">
+              <div className="flex items-center gap-2 text-muted-foreground py-12">
                 <Loader2 className="w-6 h-6 animate-spin" /> Loading units…
               </div>
             ) : unitsError ? (
-              <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-sm text-red-600 bg-danger-soft border border-danger/28 rounded-lg p-4">
                 Failed to load community units.
               </p>
             ) : units.length === 0 ? (
-              <div className="bg-white rounded-lg border border-gray-200 p-12 text-center text-gray-500 text-sm">
+              <div className="bg-card rounded-lg border border-border p-12 text-center text-muted-foreground text-sm">
                 No community units yet. Create one to get started.
               </div>
             ) : (
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div className="bg-card rounded-lg border border-border overflow-hidden">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b bg-gray-50">
+                    <tr className="border-b bg-background">
                       <th className="w-8 px-2 py-3" />
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Name</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Type</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Facility</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">District</th>
-                      <th className="text-right px-4 py-3 font-medium text-gray-600">Catchment</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Name</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Type</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Facility</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">District</th>
+                      <th className="text-right px-4 py-3 font-medium text-muted-foreground">Catchment</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -315,13 +315,13 @@ export default function WellnessCommunityPage() {
                       const open = expandedUnitId === uid;
                       return (
                         <Fragment key={uid}>
-                          <tr className="hover:bg-gray-50">
+                          <tr className="hover:bg-background">
                             <td className="px-2 py-3">
                               <button
                                 type="button"
                                 aria-label={open ? "Collapse" : "Expand"}
                                 onClick={() => setExpandedUnitId(open ? null : uid)}
-                                className="p-1 rounded text-gray-500 hover:bg-gray-100"
+                                className="p-1 rounded text-muted-foreground hover:bg-neutral-100"
                               >
                                 {open ? (
                                   <ChevronDown className="w-4 h-4" />
@@ -330,15 +330,15 @@ export default function WellnessCommunityPage() {
                                 )}
                               </button>
                             </td>
-                            <td className="px-4 py-3 font-medium text-gray-900">{String(u.name ?? "")}</td>
-                            <td className="px-4 py-3 text-gray-600">{String(u.unitType ?? u.unit_type ?? "")}</td>
-                            <td className="px-4 py-3 font-mono text-xs text-gray-500">
+                            <td className="px-4 py-3 font-medium text-foreground">{String(u.name ?? "")}</td>
+                            <td className="px-4 py-3 text-muted-foreground">{String(u.unitType ?? u.unit_type ?? "")}</td>
+                            <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
                               {(u.facilityId ?? u.facility_id)
                                 ? String(u.facilityId ?? u.facility_id).slice(0, 8) + "…"
                                 : "—"}
                             </td>
-                            <td className="px-4 py-3 text-gray-600">{String(u.district ?? "—")}</td>
-                            <td className="px-4 py-3 text-right text-gray-700">
+                            <td className="px-4 py-3 text-muted-foreground">{String(u.district ?? "—")}</td>
+                            <td className="px-4 py-3 text-right text-foreground">
                               {u.catchmentPopulation != null || u.catchment_population != null
                                 ? String(u.catchmentPopulation ?? u.catchment_population)
                                 : "—"}
@@ -350,18 +350,18 @@ export default function WellnessCommunityPage() {
                             </td>
                           </tr>
                           {open && (
-                            <tr className="bg-gray-50">
-                              <td colSpan={7} className="px-6 py-3 text-xs text-gray-600 space-y-1">
+                            <tr className="bg-background">
+                              <td colSpan={7} className="px-6 py-3 text-xs text-muted-foreground space-y-1">
                                 <div>
-                                  <span className="font-semibold text-gray-700">Unit ID:</span>{" "}
+                                  <span className="font-semibold text-foreground">Unit ID:</span>{" "}
                                   <span className="font-mono">{uid}</span>
                                 </div>
                                 <div>
-                                  <span className="font-semibold text-gray-700">Province:</span>{" "}
+                                  <span className="font-semibold text-foreground">Province:</span>{" "}
                                   {String(u.province ?? "—")}
                                 </div>
                                 <div>
-                                  <span className="font-semibold text-gray-700">Ward:</span>{" "}
+                                  <span className="font-semibold text-foreground">Ward:</span>{" "}
                                   {String(u.ward ?? "—")}
                                 </div>
                               </td>
@@ -380,11 +380,11 @@ export default function WellnessCommunityPage() {
         {tab === "visits" && (
           <div className="space-y-4">
             <div className="flex items-center justify-between gap-3 flex-wrap">
-              <h3 className="text-lg font-semibold text-gray-900">Outreach Visits</h3>
+              <h3 className="text-lg font-semibold text-foreground">Outreach Visits</h3>
               <button
                 type="button"
                 onClick={() => setShowVisitForm(!showVisitForm)}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-teal-600 text-white rounded-lg hover:bg-primary transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 {showVisitForm ? "Cancel" : "New Visit"}
@@ -392,8 +392,8 @@ export default function WellnessCommunityPage() {
             </div>
 
             {showVisitForm && (
-              <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-3">
-                <h4 className="text-sm font-semibold text-gray-700">Schedule outreach visit</h4>
+              <div className="bg-card rounded-lg border border-border p-4 space-y-3">
+                <h4 className="text-sm font-semibold text-foreground">Schedule outreach visit</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <select
                     value={visitForm.unitId}
@@ -443,7 +443,7 @@ export default function WellnessCommunityPage() {
                     type="button"
                     onClick={handleCreateVisit}
                     disabled={createVisit.isPending}
-                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-teal-600 text-white rounded-lg disabled:opacity-50 hover:bg-teal-700"
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-teal-600 text-white rounded-lg disabled:opacity-50 hover:bg-primary"
                   >
                     {createVisit.isPending ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -457,7 +457,7 @@ export default function WellnessCommunityPage() {
                   )}
                 </div>
                 {units.length === 0 && (
-                  <p className="text-xs text-amber-700">
+                  <p className="text-xs text-warning-foreground">
                     Create a community unit first to enable the unit selector.
                   </p>
                 )}
@@ -465,45 +465,45 @@ export default function WellnessCommunityPage() {
             )}
 
             {visitsLoading ? (
-              <div className="flex items-center gap-2 text-gray-600 py-12">
+              <div className="flex items-center gap-2 text-muted-foreground py-12">
                 <Loader2 className="w-6 h-6 animate-spin" /> Loading visits…
               </div>
             ) : visitsError ? (
-              <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-sm text-red-600 bg-danger-soft border border-danger/28 rounded-lg p-4">
                 Failed to load outreach visits.
               </p>
             ) : visits.length === 0 ? (
-              <div className="bg-white rounded-lg border border-gray-200 p-12 text-center text-gray-500 text-sm">
+              <div className="bg-card rounded-lg border border-border p-12 text-center text-muted-foreground text-sm">
                 No outreach visits scheduled.
               </div>
             ) : (
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div className="bg-card rounded-lg border border-border overflow-hidden">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b bg-gray-50">
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Patient CPID</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Provider</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Visit type</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Scheduled</th>
-                      <th className="text-right px-4 py-3 font-medium text-gray-600">Actions</th>
+                    <tr className="border-b bg-background">
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Patient CPID</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Provider</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Visit type</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Scheduled</th>
+                      <th className="text-right px-4 py-3 font-medium text-muted-foreground">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {visits.map((v) => {
                       const vid = String(v.visitId ?? v.visit_id ?? "");
                       const status = String(v.status ?? "SCHEDULED").toUpperCase();
-                      const badge = VISIT_STATUS_STYLES[status] ?? "bg-gray-100 text-gray-700";
+                      const badge = VISIT_STATUS_STYLES[status] ?? "bg-neutral-100 text-foreground";
                       const sched = v.scheduledAt ?? v.scheduled_at;
                       return (
-                        <tr key={vid} className="hover:bg-gray-50">
-                          <td className="px-4 py-3 font-mono text-xs text-gray-900">
+                        <tr key={vid} className="hover:bg-background">
+                          <td className="px-4 py-3 font-mono text-xs text-foreground">
                             {String(v.patientCpid ?? v.patient_cpid ?? "—")}
                           </td>
-                          <td className="px-4 py-3 text-gray-700">
+                          <td className="px-4 py-3 text-foreground">
                             {String(v.providerId ?? v.provider_id ?? "—")}
                           </td>
-                          <td className="px-4 py-3 text-gray-600">
+                          <td className="px-4 py-3 text-muted-foreground">
                             {String(v.visitType ?? v.visit_type ?? "—")}
                           </td>
                           <td className="px-4 py-3">
@@ -513,7 +513,7 @@ export default function WellnessCommunityPage() {
                               {status}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+                          <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
                             {sched
                               ? new Date(String(sched)).toLocaleString(undefined, {
                                   dateStyle: "medium",
@@ -527,7 +527,7 @@ export default function WellnessCommunityPage() {
                                 type="button"
                                 disabled={startVisit.isPending}
                                 onClick={() => startVisit.mutate({ id: vid })}
-                                className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-lg bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 disabled:opacity-50"
+                                className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-lg bg-warning-soft text-warning-foreground border border-warning/35 hover:bg-amber-100 disabled:opacity-50"
                               >
                                 <Play className="w-3 h-3" /> Start
                               </button>

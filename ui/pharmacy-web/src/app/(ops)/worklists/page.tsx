@@ -103,7 +103,7 @@ export default function WorklistsPage() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+        <div className="mb-4 p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-red-800">
           {error}
         </div>
       )}
@@ -116,7 +116,7 @@ export default function WorklistsPage() {
             onClick={() => setActiveTab(tab.value)}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
               activeTab === tab.value
-                ? "border-emerald-600 text-emerald-700"
+                ? "border-emerald-600 text-primary-hover"
                 : "border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300"
             }`}
           >

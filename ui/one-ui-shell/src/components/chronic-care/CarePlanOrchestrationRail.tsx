@@ -32,11 +32,11 @@ export function CarePlanOrchestrationRail({
   if (!activePlan) {
     return (
       <section
-        className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600"
+        className="rounded-xl border border-border bg-background px-4 py-3 text-sm text-muted-foreground"
         data-testid="care-plan-orchestration-rail"
       >
         <div className="flex items-start gap-2">
-          <ClipboardList className="mt-0.5 h-4 w-4 shrink-0 text-impilo-600" />
+          <ClipboardList className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
           <p>Create a care plan to start chronic-care goal and intervention orchestration.</p>
         </div>
       </section>
@@ -47,14 +47,14 @@ export function CarePlanOrchestrationRail({
 
   return (
     <section
-      className="rounded-xl border border-indigo-200 bg-indigo-50/50 px-4 py-4"
+      className="rounded-xl border border-info/25 bg-info-soft/50 px-4 py-4"
       data-testid="care-plan-orchestration-rail"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-indigo-700">Chronic care orchestration</p>
-          <p className="mt-1 text-sm font-medium text-slate-900">{activePlan.title}</p>
-          <p className="text-xs text-slate-600">
+          <p className="text-xs font-semibold uppercase tracking-wide text-primary-hover">Chronic care orchestration</p>
+          <p className="mt-1 text-sm font-medium text-foreground">{activePlan.title}</p>
+          <p className="text-xs text-muted-foreground">
             {activePlan.goals.length} goals · {activePlan.interventions.filter((i) => !i.completed).length} open
             interventions
           </p>
@@ -98,7 +98,7 @@ export function CarePlanOrchestrationRail({
         }}
       >
         <div className="min-w-[200px] flex-1">
-          <label className="mb-1 flex items-center gap-1 text-xs font-medium text-slate-600">
+          <label className="mb-1 flex items-center gap-1 text-xs font-medium text-muted-foreground">
             <Target className="h-3.5 w-3.5" />
             Add goal to active plan
           </label>
@@ -106,13 +106,13 @@ export function CarePlanOrchestrationRail({
             value={goalText}
             onChange={(e) => setGoalText(e.target.value)}
             placeholder="e.g. HbA1c below 7% within 90 days"
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-border px-3 py-2 text-sm"
           />
         </div>
         <button
           type="submit"
           disabled={addGoal.isPending || !goalText.trim()}
-          className="inline-flex items-center gap-1 rounded-lg border border-indigo-300 bg-white px-3 py-2 text-xs font-medium text-indigo-800 hover:bg-indigo-50 disabled:opacity-50"
+          className="inline-flex items-center gap-1 rounded-lg border border-indigo-300 bg-card px-3 py-2 text-xs font-medium text-primary-hover hover:bg-info-soft disabled:opacity-50"
         >
           {addGoal.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
           Add goal
@@ -135,7 +135,7 @@ export function CarePlanOrchestrationRail({
               { onSuccess: () => onPlanChanged?.() },
             )
           }
-          className="mt-2 text-xs font-medium text-emerald-700 hover:text-emerald-900 disabled:opacity-50"
+          className="mt-2 text-xs font-medium text-primary-hover hover:text-primary-hover disabled:opacity-50"
         >
           Mark primary goal achieved
         </button>
@@ -158,18 +158,18 @@ export function CarePlanOrchestrationRail({
         }}
       >
         <div className="min-w-[200px] flex-1">
-          <label className="mb-1 block text-xs font-medium text-slate-600">Add intervention</label>
+          <label className="mb-1 block text-xs font-medium text-muted-foreground">Add intervention</label>
           <input
             value={interventionText}
             onChange={(e) => setInterventionText(e.target.value)}
             placeholder="e.g. Schedule foot exam"
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-border px-3 py-2 text-sm"
           />
         </div>
         <button
           type="submit"
           disabled={addIntervention.isPending || !interventionText.trim()}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
+          className="rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground hover:bg-background disabled:opacity-50"
         >
           {addIntervention.isPending ? "Adding…" : "Add intervention"}
         </button>

@@ -16,23 +16,23 @@ import { ArrowLeft, Shield, Smartphone } from "lucide-react";
 
 export default function AppStorePrivacyPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+      <header className="bg-card border-b border-border sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link
               href="/privacy"
-              className="text-gray-500 hover:text-gray-700 transition-colors"
+              className="text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
-              <h1 className="text-lg font-semibold text-gray-900">Impilo</h1>
-              <p className="text-xs text-gray-500">Health Operating System</p>
+              <h1 className="text-lg font-semibold text-foreground">Impilo</h1>
+              <p className="text-xs text-muted-foreground">Health Operating System</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-xs text-gray-400">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Smartphone className="w-3.5 h-3.5" />
             <span>App Store Privacy</span>
           </div>
@@ -42,8 +42,8 @@ export default function AppStorePrivacyPage() {
       {/* Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Compliance notice */}
-        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-          <p className="text-xs text-amber-800">
+        <div className="mb-6 p-4 bg-warning-soft border border-warning/35 rounded-lg">
+          <p className="text-xs text-warning-foreground">
             <strong>Implementation note:</strong> The final store declarations must exactly
             match your real SDKs, permissions, analytics setup, and whether any data is
             actually &ldquo;linked to the user&rdquo; or used for &ldquo;tracking.&rdquo;
@@ -54,7 +54,7 @@ export default function AppStorePrivacyPage() {
         </div>
 
         {/* ── Google Play ──────────────────────────────────── */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-10 mb-6">
+        <div className="bg-card rounded-xl shadow-sm border border-border p-6 sm:p-10 mb-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
               <svg className="w-5 h-5 text-green-700" viewBox="0 0 24 24" fill="currentColor">
@@ -62,13 +62,13 @@ export default function AppStorePrivacyPage() {
               </svg>
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Google Play</h2>
-              <p className="text-sm text-gray-500">Data Safety / Privacy Summary</p>
+              <h2 className="text-xl font-bold text-foreground">Google Play</h2>
+              <p className="text-sm text-muted-foreground">Data Safety / Privacy Summary</p>
             </div>
           </div>
 
-          <div className="prose prose-gray max-w-none prose-p:text-gray-600">
-            <h3 className="text-base font-semibold text-gray-900 mb-3">Privacy Summary</h3>
+          <div className="prose prose-gray max-w-none prose-p:text-muted-foreground">
+            <h3 className="text-base font-semibold text-foreground mb-3">Privacy Summary</h3>
             <p>
               Impilo Technologies Private Limited respects applicable privacy, data residency,
               data sovereignty, and health information governance requirements. Depending on the
@@ -112,9 +112,9 @@ export default function AppStorePrivacyPage() {
               fraud prevention, public health, continuity of care, and recordkeeping obligations.
             </p>
 
-            <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-              <h4 className="text-sm font-semibold text-gray-700 mb-2">Short Version (for Data Safety form)</h4>
-              <p className="text-sm text-gray-600">
+            <div className="mt-6 p-4 bg-background border border-border rounded-lg">
+              <h4 className="text-sm font-semibold text-foreground mb-2">Short Version (for Data Safety form)</h4>
+              <p className="text-sm text-muted-foreground">
                 Impilo processes only the data needed to provide, secure, support, and improve
                 the platform and related services. Depending on the deployment and features
                 used, this may include account details, contact information, technical and
@@ -134,21 +134,21 @@ export default function AppStorePrivacyPage() {
         </div>
 
         {/* ── Apple ────────────────────────────────────────── */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-10 mb-6">
+        <div className="bg-card rounded-xl shadow-sm border border-border p-6 sm:p-10 mb-6">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
-              <svg className="w-5 h-5 text-gray-700" viewBox="0 0 24 24" fill="currentColor">
+            <div className="w-10 h-10 rounded-lg bg-neutral-100 flex items-center justify-center">
+              <svg className="w-5 h-5 text-foreground" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
               </svg>
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Apple App Store</h2>
-              <p className="text-sm text-gray-500">App Privacy Summary</p>
+              <h2 className="text-xl font-bold text-foreground">Apple App Store</h2>
+              <p className="text-sm text-muted-foreground">App Privacy Summary</p>
             </div>
           </div>
 
-          <div className="prose prose-gray max-w-none prose-p:text-gray-600">
-            <h3 className="text-base font-semibold text-gray-900 mb-3">App Privacy Summary</h3>
+          <div className="prose prose-gray max-w-none prose-p:text-muted-foreground">
+            <h3 className="text-base font-semibold text-foreground mb-3">App Privacy Summary</h3>
             <p>
               Impilo Technologies Private Limited may collect and process data such as account
               information, contact details, device identifiers, diagnostics, usage data,
@@ -184,9 +184,9 @@ export default function AppStorePrivacyPage() {
               fraud prevention, continuity of care, public health, and recordkeeping obligations.
             </p>
 
-            <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-              <h4 className="text-sm font-semibold text-gray-700 mb-2">Short Version (for App Privacy labels)</h4>
-              <p className="text-sm text-gray-600">
+            <div className="mt-6 p-4 bg-background border border-border rounded-lg">
+              <h4 className="text-sm font-semibold text-foreground mb-2">Short Version (for App Privacy labels)</h4>
+              <p className="text-sm text-muted-foreground">
                 Impilo may collect account, contact, device, diagnostics, usage, location,
                 communication, and health- or service-related data depending on the features
                 used. This data is used for app functionality, account management, care
@@ -203,12 +203,12 @@ export default function AppStorePrivacyPage() {
         </div>
 
         {/* ── Data Collection Quick-Reference ──────────────── */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-10 mb-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <Shield className="w-5 h-5 text-blue-600" />
+        <div className="bg-card rounded-xl shadow-sm border border-border p-6 sm:p-10 mb-6">
+          <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+            <Shield className="w-5 h-5 text-primary" />
             Data Collection Quick-Reference
           </h2>
-          <p className="text-sm text-gray-500 mb-4">
+          <p className="text-sm text-muted-foreground mb-4">
             Categories of data that Impilo may process, depending on deployment and features.
             Use this to inform store Data Safety / App Privacy declarations.
           </p>
@@ -216,13 +216,13 @@ export default function AppStorePrivacyPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-2 pr-4 font-medium text-gray-700">Category</th>
-                  <th className="text-left py-2 pr-4 font-medium text-gray-700">Examples</th>
-                  <th className="text-left py-2 font-medium text-gray-700">Purpose</th>
+                <tr className="border-b border-border">
+                  <th className="text-left py-2 pr-4 font-medium text-foreground">Category</th>
+                  <th className="text-left py-2 pr-4 font-medium text-foreground">Examples</th>
+                  <th className="text-left py-2 font-medium text-foreground">Purpose</th>
                 </tr>
               </thead>
-              <tbody className="text-gray-600">
+              <tbody className="text-muted-foreground">
                 <DataRow
                   category="Account &amp; Identity"
                   examples="Name, email, phone, role, staff ID"
@@ -267,30 +267,30 @@ export default function AppStorePrivacyPage() {
             </table>
           </div>
 
-          <p className="mt-4 text-xs text-gray-400">
+          <p className="mt-4 text-xs text-muted-foreground">
             Impilo separates personally identifiable information from health or clinical
             information by design. Data is not sold or used for advertising tracking.
           </p>
         </div>
 
         {/* Footer */}
-        <footer className="mt-8 text-center text-xs text-gray-400 space-y-2">
+        <footer className="mt-8 text-center text-xs text-muted-foreground space-y-2">
           <div className="flex items-center justify-center gap-4 flex-wrap">
-            <Link href="/terms" className="hover:text-gray-600 transition-colors">
+            <Link href="/terms" className="hover:text-muted-foreground transition-colors">
               Terms of Use
             </Link>
             <span>&middot;</span>
-            <Link href="/privacy" className="hover:text-gray-600 transition-colors">
+            <Link href="/privacy" className="hover:text-muted-foreground transition-colors">
               Privacy Policy
             </Link>
             <span>&middot;</span>
-            <Link href="/account-deletion" className="hover:text-gray-600 transition-colors">
+            <Link href="/account-deletion" className="hover:text-muted-foreground transition-colors">
               Account Deletion
             </Link>
             <span>&middot;</span>
-            <span className="text-gray-300">App Store Privacy</span>
+            <span className="text-muted-foreground">App Store Privacy</span>
             <span>&middot;</span>
-            <Link href="/auth/login" className="hover:text-gray-600 transition-colors">
+            <Link href="/auth/login" className="hover:text-muted-foreground transition-colors">
               Sign In
             </Link>
           </div>
@@ -311,8 +311,8 @@ function DataRow({
   purpose: string;
 }) {
   return (
-    <tr className="border-b border-gray-100">
-      <td className="py-2 pr-4 font-medium text-gray-700" dangerouslySetInnerHTML={{ __html: category }} />
+    <tr className="border-b border-border">
+      <td className="py-2 pr-4 font-medium text-foreground" dangerouslySetInnerHTML={{ __html: category }} />
       <td className="py-2 pr-4">{examples}</td>
       <td className="py-2">{purpose}</td>
     </tr>

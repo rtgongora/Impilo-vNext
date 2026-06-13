@@ -108,19 +108,19 @@ export function FacilityStaffAssignmentForm({ facilityId }: FacilityStaffAssignm
   const hsc = eligibility?.hscEmploymentSummary ?? {};
 
   return (
-    <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
       <div>
-        <h3 className="text-base font-semibold text-slate-900">Assign Verified Provider / Worker</h3>
-        <p className="mt-1 text-sm text-slate-600">
+        <h3 className="text-base font-semibold text-foreground">Assign Verified Provider / Worker</h3>
+        <p className="mt-1 text-sm text-muted-foreground">
           Facility managers search verified providers — they cannot create Provider IDs here.
         </p>
       </div>
 
       <div className="grid gap-3 md:grid-cols-2">
-        <label className="text-sm text-slate-700 md:col-span-2">
+        <label className="text-sm text-foreground md:col-span-2">
           Search provider / worker
           <input
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+            className="mt-1 w-full rounded-lg border border-border px-3 py-2"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Name, Health ID, Provider ID"
@@ -133,39 +133,39 @@ export function FacilityStaffAssignmentForm({ facilityId }: FacilityStaffAssignm
               key={id}
               type="button"
               onClick={() => setProviderWorkerId(id)}
-              className="rounded-lg border border-slate-200 px-3 py-2 text-left text-sm hover:border-indigo-300"
+              className="rounded-lg border border-border px-3 py-2 text-left text-sm hover:border-indigo-300"
             >
               {String(item.displayName ?? item.fullName ?? id)}
             </button>
           );
         })}
-        <label className="text-sm text-slate-700">
+        <label className="text-sm text-foreground">
           Provider / Worker ID
           <input
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+            className="mt-1 w-full rounded-lg border border-border px-3 py-2"
             value={providerWorkerId}
             onChange={(event) => setProviderWorkerId(event.target.value)}
             placeholder="P-..."
           />
         </label>
-        <label className="text-sm text-slate-700">
+        <label className="text-sm text-foreground">
           Department / unit
           <input
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+            className="mt-1 w-full rounded-lg border border-border px-3 py-2"
             value={departmentId}
             onChange={(event) => setDepartmentId(event.target.value)}
           />
         </label>
-        <label className="text-sm text-slate-700">
+        <label className="text-sm text-foreground">
           Role template
           <input
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+            className="mt-1 w-full rounded-lg border border-border px-3 py-2"
             value={roleTemplate}
             onChange={(event) => setRoleTemplate(event.target.value)}
             placeholder="facility_clinician"
           />
         </label>
-        <label className="flex items-center gap-2 text-sm text-slate-700 md:col-span-2">
+        <label className="flex items-center gap-2 text-sm text-foreground md:col-span-2">
           <input
             type="checkbox"
             checked={assumptionOfDutyRequired}
@@ -176,7 +176,7 @@ export function FacilityStaffAssignmentForm({ facilityId }: FacilityStaffAssignm
       </div>
 
       {lookupUnavailable ? (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+        <div className="rounded-xl border border-warning/35 bg-warning-soft px-4 py-3 text-sm text-warning-foreground">
           Provider/Worker lookup is not currently available; assignment cannot be completed until professional eligibility can be verified.
         </div>
       ) : null}
@@ -206,17 +206,17 @@ export function FacilityStaffAssignmentForm({ facilityId }: FacilityStaffAssignm
           </Section>
           <Section title="Training / Fundo warnings">
             {(eligibility.trainingWarnings ?? eligibility.eligibilityWarnings ?? []).length ? (
-              <ul className="list-disc pl-5 text-xs text-amber-900">
+              <ul className="list-disc pl-5 text-xs text-warning-foreground">
                 {(eligibility.trainingWarnings ?? eligibility.eligibilityWarnings ?? []).map((warning) => (
                   <li key={warning}>{warning}</li>
                 ))}
               </ul>
             ) : (
-              <p className="text-xs text-slate-600">No training warnings returned.</p>
+              <p className="text-xs text-muted-foreground">No training warnings returned.</p>
             )}
           </Section>
           {(eligibility.blockedReasons ?? []).length ? (
-            <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs text-rose-950">
+            <div className="rounded-xl border border-danger/28 bg-danger-soft px-4 py-3 text-xs text-danger">
               {(eligibility.blockedReasons ?? []).map((reason) => (
                 <p key={reason}>{reason}</p>
               ))}
@@ -232,7 +232,7 @@ export function FacilityStaffAssignmentForm({ facilityId }: FacilityStaffAssignm
         type="button"
         disabled={submitDisabled || submitMutation.isPending}
         onClick={() => void handleSubmit()}
-        className="rounded-lg bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-800 disabled:cursor-not-allowed disabled:opacity-50"
+        className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-indigo-800 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {submitMutation.isPending ? "Submitting assignment…" : "Submit assignment / access request"}
       </button>
@@ -242,8 +242,8 @@ export function FacilityStaffAssignmentForm({ facilityId }: FacilityStaffAssignm
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</p>
+    <div className="rounded-xl border border-border bg-background px-4 py-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</p>
       <div className="mt-2 grid gap-2 md:grid-cols-2">{children}</div>
     </div>
   );
@@ -251,8 +251,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function Info({ label, value }: { label: string; value?: string }) {
   return (
-    <div className="text-xs text-slate-700">
-      <span className="font-medium text-slate-900">{label}: </span>
+    <div className="text-xs text-foreground">
+      <span className="font-medium text-foreground">{label}: </span>
       {value || "—"}
     </div>
   );

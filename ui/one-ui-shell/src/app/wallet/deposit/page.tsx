@@ -143,26 +143,26 @@ export default function DepositPage() {
         <div className="mb-4">
           <Link
             href="/wallet"
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" /> Back to wallet
           </Link>
         </div>
 
         {!cpid && (
-          <p className="text-sm text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+          <p className="text-sm text-warning-foreground bg-warning-soft border border-amber-100 rounded-lg px-3 py-2">
             Sign in to deposit funds.
           </p>
         )}
 
         {cpid && walletQ.isLoading && (
-          <div className="flex items-center gap-2 text-gray-600 text-sm py-8">
+          <div className="flex items-center gap-2 text-muted-foreground text-sm py-8">
             <Loader2 className="h-5 w-5 animate-spin" /> Loading wallet...
           </div>
         )}
 
         {cpid && !walletQ.isLoading && !walletId && (
-          <p className="text-sm text-red-700 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+          <p className="text-sm text-danger bg-danger-soft border border-red-100 rounded-lg px-3 py-2">
             No wallet found. Please set up your wallet first.
           </p>
         )}
@@ -171,18 +171,18 @@ export default function DepositPage() {
           <div className="space-y-6 max-w-xl">
             {/* Success */}
             {success && (
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+              <div className="rounded-xl border border-success/25 bg-success-soft p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                  <h3 className="text-sm font-semibold text-emerald-900">Deposit successful</h3>
+                  <CheckCircle2 className="h-5 w-5 text-primary" />
+                  <h3 className="text-sm font-semibold text-primary-hover">Deposit successful</h3>
                 </div>
-                <div className="text-xs text-emerald-800 space-y-1">
+                <div className="text-xs text-primary-hover space-y-1">
                   <p>Transaction ID: {readStr(success, "txnId", "txn_id", "transactionId", "transaction_id") || "N/A"}</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setSuccess(null)}
-                  className="mt-2 text-xs font-medium text-emerald-700 hover:underline"
+                  className="mt-2 text-xs font-medium text-primary-hover hover:underline"
                 >
                   Make another deposit
                 </button>
@@ -192,14 +192,14 @@ export default function DepositPage() {
             {!success && (
               <>
                 {/* Tab toggle */}
-                <div className="flex gap-1 border-b border-gray-200">
+                <div className="flex gap-1 border-b border-border">
                   <button
                     type="button"
                     onClick={() => setTab("linked")}
                     className={`flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                       tab === "linked"
-                        ? "border-emerald-600 text-emerald-600"
-                        : "border-transparent text-gray-500 hover:text-gray-700"
+                        ? "border-emerald-600 text-primary"
+                        : "border-transparent text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     <Landmark className="h-4 w-4" /> From Linked Source
@@ -209,8 +209,8 @@ export default function DepositPage() {
                     onClick={() => setTab("cash")}
                     className={`flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                       tab === "cash"
-                        ? "border-emerald-600 text-emerald-600"
-                        : "border-transparent text-gray-500 hover:text-gray-700"
+                        ? "border-emerald-600 text-primary"
+                        : "border-transparent text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     <Banknote className="h-4 w-4" /> Cash Deposit
@@ -218,17 +218,17 @@ export default function DepositPage() {
                 </div>
 
                 {tab === "linked" && (
-                  <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-4">
-                    <h3 className="text-sm font-semibold text-gray-900">Deposit from linked source</h3>
+                  <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+                    <h3 className="text-sm font-semibold text-foreground">Deposit from linked source</h3>
 
                     {fundingQ.isLoading && (
-                      <div className="flex items-center gap-2 text-gray-600 text-sm">
+                      <div className="flex items-center gap-2 text-muted-foreground text-sm">
                         <Loader2 className="h-4 w-4 animate-spin" /> Loading sources...
                       </div>
                     )}
 
                     {!fundingQ.isLoading && sources.length === 0 && (
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-muted-foreground">
                         No linked funding sources. Add a bank account or mobile money wallet first.
                       </p>
                     )}
@@ -236,9 +236,9 @@ export default function DepositPage() {
                     {!fundingQ.isLoading && sources.length > 0 && (
                       <>
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">Source</label>
+                          <label className="block text-xs font-medium text-muted-foreground mb-1">Source</label>
                           <select
-                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                            className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                             value={selectedSourceId}
                             onChange={(e) => setSelectedSourceId(e.target.value)}
                           >
@@ -257,21 +257,21 @@ export default function DepositPage() {
                           </select>
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">Amount</label>
+                          <label className="block text-xs font-medium text-muted-foreground mb-1">Amount</label>
                           <input
                             type="number"
                             min="0.01"
                             step="0.01"
-                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                            className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                             placeholder="0.00"
                             value={linkedAmount}
                             onChange={(e) => setLinkedAmount(e.target.value)}
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">Reference (optional)</label>
+                          <label className="block text-xs font-medium text-muted-foreground mb-1">Reference (optional)</label>
                           <input
-                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                            className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                             placeholder="Reference number"
                             value={linkedRef}
                             onChange={(e) => setLinkedRef(e.target.value)}
@@ -295,45 +295,45 @@ export default function DepositPage() {
                 )}
 
                 {tab === "cash" && (
-                  <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-4">
-                    <h3 className="text-sm font-semibold text-gray-900">Cash deposit at facility</h3>
-                    <p className="text-xs text-gray-500">
+                  <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+                    <h3 className="text-sm font-semibold text-foreground">Cash deposit at facility</h3>
+                    <p className="text-xs text-muted-foreground">
                       Deposit cash at a health facility cashier point.
                     </p>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Facility ID</label>
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">Facility ID</label>
                       <input
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                         placeholder="Facility identifier"
                         value={cashFacilityId}
                         onChange={(e) => setCashFacilityId(e.target.value)}
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Cashier ID</label>
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">Cashier ID</label>
                       <input
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                         placeholder="Cashier staff identifier"
                         value={cashCashierId}
                         onChange={(e) => setCashCashierId(e.target.value)}
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Amount</label>
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">Amount</label>
                       <input
                         type="number"
                         min="0.01"
                         step="0.01"
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                         placeholder="0.00"
                         value={cashAmount}
                         onChange={(e) => setCashAmount(e.target.value)}
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Reference (optional)</label>
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">Reference (optional)</label>
                       <input
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                         placeholder="Receipt or reference number"
                         value={cashRef}
                         onChange={(e) => setCashRef(e.target.value)}

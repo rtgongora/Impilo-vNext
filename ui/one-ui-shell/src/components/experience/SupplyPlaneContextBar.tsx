@@ -23,7 +23,7 @@ export function SupplyPlaneContextBar() {
         </div>
         <Link
           href="/operations"
-          className="shrink-0 rounded-lg border border-teal-400/80 bg-white/80 px-3 py-1.5 text-xs font-medium text-teal-950 hover:bg-white"
+          className="shrink-0 rounded-lg border border-teal-400/80 bg-card/80 px-3 py-1.5 text-xs font-medium text-teal-950 hover:bg-card"
         >
           Operations hub
         </Link>

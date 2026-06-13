@@ -17,8 +17,8 @@ import { ProviderRegistryOnboardingOrchestrationRail } from "@/components/regist
 
 const STATUS_STYLES: Record<string, string> = {
   ACTIVE: "bg-green-100 text-green-700",
-  INACTIVE: "bg-gray-100 text-gray-600",
-  SUSPENDED: "bg-red-100 text-red-700",
+  INACTIVE: "bg-neutral-100 text-muted-foreground",
+  SUSPENDED: "bg-red-100 text-danger",
   PENDING: "bg-yellow-100 text-yellow-700",
 };
 
@@ -46,7 +46,7 @@ export default function ProvidersPage() {
         <div className="mb-4">
           <Link
             href={fromRegistryAdmin ? "/registry-admin" : "/registry"}
-            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             {fromRegistryAdmin ? "Back to registry administration" : "Back to registry hub"}
@@ -56,7 +56,7 @@ export default function ProvidersPage() {
         <div className="mb-4 flex flex-wrap items-center justify-end gap-2">
           <Link
             href="/registry/providers/verification"
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border border-amber-200 text-amber-900 rounded-lg hover:bg-amber-50 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border border-warning/35 text-warning-foreground rounded-lg hover:bg-warning-soft transition-colors"
           >
             Verification queue
           </Link>
@@ -71,74 +71,74 @@ export default function ProvidersPage() {
 
         <div className="mb-4">
           <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search providers by name, number, or speciality..."
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full pl-10 pr-4 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
         </div>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Loading providers...</span>
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading providers...</span>
           </div>
         ) : providers.length === 0 ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <UserCheck className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-400 text-sm">
+          <div className="bg-card rounded-lg border border-border p-12 text-center">
+            <UserCheck className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground text-sm">
               {search ? "No providers match your search" : "No providers found"}
             </p>
             {(degraded || !search) && (
-              <p className="mt-3 text-sm text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-4 py-3 max-w-lg mx-auto">
+              <p className="mt-3 text-sm text-warning-foreground bg-warning-soft border border-amber-100 rounded-lg px-4 py-3 max-w-lg mx-auto">
                 {guidance}
               </p>
             )}
           </div>
         ) : (
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="bg-card rounded-lg border border-border overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-gray-50">
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">
+                <tr className="border-b bg-background">
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">
                     Provider #
                   </th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Name</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Name</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">
                     Qualification
                   </th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">
                     Speciality
                   </th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {providers.map((provider) => {
                   const statusStyle =
-                    STATUS_STYLES[provider.attributes.status] ?? "bg-gray-100 text-gray-600";
+                    STATUS_STYLES[provider.attributes.status] ?? "bg-neutral-100 text-muted-foreground";
                   return (
-                    <tr key={provider.id} className="hover:bg-gray-50 transition-colors">
+                    <tr key={provider.id} className="hover:bg-background transition-colors">
                       <td className="px-4 py-3">
                         <Link
                           href={`/registry/providers/${provider.id}`}
-                          className="font-medium text-blue-600 hover:text-blue-800 font-mono text-xs"
+                          className="font-medium text-primary hover:text-blue-800 font-mono text-xs"
                         >
                           {provider.attributes.registrationNumber}
                         </Link>
                       </td>
-                      <td className="px-4 py-3 text-gray-900">
+                      <td className="px-4 py-3 text-foreground">
                         {provider.attributes.displayName}
                       </td>
-                      <td className="px-4 py-3 text-gray-600">
+                      <td className="px-4 py-3 text-muted-foreground">
                         {(provider.attributes as Record<string, unknown>).qualification as string ??
                           "General"}
                       </td>
-                      <td className="px-4 py-3 text-gray-600">
+                      <td className="px-4 py-3 text-muted-foreground">
                         {provider.attributes.speciality}
                       </td>
                       <td className="px-4 py-3">

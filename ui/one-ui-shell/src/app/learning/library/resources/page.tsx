@@ -13,7 +13,7 @@ export default function LearningLibraryResourcesPage() {
       <PageShell title="Library Resources" subtitle="Curated Fundo resources with review status and source attribution.">
         <ul className="space-y-2">
           {items.map((item) => (
-            <li key={item.id} className="flex items-center justify-between rounded border border-gray-200 bg-white px-3 py-2 text-sm">
+            <li key={item.id} className="flex items-center justify-between rounded border border-border bg-card px-3 py-2 text-sm">
               <span>{item.title} · {item.resourceType ?? "DOCUMENT"} · {item.reviewStatus ?? "DRAFT"}</span>
               <Link href={`/learning/library/${item.id}`} className="text-teal-700 hover:underline">Open</Link>
             </li>

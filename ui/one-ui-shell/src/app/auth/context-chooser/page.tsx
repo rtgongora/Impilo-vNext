@@ -58,13 +58,13 @@ export default function ContextChooserPage() {
   return (
     <AuthLayout>
       <div className="max-w-lg mx-auto">
-        <h2 className="text-xl font-semibold text-gray-900 mb-1">
+        <h2 className="text-xl font-semibold text-foreground mb-1">
           Welcome{user?.displayName ? `, ${user.displayName.split(" ")[0]}` : ""}
         </h2>
-        <p className="text-sm text-gray-500 mb-6">How are you working today?</p>
+        <p className="text-sm text-muted-foreground mb-6">How are you working today?</p>
 
         {isLoading ? (
-          <p className="text-sm text-gray-400">Loading your authorised contexts...</p>
+          <p className="text-sm text-muted-foreground">Loading your authorised contexts...</p>
         ) : (
           <div className="space-y-3">
             {contextChooserOptions.map((option) => {
@@ -74,16 +74,16 @@ export default function ContextChooserPage() {
                   key={option.id}
                   type="button"
                   onClick={() => handleSelect(option.href, option.operationalMode)}
-                  className="w-full flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 text-left hover:border-impilo-400 hover:ring-1 hover:ring-impilo-200 transition-all"
+                  className="w-full flex items-center gap-4 rounded-xl border border-border bg-card p-4 text-left hover:border-impilo-400 hover:ring-1 hover:ring-impilo-200 transition-all"
                 >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-impilo-50 text-impilo-600">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
                     <Icon className="h-5 w-5" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900">{option.label}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{option.description}</p>
+                    <p className="font-medium text-foreground">{option.label}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{option.description}</p>
                   </div>
-                  <ArrowRight className="h-4 w-4 text-gray-400 shrink-0" />
+                  <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
                 </button>
               );
             })}

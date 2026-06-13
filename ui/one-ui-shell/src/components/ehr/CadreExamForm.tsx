@@ -32,9 +32,9 @@ function SelectField({ label, value, onChange, options }: {
 }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{label}</label>
+      <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{label}</label>
       <select value={value} onChange={(e) => onChange(e.target.value)}
-        className="w-full h-10 px-3 text-sm rounded-md border border-gray-300 bg-white focus:ring-2 focus:ring-violet-500">
+        className="w-full h-10 px-3 text-sm rounded-md border border-border bg-card focus:ring-2 focus:ring-violet-500">
         {options.map((o) => <option key={o} value={o}>{o}</option>)}
       </select>
     </div>
@@ -46,11 +46,11 @@ function NumberField({ label, value, onChange, unit }: {
 }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{label}</label>
+      <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{label}</label>
       <div className="flex items-center gap-2">
         <input type="number" value={value} onChange={(e) => onChange(e.target.value)}
-          className="w-full h-10 px-3 text-sm rounded-md border border-gray-300 bg-white tabular-nums" />
-        {unit && <span className="text-xs text-gray-500 shrink-0">{unit}</span>}
+          className="w-full h-10 px-3 text-sm rounded-md border border-border bg-card tabular-nums" />
+        {unit && <span className="text-xs text-muted-foreground shrink-0">{unit}</span>}
       </div>
     </div>
   );
@@ -81,11 +81,11 @@ function CHWExamScreen({ config, onSave }: { config: CadreFormConfig; onSave?: (
         <ShieldAlert className="w-6 h-6 text-violet-600" />
         <div>
           <p className="font-semibold text-base">Quick Physical Check</p>
-          <p className="text-sm text-gray-500">Check for danger signs — refer immediately if found</p>
+          <p className="text-sm text-muted-foreground">Check for danger signs — refer immediately if found</p>
         </div>
       </div>
 
-      <div className={`rounded-lg border p-4 space-y-4 ${hasAbnormal ? "border-red-300" : "border-gray-200"}`}>
+      <div className={`rounded-lg border p-4 space-y-4 ${hasAbnormal ? "border-red-300" : "border-border"}`}>
         {[
           { label: "AVPU Scale", field: "avpu", options: ["Alert", "Voice responsive", "Pain responsive", "Unresponsive"] },
           { label: "Breathing", field: "breathing", options: ["Normal", "Fast", "Difficulty", "Not breathing"] },
@@ -104,8 +104,8 @@ function CHWExamScreen({ config, onSave }: { config: CadreFormConfig; onSave?: (
                     findings[item.field] === opt
                       ? (opt === item.options[0] || opt === "No" || opt === "None")
                         ? "bg-green-100 border-2 border-green-500 text-green-700"
-                        : "bg-red-100 border-2 border-red-500 text-red-700"
-                      : "bg-gray-100 border-2 border-transparent hover:bg-gray-200"
+                        : "bg-red-100 border-2 border-red-500 text-danger"
+                      : "bg-neutral-100 border-2 border-transparent hover:bg-neutral-100"
                   }`}
                 >{opt}</button>
               ))}
@@ -141,13 +141,13 @@ function NursingExamForm({ config, onSave }: { config: CadreFormConfig; onSave?:
         <Stethoscope className="w-6 h-6 text-violet-600" />
         <div>
           <p className="font-semibold text-base">Nursing Physical Assessment</p>
-          <p className="text-sm text-gray-500">Focused examination — flag abnormalities for medical review</p>
+          <p className="text-sm text-muted-foreground">Focused examination — flag abnormalities for medical review</p>
         </div>
       </div>
 
       {/* General Appearance */}
-      <div className="rounded-lg border border-gray-200 overflow-hidden">
-        <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+      <div className="rounded-lg border border-border overflow-hidden">
+        <div className="px-4 py-3 border-b border-border bg-background">
           <h3 className="text-base font-semibold flex items-center gap-2"><User className="w-5 h-5" />General Appearance</h3>
         </div>
         <div className="p-4 grid grid-cols-2 gap-3">
@@ -167,8 +167,8 @@ function NursingExamForm({ config, onSave }: { config: CadreFormConfig; onSave?:
       </div>
 
       {/* Quick Systems */}
-      <div className="rounded-lg border border-gray-200 overflow-hidden">
-        <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+      <div className="rounded-lg border border-border overflow-hidden">
+        <div className="px-4 py-3 border-b border-border bg-background">
           <h3 className="text-base font-semibold">Focused Systems Check</h3>
         </div>
         <div className="p-4 grid grid-cols-2 gap-3">
@@ -189,8 +189,8 @@ function NursingExamForm({ config, onSave }: { config: CadreFormConfig; onSave?:
 
       {/* GCS if high acuity */}
       {config.exam.showGCS && (
-        <div className="rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+        <div className="rounded-lg border border-border overflow-hidden">
+          <div className="px-4 py-3 border-b border-border bg-background">
             <h3 className="text-base font-semibold flex items-center gap-2"><Brain className="w-5 h-5" />Glasgow Coma Scale</h3>
           </div>
           <div className="p-4">
@@ -205,7 +205,7 @@ function NursingExamForm({ config, onSave }: { config: CadreFormConfig; onSave?:
             <div className="mt-2 text-center">
               <span className={`inline-block text-base font-bold px-4 py-1 rounded-full ${
                 (parseInt(findings.gcs_eye || "4") + parseInt(findings.gcs_verbal || "5") + parseInt(findings.gcs_motor || "6")) >= 13
-                  ? "bg-violet-100 text-violet-700" : "bg-red-100 text-red-700"
+                  ? "bg-violet-100 text-violet-700" : "bg-red-100 text-danger"
               }`}>
                 GCS {(parseInt(findings.gcs_eye || "4") + parseInt(findings.gcs_verbal || "5") + parseInt(findings.gcs_motor || "6"))}/15
               </span>
@@ -216,8 +216,8 @@ function NursingExamForm({ config, onSave }: { config: CadreFormConfig; onSave?:
 
       {/* Obstetric if ANC */}
       {config.exam.showObstetricExam && (
-        <div className="rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+        <div className="rounded-lg border border-border overflow-hidden">
+          <div className="px-4 py-3 border-b border-border bg-background">
             <h3 className="text-base font-semibold flex items-center gap-2"><Baby className="w-5 h-5" />Obstetric Examination</h3>
           </div>
           <div className="p-4 grid grid-cols-2 gap-3">
@@ -271,8 +271,8 @@ function DoctorExamForm({ config, onSave }: { config: CadreFormConfig; onSave?: 
   const gcsTotal = (parseInt(findings.gcs_eye) || 0) + (parseInt(findings.gcs_verbal) || 0) + (parseInt(findings.gcs_motor) || 0);
 
   const SectionCard = ({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) => (
-    <div className="rounded-lg border border-gray-200 overflow-hidden">
-      <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+    <div className="rounded-lg border border-border overflow-hidden">
+      <div className="px-4 py-3 border-b border-border bg-background flex items-center justify-between">
         <h3 className="text-base font-semibold flex items-center gap-2">{icon}{title}</h3>
       </div>
       <div className="p-4">{children}</div>
@@ -375,9 +375,9 @@ function DoctorExamForm({ config, onSave }: { config: CadreFormConfig; onSave?: 
         <div className="space-y-4">
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Glasgow Coma Scale</span>
+              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Glasgow Coma Scale</span>
               <span className={`text-sm font-bold px-3 py-0.5 rounded-full ${
-                gcsTotal >= 13 ? "bg-violet-100 text-violet-700" : gcsTotal >= 9 ? "bg-gray-100 text-gray-700" : "bg-red-100 text-red-700"
+                gcsTotal >= 13 ? "bg-violet-100 text-violet-700" : gcsTotal >= 9 ? "bg-neutral-100 text-foreground" : "bg-red-100 text-danger"
               }`}>
                 GCS {gcsTotal}/15
               </span>
