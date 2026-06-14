@@ -1,0 +1,34 @@
+{
+  "generated_at": "2026-06-14T02:42:00+02:00",
+  "branch": "claude/staging-ux-orchestration-remediation-Yypyl",
+  "commit": "c0e65ddb",
+  "wave_target": 8,
+  "build_command": "bash scripts/operator/fullboot.sh wave-build 8",
+  "build_log": "reports/full-boot/wave-build-8-20260614-021911.log",
+  "deploy_log": "reports/full-boot/wave-deploy-8-20260614-022553.log",
+  "deploy_result": {
+    "helm_exit_code": 1,
+    "helm_note": "post-upgrade hook postgres-init-databases DeadlineExceeded; runtime recovered",
+    "deployments_ready": 98,
+    "microservices_enabled": "89/89 wave<=8",
+    "completeness": "FULL_BOOT_PASS",
+    "smoke": "SMOKE_PASS"
+  },
+  "endpoint_probe": {
+    "appointments": 200,
+    "citizen_feed": 200,
+    "settings_display": 500
+  },
+  "registry_images_local": 347,
+  "image_strategy": {
+    "missing_required_image_strategy": 0,
+    "not_required_count": 28,
+    "shared_template_count": 70,
+    "jib_count": 20
+  },
+  "notes": [
+    "Wave-build 8 may continue pushing refreshed tags; deploy used FULL_BOOT_SKIP_BUILD=1 with existing registry images.",
+    "Critical UI crash services (booking, community) now deployed and reachable.",
+    "settings/display still 500 — settings-service or BFF path needs triage."
+  ]
+}

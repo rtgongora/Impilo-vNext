@@ -1,0 +1,45 @@
+{
+  "generated_at": "2026-06-14T00:15:00Z",
+  "branch": "claude/staging-ux-orchestration-remediation-Yypyl",
+  "commit": "c0e65ddb",
+  "summary": {
+    "wave_count": 9,
+    "unique_wave_services": 110,
+    "registry_services": 91,
+    "classification_entries": 146,
+    "required_full_boot": 22,
+    "wave_sequenced_full_boot": 98,
+    "currently_deployed_wave_max": 0,
+    "currently_deployed_k8s_objects": 22,
+    "bff_downstream_env_urls": 92,
+    "gap_undeployed_runtime_services": "~87"
+  },
+  "waves": [
+    {"id": 0, "name": "required-full-boot", "service_count": 15},
+    {"id": 1, "name": "optional-trust", "service_count": 3},
+    {"id": 2, "name": "optional-registry", "service_count": 2},
+    {"id": 3, "name": "optional-clinical", "service_count": 15},
+    {"id": 4, "name": "optional-data", "service_count": 12},
+    {"id": 5, "name": "optional-integration", "service_count": 25},
+    {"id": 6, "name": "optional-experience", "service_count": 23},
+    {"id": 7, "name": "optional-enterprise", "service_count": 14},
+    {"id": 8, "name": "preview-finance-pilot", "service_count": 1}
+  ],
+  "critical_missing_for_ui_crashes": [
+    "booking-service",
+    "community-service",
+    "scheduling-service",
+    "pharmacy-service",
+    "learning-service",
+    "notification-service",
+    "search-service",
+    "wellness-service",
+    "msika-service",
+    "workflow-service"
+  ],
+  "notes": [
+    "Wave 0 is live in impilo-full-preview; waves 1-8 are the unblock target.",
+    "UI 500s are downstream I/O errors from BFF to undeployed services, not auth/roles.",
+    "VM capacity: 107GiB RAM available — full wave deploy is feasible."
+  ]
+}
