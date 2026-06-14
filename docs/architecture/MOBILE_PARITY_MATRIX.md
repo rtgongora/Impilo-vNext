@@ -1,6 +1,6 @@
 # Mobile parity matrix
 
-> Generated: 2026-06-09. Regenerate: `node scripts/architecture/generate-parity-inventories.mjs`
+> Generated: 2026-06-14. Regenerate: `node scripts/architecture/generate-parity-inventories.mjs`
 
 Apps: **citizen-app**, **provider-app** (Expo, pnpm workspace). See [MOBILE_APP_INVENTORY.md](./MOBILE_APP_INVENTORY.md).
 

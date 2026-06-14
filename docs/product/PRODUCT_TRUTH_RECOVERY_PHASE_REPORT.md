@@ -1,6 +1,6 @@
 # Product Truth Recovery — Phase Report
 
-> Generated: 2026-06-08T14:34:51.416Z
+> Generated: 2026-06-14T00:21:09.923Z
 > Branch: `claude/staging-ux-orchestration-remediation-Yypyl`
 > Phase: **1 — Discovery & Documentation Only**
 
@@ -8,42 +8,42 @@
 
 | Domain | Paths scanned |
 |--------|---------------|
-| Backend services | `services/*` (91 registry services, 723 controllers) |
-| Experience BFF | `services/experience-bff` (238 controllers, 215 route prefixes) |
-| API contracts | `contracts/openapi/` (98), `contracts/asyncapi/` (13) |
+| Backend services | `services/*` (91 registry services, 748 controllers) |
+| Experience BFF | `services/experience-bff` (250 controllers, 227 route prefixes) |
+| API contracts | `contracts/openapi/` (99), `contracts/asyncapi/` (13) |
 | Web experience | `ui/one-ui-shell/src/app/`, `routes.ts`, `hooks/queries/` |
 | Mobile | `apps/mobile/citizen-app`, `apps/mobile/provider-app`, `apps/mobile/packages/` |
 | Registry & doctrine | `docs/registry/`, `docs/doctrine/`, `docs/product/`, `CLAUDE.md`, `AGENTS.md` |
 | Infrastructure | Dockerfiles (93), `deploy/helm/`, `.github/workflows/` |
-| Canonical capabilities | `scripts/frontend/generate-parity-docs.mjs` (36 capabilities) |
-| Database | Flyway migrations across 87 service modules |
+| Canonical capabilities | `scripts/frontend/generate-parity-docs.mjs` (37 capabilities) |
+| Database | Flyway migrations across 88 service modules |
 
 ## 2. Total components discovered
 
-**2545** entries in the Product Truth Recovery Map.
+**2722** entries in the Product Truth Recovery Map.
 
 ## 3. Total backend capabilities
 
 - **91** registry backend services
 - **12** shared libraries
-- **723** backend REST controllers
-- **238** BFF controllers composing sovereign services
+- **748** backend REST controllers
+- **250** BFF controllers composing sovereign services
 
 ## 4. Total APIs/contracts
 
-- **98** OpenAPI specifications
+- **99** OpenAPI specifications
 - **13** AsyncAPI event contracts
-- **111** total API/event contracts
+- **112** total API/event contracts
 
 ## 5. Total frontend routes
 
-- **468** registered routes in `routes.ts`
-- **28** on-disk pages not in registry (guard/sidebar gap)
-- **177** TanStack Query hooks
+- **485** registered routes in `routes.ts`
+- **117** on-disk pages not in registry (guard/sidebar gap)
+- **189** TanStack Query hooks
 
 ## 6. Total mobile screens
 
-- **163** mobile screens (citizen + provider apps)
+- **169** mobile screens (citizen + provider apps)
 
 ## 7. Major hidden backend capability areas
 
@@ -51,7 +51,7 @@ Backend-rich domains with partial or missing experience surfacing (from canonica
 
 _None flagged as Not Wired/Fixture._
 
-Additional signal: BFF implements ~215 route prefixes but `experience-bff.openapi.yaml` documents only a baseline subset — significant contract-runtime drift.
+Additional signal: BFF implements ~227 route prefixes but `experience-bff.openapi.yaml` documents only a baseline subset — significant contract-runtime drift.
 
 ## 8. Major frontend/mobile visibility gaps
 
@@ -59,15 +59,16 @@ Additional signal: BFF implements ~215 route prefixes but `experience-bff.openap
 - VITO: web=partial mobile=partial gap=Issuance queue / card ops not fully surfaced
 - VARAPI: web=partial mobile=partial gap=Council import / reconciliation queue thin
 - TUSO: web=partial mobile=partial gap=Control-tower / digital readiness dashboards thin
-- Indawo: web=partial mobile=partial gap=Map layer integration incomplete
+- Indawo: web=yes mobile=partial gap=Mobile site-registry list lacks geo edit
 - BUTANO: web=yes mobile=partial gap=Mobile conditions/allergies TODO
 - Core Transaction: web=partial mobile=partial gap=Mobile journey shell shallow
-- Public Health Ops: web=partial mobile=partial gap=Field ops mobile thinner than web
-- Ndila: web=partial mobile=partial gap=Web ops map dashboards incomplete
+- Public Health Ops: web=yes mobile=partial gap=Citizen PH awareness thinner than provider web
+- Ndila: web=yes mobile=partial gap=Mobile Ndila map parity on field tasks
 - Nhume: web=partial mobile=partial gap=Dual path: nhume vs dispatch BFF
 - Comms Hub: web=partial mobile=partial gap=Template/campaign admin depth
 - Telemedicine: web=partial mobile=partial gap=RTC media intentionally blocked
 - Telemedicine analytics: web=yes mobile=no gap=Mobile analytics dashboard
+- Data Pipeline & NDR: web=yes mobile=no gap=Mobile data-ops visibility
 - Break-glass (provider request): web=yes mobile=partial gap=Mobile provider break-glass still uses legacy mobile BFF stubs
 - Msika / Msika Flow: web=partial mobile=partial gap=Order list routes 501 on some paths
 - MusheX / COSTA: web=partial mobile=partial gap=No raw /mushex/v1 in browser
@@ -79,16 +80,15 @@ Additional signal: BFF implements ~215 route prefixes but `experience-bff.openap
 - Workflow / Dispatch: web=partial mobile=partial gap=Dispatch detail + offline queue UX
 - Admin / Governance: web=partial mobile=partial gap=Keys/federation blocked
 - MADI: web=Live mobile=Live gap=—
-- MADI: web=Live mobile=Live gap=—
 
 
-_…and 8 more in rollups JSON._
+_…and 9 more in rollups JSON._
 
 
 ## 9. Unknown-needs-review items
 
-**101** entries classified `unknown-needs-review`, primarily:
-- Unregistered frontend pages (28)
+**196** entries classified `unknown-needs-review`, primarily:
+- Unregistered frontend pages (117)
 - Query hooks without detected BFF paths
 - Non-canonical UI workspaces
 

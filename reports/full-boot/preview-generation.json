@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-06-13T05:33:43Z",
-  "commit": "0ff0a6eb",
+  "generated_at": "2026-06-14T00:41:10Z",
+  "commit": "c0e65ddb",
   "public_generation": "98/98 deployments ready (namespace impilo-full-preview); helm enabled 89/89 microservices (wave\u22648)",
   "coverage_summary": "runtime 89/89 k8s microservices | registry runtime lanes 99 | non-runtime validate 47/47",
   "runtime": {
@@ -20,15 +20,15 @@
     "namespace": "impilo-full-preview",
     "ready": 98,
     "total": 98,
-    "has_public_ingress": true
+    "has_public_ingress": false
   },
   "fallback_slice": {
     "namespace": "impilo-preview",
-    "ready": 0,
+    "ready": 4,
     "total": 4,
     "has_public_ingress": false
   },
-  "public_ingress_count": 1,
-  "single_public_stack": true,
-  "reason": "ok"
+  "public_ingress_count": 0,
+  "single_public_stack": false,
+  "reason": "full stack (impilo-full-preview) has no public ingress"
 }

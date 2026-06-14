@@ -1,17 +1,17 @@
 # Service Coverage Ledger
 
-> Generated: 2026-06-07T08:11:35.964Z
+> Generated: 2026-06-14T00:21:09.862Z
 > Components: **129**
 
 | Metric | Count |
 |--------|------:|
-| surfaced-live | 7 |
-| floating | 2 |
+| surfaced-live | 15 |
+| floating | 0 |
 | stubbed | 0 |
-| unsurfaced | 108 |
+| unsurfaced | 102 |
 | internal-only | 12 |
-| domain services without journey | 26 |
-| unregistered frontend pages | 27 |
+| domain services without journey | 24 |
+| unregistered frontend pages | 28 |
 
 **Target:** floating=0, stubbed=0, unmappedUserFacing=0.
 

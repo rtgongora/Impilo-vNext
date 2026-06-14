@@ -1,6 +1,6 @@
 # Frontend route inventory
 
-> Generated from `ui/one-ui-shell/src/lib/routes.ts` (481 routes)
+> Generated from `ui/one-ui-shell/src/lib/routes.ts` (485 routes)
 
 - `/`
 - `/access`
@@ -32,6 +32,7 @@
 - `/ai-governance/models/[id]`
 - `/ask`
 - `/auth`
+- `/auth/context-chooser`
 - `/auth/forgot-password`
 - `/auth/login`
 - `/auth/login/biometric`
@@ -45,6 +46,7 @@
 - `/auth/reset-password`
 - `/auth/resolving`
 - `/beds`
+- `/bootstrap`
 - `/caregiving`
 - `/caregiving/delegation`
 - `/caregiving/dependants`
@@ -200,6 +202,4 @@
 - `/inventory`
 - `/inventory/counts`
 - `/inventory/movements`
-- `/inventory/requisitions`
-- `/inventory/stock-management`
-- … and 281 more
+- … and 285 more

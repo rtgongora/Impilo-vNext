@@ -1,6 +1,6 @@
 # AUTO-GENERATED — do not edit by hand.
-# Regenerate: node scripts/full-boot/generate-full-preview-runtime-values.mjs
-# Microservices: 89 | enabled: 89 (all waves)
+# Regenerate: node scripts/full-boot/generate-full-preview-runtime-values.mjs --max-wave 8
+# Microservices: 89 | enabled: 89 (waves 0–8)
 fullBootServices:
   ai-model-registry-service:
     enabled: true

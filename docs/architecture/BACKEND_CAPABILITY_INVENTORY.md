@@ -1,6 +1,6 @@
 # Backend capability inventory
 
-> Generated: 2026-06-09. Regenerate: `node scripts/architecture/generate-parity-inventories.mjs`
+> Generated: 2026-06-14. Regenerate: `node scripts/architecture/generate-parity-inventories.mjs`
 
 Canonical matrix: [BACKEND_CAPABILITY_TO_FRONTEND_SURFACING_MATRIX.md](../frontend/BACKEND_CAPABILITY_TO_FRONTEND_SURFACING_MATRIX.md)
 
@@ -39,7 +39,7 @@ Canonical matrix: [BACKEND_CAPABILITY_TO_FRONTEND_SURFACING_MATRIX.md](../fronte
 | MADI | Clinical | /internal/v1/madi/transfusions/*, /internal/v1/mobile/provider/madi/transfusions/* | Transfusion episode and observation capture | /internal/v1/madi/transfusions/*, /internal/v1/mobile/provider/madi/transfusions/* | yes | /madi/transfusion/* | yes | fully surfaced |
 | MADI | Clinical | /internal/v1/madi/haemovigilance/*, /internal/v1/mobile/provider/madi/haemovigilance/* | Haemovigilance (adverse reaction reporting) | /internal/v1/madi/haemovigilance/*, /internal/v1/mobile/provider/madi/haemovigilance/* | yes | /madi/haemovigilance | yes | fully surfaced |
 | MADI | Clinical | /internal/v1/madi/central-bank/* | Central blood bank coordination | /internal/v1/madi/central-bank/* | yes | /madi/central-bank | yes | fully surfaced |
-| Impilo Live | Experience | /internal/v1/live/* | Live events, webinars, broadcasts, typed scheduling | /internal/v1/live/* | yes | /live, /live/admin, /live/discover, /live/event/[eventId] | yes | fully surfaced |
+| Impilo Live | Experience | /internal/v1/live/* | Live events, webinars, broadcasts | /internal/v1/live/* | yes | /live, /live/discover, /live/event/[eventId] | yes | fully surfaced |
 | Health OS Launcher | Experience | /internal/v1/launcher/apps, /internal/v1/launcher/apps/{appCode}/state | Role/facility-aware app launcher + marketplace tiles | /internal/v1/launcher/apps, /internal/v1/launcher/apps/{appCode}/state | yes | ShellStartMenu (Start menu) | yes | fully surfaced |
 | Wellness / Monitoring | Experience | /internal/v1/mobile/citizen/monitoring/devices | Citizen remote monitoring device pair/list/sync | /internal/v1/mobile/citizen/monitoring/devices | yes | /monitoring/devices | yes | fully surfaced |
 | MADI | Clinical | /internal/v1/madi/dashboard | MADI dashboards and programme KPIs | /internal/v1/madi/dashboard | yes | /madi/dashboard | yes | fully surfaced |

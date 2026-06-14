@@ -1,6 +1,6 @@
 # Product Truth Recovery Map
 
-> Generated: 2026-06-08T14:34:51.416Z
+> Generated: 2026-06-14T00:21:09.923Z
 > Branch: `claude/staging-ux-orchestration-remediation-Yypyl`
 > Regenerate: `node scripts/product/generate-product-truth-recovery.mjs`
 
@@ -9,7 +9,7 @@
 Authoritative Phase 1 discovery map reconciling registry, contracts, BFF, backend controllers, web routes, mobile screens, hooks, events, migrations, doctrine, and infrastructure into one product-truth inventory.
 
 **Exhaustive machine-readable exports:**
-- [product-truth-recovery-map.json](../../reports/product/product-truth-recovery-map.json) — 2545 entries
+- [product-truth-recovery-map.json](../../reports/product/product-truth-recovery-map.json) — 2722 entries
 - [product-truth-recovery-map.csv](../../reports/product/product-truth-recovery-map.csv) — same data, CSV
 - [product-truth-rollups.md](../../reports/product/product-truth-rollups.md) — summary counts
 
@@ -17,13 +17,13 @@ Authoritative Phase 1 discovery map reconciling registry, contracts, BFF, backen
 
 | Dimension | Discovered |
 |-----------|----------:|
-| Total items | 2545 |
+| Total items | 2722 |
 | Backend services | 91 |
-| APIs/contracts | 111 |
-| Frontend routes | 468 |
-| Mobile screens | 163 |
-| BFF route prefixes | 215 |
-| Unknown-needs-review | 101 |
+| APIs/contracts | 112 |
+| Frontend routes | 485 |
+| Mobile screens | 169 |
+| BFF route prefixes | 227 |
+| Unknown-needs-review | 196 |
 
 ## Canonical capabilities (embedded registry)
 
@@ -33,15 +33,16 @@ Authoritative Phase 1 discovery map reconciling registry, contracts, BFF, backen
 | VITO: Client search, register, profile, Health ID | Registry/VITO | partial | partial | Partial | Issuance queue / card ops not fully surfaced |
 | VARAPI: Provider registry, licenses, privileges, CPD | Registry/VARAPI | partial | partial | Partial | Council import / reconciliation queue thin |
 | TUSO: Facility/workspace registry, bookings | Registry/TUSO | partial | partial | Partial | Control-tower / digital readiness dashboards thin |
-| Indawo: Public health site registry | Registry/Indawo | partial | partial | Partial | Map layer integration incomplete |
+| Indawo: Public health site registry + geo capture | Registry/Indawo | yes | partial | Live | Mobile site-registry list lacks geo edit |
 | BUTANO: SHR summary, timeline, allergies, conditions | Clinical/BUTANO | yes | partial | Live | Mobile conditions/allergies TODO |
 | Core Transaction: Transaction composition, journey steppers | Clinical/Core Transaction | partial | partial | Partial | Mobile journey shell shallow |
-| Public Health Ops: Inspections, outbreaks, campaigns, intelligence | Data & Intelligence/Public Health Ops | partial | partial | Partial | Field ops mobile thinner than web |
-| Ndila: Geocode, routes, intelligence layers | Integration & Edge/Ndila | partial | partial | Partial | Web ops map dashboards incomplete |
+| Public Health Ops: Surveillance, investigations, campaigns, intelligence, field  | Data & Intelligence/Public Health Ops | yes | partial | Live | Citizen PH awareness thinner than provider web |
+| Ndila: Geocode, routes, PH/site ops maps | Integration & Edge/Ndila | yes | partial | Live | Mobile Ndila map parity on field tasks |
 | Nhume: Dispatch, delivery, fleet tracking | Enterprise/Nhume | partial | partial | Partial | Dual path: nhume vs dispatch BFF |
 | Comms Hub: Omnichannel, messaging, notifications | Experience/Comms Hub | partial | partial | Partial | Template/campaign admin depth |
 | Telemedicine: Teleconsult sessions, scheduling | Clinical/Telemedicine | partial | partial | Partial | RTC media intentionally blocked |
-| Telemedicine analytics: Telemedicine lifecycle SLA aggregates + event ingest | Data/Telemedicine analytics | yes | no | Partial | Mobile analytics dashboard |
+| Telemedicine analytics: Telemedicine lifecycle SLA aggregates + event ingest | Data/Telemedicine analytics | yes | no | Live | Mobile analytics dashboard |
+| Data Pipeline & NDR: Pipeline watermarks, warehouse gold, national dataset catal | Data/Data Pipeline & NDR | yes | no | Live | Mobile data-ops visibility |
 | Break-glass (provider request): Emergency access override request from clinical/ | Trust/Break-glass (provider request) | yes | partial | Partial | Mobile provider break-glass still uses legacy mobile BFF stubs |
 | Msika / Msika Flow: Catalog, orders, marketplace | Enterprise/Msika / Msika Flow | partial | partial | Partial | Order list routes 501 on some paths |
 | MusheX / COSTA: Payments, claims, billing, tariffs | Enterprise/MusheX / COSTA | partial | partial | Partial | No raw /mushex/v1 in browser |
@@ -84,7 +85,7 @@ Authoritative Phase 1 discovery map reconciling registry, contracts, BFF, backen
 | community-service | experience/workflow-orchestration | production=baseline-assessed; impl=implemented-or-partial; frontend=wired | contract: contracts/openapi/community.openapi.yaml; status=p | yes |  |
 | connector-fhir-adapter | integration/interoperability | production=baseline-assessed; impl=implemented-or-partial; frontend=unknown-or-p | no-matched-openapi; status=partial | partial |  |
 | costing-engine-service | enterprise/finance | production=baseline-assessed; impl=implemented-or-partial; frontend=unknown-or-p | no-matched-openapi; status=partial | partial |  |
-| coverage-service | enterprise/finance | production=baseline-assessed; impl=implemented-or-partial; frontend=unknown-or-p | contract: contracts/openapi/coverage.openapi.yaml; status=pa | partial |  |
+| coverage-service | enterprise/finance | production=pilot-ready-enrolled-coverage; impl=implemented; frontend=wired | contract: contracts/openapi/coverage.openapi.yaml; status=wi | yes |  |
 | credential-verification-service | enterprise/finance | production=baseline-assessed; impl=implemented-or-partial; frontend=unknown-or-p | contract: contracts/openapi/credential-verification.openapi. | partial |  |
 | data-access-governance-service | data/intelligence | production=baseline-assessed; impl=implemented-or-partial; frontend=unknown-or-p | contract: contracts/openapi/data-access-governance.openapi.y | partial |  |
 | data-governance-service | data/intelligence | production=baseline-assessed; impl=implemented-or-partial; frontend=unknown-or-p | contract: contracts/openapi/data-governance.openapi.yaml; st | partial |  |
@@ -101,15 +102,15 @@ Authoritative Phase 1 discovery map reconciling registry, contracts, BFF, backen
 | guidance-service | clinical/clinical-knowledge | production=baseline-assessed; impl=implemented-or-partial; frontend=unknown-or-p | contract: contracts/openapi/guidance.openapi.yaml; status=pa | partial |  |
 | hr-payroll-service | enterprise/enterprise-resource | production=baseline-assessed; impl=implemented-or-partial; frontend=unknown-or-p | contract: contracts/openapi/hr-payroll.openapi.yaml; status= | partial |  |
 | identity-assurance-service | trust/identity-governance | production=baseline-assessed; impl=implemented-or-partial; frontend=unknown-or-p | contract: contracts/openapi/identity-assurance.openapi.yaml; | partial |  |
-| indawo-service | registry/registry-spine | production=baseline-assessed; impl=implemented-or-partial; frontend=unknown-or-p | contract: contracts/openapi/indawo.openapi.yaml; status=part | partial | Map layer integration incomplete |
-| inpatient-service | clinical/care-delivery | production=baseline-assessed; impl=implemented-or-partial; frontend=unknown-or-p | contract: contracts/openapi/inpatient.openapi.yaml; status=p | partial |  |
+| indawo-service | registry/registry-spine | production=baseline-assessed; impl=implemented-or-partial; frontend=unknown-or-p | contract: contracts/openapi/indawo.openapi.yaml; status=part | partial | Mobile site-registry list lacks geo edit |
+| inpatient-service | clinical/care-delivery | production=pilot-ready-enrolled-inpatient; impl=implemented-or-partial; frontend | contract: contracts/openapi/inpatient.openapi.yaml; status=p | yes |  |
 | integration-hub | integration/interoperability | production=baseline-assessed; impl=implemented-or-partial; frontend=unknown-or-p | contract: contracts/openapi/integration-hub.openapi.yaml; st | partial |  |
 | inventory-elmis-adapter | clinical/care-delivery | production=baseline-assessed; impl=implemented-or-partial; frontend=unknown-or-p | no-matched-openapi; status=partial | partial |  |
 | inventory-service | clinical/care-delivery | production=baseline-assessed; impl=implemented-or-partial; frontend=unknown-or-p | contract: contracts/openapi/inventory.openapi.yaml; status=p | partial |  |
 | iot-ingestion-service | integration/platform-ops | production=baseline-assessed; impl=implemented-or-partial; frontend=unknown-or-p | contract: contracts/openapi/iot-ingestion.openapi.yaml; stat | partial |  |
 | jobs-service | integration/interoperability | production=baseline-assessed; impl=implemented-or-partial; frontend=unknown-or-p | contract: contracts/openapi/jobs.openapi.yaml; status=partia | partial |  |
 | landela-adapter-service | integration/interoperability | production=baseline-assessed; impl=implemented-or-partial; frontend=unknown-or-p | contract: contracts/openapi/landela-adapter.openapi.yaml; st | partial |  |
-| learning-service | experience/workflow-orchestration | production=baseline-assessed; impl=implemented-or-partial; frontend=wired | contract: contracts/openapi/learning.openapi.yaml; status=pa | yes |  |
+| learning-service | experience/workflow-orchestration | production=pilot-ready-enrolled-learning; impl=implemented; frontend=wired | contract: contracts/openapi/learning.openapi.yaml; status=wi | yes |  |
 
 _…and 51 more rows in JSON/CSV._
 
@@ -119,11 +120,11 @@ _…and 51 more rows in JSON/CSV._
 | route | path | blocker |
 | --- | --- | --- |
 | /access/governance | ui/one-ui-shell/src/app/access/governance/page.tsx | not in routes.ts — guard/sidebar coverage gap |
-| /coverage/contracts | ui/one-ui-shell/src/app/coverage/contracts/page.tsx | not in routes.ts — guard/sidebar coverage gap |
-| /coverage/enroll | ui/one-ui-shell/src/app/coverage/enroll/page.tsx | not in routes.ts — guard/sidebar coverage gap |
-| /coverage/member | ui/one-ui-shell/src/app/coverage/member/page.tsx | not in routes.ts — guard/sidebar coverage gap |
+| /clinical/emergency/[visitId] | ui/one-ui-shell/src/app/clinical/emergency/[visitId]/page.tsx | not in routes.ts — guard/sidebar coverage gap |
 | /developer/event-catalogue | ui/one-ui-shell/src/app/developer/event-catalogue/page.tsx | not in routes.ts — guard/sidebar coverage gap |
+| /ehr/[patientId]/charts/[chartId] | ui/one-ui-shell/src/app/ehr/[patientId]/charts/[chartId]/page.tsx | not in routes.ts — guard/sidebar coverage gap |
 | /ehr/[patientId]/emergency | ui/one-ui-shell/src/app/ehr/[patientId]/emergency/page.tsx | not in routes.ts — guard/sidebar coverage gap |
+| /ehr/[patientId]/procedures/[episodeId] | ui/one-ui-shell/src/app/ehr/[patientId]/procedures/[episodeId]/page.tsx | not in routes.ts — guard/sidebar coverage gap |
 | /ehr/[patientId]/workspace/[specialty] | ui/one-ui-shell/src/app/ehr/[patientId]/workspace/[specialty]/page.tsx | not in routes.ts — guard/sidebar coverage gap |
 | /groups/[id] | ui/one-ui-shell/src/app/groups/[id]/page.tsx | not in routes.ts — guard/sidebar coverage gap |
 | /groups | ui/one-ui-shell/src/app/groups/page.tsx | not in routes.ts — guard/sidebar coverage gap |
@@ -131,6 +132,7 @@ _…and 51 more rows in JSON/CSV._
 | /inventory/reconciliation | ui/one-ui-shell/src/app/inventory/reconciliation/page.tsx | not in routes.ts — guard/sidebar coverage gap |
 | /inventory/stock | ui/one-ui-shell/src/app/inventory/stock/page.tsx | not in routes.ts — guard/sidebar coverage gap |
 | /landela | ui/one-ui-shell/src/app/landela/page.tsx | not in routes.ts — guard/sidebar coverage gap |
+| /learning/admin/moderation | ui/one-ui-shell/src/app/learning/admin/moderation/page.tsx | not in routes.ts — guard/sidebar coverage gap |
 | /marketplace/apps/[itemCode] | ui/one-ui-shell/src/app/marketplace/apps/[itemCode]/page.tsx | not in routes.ts — guard/sidebar coverage gap |
 | /marketplace/apps/admin/activation | ui/one-ui-shell/src/app/marketplace/apps/admin/activation/page.tsx | not in routes.ts — guard/sidebar coverage gap |
 | /marketplace/apps/admin/installations | ui/one-ui-shell/src/app/marketplace/apps/admin/installations/page.tsx | not in routes.ts — guard/sidebar coverage gap |
@@ -138,14 +140,28 @@ _…and 51 more rows in JSON/CSV._
 | /marketplace/apps | ui/one-ui-shell/src/app/marketplace/apps/page.tsx | not in routes.ts — guard/sidebar coverage gap |
 | /page.tsx | ui/one-ui-shell/src/app/page.tsx | not in routes.ts — guard/sidebar coverage gap |
 | /professional | ui/one-ui-shell/src/app/professional/page.tsx | not in routes.ts — guard/sidebar coverage gap |
-| /registry/clients/[id] | ui/one-ui-shell/src/app/registry/clients/[id]/page.tsx | not in routes.ts — guard/sidebar coverage gap |
-| /registry/clients/new | ui/one-ui-shell/src/app/registry/clients/new/page.tsx | not in routes.ts — guard/sidebar coverage gap |
 | /registry/facilities/[id]/edit | ui/one-ui-shell/src/app/registry/facilities/[id]/edit/page.tsx | not in routes.ts — guard/sidebar coverage gap |
 | /registry/facilities/new | ui/one-ui-shell/src/app/registry/facilities/new/page.tsx | not in routes.ts — guard/sidebar coverage gap |
 | /registry/providers/[id]/edit | ui/one-ui-shell/src/app/registry/providers/[id]/edit/page.tsx | not in routes.ts — guard/sidebar coverage gap |
 | /registry/providers/new | ui/one-ui-shell/src/app/registry/providers/new/page.tsx | not in routes.ts — guard/sidebar coverage gap |
 | /tuso | ui/one-ui-shell/src/app/tuso/page.tsx | not in routes.ts — guard/sidebar coverage gap |
-| /wellness/dashboard | ui/one-ui-shell/src/app/wellness/dashboard/page.tsx | not in routes.ts — guard/sidebar coverage gap |
+| /work/administration-governance/access-requests | ui/one-ui-shell/src/app/work/administration-governance/access-requests/page.tsx | not in routes.ts — guard/sidebar coverage gap |
+| /work/administration-governance/access-review/[subjectId] | ui/one-ui-shell/src/app/work/administration-governance/access-review/[subjectId] | not in routes.ts — guard/sidebar coverage gap |
+| /work/administration-governance/access-review | ui/one-ui-shell/src/app/work/administration-governance/access-review/page.tsx | not in routes.ts — guard/sidebar coverage gap |
+| /work/administration-governance/audit | ui/one-ui-shell/src/app/work/administration-governance/audit/page.tsx | not in routes.ts — guard/sidebar coverage gap |
+| /work/administration-governance/municipal | ui/one-ui-shell/src/app/work/administration-governance/municipal/page.tsx | not in routes.ts — guard/sidebar coverage gap |
+| /work/administration-governance/onboard/citizen | ui/one-ui-shell/src/app/work/administration-governance/onboard/citizen/page.tsx | not in routes.ts — guard/sidebar coverage gap |
+| /work/administration-governance/onboard/external-partner-user | ui/one-ui-shell/src/app/work/administration-governance/onboard/external-partner- | not in routes.ts — guard/sidebar coverage gap |
+| /work/administration-governance/onboard/hsc-user | ui/one-ui-shell/src/app/work/administration-governance/onboard/hsc-user/page.tsx | not in routes.ts — guard/sidebar coverage gap |
+| /work/administration-governance/onboard/madi-user | ui/one-ui-shell/src/app/work/administration-governance/onboard/madi-user/page.ts | not in routes.ts — guard/sidebar coverage gap |
+| /work/administration-governance/onboard/marketplace-user | ui/one-ui-shell/src/app/work/administration-governance/onboard/marketplace-user/ | not in routes.ts — guard/sidebar coverage gap |
+| /work/administration-governance/onboard/municipal-user | ui/one-ui-shell/src/app/work/administration-governance/onboard/municipal-user/pa | not in routes.ts — guard/sidebar coverage gap |
+| /work/administration-governance/onboard | ui/one-ui-shell/src/app/work/administration-governance/onboard/page.tsx | not in routes.ts — guard/sidebar coverage gap |
+| /work/administration-governance/onboard/payer-user | ui/one-ui-shell/src/app/work/administration-governance/onboard/payer-user/page.t | not in routes.ts — guard/sidebar coverage gap |
+| /work/administration-governance/onboard/private-facility-user | ui/one-ui-shell/src/app/work/administration-governance/onboard/private-facility- | not in routes.ts — guard/sidebar coverage gap |
+
+_…and 77 more rows in JSON/CSV._
+
 
 ## Entry schema
 

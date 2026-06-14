@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-06-07T08:11:35.964Z",
+  "generatedAt": "2026-06-14T00:21:09.862Z",
   "counts": {
     "total": 129,
-    "surfacedLive": 7,
-    "floating": 2,
+    "surfacedLive": 15,
+    "floating": 0,
     "stubbed": 0,
-    "unsurfaced": 108,
+    "unsurfaced": 102,
     "internalOnly": 12,
-    "unmappedServices": 26,
-    "unregisteredPages": 27
+    "unmappedServices": 24,
+    "unregisteredPages": 28
   },
   "rows": [
     {
@@ -36,7 +36,9 @@
       "mavenModule": "analytics-pipeline-service",
       "serviceClass": "B",
       "surfaceStatus": "unsurfaced",
-      "journeyIds": [],
+      "journeyIds": [
+        "telemedicine-encounter"
+      ],
       "webRoutes": [],
       "mobileScreens": [],
       "bffEndpoints": [],
@@ -95,8 +97,11 @@
       "entity": "booking-service",
       "mavenModule": "booking-service",
       "serviceClass": "B",
-      "surfaceStatus": "floating",
-      "journeyIds": [],
+      "surfaceStatus": "surfaced-live",
+      "journeyIds": [
+        "appointment-scheduling",
+        "impilo-live-events"
+      ],
       "webRoutes": [],
       "mobileScreens": [],
       "bffEndpoints": [],
@@ -318,7 +323,7 @@
       "entity": "coverage-service",
       "mavenModule": "coverage-service",
       "serviceClass": "B",
-      "surfaceStatus": "unsurfaced",
+      "surfaceStatus": "surfaced-live",
       "journeyIds": [
         "payment-billing-claim",
         "coverage-enrollment"
@@ -560,6 +565,7 @@
         "health-id-issuance",
         "marketplace-order",
         "wellness-journey",
+        "impilo-live-events",
         "social-community",
         "public-health-outreach",
         "crvs-ubomi",
@@ -747,7 +753,7 @@
       "entity": "inpatient-service",
       "mavenModule": "inpatient-service",
       "serviceClass": "B",
-      "surfaceStatus": "unsurfaced",
+      "surfaceStatus": "surfaced-live",
       "journeyIds": [
         "inpatient-admission",
         "emergency-encounter"
@@ -919,8 +925,10 @@
       "entity": "live-service",
       "mavenModule": "live-service",
       "serviceClass": "A",
-      "surfaceStatus": "floating",
-      "journeyIds": [],
+      "surfaceStatus": "surfaced-live",
+      "journeyIds": [
+        "impilo-live-events"
+      ],
       "webRoutes": [],
       "mobileScreens": [],
       "bffEndpoints": [],
@@ -1324,7 +1332,7 @@
       "entity": "pacs-adapter-service",
       "mavenModule": "pacs-adapter-service",
       "serviceClass": "B",
-      "surfaceStatus": "unsurfaced",
+      "surfaceStatus": "surfaced-live",
       "journeyIds": [
         "imaging-order-result"
       ],
@@ -1346,7 +1354,7 @@
       "entity": "pct-service",
       "mavenModule": "pct-service",
       "serviceClass": "B",
-      "surfaceStatus": "unsurfaced",
+      "surfaceStatus": "surfaced-live",
       "journeyIds": [
         "patient-search-selection",
         "queue-walk-in",
@@ -1510,9 +1518,10 @@
       "entity": "rtc-gateway-service",
       "mavenModule": "rtc-gateway-service",
       "serviceClass": "B",
-      "surfaceStatus": "unsurfaced",
+      "surfaceStatus": "surfaced-live",
       "journeyIds": [
-        "telemedicine-encounter"
+        "telemedicine-encounter",
+        "impilo-live-events"
       ],
       "webRoutes": [],
       "mobileScreens": [],
@@ -1658,7 +1667,7 @@
       "entity": "simba-service",
       "mavenModule": "simba-service",
       "serviceClass": "B",
-      "surfaceStatus": "unsurfaced",
+      "surfaceStatus": "surfaced-live",
       "journeyIds": [
         "wellness-journey"
       ],

@@ -2,6 +2,7 @@
 
 > OpenAPI under `contracts/openapi/`. Extend per contract.
 
+- `admin-governance.openapi.yaml`
 - `ai-model-registry.openapi.yaml`
 - `analytics-pipeline.openapi.yaml`
 - `asset-registry.openapi.yaml`
@@ -81,4 +82,3 @@
 - `search.openapi.yaml`
 - `security-hardening.openapi.yaml`
 - `share-slip.openapi.yaml`
-- `simba.openapi.yaml`
