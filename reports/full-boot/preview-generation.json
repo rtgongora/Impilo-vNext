@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-06-14T01:20:32Z",
-  "commit": "3178764b",
-  "public_generation": "98/98 deployments ready (namespace impilo-full-preview); helm enabled 89/89 microservices (wave\u22648)",
+  "generated_at": "2026-06-14T07:20:20Z",
+  "commit": "74478954",
+  "public_generation": "98/98 deployments ready (namespace impilo-full-preview); helm enabled 89/89 microservices (wave\u22640)",
   "coverage_summary": "runtime 89/89 k8s microservices | registry runtime lanes 99 | non-runtime validate 47/47",
   "runtime": {
     "deployments_ready": 98,
     "deployments_total": 98,
     "k8s_microservice_catalog": 89,
     "helm_enabled_microservices": 89,
-    "max_wave": 8,
+    "max_wave": 0,
     "wave_runtime_catalog": 99
   },
   "non_runtime": {
