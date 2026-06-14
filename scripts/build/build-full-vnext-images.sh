@@ -21,8 +21,16 @@ while [[ $# -gt 0 ]]; do
       WAVE_MAX="$2"
       shift 2
       ;;
-    --required-only)
+    --full-estate)
+      # Default behaviour: build the full deployable estate (all non not-required strategies).
+      REQUIRED_ONLY=0
+      shift
+      ;;
+    --debug-required-spine-only|--required-only)
+      # DEBUG/partial mode: required spine only. Not the full vNext estate.
       REQUIRED_ONLY=1
+      echo "[estate] WARN --required-only is a DEBUG mode (required spine only), not the full estate."
+      echo "This is not the full vNext estate and is not valid for full product testing. All of vNext is vNext." >&2
       shift
       ;;
     --summary-only)
@@ -31,7 +39,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     *)
       echo "Unknown argument: $1"
-      echo "Usage: bash scripts/build/build-full-vnext-images.sh [--required-only] [--summary-only] [--wave N] [--only <service>]..."
+      echo "Usage: bash scripts/build/build-full-vnext-images.sh [--full-estate] [--debug-required-spine-only] [--summary-only] [--wave N] [--only <service>]..."
       exit 2
       ;;
   esac
@@ -250,6 +258,58 @@ for target in sorted(selected, key=lambda item: item["id"]):
     skip_n += 1
     per_service[service_id] = "skipped"
 
+# Runtime image truth: per-service build records. The "target digest set" for a deploy is
+# computed from these records (service, source_commit, image_tag, local_docker_image_id,
+# registry_digest, build_timestamp). registry_digest is best-effort here (populated after
+# push-images-to-local-registry.sh); the truth guard re-resolves it from the registry.
+def _git_commit():
+    try:
+        out = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, capture_output=True, text=True)
+        return out.stdout.strip() if out.returncode == 0 else ""
+    except Exception:
+        return ""
+
+def _docker_image_id(image_ref):
+    try:
+        out = subprocess.run(["docker", "image", "inspect", image_ref, "--format", "{{.Id}}"],
+                             capture_output=True, text=True)
+        return out.stdout.strip() if out.returncode == 0 else ""
+    except Exception:
+        return ""
+
+def _repo_digest(image_ref):
+    try:
+        out = subprocess.run(["docker", "image", "inspect", image_ref, "--format", "{{join .RepoDigests \",\"}}"],
+                             capture_output=True, text=True)
+        return out.stdout.strip() if out.returncode == 0 else ""
+    except Exception:
+        return ""
+
+source_commit = _git_commit()
+build_ts = datetime.now(timezone.utc).isoformat()
+build_records = {}
+for service_id, status in per_service.items():
+    if not (str(status).startswith("pass") or status == "official_ok"):
+        continue
+    image_ref = f"impilo/{service_id}:preview"
+    build_records[service_id] = {
+        "service": service_id,
+        "source_commit": source_commit,
+        "image_tag": "preview",
+        "image_tag_sha": tag,
+        "local_docker_image_id": _docker_image_id(image_ref) if status != "official_ok" else "",
+        "registry_digest": _repo_digest(image_ref) if status != "official_ok" else "",
+        "build_timestamp": build_ts,
+        "build_status": status,
+    }
+
+(reports / "full-image-build-records.json").write_text(json.dumps({
+    "generated_at": build_ts,
+    "source_commit": source_commit,
+    "tag_sha": tag,
+    "records": build_records,
+}, indent=2))
+
 summary = {
     "generated_at": datetime.now(timezone.utc).isoformat(),
     "tag_sha": tag,
@@ -279,6 +339,8 @@ summary = {
     "missing_required_image_strategy": strategy_missing,
     "required_fail": required_fail,
     "per_service": per_service,
+    "build_records": build_records,
+    "source_commit": source_commit,
 }
 
 for name in ("full-image-build-summary.json", "image-strategy-summary.json"):

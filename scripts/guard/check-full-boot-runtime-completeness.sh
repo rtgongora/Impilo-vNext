@@ -107,6 +107,18 @@ deployed_full, ready_deploys = deploy_ready_names(full_ns)
 deployed_slice = ns_deployments(slice_ns)
 pod_total, pod_ready, pod_crash, pod_pending = ns_ready_pods(full_ns)
 
+# Full RUNTIME ESTATE = all runtime_k8s_microservice + dedicated bff/shell. One estate means
+# all deployable vNext services, not just the required spine. Waves are sequencing, not
+# optionality: a subset that is healthy is PARTIAL_WAVE_PASS, never FULL_ESTATE_PASS.
+runtime_estate = sorted({
+    e["id"] for e in entries if e.get("deployment_lane") == "runtime_k8s_microservice"
+} | {"experience-bff", "one-ui-shell"})
+estate_total = len(runtime_estate)
+estate_ready = len(set(runtime_estate) & ready_deploys)
+estate_deployed = len(set(runtime_estate) & deployed_full)
+estate_missing = sorted(set(runtime_estate) - deployed_full)
+estate_fully_ready = estate_ready >= estate_total and not estate_missing
+
 helm_audit = {}
 ha_path = root / "reports/full-boot/helm-deployability-audit.json"
 if ha_path.exists():
@@ -193,6 +205,41 @@ if images_ready or img_sum.exists() or build_sum.exists():
         status = "FULL_BOOT_PASS"
         reason = "images, helm, and runtime healthy"
 
+# Estate status (canonical). FULL_BOOT_* retained as warned backward-compat aliases.
+# A deployment is not complete until the FULL estate is running, aligned, healthy, current.
+estate_status = "FAIL"
+estate_reason = reason
+if status == "FULL_BOOT_NOT_ATTEMPTED":
+    estate_status = "FULL_BOOT_NOT_ATTEMPTED"
+    estate_reason = "deployment not attempted"
+elif status == "FULL_BOOT_FAIL":
+    estate_status = "FAIL"
+elif status in ("FULL_BOOT_PARTIAL",):
+    estate_status = "PARTIAL_WAVE_PASS"
+    estate_reason = f"{reason}; estate {estate_ready}/{estate_total} ready"
+elif status == "FULL_BOOT_PASS":
+    if estate_fully_ready:
+        estate_status = "FULL_ESTATE_PASS"
+        estate_reason = "full estate deployed, ready, and healthy"
+    else:
+        estate_status = "PARTIAL_WAVE_PASS"
+        estate_reason = (
+            f"required spine healthy but estate only {estate_ready}/{estate_total} ready "
+            f"(missing/not-ready: {len(estate_missing)}) - waves are sequencing, not full estate"
+        )
+
+# Consume runtime image truth artifact if present: stale non-exempt services block FULL_ESTATE_PASS.
+truth_path = root / "reports/full-boot/runtime-image-truth.json"
+estate_stale_services = []
+if truth_path.exists():
+    try:
+        estate_stale_services = json.loads(truth_path.read_text()).get("stale_non_exempt", [])
+    except Exception:
+        estate_stale_services = []
+    if estate_stale_services and estate_status == "FULL_ESTATE_PASS":
+        estate_status = "FAIL"
+        estate_reason = f"runtime image truth: {len(estate_stale_services)} stale non-exempt service(s)"
+
 report = {
     "total_discovered": len(entries),
     "by_plane": by_plane,
@@ -233,13 +280,25 @@ report = {
     "image_strategy_summary": strategy_counts,
     "full_boot_status": status,
     "full_boot_reason": reason,
+    "estate_status": estate_status,
+    "estate_reason": estate_reason,
+    "runtime_estate_total": estate_total,
+    "runtime_estate_ready": estate_ready,
+    "runtime_estate_deployed": estate_deployed,
+    "runtime_estate_missing": estate_missing,
+    "runtime_estate_missing_count": len(estate_missing),
+    "estate_stale_services": estate_stale_services,
 }
 (root / "reports/full-boot/full-boot-runtime-report.json").write_text(json.dumps(report, indent=2))
 md = [
     "# Full Boot Runtime Completeness Report",
     "",
-    f"**Status:** `{status}`",
-    f"**Reason:** {reason}",
+    "> All of vNext is accountable. One estate means all deployable vNext services. Waves are sequencing, not optionality.",
+    "",
+    f"**Estate status:** `{estate_status}`",
+    f"**Estate reason:** {estate_reason}",
+    f"**Runtime estate ready:** {estate_ready}/{estate_total} (missing/not-ready: {len(estate_missing)})",
+    f"**Legacy full-boot status (alias):** `{status}` — {reason}",
     "",
     "| Phase | State |",
     "|-------|-------|",
@@ -259,15 +318,19 @@ md = [
     "",
 ]
 (root / "reports/full-boot/full-boot-runtime-report.md").write_text("\n".join(md) + "\n")
-print(f"FULL_BOOT_STATUS={status}")
+print(f"ESTATE_STATUS={estate_status}")
+print(f"FULL_BOOT_STATUS={status}  (legacy alias)")
+print(f"estate_ready={estate_ready}/{estate_total} reason={estate_reason}")
 print(f"reason={reason} images_ready={images_ready} helm_ready={helm_ready}/{req_total} deployed={namespace_deployed}")
 PY
 
+ESTATE_STATUS="$(python3 -c "import json; print(json.load(open('$REPORT_JSON'))['estate_status'])")"
 STATUS="$(python3 -c "import json; print(json.load(open('$REPORT_JSON'))['full_boot_status'])")"
-echo "=== Full boot runtime completeness: $STATUS ==="
-case "$STATUS" in
-  FULL_BOOT_PASS) guard_pass "full boot runtime completeness" ;;
-  FULL_BOOT_PARTIAL) guard_warn "full boot partial — see $REPORT_MD"; exit 0 ;;
-  FULL_BOOT_NOT_ATTEMPTED) guard_warn "full boot not attempted"; exit 0 ;;
-  *) guard_fail "full boot runtime completeness: $STATUS"; exit 1 ;;
+echo "=== vNext runtime estate completeness: $ESTATE_STATUS (legacy: $STATUS) ==="
+case "$ESTATE_STATUS" in
+  FULL_ESTATE_PASS) guard_pass "vNext full runtime estate complete" ;;
+  PARTIAL_WAVE_PASS) guard_warn "partial wave (not full estate) — see $REPORT_MD"; exit 0 ;;
+  DEBUG_SLICE_PASS) guard_warn "debug slice only (not full estate) — see $REPORT_MD"; exit 0 ;;
+  FULL_BOOT_NOT_ATTEMPTED) guard_warn "full estate not attempted"; exit 0 ;;
+  *) guard_fail "vNext runtime estate completeness: $ESTATE_STATUS"; exit 1 ;;
 esac

@@ -402,8 +402,11 @@ PY
     export FULL_BOOT_SKIP_BUILD=1
     unset FULL_BOOT_SKIP_IMPORT || true
     fb_import_images_flow
+    # Wave-sequenced rollout is a sanctioned intermediate (wave_sequenced_full_estate), so it
+    # explicitly opts into the partial step with --allow-partial. The final wave must reach the
+    # full estate; waves are sequencing, not optionality.
     printf '%s\n' "$DEPLOY_PHRASE" | FULL_BOOT_MAX_WAVE="$WAVE_N" FULLBOOT_DEPLOY_AUTHORIZED=1 \
-      bash "$REPO/scripts/deploy/full-boot-preview-deploy.sh"
+      bash "$REPO/scripts/deploy/full-boot-preview-deploy.sh" --allow-partial
     bash "$REPO/scripts/operator/wave-gates.sh" "$WAVE_N" || true
     bash "$REPO/scripts/build/build-non-runtime-registry-lane.sh" || true
     fb_workflow_update "wave_deploy_completed" "wave_$WAVE_N"

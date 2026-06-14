@@ -152,9 +152,51 @@ function classifyEntry(entry) {
   return "wave_sequenced_full_boot";
 }
 
-/** Backwards-compatible alias for pre-PCW-2 classification labels. */
+/**
+ * Backwards-compatible alias normalization for legacy classification labels.
+ * All of vNext is accountable; do not use "optional"/"required-only" as product end states.
+ * Legacy values are normalized and a loud warning is emitted so the source is updated.
+ */
+const LEGACY_CLASSIFICATION_ALIASES = {
+  optional_full_boot: "wave_sequenced_full_boot",
+  optional: "wave_sequenced_full_boot",
+  required_only: "required_full_boot",
+  "required-only": "required_full_boot",
+};
 function normalizeClassification(value) {
-  return value === "optional_full_boot" ? "wave_sequenced_full_boot" : value;
+  if (Object.prototype.hasOwnProperty.call(LEGACY_CLASSIFICATION_ALIASES, value)) {
+    const normalized = LEGACY_CLASSIFICATION_ALIASES[value];
+    console.warn(`[estate] WARN legacy classification '${value}' normalized to '${normalized}' - update source. Waves are sequencing, not optionality.`);
+    return normalized;
+  }
+  return value;
+}
+
+/**
+ * Canonical estate role for a component. One estate means all deployable vNext services.
+ * Supporting artifacts do not run as pods but remain part of vNext truth.
+ */
+function estateRole(entry, classification) {
+  if (entry.component_type === "mobile_app") return "mobile_surface_requires_mobile_test";
+  switch (classification) {
+    case "internal_package":
+      return "non_runtime_artifact";
+    case "external_dependency":
+      return "external_dependency_with_internal_adapter";
+    case "deprecated_retired":
+    case "doctrine_only_future":
+      return "non_runtime_artifact";
+    case "required_full_boot":
+      return "full_estate";
+    case "wave_sequenced_full_boot":
+      // UI workspaces that are bundled (not their own pod) are non-runtime artifacts.
+      if (entry.component_type === "ui_workspace" && entry.id !== "one-ui-shell") {
+        return "non_runtime_artifact";
+      }
+      return "wave_sequenced_full_estate";
+    default:
+      return "wave_sequenced_full_estate";
+  }
 }
 
 function deployOrderGroup(entry, classification) {
@@ -336,6 +378,7 @@ function enrichEntry(entry, facts) {
     dockerfile_status: hasDocker ? "present" : entry.buildable ? "optional" : "n/a",
     helm_support: hasHelm ? "chart_in_helm/" : entry.id === "one-ui-shell" || entry.id === "experience-bff" ? "deploy/helm/impilo-vnext" : "none",
     full_boot_classification: classification,
+    estate_role: estateRole(entry, classification),
     deploy_order_group: deployOrderGroup(entry, classification),
     ...img,
     reason: wave6RetireReason ?? img.reason,
@@ -535,6 +578,7 @@ function writeClassificationYaml(catalog) {
     component_type: e.component_type,
     full_boot_classification: e.full_boot_classification,
     classification: e.full_boot_classification,
+    estate_role: e.estate_role,
     runtime_kind: e.runtime_kind ?? null,
     deploy_order_group: e.deploy_order_group,
     build_required: ["required_full_boot", "wave_sequenced_full_boot"].includes(e.full_boot_classification) && e.buildable,

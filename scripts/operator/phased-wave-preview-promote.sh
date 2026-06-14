@@ -165,3 +165,24 @@ done
 echo ""
 echo "=== Phased promote complete (waves $START_WAVE..$END_WAVE) ==="
 bash "$REPO/scripts/operator/report-preview-generation.sh"
+
+# Final wave must reach the full estate. Waves are sequencing, not optionality.
+MAX_WAVE_DEFINED="$(python3 - "$REPO" <<'PY' 2>/dev/null || echo 8
+import sys, yaml
+d = yaml.safe_load(open(f"{sys.argv[1]}/config/full-boot-waves.yml"))
+print(max(w.get("id", 0) for w in d.get("waves", [])))
+PY
+)"
+if [[ "$END_WAVE" -ge "$MAX_WAVE_DEFINED" ]]; then
+  echo ""
+  echo "--- Final wave reached: asserting full estate runtime image truth ---"
+  if bash "$REPO/scripts/guard/check-runtime-image-truth.sh"; then
+    echo "FINAL STATE: full_estate (all non-exempt runtime services digest-aligned)."
+  else
+    echo "FINAL STATE: NOT full_estate - runtime image truth FAILED. Some pods are stale."
+    echo "DEPLOYMENT TRUTH FAILURE: Helm metadata is newer than running images. k3s is still serving stale runtime. Push/import/pin images and reroll."
+    exit 1
+  fi
+else
+  echo "FINAL STATE: partial_wave (stopped at wave $END_WAVE of $MAX_WAVE_DEFINED) - NOT full estate. All of vNext is vNext."
+fi

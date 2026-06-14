@@ -1,0 +1,86 @@
+# Runtime Image Truth Exemptions
+#
+# All of vNext is accountable. All deployable vNext services must run. One estate means all
+# deployable vNext services. Supporting artifacts do not run as pods, but they remain part of
+# vNext truth. Waves are sequencing, not optionality. Deployment truth is the running estate,
+# not the deployment story. A deployment is not complete until the full estate is running,
+# aligned, healthy, current, and testable.
+#
+# This file lists the ONLY components allowed to be exempt from the runtime image truth guard
+# (scripts/guard/check-runtime-image-truth.sh). Allowed exemption categories:
+#   - externally pinned infrastructure images
+#   - services not built from this repo
+#   - true external dependencies
+#   - explicitly documented non-runtime artifacts
+#
+# Every exemption MUST justify itself. The guard fails a full-estate deploy for any NON-exempt
+# application service running an old digest. Exemptions never apply to application services
+# built from this repo (e.g. *-service, experience-bff, one-ui-shell).
+#
+# The "target digest set" for a deploy is computed from the per-service build records written
+# to reports/full-boot/full-image-build-summary.json (service, source_commit, image_tag,
+# local_docker_image_id, registry_digest, build_timestamp). The guard compares running pod
+# imageIDs against that target set; exempt entries below are excluded from the stale check but
+# are still reported for visibility.
+
+schema:
+  fields:
+    - name                      # component/service/artifact name
+    - classification            # one of: external_dependency_with_internal_adapter | non_runtime_artifact
+    - reason                    # why it is exempt
+    - owner_source              # upstream image ref / owning team / source
+    - why_safe                  # why exemption does not compromise product truth
+    - affects_product_testing   # true|false
+    - internal_adapter_service  # internal vNext adapter that MUST still run, or 'none'
+
+exemptions:
+  # --- Required infrastructure: externally pinned upstream images (see values-full-preview.yaml) ---
+  - name: postgres
+    classification: external_dependency_with_internal_adapter
+    reason: Official infrastructure image, pinned upstream tag.
+    owner_source: "postgres:16-alpine"
+    why_safe: Version-pinned upstream; not built from repo; data persisted via PVC.
+    affects_product_testing: false
+    internal_adapter_service: none
+  - name: redis
+    classification: external_dependency_with_internal_adapter
+    reason: Official infrastructure image, pinned upstream tag.
+    owner_source: "redis:7-alpine"
+    why_safe: Version-pinned upstream; not built from repo.
+    affects_product_testing: false
+    internal_adapter_service: none
+  - name: kafka
+    classification: external_dependency_with_internal_adapter
+    reason: Official infrastructure image (KRaft), pinned upstream tag.
+    owner_source: "apache/kafka:3.7.1"
+    why_safe: Version-pinned upstream; not built from repo.
+    affects_product_testing: false
+    internal_adapter_service: none
+  - name: keycloak
+    classification: external_dependency_with_internal_adapter
+    reason: Official identity provider image, pinned upstream tag.
+    owner_source: "quay.io/keycloak/keycloak:25.0"
+    why_safe: Version-pinned upstream; not built from repo.
+    affects_product_testing: false
+    internal_adapter_service: tshepo-identity-service
+  - name: envoy
+    classification: external_dependency_with_internal_adapter
+    reason: Official edge proxy image, pinned upstream tag.
+    owner_source: "envoyproxy/envoy:v1.31-latest"
+    why_safe: Version-pinned upstream; ext_authz routes to TSHEPO which IS in the estate.
+    affects_product_testing: false
+    internal_adapter_service: tshepo-authz-service
+  - name: minio
+    classification: external_dependency_with_internal_adapter
+    reason: Official object storage image.
+    owner_source: "minio/minio:latest"
+    why_safe: Upstream object store; not built from repo.
+    affects_product_testing: false
+    internal_adapter_service: document-service
+  - name: hapi-fhir
+    classification: external_dependency_with_internal_adapter
+    reason: Official HAPI FHIR server image, pinned upstream tag.
+    owner_source: "hapiproject/hapi:v7.4.0"
+    why_safe: Upstream FHIR server fronted by the internal fhir-gateway-service adapter.
+    affects_product_testing: true
+    internal_adapter_service: fhir-gateway-service

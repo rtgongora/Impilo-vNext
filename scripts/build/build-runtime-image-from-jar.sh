@@ -23,7 +23,19 @@ PORT="$(cat /tmp/impilo-port-$$ 2>/dev/null || echo 8080)"
 rm -f /tmp/impilo-port-$$
 
 JAR="$(ls "services/${SERVICE_ID}"/target/*.jar 2>/dev/null | grep -v original | head -1)"
-[[ -n "$JAR" ]] || { echo "No JAR in services/${SERVICE_ID}/target"; exit 1; }
+[[ -n "$JAR" ]] || { echo "[estate] FAIL no JAR in services/${SERVICE_ID}/target - run mvn package first"; exit 1; }
+
+# Runtime image truth: refuse to package a stale JAR into an image. If any tracked source
+# file under the module's src/ is newer than the built JAR, the JAR is stale and the image
+# would silently ship old code (the COPY target/*.jar stale-JAR risk).
+if [[ "${ALLOW_STALE_JAR:-0}" != "1" && -d "services/${SERVICE_ID}/src" ]]; then
+  if find "services/${SERVICE_ID}/src" -type f -newer "$JAR" 2>/dev/null | grep -q .; then
+    echo "[estate] FAIL stale JAR for ${SERVICE_ID}: source under services/${SERVICE_ID}/src is newer than ${JAR##*/}."
+    echo "[estate]      Rebuild with: (cd services && ./mvnw -q package -pl ${SERVICE_ID} -am -DskipTests)"
+    echo "[estate]      Override only for emergencies with ALLOW_STALE_JAR=1 (not valid for full estate)."
+    exit 1
+  fi
+fi
 
 TMP="$(mktemp -d)"
 cp "$JAR" "$TMP/app.jar"

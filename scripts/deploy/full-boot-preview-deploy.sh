@@ -1,9 +1,18 @@
 #!/usr/bin/env bash
 # Full boot preview deploy — impilo-full-preview only; does not modify impilo-preview slice.
+#
+# All of vNext is accountable. All deployable vNext services must run. One estate means all
+# deployable vNext services. Waves are sequencing, not optionality. Deployment truth is the
+# running estate, not the deployment story. A deployment is not complete until the full estate
+# is running, aligned, healthy, current, and testable.
+#
+# DEFAULT = full estate. To run an explicitly partial debug mode, pass one of:
+#   --debug-required-spine-only | --debug-wave-zero-only | --slice | --allow-partial | --no-full-estate
 set -euo pipefail
 REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
 cd "$REPO_PATH"
 source scripts/full-boot/_full-boot-common.sh
+source scripts/full-boot/_estate-guard.sh
 source scripts/deploy/_preview-deploy-metadata.sh
 
 AUTH_PHRASE="AUTHORIZE FULL BOOT PREVIEW DEPLOY"
@@ -14,7 +23,10 @@ RUNTIME_VALUES="$CHART_DIR/values-full-preview-runtime.generated.yaml"
 BFF_ENV_VALUES="$CHART_DIR/values-full-preview-bff-env.generated.yaml"
 RELEASE_NAME="impilo-full-preview"
 MODE="deploy"
-FULL_BOOT_MAX_WAVE="${FULL_BOOT_MAX_WAVE:-0}"
+# DEFAULT is the FULL ESTATE. 'all' => no --max-wave passed downstream (every microservice enabled).
+# A numeric value is only honoured when an explicit debug/partial flag is also present.
+FULL_BOOT_MAX_WAVE="$(estate_normalize_max_wave "${FULL_BOOT_MAX_WAVE:-all}")"
+ESTATE_DEBUG_SET=0
 
 # Public preview IP. Per Highest-Validated-Stack-Wins this is now served by the full stack.
 PREVIEW_URL="${PREVIEW_URL:-http://41.57.127.235}"
@@ -112,10 +124,17 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --preflight) MODE="preflight"; shift ;;
     --dry-run) MODE="dry-run"; shift ;;
+    --debug-required-spine-only) ESTATE_DEBUG_SET=1; FULL_BOOT_MAX_WAVE=0; shift ;;
+    --debug-wave-zero-only) ESTATE_DEBUG_SET=1; FULL_BOOT_MAX_WAVE=0; shift ;;
+    --slice|--allow-partial|--no-full-estate) ESTATE_DEBUG_SET=1; shift ;;
     --help|-h) usage; exit 0 ;;
     *) echo "Unknown arg: $1"; usage; exit 1 ;;
   esac
 done
+
+# Refuse a partial vNext deploy unless an explicit debug/partial flag was passed.
+# 'all' => full estate; anything else requires an explicit debug flag.
+estate_refuse_partial "$FULL_BOOT_MAX_WAVE" "$ESTATE_DEBUG_SET"
 
 full_boot_ensure_artifacts
 resolve_preview_deploy_metadata
@@ -136,7 +155,13 @@ fi
 
 helm_values_args() {
   local args=(-f "$VALUES_FILE")
-  node scripts/full-boot/generate-full-preview-runtime-values.mjs --max-wave "$FULL_BOOT_MAX_WAVE" >/dev/null
+  # Full estate ('all') => no --max-wave so EVERY runtime microservice is enabled.
+  # A numeric wave is only used in explicit debug/partial mode.
+  if [[ "$FULL_BOOT_MAX_WAVE" == "all" ]]; then
+    node scripts/full-boot/generate-full-preview-runtime-values.mjs >/dev/null
+  else
+    node scripts/full-boot/generate-full-preview-runtime-values.mjs --max-wave "$FULL_BOOT_MAX_WAVE" >/dev/null
+  fi
   node scripts/full-boot/generate-full-preview-bff-downstream-env.mjs >/dev/null
   if [[ -f "$RUNTIME_VALUES" ]]; then
     args+=(-f "$RUNTIME_VALUES")
@@ -152,7 +177,11 @@ helm_values_args() {
 }
 
 readarray -d '' HELM_VALUE_FILES < <(helm_values_args)
-echo "Helm values: ${VALUES_FILE} + runtime + BFF downstream env (max wave $FULL_BOOT_MAX_WAVE)"
+if [[ "$FULL_BOOT_MAX_WAVE" == "all" ]]; then
+  echo "Helm values: ${VALUES_FILE} + runtime + BFF downstream env (FULL ESTATE - all runtime microservices)"
+else
+  echo "Helm values: ${VALUES_FILE} + runtime + BFF downstream env (DEBUG partial: max wave $FULL_BOOT_MAX_WAVE)"
+fi
 
 echo "--- Chart integrity ---"
 if ! bash scripts/deploy/check-helm-chart-integrity.sh; then
@@ -266,15 +295,36 @@ fi
 
 run_preflight || true
 
+# Image build target: full estate by default; required spine only in explicit debug mode.
+IMAGE_BUILD_FLAG="--full-estate"
+PUSH_MODE="runtime"
+if [[ "$ESTATE_DEBUG_SET" == "1" && "$FULL_BOOT_MAX_WAVE" != "all" ]]; then
+  IMAGE_BUILD_FLAG="--debug-required-spine-only"
+  PUSH_MODE="required"
+fi
+
 if [[ "${FULL_BOOT_SKIP_BUILD:-}" == "1" ]]; then
-  echo "SKIP: FULL_BOOT_SKIP_BUILD=1 (images already built/imported)"
+  echo "SKIP: FULL_BOOT_SKIP_BUILD=1 (images already built)"
 else
   if ! bash scripts/build/build-full-vnext.sh; then
     echo "ABORT: full build failed for required targets."
     exit 1
   fi
-  if ! bash scripts/build/build-full-vnext-images.sh --required-only; then
-    echo "ABORT: required image build failed."
+  if ! bash scripts/build/build-full-vnext-images.sh "$IMAGE_BUILD_FLAG"; then
+    echo "ABORT: estate image build failed ($IMAGE_BUILD_FLAG)."
+    exit 1
+  fi
+fi
+
+# RUNTIME IMAGE TRUTH: build is not enough. Every built image MUST be pushed to the registry
+# k3s pulls from, BEFORE rollout. Skipping this is the stale-pod failure class this doctrine
+# exists to prevent.
+if [[ "${FULL_BOOT_SKIP_PUSH:-}" == "1" ]]; then
+  echo "WARN: FULL_BOOT_SKIP_PUSH=1 - skipping registry push. k3s may serve stale images."
+else
+  echo "--- Push images to local registry ($PUSH_MODE) [runtime image truth] ---"
+  if ! bash scripts/build/push-images-to-local-registry.sh "$PUSH_MODE"; then
+    echo "ABORT: registry push failed - rollout would serve stale images."
     exit 1
   fi
 fi
@@ -312,7 +362,28 @@ helm upgrade --install "$RELEASE_NAME" "$CHART_DIR" \
 
 kubectl rollout status deployment -n "$NAMESPACE" --timeout=600s || true
 bash scripts/test/run-full-boot-smoke-tests.sh
+
+# --- RUNTIME IMAGE TRUTH: prove the running estate, not the deployment story. ---
+echo "--- Runtime image truth (digest alignment across the chain) ---"
+RUNTIME_TRUTH_OK=1
+bash scripts/guard/check-runtime-image-truth.sh || RUNTIME_TRUTH_OK=0
+
 bash scripts/guard/check-full-boot-runtime-completeness.sh || true
+
+# --- BFF/shell image pinning report (Area 10) ---
+echo "--- Image pinning report ---"
+echo "Pinning: global.imageTag=$IMAGE_TAG; experience-bff and one-ui-shell use tag '$IMAGE_TAG'."
+if [[ "$IMAGE_TAG" == "preview" ]]; then
+  echo "Pinning mode: mutable ':preview' tag, re-pushed and digest-verified this deploy (not a frozen commit)."
+else
+  echo "Pinning mode: commit-scoped tag '$IMAGE_TAG' (explicit). Confirm all other services align to the intended target."
+fi
+
+# --- UI bundle + BFF behaviour truth (served bundle / changed endpoint, not metadata alone) ---
+echo "--- Served UI bundle truth ---"
+bash scripts/test/verify-ui-bundle-truth.sh --url "$PREVIEW_URL" || echo "WARN: UI bundle truth check failed."
+echo "--- BFF behaviour truth ---"
+bash scripts/test/verify-bff-behaviour-truth.sh --url "$PREVIEW_URL" --ns "$NAMESPACE" || echo "WARN: BFF behaviour truth check failed."
 
 # Record which preview generation is now public and assert a single public stack.
 bash scripts/operator/report-preview-generation.sh || true
@@ -320,6 +391,15 @@ bash scripts/operator/report-preview-generation.sh || true
 # The whole point of the pipeline: the public IP must now show THIS stack/commit.
 verify_public_ip || echo "WARN: public IP verification failed — check ingress cutover."
 
+# --- DEPLOYMENT TRUTH: Helm metadata must not outrun running images. ---
+if [[ "$RUNTIME_TRUTH_OK" != "1" ]]; then
+  echo ""
+  echo "DEPLOYMENT TRUTH FAILURE: Helm metadata is newer than running images. k3s is still serving stale runtime. Push/import/pin images and reroll."
+  echo "See reports/full-boot/runtime-image-truth.md for the per-service digest alignment."
+  exit 1
+fi
+
 echo ""
 echo "Full boot deploy finished. Namespace: $NAMESPACE"
+echo "All of vNext is vNext: full estate deploy is complete only when runtime image truth passes."
 echo "Confirm in a browser: open $PREVIEW_URL (Sign In with any email/password for a CITIZEN preview session)."

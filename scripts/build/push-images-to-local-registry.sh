@@ -17,6 +17,11 @@ WAVE_MAX="${IMPILO_PUSH_WAVE:-}"
 bash "$REPO/scripts/operator/registry-up.sh"
 
 refs_file="$(mktemp)"
+# 'required' is the DEBUG/partial required-spine mode. Default full-estate pushes use 'runtime'.
+if [[ "$MODE" == "debug-required-spine" ]]; then MODE="required"; fi
+if [[ "$MODE" == "required" ]]; then
+  echo "[estate] NOTE 'required' push mode is the required spine only (debug/partial), not the full estate." >&2
+fi
 case "$MODE" in
   required)
     python3 - "$REPO" "$TAG" <<'PY' >"$refs_file"
