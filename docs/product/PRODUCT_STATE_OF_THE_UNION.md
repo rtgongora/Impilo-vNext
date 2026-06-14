@@ -14,7 +14,7 @@ Impilo vNext is a **Health Operating System** with **576 registered web routes**
 |-----------|--------|----------|
 | **Backend services** | 91 registry entries; 110 wave-classified; wave 0 only live pre-unblock | [`reports/full-boot/wave-enumeration.json`](../../reports/full-boot/wave-enumeration.json) |
 | **Web experience** | 576 routes; shell + role-aware home; error degradation added | [`ui/one-ui-shell/src/lib/routes.ts`](../../ui/one-ui-shell/src/lib/routes.ts) |
-| **BFF wiring** | 92 downstream env URLs | `deploy/helm/impilo-vnext/values-full-preview-bff-env.generated.yaml` |
+| **Preview deploy (wave 8)** | **89/89 microservices** enabled; FULL_BOOT_PASS; appointments + citizen feed **200** | [`wave-build-8-summary.json`](../../reports/full-boot/wave-build-8-summary.json) |
 | **Web ↔ backend parity** | Mostly **partial**; several **complete** (Social, PH ops, Ndila, BUTANO summary) | [`FRONTEND_BACKEND_PARITY_MATRIX.md`](../architecture/FRONTEND_BACKEND_PARITY_MATRIX.md) |
 | **Mobile parity** | 37 capabilities tracked; **8 complete**, remainder partial/deferred | [`MOBILE_PARITY_MATRIX.md`](../architecture/MOBILE_PARITY_MATRIX.md) |
 | **Contracts** | 4478 OpenAPI ops; 4539 implemented bindings; 3 violations | [`CONTRACT_IMPLEMENTATION_MATRIX.md`](./CONTRACT_IMPLEMENTATION_MATRIX.md) |
