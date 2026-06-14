@@ -169,4 +169,25 @@ public class WorkflowController {
                     "error", Map.of("code", "TRANSITION_INSTANCE_FAILED", "message", e.getMessage())));
         }
     }
+
+    @GetMapping("/instances/{id}")
+    public ResponseEntity<Map<String, Object>> getInstance(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode data = client.getInstance(id);
+            if (data == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(Map.of(
+                    "data", data,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.warn("Workflow instance get failed: {}", e.getMessage());
+            return ResponseEntity.ok(Map.of(
+                    "data", Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
 }

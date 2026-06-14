@@ -69,6 +69,7 @@ export const ROUTES: RouteDefinition[] = [
   // â”€â”€ Zone: Clinical Hub â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/clinical", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Clinical Care", navLabel: "Clinical Hub", navZone: "work" },
   { path: "/core-transaction", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Core Transaction", navLabel: "Core Transaction", navZone: "work" },
+  { path: "/core-transaction/[transactionId]", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Core Transaction Detail", navLabel: "Transaction Detail", navZone: "work" },
   { path: "/client-journey", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Client Journey", navLabel: "Client Journey", navZone: "life" },
   { path: "/provider-workspace", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Provider Workspace", navLabel: "Provider Workspace", navZone: "work" },
   { path: "/platform-journey", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Platform Journey", navLabel: "Platform Journey", navZone: "professional" },
@@ -465,7 +466,9 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/operations/facility-operations/patient-flow", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Patient Flow", navLabel: "Patient Flow", navZone: "professional" },
   { path: "/operations/facility-operations/resources", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Resource Operations", navLabel: "Resource Ops", navZone: "professional" },
   { path: "/operations/workflows", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Workflow Orchestration", navLabel: "Workflows", navZone: "professional" },
+  { path: "/operations/workflows/[instanceId]", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Workflow Instance", navLabel: "Workflow Instance", navZone: "professional" },
   { path: "/operations/dispatch", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Dispatch Operations", navLabel: "Dispatch", navZone: "professional" },
+  { path: "/operations/dispatch/[taskId]", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Dispatch Task", navLabel: "Dispatch Task", navZone: "professional" },
   { path: "/operations/vito", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Identity Operations", navLabel: "Identity Ops", navZone: "professional" },
   { path: "/operations/vito/registration", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Client Registration", navLabel: "Registration", navZone: "professional" },
   { path: "/operations/vito/registration/new", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "New Registration", navLabel: "New Registration", navZone: "professional" },
@@ -694,7 +697,7 @@ export const ROUTES: RouteDefinition[] = [
 // haemovigilance (services/madi-service). New canonical total is 452.
 // Impilo Live (Jun 2026): 14 routes under /live incl. /live/admin (services/live-service).
 // Trust & Access Administration (Jun 2026): 90 contract-governed routes under /work/** (administration-governance scaffold).
-export const EXPECTED_ROUTE_COUNT = 576;
+export const EXPECTED_ROUTE_COUNT = 579;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

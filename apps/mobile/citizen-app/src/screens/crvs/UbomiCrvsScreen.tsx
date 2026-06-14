@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, ScrollView, TextInput, StyleSheet } from "react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, Card, CardBody, Header, LoadingSpinner, Screen } from "@impilo/mobile-design-system";
+import { Button, Card, CardBody, FeatureMaturityBadge, Header, LoadingSpinner, Screen } from "@impilo/mobile-design-system";
 import {
   fetchUbomiStatus,
   listUbomiBirthNotifications,
@@ -71,6 +71,10 @@ export function UbomiCrvsScreen({ onBack }: { onBack?: () => void }) {
         onBack={onBack}
       />
       <ScrollView contentContainerStyle={styles.content}>
+        <FeatureMaturityBadge
+          status={statusQ.data?.available ? "connected" : "partial"}
+          detail="Births, deaths, and verify via /internal/v1/ubomi on Experience BFF"
+        />
         {statusQ.isLoading ? <LoadingSpinner /> : null}
         <Card>
           <CardBody>

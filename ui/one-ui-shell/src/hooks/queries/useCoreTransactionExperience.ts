@@ -322,6 +322,28 @@ export function useTransitionWorkflowInstance() {
   });
 }
 
+export function useWorkflowInstanceDetail(instanceId: string) {
+  return useQuery({
+    queryKey: ["operations", "workflows", "instance", instanceId],
+    queryFn: async () =>
+      apiClient.get<ApiResponse<unknown>>(
+        `/internal/v1/workflows/instances/${encodeURIComponent(instanceId)}`,
+      ),
+    enabled: instanceId.length > 0,
+  });
+}
+
+export function useDispatchTaskDetail(taskId: string) {
+  return useQuery({
+    queryKey: ["operations", "dispatch", "task", taskId],
+    queryFn: async () =>
+      apiClient.get<ApiResponse<unknown>>(
+        `/internal/v1/dispatch/tasks/${encodeURIComponent(taskId)}`,
+      ),
+    enabled: taskId.length > 0,
+  });
+}
+
 export function useCoreTransactionDetail(transactionId: string) {
   return useQuery({
     queryKey: ["core-transaction", transactionId],

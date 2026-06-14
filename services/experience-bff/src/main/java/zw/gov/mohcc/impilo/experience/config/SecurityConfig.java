@@ -357,8 +357,9 @@ public class SecurityConfig {
                     .requestMatchers("/internal/v1/account/delete/status").authenticated()
                     .requestMatchers("/internal/v1/account/delete/cancel").authenticated()
 
-                    // ── Privacy preferences ─────────────────────────────
+                    // ── Privacy & display preferences ───────────────────
                     .requestMatchers("/internal/v1/settings/privacy/**").authenticated()
+                    .requestMatchers("/internal/v1/settings/display/**").authenticated()
 
                     // ── Patient-mediated external provider collaboration (VITO-backed) ──
                     .requestMatchers("/internal/v1/public/patient-shares/**").permitAll()

@@ -32,12 +32,14 @@ print(f'{ready} {len(items)}')
 read -r FULL_READY FULL_TOTAL <<<"$(ready_count "$FULL_NS")"
 read -r SLICE_READY SLICE_TOTAL <<<"$(ready_count "$SLICE_NS")"
 
-# Public ingress inventory: how many ingresses claim the public entrypoint.
+# Public ingress inventory: standard Ingress + Traefik IngressRoute (k3s preview uses IngressRoute).
 PUBLIC_INGRESSES="$(kubectl get ingress -A --no-headers 2>/dev/null | awk '{print $1"/"$2}' | sort || true)"
-PUBLIC_INGRESS_COUNT="$(printf '%s\n' "$PUBLIC_INGRESSES" | grep -c . || true)"
+PUBLIC_INGRESSROUTES="$(kubectl get ingressroute -A --no-headers 2>/dev/null | awk '{print $1"/"$2}' | sort || true)"
+PUBLIC_INGRESS_ALL="$(printf '%s\n%s\n' "$PUBLIC_INGRESSES" "$PUBLIC_INGRESSROUTES" | grep -v '^$' | sort -u)"
+PUBLIC_INGRESS_COUNT="$(printf '%s\n' "$PUBLIC_INGRESS_ALL" | grep -c . || true)"
 FULL_HAS_INGRESS="no"; SLICE_HAS_INGRESS="no"
-printf '%s\n' "$PUBLIC_INGRESSES" | grep -q "^$FULL_NS/" && FULL_HAS_INGRESS="yes"
-printf '%s\n' "$PUBLIC_INGRESSES" | grep -q "^$SLICE_NS/" && SLICE_HAS_INGRESS="yes"
+printf '%s\n' "$PUBLIC_INGRESS_ALL" | grep -q "^$FULL_NS/" && FULL_HAS_INGRESS="yes"
+printf '%s\n' "$PUBLIC_INGRESS_ALL" | grep -q "^$SLICE_NS/" && SLICE_HAS_INGRESS="yes"
 
 # Single-public-stack invariant: the full stack owns the ingress and the slice does not.
 SINGLE_PUBLIC_STACK="yes"

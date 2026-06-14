@@ -23,6 +23,7 @@ import {
 import { AppLayout } from "@/components/AppLayout";
 import { OrganizationPlaneContextBar } from "@/components/experience/OrganizationPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
+import { FeatureMaturityBadge } from "@/components/FeatureMaturityBadge";
 import { WorkflowHeader } from "@/components/workflow/WorkflowHeader";
 import { MusheXFinanceJourneysOrchestrationRail } from "@/components/finance/MusheXFinanceJourneysOrchestrationRail";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
@@ -129,6 +130,12 @@ export default function FinancePage() {
         subtitle="Financial management and revenue cycle"
       >
         <OrganizationPlaneContextBar />
+        <div className="flex flex-wrap items-center gap-2">
+          <FeatureMaturityBadge
+            status="partial"
+            detail="MusheX/COSTA billing, claims, and wallet via Experience BFF · mobile finance parity in progress"
+          />
+        </div>
         <div className="space-y-6">
           <MusheXFinanceJourneysOrchestrationRail />
           <WorkflowHeader

@@ -71,6 +71,12 @@ export default function CoreTransactionOverviewPage() {
               {tx.nextActions.length > 0 ? (
                 <p className="mt-1 text-xs text-primary">Next: {tx.nextActions[0].label}</p>
               ) : null}
+              <Link
+                href={`/core-transaction/${encodeURIComponent(tx.transaction.id)}`}
+                className="mt-2 inline-block text-xs font-medium text-primary hover:underline"
+              >
+                Open transaction detail
+              </Link>
             </li>
           ))}
         </ul>

@@ -85,6 +85,12 @@ public class WorkflowServiceClient {
         return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
     }
 
+    public JsonNode getInstance(String id) {
+        String url = baseUrl + "/internal/v1/workflows/instances/" + id;
+        log.debug("Workflow: getInstance id={}", id);
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

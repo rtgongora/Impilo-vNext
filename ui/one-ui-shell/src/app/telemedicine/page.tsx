@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { FeatureMaturityBadge } from "@/components/FeatureMaturityBadge";
 import { FacilitiesGeoMapPanel } from "@/components/maps/FacilitiesGeoMapPanel";
 import { TelemedicineCareChainRail } from "@/components/telemedicine/TelemedicineCareChainRail";
 import { TelemedicineEncounterOrchestrationRail } from "@/components/telemedicine/TelemedicineEncounterOrchestrationRail";
@@ -201,6 +202,12 @@ export default function TelemedicinePage() {
             : "Select a facility to start or join telemedicine sessions"
         }
       >
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <FeatureMaturityBadge
+            status="partial"
+            detail="Scheduling and session lifecycle live via BFF · RTC media blocked until governed transport"
+          />
+        </div>
         <div className="mb-4 space-y-4">
           <TelemedicineCareChainRail />
           <TelemedicineRtcHealthPanel />

@@ -598,15 +598,7 @@
   "crashloop": [],
   "pending": [],
   "not_ready_pods": [],
-  "jobs": [
-    {
-      "name": "postgres-init-databases",
-      "succeeded": 0,
-      "failed": 1,
-      "active": 0,
-      "ok": false
-    }
-  ],
+  "jobs": [],
   "health_version_reachable": false,
   "health_version_snippet": null,
   "health_version_note": "skipped \u2014 set FULL_BOOT_BASE_URL to port-forward BFF (e.g. http://127.0.0.1:18160)",

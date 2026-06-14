@@ -1,20 +1,31 @@
 import { ExpoConfig, ConfigContext } from "expo/config";
 
-const VARIANT = (process.env.EXPO_PUBLIC_APP_VARIANT ?? "dev").toLowerCase();
-const VARIANT_NAME_SUFFIX: Record<string, string> = {
+const VARIANT_NAME_SUFFIX = {
   dev: " Dev",
   development: " Dev",
   preview: " Preview",
   staging: " Staging",
   production: "",
-};
-const VARIANT_BUNDLE_SUFFIX: Record<string, string> = {
+} as const;
+const VARIANT_BUNDLE_SUFFIX = {
   dev: ".dev",
   development: ".dev",
   preview: ".preview",
   staging: ".staging",
   production: "",
-};
+} as const;
+
+type AppVariant = keyof typeof VARIANT_NAME_SUFFIX;
+
+function resolveVariant(raw: string | undefined): AppVariant {
+  const normalized = (raw ?? "dev").toLowerCase();
+  if (normalized in VARIANT_NAME_SUFFIX) {
+    return normalized as AppVariant;
+  }
+  return "dev";
+}
+
+const VARIANT = resolveVariant(process.env.EXPO_PUBLIC_APP_VARIANT);
 
 const APP_NAME =
   process.env.EXPO_PUBLIC_APP_NAME ?? `Impilo Provider${VARIANT_NAME_SUFFIX[VARIANT] ?? ""}`;

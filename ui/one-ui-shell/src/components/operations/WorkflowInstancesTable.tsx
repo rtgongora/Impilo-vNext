@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { DomainCollectionTable } from "@/components/common/DomainCollectionTable";
 
 type WorkflowInstanceRow = {
@@ -64,13 +65,18 @@ export function WorkflowInstancesTable({
           key: "id",
           header: "Instance",
           render: (row) => (
-            <button
-              type="button"
-              className={`text-left font-mono text-xs ${selectedId === row.id ? "text-primary-hover font-semibold" : "text-foreground"}`}
-              onClick={() => onSelect?.(row.id)}
+            <Link
+              href={`/operations/workflows/${encodeURIComponent(row.id)}`}
+              className={`font-mono text-xs ${selectedId === row.id ? "text-primary-hover font-semibold" : "text-foreground hover:underline"}`}
+              onClick={(e) => {
+                if (onSelect) {
+                  e.preventDefault();
+                  onSelect(row.id);
+                }
+              }}
             >
               {row.id}
-            </button>
+            </Link>
           ),
         },
         { key: "definition", header: "Definition", render: (row) => row.definitionId },

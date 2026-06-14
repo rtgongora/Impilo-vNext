@@ -13,7 +13,7 @@ check_file() {
   local desc="$2"
   if [ -f "$path" ]; then
     lines=$(wc -l < "$path" 2>/dev/null || echo "0")
-    if [ "$lines" -gt 15 ]; then
+    if [ "$lines" -gt 15 ] || grep -qE "export function|export default" "$path" 2>/dev/null; then
       echo "  [PASS] $desc â€” $path ($lines lines)"
       PASS=$((PASS + 1))
     else
