@@ -14,28 +14,29 @@
   --impilo-charcoal: #231f20;
   --impilo-white: #ffffff;
 
-  /* Surfaces */
-  --background: #f5f6f5;
+  /* Surfaces — deepened for richer presence (still sovereign, not marketing-heavy) */
+  --background: #e2e9e4;
+  --background-deep: #d4ded6;
   --surface: #ffffff;
-  --surface-soft: #e6f5ec;
-  --surface-warm: #fff8bf;
+  --surface-soft: #cfe8d8;
+  --surface-warm: #f5efb8;
 
   /* Primary / action */
   --primary: #009739;
   --primary-hover: #006b2d;
-  --primary-soft: #e6f5ec;
-  --primary-muted: #b8e4ce;
+  --primary-soft: #cfe8d8;
+  --primary-muted: #9fd4b3;
 
   /* Accents */
   --accent-yellow: #fce300;
-  --accent-yellow-soft: #fff8bf;
+  --accent-yellow-soft: #f5efb8;
   --accent-red: #ef3340;
-  --accent-red-soft: #fde8ea;
+  --accent-red-soft: #f8d4d7;
 
-  /* Borders */
-  --border: #d9ded9;
-  --border-soft: #d9ded9;
-  --border-strong: #b8d8c4;
+  /* Borders — slightly stronger for definition on light surfaces */
+  --border: #c5d4c8;
+  --border-soft: #c5d4c8;
+  --border-strong: #9fc4ab;
 
   /* Text */
   --text-primary: #231f20;
@@ -47,17 +48,20 @@
 
   /* Semantic status */
   --success: #009739;
-  --success-soft: #e6f5ec;
+  --success-soft: #cfe8d8;
   --warning: #fce300;
-  --warning-soft: #fff8bf;
+  --warning-soft: #f5efb8;
   --danger: #ef3340;
-  --danger-soft: #fde8ea;
+  --danger-soft: #f8d4d7;
   --info: #009739;
-  --info-soft: #e6f5ec;
+  --info-soft: #cfe8d8;
 
   /* Nompilo / Fundo tips (yellow accent system) */
   --nompilo: #fce300;
-  --nompilo-soft: #fff8bf;
+  --nompilo-soft: #f5efb8;
+
+  /* African print motif (SVG data URI — green / yellow / charcoal geometry) */
+  --impilo-african-print: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cg fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M0 24 L24 0 L48 24 L24 48 Z' stroke='%23009739' stroke-width='0.75' opacity='0.09'/%3E%3Cpath d='M12 24 L24 12 L36 24 L24 36 Z' stroke='%23FCE300' stroke-width='0.5' opacity='0.08'/%3E%3Ccircle cx='24' cy='24' r='2.5' fill='%23231F20' opacity='0.05'/%3E%3Cpath d='M0 0 L12 12 M48 0 L36 12 M0 48 L12 36 M48 48 L36 36' stroke='%23EF3340' stroke-width='0.45' opacity='0.05'/%3E%3C/g%3E%3C/svg%3E");
 
   /* Typography */
   --font-sans: "Inter", system-ui, sans-serif;
@@ -74,11 +78,11 @@
   --radius-3xl: 32px;
 
   /* Shadows */
-  --shadow-subtle: 0 1px 2px rgba(35, 31, 32, 0.06);
-  --shadow-soft: 0 18px 45px rgba(16, 80, 45, 0.08);
-  --shadow-card: 0 12px 30px rgba(20, 80, 45, 0.07);
-  --shadow-floating: 0 22px 60px rgba(20, 60, 40, 0.14);
-  --shadow-nompilo: 0 20px 50px rgba(252, 227, 0, 0.16);
+  --shadow-subtle: 0 1px 3px rgba(35, 31, 32, 0.1);
+  --shadow-soft: 0 18px 45px rgba(16, 80, 45, 0.12);
+  --shadow-card: 0 10px 28px rgba(20, 60, 40, 0.11);
+  --shadow-floating: 0 22px 60px rgba(20, 60, 40, 0.18);
+  --shadow-nompilo: 0 20px 50px rgba(252, 227, 0, 0.2);
 
   /* Legacy shared-ui aliases (backward compat) */
   --color-brand-primary: var(--impilo-green);

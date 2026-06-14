@@ -41,6 +41,7 @@ const impiloPreset: Partial<Config> = {
           "accent-black": "var(--impilo-charcoal)",
         },
         background: "var(--background)",
+        backgroundDeep: "var(--background-deep)",
         foreground: "var(--text-primary)",
         card: "var(--surface)",
         border: "var(--border-soft)",

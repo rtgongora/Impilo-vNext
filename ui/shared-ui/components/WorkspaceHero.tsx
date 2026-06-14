@@ -19,11 +19,11 @@ export function WorkspaceHero({
 }: WorkspaceHeroProps) {
   return (
     <section
-      className={`relative overflow-hidden rounded-3xl bg-gradient-to-br from-impilo-700 via-impilo-600 to-impilo-800 px-6 py-8 text-white shadow-impilo-card sm:px-8 ${className}`}
+      className={`relative overflow-hidden rounded-3xl bg-gradient-to-br from-impilo-900 via-impilo-800 to-impilo-700 px-6 py-8 text-white shadow-impilo-floating sm:px-8 ${className}`}
     >
       {watermark ? (
         <div
-          className="pointer-events-none absolute inset-0 opacity-[0.07]"
+          className="pointer-events-none absolute inset-0 opacity-[0.12]"
           style={{
             backgroundImage: "url('/brand/mark-rgb.svg')",
             backgroundRepeat: "no-repeat",

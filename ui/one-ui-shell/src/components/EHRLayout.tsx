@@ -6,8 +6,6 @@
  *
  * Structure (Lovable-aligned):
  *   [TopBar]
- *   [ClinicalSupportStrip — Comms Hub, Help, System Support]
- *   [OperationalContextStrip — operational mode]
  *   [PatientBanner]
  *   [ClinicalToolbar — pathways, EDLIZ, CDS, tools]
  *   [ClinicalWizardHeader — configurable encounter workflow]
@@ -18,14 +16,12 @@
 import { useState, type ReactNode, useMemo, useEffect } from "react";
 import { useParams, usePathname } from "next/navigation";
 import { TopBar } from "./TopBar";
-import { OperationalContextStrip } from "./experience/OperationalContextStrip";
 import { PatientBanner } from "./PatientBanner";
 import { EncounterMenu } from "./EncounterMenu";
 import { PanelLeft, PanelRight } from "lucide-react";
 import { ClinicalGuidanceProvider } from "@/components/clinical/ClinicalGuidanceContext";
 import { ClinicalToolbar } from "@/components/clinical/ClinicalToolbar";
 import { ClinicalKnowledgeDock } from "@/components/clinical/ClinicalKnowledgeDock";
-import { ClinicalSupportStrip } from "@/components/clinical/ClinicalSupportStrip";
 import { ClinicalWizardHeader } from "@/components/clinical/ClinicalWizardHeader";
 import { ClinicalWorkflowProvider, type ClinicalWorkflowConfig } from "@/components/clinical/ClinicalWorkflowContext";
 import { useEncounters } from "@/hooks/queries/useEncounters";
@@ -113,8 +109,6 @@ export function EHRLayout({ children }: { children: ReactNode }) {
       <ClinicalGuidanceProvider>
         <div className="flex flex-col h-screen bg-background">
           <TopBar />
-          <ClinicalSupportStrip />
-          <OperationalContextStrip />
           <PatientBanner />
           {isEhrShell && <ClinicalToolbar hasActivePatient />}
           {showEncounterWizard && (

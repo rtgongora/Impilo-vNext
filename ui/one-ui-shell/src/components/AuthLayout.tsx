@@ -16,12 +16,12 @@ import { ImpiloBrandLogo } from "@/components/brand/ImpiloBrandLogo";
 
 export function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className="min-h-screen flex bg-background-deep">
       {/* Left Panel — Branding (desktop only) */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-impilo-700 via-impilo-600 to-impilo-800 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-impilo-900 via-impilo-800 to-impilo-700 relative overflow-hidden">
         {/* Connected-health watermark */}
         <div
-          className="pointer-events-none absolute inset-0 opacity-[0.08]"
+          className="pointer-events-none absolute inset-0 opacity-[0.14]"
           style={{
             backgroundImage: "url('/brand/mark-rgb.svg')",
             backgroundRepeat: "no-repeat",
@@ -85,7 +85,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
       </div>
 
       {/* Right Panel — Auth Content */}
-      <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
+      <div className="flex-1 flex items-center justify-center p-6 lg:p-12 impilo-african-print bg-[color:var(--background)]">
         <div className="w-full max-w-md">
           {/* Mobile header */}
           <div className="lg:hidden text-center mb-8" data-testid="auth-mobile-hero-logo">
@@ -95,7 +95,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
             <p className="text-xs text-muted-foreground mt-1">Health Operating System</p>
           </div>
 
-          <div className="bg-card rounded-xl border border-border shadow-impilo-card p-8">{children}</div>
+          <div className="bg-card rounded-xl border border-[color:var(--border-strong)] shadow-impilo-floating p-8">{children}</div>
 
           <div className="mt-4 text-center space-y-2">
             <p className="text-xs text-muted-foreground flex items-center justify-center gap-1.5">
