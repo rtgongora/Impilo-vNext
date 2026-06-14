@@ -57,7 +57,7 @@ describe("PageShell", () => {
   it("applies correct heading CSS classes", () => {
     render(<PageShell title="Styled" />);
     const heading = screen.getByRole("heading", { level: 1 });
-    expect(heading.className).toContain("text-2xl");
+    expect(heading.className).toContain("text-xl");
     expect(heading.className).toContain("font-bold");
     expect(heading.className).toContain("text-foreground");
   });
@@ -67,9 +67,19 @@ describe("PageShell", () => {
     expect(screen.getByRole("img", { name: "Fundo logo" })).toBeInTheDocument();
   });
 
-  it("applies mb-6 to the title container", () => {
+  it("applies mb-4 to the title container", () => {
     const { container } = render(<PageShell title="Test" />);
     const titleContainer = container.firstElementChild?.firstElementChild;
-    expect(titleContainer?.className).toContain("mb-6");
+    expect(titleContainer?.className).toContain("mb-4");
+  });
+
+  it("skips the title card when hideHeader is set", () => {
+    render(
+      <PageShell title="Home" hideHeader>
+        <div data-testid="home-body">Welcome</div>
+      </PageShell>,
+    );
+    expect(screen.queryByRole("heading", { level: 1 })).not.toBeInTheDocument();
+    expect(screen.getByTestId("home-body")).toBeInTheDocument();
   });
 });

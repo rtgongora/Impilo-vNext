@@ -510,7 +510,7 @@ export function ExperienceSidebar() {
         data-sidebar
         className={[
           "fixed inset-y-0 left-0 z-50 flex h-screen flex-col border-r text-[color:var(--text-primary)] transition-transform duration-200 impilo-subtle-african-accent",
-          "border-[color:var(--border-soft)] bg-[linear-gradient(180deg,#E6F5EC_0%,#F5F6F5_52%,#F5F6F5_100%)]",
+          "border-[color:var(--border-strong)] bg-[linear-gradient(180deg,#cfe8d8_0%,#d4ded6_48%,#e2e9e4_100%)]",
           shellClasses,
           navDrawerOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full pointer-events-none",
         ].join(" ")}

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { RoleJourneyNavigation } from "@/components/navigation/RoleJourneyNavigation";
-import { AccessibilityToolbar } from "@/components/accessibility/AccessibilityToolbar";
+import { ShellAccessibilityMenu } from "@/components/shell/ShellAccessibilityMenu";
 import { ImpiloBrandLogo } from "@/components/brand/ImpiloBrandLogo";
 import { AppLayout } from "@/components/AppLayout";
 import { visibleShellCommands } from "@/lib/shell/app-registry";
@@ -89,6 +89,8 @@ describe("journey shell components", () => {
     );
     expect(screen.queryByText("Nompilo Command Layer")).not.toBeInTheDocument();
     expect(screen.queryByTitle("Nompilo — contextual help")).not.toBeInTheDocument();
+    expect(screen.queryByRole("navigation", { name: "Journey shortcuts" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Accessibility")).not.toBeInTheDocument();
     expect(screen.getByText("content")).toBeInTheDocument();
   });
 
@@ -100,11 +102,12 @@ describe("journey shell components", () => {
     expect(ask?.action).toEqual({ type: "navigate", href: "/ask" });
   });
 
-  it("renders accessibility toolbar toggles", () => {
+  it("renders taskbar accessibility menu toggles", () => {
     mockUsePathname.mockReturnValue("/home");
-    render(<AccessibilityToolbar />);
-    fireEvent.click(screen.getByRole("button", { name: "High Contrast" }));
+    render(<ShellAccessibilityMenu />);
+    fireEvent.click(screen.getByLabelText("Accessibility options"));
+    fireEvent.click(screen.getByRole("button", { name: /High Contrast/i }));
     expect(document.documentElement.classList.contains("impilo-high-contrast")).toBe(true);
-    expect(screen.getByRole("button", { name: "Read Aloud" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Read aloud/i })).toBeInTheDocument();
   });
 });

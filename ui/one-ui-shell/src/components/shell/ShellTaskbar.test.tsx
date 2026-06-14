@@ -38,6 +38,14 @@ vi.mock("./ShellSosDialog", () => ({
   ShellSosDialog: () => null,
 }));
 
+vi.mock("./ShellAccessibilityMenu", () => ({
+  ShellAccessibilityMenu: () => (
+    <button type="button" aria-label="Accessibility options">
+      Accessibility
+    </button>
+  ),
+}));
+
 vi.mock("./ShellNotificationTray", () => ({
   ShellNotificationTray: () => <span data-testid="notif-tray">tray</span>,
 }));
@@ -54,6 +62,8 @@ describe("ShellTaskbar", () => {
     expect(screen.getByLabelText(/open search and commands/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/open nompilo ask/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/open sos/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/accessibility options/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/profile/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/sign out/i)).toBeInTheDocument();
   });
 });

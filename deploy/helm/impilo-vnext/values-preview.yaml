@@ -31,6 +31,24 @@ postgres:
 keycloak:
   enabled: false
 
+# Slice preview does not deploy Keycloak/MinIO credential secrets (full-preview owns those).
+previewSecrets:
+  enabled: false
+
+kafka:
+  enabled: false
+
+minio:
+  enabled: false
+
+envoy:
+  enabled: false
+
+hapiFhir:
+  enabled: false
+
+fullBootServices: {}
+
 experienceBff:
   enabled: true
   replicaCount: 1

@@ -42,7 +42,7 @@ Doctrine references:
 - App shell and navigation: `src/components/AppLayout.tsx`, `src/components/navigation`, `src/components/shell`
 - Core transaction feature: `src/features/core-transaction`
 - Role and route grouping metadata: `src/lib/ui-route-journey-map.ts`
-- Accessibility controls: `src/components/accessibility/AccessibilityToolbar.tsx`
+- Accessibility controls: taskbar `ShellAccessibilityMenu` + `useAccessibilityPreferences`
 
 ## Adding Future UI Features (Without Duplication)
 
