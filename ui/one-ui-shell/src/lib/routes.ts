@@ -92,6 +92,7 @@ export const ROUTES: RouteDefinition[] = [
 
   // Production Command Centre (Health OS discoverability)
   { path: "/production-command-centre", zone: "admin", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Production Command Centre", navLabel: "Command Centre", navZone: "professional" },
+  { path: "/platform/all-features", zone: "admin", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "All Features", navLabel: "All Features", navZone: "professional" },
   { path: "/health-os/command-centre", zone: "admin", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Health OS Command Centre", navLabel: "Command Centre", navZone: "professional" },
 
   // Data & Intelligence Plane hub (Wave 20)
@@ -693,7 +694,7 @@ export const ROUTES: RouteDefinition[] = [
 // haemovigilance (services/madi-service). New canonical total is 452.
 // Impilo Live (Jun 2026): 14 routes under /live incl. /live/admin (services/live-service).
 // Trust & Access Administration (Jun 2026): 90 contract-governed routes under /work/** (administration-governance scaffold).
-export const EXPECTED_ROUTE_COUNT = 575;
+export const EXPECTED_ROUTE_COUNT = 576;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

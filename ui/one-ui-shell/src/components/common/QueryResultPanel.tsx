@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader2, AlertCircle } from "lucide-react";
+import { formatServiceError, isLikelyServiceUnavailable } from "@/lib/service-error";
 
 type FieldSpec = { key: string; label: string };
 
@@ -103,7 +104,18 @@ export function QueryResultPanel({
         ) : isError ? (
           <div className="flex items-start gap-2 text-xs text-danger">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-            <span>{error instanceof Error ? error.message : "Request failed"}</span>
+            <div>
+              <p>{formatServiceError(error)}</p>
+              {isLikelyServiceUnavailable(error) ? (
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Preview may only have wave 0–N services running. Try{" "}
+                  <a href="/platform/all-features" className="font-medium text-primary hover:underline">
+                    All Features
+                  </a>{" "}
+                  or sign in as super@mohcc.gov.zw.
+                </p>
+              ) : null}
+            </div>
           </div>
         ) : (
           (() => {

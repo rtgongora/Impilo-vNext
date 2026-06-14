@@ -11,6 +11,7 @@ import {
   Layers,
   LayoutGrid,
   LifeBuoy,
+  LogOut,
   MessageSquare,
   Search,
   Siren,
@@ -23,6 +24,7 @@ import { ImpiloBrandLogo } from "@/components/brand/ImpiloBrandLogo";
 import { ShellIcon } from "./ShellIcon";
 import { ShellNotificationTray } from "./ShellNotificationTray";
 import { ShellSosDialog } from "./ShellSosDialog";
+import { ShellAccessibilityMenu } from "./ShellAccessibilityMenu";
 
 function TaskbarButton({
   onClick,
@@ -170,11 +172,24 @@ export function ShellTaskbar() {
             <span className="hidden text-xs font-semibold text-danger sm:inline dark:text-red-400">SOS</span>
           </TaskbarButton>
 
+          <ShellAccessibilityMenu />
+
           <div className="mx-0.5 hidden h-8 w-px shrink-0 bg-border sm:mx-1 sm:block dark:bg-slate-700" />
 
           <TaskbarButton onClick={() => setTaskManagerOpen(true)} title="Task manager" ariaLabel="Open task manager">
             <Layers className="h-5 w-5 text-muted-foreground dark:text-muted-foreground" />
           </TaskbarButton>
+
+          {(hasRole("SUPER_ADMIN") || hasRole("SYSTEM_ADMIN") || hasRole("DEVELOPER")) && (
+            <TaskbarButton
+              onClick={() => router.push("/platform/all-features")}
+              title="All Features — route catalog for E2E testing"
+              ariaLabel="Open all features catalog"
+            >
+              <LayoutGrid className="h-5 w-5 text-muted-foreground dark:text-muted-foreground" />
+              <span className="hidden text-xs font-medium text-foreground xl:inline dark:text-foreground">Features</span>
+            </TaskbarButton>
+          )}
 
           <TaskbarButton
             onClick={() => router.push("/shell/file-manager")}
@@ -291,6 +306,15 @@ export function ShellTaskbar() {
             >
               <UserCircle className="h-6 w-6 text-muted-foreground dark:text-muted-foreground" />
               <span className="hidden text-xs font-medium text-foreground lg:inline dark:text-foreground">Profile</span>
+            </Link>
+            <Link
+              href="/auth/logout"
+              className="inline-flex h-11 items-center gap-1 rounded-lg border border-transparent px-2 hover:bg-primary-soft dark:hover:bg-primary-soft"
+              title="Sign out"
+              aria-label="Sign out"
+            >
+              <LogOut className="h-5 w-5 text-muted-foreground dark:text-muted-foreground" />
+              <span className="hidden text-xs font-medium text-foreground xl:inline dark:text-foreground">Sign out</span>
             </Link>
             <button
               type="button"

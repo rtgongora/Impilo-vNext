@@ -24,6 +24,7 @@ import { InactivityLockProvider } from "./InactivityLockProvider";
 import { PrivacyWatermark } from "@/components/PrivacyWatermark";
 import { VisibilityContextBar } from "@/components/VisibilityContextBar";
 import { ShellChrome } from "@/components/shell/ShellChrome";
+import { ShellErrorBoundary } from "@/components/ShellErrorBoundary";
 import { ShellWorkspaceRemoteSync } from "@/components/shell/ShellWorkspaceRemoteSync";
 import { loadHydratedExperienceContinuity, resetExperienceContinuity } from "@/lib/session-continuity";
 import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
@@ -118,7 +119,7 @@ export function Providers({ children }: { children: ReactNode }) {
             <InactivityLockProvider>
               <PrivacyWatermark />
               <VisibilityContextBar />
-              {children}
+              <ShellErrorBoundary>{children}</ShellErrorBoundary>
               <ShellChrome />
             </InactivityLockProvider>
           </AuthGuardProvider>

@@ -19,7 +19,7 @@ import {
   ChevronRight, Video, ShoppingCart, Database, AlertTriangle,
   Briefcase, Heart, Globe, Siren, Award, User, ShieldCheck, UserCog, Droplet,
   MessageSquare, Radio, TestTube2, Scan, Phone, Send, ThumbsUp, MessageCircle, GraduationCap,
-  Wifi, Wrench, Layers, QrCode, FlaskConical, FileCheck, Clipboard, Play, LayoutGrid, BedDouble,
+  Wifi, Wrench, Layers, QrCode, FlaskConical, FileCheck, Clipboard, Play, LayoutGrid, BedDouble, Wallet,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { ModuleCardIcon } from "@/components/branding/ModuleCardIcon";
@@ -49,6 +49,7 @@ import { useProviderPrivileges } from "@/hooks/queries/useProviderPrivileges";
 import { useCommunityGroups, useJoinGroup } from "@/hooks/queries/useCommunity";
 import { useFacilityActiveShiftCount, useFacilityQueueStats } from "@/hooks/queries/useFacilityOperations";
 import { apiClient } from "@/lib/api-client";
+import { formatServiceError } from "@/lib/service-error";
 import { countUnacknowledgedAbnormalLabResults } from "@/lib/lab-results-attention";
 import { getAppointmentStatus, getAppointmentTime, getAppointmentType, getAppointmentProvider } from "@/lib/queue-workflows";
 import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
@@ -978,7 +979,7 @@ export default function HomePage() {
   if (identity.isCitizenOnly) {
     return (
       <AppLayout>
-        <PageShell title="Home">
+        <PageShell title="Home" hideHeader>
           <span data-testid="home-operational-mode" className="sr-only">
             {operationalMode}
           </span>
@@ -991,13 +992,13 @@ export default function HomePage() {
   // ── Professional layout (existing tabs) ────────────────────────
   return (
     <AppLayout>
-      <PageShell title="Home">
+      <PageShell title="Home" hideHeader>
         <span data-testid="home-operational-mode" className="sr-only">
           {operationalMode}
         </span>
         <div className="space-y-6">
-          {/* Welcome + Context */}
-          <div className="bg-card rounded-lg border border-border p-6">
+          {/* Welcome + Context — flush under shell header */}
+          <div className="-mx-3 border-b border-border bg-card p-4 md:-mx-4 md:p-5">
             <div className="flex items-start justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-foreground">
@@ -1947,7 +1948,7 @@ function CitizenHome({
   return (
     <>
       {/* ── Top status bar ────────────────────────────────────────── */}
-      <div className="flex items-center justify-between bg-card border-b border-border px-4 py-2.5 -mx-4 -mt-4 mb-4 sm:px-6 sm:-mx-6">
+      <div className="mb-4 flex -mx-3 items-center justify-between border-b border-border bg-card px-3 py-2.5 md:-mx-4 md:px-4">
         <div className="flex items-center gap-3 min-w-0">
           <div className="h-9 w-9 rounded-full bg-primary-soft flex items-center justify-center shrink-0">
             <User className="h-4.5 w-4.5 text-primary" />
@@ -2081,13 +2082,13 @@ function CitizenHome({
 
         {/* ════ RIGHT COLUMN — Widgets ════ */}
         <aside className="hidden lg:block space-y-4">
-          {/* Health ID Widget - prominent at top */}
-          <Link href="/citizen/health-id/qr"
-            className="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-br from-impilo-500 to-impilo-600 hover:from-impilo-600 hover:to-impilo-700 transition-colors text-white">
-            <QrCode className="w-8 h-8" />
+          {/* My Wallet — prominent at top (Health ID lives in left column) */}
+          <Link href="/wallet"
+            className="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-br from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 transition-colors text-[color:var(--on-yellow)]">
+            <Wallet className="w-8 h-8" />
             <div>
-              <p className="text-sm font-semibold">Health ID</p>
-              <p className="text-xs opacity-80">Tap to show QR code</p>
+              <p className="text-sm font-semibold">My Wallet</p>
+              <p className="text-xs opacity-90">Payments, claims &amp; coverage</p>
             </div>
           </Link>
 
@@ -2255,13 +2256,14 @@ function TimelineComposer({ userName }: { userName: string }) {
 function TimelineFeed({ userId }: { userId?: string }) {
   const hasRole = useAuthStore((s) => s.hasRole);
   const isCitizenAccess = hasRole("CITIZEN") || hasRole("SYSTEM_ADMIN") || hasRole("SUPER_ADMIN") || hasRole("DEVELOPER");
-  const { data, isLoading } = useQuery<{ data: Array<{ id: string; attributes: Record<string, unknown> }> }>({
+  const { data, isLoading, isError, error } = useQuery<{ data: Array<{ id: string; attributes: Record<string, unknown> }> }>({
     queryKey: ["personal-feed", userId],
     queryFn: () => apiClient.get("/internal/v1/mobile/citizen/feed?size=10"),
     staleTime: 30_000,
     enabled: isCitizenAccess,
+    retry: false,
   });
-  const liveItems = data?.data ?? [];
+  const liveItems = isError ? [] : (data?.data ?? []);
 
   // Seeded posts so the timeline never looks empty
   const seededPosts: Array<{
@@ -2370,6 +2372,11 @@ function TimelineFeed({ userId }: { userId?: string }) {
         </Link>
       </div>
 
+      {isError && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Live feed unavailable — showing community highlights. {formatServiceError(error)}
+        </div>
+      )}
       {/* Timeline posts */}
       {isLoading && (
         <div className="rounded-xl border border-border bg-card px-4 py-8 text-center text-sm text-muted-foreground">
