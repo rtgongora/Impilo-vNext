@@ -20,6 +20,39 @@ import static org.junit.jupiter.api.Assertions.*;
 class AuthSessionControllerTest {
 
     @Test
+    void resolvePersonAnchorId_prefersHealthIdClaimsOverKeycloakSub() throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode claims = mapper.readTree("""
+                {
+                  "sub": "6ff79608-0000-4000-8000-000000000099",
+                  "x_actor_id": "b0000000-0000-4000-8000-000000000010",
+                  "email": "superadmin@impilo.gov.zw"
+                }
+                """);
+
+        String anchor = AuthSessionController.resolvePersonAnchorId(
+                claims, claims.get("sub").asText());
+
+        assertEquals("b0000000-0000-4000-8000-000000000010", anchor);
+    }
+
+    @Test
+    void resolvePersonAnchorId_fallsBackToHealthIdClaim() throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode claims = mapper.readTree("""
+                {
+                  "sub": "6ff79608-0000-4000-8000-000000000099",
+                  "health_id": "b0000000-0000-4000-8000-000000000010"
+                }
+                """);
+
+        String anchor = AuthSessionController.resolvePersonAnchorId(
+                claims, claims.get("sub").asText());
+
+        assertEquals("b0000000-0000-4000-8000-000000000010", anchor);
+    }
+
+    @Test
     void logout_returnsLoggedOutStatus() {
         AuthSessionController controller = new AuthSessionController(new RestTemplate(), null, null, null);
         ResponseEntity<Map<String, Object>> response =
@@ -90,7 +123,7 @@ class AuthSessionControllerTest {
         Method method = AuthSessionController.class.getDeclaredMethod(
                 "buildLoginResponse",
                 String.class, String.class, int.class, int.class,
-                String.class, String.class, String.class,
+                String.class, String.class, String.class, String.class,
                 List.class, String.class, String.class, String.class,
                 String.class, String.class);
         method.setAccessible(true);
@@ -101,7 +134,7 @@ class AuthSessionControllerTest {
         ResponseEntity<Map<String, Object>> response = (ResponseEntity<Map<String, Object>>) method.invoke(
                 controller,
                 "some-token", "some-refresh-token", accessTokenLifetime, refreshTokenLifetime,
-                "user-1", "user@example.com", "User One",
+                "user-1", "kc-sub-1", "user@example.com", "User One",
                 List.of("CITIZEN"), "CITIZEN", "user@example.com", "email",
                 "req-1", "corr-1");
 

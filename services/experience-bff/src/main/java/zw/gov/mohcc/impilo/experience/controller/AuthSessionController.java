@@ -138,7 +138,8 @@ public class AuthSessionController {
                 String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]));
                 JsonNode claims = new com.fasterxml.jackson.databind.ObjectMapper().readTree(payloadJson);
 
-                String userId = claims.has("sub") ? claims.get("sub").asText() : UUID.randomUUID().toString();
+                String keycloakSub = claims.has("sub") ? claims.get("sub").asText() : UUID.randomUUID().toString();
+                String userId = resolvePersonAnchorId(claims, keycloakSub);
                 String userEmail = claims.has("email") ? claims.get("email").asText() : email;
                 String displayName = claims.has("name") ? claims.get("name").asText()
                         : claims.has("preferred_username") ? claims.get("preferred_username").asText() : email;
@@ -155,9 +156,9 @@ public class AuthSessionController {
 
                 String actorType = determineActorType(roles);
 
-                log.info("Keycloak login successful: user={}, email={}, roles={}", userId, userEmail, roles);
+                log.info("Keycloak login successful: user={}, keycloakSub={}, email={}, roles={}", userId, keycloakSub, userEmail, roles);
 
-                return buildLoginResponse(accessToken, refreshToken, expiresIn, refreshExpiresIn, userId, userEmail, displayName, roles, actorType,
+                return buildLoginResponse(accessToken, refreshToken, expiresIn, refreshExpiresIn, userId, keycloakSub, userEmail, displayName, roles, actorType,
                         email, loginMethod, requestId, correlationId);
             }
         } catch (org.springframework.web.client.HttpClientErrorException e) {
@@ -189,7 +190,7 @@ public class AuthSessionController {
 
         // Health OS Identity Doctrine: everyone starts as CITIZEN.
         // Professional capacity is discovered post-login via /linked-ids.
-        return buildLoginResponse(fallbackToken, null, 28800, 0, fallbackUserId, email, email,
+        return buildLoginResponse(fallbackToken, null, 28800, 0, fallbackUserId, fallbackUserId, email, email,
                 List.of("CITIZEN"), "CITIZEN", email, loginMethod, requestId, correlationId);
     }
 
@@ -267,7 +268,8 @@ public class AuthSessionController {
                 String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]));
                 JsonNode claims = new com.fasterxml.jackson.databind.ObjectMapper().readTree(payloadJson);
 
-                String userId = claims.has("sub") ? claims.get("sub").asText() : "";
+                String keycloakSub = claims.has("sub") ? claims.get("sub").asText() : "";
+                String userId = resolvePersonAnchorId(claims, keycloakSub);
                 String userEmail = claims.has("email") ? claims.get("email").asText() : "";
                 String displayName = claims.has("name") ? claims.get("name").asText()
                         : claims.has("preferred_username") ? claims.get("preferred_username").asText() : userEmail;
@@ -285,8 +287,8 @@ public class AuthSessionController {
                 String actorType = determineActorType(roles);
                 log.info("Token refreshed for user={}", userId);
 
-                return buildLoginResponse(newAccessToken, newRefreshToken, expiresIn, refreshExpiresIn, userId, userEmail,
-                        displayName, roles, actorType, userEmail, null, requestId, correlationId);
+                return buildLoginResponse(newAccessToken, newRefreshToken, expiresIn, refreshExpiresIn,
+                        userId, keycloakSub, userEmail, displayName, roles, actorType, userEmail, null, requestId, correlationId);
             }
         } catch (org.springframework.web.client.HttpClientErrorException e) {
             log.info("Token refresh failed: {}", e.getMessage());
@@ -534,6 +536,7 @@ public class AuthSessionController {
 
                     return buildLoginResponse(accessToken, refreshToken, expiresIn, refreshExpiresIn,
                             userId != null ? userId : UUID.randomUUID().toString(),
+                            userId,
                             email, firstName + " " + lastName,
                             List.of(role), "CITIZEN",
                             email, "email", requestId, correlationId);
@@ -610,7 +613,8 @@ public class AuthSessionController {
     }
 
     private ResponseEntity<Map<String, Object>> buildLoginResponse(
-            String token, String refreshToken, int expiresIn, int refreshExpiresIn, String userId, String userEmail,
+            String token, String refreshToken, int expiresIn, int refreshExpiresIn,
+            String userId, String keycloakSub, String userEmail,
             String displayName, List<String> roles, String actorType,
             String loginPrincipal, String loginMethod,
             String requestId, String correlationId) {
@@ -619,7 +623,11 @@ public class AuthSessionController {
 
         Map<String, Object> user = new LinkedHashMap<>();
         user.put("id", userId);
+        user.put("healthId", userId);
         user.put("email", userEmail);
+        if (keycloakSub != null && !keycloakSub.isBlank() && !keycloakSub.equals(userId)) {
+            user.put("keycloakSubject", keycloakSub);
+        }
         user.put("identifier", loginPrincipal != null && !loginPrincipal.isBlank() ? loginPrincipal : userEmail);
         user.put("displayName", displayName);
         user.put("roles", roles);
@@ -800,5 +808,31 @@ public class AuthSessionController {
             return providerData.get("providerPublicId").asText();
         }
         return null;
+    }
+
+    /**
+     * Person anchor for session contract and VARAPI lookup: prefer Health ID claims over Keycloak sub.
+     */
+    static String resolvePersonAnchorId(JsonNode claims, String keycloakSub) {
+        String anchor = readJwtClaim(claims, "x_actor_id");
+        if (anchor != null) {
+            return anchor;
+        }
+        anchor = readJwtClaim(claims, "health_id");
+        if (anchor != null) {
+            return anchor;
+        }
+        if (keycloakSub != null && !keycloakSub.isBlank()) {
+            return keycloakSub;
+        }
+        return UUID.randomUUID().toString();
+    }
+
+    private static String readJwtClaim(JsonNode claims, String claimName) {
+        if (claims == null || !claims.has(claimName)) {
+            return null;
+        }
+        String value = claims.get(claimName).asText();
+        return value == null || value.isBlank() ? null : value.trim();
     }
 }

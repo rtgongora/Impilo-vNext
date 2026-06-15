@@ -3,8 +3,10 @@ package zw.gov.mohcc.impilo.experience.session;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
+import zw.gov.mohcc.impilo.experience.bootstrap.BootstrapProperties;
 import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
 import zw.gov.mohcc.impilo.experience.client.WorkforceGovernanceClient;
+import zw.gov.mohcc.impilo.experience.config.ProductOwnerAccessProperties;
 
 import java.util.*;
 
@@ -18,13 +20,19 @@ public class SessionExperienceService {
     private final VarapiServiceClient varapiClient;
     private final WorkforceGovernanceClient workforceGovernanceClient;
     private final ObjectMapper objectMapper;
+    private final ProductOwnerAccessProperties productOwnerAccessProperties;
+    private final BootstrapProperties bootstrapProperties;
 
     public SessionExperienceService(VarapiServiceClient varapiClient,
                                       WorkforceGovernanceClient workforceGovernanceClient,
-                                      ObjectMapper objectMapper) {
+                                      ObjectMapper objectMapper,
+                                      ProductOwnerAccessProperties productOwnerAccessProperties,
+                                      BootstrapProperties bootstrapProperties) {
         this.varapiClient = varapiClient;
         this.workforceGovernanceClient = workforceGovernanceClient;
         this.objectMapper = objectMapper;
+        this.productOwnerAccessProperties = productOwnerAccessProperties;
+        this.bootstrapProperties = bootstrapProperties;
     }
 
     public Map<String, Object> buildExperienceContract(String actorId,
@@ -56,13 +64,13 @@ public class SessionExperienceService {
 
         String defaultTab = workVisible ? "work" : (professionalVisible && "provider_id".equals(loginMethod) ? "professional" : "personal");
 
-        Map<String, Object> tabs = Map.of(
+        Map<String, Object> tabs = new LinkedHashMap<>(Map.of(
                 "personal", tabDef(personalVisible, "My Life / My Health", "/home", "personal".equals(defaultTab), "health_id", null),
                 "professional", tabDef(professionalVisible, "My Professional", "/professional", "professional".equals(defaultTab), "verified_provider_worker_id",
                         professionalVisible ? null : "No verified Provider/Worker ID"),
                 "work", tabDef(workVisible, "Work", "/provider-workspace", "work".equals(defaultTab), "active_work_assignment",
                         workVisible ? null : "No active work assignment")
-        );
+        ));
 
         String friendlyState = null;
         if (orgFriendlyBlock != null) friendlyState = orgFriendlyBlock;
@@ -106,7 +114,55 @@ public class SessionExperienceService {
         contract.put("facilityModeAvailable", workVisible && activeAssignments.stream().anyMatch(a -> a.get("facilityId") != null));
         contract.put("facilityModeActive", hasSelectedFacility);
         contract.put("defaultRoute", resolveDefaultRoute(defaultTab, friendlyState, activeAssignments, hasSelectedFacility));
+
+        applyProductOwnerOverride(contract, actorId);
         return contract;
+    }
+
+    private void applyProductOwnerOverride(Map<String, Object> contract, String actorId) {
+        if (!productOwnerAccessProperties.isEffective(bootstrapProperties.getEnvironment())) {
+            return;
+        }
+        if (!productOwnerAccessProperties.isAllowlisted(actorId, null)) {
+            return;
+        }
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> tabs = (Map<String, Object>) contract.get("tabs");
+        if (tabs != null) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> workTab = (Map<String, Object>) tabs.get("work");
+            if (workTab != null) {
+                workTab.put("visible", true);
+                workTab.remove("reason");
+            }
+            @SuppressWarnings("unchecked")
+            Map<String, Object> professionalTab = (Map<String, Object>) tabs.get("professional");
+            if (professionalTab != null) {
+                professionalTab.put("visible", true);
+                professionalTab.remove("reason");
+            }
+        }
+
+        List<String> fullManagement = PRODUCT_OWNER_MANAGEMENT_WORKSPACES;
+        contract.put("visibleManagementWorkspaces", fullManagement);
+        contract.put("blockedManagementWorkspaces", List.of());
+        contract.put("visibleWorkspaces", mergeUnique(
+                castStringList(contract.get("visibleWorkspaces")),
+                fullManagement
+        ));
+        contract.put("visibleActions", mergeUnique(
+                castStringList(contract.get("visibleActions")),
+                List.of("work.context.enter", "administration.governance.view")
+        ));
+        contract.put("blockedActions", List.of());
+        contract.put("friendlyResolutionState", "");
+        contract.put("policyMetadata", Map.of(
+                "contractVersion", "1.1.0",
+                "opaPackages", List.of("impilo.tabs", "impilo.work", "impilo.professional", "impilo.registry", "impilo.marketplace", "impilo.organisation"),
+                "enforcement", "bff_and_opa",
+                "previewProductOwnerAccess", true
+        ));
     }
 
     private Map<String, Object> fetchLinkedIds(String actorId) {
@@ -153,6 +209,9 @@ public class SessionExperienceService {
     private static List<Map<String, Object>> filterActiveAssignments(List<Map<String, Object>> assignments) {
         return assignments.stream().filter(a -> {
             String s = normalizeStatus(stringVal(a.get("assignmentStatus")));
+            if (s == null) {
+                s = normalizeStatus(stringVal(a.get("status")));
+            }
             return "active".equals(s) || "active_temporary".equals(s) || "active_restricted".equals(s);
         }).toList();
     }
@@ -186,32 +245,81 @@ public class SessionExperienceService {
         return "citizen";
     }
 
-    private static Map<String, Object> resolveOrganisationContext(List<Map<String, Object>> assignments) {
+    private Map<String, Object> resolveOrganisationContext(List<Map<String, Object>> assignments) {
+        Map<String, Object> best = Map.of();
+        int bestPriority = -1;
         for (Map<String, Object> assignment : assignments) {
-            String organisationId = stringVal(assignment.get("organisationId"));
-            if (organisationId == null || organisationId.isBlank()) continue;
-            Map<String, Object> org = new LinkedHashMap<>();
-            org.put("organisationId", organisationId);
-            putIfPresent(org, "organisationType", assignment.get("organisationType"));
-            putIfPresent(org, "organisationName", assignment.get("organisationName"));
-            putIfPresent(org, "organisationTrustTier", assignment.get("organisationTrustTier"));
-            putIfPresent(org, "organisationLifecycleStatus", assignment.get("organisationLifecycleStatus"));
-            putIfPresent(org, "organisationAccessEnvironment", assignment.get("organisationAccessEnvironment"));
-            putIfPresent(org, "organisationCountry", assignment.get("organisationCountry"));
-            putIfPresent(org, "userOrganisationRole", assignment.get("userOrganisationRole"));
-            org.put("activeOrganisationAssignment", true);
-            if (assignment.get("organisationDataScopes") instanceof List<?> scopes) {
-                org.put("organisationDataScopes", scopes);
+            Map<String, Object> org = buildOrganisationContextFromAssignment(assignment);
+            if (org.isEmpty()) {
+                continue;
             }
-            if (assignment.get("organisationApiScopes") instanceof List<?> scopes) {
-                org.put("organisationApiScopes", scopes);
+            int priority = organisationContextPriority(org);
+            if (priority > bestPriority) {
+                best = org;
+                bestPriority = priority;
             }
-            if (assignment.get("crossBorderAccessFlag") instanceof Boolean flag) {
-                org.put("crossBorderAccessFlag", flag);
-            }
-            return org;
         }
-        return Map.of();
+        return best;
+    }
+
+    private Map<String, Object> buildOrganisationContextFromAssignment(Map<String, Object> assignment) {
+        String organisationId = stringVal(assignment.get("organisationId"));
+        if (organisationId == null || organisationId.isBlank()) {
+            return Map.of();
+        }
+        Map<String, Object> org = new LinkedHashMap<>();
+        org.put("organisationId", organisationId);
+        putIfPresent(org, "organisationType", assignment.get("organisationType"));
+        putIfPresent(org, "organisationName", assignment.get("organisationName"));
+        putIfPresent(org, "organisationTrustTier", assignment.get("organisationTrustTier"));
+        putIfPresent(org, "organisationLifecycleStatus", assignment.get("organisationLifecycleStatus"));
+        putIfPresent(org, "organisationAccessEnvironment", assignment.get("organisationAccessEnvironment"));
+        putIfPresent(org, "organisationCountry", assignment.get("organisationCountry"));
+        putIfPresent(org, "userOrganisationRole", assignment.get("userOrganisationRole"));
+
+        if (stringVal(org.get("organisationType")) == null) {
+            enrichOrganisationFromWgv(org, organisationId);
+        }
+
+        String organisationType = normalizeOrgType(stringVal(org.get("organisationType")));
+        if (organisationType != null) {
+            org.put("organisationType", organisationType);
+        }
+
+        org.put("activeOrganisationAssignment", true);
+        if (assignment.get("organisationDataScopes") instanceof List<?> scopes) {
+            org.put("organisationDataScopes", scopes);
+        }
+        if (assignment.get("organisationApiScopes") instanceof List<?> scopes) {
+            org.put("organisationApiScopes", scopes);
+        }
+        if (assignment.get("crossBorderAccessFlag") instanceof Boolean flag) {
+            org.put("crossBorderAccessFlag", flag);
+        }
+        return org;
+    }
+
+    private void enrichOrganisationFromWgv(Map<String, Object> org, String organisationId) {
+        try {
+            JsonNode node = workforceGovernanceClient.getJson("/v1/internal/governance/organisations/" + organisationId);
+            if (node == null || node.isNull()) {
+                return;
+            }
+            putIfPresent(org, "organisationType", jsonText(node, "organisationType"));
+            putIfPresent(org, "organisationName", jsonText(node, "name"));
+            putIfPresent(org, "organisationLifecycleStatus", jsonText(node, "status"));
+        } catch (Exception ignored) {
+            // Downstream unavailable — keep partial org context.
+        }
+    }
+
+    private static int organisationContextPriority(Map<String, Object> org) {
+        String type = normalizeOrgType(stringVal(org.get("organisationType")));
+        if ("sovereign_public_owner".equals(type)) return 100;
+        if ("ministry_department".equals(type)) return 90;
+        if ("health_professions_authority".equals(type)) return 80;
+        if ("public_facility".equals(type)) return 50;
+        return 10;
     }
 
     private static void putIfPresent(Map<String, Object> target, String key, Object value) {
@@ -237,7 +345,7 @@ public class SessionExperienceService {
     }
 
     private static Map<String, List<String>> resolveManagementWorkspaces(Map<String, Object> organisation) {
-        String organisationType = stringVal(organisation.get("organisationType"));
+        String organisationType = normalizeOrgType(stringVal(organisation.get("organisationType")));
         if (organisationType == null || organisationType.isBlank()) {
             return Map.of("visible", List.of(), "blocked", List.of());
         }
@@ -272,6 +380,35 @@ public class SessionExperienceService {
             "municipal_user_management", "municipal_facility_staff_management", "municipal_public_health_team_management");
     private static final List<String> PRIVATE_ONLY_WORKSPACES = List.of(
             "private_facility_user_management", "private_clinician_assignment");
+
+    private static final List<String> PRODUCT_OWNER_MANAGEMENT_WORKSPACES = List.of(
+            "national_organisation_registry",
+            "national_trust_console",
+            "national_platform_user_administration",
+            "national_system_operator_management",
+            "national_identity_governance",
+            "mohcc_head_office_user_management",
+            "municipal_organisation_management",
+            "municipal_user_management",
+            "municipal_facility_staff_management",
+            "public_facility_staff_management",
+            "facility_work_assignment",
+            "private_facility_user_management",
+            "private_clinician_assignment",
+            "regulator_organisation_management",
+            "council_user_management",
+            "hsc_user_management",
+            "hsc_workspace",
+            "hsc_establishment_control",
+            "blood_service_user_management",
+            "blood_service_organisation_management",
+            "marketplace_user_management",
+            "marketplace_organisation_verification",
+            "payer_organisation_management",
+            "payer_user_management",
+            "external_partner_user_management",
+            "research_partner_organisation_management"
+    );
 
     private static final Map<String, List<String>> MANAGEMENT_WORKSPACE_DEFAULTS = Map.ofEntries(
             Map.entry("sovereign_public_owner", List.of("national_organisation_registry", "national_trust_console", "national_platform_user_administration")),
@@ -348,6 +485,18 @@ public class SessionExperienceService {
         return status.trim().toLowerCase().replace(' ', '_').replace('-', '_');
     }
 
+    private static String normalizeOrgType(String organisationType) {
+        return normalizeStatus(organisationType);
+    }
+
+    private static String jsonText(JsonNode node, String field) {
+        if (node == null || !node.has(field) || node.get(field).isNull()) {
+            return null;
+        }
+        String value = node.get(field).asText();
+        return value == null || value.isBlank() ? null : value.trim();
+    }
+
     private static String resolveProviderPublicId(JsonNode node) {
         if (node == null || node.isNull()) return null;
         if (node.has("providerId") && !node.get("providerId").asText().isBlank()) {
@@ -357,5 +506,26 @@ public class SessionExperienceService {
             return node.get("providerPublicId").asText();
         }
         return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<String> castStringList(Object value) {
+        if (!(value instanceof List<?> list)) {
+            return List.of();
+        }
+        List<String> out = new ArrayList<>();
+        for (Object item : list) {
+            if (item != null) {
+                out.add(item.toString());
+            }
+        }
+        return out;
+    }
+
+    private static List<String> mergeUnique(List<String> left, List<String> right) {
+        LinkedHashSet<String> merged = new LinkedHashSet<>();
+        merged.addAll(left);
+        merged.addAll(right);
+        return new ArrayList<>(merged);
     }
 }

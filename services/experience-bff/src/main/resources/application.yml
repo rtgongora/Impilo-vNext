@@ -53,6 +53,11 @@ impilo:
     require-mfa: ${IMPILO_BOOTSTRAP_REQUIRE_MFA:true}
     environment: ${IMPILO_BOOTSTRAP_ENVIRONMENT:development}
     bootstrap-role-ttl-hours: 24
+  preview:
+    product-owner-access:
+      enabled: ${IMPILO_PREVIEW_PRODUCT_OWNER_ACCESS:false}
+      allowed-actors: ${IMPILO_PREVIEW_PRODUCT_OWNER_ALLOWED_ACTORS:b0000000-0000-4000-8000-000000000010,superadmin@impilo.gov.zw}
+      blocked-environments: ${IMPILO_PREVIEW_PRODUCT_OWNER_BLOCKED_ENVIRONMENTS:production,prod}
   governance:
     invitation-expiry-hours: ${IMPILO_GOVERNANCE_INVITATION_EXPIRY_HOURS:168}
   registry-intake:
@@ -192,6 +197,7 @@ impilo:
     procurement-base-url: ${PROCUREMENT_BASE_URL:http://localhost:8283}
     scheduling-service-base-url: ${SCHEDULING_SERVICE_BASE_URL:http://localhost:8128}
     booking-base-url: ${BOOKING_BASE_URL:http://localhost:8265}
+    workforce-governance-base-url: ${WORKFORCE_GOVERNANCE_BASE_URL:http://localhost:8165}
 
     # PCW-2 orchestration backlog — preview env mapped; dedicated BFF clients not yet implemented.
     orchestration-backlog:

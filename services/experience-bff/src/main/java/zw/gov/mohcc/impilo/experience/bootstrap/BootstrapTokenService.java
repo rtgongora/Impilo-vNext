@@ -42,7 +42,9 @@ public class BootstrapTokenService {
         }
         String configuredHash = properties.getTokenHash();
         if (configuredHash == null || configuredHash.isBlank()) {
-            if ("development".equalsIgnoreCase(properties.getEnvironment()) || "test".equalsIgnoreCase(properties.getEnvironment())) {
+            if ("development".equalsIgnoreCase(properties.getEnvironment())
+                    || "test".equalsIgnoreCase(properties.getEnvironment())
+                    || "preview".equalsIgnoreCase(properties.getEnvironment())) {
                 return TokenValidationResult.valid(fingerprint(token));
             }
             return TokenValidationResult.denied("Bootstrap token is not configured.");
