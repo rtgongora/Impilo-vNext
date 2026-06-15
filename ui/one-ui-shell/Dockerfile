@@ -6,8 +6,10 @@
 FROM node:20-bookworm-slim AS base
 WORKDIR /workspace
 
-ARG NEXT_PUBLIC_BFF_URL=http://localhost:8160
-ARG NEXT_PUBLIC_API_GATEWAY_URL=http://localhost:10000
+# Preview/production: leave empty so the browser uses same-origin relative paths
+# (Traefik routes /internal/* to experience-bff). Compose/local dev overrides at build time.
+ARG NEXT_PUBLIC_BFF_URL=
+ARG NEXT_PUBLIC_API_GATEWAY_URL=
 ENV NEXT_PUBLIC_BFF_URL=$NEXT_PUBLIC_BFF_URL
 ENV NEXT_PUBLIC_API_GATEWAY_URL=$NEXT_PUBLIC_API_GATEWAY_URL
 ENV NEXT_TELEMETRY_DISABLED=1

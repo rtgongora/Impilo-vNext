@@ -17,6 +17,7 @@ import { useShiftStore } from "@/hooks/useShiftStore";
 import { useIdentityContext } from "@/hooks/useIdentityContext";
 import { matchesRequiredRole, ROLE_GROUPS } from "@/lib/auth/role-groups";
 import { isRouteBlockedForCitizen } from "@/lib/identity-context";
+import { buildContextGuardRedirect } from "@/lib/resolve-post-login-destination";
 import { matchRouteDefinition } from "@/lib/routes";
 import { isSchedulingClusterPath } from "@/lib/scheduling-paths";
 
@@ -93,26 +94,41 @@ export function AuthGuardProvider({ children }: { children: ReactNode }) {
         break;
       case "facility":
         if (!isAuthenticated) { router.replace("/auth/login"); return; }
-        if (!hasFacility) { router.replace("/facility"); return; }
+        if (!hasFacility) {
+          router.replace(buildContextGuardRedirect("/facility", pathname));
+          return;
+        }
         break;
       case "workspace":
         if (!isAuthenticated) { router.replace("/auth/login"); return; }
-        if (!hasFacility) { router.replace("/facility"); return; }
+        if (!hasFacility) {
+          router.replace(buildContextGuardRedirect("/facility", pathname));
+          return;
+        }
         if (!hasWorkspace) {
           // Organization operators reach roster/on-call from /organization-admin/staffing
           // without picking a clinical workspace; facility context is enough for staffing APIs.
           if (isSchedulingClusterPath(pathname) && matchesRequiredRole(hasRole, "ORGANIZATION_ADMIN")) {
             break;
           }
-          router.replace("/workspace");
+          router.replace(buildContextGuardRedirect("/workspace", pathname));
           return;
         }
         break;
       case "shift":
         if (!isAuthenticated) { router.replace("/auth/login"); return; }
-        if (!hasFacility) { router.replace("/facility"); return; }
-        if (!hasWorkspace) { router.replace("/workspace"); return; }
-        if (!hasShift) { router.replace("/shift"); return; }
+        if (!hasFacility) {
+          router.replace(buildContextGuardRedirect("/facility", pathname));
+          return;
+        }
+        if (!hasWorkspace) {
+          router.replace(buildContextGuardRedirect("/workspace", pathname));
+          return;
+        }
+        if (!hasShift) {
+          router.replace(buildContextGuardRedirect("/shift", pathname));
+          return;
+        }
         break;
       case "provider":
         // Health OS §6: "Sign in as a person; practice as a provider only under activated Provider ID."
@@ -121,7 +137,10 @@ export function AuthGuardProvider({ children }: { children: ReactNode }) {
           router.replace(`/provider/activate?returnTo=${encodeURIComponent(pathname)}`);
           return;
         }
-        if (!hasFacility) { router.replace("/facility"); return; }
+        if (!hasFacility) {
+          router.replace(buildContextGuardRedirect("/facility", pathname));
+          return;
+        }
         break;
       case "role":
         if (!isAuthenticated) { router.replace("/auth/login"); return; }

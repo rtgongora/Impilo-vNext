@@ -5,6 +5,7 @@
  * Route: /facility | pageTitle: "Select Facility"
  */
 
+import { useSearchParams } from "next/navigation";
 import { BarChart3, Receipt, Shield } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { NompiloHint } from "@/components/intelligent/NompiloHint";
@@ -13,13 +14,18 @@ import { PageShell } from "@/components/PageShell";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilities, type FacilityResource } from "@/hooks/queries/useFacilities";
 import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
+import { resolvePostFacilitySelectionPath } from "@/lib/resolve-post-login-destination";
+import { matchRouteDefinition } from "@/lib/routes";
 
 export default function FacilityPage() {
   const { hasRole } = useAuthStore();
+  const searchParams = useSearchParams();
+  const returnTo = searchParams.get("returnTo");
   const { data, isLoading } = useFacilities();
   const { facility, selectFacility, enterMode } = useExperienceEntry();
 
   const facilities = data?.data ?? [];
+  const pendingRoute = returnTo ? matchRouteDefinition(returnTo) : null;
 
   function handleSelect(facilityResource: FacilityResource) {
     selectFacility(
@@ -33,7 +39,7 @@ export default function FacilityPage() {
       },
       {
         mode: "clinical",
-        nextPath: "/workspace",
+        nextPath: resolvePostFacilitySelectionPath(returnTo),
       }
     );
   }
@@ -44,6 +50,12 @@ export default function FacilityPage() {
         title="Start Work Session"
         subtitle="Where are you working today?"
       >
+        {pendingRoute ? (
+          <p className="mb-4 rounded-lg border border-primary/25 bg-primary-soft px-4 py-3 text-sm text-primary-hover">
+            Select a facility to continue to{" "}
+            <span className="font-semibold">{pendingRoute.pageTitle ?? pendingRoute.navLabel ?? returnTo}</span>.
+          </p>
+        ) : null}
         <WorkplaceSelectionHub
           facilities={facilities}
           isLoading={isLoading}

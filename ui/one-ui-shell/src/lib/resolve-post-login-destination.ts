@@ -160,3 +160,32 @@ export function buildPostLoginResolvingPath(returnTo?: string | null): string {
   }
   return "/auth/resolving";
 }
+
+/** Redirect target when a route guard blocks navigation (facility / workspace / shift). */
+export function buildContextGuardRedirect(
+  guardTarget: "/facility" | "/workspace" | "/shift",
+  attemptedPath: string,
+): string {
+  if (isSafeReturnTo(attemptedPath) && attemptedPath !== guardTarget) {
+    return withReturnTo(guardTarget, attemptedPath);
+  }
+  return guardTarget;
+}
+
+/** After facility pick, continue to returnTo when it only needs facility context. */
+export function resolvePostFacilitySelectionPath(returnTo: string | null): string {
+  if (!isSafeReturnTo(returnTo)) {
+    return "/workspace";
+  }
+  const route = matchRouteDefinition(returnTo);
+  if (!route) {
+    return returnTo;
+  }
+  if (route.guard === "facility") {
+    return returnTo;
+  }
+  if (route.guard === "workspace" || route.guard === "shift" || route.guard === "provider") {
+    return withReturnTo("/workspace", returnTo);
+  }
+  return returnTo;
+}

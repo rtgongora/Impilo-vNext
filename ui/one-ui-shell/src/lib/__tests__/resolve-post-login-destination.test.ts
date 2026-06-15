@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildContextGuardRedirect,
   buildPostLoginResolvingPath,
   isSafeReturnTo,
+  resolvePostFacilitySelectionPath,
   resolvePostLoginDestination,
 } from "@/lib/resolve-post-login-destination";
 
@@ -126,5 +128,21 @@ describe("resolvePostLoginDestination", () => {
       "/auth/resolving?returnTo=%2Fqueue",
     );
     expect(buildPostLoginResolvingPath()).toBe("/auth/resolving");
+  });
+
+  it("buildContextGuardRedirect preserves attempted path as returnTo", () => {
+    expect(buildContextGuardRedirect("/facility", "/clinical")).toBe(
+      "/facility?returnTo=%2Fclinical",
+    );
+    expect(buildContextGuardRedirect("/facility", "/facility")).toBe("/facility");
+  });
+
+  it("resolvePostFacilitySelectionPath returns clinical hub when only facility guard applies", () => {
+    expect(resolvePostFacilitySelectionPath("/clinical")).toBe("/clinical");
+    expect(resolvePostFacilitySelectionPath(null)).toBe("/workspace");
+    expect(resolvePostFacilitySelectionPath("/queue/triage")).toBe("/queue/triage");
+    expect(resolvePostFacilitySelectionPath("/scheduling")).toBe(
+      "/workspace?returnTo=%2Fscheduling",
+    );
   });
 });

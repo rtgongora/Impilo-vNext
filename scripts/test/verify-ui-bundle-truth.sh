@@ -79,6 +79,11 @@ if [[ -z "$js" ]]; then
 fi
 
 missing=()
+# Preview must be same-origin: browser bundle must not call localhost:8160 on the user's machine.
+if printf '%s' "$js" | grep -qF 'localhost:8160'; then
+  echo "  FORBIDDEN marker present: localhost:8160 (wrong NEXT_PUBLIC_BFF_URL at image build)"
+  missing+=("same-origin-bff")
+fi
 IFS=',' read -ra MARKERS <<<"$EXPECT_MARKERS"
 for m in "${MARKERS[@]}"; do
   m_trim="$(echo "$m" | sed 's/^ *//;s/ *$//')"
