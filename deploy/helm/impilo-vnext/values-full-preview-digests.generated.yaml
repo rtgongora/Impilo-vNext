@@ -1,0 +1,5 @@
+# AUTO-GENERATED — do not edit by hand.
+# Regenerate after registry push: bash scripts/full-boot/resolve-image-digests.sh
+# Populated by full-boot-preview-deploy.sh (chart-native @sha256 pinning).
+fullBootServices: {}
+images: {}

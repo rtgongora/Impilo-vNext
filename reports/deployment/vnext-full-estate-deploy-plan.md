@@ -47,19 +47,33 @@ flowchart LR
 
 1. Build all estate services (`build-full-vnext.sh` + `build-full-vnext-images.sh --full-estate`).
    - Stale-JAR guard refuses packaging old `target/*.jar`.
+   - App Dockerfiles cache-bust via `SOURCE_COMMIT` + `CACHE_BUST` build-args (`IMPILO_IMAGE_NO_CACHE=1` escape hatch).
+   - `one-ui-shell` post-build bundle-hash assertion when UI sources changed.
    - Per-service build records written to `reports/full-boot/full-image-build-records.json` (the target digest set).
 2. **Push to the local registry** (`push-images-to-local-registry.sh runtime`) — build is not enough.
-3. Import/verify in k3s/containerd (`fullboot.sh import-images` + `verify-images`).
-4. `helm upgrade` with the full estate enabled (no `--max-wave`).
-5. Rollout (phased via `phased-wave-preview-promote.sh` to respect the pod cap).
-6. Per-wave readiness checks.
-7. Final verification:
+3. **Resolve registry digests** (`resolve-image-digests.sh`) → `values-full-preview-digests.generated.yaml` (chart-native `@sha256` pinning; default on).
+4. Pre-rollout `check-runtime-image-truth.sh --phase pre-rollout` (registry alignment).
+5. Import/verify in k3s/containerd (`fullboot.sh import-images` + `verify-images`).
+6. `helm upgrade` with full estate + digests values file (no `--max-wave`).
+7. Rollout (phased via `phased-wave-preview-promote.sh` to respect the pod cap).
+8. Per-wave readiness checks.
+9. Final verification:
    - `check-runtime-image-truth.sh` (digest alignment; fails on stale non-exempt).
    - `verify-ui-bundle-truth.sh` (served bundle hash + feature markers).
    - `verify-bff-behaviour-truth.sh` (changed-endpoint behaviour, not metadata).
    - `report-preview-generation.sh` (single public stack).
    - API smoke (`run-full-boot-smoke-tests.sh`).
-8. `check-full-boot-runtime-completeness.sh` must return `FULL_ESTATE_PASS`.
+10. `check-full-boot-runtime-completeness.sh` must return `FULL_ESTATE_PASS`.
+
+## Digest pinning (default)
+- After push, `bash scripts/full-boot/resolve-image-digests.sh` queries `127.0.0.1:5000/v2/impilo/<service>/manifests/preview`.
+- Helm renders `127.0.0.1:5000/impilo/<service>@sha256:…` for every runtime microservice, `experience-bff`, and `one-ui-shell`.
+- Opt out only for emergencies: `IMPILO_DEPLOY_NO_DIGEST_PIN=1` (mutable `:preview` tags; stale-pod risk returns).
+
+## Build cache-bust (default)
+- `build-full-vnext-images.sh` passes `--build-arg SOURCE_COMMIT` and `--build-arg CACHE_BUST=<content-hash>`.
+- `IMPILO_IMAGE_NO_CACHE=1` adds `--no-cache` for a full layer rebuild.
+- UI builds record `layout-<hash>.js` in `reports/full-boot/ui-bundle-hash.txt` and fail if unchanged after source changes.
 
 ## Success criteria (FULL_ESTATE_PASS)
 - All 89 runtime microservices + `experience-bff` + `one-ui-shell` deployed and Ready.

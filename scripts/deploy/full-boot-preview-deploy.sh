@@ -21,6 +21,7 @@ CHART_DIR="deploy/helm/impilo-vnext"
 VALUES_FILE="$CHART_DIR/values-full-preview.yaml"
 RUNTIME_VALUES="$CHART_DIR/values-full-preview-runtime.generated.yaml"
 BFF_ENV_VALUES="$CHART_DIR/values-full-preview-bff-env.generated.yaml"
+DIGESTS_VALUES="$CHART_DIR/values-full-preview-digests.generated.yaml"
 RELEASE_NAME="impilo-full-preview"
 MODE="deploy"
 # DEFAULT is the FULL ESTATE. 'all' => no --max-wave passed downstream (every microservice enabled).
@@ -329,6 +330,27 @@ else
   fi
 fi
 
+# Chart-native digest pinning (default): resolve registry @sha256 for every runtime service
+# so Helm tells k3s exactly what to run — not mutable :preview tags.
+EXTRA_HELM_VALUES=()
+if [[ "${IMPILO_DEPLOY_NO_DIGEST_PIN:-}" == "1" ]]; then
+  echo "WARN: IMPILO_DEPLOY_NO_DIGEST_PIN=1 — rollout uses mutable tags (not recommended)."
+else
+  echo "--- Resolve registry digests for chart-native pinning ---"
+  if bash scripts/full-boot/resolve-image-digests.sh --tag "${IMAGE_TAG:-preview}"; then
+    if [[ -f "$DIGESTS_VALUES" ]]; then
+      EXTRA_HELM_VALUES+=(-f "$DIGESTS_VALUES")
+      echo "Digest pinning: $DIGESTS_VALUES ($(grep -c 'digest:' "$DIGESTS_VALUES" 2>/dev/null || echo 0) digests)"
+    else
+      echo "WARN: digest values file missing after resolve — continuing with mutable tags."
+    fi
+  else
+    echo "WARN: resolve-image-digests.sh incomplete — continuing with mutable tags."
+  fi
+  echo "--- Pre-rollout runtime image truth (registry alignment) ---"
+  bash scripts/guard/check-runtime-image-truth.sh --phase pre-rollout --ns "$NAMESPACE" || true
+fi
+
 if [[ "${FULL_BOOT_SKIP_IMPORT:-}" == "1" ]]; then
   echo "SKIP: FULL_BOOT_SKIP_IMPORT=1 (k3s images already verified)"
   echo "WARN: deploy may use stale containerd layers if import was not run for tag $IMAGE_TAG"
@@ -352,6 +374,7 @@ kubectl create namespace "$NAMESPACE" 2>/dev/null || true
 helm upgrade --install "$RELEASE_NAME" "$CHART_DIR" \
   -n "$NAMESPACE" \
   "${HELM_VALUE_FILES[@]}" \
+  "${EXTRA_HELM_VALUES[@]}" \
   --set global.gitBranch="$PREVIEW_DEPLOY_BRANCH" \
   --set global.gitCommit="$PREVIEW_DEPLOY_COMMIT" \
   --set global.buildDate="$PREVIEW_DEPLOY_BUILD_DATE" \
@@ -372,11 +395,16 @@ bash scripts/guard/check-full-boot-runtime-completeness.sh || true
 
 # --- BFF/shell image pinning report (Area 10) ---
 echo "--- Image pinning report ---"
-echo "Pinning: global.imageTag=$IMAGE_TAG; experience-bff and one-ui-shell use tag '$IMAGE_TAG'."
-if [[ "$IMAGE_TAG" == "preview" ]]; then
-  echo "Pinning mode: mutable ':preview' tag, re-pushed and digest-verified this deploy (not a frozen commit)."
+if [[ "${IMPILO_DEPLOY_NO_DIGEST_PIN:-}" == "1" ]]; then
+  echo "Pinning mode: mutable tag (IMPILO_DEPLOY_NO_DIGEST_PIN=1)."
+elif [[ -f "$DIGESTS_VALUES" ]]; then
+  echo "Pinning mode: chart-native @sha256 digests from $DIGESTS_VALUES (canonical)."
 else
-  echo "Pinning mode: commit-scoped tag '$IMAGE_TAG' (explicit). Confirm all other services align to the intended target."
+  echo "Pinning mode: mutable ':preview' tag, re-pushed and digest-verified this deploy."
+fi
+echo "Tag metadata: global.imageTag=$IMAGE_TAG; experience-bff and one-ui-shell tag '$IMAGE_TAG' when digest unset."
+if [[ "$IMAGE_TAG" != "preview" && "${IMPILO_DEPLOY_NO_DIGEST_PIN:-}" == "1" ]]; then
+  echo "Commit-scoped tag '$IMAGE_TAG' (explicit). Confirm all services align to intended target."
 fi
 
 # --- UI bundle + BFF behaviour truth (served bundle / changed endpoint, not metadata alone) ---

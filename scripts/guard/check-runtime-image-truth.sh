@@ -191,18 +191,59 @@ def short_digest(s):
     return s[:19]
 
 
+def normalize_digest(s):
+    if not s:
+        return ""
+    if "sha256:" in s:
+        return "sha256:" + s.split("sha256:", 1)[1].split("@")[-1]
+    return s
+
+
+def parse_digest_from_ref(ref):
+    if not ref or "@sha256:" not in ref:
+        return ""
+    return normalize_digest(ref.split("@", 1)[1])
+
+
+def load_pinned_digests():
+    """Load chart-native digest pins from generated Helm values."""
+    pinned = {}
+    path = root / "deploy/helm/impilo-vnext/values-full-preview-digests.generated.yaml"
+    if yaml is None or not path.exists():
+        return pinned
+    try:
+        doc = yaml.safe_load(path.read_text()) or {}
+        for sid, svc in (doc.get("fullBootServices") or {}).items():
+            d = ((svc or {}).get("image") or {}).get("digest")
+            if d:
+                pinned[sid] = normalize_digest(d)
+        for key, sid in (("experienceBff", "experience-bff"), ("oneUiShell", "one-ui-shell")):
+            d = ((doc.get("images") or {}).get(key) or {}).get("digest")
+            if d:
+                pinned[sid] = normalize_digest(d)
+    except Exception:
+        pass
+    return pinned
+
+
+pinned_digests = load_pinned_digests()
+
 rows = []
 stale_non_exempt = []
 for sid in runtime_services:
     is_exempt = sid in exempt
     rec = records.get(sid, {})
     expected_image_ref = f"{registry}/impilo/{sid}:preview"
-    expected_digest = rec.get("registry_digest", "")
+    dep_image = deployment_image(sid) if kubectl else ""
+    dep_digest = parse_digest_from_ref(dep_image)
+
+    # Prefer chart-native @sha256 deployment ref, then pinned values, then build records.
+    expected_digest = dep_digest or pinned_digests.get(sid, "") or normalize_digest(rec.get("registry_digest", ""))
     local_id = docker_image_id(f"impilo/{sid}:preview")
-    reg_digest = registry_digest(sid)
+    reg_digest = normalize_digest(registry_digest(sid))
     ctr_digest = containerd_digest(sid)
-    dep_image = deployment_image(sid)
-    pod_id = pod_image_id(sid)
+    pod_id = pod_image_id(sid) if kubectl else ""
+    pod_digest = normalize_digest(pod_id)
 
     # Alignment + reason classification.
     aligned = "YES"
@@ -212,26 +253,37 @@ for sid in runtime_services:
         reason = "explicit_exemption"
     elif kubectl and not dep_image:
         aligned = "NO"
-        reason = "missing_pod"
+        reason = "missing_deployment"
         stale_non_exempt.append(sid)
     elif kubectl and not pod_id:
         aligned = "NO"
         reason = "missing_pod"
         stale_non_exempt.append(sid)
-    elif docker and not local_id:
+    elif dep_digest and pod_digest and dep_digest not in pod_digest and pod_digest not in dep_digest:
         aligned = "NO"
-        reason = "built_not_pushed" if not reg_digest else "stale_application_service"
+        reason = "helm_pod_digest_drift"
         stale_non_exempt.append(sid)
-    elif curl and local_id and not reg_digest:
+    elif dep_digest and reg_digest and dep_digest not in reg_digest and reg_digest not in dep_digest:
         aligned = "NO"
-        reason = "built_not_pushed"
+        reason = "registry_digest_drift"
         stale_non_exempt.append(sid)
-    elif reg_digest and pod_id and reg_digest not in pod_id and pod_id not in reg_digest:
-        # Pod running a digest that does not match the current registry digest.
+    elif expected_digest and pod_digest and expected_digest not in pod_digest and pod_digest not in expected_digest:
         aligned = "NO"
         reason = "stale_application_service"
         stale_non_exempt.append(sid)
-    elif expected_digest and reg_digest and expected_digest not in reg_digest and reg_digest not in expected_digest:
+    elif docker and not local_id and not is_exempt:
+        aligned = "NO"
+        reason = "built_not_pushed" if not reg_digest else "stale_application_service"
+        stale_non_exempt.append(sid)
+    elif curl and local_id and not reg_digest and phase == "pre-rollout":
+        aligned = "NO"
+        reason = "built_not_pushed"
+        stale_non_exempt.append(sid)
+    elif not dep_digest and reg_digest and pod_digest and reg_digest not in pod_digest and pod_digest not in reg_digest:
+        aligned = "NO"
+        reason = "stale_application_service"
+        stale_non_exempt.append(sid)
+    elif expected_digest and reg_digest and not dep_digest and expected_digest not in reg_digest and reg_digest not in expected_digest:
         aligned = "NO"
         reason = "registry_tag_stale"
         stale_non_exempt.append(sid)
@@ -242,7 +294,7 @@ for sid in runtime_services:
     rows.append({
         "service": sid,
         "source_commit": rec.get("source_commit", ""),
-        "expected_image_ref": expected_image_ref,
+        "expected_image_ref": dep_image or expected_image_ref,
         "expected_registry_digest": short_digest(expected_digest),
         "local_docker_image_id": short_digest(local_id),
         "local_registry_digest": short_digest(reg_digest),
@@ -250,6 +302,7 @@ for sid in runtime_services:
         "helm_deployment_image_ref": dep_image,
         "running_pod_imageID": short_digest(pod_id),
         "expected_digest": short_digest(expected_digest),
+        "digest_pinned": "YES" if dep_digest else "NO",
         "aligned": aligned,
         "reason": reason,
     })

@@ -1,29 +1,29 @@
 # AUTO-GENERATED — do not edit by hand.
-# Regenerate: node scripts/full-boot/generate-full-preview-runtime-values.mjs
-# Microservices: 89 | enabled: 89 (all waves)
+# Regenerate: node scripts/full-boot/generate-full-preview-runtime-values.mjs --max-wave 0
+# Microservices: 89 | enabled: 13 (waves 0–0)
 fullBootServices:
   ai-model-registry-service:
-    enabled: true
+    enabled: false
     port: 8280
     database: ai_model_registry
   analytics-pipeline-service:
-    enabled: true
+    enabled: false
     port: 8365
     database: analytics_pipeline
   asset-registry-service:
-    enabled: true
+    enabled: false
     port: 8310
     database: asset_registry
   audit-ledger-service:
-    enabled: true
+    enabled: false
     port: 8350
     database: audit_ledger
   booking-service:
-    enabled: true
+    enabled: false
     port: 8265
     database: booking
   butano-fhir:
-    enabled: true
+    enabled: false
     port: 8289
     database: butano_fhir
   butano-service:
@@ -42,71 +42,71 @@ fullBootServices:
         cpu: '2'
         memory: 2Gi
   campaigns-service:
-    enabled: true
+    enabled: false
     port: 8190
     database: campaigns
   card-print-agent:
-    enabled: true
+    enabled: false
     port: 8291
     database: card_print_agent
   channels-service:
-    enabled: true
+    enabled: false
     port: 8130
     database: channels
   clinical-knowledge-platform-service:
-    enabled: true
+    enabled: false
     port: 8270
     database: clinical_knowledge_platform
   community-service:
-    enabled: true
+    enabled: false
     port: 8122
     database: community
   connector-fhir-adapter:
-    enabled: true
+    enabled: false
     port: 8151
     database: connector_fhir_adapter
   costing-engine-service:
-    enabled: true
+    enabled: false
     port: 8101
     database: costing_engine
   coverage-service:
-    enabled: true
+    enabled: false
     port: 8140
     database: coverage
   credential-verification-service:
-    enabled: true
+    enabled: false
     port: 8094
     database: credential_verification
   data-access-governance-service:
-    enabled: true
+    enabled: false
     port: 8170
     database: data_access_governance
   data-governance-service:
-    enabled: true
+    enabled: false
     port: 8220
     database: data_governance
   data-ingestion-service:
-    enabled: true
+    enabled: false
     port: 8210
     database: data_ingestion
   data-pipeline-service:
-    enabled: true
+    enabled: false
     port: 8215
     database: data_pipeline
   data-warehouse-service:
-    enabled: true
+    enabled: false
     port: 8233
     database: data_warehouse
   developer-portal-service:
-    enabled: true
+    enabled: false
     port: 8370
     database: developer_portal
   dispatch-service:
-    enabled: true
+    enabled: false
     port: 8320
     database: dispatch
   document-service:
-    enabled: true
+    enabled: false
     port: 8093
     database: document
   fhir-gateway-service:
@@ -116,91 +116,91 @@ fullBootServices:
     env:
       FHIR_BASE_URL: http://hapi-fhir:8090/fhir
   forms-service:
-    enabled: true
+    enabled: false
     port: 8240
     database: forms
   general-ledger-service:
-    enabled: true
+    enabled: false
     port: 8281
     database: general_ledger
   guidance-service:
-    enabled: true
+    enabled: false
     port: 8260
     database: guidance
   hr-payroll-service:
-    enabled: true
+    enabled: false
     port: 8282
     database: hr_payroll
   identity-assurance-service:
-    enabled: true
+    enabled: false
     port: 8201
     database: identity_assurance
   indawo-service:
-    enabled: true
+    enabled: false
     port: 8150
     database: indawo
   inpatient-service:
-    enabled: true
+    enabled: false
     port: 8121
     database: inpatient
   integration-hub:
-    enabled: true
+    enabled: false
     port: 8110
     database: integration_hub
   inventory-elmis-adapter:
-    enabled: true
+    enabled: false
     port: 8108
     database: inventory_elmis_adapter
   inventory-service:
-    enabled: true
+    enabled: false
     port: 8098
     database: inventory
   iot-ingestion-service:
-    enabled: true
+    enabled: false
     port: 8330
     database: iot_ingestion
   jobs-service:
-    enabled: true
+    enabled: false
     port: 8109
     database: jobs
   landela-adapter-service:
-    enabled: true
+    enabled: false
     port: 8092
     database: landela_adapter
   learning-service:
-    enabled: true
+    enabled: false
     port: 8235
     database: learning
   live-service:
-    enabled: true
+    enabled: false
     port: 8380
     database: live
   llm-orchestration-service:
-    enabled: true
+    enabled: false
     port: 8265
     database: llm_orchestration
   madi-service:
-    enabled: true
+    enabled: false
     port: 8300
     database: madi
   msika-apps-service:
-    enabled: true
+    enabled: false
     port: 8181
     database: msika_apps
   msika-flow-service:
-    enabled: true
+    enabled: false
     port: 8100
     database: msika_flow
   msika-service:
-    enabled: true
+    enabled: false
     port: 8086
     database: msika
   mushe-wallet-service:
-    enabled: true
+    enabled: false
     port: 8126
     database: mushe_wallet
   mushex-service:
-    enabled: true
+    enabled: false
     port: 8102
     database: mushex
     env:
@@ -208,15 +208,15 @@ fullBootServices:
       MUSHEX_SANDBOX_BYPASS_CREDENTIAL_CHECK: 'true'
       MUSHEX_SANDBOX_APPLY_SIMULATION_OUTCOME: 'true'
   mvumo-service:
-    enabled: true
+    enabled: false
     port: 8197
     database: mvumo
   national-data-repository-service:
-    enabled: true
+    enabled: false
     port: 8152
     database: national_data_repository
   ndila-service:
-    enabled: true
+    enabled: false
     port: 8155
     database: ndila
     env:
@@ -226,35 +226,35 @@ fullBootServices:
       NDILA_PREVIEW_SOVEREIGN_TILES_ENABLED: 'true'
       NDILA_POSTGIS_ENABLED: 'false'
   ndr-service:
-    enabled: true
+    enabled: false
     port: 8232
     database: ndr
   nhume-service:
-    enabled: true
+    enabled: false
     port: 8210
     database: nhume
   notification-service:
-    enabled: true
+    enabled: false
     port: 8200
     database: notification
   observability-service:
-    enabled: true
+    enabled: false
     port: 8211
     database: observability
   offline-edge-service:
-    enabled: true
+    enabled: false
     port: 8360
     database: offline_edge
   offline-sync-service:
-    enabled: true
+    enabled: false
     port: 8095
     database: offline_sync
   oros-service:
-    enabled: true
+    enabled: false
     port: 8089
     database: oros
   pacs-adapter-service:
-    enabled: true
+    enabled: false
     port: 8113
     database: pacs_adapter
   pct-service:
@@ -262,19 +262,19 @@ fullBootServices:
     port: 8088
     database: pct
   pharmacy-elmis-adapter:
-    enabled: true
+    enabled: false
     port: 8099
     database: pharmacy_elmis_adapter
   pharmacy-service:
-    enabled: true
+    enabled: false
     port: 8096
     database: pharmacy
   procurement-service:
-    enabled: true
+    enabled: false
     port: 8283
     database: procurement
   product-registry-service:
-    enabled: true
+    enabled: false
     port: 8097
     database: product_registry
     env:
@@ -282,51 +282,51 @@ fullBootServices:
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: ''
       IMPILO_SECURITY_ALLOW_ANONYMOUS: 'true'
   referral-service:
-    enabled: true
+    enabled: false
     port: 8399
     database: referral
   reporting-service:
-    enabled: true
+    enabled: false
     port: 8176
     database: reporting
   rtc-gateway-service:
-    enabled: true
+    enabled: false
     port: 8196
     database: rtc_gateway
   rules-service:
-    enabled: true
+    enabled: false
     port: 8241
     database: rules
   scheduling-service:
-    enabled: true
+    enabled: false
     port: 8128
     database: scheduling
   schema-registry-service:
-    enabled: true
+    enabled: false
     port: 8371
     database: schema_registry
   search-service:
-    enabled: true
+    enabled: false
     port: 8230
     database: search
   security-hardening-service:
-    enabled: true
+    enabled: false
     port: 8221
     database: security_hardening
   share-slip-service:
-    enabled: true
+    enabled: false
     port: 8104
     database: share_slip
   simba-service:
-    enabled: true
+    enabled: false
     port: 8125
     database: simba
   support-service:
-    enabled: true
+    enabled: false
     port: 8340
     database: support
   surveillance-service:
-    enabled: true
+    enabled: false
     port: 8180
     database: surveillance
   tshepo-audit-service:
@@ -353,7 +353,7 @@ fullBootServices:
     port: 8184
     database: tshepo_keys
   tshepo-offline-service:
-    enabled: true
+    enabled: false
     port: 8185
     database: tshepo_offline
   tuso-service:
@@ -375,15 +375,15 @@ fullBootServices:
     env:
       VITO_HMAC_PEPPER: preview-vito-hmac-pepper-change-me-0123456789
   wellness-service:
-    enabled: true
+    enabled: false
     port: 8161
     database: wellness
   workflow-service:
-    enabled: true
+    enabled: false
     port: 8250
     database: workflow
   workforce-governance-service:
-    enabled: true
+    enabled: false
     port: 8165
     database: workforce_governance
   zibo-service:

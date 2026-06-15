@@ -593,7 +593,7 @@
   },
   "missing_deployments": [],
   "unhealthy_deployments": [],
-  "runtime_pods_count": 98,
+  "runtime_pods_count": 99,
   "verify_pods_ignored": 0,
   "crashloop": [],
   "pending": [],

@@ -16,8 +16,13 @@ spec:
     spec:
       containers:
         - name: one-ui-shell
-          image: "{{ .Values.images.oneUiShell.repository }}:{{ .Values.images.oneUiShell.tag }}"
-          imagePullPolicy: {{ .Values.images.oneUiShell.pullPolicy }}
+          {{- $shellImg := .Values.images.oneUiShell }}
+          {{- if and $shellImg.digest (hasPrefix "sha256:" $shellImg.digest) }}
+          image: "{{ $shellImg.repository }}@{{ $shellImg.digest }}"
+          {{- else }}
+          image: "{{ $shellImg.repository }}:{{ $shellImg.tag }}"
+          {{- end }}
+          imagePullPolicy: {{ $shellImg.pullPolicy }}
           ports:
             - containerPort: 3000
           env:

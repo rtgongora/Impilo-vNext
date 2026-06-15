@@ -27,11 +27,18 @@ impilo.io/environment: {{ .Values.global.environment | quote }}
 {{- define "impilo.image" -}}
 {{- $repo := .repository -}}
 {{- $tag := .tag | default "preview" -}}
+{{- $digest := .digest | default "" -}}
 {{- $registry := "" -}}
 {{- if .root -}}
 {{- $registry = .root.Values.global.imageRegistry | default "" -}}
 {{- end -}}
+{{- if and $digest (hasPrefix "sha256:" $digest) -}}
 {{- if $registry -}}
+{{ printf "%s/%s@%s" $registry $repo $digest }}
+{{- else -}}
+{{ printf "%s@%s" $repo $digest }}
+{{- end -}}
+{{- else if $registry -}}
 {{ printf "%s/%s:%s" $registry $repo $tag }}
 {{- else -}}
 {{ $repo }}:{{ $tag }}

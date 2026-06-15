@@ -119,6 +119,110 @@ def append_log(log_path: pathlib.Path, message: str):
     log_path.write_text(existing + message)
 
 
+def _git_commit():
+    try:
+        out = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, capture_output=True, text=True)
+        return out.stdout.strip() if out.returncode == 0 else ""
+    except Exception:
+        return ""
+
+
+def _cache_bust(service_id: str) -> str:
+    """Content-addressed cache bust for app Dockerfiles (commit + source fingerprint)."""
+    import hashlib
+
+    commit = _git_commit() or "unknown"
+    h = hashlib.sha256()
+    if service_id == "one-ui-shell":
+        scan_roots = [
+            root / "ui/one-ui-shell",
+            root / "ui/shared-ui",
+            root / "contracts",
+            root / "registry-templates",
+        ]
+        for base in scan_roots:
+            if not base.exists():
+                continue
+            if base.is_file():
+                h.update(base.read_bytes())
+                continue
+            for f in sorted(base.rglob("*")):
+                if not f.is_file():
+                    continue
+                rel = str(f.relative_to(root))
+                if any(x in rel for x in ("node_modules", ".next-build", ".next/", "coverage/", "e2e/")):
+                    continue
+                h.update(rel.encode())
+                h.update(str(f.stat().st_mtime_ns).encode())
+    elif service_id == "experience-bff":
+        jar_dir = root / "services/experience-bff/target"
+        jars = [p for p in jar_dir.glob("*.jar") if "original" not in p.name] if jar_dir.is_dir() else []
+        if jars:
+            h.update(sorted(jars)[0].read_bytes())
+        else:
+            src = root / "services/experience-bff/src"
+            if src.is_dir():
+                for f in sorted(src.rglob("*")):
+                    if f.is_file():
+                        h.update(str(f.relative_to(root)).encode())
+                        h.update(str(f.stat().st_mtime_ns).encode())
+    else:
+        return commit
+    return f"{commit}:{h.hexdigest()[:16]}"
+
+
+def _extract_ui_bundle_hash(image_ref: str) -> str:
+    import re
+
+    cmd = [
+        "docker", "run", "--rm", "--entrypoint", "sh", image_ref, "-c",
+        "ls /app/one-ui-shell/.next-build/static/chunks/app/layout-*.js 2>/dev/null | head -1",
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+    if result.returncode != 0 or not result.stdout.strip():
+        return ""
+    match = re.search(r"layout-([a-f0-9]+)\.js", result.stdout)
+    return match.group(1) if match else ""
+
+
+def _ui_sources_changed() -> bool:
+    for cmd in (
+        ["git", "diff", "--name-only", "HEAD", "--", "ui/one-ui-shell", "ui/shared-ui"],
+        ["git", "status", "--porcelain", "--", "ui/one-ui-shell", "ui/shared-ui"],
+    ):
+        try:
+            out = subprocess.run(cmd, cwd=root, capture_output=True, text=True)
+            if out.returncode == 0 and out.stdout.strip():
+                return True
+        except Exception:
+            pass
+    return False
+
+
+def _verify_ui_bundle_after_build(image_ref: str, log_path: pathlib.Path):
+    bundle_hash = _extract_ui_bundle_hash(image_ref)
+    if not bundle_hash:
+        append_log(log_path, "FAIL UI bundle verification: no layout-*.js hash found in image\n")
+        return False, ""
+    prev_path = reports / "ui-bundle-hash.txt"
+    prev_hash = prev_path.read_text().strip() if prev_path.exists() else ""
+    if prev_hash and _ui_sources_changed() and bundle_hash == prev_hash:
+        append_log(
+            log_path,
+            f"FAIL UI bundle verification: hash unchanged ({bundle_hash}) after UI source changes\n",
+        )
+        return False, bundle_hash
+    prev_path.write_text(bundle_hash + "\n")
+    meta = {
+        "bundle_hash": bundle_hash,
+        "source_commit": _git_commit(),
+        "built_at": datetime.now(timezone.utc).isoformat(),
+    }
+    (reports / "ui-bundle-build-meta.json").write_text(json.dumps(meta, indent=2))
+    append_log(log_path, f"UI bundle hash verified: layout-{bundle_hash}.js\n")
+    return True, bundle_hash
+
+
 def run_command(command, log_path: pathlib.Path, cwd: pathlib.Path = root):
     result = subprocess.run(command, cwd=cwd, capture_output=True, text=True)
     append_log(log_path, result.stdout + result.stderr)
@@ -135,20 +239,35 @@ def build_dockerfile(service_id: str, dockerfile_path: str | None, log_path: pat
         dockerfile = root / f"ui/{service_id}/Dockerfile"
     if dockerfile is None:
         append_log(log_path, f"FAIL impilo/{service_id} (Dockerfile not found)\n")
-        return False
+        return False, None
 
     context = docker_context_for(str(dockerfile.relative_to(root)), service_id)
     image = f"impilo/{service_id}"
+    source_commit = _git_commit() or "unknown"
+    cache_bust = _cache_bust(service_id)
+    build_cmd = [
+        "docker", "build",
+        "-t", f"{image}:preview",
+        "-t", f"{image}:{tag}",
+        "--build-arg", f"SOURCE_COMMIT={source_commit}",
+        "--build-arg", f"CACHE_BUST={cache_bust}",
+        "-f", str(dockerfile),
+        str(context),
+    ]
+    if os.environ.get("IMPILO_IMAGE_NO_CACHE") == "1":
+        build_cmd.insert(2, "--no-cache")
     append_log(
         log_path,
-        f"STRATEGY dockerfile\nCOMMAND docker build -f {dockerfile} {context}\nLOG {log_path}\n",
+        f"STRATEGY dockerfile\nCOMMAND {' '.join(shlex.quote(c) for c in build_cmd)}\nLOG {log_path}\n",
     )
-    ok = run_command(
-        ["docker", "build", "-t", f"{image}:preview", "-t", f"{image}:{tag}", "-f", str(dockerfile), str(context)],
-        log_path,
-    )
+    ok = run_command(build_cmd, log_path)
+    ui_bundle_hash = ""
+    if ok and service_id == "one-ui-shell":
+        verified, ui_bundle_hash = _verify_ui_bundle_after_build(f"{image}:preview", log_path)
+        if not verified:
+            ok = False
     append_log(log_path, f"{'PASS' if ok else 'FAIL'} {image} (dockerfile)\n")
-    return ok
+    return ok, ui_bundle_hash if service_id == "one-ui-shell" else None
 
 
 selected = []
@@ -171,6 +290,7 @@ else:
 
 pass_n = fail_n = skip_n = official_ok = strategy_missing = unknown_review = required_fail = blocking = 0
 per_service = {}
+ui_bundle_hashes = {}
 
 for target in sorted(selected, key=lambda item: item["id"]):
     service_id = target["id"]
@@ -231,7 +351,10 @@ for target in sorted(selected, key=lambda item: item["id"]):
             pass_n += 1
             per_service[service_id] = "pass_shared_template"
             continue
-        if build_dockerfile(service_id, target.get("dockerfile_path"), log_path):
+        built_ok, ui_hash = build_dockerfile(service_id, target.get("dockerfile_path"), log_path)
+        if ui_hash:
+            ui_bundle_hashes[service_id] = ui_hash
+        if built_ok:
             pass_n += 1
             per_service[service_id] = "pass_dockerfile_fallback"
         else:
@@ -243,7 +366,10 @@ for target in sorted(selected, key=lambda item: item["id"]):
         continue
 
     if strategy == "dockerfile":
-        if build_dockerfile(service_id, target.get("dockerfile_path"), log_path):
+        built_ok, ui_hash = build_dockerfile(service_id, target.get("dockerfile_path"), log_path)
+        if ui_hash:
+            ui_bundle_hashes[service_id] = ui_hash
+        if built_ok:
             pass_n += 1
             per_service[service_id] = "pass"
         else:
@@ -261,14 +387,7 @@ for target in sorted(selected, key=lambda item: item["id"]):
 # Runtime image truth: per-service build records. The "target digest set" for a deploy is
 # computed from these records (service, source_commit, image_tag, local_docker_image_id,
 # registry_digest, build_timestamp). registry_digest is best-effort here (populated after
-# push-images-to-local-registry.sh); the truth guard re-resolves it from the registry.
-def _git_commit():
-    try:
-        out = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, capture_output=True, text=True)
-        return out.stdout.strip() if out.returncode == 0 else ""
-    except Exception:
-        return ""
-
+# push-images-to-local-registry.sh and resolve-image-digests.sh); the truth guard re-resolves.
 def _docker_image_id(image_ref):
     try:
         out = subprocess.run(["docker", "image", "inspect", image_ref, "--format", "{{.Id}}"],
@@ -292,16 +411,20 @@ for service_id, status in per_service.items():
     if not (str(status).startswith("pass") or status == "official_ok"):
         continue
     image_ref = f"impilo/{service_id}:preview"
-    build_records[service_id] = {
+    record = {
         "service": service_id,
         "source_commit": source_commit,
         "image_tag": "preview",
         "image_tag_sha": tag,
+        "cache_bust": _cache_bust(service_id) if status != "official_ok" else "",
         "local_docker_image_id": _docker_image_id(image_ref) if status != "official_ok" else "",
         "registry_digest": _repo_digest(image_ref) if status != "official_ok" else "",
         "build_timestamp": build_ts,
         "build_status": status,
     }
+    if service_id in ui_bundle_hashes:
+        record["ui_bundle_hash"] = ui_bundle_hashes[service_id]
+    build_records[service_id] = record
 
 (reports / "full-image-build-records.json").write_text(json.dumps({
     "generated_at": build_ts,

@@ -17,8 +17,13 @@ spec:
       enableServiceLinks: false
       containers:
         - name: experience-bff
-          image: "{{ .Values.images.experienceBff.repository }}:{{ .Values.images.experienceBff.tag }}"
-          imagePullPolicy: {{ .Values.images.experienceBff.pullPolicy }}
+          {{- $bffImg := .Values.images.experienceBff }}
+          {{- if and $bffImg.digest (hasPrefix "sha256:" $bffImg.digest) }}
+          image: "{{ $bffImg.repository }}@{{ $bffImg.digest }}"
+          {{- else }}
+          image: "{{ $bffImg.repository }}:{{ $bffImg.tag }}"
+          {{- end }}
+          imagePullPolicy: {{ $bffImg.pullPolicy }}
           ports:
             - containerPort: 8160
           env:

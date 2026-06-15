@@ -31,6 +31,12 @@ RUN npm config set fetch-retries 5 \
     && npm install @next/swc-linux-x64-gnu@14.2.18 --legacy-peer-deps --no-save
 
 WORKDIR /workspace
+# Runtime image truth: bust BuildKit cache for source+build layers when commit/content changes.
+# Dependency-install layers above remain cacheable for speed.
+ARG SOURCE_COMMIT=unknown
+ARG CACHE_BUST=unknown
+RUN echo "cachebust=${CACHE_BUST} commit=${SOURCE_COMMIT}" > /dev/null
+
 COPY ui/shared-ui ./ui/shared-ui
 COPY ui/one-ui-shell ./ui/one-ui-shell
 COPY contracts ./contracts

@@ -5,6 +5,11 @@
 **/.next-build
 **/dist
 **/build
+# Runtime image truth: never ship host build artifacts into the Docker build context.
+ui/one-ui-shell/.next-build
+ui/one-ui-shell/node_modules
+ui/shared-ui/node_modules
+ui/node_modules
 .git
 .cursor
 vendor

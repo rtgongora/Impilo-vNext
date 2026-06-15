@@ -1,5 +1,10 @@
 FROM eclipse-temurin:21-jre
 
+# Runtime image truth: bust cache before packaging the JAR artifact.
+ARG SOURCE_COMMIT=unknown
+ARG CACHE_BUST=unknown
+RUN echo "cachebust=${CACHE_BUST} commit=${SOURCE_COMMIT}" > /dev/null
+
 RUN groupadd -r impilo && useradd -r -g impilo impilo
 
 WORKDIR /app

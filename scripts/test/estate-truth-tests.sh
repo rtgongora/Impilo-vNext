@@ -134,6 +134,58 @@ else
   bad "UI/BFF behaviour verifiers missing"
 fi
 
+# 17) Digest resolve script exists and deploy wires it by default.
+if [[ -f scripts/full-boot/resolve-image-digests.sh ]]; then
+  ok "resolve-image-digests.sh exists"
+else
+  bad "resolve-image-digests.sh missing"
+fi
+if grep -q 'resolve-image-digests.sh' scripts/deploy/full-boot-preview-deploy.sh \
+   && grep -q 'IMPILO_DEPLOY_NO_DIGEST_PIN' scripts/deploy/full-boot-preview-deploy.sh; then
+  ok "deploy resolves digests by default with opt-out escape hatch"
+else
+  bad "deploy must wire digest resolution with IMPILO_DEPLOY_NO_DIGEST_PIN escape hatch"
+fi
+
+# 18) Helm impilo.image helper renders @sha256 when digest provided.
+if grep -q 'hasPrefix "sha256:"' deploy/helm/impilo-vnext/templates/_helpers.tpl; then
+  ok "impilo.image helper supports digest pinning"
+else
+  bad "impilo.image helper must render @sha256 when digest set"
+fi
+
+# 19) App Dockerfiles declare CACHE_BUST build-args.
+if grep -q 'ARG CACHE_BUST' ui/one-ui-shell/Dockerfile \
+   && grep -q 'ARG CACHE_BUST' services/experience-bff/Dockerfile; then
+  ok "app Dockerfiles declare CACHE_BUST build-args"
+else
+  bad "app Dockerfiles must declare CACHE_BUST before source COPY+build"
+fi
+
+# 20) Build script threads CACHE_BUST and has UI bundle post-build assertion.
+if grep -q 'CACHE_BUST' scripts/build/build-full-vnext-images.sh \
+   && grep -q '_verify_ui_bundle_after_build' scripts/build/build-full-vnext-images.sh \
+   && grep -q 'IMPILO_IMAGE_NO_CACHE' scripts/build/build-full-vnext-images.sh; then
+  ok "build script threads cache-bust and UI bundle verification"
+else
+  bad "build script must thread CACHE_BUST/NO_CACHE and verify UI bundle"
+fi
+
+# 21) Truth guard prefers deployment @sha256 ref.
+if grep -q 'parse_digest_from_ref' scripts/guard/check-runtime-image-truth.sh \
+   && grep -q 'load_pinned_digests' scripts/guard/check-runtime-image-truth.sh; then
+  ok "truth guard prefers deployment @sha256 digest"
+else
+  bad "truth guard must prefer deployment @sha256 ref when pinned"
+fi
+
+# 22) Root .dockerignore excludes host UI build artifacts.
+if grep -q 'one-ui-shell/.next-build' .dockerignore && grep -q 'node_modules' .dockerignore; then
+  ok "root .dockerignore excludes host UI build artifacts"
+else
+  bad "root .dockerignore must exclude .next-build and node_modules"
+fi
+
 echo ""
 echo "ESTATE_TRUTH_TESTS: pass=$PASS fail=$FAIL"
 [[ "$FAIL" == "0" ]] || exit 1

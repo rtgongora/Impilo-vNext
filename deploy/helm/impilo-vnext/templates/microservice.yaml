@@ -23,7 +23,7 @@ spec:
       containers:
         - name: {{ $name }}
           {{- $img := $svc.image | default dict }}
-          image: "{{ include "impilo.image" (dict "root" $ "repository" ($img.repository | default (printf "impilo/%s" $name)) "tag" ($img.tag | default $.Values.global.imageTag | default "preview")) }}"
+          image: "{{ include "impilo.image" (dict "root" $ "repository" ($img.repository | default (printf "impilo/%s" $name)) "tag" ($img.tag | default $.Values.global.imageTag | default "preview") "digest" ($img.digest | default "")) }}"
           imagePullPolicy: {{ $img.pullPolicy | default $.Values.global.imagePullPolicy | default "IfNotPresent" }}
           ports:
             - containerPort: {{ $svc.port }}

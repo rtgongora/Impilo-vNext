@@ -181,8 +181,9 @@ Hard runtime image truth rules:
 6. **Browser bundle truth is required for `one-ui-shell`.** Verify the served JS/CSS bundle hash changed when expected and contains expected feature markers/routes/strings.
 7. **BFF/runtime behaviour truth is required for `experience-bff`.** Verify changed endpoint behaviour, not only `/health/version`.
 8. **Stale tag detection is mandatory.** For mutable tags (`:preview`), compare local Docker digest, registry digest, containerd digest, deployment image ref, and running pod `imageID`. If any differ unexpectedly, fail.
-9. **Digest pinning is preferred for changed services.**
-10. **Full estate deploy cannot pass with stale services.** A deploy cannot return `FULL_ESTATE_PASS` if any non-exempt application service runs an old digest.
+9. **Digest pinning is the default for full-estate deploys.** After push, `resolve-image-digests.sh` writes `values-full-preview-digests.generated.yaml`; Helm renders `registry/repo@sha256:…` via the `impilo.image` helper. Escape hatch: `IMPILO_DEPLOY_NO_DIGEST_PIN=1` (not recommended).
+10. **Build freshness is mandatory for app images.** App Dockerfiles accept `SOURCE_COMMIT` and `CACHE_BUST` build-args before source COPY+build layers. `build-full-vnext-images.sh` passes a content hash; `IMPILO_IMAGE_NO_CACHE=1` forces `--no-cache`. `one-ui-shell` builds assert a fresh layout bundle hash when UI sources changed.
+11. **Full estate deploy cannot pass with stale services.** A deploy cannot return `FULL_ESTATE_PASS` if any non-exempt application service runs an old digest.
 
 ---
 
