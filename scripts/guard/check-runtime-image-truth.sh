@@ -143,10 +143,23 @@ def digest_matches_pod(candidate, pod_digest):
     return bool(c and p and (c == p or c in p or p in c))
 
 
+def pod_manifest_digest(service_id, pod_digest):
+    """Resolve pod imageID to amd64 manifest digest (OCI index -> platform manifest)."""
+    if not pod_digest:
+        return ""
+    try:
+        return normalize_digest(
+            resolve_runtime_digest(registry, f"impilo/{service_id}", pod_digest)
+        )
+    except RuntimeError:
+        return pod_digest
+
+
 def runtime_matches_pod(dep_image, pod_digest, reg_digest, sid):
     """True when pod imageID matches deployment/registry target (manifest or runtime ID)."""
     if not pod_digest:
         return False
+    pod_effective = pod_manifest_digest(sid, pod_digest)
     candidates = []
     dep_digest = parse_digest_from_ref(dep_image)
     if dep_digest:
@@ -158,7 +171,7 @@ def runtime_matches_pod(dep_image, pod_digest, reg_digest, sid):
         candidates.append(
             docker_ref_runtime_id(f"{registry}/impilo/{sid}@{reg_digest}")
         )
-    return any(digest_matches_pod(c, pod_digest) for c in candidates if c)
+    return any(digest_matches_pod(c, pod_effective) for c in candidates if c)
 
 
 def registry_digest(service_id, tag="preview"):
@@ -268,6 +281,7 @@ for sid in runtime_services:
     ctr_digest = containerd_digest(sid)
     pod_id = pod_image_id(sid) if kubectl else ""
     pod_digest = normalize_digest(pod_id)
+    pod_manifest = pod_manifest_digest(sid, pod_digest) if pod_digest else ""
 
     # Alignment + reason classification.
     aligned = "YES"
@@ -306,7 +320,7 @@ for sid in runtime_services:
         aligned = "NO"
         reason = "built_not_pushed"
         stale_non_exempt.append(sid)
-    elif not dep_digest and reg_digest and pod_digest and reg_digest not in pod_digest and pod_digest not in reg_digest:
+    elif not dep_digest and reg_digest and pod_manifest and not digest_matches_pod(reg_digest, pod_manifest):
         aligned = "NO"
         reason = "stale_application_service"
         stale_non_exempt.append(sid)
@@ -328,6 +342,7 @@ for sid in runtime_services:
         "containerd_digest": short_digest(ctr_digest) or ("unavailable" if not ctr_available else ""),
         "helm_deployment_image_ref": dep_image,
         "running_pod_imageID": short_digest(pod_id),
+        "running_pod_manifest_digest": short_digest(pod_manifest),
         "expected_digest": short_digest(expected_digest),
         "digest_pinned": "YES" if dep_digest else "NO",
         "aligned": aligned,

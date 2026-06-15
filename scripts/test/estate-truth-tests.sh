@@ -205,11 +205,21 @@ else
 fi
 
 # 25) Deploy avoids mass rollout restart; force-imports on digest pin.
-if grep -q 'all-local-preview --force' scripts/deploy/full-boot-preview-deploy.sh \
+if grep -q 'list-runtime-service-ids.sh' scripts/deploy/full-boot-preview-deploy.sh \
+   && grep -q -- '--runtime-only' scripts/deploy/full-boot-preview-deploy.sh \
+   && grep -q -- '--force' scripts/deploy/full-boot-preview-deploy.sh \
    && ! grep -qE 'kubectl.*rollout restart|rollout restart.*xargs' scripts/deploy/full-boot-preview-deploy.sh; then
   ok "deploy force-imports digest-pinned images and skips mass rollout restart"
 else
   bad "deploy must force-import on digest pin and must not mass rollout restart"
+fi
+
+# 26) Guard normalizes pod OCI index digest to amd64 manifest before compare.
+if grep -q 'pod_manifest_digest' scripts/guard/check-runtime-image-truth.sh \
+   && grep -q 'resolve_runtime_digest' scripts/guard/check-runtime-image-truth.sh; then
+  ok "truth guard normalizes pod OCI index to amd64 manifest digest"
+else
+  bad "truth guard must resolve pod imageID index to amd64 manifest before compare"
 fi
 
 echo ""
