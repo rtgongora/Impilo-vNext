@@ -57,7 +57,7 @@ apply_seed tshepo "$SEED_DIR/05-seed-tshepo.sql" "TSHEPO trust" "SELECT count(*)
 apply_seed zibo   "$SEED_DIR/06-seed-zibo.sql"   "ZIBO terminology" "SELECT count(*) FROM zibo.code_system;"
 apply_seed pct    "$SEED_DIR/07-seed-pct.sql"    "PCT queue" "SELECT count(*) FROM pct.encounter;"
 apply_seed oros   "$SEED_DIR/08-seed-oros.sql"   "OROS orders" "SELECT count(*) FROM oros.service_request;"
-apply_seed workforce_governance "$SEED_DIR/09-seed-workforce-governance.sql" "Workforce governance assignments" "SELECT count(*) FROM wgv_assignment;"
+apply_seed workforce_governance "$SEED_DIR/09-seed-workforce-governance.sql" "Workforce governance assignments" "SELECT count(*) FROM wgv_organisation WHERE organisation_code='MOHCC-NATIONAL';"
 
 echo ""
 echo "Verification:"

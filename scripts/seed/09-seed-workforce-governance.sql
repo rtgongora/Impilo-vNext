@@ -5,6 +5,26 @@
 -- Idempotent via fixed UUIDs and ON CONFLICT / WHERE NOT EXISTS
 -- =============================================================================
 
+-- National sovereign owner organisation (Product Owner / platform administration preview)
+INSERT INTO wgv_organisation
+    (id, tenant_id, organisation_code, name, legal_name, organisation_type, status, active_flag, created_at, updated_at)
+SELECT
+    'f2000000-0000-4000-8000-000000000002'::uuid,
+    '00000000-0000-4000-8000-000000000001'::uuid,
+    'MOHCC-NATIONAL',
+    'Ministry of Health and Child Care',
+    'Ministry of Health and Child Care',
+    'SOVEREIGN_PUBLIC_OWNER',
+    'ACTIVE',
+    true,
+    NOW(),
+    NOW()
+WHERE NOT EXISTS (
+    SELECT 1 FROM wgv_organisation
+    WHERE tenant_id = '00000000-0000-4000-8000-000000000001'::uuid
+      AND organisation_code = 'MOHCC-NATIONAL'
+);
+
 -- Organisation backing Harare Central Hospital
 INSERT INTO wgv_organisation
     (id, tenant_id, organisation_code, name, legal_name, organisation_type, status, active_flag, created_at, updated_at)
@@ -93,7 +113,30 @@ WHERE NOT EXISTS (
       AND role_code = 'PLATFORM_ADMIN'
 );
 
--- superadmin / System Admin provider (PROV-ZW-ADMIN-001)
+-- superadmin / System Admin provider (PROV-ZW-ADMIN-001) — national sovereign context
+INSERT INTO wgv_assignment
+    (id, tenant_id, subject_type, subject_id, role_definition_id, target_type, target_id,
+     organisation_id, start_date, status, primary_flag, secondary_flag, created_at, updated_at)
+SELECT
+    'f5000000-0000-4000-8000-000000000011'::uuid,
+    '00000000-0000-4000-8000-000000000001'::uuid,
+    'PROVIDER',
+    'PROV-ZW-ADMIN-001',
+    'f4000000-0000-4000-8000-000000000002'::uuid,
+    'ORGANISATION',
+    'f2000000-0000-4000-8000-000000000002',
+    'f2000000-0000-4000-8000-000000000002'::uuid,
+    CURRENT_DATE,
+    'ACTIVE',
+    true,
+    false,
+    NOW(),
+    NOW()
+WHERE NOT EXISTS (
+    SELECT 1 FROM wgv_assignment WHERE id = 'f5000000-0000-4000-8000-000000000011'::uuid
+);
+
+-- superadmin facility assignment (secondary — clinical context at Harare Central)
 INSERT INTO wgv_assignment
     (id, tenant_id, subject_type, subject_id, role_definition_id, target_type, target_id,
      organisation_id, start_date, status, primary_flag, secondary_flag, created_at, updated_at)
@@ -108,13 +151,23 @@ SELECT
     'f2000000-0000-4000-8000-000000000001'::uuid,
     CURRENT_DATE,
     'ACTIVE',
-    true,
     false,
+    true,
     NOW(),
     NOW()
 WHERE NOT EXISTS (
     SELECT 1 FROM wgv_assignment WHERE id = 'f5000000-0000-4000-8000-000000000010'::uuid
 );
+
+UPDATE wgv_assignment
+SET primary_flag = false,
+    secondary_flag = true,
+    updated_at = NOW()
+WHERE id = 'f5000000-0000-4000-8000-000000000010'::uuid
+  AND EXISTS (
+      SELECT 1 FROM wgv_assignment
+      WHERE id = 'f5000000-0000-4000-8000-000000000011'::uuid
+  );
 
 -- Dr Mapfumo golden-path clinician (PROV-ZW-00001)
 INSERT INTO wgv_assignment
