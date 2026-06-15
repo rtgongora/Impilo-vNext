@@ -204,6 +204,25 @@ def _verify_ui_bundle_after_build(image_ref: str, log_path: pathlib.Path):
     if not bundle_hash:
         append_log(log_path, "FAIL UI bundle verification: no layout-*.js hash found in image\n")
         return False, ""
+    bff_url = os.environ.get("NEXT_PUBLIC_BFF_URL", "")
+    if not bff_url:
+        probe = subprocess.run(
+            [
+                "docker", "run", "--rm", "--entrypoint", "sh", image_ref, "-c",
+                "grep -rl 'localhost:8160' /app/one-ui-shell/.next-build/static/chunks/ 2>/dev/null | wc -l",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+        hits = probe.stdout.strip() if probe.returncode == 0 else "?"
+        if hits not in ("0", ""):
+            append_log(
+                log_path,
+                f"FAIL UI bundle verification: localhost:8160 baked into {hits} chunk(s); "
+                "rebuild with empty NEXT_PUBLIC_BFF_URL for same-origin preview\n",
+            )
+            return False, bundle_hash
     prev_path = reports / "ui-bundle-hash.txt"
     prev_hash = prev_path.read_text().strip() if prev_path.exists() else ""
     if prev_hash and _ui_sources_changed() and bundle_hash == prev_hash:
@@ -254,6 +273,13 @@ def build_dockerfile(service_id: str, dockerfile_path: str | None, log_path: pat
         "-f", str(dockerfile),
         str(context),
     ]
+    if service_id == "one-ui-shell":
+        bff_url = os.environ.get("NEXT_PUBLIC_BFF_URL", "")
+        gateway_url = os.environ.get("NEXT_PUBLIC_API_GATEWAY_URL", "")
+        build_cmd[6:6] = [
+            "--build-arg", f"NEXT_PUBLIC_BFF_URL={bff_url}",
+            "--build-arg", f"NEXT_PUBLIC_API_GATEWAY_URL={gateway_url}",
+        ]
     if os.environ.get("IMPILO_IMAGE_NO_CACHE") == "1":
         build_cmd.insert(2, "--no-cache")
     append_log(

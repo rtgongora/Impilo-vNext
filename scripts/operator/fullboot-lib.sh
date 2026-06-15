@@ -42,7 +42,12 @@ fb_verify_passed() {
 
 fb_import_passwordless() {
   if [[ "${FULL_BOOT_DIGEST_PIN_FORCE_IMPORT:-}" == "1" ]]; then
-    sudo -n /usr/local/sbin/impilo-k3s-import-images "$(fb_tag)" "$(fb_repo)" --all-local-preview --force
+    local repo ids count
+    repo="$(fb_repo)"
+    ids="$(bash "$repo/scripts/full-boot/list-runtime-service-ids.sh")"
+    count="$(echo "$ids" | tr ',' '\n' | grep -c . || echo 0)"
+    echo "Digest-pinned import: force-sync $count runtime services into k3s"
+    sudo -n /usr/local/sbin/impilo-k3s-import-images "$(fb_tag)" "$repo" --runtime-only --only "$ids" --force
   else
     sudo -n /usr/local/sbin/impilo-k3s-import-images "$(fb_tag)" "$(fb_repo)"
   fi

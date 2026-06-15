@@ -356,10 +356,13 @@ if [[ "${FULL_BOOT_SKIP_IMPORT:-}" == "1" ]]; then
   echo "WARN: deploy may use stale containerd layers if import was not run for tag $IMAGE_TAG"
 elif [[ -f "$DIGESTS_VALUES" ]] && [[ "${IMPILO_DEPLOY_NO_DIGEST_PIN:-}" != "1" ]]; then
   export FULL_BOOT_DIGEST_PIN_FORCE_IMPORT=1
-  echo "--- Import images (digest-pinned: force-sync runtime images into k3s) ---"
+  RUNTIME_ONLY_IDS="$(bash scripts/full-boot/list-runtime-service-ids.sh)"
+  RUNTIME_IMPORT_COUNT="$(echo "$RUNTIME_ONLY_IDS" | tr ',' '\n' | grep -c . || echo 0)"
+  echo "--- Import images (digest-pinned: force-sync all $RUNTIME_IMPORT_COUNT runtime images into k3s) ---"
   if [[ -x /usr/local/sbin/impilo-k3s-import-images ]] && sudo -n true 2>/dev/null; then
-    if ! sudo -n /usr/local/sbin/impilo-k3s-import-images "$IMAGE_TAG" "$REPO_PATH" --all-local-preview --force; then
-      echo "ABORT: digest-pinned k3s image force-import failed."
+    if ! sudo -n /usr/local/sbin/impilo-k3s-import-images "$IMAGE_TAG" "$REPO_PATH" \
+      --runtime-only --only "$RUNTIME_ONLY_IDS" --force; then
+      echo "ABORT: digest-pinned k3s runtime image force-import failed."
       exit 1
     fi
   elif ! bash scripts/operator/fullboot.sh import-images; then
