@@ -5,7 +5,9 @@ REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
 CHART_DIR="$REPO_PATH/deploy/helm/impilo-vnext"
 VALUES_FILE="$CHART_DIR/values-full-preview.yaml"
 RUNTIME_VALUES="$CHART_DIR/values-full-preview-runtime.generated.yaml"
-FULL_BOOT_MAX_WAVE="${FULL_BOOT_MAX_WAVE:-0}"
+# shellcheck source=scripts/full-boot/_estate-guard.sh
+source "$REPO_PATH/scripts/full-boot/_estate-guard.sh"
+FULL_BOOT_MAX_WAVE="$(estate_normalize_max_wave "${FULL_BOOT_MAX_WAVE:-all}")"
 MIN_TEMPLATES="${MIN_HELM_TEMPLATES:-12}"
 REQUIRED_DEPLOYMENTS="${REQUIRED_FULL_BOOT_DEPLOYMENTS:-22}"
 
@@ -48,7 +50,11 @@ grep -q 'fullBootServices' "$CHART_DIR/templates/microservice.yaml" \
 
 HELM_VAL_ARGS=(-f "$VALUES_FILE")
 if [[ -f "$RUNTIME_VALUES" ]]; then
-  node "$REPO_PATH/scripts/full-boot/generate-full-preview-runtime-values.mjs" --max-wave "$FULL_BOOT_MAX_WAVE" >/dev/null 2>&1 || true
+  if [[ "$FULL_BOOT_MAX_WAVE" == "all" ]]; then
+    node "$REPO_PATH/scripts/full-boot/generate-full-preview-runtime-values.mjs" >/dev/null 2>&1 || true
+  else
+    node "$REPO_PATH/scripts/full-boot/generate-full-preview-runtime-values.mjs" --max-wave "$FULL_BOOT_MAX_WAVE" >/dev/null 2>&1 || true
+  fi
   HELM_VAL_ARGS+=(-f "$RUNTIME_VALUES")
 else
   echo "WARN: missing $RUNTIME_VALUES — microservice deployments may be absent"

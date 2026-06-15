@@ -5,6 +5,8 @@ metadata:
   name: experience-bff
   namespace: {{ .Release.Namespace }}
 spec:
+  strategy:
+    type: {{ .Values.global.deploymentStrategy | default "Recreate" }}
   replicas: {{ .Values.experienceBff.replicaCount }}
   selector:
     matchLabels:

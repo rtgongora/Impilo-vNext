@@ -354,6 +354,17 @@ fi
 if [[ "${FULL_BOOT_SKIP_IMPORT:-}" == "1" ]]; then
   echo "SKIP: FULL_BOOT_SKIP_IMPORT=1 (k3s images already verified)"
   echo "WARN: deploy may use stale containerd layers if import was not run for tag $IMAGE_TAG"
+elif [[ -f "$DIGESTS_VALUES" ]] && [[ -x /usr/local/sbin/impilo-k3s-import-images ]] && sudo -n true 2>/dev/null; then
+  echo "--- Import images (digest-pinned: force-sync all local preview images into k3s) ---"
+  if ! sudo -n /usr/local/sbin/impilo-k3s-import-images "$IMAGE_TAG" "$REPO_PATH" --all-local-preview --force; then
+    echo "ABORT: digest-pinned k3s image force-import failed."
+    exit 1
+  fi
+  echo "--- Verify image presence in k3s ---"
+  if ! bash scripts/operator/fullboot.sh verify-images; then
+    echo "ABORT: k3s image verification failed (need IMAGE_PRESENCE PASS, ok=22 fail=0)"
+    exit 1
+  fi
 else
   echo "--- Import images into k3s/containerd (mandatory) ---"
   if ! bash scripts/operator/fullboot.sh import-images; then
@@ -371,10 +382,16 @@ fi
 
 kubectl create namespace "$NAMESPACE" 2>/dev/null || true
 
+HELM_DIGEST_PIN_SETS=()
+if [[ -f "$DIGESTS_VALUES" ]] && [[ "${IMPILO_DEPLOY_NO_DIGEST_PIN:-}" != "1" ]]; then
+  HELM_DIGEST_PIN_SETS+=(--set global.imagePullPolicy=Always)
+fi
+
 helm upgrade --install "$RELEASE_NAME" "$CHART_DIR" \
   -n "$NAMESPACE" \
   "${HELM_VALUE_FILES[@]}" \
   "${EXTRA_HELM_VALUES[@]}" \
+  "${HELM_DIGEST_PIN_SETS[@]}" \
   --set global.gitBranch="$PREVIEW_DEPLOY_BRANCH" \
   --set global.gitCommit="$PREVIEW_DEPLOY_COMMIT" \
   --set global.buildDate="$PREVIEW_DEPLOY_BUILD_DATE" \
@@ -383,7 +400,11 @@ helm upgrade --install "$RELEASE_NAME" "$CHART_DIR" \
   --set images.oneUiShell.tag="$IMAGE_TAG" \
   --wait --timeout "${FULL_BOOT_HELM_WAIT_TIMEOUT:-60m}" --atomic=false
 
-kubectl rollout status deployment -n "$NAMESPACE" --timeout=600s || true
+# Digest-pinned estates: helm upgrade with Recreate strategy rolls each changed
+# Deployment natively (old pod terminates before new pod starts). No mass
+# rollout restart — that caused RollingUpdate surge pods and exceeded the node cap.
+echo "--- Waiting for estate rollouts (timeout ${FULL_BOOT_ROLLOUT_TIMEOUT:-45m}) ---"
+kubectl rollout status deployment -n "$NAMESPACE" --timeout="${FULL_BOOT_ROLLOUT_TIMEOUT:-45m}" || true
 bash scripts/test/run-full-boot-smoke-tests.sh
 
 # --- RUNTIME IMAGE TRUTH: prove the running estate, not the deployment story. ---

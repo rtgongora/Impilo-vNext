@@ -6,6 +6,8 @@ global:
   imageTag: preview
   imagePullPolicy: IfNotPresent
   imageRegistry: "127.0.0.1:5000"
+  # Single-node preview: Recreate avoids RollingUpdate surge pods that exceed the 110 pod cap.
+  deploymentStrategy: Recreate
   database:
     enabled: true
     jdbcUrl: jdbc:postgresql://postgres:5432/impilo

@@ -5,6 +5,8 @@ metadata:
   name: redis
   namespace: {{ .Release.Namespace }}
 spec:
+  strategy:
+    type: {{ .Values.global.deploymentStrategy | default "Recreate" }}
   replicas: 1
   selector:
     matchLabels:

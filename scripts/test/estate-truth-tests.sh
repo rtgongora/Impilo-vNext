@@ -186,6 +186,32 @@ else
   bad "root .dockerignore must exclude .next-build and node_modules"
 fi
 
+# 23) Registry digest resolver picks platform manifest (not OCI index digest).
+if [[ -f scripts/full-boot/registry_runtime_digest.py ]] \
+   && grep -q 'resolve_runtime_digest' scripts/full-boot/resolve-image-digests.sh \
+   && grep -q 'resolve_runtime_digest' scripts/guard/check-runtime-image-truth.sh; then
+  ok "registry runtime digest resolver wired into resolve + truth guard"
+else
+  bad "registry runtime digest resolver must be shared by resolve + truth guard"
+fi
+
+# 24) Recreate deployment strategy on full-preview + deploy templates.
+if grep -q 'deploymentStrategy: Recreate' deploy/helm/impilo-vnext/values-full-preview.yaml \
+   && grep -q 'global.deploymentStrategy' deploy/helm/impilo-vnext/templates/microservice.yaml \
+   && grep -q 'global.deploymentStrategy' deploy/helm/impilo-vnext/templates/postgres.yaml; then
+  ok "Recreate strategy configured for full-preview estate"
+else
+  bad "Recreate strategy must be set globally and rendered in deploy templates"
+fi
+
+# 25) Deploy avoids mass rollout restart; force-imports on digest pin.
+if grep -q 'all-local-preview --force' scripts/deploy/full-boot-preview-deploy.sh \
+   && ! grep -qE 'kubectl.*rollout restart|rollout restart.*xargs' scripts/deploy/full-boot-preview-deploy.sh; then
+  ok "deploy force-imports digest-pinned images and skips mass rollout restart"
+else
+  bad "deploy must force-import on digest pin and must not mass rollout restart"
+fi
+
 echo ""
 echo "ESTATE_TRUTH_TESTS: pass=$PASS fail=$FAIL"
 [[ "$FAIL" == "0" ]] || exit 1

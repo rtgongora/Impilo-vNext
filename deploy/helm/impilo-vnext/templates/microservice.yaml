@@ -9,6 +9,8 @@ metadata:
   labels:
     {{- include "impilo.labels" (dict "name" $name "Release" $.Release "Values" $.Values) | nindent 4 }}
 spec:
+  strategy:
+    type: {{ $.Values.global.deploymentStrategy | default "Recreate" }}
   replicas: {{ $svc.replicaCount | default 1 }}
   selector:
     matchLabels:

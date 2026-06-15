@@ -31,7 +31,7 @@ python3 <<'PY'
 import json
 import os
 import pathlib
-import subprocess
+import sys
 from datetime import datetime, timezone
 
 try:
@@ -40,6 +40,9 @@ except ImportError as exc:
     raise SystemExit(f"PyYAML required: {exc}") from exc
 
 root = pathlib.Path(os.environ["REPO_PATH"])
+sys.path.insert(0, str(root / "scripts/full-boot"))
+from registry_runtime_digest import resolve_runtime_digest  # noqa: E402
+
 registry = os.environ["REGISTRY"]
 tag = os.environ["TAG"]
 out_path = pathlib.Path(os.environ["OUT"])
@@ -66,24 +69,10 @@ if ex_path.exists():
 
 
 def registry_digest(service_id: str) -> str:
-    url = f"http://{registry}/v2/impilo/{service_id}/manifests/{tag}"
-    result = subprocess.run(
-        [
-            "curl", "-sS", "-o", "/dev/null", "-D", "-",
-            "-H", "Accept: application/vnd.docker.distribution.manifest.v2+json",
-            "-H", "Accept: application/vnd.oci.image.index.v1+json",
-            url,
-        ],
-        capture_output=True,
-        text=True,
-        timeout=20,
-    )
-    if result.returncode != 0:
+    try:
+        return resolve_runtime_digest(registry, f"impilo/{service_id}", tag)
+    except RuntimeError:
         return ""
-    for line in result.stdout.splitlines():
-        if line.lower().startswith("docker-content-digest:"):
-            return line.split(":", 1)[1].strip()
-    return ""
 
 
 full_boot = {}

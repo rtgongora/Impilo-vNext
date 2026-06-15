@@ -45,10 +45,12 @@ done
 export NS REGISTRY PHASE ONLY_SERVICE AS_JSON REPO_PATH
 
 python3 <<'PY'
-import json, os, pathlib, shutil, subprocess
+import json, os, pathlib, shutil, subprocess, sys
 from datetime import datetime, timezone
 
 root = pathlib.Path(os.environ.get("REPO_PATH", "."))
+sys.path.insert(0, str(root / "scripts/full-boot"))
+from registry_runtime_digest import resolve_runtime_digest  # noqa: E402
 reports = root / "reports/full-boot"
 ns = os.environ["NS"]
 registry = os.environ["REGISTRY"]
@@ -131,19 +133,10 @@ def docker_image_id(ref):
 def registry_digest(service_id, tag="preview"):
     if not curl:
         return ""
-    url = f"http://{registry}/v2/impilo/{service_id}/manifests/{tag}"
-    rc, out, _ = run([
-        "curl", "-sS", "-o", "/dev/null", "-D", "-",
-        "-H", "Accept: application/vnd.docker.distribution.manifest.v2+json",
-        "-H", "Accept: application/vnd.oci.image.index.v1+json",
-        url,
-    ])
-    if rc != 0:
+    try:
+        return resolve_runtime_digest(registry, f"impilo/{service_id}", tag)
+    except RuntimeError:
         return ""
-    for line in out.splitlines():
-        if line.lower().startswith("docker-content-digest:"):
-            return line.split(":", 1)[1].strip()
-    return ""
 
 
 def containerd_digest(service_id, tag="preview"):

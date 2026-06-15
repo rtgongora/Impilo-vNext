@@ -5,6 +5,8 @@ metadata:
   name: one-ui-shell
   namespace: {{ .Release.Namespace }}
 spec:
+  strategy:
+    type: {{ .Values.global.deploymentStrategy | default "Recreate" }}
   replicas: {{ .Values.oneUiShell.replicaCount }}
   selector:
     matchLabels:
