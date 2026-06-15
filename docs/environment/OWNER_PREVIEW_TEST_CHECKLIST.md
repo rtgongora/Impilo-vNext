@@ -132,6 +132,17 @@ Expert-user validation for the **Dev Preview Sandbox** (not formal staging).
 | 47 | Council MusheX intent + sync payment | | `/registry/provider-council/self-service?providerId=…` — Create intent → Sync payment → fee-paid advance |
 | 48 | National revenue oversight panel | | `/enterprise/oversight` — Costa national revenue + claims + MusheX remittances + debt aging |
 | 49 | MADI central-bank mobile tab | | Provider app Clinical Tools → **Central Bank** — metrics + emergency redistribution approve/handoff |
+| 50 | **Administration & Governance** — Work → Administration & Governance visible for `superadmin@impilo.gov.zw` | | Requires sovereign WGV assignment or preview Product Owner access mode |
+| 51 | **Bootstrap** — `/bootstrap` loads First National Administrator wizard | | Token: `ImpiloPreviewBootstrap2026!` (preview only) |
+| 52 | **Onboarding** — `/work/administration-governance/onboard` and org data-uploads routes load | | BFF must reach workforce-governance-service (not localhost:8165) |
+
+## Product Owner preview access (full-preview only)
+
+- Login: `superadmin@impilo.gov.zw` / `Impilo@2024!`
+- Health ID (session actor): `b0000000-0000-4000-8000-000000000010`
+- Preview env flag: `IMPILO_PREVIEW_PRODUCT_OWNER_ACCESS=true` (never enable in production)
+- Bootstrap token (preview): `ImpiloPreviewBootstrap2026!`
+- After deploy: `bash scripts/deploy/seed-full-preview-sovereign-data.sh` if sovereign org missing
 
 ## Impilo Live smoke notes
 
