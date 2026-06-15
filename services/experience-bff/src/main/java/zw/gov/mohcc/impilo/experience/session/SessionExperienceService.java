@@ -38,7 +38,8 @@ public class SessionExperienceService {
     public Map<String, Object> buildExperienceContract(String actorId,
                                                        String loginMethod,
                                                        String providerId,
-                                                       boolean hasSelectedFacility) {
+                                                       boolean hasSelectedFacility,
+                                                       String actorEmail) {
         Map<String, Object> linked = fetchLinkedIds(actorId);
         Map<String, Object> professionalTruth = fetchProfessionalTruth(actorId, linked);
         List<Map<String, Object>> assignments = fetchActiveAssignments(providerId != null ? providerId : stringVal(linked.get("providerId")));
@@ -115,15 +116,22 @@ public class SessionExperienceService {
         contract.put("facilityModeActive", hasSelectedFacility);
         contract.put("defaultRoute", resolveDefaultRoute(defaultTab, friendlyState, activeAssignments, hasSelectedFacility));
 
-        applyProductOwnerOverride(contract, actorId);
+        applyProductOwnerOverride(contract, actorId, actorEmail);
         return contract;
     }
 
-    private void applyProductOwnerOverride(Map<String, Object> contract, String actorId) {
+    public Map<String, Object> buildExperienceContract(String actorId,
+                                                       String loginMethod,
+                                                       String providerId,
+                                                       boolean hasSelectedFacility) {
+        return buildExperienceContract(actorId, loginMethod, providerId, hasSelectedFacility, null);
+    }
+
+    private void applyProductOwnerOverride(Map<String, Object> contract, String actorId, String actorEmail) {
         if (!productOwnerAccessProperties.isEffective(bootstrapProperties.getEnvironment())) {
             return;
         }
-        if (!productOwnerAccessProperties.isAllowlisted(actorId, null)) {
+        if (!productOwnerAccessProperties.isAllowlisted(actorId, actorEmail)) {
             return;
         }
 

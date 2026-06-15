@@ -15,6 +15,7 @@ import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.RulesServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
+import zw.gov.mohcc.impilo.experience.config.ProductOwnerAccessProperties;
 
 import java.time.OffsetDateTime;
 import java.time.Duration;
@@ -53,6 +54,9 @@ public class AuthSessionController {
     @Value("${KEYCLOAK_CLIENT_ID:experience-ui}")
     private String clientId;
 
+    @Value("${KEYCLOAK_TOKEN_SCOPE:openid profile email impilo-trust-headers}")
+    private String keycloakTokenScope;
+
     /**
      * Controls whether local fallback tokens are issued when Keycloak is unreachable.
      * Default: false (fail-closed). Set to true ONLY in development/test environments.
@@ -68,15 +72,18 @@ public class AuthSessionController {
     private final VarapiServiceClient varapiClient;
     private final VitoServiceClient vitoClient;
     private final RulesServiceClient rulesClient;
+    private final ProductOwnerAccessProperties productOwnerAccessProperties;
 
     public AuthSessionController(RestTemplate serviceRestTemplate,
                                  VarapiServiceClient varapiClient,
                                  VitoServiceClient vitoClient,
-                                 RulesServiceClient rulesClient) {
+                                 RulesServiceClient rulesClient,
+                                 ProductOwnerAccessProperties productOwnerAccessProperties) {
         this.restTemplate = serviceRestTemplate;
         this.varapiClient = varapiClient;
         this.vitoClient = vitoClient;
         this.rulesClient = rulesClient;
+        this.productOwnerAccessProperties = productOwnerAccessProperties;
     }
 
     /**
@@ -117,6 +124,9 @@ public class AuthSessionController {
             formData.add("client_id", clientId);
             formData.add("username", email);
             formData.add("password", password);
+            if (keycloakTokenScope != null && !keycloakTokenScope.isBlank()) {
+                formData.add("scope", keycloakTokenScope.trim());
+            }
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -141,6 +151,7 @@ public class AuthSessionController {
                 String keycloakSub = claims.has("sub") ? claims.get("sub").asText() : UUID.randomUUID().toString();
                 String userId = resolvePersonAnchorId(claims, keycloakSub);
                 String userEmail = claims.has("email") ? claims.get("email").asText() : email;
+                userId = resolvePreviewPersonAnchor(userId, keycloakSub, userEmail);
                 String displayName = claims.has("name") ? claims.get("name").asText()
                         : claims.has("preferred_username") ? claims.get("preferred_username").asText() : email;
 
@@ -248,6 +259,9 @@ public class AuthSessionController {
             formData.add("grant_type", "refresh_token");
             formData.add("client_id", clientId);
             formData.add("refresh_token", refreshToken);
+            if (keycloakTokenScope != null && !keycloakTokenScope.isBlank()) {
+                formData.add("scope", keycloakTokenScope.trim());
+            }
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -271,6 +285,7 @@ public class AuthSessionController {
                 String keycloakSub = claims.has("sub") ? claims.get("sub").asText() : "";
                 String userId = resolvePersonAnchorId(claims, keycloakSub);
                 String userEmail = claims.has("email") ? claims.get("email").asText() : "";
+                userId = resolvePreviewPersonAnchor(userId, keycloakSub, userEmail);
                 String displayName = claims.has("name") ? claims.get("name").asText()
                         : claims.has("preferred_username") ? claims.get("preferred_username").asText() : userEmail;
 
@@ -518,6 +533,9 @@ public class AuthSessionController {
                 loginForm.add("client_id", clientId);
                 loginForm.add("username", email);
                 loginForm.add("password", password);
+                if (keycloakTokenScope != null && !keycloakTokenScope.isBlank()) {
+                    loginForm.add("scope", keycloakTokenScope.trim());
+                }
 
                 HttpHeaders loginHeaders = new HttpHeaders();
                 loginHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -822,10 +840,21 @@ public class AuthSessionController {
         if (anchor != null) {
             return anchor;
         }
+        anchor = readJwtClaim(claims, "actor_id");
+        if (anchor != null) {
+            return anchor;
+        }
         if (keycloakSub != null && !keycloakSub.isBlank()) {
             return keycloakSub;
         }
         return UUID.randomUUID().toString();
+    }
+
+    private String resolvePreviewPersonAnchor(String resolvedId, String keycloakSub, String userEmail) {
+        if (resolvedId != null && !resolvedId.isBlank() && keycloakSub != null && !resolvedId.equals(keycloakSub)) {
+            return resolvedId;
+        }
+        return productOwnerAccessProperties.pairedHealthIdForEmail(userEmail).orElse(resolvedId);
     }
 
     private static String readJwtClaim(JsonNode claims, String claimName) {

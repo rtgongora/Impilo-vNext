@@ -22,4 +22,13 @@ class ProductOwnerAccessPropertiesTest {
         assertTrue(props.isAllowlisted(null, "superadmin@impilo.gov.zw"));
         assertFalse(props.isAllowlisted("other-actor", "other@example.com"));
     }
+
+    @Test
+    void pairedHealthIdForEmail_returnsHealthIdForAllowlistedPreviewEmail() {
+        ProductOwnerAccessProperties props = new ProductOwnerAccessProperties();
+        assertEquals(
+                "b0000000-0000-4000-8000-000000000010",
+                props.pairedHealthIdForEmail("superadmin@impilo.gov.zw").orElseThrow());
+        assertTrue(props.pairedHealthIdForEmail("unknown@example.com").isEmpty());
+    }
 }

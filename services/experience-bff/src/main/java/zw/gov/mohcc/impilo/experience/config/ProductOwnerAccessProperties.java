@@ -5,6 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 /**
  * Dev/preview-only Product Owner full-access mode for confirming Administration &amp; Governance surfaces.
@@ -61,6 +62,25 @@ public class ProductOwnerAccessProperties {
             return allowed.stream().anyMatch(a -> a.equalsIgnoreCase(email));
         }
         return false;
+    }
+
+    /**
+     * When preview allowlist pairs an email with a Health ID, return that Health ID for login/session anchoring.
+     */
+    public Optional<String> pairedHealthIdForEmail(String actorEmail) {
+        if (actorEmail == null || actorEmail.isBlank() || !isAllowlisted(null, actorEmail)) {
+            return Optional.empty();
+        }
+        return parseList(allowedActors).stream()
+                .filter(ProductOwnerAccessProperties::looksLikeHealthId)
+                .findFirst();
+    }
+
+    private static boolean looksLikeHealthId(String value) {
+        return value != null
+                && !value.contains("@")
+                && value.length() >= 32
+                && value.chars().filter(ch -> ch == '-').count() >= 4;
     }
 
     private static List<String> parseList(String raw) {

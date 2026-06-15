@@ -40,7 +40,8 @@ class SessionExperienceControllerTest {
                 org.mockito.ArgumentMatchers.anyString(),
                 org.mockito.ArgumentMatchers.any(),
                 org.mockito.ArgumentMatchers.any(),
-                org.mockito.ArgumentMatchers.anyBoolean()))
+                org.mockito.ArgumentMatchers.anyBoolean(),
+                org.mockito.ArgumentMatchers.any()))
                 .thenReturn(java.util.Map.of(
                         "authenticated", true,
                         "tabs", java.util.Map.of(

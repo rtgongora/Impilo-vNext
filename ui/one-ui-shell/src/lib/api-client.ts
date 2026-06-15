@@ -82,8 +82,12 @@ function getV12Headers(): Record<string, string> {
 
   // ── Actor identity (Health OS §5–§6: who is acting) ──────────
   const authUser = getStoredAuthUser();
-  if (authUser?.id) {
-    headers["X-Actor-ID"] = authUser.id;           // Health ID — person anchor
+  const actorAnchor = authUser?.healthId?.trim() || authUser?.id;
+  if (actorAnchor) {
+    headers["X-Actor-ID"] = actorAnchor;           // Health ID — person anchor
+  }
+  if (authUser?.email) {
+    headers["X-Actor-Email"] = authUser.email;
   }
   if (authUser?.actorType) {
     headers["X-Actor-Type"] = authUser.actorType;
@@ -165,12 +169,30 @@ function getStoredJson<T>(key: string): T | null {
   }
 }
 
-function getStoredAuthUser(): { id?: string; actorType?: string; loginMethod?: string } | null {
+function getStoredAuthUser(): {
+  id?: string;
+  healthId?: string;
+  email?: string;
+  actorType?: string;
+  loginMethod?: string;
+} | null {
   const liveUser = useAuthStore.getState().user;
   if (liveUser) {
-    return { id: liveUser.id, actorType: liveUser.actorType };
+    return {
+      id: liveUser.id,
+      healthId: liveUser.healthId,
+      email: liveUser.email,
+      actorType: liveUser.actorType,
+      loginMethod: liveUser.loginMethod,
+    };
   }
-  return getStoredJson<{ id?: string; actorType?: string }>("exp:auth_user");
+  return getStoredJson<{
+    id?: string;
+    healthId?: string;
+    email?: string;
+    actorType?: string;
+    loginMethod?: string;
+  }>("exp:auth_user");
 }
 
 function getContextId(key: string): string | null {

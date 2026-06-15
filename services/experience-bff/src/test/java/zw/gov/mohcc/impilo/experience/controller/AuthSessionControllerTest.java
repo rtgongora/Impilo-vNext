@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
+import zw.gov.mohcc.impilo.experience.config.ProductOwnerAccessProperties;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
 import java.lang.reflect.Method;
@@ -18,6 +19,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 
 class AuthSessionControllerTest {
+
+    private static AuthSessionController controller() {
+        return new AuthSessionController(new RestTemplate(), null, null, null, new ProductOwnerAccessProperties());
+    }
 
     @Test
     void resolvePersonAnchorId_prefersHealthIdClaimsOverKeycloakSub() throws Exception {
@@ -53,8 +58,24 @@ class AuthSessionControllerTest {
     }
 
     @Test
+    void resolvePersonAnchorId_fallsBackToActorIdClaim() throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode claims = mapper.readTree("""
+                {
+                  "sub": "6ff79608-0000-4000-8000-000000000099",
+                  "actor_id": "b0000000-0000-4000-8000-000000000010"
+                }
+                """);
+
+        String anchor = AuthSessionController.resolvePersonAnchorId(
+                claims, claims.get("sub").asText());
+
+        assertEquals("b0000000-0000-4000-8000-000000000010", anchor);
+    }
+
+    @Test
     void logout_returnsLoggedOutStatus() {
-        AuthSessionController controller = new AuthSessionController(new RestTemplate(), null, null, null);
+        AuthSessionController controller = controller();
         ResponseEntity<Map<String, Object>> response =
                 controller.logout("t1", "req-1", "corr-1", null);
         assertEquals(200, response.getStatusCode().value());
@@ -66,7 +87,7 @@ class AuthSessionControllerTest {
 
     @Test
     void getSession_returnsAuthenticatedFalseWithoutAuth() {
-        AuthSessionController controller = new AuthSessionController(new RestTemplate(), null, null, null);
+        AuthSessionController controller = controller();
         ResponseEntity<Map<String, Object>> response =
                 controller.getSession("t1", "req-2", "corr-2", null);
         assertEquals(200, response.getStatusCode().value());
@@ -77,7 +98,7 @@ class AuthSessionControllerTest {
 
     @Test
     void getSession_returnsAuthenticatedTrueWithAuth() {
-        AuthSessionController controller = new AuthSessionController(new RestTemplate(), null, null, null);
+        AuthSessionController controller = controller();
         ResponseEntity<Map<String, Object>> response =
                 controller.getSession("t1", "req-3", "corr-3", "Bearer some-token");
         assertEquals(200, response.getStatusCode().value());
@@ -87,7 +108,7 @@ class AuthSessionControllerTest {
 
     @Test
     void login_rejectsBlankCredentials() {
-        AuthSessionController controller = new AuthSessionController(new RestTemplate(), null, null, null);
+        AuthSessionController controller = controller();
         ResponseEntity<Map<String, Object>> response = controller.login(
                 "t1", "pod-1", "req-login", "corr-login", null,
                 Map.of("email", "", "password", ""));
@@ -103,7 +124,8 @@ class AuthSessionControllerTest {
                 new RestTemplate(),
                 new LinkedIdsVarapiClient(),
                 new LinkedIdsVitoClient(),
-                null);
+                null,
+                new ProductOwnerAccessProperties());
 
         ResponseEntity<Map<String, Object>> response =
                 controller.getLinkedIds("req-linked", "corr-linked", "actor-health-1");
@@ -118,7 +140,7 @@ class AuthSessionControllerTest {
     @Test
     @SuppressWarnings("unchecked")
     void buildLoginResponse_refreshCookieUsesRefreshExpiresIn() throws Exception {
-        AuthSessionController controller = new AuthSessionController(new RestTemplate(), null, null, null);
+        AuthSessionController controller = controller();
 
         Method method = AuthSessionController.class.getDeclaredMethod(
                 "buildLoginResponse",

@@ -106,6 +106,26 @@ class SessionExperienceServiceTest {
     }
 
     @Test
+    void buildExperienceContract_appliesProductOwnerOverrideForAllowlistedEmail() throws Exception {
+        productOwnerAccessProperties.setEnabled(true);
+        when(varapiClient.getProviderByHealthId(anyString())).thenReturn(null);
+
+        Map<String, Object> contract = service.buildExperienceContract(
+                "f9697886-ad9c-4b24-87e8-9040944b2d65", "email", null, false,
+                "superadmin@impilo.gov.zw");
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> tabs = (Map<String, Object>) contract.get("tabs");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> work = (Map<String, Object>) tabs.get("work");
+        assertEquals(true, work.get("visible"));
+
+        @SuppressWarnings("unchecked")
+        List<String> visible = (List<String>) contract.get("visibleManagementWorkspaces");
+        assertTrue(visible.contains("national_platform_user_administration"));
+    }
+
+    @Test
     void buildExperienceContract_doesNotApplyProductOwnerOverrideInProduction() throws Exception {
         productOwnerAccessProperties.setEnabled(true);
         bootstrapProperties.setEnvironment("production");

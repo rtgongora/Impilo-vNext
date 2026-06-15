@@ -29,11 +29,12 @@ public class SessionExperienceController {
             @RequestHeader(CompanionHeaders.ACTOR_ID) String actorId,
             @RequestHeader(value = CompanionHeaders.PROVIDER_ID, required = false) String providerId,
             @RequestHeader(value = "X-Login-Method", required = false) String loginMethod,
-            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId) {
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestHeader(value = "X-Actor-Email", required = false) String actorEmail) {
 
         boolean hasSelectedFacility = facilityId != null && !facilityId.isBlank();
         Map<String, Object> attributes = sessionExperienceService.buildExperienceContract(
-                actorId, loginMethod, providerId, hasSelectedFacility);
+                actorId, loginMethod, providerId, hasSelectedFacility, actorEmail);
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", Map.of(
