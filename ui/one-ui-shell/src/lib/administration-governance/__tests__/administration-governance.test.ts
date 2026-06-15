@@ -51,6 +51,44 @@ describe("Administration & Governance entry", () => {
     expect(tileEnabled(hsc, MANAGEMENT_TILES.find((t) => t.id === "system_admin")!.requiredWorkspaces)).toBe(false);
   });
 
+  it("sovereign national admin sees Administration & Governance entry", () => {
+    const sovereign = resolveSessionExperienceContract({
+      authenticated: true,
+      healthId: "b0000000-0000-4000-8000-000000000010",
+      providerWorkerId: "PROV-ZW-ADMIN-001",
+      organisation: {
+        organisationId: "f2000000-0000-4000-8000-000000000002",
+        organisationType: "sovereign_public_owner",
+        organisationLifecycleStatus: "active",
+        activeOrganisationAssignment: true,
+        userOrganisationRole: "organisation_administrator",
+      },
+      professionalTruth: { providerWorkerStatus: "active" },
+      publicSectorEmployment: {
+        providerWorkerId: "PROV-ZW-ADMIN-001",
+        employmentAuthority: "health_service_commission",
+        employmentStatus: "active",
+        employerOrganisationType: "sovereign_public_owner",
+        verificationStatus: "verified",
+      },
+      workAssignments: [
+        {
+          assignmentId: "A-NAT",
+          subjectId: "PROV-ZW-ADMIN-001",
+          subjectType: "provider_worker",
+          contextType: "national_platform",
+          assignmentType: "organisation_assignment",
+          assignmentStatus: "active",
+          organisationId: "f2000000-0000-4000-8000-000000000002",
+        },
+      ],
+    });
+    expect(hasAdministrationGovernanceEntry(sovereign)).toBe(true);
+    expect(sovereign.visibleManagementWorkspaces).toContain("national_platform_user_administration");
+    expect(canAccessAdministrationPath(sovereign, "/work/administration-governance")).toBe(true);
+    expect(canAccessAdministrationPath(sovereign, "/work/system-admin")).toBe(true);
+  });
+
   it("municipal admin sees municipal management only", () => {
     const municipal = resolveSessionExperienceContract({
       authenticated: true,
