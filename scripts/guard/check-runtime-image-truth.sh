@@ -130,6 +130,37 @@ def docker_image_id(ref):
     return out if rc == 0 else ""
 
 
+def docker_ref_runtime_id(ref):
+    """Map a manifest/index ref to the image ID kubelet typically reports."""
+    return normalize_digest(docker_image_id(ref))
+
+
+def digest_matches_pod(candidate, pod_digest):
+    if not candidate or not pod_digest:
+        return False
+    c = normalize_digest(candidate)
+    p = normalize_digest(pod_digest)
+    return bool(c and p and (c == p or c in p or p in c))
+
+
+def runtime_matches_pod(dep_image, pod_digest, reg_digest, sid):
+    """True when pod imageID matches deployment/registry target (manifest or runtime ID)."""
+    if not pod_digest:
+        return False
+    candidates = []
+    dep_digest = parse_digest_from_ref(dep_image)
+    if dep_digest:
+        candidates.append(dep_digest)
+    if dep_image:
+        candidates.append(docker_ref_runtime_id(dep_image))
+    if reg_digest:
+        candidates.append(reg_digest)
+        candidates.append(
+            docker_ref_runtime_id(f"{registry}/impilo/{sid}@{reg_digest}")
+        )
+    return any(digest_matches_pod(c, pod_digest) for c in candidates if c)
+
+
 def registry_digest(service_id, tag="preview"):
     if not curl:
         return ""
@@ -252,15 +283,18 @@ for sid in runtime_services:
         aligned = "NO"
         reason = "missing_pod"
         stale_non_exempt.append(sid)
-    elif dep_digest and pod_digest and dep_digest not in pod_digest and pod_digest not in dep_digest:
+    elif dep_image and pod_digest and not runtime_matches_pod(dep_image, pod_digest, reg_digest, sid):
         aligned = "NO"
         reason = "helm_pod_digest_drift"
         stale_non_exempt.append(sid)
     elif dep_digest and reg_digest and dep_digest not in reg_digest and reg_digest not in dep_digest:
-        aligned = "NO"
-        reason = "registry_digest_drift"
-        stale_non_exempt.append(sid)
-    elif expected_digest and pod_digest and expected_digest not in pod_digest and pod_digest not in expected_digest:
+        if not runtime_matches_pod(dep_image, pod_digest, reg_digest, sid):
+            aligned = "NO"
+            reason = "registry_digest_drift"
+            stale_non_exempt.append(sid)
+    elif expected_digest and pod_digest and not runtime_matches_pod(
+        dep_image or f"{registry}/impilo/{sid}@{expected_digest}", pod_digest, reg_digest, sid
+    ):
         aligned = "NO"
         reason = "stale_application_service"
         stale_non_exempt.append(sid)

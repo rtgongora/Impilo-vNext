@@ -75,6 +75,10 @@ fb_deploy_authorized() {
 }
 
 fb_ensure_images_ready() {
+  if [[ "${FULL_BOOT_DIGEST_PIN_FORCE_IMPORT:-}" == "1" ]]; then
+    echo "SKIP: verify-images short-circuit disabled (digest-pinned force import)"
+    return 1
+  fi
   local log
   log="$(fb_reports)/k3s-image-verify-preview.log"
   echo "--- verify-images (skip import if already PASS) ---"

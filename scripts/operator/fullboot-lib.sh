@@ -41,7 +41,11 @@ fb_verify_passed() {
 }
 
 fb_import_passwordless() {
-  sudo -n /usr/local/sbin/impilo-k3s-import-images "$(fb_tag)" "$(fb_repo)"
+  if [[ "${FULL_BOOT_DIGEST_PIN_FORCE_IMPORT:-}" == "1" ]]; then
+    sudo -n /usr/local/sbin/impilo-k3s-import-images "$(fb_tag)" "$(fb_repo)" --all-local-preview --force
+  else
+    sudo -n /usr/local/sbin/impilo-k3s-import-images "$(fb_tag)" "$(fb_repo)"
+  fi
 }
 
 fb_state_file() { echo "$(fb_reports)/fullboot-workflow-state.json"; }
