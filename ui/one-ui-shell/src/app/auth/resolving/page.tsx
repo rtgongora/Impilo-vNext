@@ -16,7 +16,9 @@ import { useLinkedIds } from "@/hooks/queries/useLinkedIds";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useOperationalContextStore } from "@/hooks/useOperationalContextStore";
-import { resolvePostLoginDestination } from "@/lib/resolve-post-login-destination";
+import { useSessionExperienceContract } from "@/hooks/useSessionExperienceContract";
+import { sessionContractAllowsRoute } from "@/lib/trust";
+import { isSafeReturnTo, resolvePostLoginDestination } from "@/lib/resolve-post-login-destination";
 
 const RESOLUTION_TIMEOUT_MS = 5000;
 const PROFESSIONAL_NOTICE_DELAY_MS = 1200;
@@ -34,6 +36,7 @@ export default function ResolvingPage() {
   const { data, isLoading, isSuccess, isError } = useLinkedIds();
   const { data: affiliations = [], isSuccess: affSuccess } = useAffiliations();
   const { data: workAssignments = [], isSuccess: assignSuccess } = useWorkAssignments();
+  const { contract } = useSessionExperienceContract();
   const [hasNavigated, setHasNavigated] = useState(false);
   const [showProfessionalNotice, setShowProfessionalNotice] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -45,6 +48,22 @@ export default function ResolvingPage() {
   const navigate = useCallback(() => {
     if (hasNavigated) return;
     setHasNavigated(true);
+
+    // Contract-authoritative routing: the BFF Session Experience Contract is the single
+    // source of truth for the post-login landing (tabs/defaultRoute). The client identity
+    // resolver below is only a fallback when the contract is unavailable (offline/dev).
+    if (contract?.authenticated && contract.defaultRoute) {
+      const blockedAfterResolution =
+        resolutionReason === "no_work" && !!returnTo && returnTo.startsWith("/work/");
+      const href =
+        isSafeReturnTo(returnTo) &&
+        !blockedAfterResolution &&
+        sessionContractAllowsRoute(contract, returnTo)
+          ? returnTo
+          : contract.defaultRoute;
+      window.location.assign(href);
+      return;
+    }
 
     const destination = resolvePostLoginDestination({
       user,
@@ -68,6 +87,7 @@ export default function ResolvingPage() {
     window.location.assign(destination.href);
   }, [
     hasNavigated,
+    contract,
     linkedAttrs,
     affiliations,
     workAssignments,
@@ -81,6 +101,9 @@ export default function ResolvingPage() {
   const identityResolved = isSuccess || isError;
   const affiliationsResolved = affSuccess || isError;
   const assignmentsResolved = assignSuccess || isError || workAssignments.length >= 0;
+  // Prefer to wait for the BFF contract so contract.defaultRoute drives the landing;
+  // the RESOLUTION_TIMEOUT_MS fallback still navigates if it never arrives.
+  const contractResolved = !!contract || isError;
 
   const steps: ResolverStep[] = [
     {
@@ -108,7 +131,7 @@ export default function ResolvingPage() {
   }, [navigate]);
 
   useEffect(() => {
-    if (!identityResolved || !affiliationsResolved || !assignmentsResolved || hasNavigated) return;
+    if (!identityResolved || !affiliationsResolved || !assignmentsResolved || !contractResolved || hasNavigated) return;
 
     if (hasProfessionalId && loginMethod !== "provider_id") {
       setShowProfessionalNotice(true);
@@ -119,7 +142,7 @@ export default function ResolvingPage() {
     }
 
     navigate();
-  }, [identityResolved, affiliationsResolved, assignmentsResolved, hasProfessionalId, loginMethod, hasNavigated, navigate]);
+  }, [identityResolved, affiliationsResolved, assignmentsResolved, contractResolved, hasProfessionalId, loginMethod, hasNavigated, navigate]);
 
   useEffect(() => {
     if (!isError || hasNavigated) return;

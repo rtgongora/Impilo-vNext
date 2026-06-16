@@ -3,6 +3,8 @@ import { resolveSessionExperienceContract } from "@/lib/trust";
 import {
   canAccessAdministrationPath,
   hasAdministrationGovernanceEntry,
+  isGovernanceWorkPathGrantedBySession,
+  isWorkZoneGrantedBySession,
   tileEnabled,
 } from "../access";
 import { MANAGEMENT_TILES, QUICK_ACTION_TILES } from "../tiles";
@@ -86,6 +88,8 @@ describe("Administration & Governance entry", () => {
     expect(hasAdministrationGovernanceEntry(sovereign)).toBe(true);
     expect(sovereign.visibleManagementWorkspaces).toContain("national_platform_user_administration");
     expect(canAccessAdministrationPath(sovereign, "/work/administration-governance")).toBe(true);
+    expect(isGovernanceWorkPathGrantedBySession(sovereign, "/work/administration-governance")).toBe(true);
+    expect(isWorkZoneGrantedBySession(sovereign)).toBe(true);
     expect(canAccessAdministrationPath(sovereign, "/work/system-admin")).toBe(true);
   });
 
@@ -224,6 +228,8 @@ describe("Route guards", () => {
   it("blocks deep links when contract lacks authority", () => {
     const citizen = resolveSessionExperienceContract({ authenticated: true, healthId: "H2" });
     expect(canAccessAdministrationPath(citizen, "/work/administration-governance")).toBe(false);
+    expect(isGovernanceWorkPathGrantedBySession(citizen, "/work/administration-governance")).toBe(false);
+    expect(isWorkZoneGrantedBySession(citizen)).toBe(false);
     expect(canAccessAdministrationPath(citizen, "/work/hsc/users")).toBe(false);
     expect(canAccessAdministrationPath(citizen, "/work/system-admin/users")).toBe(false);
   });

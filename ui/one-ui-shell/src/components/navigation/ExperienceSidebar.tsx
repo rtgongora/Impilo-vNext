@@ -58,7 +58,10 @@ import { ProviderActivationBanner } from "@/components/ProviderActivationBanner"
 import { WorkspaceSwitcher } from "@/components/WorkspaceSwitcher";
 import { useAuthStore, type AuthUser } from "@/hooks/useAuthStore";
 import { resolveIdentityContext } from "@/lib/identity-context";
-import { hasAdministrationGovernanceEntry } from "@/lib/administration-governance";
+import {
+  hasAdministrationGovernanceEntry,
+  isWorkZoneGrantedBySession,
+} from "@/lib/administration-governance";
 import { useSessionExperienceContract } from "@/hooks/useSessionExperienceContract";
 import { useShellStore } from "@/hooks/useShellStore";
 import { ServiceLogo } from "@/components/branding/ServiceLogo";
@@ -455,11 +458,16 @@ export function ExperienceSidebar() {
   }
 
   const citizenOnly = isCitizenOnly(user);
+  const sessionWorkZone = isWorkZoneGrantedBySession(contract);
 
   const orderedZones = [...ZONES]
     .filter((zone) => {
-      // Citizens only see the "life" zone — no work, no professional
-      if (citizenOnly && zone.id !== "life") return false;
+      // Citizens only see "life" unless the BFF session contract grants work/professional tabs.
+      if (citizenOnly && zone.id !== "life") {
+        if (zone.id === "work" && sessionWorkZone) return true;
+        if (zone.id === "professional" && contract?.tabs?.professional?.visible) return true;
+        return false;
+      }
       return true;
     })
     .sort((left, right) => {
@@ -475,7 +483,11 @@ export function ExperienceSidebar() {
       if (!item.requiredRoles) return true;
       return item.requiredRoles.some((role) => hasRole(role));
     });
-    if (zone.id === "work" && contract && hasAdministrationGovernanceEntry(contract)) {
+    if (zone.id === "work" && citizenOnly && contract && hasAdministrationGovernanceEntry(contract)) {
+      items = [
+        { href: "/work/administration-governance", label: "Administration & Governance", icon: ShieldCheck },
+      ];
+    } else if (zone.id === "work" && contract && hasAdministrationGovernanceEntry(contract)) {
       items = [
         { href: "/work/administration-governance", label: "Administration & Governance", icon: ShieldCheck },
         ...items,

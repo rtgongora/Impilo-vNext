@@ -12,6 +12,20 @@ export function hasAdministrationGovernanceEntry(contract: SessionExperienceCont
   return visible.length > 0 || workspaces.some((w) => w.includes("management") || w.includes("governance"));
 }
 
+/** BFF session contract may grant governance work paths to person-only logins (e.g. preview product owner). */
+export function isGovernanceWorkPathGrantedBySession(
+  contract: SessionExperienceContract | undefined,
+  pathname: string,
+): boolean {
+  if (!contract?.authenticated || !contract.tabs.work.visible) return false;
+  const path = pathname.split("?")[0];
+  return path.startsWith("/work/administration-governance") && hasAdministrationGovernanceEntry(contract);
+}
+
+export function isWorkZoneGrantedBySession(contract: SessionExperienceContract | undefined): boolean {
+  return isGovernanceWorkPathGrantedBySession(contract, "/work/administration-governance");
+}
+
 export function workspaceAllowed(
   contract: SessionExperienceContract | undefined,
   workspace: string,

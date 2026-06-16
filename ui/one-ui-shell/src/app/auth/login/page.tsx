@@ -78,6 +78,7 @@ export default function LoginPage() {
           setAuth(
             {
               id: user.id,
+              healthId: (user as { healthId?: string }).healthId ?? user.id,
               email: user.email,
               displayName: user.displayName,
               roles: user.roles,

@@ -19,20 +19,10 @@ vi.mock("@/providers/ExperienceEntryProvider", () => ({
 }));
 
 vi.mock("@/hooks/useSessionExperienceContract", () => ({
-  useSessionExperienceContract: () => ({
-    contract: {
-      tabs: {
-        work: { visible: true },
-        professional: { visible: true },
-        personal: { visible: true },
-      },
-      visibleWorkspaces: ["facility_staff_management"],
-      visibleManagementWorkspaces: ["national_organisation_registry"],
-      friendlyResolutionState: null,
-    },
-    isLoading: false,
-  }),
+  useSessionExperienceContract: () => mockUseSessionExperienceContract(),
 }));
+
+const mockUseSessionExperienceContract = vi.fn();
 
 const mockSetNavDrawerOpen = vi.fn();
 vi.mock("@/hooks/useShellStore", () => ({
@@ -44,6 +34,20 @@ vi.mock("@/hooks/useShellStore", () => ({
 
 describe("ExperienceSidebar", () => {
   beforeEach(() => {
+    mockUseSessionExperienceContract.mockReturnValue({
+      contract: {
+        authenticated: true,
+        tabs: {
+          work: { visible: true },
+          professional: { visible: true },
+          personal: { visible: true },
+        },
+        visibleWorkspaces: ["facility_staff_management"],
+        visibleManagementWorkspaces: ["national_organisation_registry"],
+        friendlyResolutionState: null,
+      },
+      isLoading: false,
+    });
     mockUsePathname.mockReturnValue("/clinical");
     mockUseAuthStore.mockReturnValue({
       user: {
@@ -173,6 +177,20 @@ describe("ExperienceSidebar", () => {
   });
 
   it("hides Work and My Professional zones for citizen-only users", () => {
+    mockUseSessionExperienceContract.mockReturnValue({
+      contract: {
+        authenticated: true,
+        tabs: {
+          work: { visible: false },
+          professional: { visible: false },
+          personal: { visible: true },
+        },
+        visibleWorkspaces: [],
+        visibleManagementWorkspaces: [],
+        friendlyResolutionState: null,
+      },
+      isLoading: false,
+    });
     mockUseAuthStore.mockReturnValue({
       user: {
         id: "citizen-1",
@@ -191,5 +209,28 @@ describe("ExperienceSidebar", () => {
     expect(screen.queryByRole("link", { name: "Clinical Hub" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Professional Profile" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Home" })).toBeInTheDocument();
+  });
+
+  it("shows Administration & Governance in Work for citizen-only users when session contract grants governance", () => {
+    mockUseAuthStore.mockReturnValue({
+      user: {
+        id: "b0000000-0000-4000-8000-000000000010",
+        displayName: "Super Admin",
+        email: "superadmin@impilo.gov.zw",
+        roles: ["CITIZEN", "SYSTEM_ADMIN"],
+        actorType: "CITIZEN",
+        assuranceLevel: "VERIFIED",
+        providerActivated: false,
+      },
+      hasRole: (role: string) => ["CITIZEN", "SYSTEM_ADMIN"].includes(role),
+    });
+
+    render(<ExperienceSidebar />);
+
+    expect(screen.getByRole("link", { name: "Administration & Governance" })).toHaveAttribute(
+      "href",
+      "/work/administration-governance",
+    );
+    expect(screen.queryByRole("link", { name: "Clinical Hub" })).not.toBeInTheDocument();
   });
 });
