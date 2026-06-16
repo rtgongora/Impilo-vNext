@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { FundoStudioWorkspace } from "@/components/learning/FundoStudioWorkspace";
+import { useFundoLanguageOptions } from "@/hooks/queries/useFundoLms";
 import { useCreateFundoCourse } from "@/hooks/queries/useFundoStudio";
 
 export default function FundoStudioNewCoursePage() {
@@ -10,6 +11,11 @@ export default function FundoStudioNewCoursePage() {
   const createCourse = useCreateFundoCourse();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [language, setLanguage] = useState("en");
+  const { data: languageData } = useFundoLanguageOptions();
+  const languages = languageData?.data?.items?.length
+    ? languageData.data.items
+    : [{ code: "en", label: "English", nativeLabel: "English" }];
 
   async function onCreate() {
     const res = (await createCourse.mutateAsync({
@@ -18,7 +24,7 @@ export default function FundoStudioNewCoursePage() {
       status: "DRAFT",
       category: "GENERAL",
       level: "FOUNDATION",
-      language: "en",
+      language,
     })) as { data?: { course?: { id?: string } } };
     const id = res?.data?.course?.id;
     if (id) router.push(`/learning/studio/courses/${id}/builder`);
@@ -34,6 +40,16 @@ export default function FundoStudioNewCoursePage() {
         <label className="block text-sm text-foreground">
           Description
           <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="mt-1 w-full rounded border border-border px-3 py-2 text-sm" rows={4} />
+        </label>
+        <label className="block text-sm text-foreground">
+          Language
+          <select value={language} onChange={(e) => setLanguage(e.target.value)} className="mt-1 w-full rounded border border-border px-3 py-2 text-sm">
+            {languages.map((option) => (
+              <option key={option.code} value={option.code}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </label>
         <button
           type="button"

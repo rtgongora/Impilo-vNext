@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useLearningSubject } from "@/components/learning/LearningSubjectPicker";
 import { useFundoCertificates } from "@/hooks/queries/useFundoLms";
@@ -12,7 +11,6 @@ export default function CertificatesPage() {
   const items = (((data?.data as Record<string, unknown>)?.items as Array<Record<string, unknown>>) ?? []).filter(Boolean);
 
   return (
-    <AppLayout>
       <PageShell title="Certificates" subtitle="Native certificate metadata (not signed credential issuance in this phase).">
         <ul className="space-y-2" data-testid="fundo-certificate-list">
           {items.map((c) => (
@@ -26,6 +24,5 @@ export default function CertificatesPage() {
           ))}
         </ul>
       </PageShell>
-    </AppLayout>
   );
 }

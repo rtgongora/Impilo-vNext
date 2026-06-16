@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { apiClient } from "@/lib/api-client";
 
@@ -49,7 +48,6 @@ export default function NewAssessmentPage() {
   }
 
   return (
-    <AppLayout>
       <PageShell title="New assessment" subtitle="Create assessment and add basic questions.">
         <div className="max-w-xl space-y-2 rounded border border-border bg-card p-4">
           <input className="w-full rounded border border-border px-2 py-1 text-sm" placeholder="Course ID" value={courseId} onChange={(e) => setCourseId(e.target.value)} />
@@ -75,6 +73,5 @@ export default function NewAssessmentPage() {
           ) : null}
         </div>
       </PageShell>
-    </AppLayout>
   );
 }

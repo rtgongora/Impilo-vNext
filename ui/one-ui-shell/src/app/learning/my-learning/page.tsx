@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useLearningSubject } from "@/components/learning/LearningSubjectPicker";
 import { useFundoMyLearning } from "@/hooks/queries/useFundoLms";
@@ -22,7 +21,6 @@ export default function MyLearningPage() {
   ] as const;
 
   return (
-    <AppLayout>
       <PageShell title="My learning" subtitle="Learner journey dashboard for enrolments, progress, certificates and CPD evidence.">
         <div className="mb-3">
           <Link href="/learning/record" className="text-sm text-teal-700 hover:underline">
@@ -54,6 +52,5 @@ export default function MyLearningPage() {
           ))}
         </div>
       </PageShell>
-    </AppLayout>
   );
 }

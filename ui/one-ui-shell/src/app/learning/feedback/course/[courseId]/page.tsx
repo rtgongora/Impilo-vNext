@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useCreateInteractiveActivity, useSubmitInteractiveResponse } from "@/hooks/queries/useFundoStudio";
 
@@ -29,7 +28,6 @@ export default function LearningCourseFeedbackPage({ params }: { params: { cours
   }
 
   return (
-    <AppLayout>
       <PageShell title="Course Feedback" subtitle="Feedback, reflections and trainer/course evaluations.">
         <div className="rounded border border-border bg-card p-4">
           <textarea value={feedback} onChange={(e) => setFeedback(e.target.value)} className="h-28 w-full rounded border border-border px-3 py-2 text-sm" />
@@ -39,6 +37,5 @@ export default function LearningCourseFeedbackPage({ params }: { params: { cours
           </div>
         </div>
       </PageShell>
-    </AppLayout>
   );
 }

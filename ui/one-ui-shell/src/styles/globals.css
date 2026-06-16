@@ -194,4 +194,20 @@
     opacity: 0.1;
     pointer-events: none;
   }
+
+  .learning-module-shell > .space-y-5 {
+    @apply space-y-3;
+  }
+
+  .learning-module-shell > .space-y-5 > .impilo-surface-card:first-child {
+    @apply mb-3 rounded-lg p-3 shadow-none sm:p-4;
+  }
+
+  .learning-module-shell > .space-y-5 > .impilo-surface-card:first-child h1 {
+    @apply text-lg leading-6 md:text-xl;
+  }
+
+  .learning-module-shell > .space-y-5 > .impilo-surface-card:first-child p {
+    @apply mt-1 max-w-5xl text-sm leading-5;
+  }
 }

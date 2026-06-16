@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { FundoLessonContent } from "@/components/learning/FundoLessonContent";
 import { useFundoEnrolment, useFundoEnrolmentProgress, useOpenFundoLesson, useRecordFundoProgress } from "@/hooks/queries/useFundoLms";
@@ -32,7 +31,6 @@ export default function LessonPlayerPage() {
   const currentPercent = Number(currentProgress?.progressPercent ?? 0);
 
   return (
-    <AppLayout>
       <PageShell title={String(currentLesson.title ?? "Lesson player")} subtitle="Native Fundo lesson player with text, media, documents, and practical tasks.">
         <div className="rounded border border-border bg-card p-4">
           <p className="text-sm text-muted-foreground">Lesson ID: {lessonId}</p>
@@ -85,6 +83,5 @@ export default function LessonPlayerPage() {
           </div>
         </div>
       </PageShell>
-    </AppLayout>
   );
 }

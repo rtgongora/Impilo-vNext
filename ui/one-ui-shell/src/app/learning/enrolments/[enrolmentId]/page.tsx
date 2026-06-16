@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useFundoCourseAssessments, useFundoEnrolment, useFundoEnrolmentProgress, useIssueFundoCertificate, useStartFundoEnrolment } from "@/hooks/queries/useFundoLms";
 import { useFundoCourseStructure } from "@/hooks/queries/useFundoCatalog";
@@ -40,7 +39,6 @@ export default function EnrolmentPlayerPage() {
   const canIssueCertificate = String(enrolment.status) === "COMPLETED" || percent >= 100;
 
   return (
-    <AppLayout>
       <PageShell title="Enrolment" subtitle={`Course player shell • ${String(enrolment.status ?? "ENROLLED")}`}>
         <div className="mb-3 flex flex-wrap gap-2">
           <button
@@ -121,6 +119,5 @@ export default function EnrolmentPlayerPage() {
           )}
         </div>
       </PageShell>
-    </AppLayout>
   );
 }

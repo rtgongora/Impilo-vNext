@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { summarizeFundoMyLearning, useFundoMyLearning } from "@/hooks/queries/useFundoLms";
 import { FundoLearningOrchestrationRail } from "@/components/learning/FundoLearningOrchestrationRail";
@@ -19,7 +18,6 @@ export default function LearningHubPage() {
   const certs = Array.isArray(payload.certificates) ? payload.certificates.length : 0;
 
   return (
-    <AppLayout>
       <PageShell
         title="Impilo Fundo"
         subtitle="Native learning management, certification, in-service training, pre-service training and CPD support."
@@ -70,6 +68,5 @@ export default function LearningHubPage() {
           ))}
         </div>
       </PageShell>
-    </AppLayout>
   );
 }

@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { useFundoLanguageOptions } from "@/hooks/queries/useFundoLms";
 import { apiClient } from "@/lib/api-client";
 
 export default function NewCoursePage() {
@@ -12,10 +12,15 @@ export default function NewCoursePage() {
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("GENERAL");
   const [level, setLevel] = useState("INTRODUCTORY");
+  const [language, setLanguage] = useState("en");
   const [status, setStatus] = useState("DRAFT");
   const [saved, setSaved] = useState<string>("");
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const { data: languageData } = useFundoLanguageOptions();
+  const languages = languageData?.data?.items?.length
+    ? languageData.data.items
+    : [{ code: "en", label: "English", nativeLabel: "English" }];
 
   async function save() {
     setError("");
@@ -31,7 +36,7 @@ export default function NewCoursePage() {
         description: description.trim(),
         category,
         level,
-        language: "en",
+        language,
         mandatory: false,
         cpdEligible: false,
         status,
@@ -48,7 +53,6 @@ export default function NewCoursePage() {
   }
 
   return (
-    <AppLayout>
       <PageShell title="New course" subtitle="Basic native course authoring form.">
         <div className="max-w-xl space-y-2 rounded border border-border bg-card p-4">
           <input className="w-full rounded border border-border px-2 py-1 text-sm" placeholder="Course code" value={code} onChange={(e) => setCode(e.target.value)} />
@@ -57,6 +61,15 @@ export default function NewCoursePage() {
           <div className="grid grid-cols-3 gap-2">
             <input className="rounded border border-border px-2 py-1 text-sm" placeholder="Category" value={category} onChange={(e) => setCategory(e.target.value)} />
             <input className="rounded border border-border px-2 py-1 text-sm" placeholder="Level" value={level} onChange={(e) => setLevel(e.target.value)} />
+            <select className="rounded border border-border px-2 py-1 text-sm" value={language} onChange={(e) => setLanguage(e.target.value)}>
+              {languages.map((option) => (
+                <option key={option.code} value={option.code}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <select className="rounded border border-border px-2 py-1 text-sm" value={status} onChange={(e) => setStatus(e.target.value)}>
               <option value="DRAFT">DRAFT</option>
               <option value="PUBLISHED">PUBLISHED</option>
@@ -73,6 +86,5 @@ export default function NewCoursePage() {
           ) : null}
         </div>
       </PageShell>
-    </AppLayout>
   );
 }

@@ -30,12 +30,14 @@ public class FundoCatalogService {
             UUID tenantId,
             CatalogueFilter filter,
             int limit) {
-        int cap = Math.min(Math.max(limit, 1), 100);
+        int cap = Math.min(Math.max(limit, 1), 500);
         String status = filter.status() != null ? filter.status() : "PUBLISHED";
         PageRequest page = PageRequest.of(0, cap);
 
         List<CourseEntity> rows;
-        if (filter.category() != null) {
+        if ("ALL".equalsIgnoreCase(status)) {
+            rows = courseRepository.findByTenantId(tenantId, page);
+        } else if (filter.category() != null) {
             rows = courseRepository.findByTenantIdAndStatusAndCategory(tenantId, status, filter.category(), page);
         } else if (filter.level() != null) {
             rows = courseRepository.findByTenantIdAndStatusAndLevel(tenantId, status, filter.level(), page);

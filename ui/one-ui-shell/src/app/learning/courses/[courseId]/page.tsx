@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, BadgeCheck, BookOpenCheck, CheckCircle2, Clock, GraduationCap } from "lucide-react";
-import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useFundoCourseStructure } from "@/hooks/queries/useFundoCatalog";
 import { useCreateFundoEnrolment } from "@/hooks/queries/useFundoLms";
@@ -27,7 +26,6 @@ export default function LearningCourseDetailPage() {
   const titleText = structure?.title ?? "Impilo Fundo Course";
 
   return (
-    <AppLayout>
       <PageShell
         title={titleText}
         subtitle={
@@ -173,6 +171,5 @@ export default function LearningCourseDetailPage() {
           </>
         ) : null}
       </PageShell>
-    </AppLayout>
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useFundoCertificate } from "@/hooks/queries/useFundoLms";
 
@@ -12,7 +11,6 @@ export default function CertificateDetailPage() {
   const cert = ((data?.data as Record<string, unknown>)?.certificate ?? {}) as Record<string, unknown>;
 
   return (
-    <AppLayout>
       <PageShell title="Certificate detail" subtitle="Tamper-evident metadata digest — not a PKI-signed credential. Council CPD credit is accepted in Varapi.">
         <div className="rounded border border-border bg-card p-4 text-sm" data-testid="fundo-certificate-detail">
           <p>Certificate number: {String(cert.certificateNumber ?? "-")}</p>
@@ -26,6 +24,5 @@ export default function CertificateDetailPage() {
           </p>
         </div>
       </PageShell>
-    </AppLayout>
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useFundoReportsOverview } from "@/hooks/queries/useFundoLms";
 
@@ -10,7 +9,6 @@ export default function LearningReportsHomePage() {
   const overview = (data?.data ?? {}) as Record<string, unknown>;
 
   return (
-    <AppLayout>
       <PageShell title="Learning reports" subtitle="Trainer and supervisor reporting workspace.">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {[
@@ -38,6 +36,5 @@ export default function LearningReportsHomePage() {
           ))}
         </div>
       </PageShell>
-    </AppLayout>
   );
 }

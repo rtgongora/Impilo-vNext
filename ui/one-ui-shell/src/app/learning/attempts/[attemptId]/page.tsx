@@ -1,7 +1,6 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useFundoAttempt } from "@/hooks/queries/useFundoLms";
 
@@ -13,7 +12,6 @@ export default function AttemptResultPage() {
   const pendingManualReview = String(attempt.passed ?? "").length === 0 || attempt.passed === null;
 
   return (
-    <AppLayout>
       <PageShell title="Attempt result" subtitle="Score and pass/fail outcome for submitted native assessment attempt.">
         <div className="rounded border border-border bg-card p-4 text-sm">
           <p>Attempt: {String(attempt.id ?? attemptId)}</p>
@@ -27,6 +25,5 @@ export default function AttemptResultPage() {
           ) : null}
         </div>
       </PageShell>
-    </AppLayout>
   );
 }
