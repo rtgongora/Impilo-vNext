@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { GraduationCap, Loader2, PlayCircle } from "lucide-react";
+import { GraduationCap, Loader2 } from "lucide-react";
 import { useLearningSubject } from "@/components/learning/LearningSubjectPicker";
 import { summarizeFundoMyLearning, useFundoEnrolments, useFundoMyLearning } from "@/hooks/queries/useFundoLms";
 import { useFundoCatalog } from "@/hooks/queries/useFundoCatalog";
@@ -24,7 +23,7 @@ export function FundoLearningOrchestrationRail() {
 
   return (
     <section
-      className="mb-6 rounded-2xl border border-teal-200 bg-teal-50/80 p-4"
+      className="mb-3 rounded-lg border border-teal-200 bg-teal-50/80 px-3 py-2.5"
       data-testid="fundo-learning-orchestration-rail"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -43,27 +42,6 @@ export function FundoLearningOrchestrationRail() {
               ? "Catalog: probing native LMS…"
               : `${catalogCount} published course(s) ready for enrolment`}
           </p>
-        </div>
-        <div className="flex flex-wrap gap-2 text-xs">
-          <Link
-            href="/learning/catalog"
-            className="inline-flex items-center gap-1 rounded-lg border border-teal-200 bg-card px-2.5 py-1.5 font-medium text-teal-900 hover:border-teal-300"
-          >
-            <PlayCircle className="h-3.5 w-3.5" />
-            Browse catalog
-          </Link>
-          <Link
-            href="/learning/my-learning"
-            className="rounded-lg border border-teal-200 bg-card px-2.5 py-1.5 font-medium text-teal-900 hover:border-teal-300"
-          >
-            My learning
-          </Link>
-          <Link
-            href="/learning/certificates"
-            className="rounded-lg border border-teal-200 bg-card px-2.5 py-1.5 font-medium text-teal-900 hover:border-teal-300"
-          >
-            Certificates
-          </Link>
         </div>
       </div>
       {(myLearningQ.isLoading || catalogQ.isLoading) && (

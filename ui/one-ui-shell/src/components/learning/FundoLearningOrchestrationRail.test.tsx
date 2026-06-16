@@ -28,6 +28,6 @@ describe("FundoLearningOrchestrationRail", () => {
     expect(screen.getByTestId("fundo-learning-orchestration-rail")).toBeInTheDocument();
     expect(screen.getByTestId("fundo-kpi-strip")).toHaveTextContent("2 in progress");
     expect(screen.getByTestId("fundo-catalog-probe")).toHaveTextContent("3 published course(s)");
-    expect(screen.getByRole("link", { name: /Browse catalog/i })).toHaveAttribute("href", "/learning/catalog");
+    expect(screen.queryByRole("link", { name: /Browse catalog/i })).not.toBeInTheDocument();
   });
 });
