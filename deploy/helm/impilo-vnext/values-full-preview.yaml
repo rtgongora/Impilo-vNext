@@ -172,6 +172,10 @@ experienceBff:
     TUSO_BASE_URL: http://tuso-service:8084
     WORKFORCE_GOVERNANCE_BASE_URL: http://workforce-governance-service:8165
     FHIR_GATEWAY_BASE_URL: http://fhir-gateway-service:8091
+    # Booking/scheduling downstreams — unset previously, so the BFF called localhost
+    # and citizen/provider appointment surfaces returned 500 (connection refused).
+    BOOKING_BASE_URL: http://booking-service:8265
+    SCHEDULING_SERVICE_BASE_URL: http://scheduling-service:8128
     SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     SPRING_KAFKA_LISTENER_AUTO_STARTUP: "false"
     MANAGEMENT_HEALTH_KAFKA_ENABLED: "false"
