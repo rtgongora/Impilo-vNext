@@ -903,11 +903,13 @@ export default function HomePage() {
     router.push("/queue");
   }
 
-  // Fetch recent encounters
+  // Fetch recent encounters — the encounters endpoint requires a patient_id
+  // (the person's own timeline). Without it the BFF returns 400 MISSING_PATIENT_ID.
   const { data: recentEncounters } = useQuery<{ data: Array<{ id: string; attributes: Record<string, unknown> }> }>({
-    queryKey: ["home-recent-encounters"],
-    queryFn: () => apiClient.get("/internal/v1/encounters?size=5"),
-    enabled: isClinical,
+    queryKey: ["home-recent-encounters", user?.id],
+    queryFn: () =>
+      apiClient.get(`/internal/v1/encounters?size=5&patient_id=${encodeURIComponent(user?.id ?? "")}`),
+    enabled: isClinical && !!user?.id,
   });
   const encounters = recentEncounters?.data ?? [];
   const activeEncounterCount = encounters.filter((enc) => {
