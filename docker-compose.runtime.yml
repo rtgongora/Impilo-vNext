@@ -20,26 +20,47 @@ services:
   # ── PostgreSQL 16 ──────────────────────────────────────────────────
   postgres:
     image: postgres:16-alpine
+    command: ["postgres", "-c", "max_connections=${POSTGRES_MAX_CONNECTIONS:-500}"]
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-impilo}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
-      # DB creation only — data seeds (02–08) run after Flyway migrations, not at cluster init.
       - ./scripts/seed/01-init-databases.sql:/docker-entrypoint-initdb.d/01-init-databases.sql
+      - ./scripts/seed/02-seed-tuso.sql:/docker-entrypoint-initdb.d/02-seed-tuso.sql
+      - ./scripts/seed/03-seed-vito.sql:/docker-entrypoint-initdb.d/03-seed-vito.sql
+      - ./scripts/seed/04-seed-varapi.sql:/docker-entrypoint-initdb.d/04-seed-varapi.sql
+      - ./scripts/seed/05-seed-tshepo.sql:/docker-entrypoint-initdb.d/05-seed-tshepo.sql
+      - ./scripts/seed/06-seed-zibo.sql:/docker-entrypoint-initdb.d/06-seed-zibo.sql
+      - ./scripts/seed/07-seed-pct.sql:/docker-entrypoint-initdb.d/07-seed-pct.sql
+      - ./scripts/seed/08-seed-oros.sql:/docker-entrypoint-initdb.d/08-seed-oros.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-impilo}"]
       interval: 5s
       timeout: 3s
       retries: 10
 
+  postgres-db-ensure:
+    image: postgres:16-alpine
+    restart: "no"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-impilo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      PGHOST: postgres
+    volumes:
+      - ./scripts/seed/ensure-databases.sh:/ensure-databases.sh:ro
+    entrypoint: ["/bin/sh", "/ensure-databases.sh"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   # ── Redis 7 ────────────────────────────────────────────────────────
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "6390:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -79,6 +100,9 @@ services:
       KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
       KC_DB_USERNAME: ${POSTGRES_USER:-impilo}
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      KC_DB_POOL_INITIAL_SIZE: ${KEYCLOAK_DB_POOL_INITIAL_SIZE:-1}
+      KC_DB_POOL_MIN_SIZE: ${KEYCLOAK_DB_POOL_MIN_SIZE:-1}
+      KC_DB_POOL_MAX_SIZE: ${KEYCLOAK_DB_POOL_MAX_SIZE:-10}
       KC_HEALTH_ENABLED: "true"
     volumes:
       - ./tools/auth/impilo-realm.json:/opt/keycloak/data/import/impilo-realm.json:ro
@@ -298,7 +322,7 @@ services:
       SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
     mem_limit: 768m
     ports:
-      - "8083:8083"
+      - "8093:8083"
     depends_on:
       postgres:
         condition: service_healthy
@@ -332,7 +356,7 @@ services:
       SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
     mem_limit: 768m
     ports:
-      - "8084:8084"
+      - "8094:8084"
     depends_on:
       postgres:
         condition: service_healthy
@@ -568,6 +592,38 @@ services:
       retries: 20
       start_period: 40s
 
+  # ── Learning Service — Impilo Fundo backend (port 8235) ─────────────
+  fundo:
+    build:
+      context: ./services/learning-service
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-impilo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/impilo_learning
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM:-impilo}
+      SERVER_PORT: 8235
+      LEARNING_SECURITY_OAUTH2_ENABLED: "false"
+      LEARNING_OUTBOX_PUBLISHER_ENABLED: ${LEARNING_OUTBOX_PUBLISHER_ENABLED:-false}
+    mem_limit: 1024m
+    ports:
+      - "8235:8235"
+    depends_on:
+      postgres-db-ensure:
+        condition: service_completed_successfully
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8235/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 40s
+
   # ===========================================================================
   # EXPERIENCE LAYER
   # ===========================================================================
@@ -591,6 +647,7 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       KEYCLOAK_URL: http://keycloak:8080
       KEYCLOAK_REALM: ${KEYCLOAK_REALM:-impilo}
+      KEYCLOAK_TOKEN_SCOPE: ${KEYCLOAK_TOKEN_SCOPE:-openid profile email}
       # ── Backend service URLs ──────────────────────────────────────
       PCT_BASE_URL: http://pct:8088
       OROS_BASE_URL: http://oros:8089
@@ -616,6 +673,7 @@ services:
       ORTHANC_DICOMWEB_URL: http://orthanc:8042/dicom-web
       GUIDANCE_BASE_URL: http://guidance:8260
       CLINICAL_KNOWLEDGE_PLATFORM_BASE_URL: http://clinical-knowledge-platform:8270
+      LEARNING_SERVICE_BASE_URL: http://fundo:8235
     mem_limit: 768m
     ports:
       - "8160:8160"
@@ -623,6 +681,8 @@ services:
       postgres:
         condition: service_healthy
       kafka:
+        condition: service_healthy
+      fundo:
         condition: service_healthy
       clinical-knowledge-platform:
         condition: service_healthy

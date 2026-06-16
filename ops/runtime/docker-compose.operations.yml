@@ -385,6 +385,7 @@ services:
       SPRING_PROFILES_ACTIVE: default
       KEYCLOAK_URL: http://keycloak:8080
       KEYCLOAK_REALM: ${KEYCLOAK_REALM:-impilo}
+      KEYCLOAK_TOKEN_SCOPE: ${KEYCLOAK_TOKEN_SCOPE:-openid profile email}
       # Sovereign service URLs (compose networking)
       PCT_BASE_URL: http://pct:8088
       # Aggregated patient summary (PCT + Mvumo consent) — run mvumo on host or add service to this compose

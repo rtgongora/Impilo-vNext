@@ -21,6 +21,9 @@ services:
       KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
       KC_DB_USERNAME: ${POSTGRES_USER:-impilo}
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      KC_DB_POOL_INITIAL_SIZE: ${KEYCLOAK_DB_POOL_INITIAL_SIZE:-1}
+      KC_DB_POOL_MIN_SIZE: ${KEYCLOAK_DB_POOL_MIN_SIZE:-1}
+      KC_DB_POOL_MAX_SIZE: ${KEYCLOAK_DB_POOL_MAX_SIZE:-10}
     volumes:
       - ../../tools/auth/impilo-realm.json:/opt/keycloak/data/import/impilo-realm.json:ro
     ports:

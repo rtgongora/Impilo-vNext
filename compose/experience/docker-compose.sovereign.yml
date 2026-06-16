@@ -13,16 +13,14 @@ services:
     environment:
       PGPASSWORD: impilo
     depends_on:
-      experience-db:
-        condition: service_healthy
+      sovereign-db-init:
+        condition: service_completed_successfully
     entrypoint: ["sh", "-c"]
     command:
       - |
+        # Compatibility gate for services in this overlay. The base
+        # sovereign-db-init owns the complete idempotent database list.
         until psql -h experience-db -U impilo -d postgres -c '\q' 2>/dev/null; do sleep 1; done
-        for db in pharmacy mushex_db impilo_dispatch costa_db surv impilo_ndila impilo_nhume; do
-          psql -h experience-db -U impilo -d postgres -tc "SELECT 1 FROM pg_database WHERE datname = '$$db'" | grep -q 1 \
-            || psql -h experience-db -U impilo -d postgres -c "CREATE DATABASE \"$$db\" OWNER impilo;"
-        done
     restart: "no"
 
   pharmacy-service:

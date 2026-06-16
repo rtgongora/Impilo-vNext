@@ -53,7 +53,7 @@ public class AuthSessionController {
     @Value("${KEYCLOAK_CLIENT_ID:experience-ui}")
     private String clientId;
 
-    @Value("${KEYCLOAK_TOKEN_SCOPE:openid profile email impilo-trust-headers}")
+    @Value("${KEYCLOAK_TOKEN_SCOPE:openid profile email}")
     private String keycloakTokenScope;
 
     /**

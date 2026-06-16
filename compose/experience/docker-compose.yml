@@ -51,6 +51,7 @@ services:
   # ── PostgreSQL ───────────────────────────────────────────────────
   experience-db:
     image: postgres:16-alpine
+    command: ["postgres", "-c", "max_connections=${POSTGRES_MAX_CONNECTIONS:-300}"]
     environment:
       POSTGRES_DB: experience_bff
       POSTGRES_USER: impilo
@@ -107,7 +108,7 @@ services:
     command:
       - |
         until psql -h experience-db -U impilo -d postgres -c '\q' 2>/dev/null; do sleep 1; done
-        for db in inpatient pct impilo_integration_hub impilo_learning impilo_coverage impilo_simba impilo_pacs; do
+        for db in inpatient pct impilo_integration_hub impilo_learning impilo_coverage impilo_simba impilo_pacs pharmacy mushex_db impilo_dispatch costa_db surv impilo_ndila impilo_nhume; do
           psql -h experience-db -U impilo -d postgres -tc "SELECT 1 FROM pg_database WHERE datname = '$$db'" | grep -q 1 \
             || psql -h experience-db -U impilo -d postgres -c "CREATE DATABASE \"$$db\" OWNER impilo;"
         done
@@ -371,6 +372,7 @@ services:
       DB_PASSWORD: impilo
       SPRING_PROFILES_ACTIVE: default
       SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+      KEYCLOAK_TOKEN_SCOPE: ${KEYCLOAK_TOKEN_SCOPE:-openid profile email}
       # Sovereign service URLs (in-compose where available; host ports for optional services)
       PCT_BASE_URL: http://pct-service:8088
       INTEGRATION_HUB_BASE_URL: http://integration-hub:8110
