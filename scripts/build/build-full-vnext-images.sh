@@ -127,6 +127,14 @@ def _git_commit():
         return ""
 
 
+def _git_branch():
+    try:
+        out = subprocess.run(["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=root, capture_output=True, text=True)
+        return out.stdout.strip() if out.returncode == 0 else ""
+    except Exception:
+        return ""
+
+
 def _cache_bust(service_id: str) -> str:
     """Content-addressed cache bust for app Dockerfiles (commit + source fingerprint)."""
     import hashlib
@@ -263,12 +271,16 @@ def build_dockerfile(service_id: str, dockerfile_path: str | None, log_path: pat
     context = docker_context_for(str(dockerfile.relative_to(root)), service_id)
     image = f"impilo/{service_id}"
     source_commit = _git_commit() or "unknown"
+    source_branch = _git_branch() or "unknown"
+    build_date = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     cache_bust = _cache_bust(service_id)
     build_cmd = [
         "docker", "build",
         "-t", f"{image}:preview",
         "-t", f"{image}:{tag}",
         "--build-arg", f"SOURCE_COMMIT={source_commit}",
+        "--build-arg", f"SOURCE_BRANCH={source_branch}",
+        "--build-arg", f"BUILD_DATE={build_date}",
         "--build-arg", f"CACHE_BUST={cache_bust}",
         "-f", str(dockerfile),
         str(context),

@@ -31,12 +31,20 @@ spec:
           env:
             - name: IMPILO_ENV
               value: {{ .Values.global.environment | quote }}
+            {{- /* Only override the image-baked provenance when explicitly provided, so an
+                   empty Helm value never blanks out the commit/branch baked into the image. */}}
+            {{- if .Values.global.gitBranch }}
             - name: IMPILO_GIT_BRANCH
-              value: {{ .Values.global.gitBranch | default "" | quote }}
+              value: {{ .Values.global.gitBranch | quote }}
+            {{- end }}
+            {{- if .Values.global.gitCommit }}
             - name: IMPILO_GIT_COMMIT
-              value: {{ .Values.global.gitCommit | default "" | quote }}
+              value: {{ .Values.global.gitCommit | quote }}
+            {{- end }}
+            {{- if .Values.global.buildDate }}
             - name: IMPILO_BUILD_DATE
-              value: {{ .Values.global.buildDate | default "" | quote }}
+              value: {{ .Values.global.buildDate | quote }}
+            {{- end }}
             {{- range $k, $v := .Values.experienceBff.env }}
             - name: {{ $k }}
               value: {{ $v | quote }}
