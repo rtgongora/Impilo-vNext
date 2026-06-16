@@ -8,7 +8,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
-import zw.gov.mohcc.impilo.experience.config.ProductOwnerAccessProperties;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
 import java.lang.reflect.Method;
@@ -21,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class AuthSessionControllerTest {
 
     private static AuthSessionController controller() {
-        return new AuthSessionController(new RestTemplate(), null, null, null, new ProductOwnerAccessProperties());
+        return new AuthSessionController(new RestTemplate(), null, null, null);
     }
 
     @Test
@@ -124,8 +123,7 @@ class AuthSessionControllerTest {
                 new RestTemplate(),
                 new LinkedIdsVarapiClient(),
                 new LinkedIdsVitoClient(),
-                null,
-                new ProductOwnerAccessProperties());
+                null);
 
         ResponseEntity<Map<String, Object>> response =
                 controller.getLinkedIds("req-linked", "corr-linked", "actor-health-1");
@@ -135,6 +133,16 @@ class AuthSessionControllerTest {
         Map<?, ?> attrs = (Map<?, ?>) data.get("attributes");
         assertEquals("PRV-LINK-1", attrs.get("providerId"));
         assertEquals("STAFF-9", attrs.get("staffId"));
+    }
+
+    @Test
+    void resolveLicenceValid_defaultsTrueForActiveProviderWithoutExplicitFlag() throws Exception {
+        Method method = AuthSessionController.class.getDeclaredMethod("resolveLicenceValid", JsonNode.class);
+        method.setAccessible(true);
+        JsonNode active = new ObjectMapper().readTree("{\"status\":\"ACTIVE\"}");
+        assertEquals(true, method.invoke(null, active));
+        JsonNode inactive = new ObjectMapper().readTree("{\"status\":\"SUSPENDED\"}");
+        assertEquals(false, method.invoke(null, inactive));
     }
 
     @Test

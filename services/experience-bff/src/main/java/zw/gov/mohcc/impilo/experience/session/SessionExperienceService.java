@@ -3,16 +3,18 @@ package zw.gov.mohcc.impilo.experience.session;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
-import zw.gov.mohcc.impilo.experience.bootstrap.BootstrapProperties;
 import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
 import zw.gov.mohcc.impilo.experience.client.WorkforceGovernanceClient;
-import zw.gov.mohcc.impilo.experience.config.ProductOwnerAccessProperties;
 
 import java.util.*;
 
 /**
  * Builds the Session Experience Contract from linked IDs, VARAPI professional truth,
  * and workforce governance assignments. Keycloak roles alone do not unlock Work.
+ *
+ * <p>Authority is sovereign-truth only: identity (VITO/VARAPI) plus governance
+ * assignments (WGV). There is no preview superuser / Product Owner allowlist path —
+ * every actor, including the Product Owner, resolves through the same seeded chain.</p>
  */
 @Service
 public class SessionExperienceService {
@@ -20,19 +22,13 @@ public class SessionExperienceService {
     private final VarapiServiceClient varapiClient;
     private final WorkforceGovernanceClient workforceGovernanceClient;
     private final ObjectMapper objectMapper;
-    private final ProductOwnerAccessProperties productOwnerAccessProperties;
-    private final BootstrapProperties bootstrapProperties;
 
     public SessionExperienceService(VarapiServiceClient varapiClient,
                                       WorkforceGovernanceClient workforceGovernanceClient,
-                                      ObjectMapper objectMapper,
-                                      ProductOwnerAccessProperties productOwnerAccessProperties,
-                                      BootstrapProperties bootstrapProperties) {
+                                      ObjectMapper objectMapper) {
         this.varapiClient = varapiClient;
         this.workforceGovernanceClient = workforceGovernanceClient;
         this.objectMapper = objectMapper;
-        this.productOwnerAccessProperties = productOwnerAccessProperties;
-        this.bootstrapProperties = bootstrapProperties;
     }
 
     public Map<String, Object> buildExperienceContract(String actorId,
@@ -95,7 +91,7 @@ public class SessionExperienceService {
         contract.put("blockedActions", buildBlockedActions(workVisible, professionalVisible));
         contract.put("roleTemplates", activeAssignments.stream().map(a -> stringVal(a.get("roleTemplateId"))).filter(Objects::nonNull).toList());
         contract.put("policyMetadata", Map.of(
-                "contractVersion", "1.1.0",
+                "contractVersion", CONTRACT_VERSION,
                 "opaPackages", List.of("impilo.tabs", "impilo.work", "impilo.professional", "impilo.registry", "impilo.marketplace", "impilo.organisation"),
                 "enforcement", "bff_and_opa"
         ));
@@ -115,8 +111,6 @@ public class SessionExperienceService {
         contract.put("facilityModeAvailable", workVisible && activeAssignments.stream().anyMatch(a -> a.get("facilityId") != null));
         contract.put("facilityModeActive", hasSelectedFacility);
         contract.put("defaultRoute", resolveDefaultRoute(defaultTab, friendlyState, activeAssignments, hasSelectedFacility));
-
-        applyProductOwnerOverride(contract, actorId, actorEmail);
         return contract;
     }
 
@@ -125,52 +119,6 @@ public class SessionExperienceService {
                                                        String providerId,
                                                        boolean hasSelectedFacility) {
         return buildExperienceContract(actorId, loginMethod, providerId, hasSelectedFacility, null);
-    }
-
-    private void applyProductOwnerOverride(Map<String, Object> contract, String actorId, String actorEmail) {
-        if (!productOwnerAccessProperties.isEffective(bootstrapProperties.getEnvironment())) {
-            return;
-        }
-        if (!productOwnerAccessProperties.isAllowlisted(actorId, actorEmail)) {
-            return;
-        }
-
-        @SuppressWarnings("unchecked")
-        Map<String, Object> tabs = (Map<String, Object>) contract.get("tabs");
-        if (tabs != null) {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> workTab = (Map<String, Object>) tabs.get("work");
-            if (workTab != null) {
-                workTab.put("visible", true);
-                workTab.remove("reason");
-            }
-            @SuppressWarnings("unchecked")
-            Map<String, Object> professionalTab = (Map<String, Object>) tabs.get("professional");
-            if (professionalTab != null) {
-                professionalTab.put("visible", true);
-                professionalTab.remove("reason");
-            }
-        }
-
-        List<String> fullManagement = PRODUCT_OWNER_MANAGEMENT_WORKSPACES;
-        contract.put("visibleManagementWorkspaces", fullManagement);
-        contract.put("blockedManagementWorkspaces", List.of());
-        contract.put("visibleWorkspaces", mergeUnique(
-                castStringList(contract.get("visibleWorkspaces")),
-                fullManagement
-        ));
-        contract.put("visibleActions", mergeUnique(
-                castStringList(contract.get("visibleActions")),
-                List.of("work.context.enter", "administration.governance.view")
-        ));
-        contract.put("blockedActions", List.of());
-        contract.put("friendlyResolutionState", "");
-        contract.put("policyMetadata", Map.of(
-                "contractVersion", "1.1.0",
-                "opaPackages", List.of("impilo.tabs", "impilo.work", "impilo.professional", "impilo.registry", "impilo.marketplace", "impilo.organisation"),
-                "enforcement", "bff_and_opa",
-                "previewProductOwnerAccess", true
-        ));
     }
 
     private Map<String, Object> fetchLinkedIds(String actorId) {
@@ -389,34 +337,8 @@ public class SessionExperienceService {
     private static final List<String> PRIVATE_ONLY_WORKSPACES = List.of(
             "private_facility_user_management", "private_clinician_assignment");
 
-    private static final List<String> PRODUCT_OWNER_MANAGEMENT_WORKSPACES = List.of(
-            "national_organisation_registry",
-            "national_trust_console",
-            "national_platform_user_administration",
-            "national_system_operator_management",
-            "national_identity_governance",
-            "mohcc_head_office_user_management",
-            "municipal_organisation_management",
-            "municipal_user_management",
-            "municipal_facility_staff_management",
-            "public_facility_staff_management",
-            "facility_work_assignment",
-            "private_facility_user_management",
-            "private_clinician_assignment",
-            "regulator_organisation_management",
-            "council_user_management",
-            "hsc_user_management",
-            "hsc_workspace",
-            "hsc_establishment_control",
-            "blood_service_user_management",
-            "blood_service_organisation_management",
-            "marketplace_user_management",
-            "marketplace_organisation_verification",
-            "payer_organisation_management",
-            "payer_user_management",
-            "external_partner_user_management",
-            "research_partner_organisation_management"
-    );
+    /** Session Experience Contract version — kept in lockstep with the TS contract constant. */
+    private static final String CONTRACT_VERSION = "1.2.0";
 
     private static final Map<String, List<String>> MANAGEMENT_WORKSPACE_DEFAULTS = Map.ofEntries(
             Map.entry("sovereign_public_owner", List.of("national_organisation_registry", "national_trust_console", "national_platform_user_administration")),
@@ -516,24 +438,4 @@ public class SessionExperienceService {
         return null;
     }
 
-    @SuppressWarnings("unchecked")
-    private static List<String> castStringList(Object value) {
-        if (!(value instanceof List<?> list)) {
-            return List.of();
-        }
-        List<String> out = new ArrayList<>();
-        for (Object item : list) {
-            if (item != null) {
-                out.add(item.toString());
-            }
-        }
-        return out;
-    }
-
-    private static List<String> mergeUnique(List<String> left, List<String> right) {
-        LinkedHashSet<String> merged = new LinkedHashSet<>();
-        merged.addAll(left);
-        merged.addAll(right);
-        return new ArrayList<>(merged);
-    }
 }

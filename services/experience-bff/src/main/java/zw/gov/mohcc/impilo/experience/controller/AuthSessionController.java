@@ -15,7 +15,6 @@ import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.RulesServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
-import zw.gov.mohcc.impilo.experience.config.ProductOwnerAccessProperties;
 
 import java.time.OffsetDateTime;
 import java.time.Duration;
@@ -72,18 +71,15 @@ public class AuthSessionController {
     private final VarapiServiceClient varapiClient;
     private final VitoServiceClient vitoClient;
     private final RulesServiceClient rulesClient;
-    private final ProductOwnerAccessProperties productOwnerAccessProperties;
 
     public AuthSessionController(RestTemplate serviceRestTemplate,
                                  VarapiServiceClient varapiClient,
                                  VitoServiceClient vitoClient,
-                                 RulesServiceClient rulesClient,
-                                 ProductOwnerAccessProperties productOwnerAccessProperties) {
+                                 RulesServiceClient rulesClient) {
         this.restTemplate = serviceRestTemplate;
         this.varapiClient = varapiClient;
         this.vitoClient = vitoClient;
         this.rulesClient = rulesClient;
-        this.productOwnerAccessProperties = productOwnerAccessProperties;
     }
 
     /**
@@ -151,7 +147,6 @@ public class AuthSessionController {
                 String keycloakSub = claims.has("sub") ? claims.get("sub").asText() : UUID.randomUUID().toString();
                 String userId = resolvePersonAnchorId(claims, keycloakSub);
                 String userEmail = claims.has("email") ? claims.get("email").asText() : email;
-                userId = resolvePreviewPersonAnchor(userId, keycloakSub, userEmail);
                 String displayName = claims.has("name") ? claims.get("name").asText()
                         : claims.has("preferred_username") ? claims.get("preferred_username").asText() : email;
 
@@ -285,7 +280,6 @@ public class AuthSessionController {
                 String keycloakSub = claims.has("sub") ? claims.get("sub").asText() : "";
                 String userId = resolvePersonAnchorId(claims, keycloakSub);
                 String userEmail = claims.has("email") ? claims.get("email").asText() : "";
-                userId = resolvePreviewPersonAnchor(userId, keycloakSub, userEmail);
                 String displayName = claims.has("name") ? claims.get("name").asText()
                         : claims.has("preferred_username") ? claims.get("preferred_username").asText() : userEmail;
 
@@ -363,7 +357,7 @@ public class AuthSessionController {
             if (providerData != null && !providerData.isNull()) {
                 linkedIds.put("providerId", resolveProviderPublicId(providerData));
                 linkedIds.put("providerStatus", providerData.has("status") ? providerData.get("status").asText() : null);
-                linkedIds.put("licenceValid", providerData.has("licenceValid") ? providerData.get("licenceValid").asBoolean() : false);
+                linkedIds.put("licenceValid", resolveLicenceValid(providerData));
             }
             if (staffData != null && !staffData.isNull()) {
                 linkedIds.put("staffId", staffData.has("staffId") ? staffData.get("staffId").asText() : null);
@@ -828,6 +822,16 @@ public class AuthSessionController {
         return null;
     }
 
+    /** Active registry rows without explicit licenceValid are treated as valid for shell resolution. */
+    static boolean resolveLicenceValid(JsonNode providerData) {
+        if (providerData == null || providerData.isNull()) return false;
+        if (providerData.has("licenceValid") && !providerData.get("licenceValid").isNull()) {
+            return providerData.get("licenceValid").asBoolean();
+        }
+        String status = providerData.has("status") ? providerData.get("status").asText("") : "";
+        return "ACTIVE".equalsIgnoreCase(status) || "VERIFIED".equalsIgnoreCase(status);
+    }
+
     /**
      * Person anchor for session contract and VARAPI lookup: prefer Health ID claims over Keycloak sub.
      */
@@ -848,13 +852,6 @@ public class AuthSessionController {
             return keycloakSub;
         }
         return UUID.randomUUID().toString();
-    }
-
-    private String resolvePreviewPersonAnchor(String resolvedId, String keycloakSub, String userEmail) {
-        if (resolvedId != null && !resolvedId.isBlank() && keycloakSub != null && !resolvedId.equals(keycloakSub)) {
-            return resolvedId;
-        }
-        return productOwnerAccessProperties.pairedHealthIdForEmail(userEmail).orElse(resolvedId);
     }
 
     private static String readJwtClaim(JsonNode claims, String claimName) {

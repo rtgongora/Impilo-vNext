@@ -53,11 +53,6 @@ impilo:
     require-mfa: ${IMPILO_BOOTSTRAP_REQUIRE_MFA:true}
     environment: ${IMPILO_BOOTSTRAP_ENVIRONMENT:development}
     bootstrap-role-ttl-hours: 24
-  preview:
-    product-owner-access:
-      enabled: ${IMPILO_PREVIEW_PRODUCT_OWNER_ACCESS:false}
-      allowed-actors: ${IMPILO_PREVIEW_PRODUCT_OWNER_ALLOWED_ACTORS:b0000000-0000-4000-8000-000000000010,superadmin@impilo.gov.zw}
-      blocked-environments: ${IMPILO_PREVIEW_PRODUCT_OWNER_BLOCKED_ENVIRONMENTS:production,prod}
   governance:
     invitation-expiry-hours: ${IMPILO_GOVERNANCE_INVITATION_EXPIRY_HOURS:168}
   registry-intake:

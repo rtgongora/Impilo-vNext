@@ -160,8 +160,6 @@ experienceBff:
     KEYCLOAK_BACKEND_SECRET: impilo-backend-secret
     AUTH_FALLBACK_ENABLED: "false"
     IMPILO_SECURITY_ALLOW_ANONYMOUS: "true"
-    IMPILO_PREVIEW_PRODUCT_OWNER_ACCESS: "true"
-    IMPILO_PREVIEW_PRODUCT_OWNER_ALLOWED_ACTORS: "b0000000-0000-4000-8000-000000000010,superadmin@impilo.gov.zw"
     IMPILO_BOOTSTRAP_ENABLED: "true"
     IMPILO_BOOTSTRAP_ENVIRONMENT: "preview"
     IMPILO_BOOTSTRAP_REQUIRE_MFA: "false"
@@ -170,6 +168,9 @@ experienceBff:
     IMPILO_BOOTSTRAP_ALLOWED_METHODS: "one_time_token,signed_authorisation"
     TSHEPO_AUTHZ_BASE_URL: http://tshepo-authz-service:8081
     VITO_BASE_URL: http://vito-service:8082
+    VARAPI_BASE_URL: http://varapi-service:8083
+    TUSO_BASE_URL: http://tuso-service:8084
+    WORKFORCE_GOVERNANCE_BASE_URL: http://workforce-governance-service:8165
     FHIR_GATEWAY_BASE_URL: http://fhir-gateway-service:8091
     SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     SPRING_KAFKA_LISTENER_AUTO_STARTUP: "false"

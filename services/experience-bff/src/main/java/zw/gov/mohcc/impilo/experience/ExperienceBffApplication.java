@@ -24,8 +24,7 @@ import zw.gov.mohcc.impilo.experience.config.RegistryDownstreamProperties;
     BffProviderHubsProperties.class,
     BffWalletProperties.class,
     OrchestrationBacklogEndpoints.class,
-    zw.gov.mohcc.impilo.experience.bootstrap.BootstrapProperties.class,
-    zw.gov.mohcc.impilo.experience.config.ProductOwnerAccessProperties.class
+    zw.gov.mohcc.impilo.experience.bootstrap.BootstrapProperties.class
 })
 public class ExperienceBffApplication {
 
