@@ -53,10 +53,13 @@ kubectl exec -n "$NS" deploy/postgres -- pg_isready -U impilo >/dev/null
 apply_seed tuso   "$SEED_DIR/02-seed-tuso.sql"   "TUSO facilities" "SELECT count(*) FROM tuso.facility;"
 apply_seed vito   "$SEED_DIR/03-seed-vito.sql"   "VITO clients" "SELECT count(*) FROM vito.client;"
 apply_seed varapi "$SEED_DIR/04-seed-varapi.sql" "VARAPI providers" "SELECT count(*) FROM varapi.provider;"
-apply_seed tshepo "$SEED_DIR/05-seed-tshepo.sql" "TSHEPO trust" "SELECT count(*) FROM tshepo.policy_rule;"
-apply_seed zibo   "$SEED_DIR/06-seed-zibo.sql"   "ZIBO terminology" "SELECT count(*) FROM zibo.code_system;"
-apply_seed pct    "$SEED_DIR/07-seed-pct.sql"    "PCT queue" "SELECT count(*) FROM pct.encounter;"
-apply_seed oros   "$SEED_DIR/08-seed-oros.sql"   "OROS orders" "SELECT count(*) FROM oros.service_request;"
+# Idempotency skip-queries must target a table the seed actually populates, else
+# the guard reads 0 and re-applies every run. These were pointed at non-existent
+# tables (policy_rule / code_system / encounter / service_request).
+apply_seed tshepo "$SEED_DIR/05-seed-tshepo.sql" "TSHEPO trust" "SELECT count(*) FROM tshepo.policy_decision_log;"
+apply_seed zibo   "$SEED_DIR/06-seed-zibo.sql"   "ZIBO terminology" "SELECT count(*) FROM zibo_packs;"
+apply_seed pct    "$SEED_DIR/07-seed-pct.sql"    "PCT queue" "SELECT count(*) FROM pct_encounters;"
+apply_seed oros   "$SEED_DIR/08-seed-oros.sql"   "OROS orders" "SELECT count(*) FROM oros_orders;"
 apply_seed workforce_governance "$SEED_DIR/09-seed-workforce-governance.sql" "Workforce governance assignments" "SELECT count(*) FROM wgv_organisation WHERE organisation_code='MOHCC-NATIONAL';"
 
 echo ""
