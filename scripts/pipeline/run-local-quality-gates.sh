@@ -76,6 +76,15 @@ if [[ "${PIPELINE_SKIP_REGRESSION:-0}" != "1" ]]; then
     bash tests/regression/frontend-backend-parity-smoke.sh
 fi
 
+# 12b. Session Experience multi-persona E2E (advisory; needs a live preview).
+# Skipped by default — set PIPELINE_RUN_SESSION_E2E=1 (and SESSION_E2E_URL) to run it.
+if [[ "${PIPELINE_RUN_SESSION_E2E:-0}" == "1" ]]; then
+  session_e2e_blocking=0
+  [[ "${SESSION_E2E_STRICT:-0}" == "1" ]] && session_e2e_blocking=1
+  pipeline_run_phase session-experience-e2e "Session Experience multi-persona E2E" "$session_e2e_blocking" \
+    bash scripts/test/verify-session-experience-e2e.sh --url "${SESSION_E2E_URL:-http://41.57.127.235}" || true
+fi
+
 # 13. Full-boot readiness (advisory unless PIPELINE_FULL_BOOT_BLOCKING=1)
 full_boot_blocking=0
 [[ "${PIPELINE_FULL_BOOT_BLOCKING:-0}" == "1" ]] && full_boot_blocking=1
