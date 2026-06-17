@@ -25,6 +25,14 @@ const nextConfig = {
     // Merged Experience tree; align lint cleanup in a follow-up pass.
     ignoreDuringBuilds: true,
   },
+  webpack: (config) => {
+    // DWV package "node" export breaks Next build; force browser bundle.
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      dwv: path.join(__dirname, "../node_modules/dwv/dist/dwv.min.js"),
+    };
+    return config;
+  },
   async rewrites() {
     const gateway =
       process.env.API_GATEWAY_URL ||

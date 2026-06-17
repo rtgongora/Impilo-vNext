@@ -15,11 +15,25 @@ import {
   Move,
   SunMedium,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useImagingViewerLaunchContext, useLaunchImagingViewer } from "@/hooks/queries/useImaging";
 import { apiClient } from "@/lib/api-client";
 import { applyWindowLevelToRgba, decodeNativeGrayscaleForWl } from "@/lib/dicom/nativeWindowLevel";
+import { resolveImagingViewerEngine } from "@/lib/imaging/resolveViewerEngine";
+
+const DwvNativeViewer = dynamic(
+  () => import("@/components/imaging/DwvNativeViewer").then((mod) => mod.DwvNativeViewer),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex min-h-[360px] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    ),
+  },
+);
 
 interface DicomwebTagBlock {
   Value?: unknown[];
@@ -58,14 +72,10 @@ export default function DicomViewerPage() {
     viewerType: requestedViewerType,
   });
   const sessionRecorded = useRef(false);
-  const resolvedViewerEngine = String(
-    (launchContextQ.data?.data as { viewerEngine?: string } | undefined)?.viewerEngine ??
-      requestedViewerType ??
-      "DICOMWEB_STACK",
-  )
-    .trim()
-    .toUpperCase();
+  const launchContextEngine = (launchContextQ.data?.data as { viewerEngine?: string } | undefined)?.viewerEngine;
+  const resolvedViewerEngine = resolveImagingViewerEngine(launchContextEngine, requestedViewerType);
   const useOhif = resolvedViewerEngine === "OHIF";
+  const useDwvNative = resolvedViewerEngine === "DWV_NATIVE";
   const ohifUrl = useMemo(() => {
     if (!useOhif || !ohifBaseUrl || !studyUid) return null;
     const normalizedBase = ohifBaseUrl.replace(/\/+$/, "");
@@ -407,6 +417,14 @@ export default function DicomViewerPage() {
             >
               OHIF
             </Link>
+            <Link
+              href={`/ehr/${encodeURIComponent(patientId)}/imaging/viewer?studyUid=${encodeURIComponent(
+                studyUid,
+              )}${governedStudyId ? `&governedStudyId=${encodeURIComponent(governedStudyId)}` : ""}&viewerType=DWV_NATIVE`}
+              className={`ml-2 rounded px-2 py-1 ${resolvedViewerEngine === "DWV_NATIVE" ? "bg-neutral-100 font-semibold" : "hover:bg-background"}`}
+            >
+              DWV_NATIVE
+            </Link>
           </div>
         )}
 
@@ -449,7 +467,98 @@ export default function DicomViewerPage() {
           </div>
         )}
 
-        {!useOhif && studyUid && !loadingSeries && !seriesError && (
+        {useDwvNative && studyUid && loadingSeries && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-5 w-5 animate-spin" /> Loading series for DWV viewer…
+          </div>
+        )}
+
+        {useDwvNative && studyUid && seriesError && (
+          <div className="rounded-2xl border border-danger/28 bg-danger-soft p-4 text-sm text-red-900">
+            Could not load DICOMweb series for DWV viewer. Ensure Orthanc is reachable and the study UID exists.
+          </div>
+        )}
+
+        {useDwvNative && studyUid && !loadingSeries && !seriesError && (
+          <div className="grid gap-4 xl:grid-cols-[240px_minmax(0,1fr)]">
+            <div className="rounded-2xl border border-border bg-card p-3 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Series</p>
+              <div className="mt-2 max-h-[70vh] space-y-1 overflow-y-auto">
+                {seriesList.map((s) => {
+                  const selected = s.seriesUid === activeSeriesUid;
+                  return (
+                    <button
+                      key={s.seriesUid}
+                      type="button"
+                      onClick={() => setActiveSeriesUid(s.seriesUid)}
+                      className={`w-full rounded-xl border px-2 py-2 text-left text-xs ${
+                        selected ? "border-impilo-400 bg-primary-soft" : "border-border hover:bg-background"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Monitor className="h-3.5 w-3.5 text-primary" />
+                        <span className="break-all font-mono text-[11px]">{s.seriesUid}</span>
+                      </div>
+                      <div className="mt-1 text-muted-foreground">
+                        {s.modality ?? "—"} {s.description ? `· ${s.description}` : ""}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="rounded-2xl border border-border bg-neutral-900 p-3 text-foreground">
+                <div className="mb-2 text-xs font-mono break-all opacity-90">Study {studyUid}</div>
+                {loadingInstances && (
+                  <div className="flex min-h-[360px] items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+                )}
+                {!loadingInstances && active?.sop && activeSeriesUid && (
+                  <>
+                    <DwvNativeViewer
+                      studyUid={studyUid}
+                      seriesUid={activeSeriesUid}
+                      sopInstanceUid={active.sop}
+                      className="min-h-[360px] rounded-xl"
+                    />
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={prevInstance}
+                        className="rounded-lg border border-slate-600 px-2 py-1 text-xs hover:bg-primary-hover"
+                        aria-label="Previous instance"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={nextInstance}
+                        className="rounded-lg border border-slate-600 px-2 py-1 text-xs hover:bg-primary-hover"
+                        aria-label="Next instance"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                      <span className="text-[11px] font-mono text-muted-foreground">
+                        Instance {instanceIx + 1} / {Math.max(1, instances.length)} · SOP {active.sop}
+                      </span>
+                    </div>
+                  </>
+                )}
+                {!loadingInstances && !active?.sop && (
+                  <div className="flex min-h-[360px] flex-col items-center justify-center gap-2 p-6 text-center text-sm text-muted-foreground">
+                    <ImageIcon className="h-10 w-10 opacity-50" />
+                    No DICOM instance available for DWV viewer in this series.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {!useOhif && !useDwvNative && studyUid && !loadingSeries && !seriesError && (
           <div className="grid gap-4 xl:grid-cols-[240px_minmax(0,1fr)]">
             <div className="rounded-2xl border border-border bg-card p-3 shadow-sm">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Series</p>
