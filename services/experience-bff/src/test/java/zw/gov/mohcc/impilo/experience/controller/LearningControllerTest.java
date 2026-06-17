@@ -39,6 +39,18 @@ class LearningControllerTest {
         assertEquals(200, response.getStatusCode().value());
     }
 
+    @Test
+    void v11MetadataLanguages_returnsProxyEnvelope() {
+        LearningController controller = new LearningController(
+                new StubLearningClient(),
+                new StubNotificationClient(),
+                new RestTemplate(),
+                "http://localhost:8265");
+        ResponseEntity<Map<String, Object>> response = controller.v11MetadataLanguages("tenant-1");
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(true, response.getBody().containsKey("data"));
+    }
+
     private static final class StubLearningClient extends LearningServiceClient {
         private static final ObjectMapper mapper = new ObjectMapper();
 
@@ -48,6 +60,14 @@ class LearningControllerTest {
 
         @Override
         public JsonNode getV11(String relativePath, Map<String, Object> queryParams) {
+            if ("metadata/languages".equals(relativePath)) {
+                return mapper.createObjectNode()
+                        .set("items", mapper.createArrayNode()
+                                .add(mapper.createObjectNode()
+                                        .put("code", "en")
+                                        .put("label", "English")
+                                        .put("nativeLabel", "English")));
+            }
             return mapper.createObjectNode().put("status", "OK");
         }
 

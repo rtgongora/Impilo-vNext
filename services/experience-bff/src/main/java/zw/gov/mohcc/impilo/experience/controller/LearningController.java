@@ -129,6 +129,20 @@ public class LearningController {
                 "data", f.objectNode().put("limit", limit).set("items", f.arrayNode())));
     }
 
+    /**
+     * Fundo language metadata — passthrough to {@code learning-service}
+     * {@code GET /internal/v1/learning/v11/metadata/languages}. Returns
+     * {@code {"data":{"items":[...]}}} for {@code useFundoLanguageOptions()}.
+     */
+    @GetMapping("/v11/metadata/languages")
+    public ResponseEntity<Map<String, Object>> v11MetadataLanguages(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId) {
+        JsonNode n = learningClient.getV11("metadata/languages", Map.of());
+        JsonNodeFactory f = JsonNodeFactory.instance;
+        return ResponseEntity.ok(Map.of(
+                "data", n != null ? n : f.objectNode().set("items", f.arrayNode())));
+    }
+
     @GetMapping("/v11/catalog/{courseId}")
     public ResponseEntity<Map<String, Object>> v11Course(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
