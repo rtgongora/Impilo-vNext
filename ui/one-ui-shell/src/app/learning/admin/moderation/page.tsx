@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useFundoCourseAssessments } from "@/hooks/queries/useFundoLms";
 import { useState } from "react";
@@ -18,7 +17,6 @@ export default function LearningModerationPage() {
   );
 
   return (
-    <AppLayout>
       <PageShell title="Assessment moderation" subtitle="Review pending free-text attempts and score objective items in authoring.">
         <div className="mb-4 rounded border border-warning/35 bg-warning-soft p-3 text-sm text-warning-foreground">
           Objective MCQ/TF attempts auto-score. Free-text responses appear in each assessment&apos;s edit screen pending-review queue.
@@ -60,6 +58,5 @@ export default function LearningModerationPage() {
           </Link>
         </p>
       </PageShell>
-    </AppLayout>
   );
 }

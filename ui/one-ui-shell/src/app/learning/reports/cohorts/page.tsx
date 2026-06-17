@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useFundoReportFiltered } from "@/hooks/queries/useFundoLms";
 
@@ -11,7 +10,6 @@ export default function CohortReportPage() {
   const { data } = useFundoReportFiltered("cohort-completions", { pathwayId, courseId, limit: 100 });
   const items = (((data?.data as Record<string, unknown>)?.items as Array<Record<string, unknown>>) ?? []).filter(Boolean);
   return (
-    <AppLayout>
       <PageShell title="Cohort completions" subtitle="Completion and certificate metrics by cohort/course.">
         <div className="mb-3 grid gap-2 rounded border border-border bg-card p-3 sm:grid-cols-2">
           <input value={pathwayId} onChange={(e) => setPathwayId(e.target.value)} placeholder="Filter pathway ID" className="rounded border border-border px-2 py-1 text-sm" />
@@ -45,6 +43,5 @@ export default function CohortReportPage() {
           </table>
         </div>
       </PageShell>
-    </AppLayout>
   );
 }

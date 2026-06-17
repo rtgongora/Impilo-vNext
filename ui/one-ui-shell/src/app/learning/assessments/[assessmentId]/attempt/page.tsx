@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useLearningSubject } from "@/components/learning/LearningSubjectPicker";
 import { useFundoAssessment, useSubmitFundoAttempt } from "@/hooks/queries/useFundoLms";
@@ -49,7 +48,6 @@ export default function AssessmentAttemptPage() {
   }
 
   return (
-    <AppLayout>
       <PageShell title="Assessment attempt" subtitle={`Objective questions: ${objectiveCount} • non-objective answers remain pending/manual.`}>
         {attemptLimit > 0 ? (
           <p className="mb-3 text-xs text-muted-foreground">Maximum attempts allowed: {attemptLimit}</p>
@@ -106,6 +104,5 @@ export default function AssessmentAttemptPage() {
           </Link>
         ) : null}
       </PageShell>
-    </AppLayout>
   );
 }

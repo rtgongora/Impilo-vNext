@@ -1,6 +1,5 @@
 "use client";
 
-import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useLearningSubject } from "@/components/learning/LearningSubjectPicker";
 import { useFundoLearningRecord } from "@/hooks/queries/useFundoLms";
@@ -14,7 +13,6 @@ export default function LearningRecordPage() {
   const certificates = ((record.certificates as Array<Record<string, unknown>>) ?? []).filter(Boolean);
 
   return (
-    <AppLayout>
       <PageShell title="Learning record / transcript" subtitle="Native Fundo learner transcript including completions, assessments and certificates.">
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="rounded border border-border bg-card p-3">
@@ -40,6 +38,5 @@ export default function LearningRecordPage() {
           </ul>
         </div>
       </PageShell>
-    </AppLayout>
   );
 }

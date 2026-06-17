@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useFundoPendingReviews, useFundoReportFiltered } from "@/hooks/queries/useFundoLms";
 
@@ -14,7 +13,6 @@ export default function AssessmentPerformanceReportPage() {
   const items = (((data?.data as Record<string, unknown>)?.items as Array<Record<string, unknown>>) ?? []).filter(Boolean);
   const pendingItems = ((((pendingData?.data as Record<string, unknown>)?.items as Array<Record<string, unknown>>) ?? []).filter(Boolean));
   return (
-    <AppLayout>
       <PageShell title="Assessment performance" subtitle="Attempt volumes, pass rate and scoring indicators by assessment.">
         <div className="mb-3 grid gap-2 rounded border border-border bg-card p-3 sm:grid-cols-3">
           <input value={courseId} onChange={(e) => setCourseId(e.target.value)} placeholder="Course ID" className="rounded border border-border px-2 py-1 text-sm" />
@@ -64,6 +62,5 @@ export default function AssessmentPerformanceReportPage() {
           </div>
         ) : null}
       </PageShell>
-    </AppLayout>
   );
 }

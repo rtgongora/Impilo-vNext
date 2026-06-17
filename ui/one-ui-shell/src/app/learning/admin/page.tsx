@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 
 export default function LearningAdminHomePage() {
@@ -13,7 +12,6 @@ export default function LearningAdminHomePage() {
     ["/learning/library/uploads", "Content uploads"],
   ];
   return (
-    <AppLayout>
       <PageShell title="Fundo authoring admin" subtitle="Native authoring shell for courses, pathways and assessments.">
         <div className="flex flex-wrap gap-2">
           {links.map(([href, label]) => (
@@ -23,6 +21,5 @@ export default function LearningAdminHomePage() {
           ))}
         </div>
       </PageShell>
-    </AppLayout>
   );
 }

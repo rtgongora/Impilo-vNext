@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { apiClient } from "@/lib/api-client";
 import { useFundoCourseStructure } from "@/hooks/queries/useFundoCatalog";
@@ -76,7 +75,6 @@ export default function EditCoursePage() {
   }
 
   return (
-    <AppLayout>
       <PageShell title="Edit course" subtitle="Update course metadata and publish/archive status.">
         <div className="max-w-xl space-y-2 rounded border border-border bg-card p-4">
           <input className="w-full rounded border border-border px-2 py-1 text-sm" placeholder="Updated title" value={title} onChange={(e) => setTitle(e.target.value)} />
@@ -135,6 +133,5 @@ export default function EditCoursePage() {
           </div>
         </div>
       </PageShell>
-    </AppLayout>
   );
 }

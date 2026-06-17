@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useFundoPathways } from "@/hooks/queries/useFundoLms";
 
@@ -9,7 +8,6 @@ export default function AdminPathwaysPage() {
   const { data } = useFundoPathways();
   const items = (((data?.data as Record<string, unknown>)?.items as Array<Record<string, unknown>>) ?? []).filter(Boolean);
   return (
-    <AppLayout>
       <PageShell title="Admin pathways" subtitle="Create and maintain ordered pathway structures.">
         <Link href="/learning/admin/pathways/new" className="text-sm text-teal-700 hover:underline">New pathway</Link>
         <ul className="mt-3 space-y-2">
@@ -21,6 +19,5 @@ export default function AdminPathwaysPage() {
           ))}
         </ul>
       </PageShell>
-    </AppLayout>
   );
 }

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { PlusCircle } from "lucide-react";
 import { FundoStudioWorkspace } from "@/components/learning/FundoStudioWorkspace";
 import { useFundoCatalog } from "@/hooks/queries/useFundoCatalog";
 
@@ -23,12 +24,20 @@ export default function FundoStudioCoursesPage() {
 
   return (
     <FundoStudioWorkspace title="Studio Courses" subtitle="Create course outlines, structure modules/lessons, and open the block builder.">
-      <div className="mb-3">
-        <Link href="/learning/studio/courses/new" className="rounded border border-teal-500 px-3 py-1.5 text-sm text-teal-700">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-300 bg-gradient-to-r from-amber-50 to-white px-3 py-2">
+        <div>
+          <p className="text-sm font-semibold text-foreground">Course authoring</p>
+          <p className="text-xs text-muted-foreground">Create a draft course, then add modules, lessons, assessments, surveys, and media.</p>
+        </div>
+        <Link
+          href="/learning/studio/courses/new"
+          className="inline-flex items-center gap-2 rounded-lg border border-amber-500 bg-gradient-to-br from-amber-400 to-amber-500 px-3 py-2 text-sm font-semibold text-[color:var(--on-yellow)] shadow-sm transition hover:from-amber-500 hover:to-amber-600"
+        >
+          <PlusCircle className="h-4 w-4" />
           New course
         </Link>
       </div>
-      <div className="mb-3 grid gap-2 rounded border border-border bg-card p-3 md:grid-cols-2">
+      <div className="mb-3 grid gap-2 rounded-lg border border-border bg-card p-3 md:grid-cols-2">
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}

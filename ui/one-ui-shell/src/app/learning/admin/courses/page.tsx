@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useFundoCatalog } from "@/hooks/queries/useFundoCatalog";
 
@@ -9,7 +8,6 @@ export default function AdminCoursesPage() {
   const { data } = useFundoCatalog({ limit: 100 });
   const items = data?.data?.items ?? [];
   return (
-    <AppLayout>
       <PageShell title="Admin courses" subtitle="Create/edit/publish native Fundo courses.">
         <Link href="/learning/admin/courses/new" className="text-sm text-teal-700 hover:underline">
           New course
@@ -25,6 +23,5 @@ export default function AdminCoursesPage() {
           ))}
         </ul>
       </PageShell>
-    </AppLayout>
   );
 }

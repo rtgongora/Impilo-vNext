@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useFundoPathways } from "@/hooks/queries/useFundoLms";
 
@@ -10,7 +9,6 @@ export default function PathwaysPage() {
   const items = (((data?.data as Record<string, unknown>)?.items as Array<Record<string, unknown>>) ?? []).filter(Boolean);
 
   return (
-    <AppLayout>
       <PageShell title="Pathways" subtitle="Available and assigned pathways with ordered learning sequences.">
         {isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : null}
         <ul className="space-y-2">
@@ -24,6 +22,5 @@ export default function PathwaysPage() {
           ))}
         </ul>
       </PageShell>
-    </AppLayout>
   );
 }

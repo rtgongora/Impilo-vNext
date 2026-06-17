@@ -54,6 +54,14 @@ vi.mock("@/hooks/queries/useFundoCatalog", () => ({
   useFundoCatalog: () => catalogState,
 }));
 
+vi.mock("@/hooks/queries/useFundoLms", () => ({
+  useFundoLanguageOptions: () => ({
+    data: { data: { items: [{ code: "en", label: "English" }] } },
+    isLoading: false,
+    isError: false,
+  }),
+}));
+
 function setState(state: Partial<typeof catalogState>) {
   Object.assign(catalogState, state);
 }

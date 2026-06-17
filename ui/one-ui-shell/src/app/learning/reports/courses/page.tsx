@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useFundoReportFiltered } from "@/hooks/queries/useFundoLms";
 
@@ -12,7 +11,6 @@ export default function CourseCompletionReportPage() {
   const { data } = useFundoReportFiltered("course-completions", { courseId, subjectType, status, limit: 100 });
   const items = (((data?.data as Record<string, unknown>)?.items as Array<Record<string, unknown>>) ?? []).filter(Boolean);
   return (
-    <AppLayout>
       <PageShell title="Course completions" subtitle="Completion rates and active/completed enrolments by course.">
         <div className="mb-3 grid gap-2 rounded border border-border bg-card p-3 sm:grid-cols-3">
           <input value={courseId} onChange={(e) => setCourseId(e.target.value)} placeholder="Course ID" className="rounded border border-border px-2 py-1 text-sm" />
@@ -49,6 +47,5 @@ export default function CourseCompletionReportPage() {
           </table>
         </div>
       </PageShell>
-    </AppLayout>
   );
 }

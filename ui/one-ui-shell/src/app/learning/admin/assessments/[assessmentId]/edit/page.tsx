@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { apiClient } from "@/lib/api-client";
 import { useFundoAssessment, useFundoPendingReviews, useManualReviewFundoAttempt } from "@/hooks/queries/useFundoLms";
@@ -90,7 +89,6 @@ export default function EditAssessmentPage() {
   }
 
   return (
-    <AppLayout>
       <PageShell title="Edit assessment" subtitle="Update native assessment metadata.">
         <div className="max-w-xl space-y-2 rounded border border-border bg-card p-4">
           <input className="w-full rounded border border-border px-2 py-1 text-sm" placeholder="Assessment title" value={title} onChange={(e) => setTitle(e.target.value)} />
@@ -149,6 +147,5 @@ export default function EditAssessmentPage() {
           </ul>
         </div>
       </PageShell>
-    </AppLayout>
   );
 }

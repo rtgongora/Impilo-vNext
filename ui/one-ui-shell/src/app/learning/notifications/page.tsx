@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useLearningSubject } from "@/components/learning/LearningSubjectPicker";
 import { useFundoNotifications, useScheduleLearningNotification } from "@/hooks/queries/useFundoStudio";
@@ -31,7 +30,6 @@ export default function LearningNotificationsPage() {
   const items = ((data?.data as { items?: Array<{ id: string; title: string; eventCode?: string; status?: string }> } | undefined)?.items ?? []);
 
   return (
-    <AppLayout>
       <PageShell title="Learning Notifications" subtitle="Comms Hub-aligned notification scheduling for learning reminders and outcomes.">
         <div className="rounded border border-border bg-card p-4">
           <div className="grid gap-2 md:grid-cols-3">
@@ -50,6 +48,5 @@ export default function LearningNotificationsPage() {
           ))}
         </ul>
       </PageShell>
-    </AppLayout>
   );
 }

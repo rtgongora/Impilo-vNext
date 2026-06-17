@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { FundoContentFormatsGuide } from "@/components/learning/FundoContentFormatsGuide";
 import { useCreateLibraryResource } from "@/hooks/queries/useFundoStudio";
@@ -45,7 +44,6 @@ export default function LearningLibraryUploadsPage() {
   }
 
   return (
-    <AppLayout>
       <PageShell title="Library Uploads" subtitle="Register governed learning assets by format — metadata and HTTPS reference URL.">
         <FundoContentFormatsGuide />
         <div className="rounded border border-border bg-card p-4" data-testid="fundo-library-upload-form">
@@ -98,6 +96,5 @@ export default function LearningLibraryUploadsPage() {
           ) : null}
         </div>
       </PageShell>
-    </AppLayout>
   );
 }

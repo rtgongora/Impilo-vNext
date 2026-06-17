@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useFundoLibraryResources } from "@/hooks/queries/useFundoStudio";
 
@@ -9,7 +8,6 @@ export default function LearningLibraryResourcesPage() {
   const { data } = useFundoLibraryResources(100);
   const items = ((data?.data as { items?: Array<{ id: string; title: string; resourceType?: string; reviewStatus?: string }> } | undefined)?.items ?? []);
   return (
-    <AppLayout>
       <PageShell title="Library Resources" subtitle="Curated Fundo resources with review status and source attribution.">
         <ul className="space-y-2">
           {items.map((item) => (
@@ -20,6 +18,5 @@ export default function LearningLibraryResourcesPage() {
           ))}
         </ul>
       </PageShell>
-    </AppLayout>
   );
 }

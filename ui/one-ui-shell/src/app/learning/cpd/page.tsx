@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useLearningSubject } from "@/components/learning/LearningSubjectPicker";
 import { useFundoCpdEvidence } from "@/hooks/queries/useFundoLms";
@@ -20,7 +19,6 @@ export default function CpdEvidencePage() {
   const providerId = user?.providerId ?? "";
 
   return (
-    <AppLayout>
       <PageShell
         title="CPD evidence"
         subtitle="Fundo provides evidence and completion artifacts; council acceptance and ledger authority remain in Varapi."
@@ -60,6 +58,5 @@ export default function CpdEvidencePage() {
           {evidence.length === 0 ? <p className="text-sm text-muted-foreground">No CPD evidence yet.</p> : null}
         </ul>
       </PageShell>
-    </AppLayout>
   );
 }

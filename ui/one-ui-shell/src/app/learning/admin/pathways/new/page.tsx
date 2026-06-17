@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { apiClient } from "@/lib/api-client";
 
@@ -34,7 +33,6 @@ export default function NewPathwayPage() {
   }
 
   return (
-    <AppLayout>
       <PageShell title="New pathway" subtitle="Basic native pathway authoring.">
         <div className="max-w-xl space-y-2 rounded border border-border bg-card p-4">
           <input className="w-full rounded border border-border px-2 py-1 text-sm" placeholder="Pathway code" value={code} onChange={(e) => setCode(e.target.value)} />
@@ -55,6 +53,5 @@ export default function NewPathwayPage() {
           ) : null}
         </div>
       </PageShell>
-    </AppLayout>
   );
 }

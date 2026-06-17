@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { apiClient } from "@/lib/api-client";
 import { useFundoPathway } from "@/hooks/queries/useFundoLms";
@@ -45,7 +44,6 @@ export default function EditPathwayPage() {
   }
 
   return (
-    <AppLayout>
       <PageShell title="Edit pathway" subtitle="Update pathway metadata and publish state.">
         <div className="max-w-xl space-y-2 rounded border border-border bg-card p-4">
           <input className="w-full rounded border border-border px-2 py-1 text-sm" placeholder="Pathway title" value={title} onChange={(e) => setTitle(e.target.value)} />
@@ -78,6 +76,5 @@ export default function EditPathwayPage() {
           </ul>
         </div>
       </PageShell>
-    </AppLayout>
   );
 }

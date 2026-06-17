@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useLearningSubject } from "@/components/learning/LearningSubjectPicker";
 import { useFundoAssessment, useFundoAssessmentAttempts } from "@/hooks/queries/useFundoLms";
@@ -21,7 +20,6 @@ export default function AssessmentPage() {
   const canAttempt = remaining === null || remaining > 0;
 
   return (
-    <AppLayout>
       <PageShell title={String(assessment.title ?? "Assessment")} subtitle="Assessment detail and question preview.">
         <div className="mb-3 flex items-center justify-between gap-4 rounded border border-border bg-card p-3">
           <div className="text-sm">
@@ -58,6 +56,5 @@ export default function AssessmentPage() {
           </div>
         ) : null}
       </PageShell>
-    </AppLayout>
   );
 }

@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useLearningSubject } from "@/components/learning/LearningSubjectPicker";
 import { useFundoInteractiveActivities, useSubmitInteractiveResponse } from "@/hooks/queries/useFundoStudio";
@@ -33,7 +32,6 @@ export default function LearningSurveyRespondPage({ params }: { params: { survey
   }
 
   return (
-    <AppLayout>
       <PageShell title="Respond to Survey" subtitle="Non-scored survey and feedback capture via Fundo interactive activities.">
         <div className="mb-3 rounded-lg border border-info/25 bg-info-soft p-3 text-sm text-primary-hover">
           Responses are stored as learning feedback evidence. They do not auto-award CPD credits.
@@ -74,6 +72,5 @@ export default function LearningSurveyRespondPage({ params }: { params: { survey
           ) : null}
         </div>
       </PageShell>
-    </AppLayout>
   );
 }

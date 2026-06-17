@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useFundoPathway } from "@/hooks/queries/useFundoLms";
 
@@ -14,7 +13,6 @@ export default function PathwayDetailPage() {
   const items = (pathway.items as Array<Record<string, unknown>> | undefined) ?? [];
 
   return (
-    <AppLayout>
       <PageShell title={String(pathway.title ?? "Pathway")} subtitle="Ordered courses and prerequisites.">
         <ul className="space-y-2">
           {items.map((it) => (
@@ -31,6 +29,5 @@ export default function PathwayDetailPage() {
           ))}
         </ul>
       </PageShell>
-    </AppLayout>
   );
 }

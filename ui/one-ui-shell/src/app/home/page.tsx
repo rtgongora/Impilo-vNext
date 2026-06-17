@@ -19,7 +19,7 @@ import {
   ChevronRight, Video, ShoppingCart, Database, AlertTriangle,
   Briefcase, Heart, Globe, Siren, Award, User, ShieldCheck, UserCog, Droplet,
   MessageSquare, Radio, TestTube2, Scan, Phone, Send, ThumbsUp, MessageCircle, GraduationCap,
-  Wifi, Wrench, Layers, QrCode, FlaskConical, FileCheck, Clipboard, Play, LayoutGrid, BedDouble, Wallet,
+  Wifi, Wrench, Layers, FlaskConical, FileCheck, Clipboard, Play, LayoutGrid, BedDouble, Wallet,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { ModuleCardIcon } from "@/components/branding/ModuleCardIcon";
@@ -30,6 +30,7 @@ import {
   HomeRecentFromShell,
   HomeSearchCommandPrompt,
 } from "@/components/home/HomeShellDiscovery";
+import { CitizenQuickAccessRail } from "@/components/home/CitizenQuickAccessRail";
 import { WorkplaceSelectionHub } from "@/components/home/WorkplaceSelectionHub";
 import { PageShell } from "@/components/PageShell";
 import { useAuthStore, type AuthUser } from "@/hooks/useAuthStore";
@@ -1981,100 +1982,7 @@ function CitizenHome({
       <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr_260px] gap-5">
 
         {/* ════ LEFT COLUMN — Quick nav ════ */}
-        <aside className="hidden lg:block space-y-4">
-          {/* Health ID QR - always visible */}
-          <Link href="/citizen/health-id/qr"
-            className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-br from-primary-soft to-impilo-100 border border-primary/25 hover:border-impilo-300 transition-colors">
-            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-              <QrCode className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-primary-hover">My Health ID</p>
-              <p className="text-[11px] text-primary">Tap to show QR</p>
-            </div>
-          </Link>
-
-          {/* My Health shortcuts with badges */}
-          <nav className="space-y-0.5">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-2 mb-1">My Health</p>
-            {[
-              { href: "/home/profile", label: "Profile", icon: User, badge: null },
-              { href: "/home/medications", label: "Medications", icon: Pill, badge: null },
-              { href: "/home/documents", label: "Documents", icon: FileText, badge: null },
-              { href: "/home/bookings", label: "My Bookings", icon: Calendar, badge: null },
-              { href: "/home/appointments", label: "My Appointments", icon: Calendar, badge: null },
-              { href: "/madi/donor", label: "Blood donation", icon: Droplet, badge: null },
-              { href: "/monitoring", label: "Monitoring", icon: Activity, badge: null },
-            ].map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link key={item.href} href={item.href}
-                  className="flex items-center justify-between px-2 py-2 rounded-lg text-sm text-foreground hover:bg-neutral-100 transition-colors">
-                  <div className="flex items-center gap-2.5">
-                    <Icon className="w-4 h-4 text-muted-foreground" />
-                    {item.label}
-                  </div>
-                  {item.badge && (
-                    <span className="px-1.5 py-0.5 text-[10px] font-medium bg-amber-100 text-warning-foreground rounded-full">
-                      {item.badge}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
-          </nav>
-
-          <hr className="border-border" />
-
-          {/* My Care */}
-          <nav className="space-y-0.5">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-2 mb-1">My Care</p>
-            {[
-              { href: "/home/care-team", label: "Care Team", icon: Users, badge: null },
-              { href: "/coverage", label: "Coverage", icon: Shield, badge: null },
-              { href: "/home/referrals", label: "Referrals", icon: ArrowRight, badge: null },
-            ].map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link key={item.href} href={item.href}
-                  className="flex items-center justify-between px-2 py-2 rounded-lg text-sm text-foreground hover:bg-neutral-100 transition-colors">
-                  <div className="flex items-center gap-2.5">
-                    <Icon className="w-4 h-4 text-muted-foreground" />
-                    {item.label}
-                  </div>
-                  {item.badge && (
-                    <span className="px-1.5 py-0.5 text-[10px] font-medium bg-amber-100 text-warning-foreground rounded-full">
-                      {item.badge}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
-          </nav>
-
-          <hr className="border-border" />
-
-          {/* Explore */}
-          <nav className="space-y-0.5">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-2 mb-1">Explore</p>
-            {[
-              { href: "/wellness", label: "Wellness", icon: Heart, badge: null },
-              { href: "/discover", label: "Find services", icon: Globe, badge: null },
-              { href: "/marketplace", label: "Marketplace", icon: ShoppingCart, badge: null },
-              { href: "/caregiving", label: "Caregiving", icon: Users, badge: null },
-              { href: "/wallet", label: "My Wallet", icon: Award, badge: null },
-            ].map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link key={item.href} href={item.href}
-                  className="flex items-center gap-2.5 px-2 py-2 rounded-lg text-sm text-foreground hover:bg-neutral-100 transition-colors">
-                  <Icon className="w-4 h-4 text-muted-foreground" />
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-        </aside>
+        <CitizenQuickAccessRail className="hidden lg:block" />
 
         {/* ════ CENTRE COLUMN — Timeline ════ */}
         <main className="min-w-0 space-y-4">

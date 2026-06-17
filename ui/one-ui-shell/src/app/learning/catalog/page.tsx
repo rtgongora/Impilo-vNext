@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, BookOpenCheck, GraduationCap, Clock, BadgeCheck, CheckCircle2 } from "lucide-react";
-import { AppLayout } from "@/components/AppLayout";
+import { ArrowLeft, BookOpenCheck, Clock, BadgeCheck, CheckCircle2 } from "lucide-react";
 import { PageShell } from "@/components/PageShell";
 import {
   useFundoCatalog,
   type FundoCourseSummary,
 } from "@/hooks/queries/useFundoCatalog";
+import { useFundoLanguageOptions } from "@/hooks/queries/useFundoLms";
 
 /**
  * Phase 6B — live Impilo Fundo catalogue browse page.
@@ -27,6 +27,8 @@ export default function LearningCataloguePage() {
   const [language, setLanguage] = useState<string>("");
   const [cpdOnly, setCpdOnly] = useState<boolean>(false);
   const [mandatoryOnly, setMandatoryOnly] = useState<boolean>(false);
+  const { data: languageData } = useFundoLanguageOptions();
+  const languages = languageData?.data?.items ?? [];
 
   const { data, isLoading, isError } = useFundoCatalog({
     status: status || undefined,
@@ -45,7 +47,6 @@ export default function LearningCataloguePage() {
   });
 
   return (
-    <AppLayout>
       <PageShell
         title="Impilo Fundo Catalogue"
         subtitle="Browse native Impilo Fundo learning resources, pathways and CPD-eligible courses."
@@ -109,14 +110,19 @@ export default function LearningCataloguePage() {
           </label>
           <label className="flex items-center gap-2 text-sm text-foreground">
             <span className="font-medium text-foreground">Language</span>
-            <input
-              type="text"
+            <select
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
-              placeholder="e.g. en"
               className="rounded border border-border px-2 py-1 text-sm"
               aria-label="Filter by language"
-            />
+            >
+              <option value="">All languages</option>
+              {languages.map((option) => (
+                <option key={option.code} value={option.code}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </label>
           <label className="inline-flex items-center gap-2 text-sm text-foreground">
             <input
@@ -207,6 +213,5 @@ export default function LearningCataloguePage() {
           </ul>
         ) : null}
       </PageShell>
-    </AppLayout>
   );
 }
