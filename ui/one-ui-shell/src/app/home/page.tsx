@@ -31,7 +31,9 @@ import {
   HomeSearchCommandPrompt,
 } from "@/components/home/HomeShellDiscovery";
 import { CitizenQuickAccessRail } from "@/components/home/CitizenQuickAccessRail";
+import { ExpandableWorkCategoryCard } from "@/components/home/ExpandableWorkCategoryCard";
 import { WorkplaceSelectionHub } from "@/components/home/WorkplaceSelectionHub";
+import { getModuleCategories } from "@/data/workSurfaceModules";
 import { PageShell } from "@/components/PageShell";
 import { useAuthStore, type AuthUser } from "@/hooks/useAuthStore";
 import { useOperationalContextStore } from "@/hooks/useOperationalContextStore";
@@ -56,28 +58,6 @@ import { getAppointmentStatus, getAppointmentTime, getAppointmentType, getAppoin
 import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
 import { useIdentityContext } from "@/hooks/useIdentityContext";
 import { WORKER_ACCESS_LABELS } from "@/lib/identity-context";
-
-// ── Module category types ────────────────────────────────────────
-interface ModuleItem {
-  label: string;
-  description: string;
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
-  color: string;
-  serviceSlug?: string;
-  requiresClinical?: boolean;
-  requiresAdmin?: boolean;
-  requiresFinance?: boolean;
-  requiresDispenser?: boolean;
-}
-
-interface ModuleCategory {
-  id: string;
-  title: string;
-  icon: React.ComponentType<{ className?: string }>;
-  color: string;
-  modules: ModuleItem[];
-}
 
 interface WorkerLaunchAction {
   label: string;
@@ -161,250 +141,6 @@ function getOperatingSignals(model?: FacilityOperatingModel): OperatingSignal[] 
         }
       : null,
   ].filter((signal): signal is OperatingSignal => signal !== null);
-}
-
-// ── Module categories (aligned to Lovable ExpandableCategoryCards) ──
-function getModuleCategories(roles: {
-  isClinical: boolean; isAdmin: boolean; isFinance: boolean; isDispenser: boolean;
-}): ModuleCategory[] {
-  const cats: ModuleCategory[] = [];
-
-  if (roles.isClinical || roles.isDispenser) {
-    cats.push({
-      id: "clinical",
-      title: "Clinical Care & Orders",
-      icon: Stethoscope,
-      color: "bg-primary",
-      modules: [
-        ...(roles.isClinical ? [
-          { label: "Clinical Hub", description: "All 10 clinical modules", href: "/clinical", icon: Stethoscope, color: "bg-primary-soft text-primary" },
-          { label: "Queues & Wards", description: "Intake, triage, waiting, and ward status", href: "/queue", icon: Users, color: "bg-orange-100 text-orange-600" },
-          { label: "Walk-in Registration", description: "Register a patient directly into queue flow", href: "/queue/walk-in", icon: Users, color: "bg-amber-100 text-amber-600" },
-          { label: "Bookings & Appointments", description: "Scheduling, waitlist, and planned arrivals", href: "/scheduling", icon: Calendar, color: "bg-cyan-100 text-cyan-600" },
-          { label: "Referrals", description: "Telemedicine and referral coordination", href: "/telemedicine", icon: Video, color: "bg-teal-100 text-teal-600" },
-          { label: "Laboratory (LIMS)", description: "Select a chart, then continue into orders and results", href: "/queue/search?workflow=lims", icon: TestTube2, color: "bg-violet-100 text-violet-700" },
-          { label: "Imaging (PACS)", description: "Select a chart, then continue into imaging review", href: "/queue/search?workflow=pacs", icon: Scan, color: "bg-rose-100 text-danger" },
-        ] : []),
-        ...(roles.isClinical || roles.isDispenser ? [
-          { label: "Pharmacy & Rx", description: "Prescriptions, dispensing, and stock follow-through", href: "/pharmacy", icon: Pill, color: "bg-green-100 text-green-600" },
-        ] : []),
-      ],
-    });
-  }
-
-  if (roles.isClinical || roles.isAdmin) {
-    cats.push({
-      id: "facility-ops",
-      title: "Facility Operations",
-      icon: Clock,
-      color: "bg-rose-500",
-      modules: [
-        ...(roles.isClinical ? [
-          { label: "Shift Handoff", description: "Care continuity reports", href: "/shift/handover", icon: Clock, color: "bg-amber-100 text-amber-600" },
-        ] : []),
-        { label: "Control Tower", description: "Real-time facility operations", href: "/clinical/control-tower", icon: BarChart3, color: "bg-rose-100 text-rose-600" },
-        { label: "Operations & Roster", description: "Shifts, roster, and workforce visibility", href: "/shift", icon: Clock, color: "bg-cyan-100 text-cyan-600" },
-        { label: "Communication Hub", description: "Messages, pages, and calls", href: "/communication", icon: MessageSquare, color: "bg-primary-soft text-primary" },
-        { label: "Provider Noticeboard", description: "Announcements and staffing updates", href: "/scheduling/noticeboard", icon: ClipboardList, color: "bg-purple-100 text-purple-600" },
-        ...(roles.isAdmin ? [
-          { label: "Omnichannel Hub", description: "SMS, callbacks, disclosure, and access channels", href: "/omnichannel", icon: Radio, color: "bg-teal-100 text-teal-600" },
-        ] : []),
-      ],
-    });
-  }
-
-  if (roles.isFinance) {
-    cats.push({
-      id: "finance",
-      title: "Finance & Billing",
-      icon: Receipt,
-      color: "bg-emerald-500",
-      modules: [
-        { label: "Billing", description: "Bills & invoices", href: "/finance/billing", icon: FileText, color: "bg-primary-soft text-primary" },
-        { label: "Payments", description: "Payment tracking", href: "/finance/payments", icon: Receipt, color: "bg-green-100 text-green-600" },
-        { label: "Claims", description: "Insurance claims", href: "/finance/claims", icon: ClipboardList, color: "bg-purple-100 text-purple-600" },
-        { label: "Tariffs", description: "Tariff schedules", href: "/finance/tariffs", icon: BarChart3, color: "bg-amber-100 text-amber-600" },
-      ],
-    });
-  }
-
-  cats.push({
-    id: "registry",
-    title: "Registries & Reference",
-    icon: Database,
-    color: "bg-indigo-500",
-    modules: [
-      { label: "Providers", description: "Provider registry", href: "/registry/providers", icon: Stethoscope, color: "bg-teal-100 text-teal-600", serviceSlug: "varapi" },
-      { label: "Facilities", description: "Facility registry", href: "/registry/facilities", icon: Building2, color: "bg-purple-100 text-purple-600", serviceSlug: "tuso" },
-      { label: "Products", description: "Product catalogue", href: "/registry/products", icon: Package, color: "bg-orange-100 text-orange-600", serviceSlug: "msika" },
-      { label: "Terminology", description: "ICD, SNOMED, LOINC", href: "/registry/terminology", icon: BookOpen, color: "bg-primary-soft text-primary", serviceSlug: "zibo" },
-    ],
-  });
-
-  if (roles.isAdmin) {
-    cats.push({
-      id: "identity",
-      title: "Identity Services",
-      icon: Shield,
-      color: "bg-indigo-500",
-      modules: [
-        { label: "ID Services Hub", description: "Generate, validate & recover IDs", href: "/id-services", icon: Shield, color: "bg-indigo-100 text-indigo-600" },
-        { label: "Patient PHID", description: "Generate patient health IDs", href: "/id-services?tab=generate", icon: Users, color: "bg-primary-soft text-primary" },
-        { label: "Provider ID", description: "Healthcare worker IDs", href: "/id-services?tab=generate", icon: Stethoscope, color: "bg-teal-100 text-teal-600" },
-        { label: "ID Validation", description: "Verify ID authenticity", href: "/id-services?tab=validate", icon: Shield, color: "bg-green-100 text-green-600" },
-        { label: "ID Recovery", description: "Recover lost IDs", href: "/id-services?tab=recovery", icon: Shield, color: "bg-amber-100 text-amber-600" },
-      ],
-    });
-  }
-
-  if (roles.isAdmin) {
-    cats.push({
-      id: "public-health",
-      title: "Public Health",
-      icon: Shield,
-      color: "bg-amber-600",
-      modules: [
-        { label: "PH Operations", description: "Surveillance & response hub", href: "/public-health", icon: Shield, color: "bg-amber-100 text-amber-600" },
-        { label: "Surveillance", description: "Disease surveillance & eIDSR", href: "/public-health?tab=surveillance", icon: Shield, color: "bg-red-100 text-red-600" },
-        { label: "Outbreaks", description: "Outbreak management", href: "/public-health?tab=outbreaks", icon: Shield, color: "bg-red-100 text-red-600" },
-        { label: "Campaigns", description: "Immunization & outreach", href: "/public-health?tab=campaigns", icon: Shield, color: "bg-green-100 text-green-600" },
-        { label: "INDAWO Sites", description: "Premises registry", href: "/public-health?tab=sites", icon: Shield, color: "bg-emerald-100 text-primary", serviceSlug: "indawo" },
-      ],
-    });
-  }
-
-  if (roles.isAdmin) {
-    cats.push({
-      id: "coverage",
-      title: "Coverage & Financing",
-      icon: Shield,
-      color: "bg-violet-500",
-      modules: [
-        { label: "Coverage Hub", description: "Schemes, eligibility & claims", href: "/coverage", icon: Shield, color: "bg-violet-100 text-violet-600" },
-        { label: "Eligibility Check", description: "Real-time coverage verification", href: "/coverage?tab=eligibility", icon: Users, color: "bg-green-100 text-green-600" },
-        { label: "Claims", description: "Submit and track claims", href: "/coverage?tab=claims", icon: FileText, color: "bg-purple-100 text-purple-600" },
-        { label: "Settlement", description: "Remittance & payouts", href: "/coverage?tab=settlement", icon: Receipt, color: "bg-emerald-100 text-primary" },
-        { label: "Schemes", description: "Plan administration", href: "/coverage?tab=schemes", icon: Shield, color: "bg-primary-soft text-primary" },
-      ],
-    });
-  }
-
-  cats.push({
-    id: "operations",
-    title: "Supply & Marketplace",
-    icon: Package,
-    color: "bg-orange-500",
-    modules: [
-      { label: "Inventory", description: "Stock management", href: "/inventory", icon: Package, color: "bg-orange-100 text-orange-600" },
-      { label: "Marketplace", description: "Health products & vendors", href: "/marketplace", icon: ShoppingCart, color: "bg-purple-100 text-purple-600", serviceSlug: "msika" },
-      { label: "Reports", description: "Analytics & dashboards", href: "/reports", icon: BarChart3, color: "bg-indigo-100 text-indigo-600" },
-    ],
-  });
-
-  if (roles.isClinical) {
-    cats.push({
-      id: "clinical-tools",
-      title: "Clinical Tools",
-      icon: Shield,
-      color: "bg-pink-500",
-      modules: [
-        { label: "Voice Dictation", description: "Speech-to-text for notes", href: "/clinical/dictation", icon: Shield, color: "bg-pink-100 text-pink-600" },
-        { label: "Offline Sync", description: "Sync status & conflicts", href: "/clinical-tools?tab=offline", icon: Shield, color: "bg-primary-soft text-primary" },
-        { label: "Documents", description: "Document management", href: "/clinical-tools?tab=documents", icon: FileText, color: "bg-primary-soft text-primary" },
-        { label: "CDS Alerts", description: "Clinical decision support", href: "/clinical-tools?tab=cds", icon: Shield, color: "bg-red-100 text-red-600" },
-      ],
-    });
-  }
-
-  if (roles.isAdmin) {
-    cats.push({
-      id: "admin",
-      title: "Governance & Admin",
-      icon: Shield,
-      color: "bg-slate-600",
-      modules: [
-        { label: "Production Command Centre", description: "Discover services, demo paths, and live integration health", href: "/production-command-centre", icon: LayoutGrid, color: "bg-primary-soft text-primary" },
-        { label: WORKER_ACCESS_LABELS.workerAccess, description: "Providers, staff & local access", href: "/admin/users", icon: Users, color: "bg-red-100 text-red-600" },
-        { label: "Audit Trail", description: "System audit logs", href: "/admin/audit", icon: ClipboardList, color: "bg-amber-100 text-amber-600" },
-        { label: "System Settings", description: "Configuration & security", href: "/admin", icon: Settings, color: "bg-neutral-100 text-muted-foreground" },
-      ],
-    });
-    cats.push({
-      id: "ai-governance",
-      title: "AI Governance",
-      icon: Shield,
-      color: "bg-cyan-600",
-      modules: [
-        { label: "AI Governance Hub", description: "Policy, audit & decision controls", href: "/ai-governance", icon: Shield, color: "bg-cyan-100 text-cyan-700" },
-        { label: "Governance Datasets", description: "Register and classify datasets", href: "/ai-governance?tab=datasets", icon: Database, color: "bg-indigo-100 text-primary-hover" },
-        { label: "Decision Rules", description: "Policy rules for AI access", href: "/ai-governance?tab=rules", icon: Shield, color: "bg-violet-100 text-violet-700" },
-        { label: "Policy Publishing", description: "Publish AI governance policy versions", href: "/ai-governance?tab=policy", icon: FileText, color: "bg-emerald-100 text-primary-hover" },
-      ],
-    });
-  }
-
-  if (roles.isClinical || roles.isAdmin || roles.isFinance || roles.isDispenser) {
-    cats.push({
-      id: "production-readiness",
-      title: "Production readiness",
-      icon: LayoutGrid,
-      color: "bg-primary",
-      modules: [
-        ...(roles.isAdmin ? [
-          {
-            label: "Production Command Centre",
-            description: "Service discovery, maturity labels, and integration probes",
-            href: "/production-command-centre",
-            icon: LayoutGrid,
-            color: "bg-primary-soft text-primary",
-          },
-        ] : []),
-        ...(roles.isClinical || roles.isAdmin ? [
-          {
-            label: "Data & intelligence",
-            description: "Quality, pipelines, integration, and audit intelligence",
-            href: "/data-intelligence",
-            icon: Database,
-            color: "bg-indigo-100 text-primary-hover",
-          },
-          {
-            label: "Inpatient workspace",
-            description: "Admissions, nursing workbench, and ward operations",
-            href: "/clinical/inpatient",
-            icon: BedDouble,
-            color: "bg-purple-100 text-warning-foreground",
-          },
-          {
-            label: "Core transactions",
-            description: "Transaction audit feed and state history",
-            href: "/core-transaction",
-            icon: Layers,
-            color: "bg-neutral-100 text-foreground",
-          },
-        ] : []),
-        ...(roles.isClinical || roles.isDispenser || roles.isFinance ? [
-          {
-            label: "Rx transaction journey",
-            description: "Golden-path Rx · pay · dispatch demonstration",
-            href: "/pharmacy/transaction-journey?patientId=CPID-ZW-00001",
-            icon: Pill,
-            color: "bg-cyan-100 text-cyan-700",
-          },
-        ] : []),
-        ...(roles.isFinance && !roles.isClinical ? [
-          {
-            label: "Core transactions",
-            description: "Billing and payment transaction audit trail",
-            href: "/core-transaction",
-            icon: Layers,
-            color: "bg-neutral-100 text-foreground",
-          },
-        ] : []),
-      ],
-    });
-  }
-
-  return cats;
 }
 
 function getWorkerLaunchActions(args: {
@@ -765,7 +501,6 @@ export default function HomePage() {
       homeContextSyncPass.current = false;
     }
   }, [pathname]);
-  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const hasProfessionalRoles = isClinical || isAdmin || isFinance || isDispenser;
   const [activeTab, setActiveTab] = useState<HomeTab>("personal");
 
@@ -1418,52 +1153,24 @@ export default function HomePage() {
           <div>
             <h3 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wide">Modules</h3>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {categories.map((cat) => {
-                const CatIcon = cat.icon;
-                const isExpanded = expandedCategory === cat.id;
-                return (
-                  <div key={cat.id}>
-                    <button
-                      onClick={() => setExpandedCategory(isExpanded ? null : cat.id)}
-                      className={`w-full text-left rounded-lg border p-4 transition-all ${
-                        isExpanded ? "border-primary/25 bg-primary-soft shadow-sm" : "border-border bg-card hover:border-border hover:shadow-sm"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-9 h-9 rounded-lg ${cat.color} flex items-center justify-center shrink-0`}>
-                          <CatIcon className="w-4.5 h-4.5 text-white" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">{cat.title}</p>
-                          <p className="text-xs text-muted-foreground">{cat.modules.length} modules</p>
-                        </div>
-                      </div>
-                    </button>
-                    {isExpanded && (
-                      <div className="mt-2 bg-card rounded-lg border border-border p-3 space-y-1">
-                        {cat.modules.map((mod) => {
-                          return (
-                            <Link key={mod.href + mod.label} href={mod.href}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-background transition-colors group">
-                              <ModuleCardIcon
-                                serviceSlug={mod.serviceSlug}
-                                icon={mod.icon}
-                                color={mod.color}
-                                size="sm"
-                              />
-                              <div className="min-w-0">
-                                <p className="text-sm text-foreground group-hover:text-primary">{mod.label}</p>
-                                <p className="text-xs text-muted-foreground truncate">{mod.description}</p>
-                              </div>
-                              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0 ml-auto" />
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+              {categories.map((cat) => (
+                <ExpandableWorkCategoryCard
+                  key={cat.id}
+                  id={cat.id}
+                  title={cat.title}
+                  icon={cat.icon}
+                  color={cat.color}
+                  modules={cat.modules.map((mod, index) => ({
+                    id: `${cat.id}-${index}`,
+                    label: mod.label,
+                    description: mod.description,
+                    href: mod.href,
+                    icon: mod.icon,
+                    color: mod.color,
+                    serviceSlug: mod.serviceSlug,
+                  }))}
+                />
+              ))}
             </div>
           </div>
 
