@@ -1,0 +1,34 @@
+{
+  "product_truth_branch": "claude/staging-ux-orchestration-remediation-Yypyl",
+  "source_branch": "origin/<selected-source-branch>",
+  "source_group": "FRONTEND_SURFACING",
+  "expected_value": "Optional operator brief — what this branch was meant to deliver",
+  "approved_by": "operator",
+  "approval_timestamp": "2026-06-17T12:00:00Z",
+  "allow_full_merge": false,
+  "approved_items": [
+    {
+      "id": "A1",
+      "classification": "ACCEPT_WITH_ADAPTATION",
+      "action": "RESTORE_FILE_FROM_SOURCE",
+      "path": "ui/one-ui-shell/src/app/example/page.tsx",
+      "commit": "",
+      "reason": "Approved UI surfacing with wiring review",
+      "risk": "medium",
+      "notes": "Run test:no-stubs after absorb"
+    }
+  ],
+  "rejected_items": [
+    {
+      "id": "R1",
+      "path": "deploy/helm/impilo-vnext/values-full-preview-digests.generated.yaml",
+      "reason": "Generated deploy artifact — do not absorb"
+    }
+  ],
+  "product_owner_decisions": [
+    {
+      "id": "P1",
+      "question": "Accept deletion of route page X or restore from source?"
+    }
+  ]
+}

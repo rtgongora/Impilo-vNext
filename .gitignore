@@ -75,6 +75,12 @@ apps/web/
 reports/pipeline/*.md
 reports/pipeline/*.json
 !reports/pipeline/.gitkeep
+# Change absorption run reports (generated; templates committed)
+reports/absorption/latest-*.md
+reports/absorption/latest-*.json
+reports/absorption/touched-areas.json
+!reports/absorption/.gitkeep
+!reports/absorption/*.template.*
 # Full-boot generated reports (summaries committed; logs stay local)
 reports/full-boot/build-logs/
 reports/full-boot/image-logs/
