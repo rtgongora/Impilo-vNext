@@ -8,8 +8,35 @@
   "allow_full_merge": false,
   "approved_items": [
     {
+      "id": "UI-001",
+      "classification": "ACCEPT_WITH_ADAPTATION",
+      "product_value_judgement": "IMPROVEMENT_BUT_NEEDS_MODIFICATION",
+      "acceptability": "Accept as part of Fundo UX slice after verification",
+      "modification_required": "None before absorb; browser QA required after absorb",
+      "completion_needs": [
+        "NEEDS_BROWSER_QA",
+        "NEEDS_TESTS"
+      ],
+      "risk_if_ignored": "Could introduce confusing dual-rail UX or hidden navigation regression",
+      "product_owner_notes": "Confirm dual-rail layout on /learning with PO browser review",
+      "action": "RESTORE_FILE_FROM_SOURCE",
+      "path": "ui/one-ui-shell/src/app/learning/page.tsx",
+      "commit": "",
+      "reason": "Improves Fundo learning hub experience",
+      "risk": "medium",
+      "notes": "Run test:no-stubs after absorb"
+    },
+    {
       "id": "A1",
       "classification": "ACCEPT_WITH_ADAPTATION",
+      "product_value_judgement": "IMPROVEMENT_ACCEPT",
+      "acceptability": "Accept with standard wiring verification",
+      "modification_required": "Verify BFF hook and no-stub guards",
+      "completion_needs": [
+        "NEEDS_TESTS",
+        "NEEDS_BROWSER_QA"
+      ],
+      "risk_if_ignored": "UI may render but fail against live BFF",
       "action": "RESTORE_FILE_FROM_SOURCE",
       "path": "ui/one-ui-shell/src/app/example/page.tsx",
       "commit": "",
@@ -22,13 +49,15 @@
     {
       "id": "R1",
       "path": "deploy/helm/impilo-vnext/values-full-preview-digests.generated.yaml",
-      "reason": "Generated deploy artifact — do not absorb"
+      "product_value_judgement": "RISKY_DEFER",
+      "reason": "Generated deploy artifact — do not absorb; separate platform intake"
     }
   ],
   "product_owner_decisions": [
     {
       "id": "P1",
-      "question": "Accept deletion of route page X or restore from source?"
+      "question": "Accept deletion of route page X or restore from source?",
+      "product_value_judgement": "NEEDS_PRODUCT_OWNER_DECISION"
     }
   ]
 }

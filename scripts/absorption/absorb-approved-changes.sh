@@ -15,6 +15,8 @@ absorption_ensure_report_dir
 
 MD_OUT="$(absorption_report_path latest-absorption.md)"
 JSON_OUT="$(absorption_report_path latest-absorption.json)"
+WARN_JSON="$(mktemp)"
+trap 'rm -f "$WARN_JSON"' EXIT
 
 [[ -n "$ABSORPTION_APPROVAL_FILE" && -f "$ABSORPTION_APPROVAL_FILE" ]] || \
   absorption_die "absorb mode requires --approval-file pointing to an existing JSON plan"
@@ -52,10 +54,17 @@ if ptb not in (base, base.replace("origin/", ""), os.environ.get("DEFAULT_PRODUC
 print("approval file OK")
 PY
 
+# Completion / enablement metadata warnings (non-blocking)
+python3 "$SCRIPT_DIR/_product-gates.py" absorb-warnings \
+  --approval "$ABSORPTION_APPROVAL_FILE" \
+  --out "$WARN_JSON" || true
+COMPLETION_WARN_COUNT="$(python3 -c "import json; print(json.load(open('$WARN_JSON')).get('count',0))" 2>/dev/null || echo 0)"
+
 APPLIED=()
 FAILED=()
 CONFLICTS=()
 SKIPPED=()
+COMPLETION_TRACKING=()
 
 apply_item() {
   local id="$1" action="$2" path="$3" commit="$4"
@@ -124,6 +133,22 @@ PY
 
 DIFF_STAT="$(git diff --stat 2>/dev/null | tail -20 || true)"
 
+export ABS_APPLIED="$(IFS='|'; echo "${APPLIED[*]:-}")"
+APPLIED_LIST="$(mktemp)"
+python3 <<PY >"$APPLIED_LIST"
+import json, os
+applied = [a for a in os.environ.get("ABS_APPLIED","").split("|") if a]
+print(json.dumps(applied))
+PY
+
+COMPLETION_MD="$(python3 "$SCRIPT_DIR/_product-gates.py" report \
+  --gates "${ABSORPTION_REPORT_DIR}/latest-analysis.json" \
+  --approval "$ABSORPTION_APPROVAL_FILE" \
+  --absorb /dev/null \
+  --verify /dev/null \
+  --out /dev/null \
+  --md-out /dev/stdout 2>/dev/null || true)"
+
 {
   echo "# Change Absorption — Absorb Report"
   echo ""
@@ -131,6 +156,39 @@ DIFF_STAT="$(git diff --stat 2>/dev/null | tail -20 || true)"
   echo "- **Source:** \`$ABSORPTION_SOURCE_REF\`"
   echo "- **Approval file:** \`$ABSORPTION_APPROVAL_FILE\`"
   echo "- **Dry run:** $ABSORPTION_DRY_RUN"
+  echo ""
+  if [[ "$COMPLETION_WARN_COUNT" -gt 0 ]]; then
+    echo "## Completion metadata warnings"
+    echo ""
+    echo "**$COMPLETION_WARN_COUNT** approved item(s) missing \`completion_needs\` or related product-owner fields."
+    echo "Absorb was **not blocked** — placeholders were recorded. Update \`approved-plan.json\` for clarity."
+    echo ""
+    python3 -c "import json; [print(f\"- {w['message']}\") for w in json.load(open('$WARN_JSON')).get('warnings',[])]"
+    echo ""
+  fi
+  echo "## Accepted Change Completion / Enablement Gate (post-absorb status)"
+  echo ""
+  echo "_Browser QA and preview smoke are reported as required follow-ups — they do not block absorb._"
+  echo ""
+  if [[ -n "$COMPLETION_MD" ]]; then
+    echo "$COMPLETION_MD"
+  else
+    python3 <<PY
+import json, os
+doc = json.load(open(os.environ["APPROVAL_FILE"]))
+applied_raw = json.load(open("$APPLIED_LIST"))
+applied_ids = {a.split(":")[0] for a in applied_raw}
+print("| Accepted change | Absorbed? | Works end-to-end? | Additional Product Truth work needed | Owner | Status |")
+print("| --------------- | --------- | ----------------- | ------------------------------------ | ----- | ------ |")
+for item in doc.get("approved_items", []):
+    iid = item.get("id","")
+    absorbed = "Yes" if iid in applied_ids else "No"
+    needs = item.get("completion_needs") or ["NEEDS_TESTS", "NEEDS_BROWSER_QA"]
+    if isinstance(needs, str):
+        needs = [needs]
+    print(f"| {iid}: {item.get('path','')} | {absorbed} | Partial | {', '.join(needs)} | engineering | Run verify --run-gates |")
+PY
+  fi
   echo ""
   echo "## Applied"
   for a in "${APPLIED[@]:-}"; do echo "- $a"; done
@@ -153,17 +211,32 @@ DIFF_STAT="$(git diff --stat 2>/dev/null | tail -20 || true)"
   echo "**No automatic commit.** Review and commit manually when satisfied."
 } >"$MD_OUT"
 
-export ABS_APPLIED="$(IFS='|'; echo "${APPLIED[*]:-}")"
 export ABS_CONFLICTS="$(IFS='|'; echo "${CONFLICTS[*]:-}")"
 export ABS_FAILED="$(IFS='|'; echo "${FAILED[*]:-}")"
 export ABS_SKIPPED="$(IFS='|'; echo "${SKIPPED[*]:-}")"
 export APPROVAL_FILE="$ABSORPTION_APPROVAL_FILE"
-python3 - "$JSON_OUT" <<'PY'
-import json, sys, os
+export ABS_WARN_JSON="$WARN_JSON"
+export ABS_APPLIED_LIST="$APPLIED_LIST"
+export ABS_JSON_OUT="$JSON_OUT"
+python3 <<'PY'
+import json, os, sys
 from datetime import datetime, timezone
-out = sys.argv[1]
-applied = [a for a in os.environ.get("ABS_APPLIED","").split("|") if a]
+from pathlib import Path
+
+repo = Path(os.environ.get("REPO_PATH", "."))
+sys.path.insert(0, str(repo / "scripts" / "absorption"))
+import importlib.util
+spec = importlib.util.spec_from_file_location("pg", repo / "scripts" / "absorption" / "_product-gates.py")
+pg = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(pg)
+
+out = os.environ["ABS_JSON_OUT"]
+applied = json.load(open(os.environ["ABS_APPLIED_LIST"]))
+applied_ids_list = applied
 conflicts = [c for c in os.environ.get("ABS_CONFLICTS","").split("|") if c]
+approval = json.load(open(os.environ["APPROVAL_FILE"]))
+warnings = json.load(open(os.environ["ABS_WARN_JSON"])).get("warnings", [])
+completion_rows = pg.build_completion_tracking_table(approval.get("approved_items", []), applied_ids_list, None)
 doc = {
     "mode": "absorb",
     "product_truth_branch": os.environ.get("ABSORPTION_BASE_REF",""),
@@ -171,15 +244,18 @@ doc = {
     "base_mode": os.environ.get("ABSORPTION_BASE_MODE",""),
     "approval_file": os.environ.get("APPROVAL_FILE",""),
     "verdict": "CONFLICT_STOP" if conflicts else ("DRY_RUN" if os.environ.get("ABSORPTION_DRY_RUN")=="1" else "APPLIED"),
-    "applied": applied,
+    "applied": applied_ids_list,
     "skipped": [s for s in os.environ.get("ABS_SKIPPED","").split("|") if s],
     "failed": [f for f in os.environ.get("ABS_FAILED","").split("|") if f],
     "conflicts": conflicts,
+    "completion_metadata_warnings": warnings,
+    "completion_tracking": completion_rows,
     "finished_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-    "final_recommendation": "Run verify --run-gates then scripts/pipeline/run-local-quality-gates.sh",
+    "final_recommendation": "Run verify --run-gates; complete completion_needs (browser QA does not block absorb)",
 }
-open(out, "w").write(json.dumps(doc, indent=2) + "\n")
+Path(out).write_text(json.dumps(doc, indent=2) + "\n")
 PY
+rm -f "$APPLIED_LIST"
 
 echo "Report: $MD_OUT"
 echo "JSON:   $JSON_OUT"

@@ -115,6 +115,24 @@ VERDICT="RECOMMEND_RUN_GATES"
   echo "- **UNKNOWN** — preview/infra dependency or inconclusive"
   echo ""
   echo "**Limitation:** PRE_EXISTING requires optional baseline run on pre-absorb commit."
+  echo ""
+  echo "## Accepted Change Completion / Enablement Gate (verification view)"
+  echo ""
+  APPROVAL_FOR_VERIFY="${ABSORPTION_APPROVAL_FILE:-$(absorption_report_path approved-plan.json)}"
+  if [[ -f "$APPROVAL_FOR_VERIFY" ]]; then
+    python3 "$SCRIPT_DIR/_product-gates.py" report \
+      --gates "${ABSORPTION_REPORT_DIR}/latest-analysis.json" \
+      --approval "$APPROVAL_FOR_VERIFY" \
+      --absorb "${ABSORPTION_REPORT_DIR}/latest-absorption.json" \
+      --verify "$JSON_OUT" \
+      --out /dev/null \
+      --md-out /dev/stdout 2>/dev/null | grep -A500 "## Accepted Change Completion" | head -40 || \
+      echo "_Run report mode after absorb for full completion tracking._"
+  else
+    echo "_No approved-plan.json — completion enablement table available after absorb + approval file._"
+  fi
+  echo ""
+  echo "_Browser QA and preview smoke remain product-owner follow-ups even when VM gates pass._"
 } >"$MD_OUT"
 
 export ABS_VERIFY_ROWS="$(printf '%s\n' "${RESULTS[@]}")"

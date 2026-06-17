@@ -55,6 +55,10 @@ Product Truth branch (fixed default):
 
 Doctrine:
   docs/environment/CHANGE_ABSORPTION_PIPELINE.md
+
+Product-owner gates (every session):
+  - Product Value / Improvement Gate — is this change good for the product?
+  - Accepted Change Completion / Enablement Gate — what else Product Truth needs
 EOF
 }
 

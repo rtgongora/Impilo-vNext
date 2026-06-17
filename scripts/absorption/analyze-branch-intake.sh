@@ -21,7 +21,9 @@ CONFLICT_JSON="$(mktemp)"
 CLASSIFY_JSON="$(mktemp)"
 INFER_JSON="$(mktemp)"
 DECISION_JSON="$(mktemp)"
-trap 'rm -f "$CONFLICT_MD" "$CONFLICT_JSON" "$CLASSIFY_JSON" "$INFER_JSON" "$DECISION_JSON"' EXIT
+GATES_JSON="$(mktemp)"
+GATES_MD="$(mktemp)"
+trap 'rm -f "$CONFLICT_MD" "$CONFLICT_JSON" "$CLASSIFY_JSON" "$INFER_JSON" "$DECISION_JSON" "$GATES_JSON" "$GATES_MD"' EXIT
 
 absorption_check_branch_safety "GATE 1 — Branch safety"
 absorption_resolve_context "$BASE_INPUT" "$SOURCE_INPUT"
@@ -270,11 +272,31 @@ PY
 FINAL_DECISION="$(python3 -c "import json; print(json.load(open('$DECISION_JSON'))['final_branch_decision'])")"
 INFER_KIND="$(python3 -c "import json; print(json.load(open('$INFER_JSON'))['inferred_kind'])")"
 
+# GATE — Product Value / Improvement + Accepted Change Completion / Enablement
+python3 -c "
+import json
+infer = json.load(open('$INFER_JSON'))
+infer['expected_value'] = '''${ABSORPTION_EXPECTED_VALUE}'''.strip() or None
+json.dump(infer, open('$INFER_JSON', 'w'), indent=2)
+" 2>/dev/null || true
+
+python3 "$SCRIPT_DIR/_product-gates.py" analyze \
+  --infer "$INFER_JSON" \
+  --decisions "$DECISION_JSON" \
+  --out "$GATES_JSON" \
+  --md-out "$GATES_MD"
+
 {
   echo "# Change Absorption — Analysis Report"
   echo ""
   echo "- **Generated:** $(absorption_now)"
   echo "- **Mode:** analysis (read-only)"
+  echo ""
+  cat "$GATES_MD"
+  echo ""
+  echo "---"
+  echo ""
+  echo "## Technical analysis detail"
   echo ""
   echo "## 1. Product Truth Branch"
   echo "\`$ABSORPTION_BASE_REF\` @ \`${ABSORPTION_BASE_COMMIT:0:12}\`"
@@ -337,14 +359,25 @@ for k,v in a.items():
         print('- _(no signals)_')
     print()
 "
-  echo "## 24. Absorption decision table"
+  echo "## 24. Per-file technical classification table"
   echo ""
   echo "| Area | Files | Candidate change | Classification | Recommended action | Risk | Reason |"
   echo "| ---- | ----- | ---------------- | -------------- | ------------------ | ---- | ------ |"
   python3 -c "
 import json
-for d in json.load(open('$DECISION_JSON'))['decisions'][:80]:
+for d in json.load(open('$GATES_JSON')).get('decisions_enriched', json.load(open('$DECISION_JSON'))['decisions'])[:80]:
     print(f\"| {d['area']} | \`{d['files']}\` | {d['candidate_change'][:40]} | {d['classification']} | {d['recommended_action'][:40]} | {d['risk']} | {d['reason']} |\")
+"
+  echo ""
+  echo "## 24b. Per-file product value + completion metadata"
+  echo ""
+  echo "| File | Product value | Acceptability | Modification | Completion needs |"
+  echo "| ---- | ------------- | ------------- | ------------ | ---------------- |"
+  python3 -c "
+import json
+for d in json.load(open('$GATES_JSON')).get('decisions_enriched', [])[:80]:
+    cn = ', '.join(d.get('completion_needs', []))
+    print(f\"| \`{d['files']}\` | {d.get('product_value_judgement','?')} | {d.get('acceptability','')[:40]} | {d.get('modification_required','')[:40]} | {cn[:50]} |\")
 "
   echo ""
   echo "## 25. Verification plan"
@@ -354,7 +387,7 @@ for d in json.load(open('$DECISION_JSON'))['decisions'][:80]:
   echo "**$FINAL_DECISION**"
 } >"$MD_OUT"
 
-export INFER_JSON DECISION_JSON CONFLICT_JSON CLASSIFY_JSON
+export INFER_JSON DECISION_JSON CONFLICT_JSON CLASSIFY_JSON GATES_JSON
 export JSON_OUT="$JSON_OUT"
 export ABSORPTION_BASE_REF ABSORPTION_SOURCE_REF ABSORPTION_BASE_MODE
 export ABS_JSON_SOURCE_GROUP="$ABSORPTION_SOURCE_GROUP"
@@ -368,6 +401,7 @@ from datetime import datetime, timezone
 
 decision = json.load(open(os.environ["DECISION_JSON"]))
 infer = json.load(open(os.environ["INFER_JSON"]))
+gates = json.load(open(os.environ["GATES_JSON"]))
 try:
     conflicts = json.load(open(os.environ["CONFLICT_JSON"]))
 except Exception:
@@ -390,13 +424,20 @@ doc = {
     "verdict": os.environ.get("ABS_JSON_FINAL"),
     "checks_run": [
         "branch-safety", "difference-discovery", "conflict-forecast",
-        "product-truth-heuristics", "decision-table",
+        "product-truth-heuristics", "product-value-gate", "completion-enablement-gate",
+        "decision-table",
     ],
-    "decisions": decision["decisions"],
+    "decisions": gates.get("decisions_enriched", decision["decisions"]),
+    "product_value_gate": gates.get("product_value_gate", {}),
+    "completion_gate": gates.get("completion_gate", {}),
+    "executive_summary": gates.get("executive_summary", {}),
+    "deferred_items": gates.get("deferred_items", []),
     "conflicts_forecast": conflicts,
     "verification": {"plan": decision["verification_plan"]},
-    "product_owner_decisions": [],
-    "final_recommendation": os.environ.get("ABS_JSON_FINAL"),
+    "product_owner_decisions": gates.get("deferred_items", []),
+    "final_recommendation": gates.get("executive_summary", {}).get(
+        "8_final_product_owner_recommendation", os.environ.get("ABS_JSON_FINAL")
+    ),
     "difference": infer,
     "assessments": decision["assessments"],
     "touched_areas": touched,
