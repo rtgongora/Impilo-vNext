@@ -22,6 +22,7 @@ import { useImagingViewerLaunchContext, useLaunchImagingViewer } from "@/hooks/q
 import { apiClient } from "@/lib/api-client";
 import { applyWindowLevelToRgba, decodeNativeGrayscaleForWl } from "@/lib/dicom/nativeWindowLevel";
 import { resolveImagingViewerEngine } from "@/lib/imaging/resolveViewerEngine";
+import { ImagingAnnotationPanel } from "@/components/imaging/ImagingAnnotationPanel";
 
 const DwvNativeViewer = dynamic(
   () => import("@/components/imaging/DwvNativeViewer").then((mod) => mod.DwvNativeViewer),
@@ -776,6 +777,9 @@ export default function DicomViewerPage() {
             </div>
           </div>
         )}
+        {governedStudyId ? (
+          <ImagingAnnotationPanel governedStudyId={governedStudyId} chartPatientCpid={patientId} />
+        ) : null}
       </PageShell>
     </EHRLayout>
   );

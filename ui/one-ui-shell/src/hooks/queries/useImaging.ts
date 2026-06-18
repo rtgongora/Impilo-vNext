@@ -174,3 +174,46 @@ export function useRetryAllImagingWritebacks() {
     },
   });
 }
+
+export interface ImagingAnnotationPayload {
+  annotationType?: string;
+  note?: string;
+  seriesId?: number | null;
+  instanceId?: number | null;
+  measurement?: Record<string, unknown>;
+  body?: Record<string, unknown>;
+}
+
+export function useImagingAnnotations(
+  studyId?: string | number | null,
+  chartPatientCpid?: string | null,
+) {
+  return useQuery<ApiResponse<unknown>>({
+    queryKey: ["imaging-annotations", studyId, chartPatientCpid ?? null],
+    queryFn: () =>
+      apiClient.get<ApiResponse<unknown>>(
+        `/internal/v1/imaging/studies/${studyId}/annotations${chartPatientQuery(chartPatientCpid)}`,
+      ),
+    enabled: !!studyId,
+  });
+}
+
+export function useCreateImagingAnnotation(chartPatientCpid?: string | null) {
+  const queryClient = useQueryClient();
+  return useMutation<
+    ApiResponse<unknown>,
+    unknown,
+    { studyId: string | number; body: ImagingAnnotationPayload }
+  >({
+    mutationFn: ({ studyId, body }) =>
+      apiClient.post<ApiResponse<unknown>>(
+        `/internal/v1/imaging/studies/${studyId}/annotations${chartPatientQuery(chartPatientCpid)}`,
+        body,
+      ),
+    onSuccess: (_data, variables) => {
+      void queryClient.invalidateQueries({
+        queryKey: ["imaging-annotations", variables.studyId, chartPatientCpid ?? null],
+      });
+    },
+  });
+}
