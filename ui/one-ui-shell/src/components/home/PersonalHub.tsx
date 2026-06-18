@@ -95,7 +95,7 @@ function healthTabAction(tab: PersonalHealthTab): { href?: string; pending?: Pen
     case PersonalHealthTab.Privacy:
       return { pending: PendingApiRoute.PortalConsentDashboard, label: "Consent dashboard" };
     case PersonalHealthTab.Monitoring:
-      return { pending: PendingApiRoute.PortalRemoteMonitoring, label: "Remote monitoring" };
+      return { href: "/home/iot-vitals" };
     case PersonalHealthTab.Services:
       return { pending: PendingApiRoute.PortalServiceDiscovery, label: "Service discovery" };
     case PersonalHealthTab.Queue:
