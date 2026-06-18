@@ -248,6 +248,19 @@ public class PctServiceClient {
         return extractData(response);
     }
 
+    public JsonNode createEncounterImagingLink(long encounterId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/encounters/" + encounterId + "/imaging-links";
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(body), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listEncounterImagingLinks(long encounterId) {
+        String url = baseUrl + "/v1/encounters/" + encounterId + "/imaging-links";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
     /**
      * Get the operational timeline for a patient.
      *
