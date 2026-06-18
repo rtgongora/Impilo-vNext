@@ -11,6 +11,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
+import zw.gov.mohcc.impilo.pacs.api.dto.AnnotationRequest;
 import zw.gov.mohcc.impilo.pacs.api.dto.CorrelateStudyRequest;
 import zw.gov.mohcc.impilo.pacs.api.dto.CreateImagingStudyRequest;
 import zw.gov.mohcc.impilo.pacs.api.dto.ForwardStudyRequest;
@@ -20,6 +21,7 @@ import zw.gov.mohcc.impilo.pacs.api.dto.OrderLinkRequest;
 import zw.gov.mohcc.impilo.pacs.api.dto.ReportLinkRequest;
 import zw.gov.mohcc.impilo.pacs.core.ImagingStudyService;
 import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingInstanceEntity;
+import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingAnnotationEntity;
 import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingOrderLinkEntity;
 import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingReportLinkEntity;
 import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingSeriesEntity;
@@ -143,6 +145,19 @@ public class ImagingStudyController {
     @GetMapping("/{id}/order-links")
     public ResponseEntity<List<ImagingOrderLinkEntity>> listOrderLinks(@PathVariable Long id) {
         return ResponseEntity.ok(imagingStudyService.listOrderLinks(id));
+    }
+
+    @PostMapping("/{id}/annotations")
+    public ResponseEntity<ImagingAnnotationEntity> createAnnotation(
+            @PathVariable Long id,
+            @Valid @RequestBody AnnotationRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(imagingStudyService.createAnnotation(id, request, actorId(), actorType()));
+    }
+
+    @GetMapping("/{id}/annotations")
+    public ResponseEntity<List<ImagingAnnotationEntity>> listAnnotations(@PathVariable Long id) {
+        return ResponseEntity.ok(imagingStudyService.listAnnotations(id));
     }
 
     @GetMapping("/ops/status")

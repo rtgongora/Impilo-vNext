@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.companion.context.RequestContext;
 import zw.gov.mohcc.impilo.companion.context.RequestContextHolder;
+import zw.gov.mohcc.impilo.pacs.api.dto.AnnotationRequest;
 import zw.gov.mohcc.impilo.pacs.api.dto.CorrelateStudyRequest;
 import zw.gov.mohcc.impilo.pacs.api.dto.CreateImagingStudyRequest;
 import zw.gov.mohcc.impilo.pacs.api.dto.ForwardStudyRequest;
@@ -23,6 +24,7 @@ import zw.gov.mohcc.impilo.pacs.events.PacsOutboxPublisher;
 import zw.gov.mohcc.impilo.pacs.integration.PacsBackendClient;
 import zw.gov.mohcc.impilo.pacs.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingAccessAuditEntity;
+import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingAnnotationEntity;
 import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingInstanceEntity;
 import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingOrderLinkEntity;
 import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingReportLinkEntity;
@@ -31,6 +33,7 @@ import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingStudyEntity;
 import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingViewerSessionEntity;
 import zw.gov.mohcc.impilo.pacs.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.pacs.persistence.repository.ImagingAccessAuditRepository;
+import zw.gov.mohcc.impilo.pacs.persistence.repository.ImagingAnnotationRepository;
 import zw.gov.mohcc.impilo.pacs.persistence.repository.ImagingInstanceRepository;
 import zw.gov.mohcc.impilo.pacs.persistence.repository.ImagingOrderLinkRepository;
 import zw.gov.mohcc.impilo.pacs.persistence.repository.ImagingReportLinkRepository;
@@ -61,6 +64,7 @@ public class ImagingStudyService {
     public static final String EVENT_VIEWER_LAUNCHED = "imaging.viewer.launched";
     public static final String EVENT_REPORT_LINKED = "imaging.report.linked";
     public static final String EVENT_ORDER_LINKED = "imaging.study.linked_to_order";
+    public static final String EVENT_ANNOTATION_CREATED = "imaging.annotation.created";
 
     private final ImagingStudyRepository studyRepository;
     private final EventOutboxRepository outboxRepository;
@@ -72,6 +76,7 @@ public class ImagingStudyService {
     private final ImagingAccessAuditRepository accessAuditRepository;
     private final ImagingReportLinkRepository reportLinkRepository;
     private final ImagingOrderLinkRepository orderLinkRepository;
+    private final ImagingAnnotationRepository annotationRepository;
     private final PacsBackendClient pacsBackendClient;
     private final ViewerEnginePolicy viewerEnginePolicy;
     private final ObjectProvider<PacsOutboxPublisher> outboxPublisherProvider;
@@ -91,7 +96,8 @@ public class ImagingStudyService {
             ImagingViewerSessionRepository viewerSessionRepository,
             ImagingAccessAuditRepository accessAuditRepository,
             ImagingReportLinkRepository reportLinkRepository,
-            ImagingOrderLinkRepository orderLinkRepository) {
+            ImagingOrderLinkRepository orderLinkRepository,
+            ImagingAnnotationRepository annotationRepository) {
         this.studyRepository = studyRepository;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
@@ -106,6 +112,7 @@ public class ImagingStudyService {
         this.accessAuditRepository = accessAuditRepository;
         this.reportLinkRepository = reportLinkRepository;
         this.orderLinkRepository = orderLinkRepository;
+        this.annotationRepository = annotationRepository;
     }
 
     public List<ImagingStudyEntity> listStudies() {
@@ -387,6 +394,36 @@ public class ImagingStudyService {
         return reportLinkRepository.findByStudyIdOrderByCreatedAtDesc(studyId);
     }
 
+    @Transactional
+    public ImagingAnnotationEntity createAnnotation(Long studyId, AnnotationRequest request,
+                                                    String actorId, String actorType) {
+        ImagingStudyEntity study = getStudy(studyId);
+
+        ImagingAnnotationEntity annotation = new ImagingAnnotationEntity();
+        annotation.setStudyId(study.getId());
+        annotation.setSeriesId(request.getSeriesId());
+        annotation.setInstanceId(request.getInstanceId());
+        annotation.setAnnotationType(request.getAnnotationType());
+        annotation.setNote(request.getNote());
+        annotation.setMeasurement(request.getMeasurement());
+        annotation.setBody(request.getBody());
+        annotation.setActorId(actorId);
+        annotation.setActorType(actorType);
+        annotation.setFacilityId(request.getFacilityId() != null ? request.getFacilityId() : study.getFacilityId());
+        annotation = annotationRepository.save(annotation);
+
+        recordAccess(study.getId(), request.getSeriesId(), request.getInstanceId(),
+                actorId, actorType, "ANNOTATION_CREATE", request.getAnnotationType());
+        appendAnnotationCreatedOutbox(study, annotation);
+
+        return annotation;
+    }
+
+    public List<ImagingAnnotationEntity> listAnnotations(Long studyId) {
+        getStudy(studyId);
+        return annotationRepository.findByStudyIdOrderByCreatedAtDesc(studyId);
+    }
+
     public List<ImagingOrderLinkEntity> listOrderLinks(Long studyId) {
         getStudy(studyId);
         return orderLinkRepository.findByStudyIdOrderByCreatedAtDesc(studyId);
@@ -577,6 +614,33 @@ public class ImagingStudyService {
             outboxRepository.save(row);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to serialize imaging.study.linked_to_order payload", e);
+        }
+    }
+
+    private void appendAnnotationCreatedOutbox(ImagingStudyEntity study, ImagingAnnotationEntity annotation) {
+        try {
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("study_id", study.getId());
+            payload.put("annotation_id", annotation.getId());
+            payload.put("annotation_type", annotation.getAnnotationType());
+            payload.put("patient_cpid", study.getPatientCpid());
+            payload.put("series_id", annotation.getSeriesId());
+            payload.put("instance_id", annotation.getInstanceId());
+
+            EventOutboxEntity row = new EventOutboxEntity();
+            row.setAggregateType(AGGREGATE_IMAGING_STUDY);
+            row.setAggregateId(String.valueOf(study.getId()));
+            row.setEventType(EVENT_ANNOTATION_CREATED);
+            row.setPayload(objectMapper.writeValueAsString(payload));
+            applyContext(row, study.getTenantId().toString());
+            row.setSubjectType(AGGREGATE_IMAGING_STUDY);
+            row.setSubjectId(String.valueOf(study.getId()));
+            row.setPartitionKey(String.valueOf(annotation.getId()));
+            row.setOccurredAt(OffsetDateTime.now());
+            row.setSchemaVersion(1);
+            outboxRepository.save(row);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize imaging.annotation.created payload", e);
         }
     }
 
