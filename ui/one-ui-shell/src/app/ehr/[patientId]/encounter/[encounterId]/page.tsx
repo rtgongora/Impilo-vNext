@@ -36,6 +36,7 @@ import { EncounterOrchestrationRail } from "@/components/encounter/EncounterOrch
 import { EncounterCareChainRail } from "@/components/encounter/EncounterCareChainRail";
 import { EncounterLabOrdersPanel } from "@/components/encounter/EncounterLabOrdersPanel";
 import { EncounterImagingOrdersPanel } from "@/components/encounter/EncounterImagingOrdersPanel";
+import { EncounterLinkedImagingStudiesPanel } from "@/components/encounter/EncounterLinkedImagingStudiesPanel";
 import { EncounterDischargePanel } from "@/components/encounter/EncounterDischargePanel";
 import { EncounterVitalsGuidance } from "@/components/clinical/EncounterVitalsGuidance";
 import {
@@ -444,6 +445,7 @@ export default function EncounterPage() {
                   patientCpid={String(patientData?.data?.attributes?.cpid ?? "")}
                   disabled={!isActive}
                 />
+                <EncounterLinkedImagingStudiesPanel patientId={patientId} encounterId={encounterId} />
                 <EncounterDischargePanel
                   patientId={patientId}
                   encounterId={encounterId}
