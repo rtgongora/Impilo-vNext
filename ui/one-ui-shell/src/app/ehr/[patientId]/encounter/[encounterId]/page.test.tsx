@@ -28,6 +28,9 @@ vi.mock("@/components/encounter/EncounterLabOrdersPanel", () => ({
 vi.mock("@/components/encounter/EncounterImagingOrdersPanel", () => ({
   EncounterImagingOrdersPanel: () => <div data-testid="encounter-imaging-orders-panel">Imaging orders</div>,
 }));
+vi.mock("@/components/encounter/EncounterLinkedImagingStudiesPanel", () => ({
+  EncounterLinkedImagingStudiesPanel: () => <div data-testid="encounter-linked-imaging-panel">Linked imaging</div>,
+}));
 vi.mock("@/components/encounter/EncounterDischargePanel", () => ({
   EncounterDischargePanel: () => <div data-testid="encounter-discharge-panel">Discharge</div>,
 }));
