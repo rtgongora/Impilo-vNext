@@ -312,6 +312,10 @@ class ClientIdentityOperationsServiceTest {
                         "Self registration started from digital front door",
                         Map.of("source", "unit-test"),
                         List.of("Alice Ncube"),
+                        null,
+                        null,
+                        null,
+                        null,
                         true
                 )
         );
@@ -353,6 +357,10 @@ class ClientIdentityOperationsServiceTest {
                         "Facility registration without immediate temporary identifier",
                         Map.of(),
                         List.of(),
+                        null,
+                        null,
+                        null,
+                        null,
                         false
                 )
         );
@@ -360,6 +368,72 @@ class ClientIdentityOperationsServiceTest {
         assertEquals(IdentityStatus.REGISTERED, savedClient.get().getStatus());
         assertTrue(identifiers.isEmpty());
         assertTrue(response.identifiers().isEmpty());
+    }
+
+    @Test
+    void createRegistration_persistsExtendedDemographicsAndReadBack() {
+        ClientRegistryDtos.ClientProfileResponse response = service.createRegistration(
+                new ClientRegistryDtos.CreateRegistrationRequest(
+                        null,
+                        ClientRegistrationType.FACILITY_REGISTRATION,
+                        "EXPERIENCE_VITO_WIZARD",
+                        null,
+                        101L,
+                        null,
+                        "Tendai",
+                        "Ruvarashe",
+                        "Moyo",
+                        LocalDate.of(1992, 4, 7),
+                        false,
+                        "MALE",
+                        "+263771234567",
+                        "tendai.moyo@example.zw",
+                        "63-123456-A-78",
+                        "P12345678",
+                        "12 Samora Machel Ave",
+                        null,
+                        "Harare",
+                        "Harare",
+                        "Harare",
+                        "Extended demographics intake test",
+                        Map.of("registrationMode", "HEALTH_WORKER_INITIATED"),
+                        List.of(),
+                        "en-ZW",
+                        "MARRIED",
+                        "Rudo Moyo",
+                        "+263772345678",
+                        true
+                )
+        );
+
+        assertEquals("Ruvarashe", savedClient.get().getMiddleName());
+        Map<String, Object> demographics = parseJsonMap(savedClient.get().getDemographics());
+        assertEquals("en-ZW", demographics.get("preferredLanguage"));
+        assertEquals("MARRIED", demographics.get("maritalStatus"));
+        Map<String, Object> contacts = parseJsonMap(savedClient.get().getContacts());
+        assertEquals("tendai.moyo@example.zw", contacts.get("email"));
+        assertEquals("Rudo Moyo", contacts.get("emergencyContactName"));
+        assertEquals("+263772345678", contacts.get("emergencyContactPhone"));
+        Map<String, Object> address = parseJsonMap(savedClient.get().getAddress());
+        assertEquals("12 Samora Machel Ave", address.get("addressLine1"));
+        assertEquals("Harare", address.get("city"));
+        assertTrue(identifiers.stream().anyMatch(i -> "PASSPORT_REFERENCE".equals(i.getIdentifierType())));
+        assertEquals("Ruvarashe", response.master().middleName());
+        assertEquals("en-ZW", response.master().demographics().get("preferredLanguage"));
+        assertEquals("MARRIED", response.master().demographics().get("maritalStatus"));
+        assertEquals("tendai.moyo@example.zw", response.master().contacts().get("email"));
+        assertEquals("Rudo Moyo", response.master().contacts().get("emergencyContactName"));
+        assertEquals("+263772345678", response.master().contacts().get("emergencyContactPhone"));
+        assertEquals("Harare", response.master().address().get("city"));
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> parseJsonMap(String json) {
+        try {
+            return new ObjectMapper().readValue(json != null ? json : "{}", Map.class);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test

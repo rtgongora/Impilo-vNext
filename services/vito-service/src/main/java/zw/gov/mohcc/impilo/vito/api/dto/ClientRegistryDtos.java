@@ -48,6 +48,10 @@ public final class ClientRegistryDtos {
             String notes,
             Map<String, Object> metadata,
             List<String> previousNames,
+            String preferredLanguage,
+            String maritalStatus,
+            String emergencyContactName,
+            String emergencyContactPhone,
             Boolean issueProvisionalIdentifier
     ) {
     }

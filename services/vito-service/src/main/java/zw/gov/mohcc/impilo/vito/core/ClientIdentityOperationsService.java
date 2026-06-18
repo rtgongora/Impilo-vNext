@@ -742,12 +742,24 @@ public class ClientIdentityOperationsService {
 
         Map<String, Object> demographics = parseMap(client.getDemographics());
         if (request.estimatedDateOfBirth() != null) demographics.put("estimatedDateOfBirth", request.estimatedDateOfBirth());
+        if (request.preferredLanguage() != null && !request.preferredLanguage().isBlank()) {
+            demographics.put("preferredLanguage", request.preferredLanguage().trim());
+        }
+        if (request.maritalStatus() != null && !request.maritalStatus().isBlank()) {
+            demographics.put("maritalStatus", request.maritalStatus().trim());
+        }
         if (request.metadata() != null) demographics.putAll(request.metadata());
         client.setDemographics(toJson(demographics));
 
         Map<String, Object> contacts = parseMap(client.getContacts());
         if (request.phone() != null && !request.phone().isBlank()) contacts.put("phone", request.phone().trim());
         if (request.email() != null && !request.email().isBlank()) contacts.put("email", request.email().trim());
+        if (request.emergencyContactName() != null && !request.emergencyContactName().isBlank()) {
+            contacts.put("emergencyContactName", request.emergencyContactName().trim());
+        }
+        if (request.emergencyContactPhone() != null && !request.emergencyContactPhone().isBlank()) {
+            contacts.put("emergencyContactPhone", request.emergencyContactPhone().trim());
+        }
         client.setContacts(toJson(contacts));
 
         Map<String, Object> address = parseMap(client.getAddress());
