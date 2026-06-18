@@ -91,8 +91,8 @@ export const DeviceModal: React.FC<DeviceModalProps> = ({
               <Loader2 className="h-10 w-10 text-impilo-500 animate-spin" />
               <p className="text-sm text-center text-gray-600 max-w-xs">
                 {scanState === "requesting"
-                  ? "Your browser will show a Bluetooth picker. Select your device from the list and grant permission."
-                  : "Establishing connection and subscribing to notifications…"}
+                  ? "Scanning… A device list has appeared in your browser. Select your device and click Pair."
+                  : "Connecting to device and subscribing to notifications — this takes a few seconds…"}
               </p>
             </div>
           )}
@@ -121,17 +121,36 @@ export const DeviceModal: React.FC<DeviceModalProps> = ({
 
           {scanState === "idle" && (
             <div className="flex flex-col items-center gap-4 py-2">
-              <p className="text-sm text-center text-gray-600 max-w-xs">
-                Make sure your Bluetooth device is powered on and in pairing mode, then press{" "}
-                <strong>Scan for device</strong>.
-              </p>
+              <div className="w-full rounded-xl bg-blue-50 border border-blue-100 px-4 py-3 text-xs text-blue-700 leading-relaxed">
+                <strong>How it works:</strong> Click <em>Scan for devices</em> — your browser will open a Bluetooth
+                scanner showing all nearby devices. Select your device from that list and click{" "}
+                <em>Pair</em>. We&apos;ll then connect and begin streaming readings automatically.
+              </div>
+              <ol className="w-full space-y-1.5 text-xs text-gray-500">
+                <li className="flex items-center gap-2">
+                  <span className="h-5 w-5 rounded-full bg-impilo-100 text-impilo-700 text-[10px] font-bold flex items-center justify-center shrink-0">1</span>
+                  Power on your device and set it to pairing mode
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="h-5 w-5 rounded-full bg-impilo-100 text-impilo-700 text-[10px] font-bold flex items-center justify-center shrink-0">2</span>
+                  Click <strong>Scan</strong> — a device list will appear in your browser
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="h-5 w-5 rounded-full bg-impilo-100 text-impilo-700 text-[10px] font-bold flex items-center justify-center shrink-0">3</span>
+                  Select your device and click Pair
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="h-5 w-5 rounded-full bg-impilo-100 text-impilo-700 text-[10px] font-bold flex items-center justify-center shrink-0">4</span>
+                  Readings will stream live — tap Save to record
+                </li>
+              </ol>
               <button
                 type="button"
                 onClick={onRequestDevice}
                 className="w-full rounded-xl bg-impilo-600 text-white py-2.5 text-sm font-medium hover:bg-impilo-700 transition-colors flex items-center justify-center gap-2"
               >
                 <Bluetooth className="h-4 w-4" />
-                Scan for device
+                Scan for devices
               </button>
             </div>
           )}

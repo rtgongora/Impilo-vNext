@@ -19,8 +19,8 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContextFilter;
  * <ul>
  *   <li>{@code /actuator/**} — open (health probes, Prometheus metrics)</li>
  *   <li>{@code /swagger-ui/**}, {@code /v3/api-docs/**} — open (API documentation)</li>
- *   <li>{@code /v1/**} — authenticated (all PCT business endpoints)</li>
- *   <li>Everything else — authenticated</li>
+ *   <li>{@code /v1/**} — trust-header gated via {@link TrustContextFilter}
+ *       (Envoy ext_authz in production; local compose permits all when JWT is off)</li>
  * </ul>
  *
  * <p>The {@link TrustContextFilter} from shared-core is registered before
@@ -51,9 +51,7 @@ public class SecurityConfig {
                 // API documentation
                 .requestMatchers("/swagger-ui/**").permitAll()
                 .requestMatchers("/v3/api-docs/**").permitAll()
-                // All PCT business endpoints require authentication
-                .requestMatchers("/v1/**").authenticated()
-                // Everything else requires authentication
+                // Trust headers enforced by TrustContextFilter; JWT optional in local compose
                 .anyRequest().permitAll()
             );
 

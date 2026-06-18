@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * IoT Vitals — BLE device integration page accessible from the Life tab.
+ * IoT Vitals — BLE medical-device integration page accessible from the Life tab.
  *
  * Flow:
  *   1. Clinician searches and selects a patient (VITO client registry via BFF).
@@ -12,13 +12,8 @@
  *   4. Saves POSTed to  POST /internal/v1/vitals  (BFF → PCT).
  *   5. History refreshed after each save.
  *
- * Bluetooth UUIDs used per vital:
- *   - Blood Pressure  : 0x1810 / 0x2A35 (IEEE 11073 BP Measurement)
- *   - Heart Rate      : 0x180D / 0x2A37 (Heart Rate Measurement)
- *   - SpO₂            : 0x1822 / 0x2A5F (PLX Spot-Check)
- *   - Temperature     : 0x1809 / 0x2A1C (Health Thermometer)
- *   - Weight          : 0x181D / 0x2A9D (Weight Measurement)
- *   - Respiratory Rate: generic (0x1840 / 0x2A66)
+ * Bluetooth wiring (vendor UUIDs + byte parsing) is ported from the proven Impilo
+ * Practitioner desktop app. See components/iot/deviceConfig.ts and dataParser.ts.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -36,44 +31,48 @@ import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { apiClient } from "@/lib/api-client";
 import { VitalCard, type VitalCardConfig, type VitalReading } from "@/components/iot/VitalCard";
-
-// ── BLE parse helpers ─────────────────────────────────────────────────────────
-
-function parseBpSystolic(dv: DataView): number | null {
-  if (dv.byteLength < 3) return null;
-  return dv.getUint16(1, true);
-}
-function parseBpDiastolic(dv: DataView): number | null {
-  if (dv.byteLength < 5) return null;
-  return dv.getUint16(3, true);
-}
-function parseHeartRate(dv: DataView): number | null {
-  if (dv.byteLength < 2) return null;
-  const flags = dv.getUint8(0);
-  return flags & 0x01 ? dv.getUint16(1, true) : dv.getUint8(1);
-}
-function parseTemperature(dv: DataView): number | null {
-  if (dv.byteLength < 5) return null;
-  const mantissa = dv.getInt32(1, true) & 0xffffff;
-  const exponent = dv.getInt8(4);
-  return mantissa * Math.pow(10, exponent);
-}
-function parseSpO2(dv: DataView): number | null {
-  if (dv.byteLength < 3) return null;
-  return dv.getUint16(1, true) / 100;
-}
-function parseWeight(dv: DataView): number | null {
-  if (dv.byteLength < 3) return null;
-  return dv.getUint16(1, true) * 0.005;
-}
-function parseRespRate(dv: DataView): number | null {
-  if (dv.byteLength < 2) return null;
-  return dv.getUint8(1);
-}
+import {
+  BLE_BLOOD_PRESSURE,
+  BLE_GLUCOMETER,
+  BLE_OXIMETER,
+  BLE_THERMOMETER,
+} from "@/components/iot/deviceConfig";
 
 // ── Vital configs ─────────────────────────────────────────────────────────────
-
+//
+// Bluetooth-enabled cards use real device kinds (oximeter, thermometer,
+// blood-pressure monitor, glucometer). The pulse oximeter streams both SpO₂ and
+// pulse, so that card saves oxygen_saturation + heart_rate together. Glucose has
+// no dedicated PCT field, so it is stored in the visit notes.
 const VITAL_CONFIGS: VitalCardConfig[] = [
+  {
+    key: "spo2",
+    label: "Pulse Oximeter",
+    unit: "%",
+    icon: "🫁",
+    color: "bg-gradient-to-br from-blue-500 to-cyan-600",
+    postField: "oxygen_saturation",
+    postField2: "heart_rate",
+    secondaryLabel: "Pulse",
+    placeholder: "SpO₂ %",
+    placeholder2: "Pulse (bpm)",
+    min: 70,
+    max: 100,
+    ble: BLE_OXIMETER,
+  },
+  {
+    key: "temp",
+    label: "Body Temperature",
+    unit: "°C",
+    icon: "🌡️",
+    color: "bg-gradient-to-br from-amber-500 to-orange-500",
+    postField: "temperature",
+    placeholder: "°C",
+    decimals: 1,
+    min: 34,
+    max: 42,
+    ble: BLE_THERMOMETER,
+  },
   {
     key: "bp",
     label: "Blood Pressure",
@@ -82,64 +81,25 @@ const VITAL_CONFIGS: VitalCardConfig[] = [
     color: "bg-gradient-to-br from-red-500 to-rose-600",
     postField: "systolic",
     postField2: "diastolic",
+    secondaryLabel: "Diastolic",
     placeholder: "Systolic",
     placeholder2: "Diastolic",
     min: 60,
     max: 250,
-    ble: {
-      serviceUuid: "0x1810",
-      characteristicUuid: "0x2A35",
-      parseValue: parseBpSystolic,
-      parseSecondValue: parseBpDiastolic,
-    },
+    ble: BLE_BLOOD_PRESSURE,
   },
   {
-    key: "hr",
-    label: "Heart Rate",
-    unit: "bpm",
-    icon: "❤️",
-    color: "bg-gradient-to-br from-pink-500 to-rose-500",
-    postField: "heart_rate",
-    placeholder: "BPM",
-    min: 30,
-    max: 250,
-    ble: {
-      serviceUuid: "0x180D",
-      characteristicUuid: "0x2A37",
-      parseValue: parseHeartRate,
-    },
-  },
-  {
-    key: "spo2",
-    label: "Oxygen Saturation",
-    unit: "%",
-    icon: "🫁",
-    color: "bg-gradient-to-br from-blue-500 to-cyan-600",
-    postField: "oxygen_saturation",
-    placeholder: "SpO₂ %",
-    min: 70,
-    max: 100,
-    ble: {
-      serviceUuid: "0x1822",
-      characteristicUuid: "0x2A5F",
-      parseValue: parseSpO2,
-    },
-  },
-  {
-    key: "temp",
-    label: "Temperature",
-    unit: "°C",
-    icon: "🌡️",
-    color: "bg-gradient-to-br from-amber-500 to-orange-500",
-    postField: "temperature",
-    placeholder: "°C",
-    min: 34,
-    max: 42,
-    ble: {
-      serviceUuid: "0x1809",
-      characteristicUuid: "0x2A1C",
-      parseValue: parseTemperature,
-    },
+    key: "glucose",
+    label: "Blood Glucose",
+    unit: "mmol/L",
+    icon: "🩸",
+    color: "bg-gradient-to-br from-fuchsia-500 to-pink-600",
+    postField: "notes",
+    placeholder: "mmol/L",
+    decimals: 1,
+    min: 1,
+    max: 40,
+    ble: BLE_GLUCOMETER,
   },
   {
     key: "rr",
@@ -151,11 +111,6 @@ const VITAL_CONFIGS: VitalCardConfig[] = [
     placeholder: "Breaths/min",
     min: 8,
     max: 40,
-    ble: {
-      serviceUuid: "0x1840",
-      characteristicUuid: "0x2A66",
-      parseValue: parseRespRate,
-    },
   },
   {
     key: "weight",
@@ -165,13 +120,9 @@ const VITAL_CONFIGS: VitalCardConfig[] = [
     color: "bg-gradient-to-br from-violet-500 to-purple-600",
     postField: "weight",
     placeholder: "kg",
+    decimals: 1,
     min: 1,
     max: 300,
-    ble: {
-      serviceUuid: "0x181D",
-      characteristicUuid: "0x2A9D",
-      parseValue: parseWeight,
-    },
   },
   {
     key: "height",
@@ -232,14 +183,41 @@ interface RawVital {
 }
 
 function extractHistory(raw: RawVital[], config: VitalCardConfig): VitalReading[] {
-  return raw.flatMap((r): VitalReading[] => {
+  const readings = raw.flatMap((r): VitalReading[] => {
     const attrs = r.attributes ?? r;
+    const ts = String(
+      attrs.recorded_at ?? attrs.created_at ?? attrs.createdAt ?? attrs.timestamp ?? "",
+    );
+
+    // Vitals with no dedicated PCT column (e.g. glucose) are stored in notes as
+    // "<label>: <value> <unit>" — parse them back out for the history view.
+    if (config.postField === "notes") {
+      const notes = String(attrs.notes ?? "");
+      const re = new RegExp(`${config.label}\\s*:\\s*([\\d.]+)`, "i");
+      const match = notes.match(re);
+      if (!match) return [];
+      const value = Number(match[1]);
+      if (!Number.isFinite(value) || value <= 0) return [];
+      return [{ value, timestamp: ts || new Date().toISOString(), source: "device" }];
+    }
+
     const primary = Number(attrs[config.postField] ?? 0);
     const secondary = config.postField2 ? Number(attrs[config.postField2] ?? 0) : undefined;
-    const ts = String(attrs.created_at ?? attrs.recorded_at ?? attrs.timestamp ?? new Date().toISOString());
     if (!primary) return [];
-    return [{ value: primary, value2: secondary || undefined, timestamp: ts, source: "device" }];
+    return [
+      {
+        value: primary,
+        value2: secondary || undefined,
+        timestamp: ts || new Date().toISOString(),
+        source: "device",
+      },
+    ];
   });
+
+  // Newest first.
+  return readings.sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+  );
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
@@ -328,12 +306,15 @@ export default function IotVitalsPage() {
       if (!selectedPatient) return;
       const cpid = selectedPatient.cpid ?? (selectedPatient.attributes?.cpid as string) ?? selectedPatient.id;
 
-      const body: Record<string, unknown> = {
-        patient_id: cpid,
-        [cfg.postField]: primary,
-      };
-      if (cfg.postField2 && secondary !== undefined) {
-        body[cfg.postField2] = secondary;
+      const body: Record<string, unknown> = { patient_id: cpid };
+      if (cfg.postField === "notes") {
+        // Vitals with no dedicated PCT field (e.g. glucose) are recorded in notes.
+        body.notes = `${cfg.label}: ${primary} ${cfg.unit}`;
+      } else {
+        body[cfg.postField] = primary;
+        if (cfg.postField2 && secondary !== undefined) {
+          body[cfg.postField2] = secondary;
+        }
       }
 
       try {
