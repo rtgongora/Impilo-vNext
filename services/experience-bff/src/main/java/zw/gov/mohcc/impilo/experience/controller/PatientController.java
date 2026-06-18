@@ -64,6 +64,20 @@ public class PatientController {
         }
 
         try {
+            Map<String, Object> registryBody = toClientRegistryRegistration(patientData);
+            JsonNode profile = vitoClient.createClientRegistration(registryBody);
+            Map<String, Object> patient = mapClientProfileToPatient(profile);
+            patient = withRegistrationOverlay(patient, patientData, true);
+
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("data", patient);
+            response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+            return ResponseEntity.status(201).body(response);
+        } catch (Exception e) {
+            log.info("VITO client-registry registration unavailable — trying legacy issuance path: {}", e.getMessage());
+        }
+
+        try {
             Map<String, Object> vitoPayload = new LinkedHashMap<>(patientData);
             vitoPayload.put("given_name", givenName);
             vitoPayload.put("family_name", familyName != null ? familyName : "");
@@ -242,6 +256,15 @@ public class PatientController {
         copyIfPresent(attrs, request, "locality_gazetteer_id");
         copyIfPresent(attrs, request, "locality_proposal_text");
         copyIfPresent(attrs, request, "coverage");
+        copyIfPresent(attrs, request, "middle_name", "middleName");
+        copyIfPresent(attrs, request, "email");
+        copyIfPresent(attrs, request, "passport_reference", "passportReference");
+        copyIfPresent(attrs, request, "address_line", "addressLine1");
+        copyIfPresent(attrs, request, "city");
+        copyIfPresent(attrs, request, "preferred_language", "preferredLanguage");
+        copyIfPresent(attrs, request, "marital_status", "maritalStatus");
+        copyIfPresent(attrs, request, "emergency_contact_name", "emergencyContactName");
+        copyIfPresent(attrs, request, "emergency_contact_phone", "emergencyContactPhone");
         attrs.put("registryDelegation", delegatedToVito);
         attrs.put("registrySyncState", delegatedToVito ? "VITO_ISSUED" : "OFFLINE_PROVISIONAL_LOCAL_FALLBACK");
         out.put("attributes", attrs);
@@ -252,6 +275,99 @@ public class PatientController {
         if (req.containsKey(key) && req.get(key) != null) {
             attrs.put(key, req.get(key));
         }
+    }
+
+    private static void copyIfPresent(Map<String, Object> attrs, Map<String, Object> req, String reqKey, String attrKey) {
+        if (req.containsKey(reqKey) && req.get(reqKey) != null) {
+            attrs.put(attrKey, req.get(reqKey));
+        }
+    }
+
+    /**
+     * Maps Experience walk-in / wizard patient payloads onto Vito client-registry registration bodies.
+     */
+    static Map<String, Object> toClientRegistryRegistration(Map<String, Object> body) {
+        Map<String, Object> metadata = new LinkedHashMap<>();
+        copyIfPresent(metadata, body, "registration_mode");
+        copyIfPresent(metadata, body, "initiating_actor");
+        copyIfPresent(metadata, body, "initiating_context");
+        copyIfPresent(metadata, body, "assurance_level");
+        copyIfPresent(metadata, body, "identity_state");
+        copyIfPresent(metadata, body, "offline_provisional");
+        copyIfPresent(metadata, body, "consent_status");
+        copyIfPresent(metadata, body, "consent_deferred_reason");
+        copyIfPresent(metadata, body, "purpose_of_use");
+        copyIfPresent(metadata, body, "country_alpha2");
+        copyIfPresent(metadata, body, "province_code");
+        copyIfPresent(metadata, body, "district_code");
+        copyIfPresent(metadata, body, "ward_code");
+        copyIfPresent(metadata, body, "locality_gazetteer_id");
+        copyIfPresent(metadata, body, "locality_proposal_text");
+        copyIfPresent(metadata, body, "coverage");
+        copyIfPresent(metadata, body, "dob_certainty");
+        copyIfPresent(metadata, body, "unknown_name_flag");
+
+        Map<String, Object> reg = new LinkedHashMap<>();
+        reg.put("registrationType", mapRegistrationMode(strVal(body, "registration_mode")));
+        reg.put("initiatedChannel", firstNonBlank(
+                strVal(body, "source_workflow"),
+                strVal(body, "initiating_context"),
+                "EXPERIENCE_VITO_WIZARD"));
+        reg.put("firstName", strVal(body, "given_name", "givenName", "firstName"));
+        reg.put("middleName", strVal(body, "middle_name", "middleName"));
+        reg.put("lastName", strVal(body, "family_name", "familyName", "lastName"));
+        reg.put("dateOfBirth", strVal(body, "date_of_birth", "dateOfBirth"));
+        reg.put("sex", strVal(body, "sex", "gender"));
+        reg.put("phone", strVal(body, "phone"));
+        reg.put("email", strVal(body, "email"));
+        reg.put("nationalIdReference", strVal(body, "national_id", "nationalId", "nationalIdReference"));
+        reg.put("passportReference", strVal(body, "passport_reference", "passportReference"));
+        reg.put("addressLine1", strVal(body, "address_line", "address_line1", "addressLine1"));
+        reg.put("city", strVal(body, "city"));
+        reg.put("preferredLanguage", strVal(body, "preferred_language", "preferredLanguage"));
+        reg.put("maritalStatus", strVal(body, "marital_status", "maritalStatus"));
+        reg.put("emergencyContactName", strVal(body, "emergency_contact_name", "emergencyContactName"));
+        reg.put("emergencyContactPhone", strVal(body, "emergency_contact_phone", "emergencyContactPhone"));
+        reg.put("issueProvisionalIdentifier", true);
+        reg.put("metadata", metadata);
+
+        String facilityId = strVal(body, "facility_id", "facilityId");
+        if (facilityId != null && !facilityId.isBlank()) {
+            try {
+                reg.put("linkedFacilityId", Long.parseLong(facilityId));
+            } catch (NumberFormatException ignored) {
+                metadata.put("facilityId", facilityId);
+                reg.put("metadata", metadata);
+            }
+        }
+
+        String providerId = strVal(body, "provider_id", "providerId", "linkedProviderId");
+        if (providerId != null && !providerId.isBlank()) {
+            reg.put("linkedProviderId", providerId);
+        }
+
+        return reg;
+    }
+
+    private static String mapRegistrationMode(String registrationMode) {
+        if (registrationMode == null || registrationMode.isBlank()) {
+            return "FACILITY_REGISTRATION";
+        }
+        return switch (registrationMode.toUpperCase()) {
+            case "SELF_INITIATED", "CITIZEN_SELF_SERVICE" -> "SELF_INITIATED";
+            case "COMMUNITY_REGISTRATION", "OUTREACH_REGISTRATION" -> "COMMUNITY_REGISTRATION";
+            case "VIRTUAL_REGISTRATION" -> "VIRTUAL_REGISTRATION";
+            default -> "FACILITY_REGISTRATION";
+        };
+    }
+
+    private static String firstNonBlank(String... values) {
+        for (String value : values) {
+            if (value != null && !value.isBlank()) {
+                return value;
+            }
+        }
+        return null;
     }
 
     private static Map<String, Object> mapIssuanceToPatient(
@@ -307,6 +423,7 @@ public class PatientController {
         String healthId = textOrNull(master, "healthId");
         String impiloId = textOrNull(master, "impiloId");
         String first = textOrNull(master, "firstName");
+        String middle = textOrNull(master, "middleName");
         String last = textOrNull(master, "lastName");
         String dob = textOrNull(master, "dateOfBirth");
         String sex = textOrNull(master, "sex");
@@ -315,13 +432,19 @@ public class PatientController {
         attrs.put("impiloId", impiloId);
         attrs.put("cpid", impiloId != null ? impiloId : healthId);
         attrs.put("givenName", first != null ? first : "");
+        attrs.put("middleName", middle);
         attrs.put("familyName", last != null ? last : "");
-        attrs.put("displayName", ((first != null ? first : "") + " " + (last != null ? last : "")).trim());
+        attrs.put("displayName", buildDisplayName(first, middle, last));
         attrs.put("dateOfBirth", dob != null ? dob : "");
         attrs.put("sex", sex != null ? sex : "unknown");
         attrs.put("lifecycleStatus", textOrNull(master, "lifecycleStatus"));
         attrs.put("verificationStatus", textOrNull(master, "verificationStatus"));
         attrs.put("status", textOrNull(master, "lifecycleStatus"));
+        putNestedPatientFields(attrs, master.get("contacts"), "phone", "email",
+                "emergencyContactName", "emergencyContactPhone");
+        putNestedPatientFields(attrs, master.get("address"), "addressLine1", "city");
+        putNestedPatientFields(attrs, master.get("demographics"), "preferredLanguage", "maritalStatus");
+        putPassportReferenceFromIdentifiers(attrs, profile);
         if (dob != null && !dob.isBlank()) {
             try {
                 attrs.put("age", LocalDate.now().getYear() - LocalDate.parse(dob).getYear());
@@ -329,6 +452,60 @@ public class PatientController {
             }
         }
         return Map.of("id", healthId != null ? healthId : UUID.randomUUID().toString(), "type", "patient", "attributes", attrs);
+    }
+
+    private static String buildDisplayName(String first, String middle, String last) {
+        StringBuilder sb = new StringBuilder();
+        if (first != null && !first.isBlank()) {
+            sb.append(first.trim());
+        }
+        if (middle != null && !middle.isBlank()) {
+            if (!sb.isEmpty()) sb.append(' ');
+            sb.append(middle.trim());
+        }
+        if (last != null && !last.isBlank()) {
+            if (!sb.isEmpty()) sb.append(' ');
+            sb.append(last.trim());
+        }
+        return sb.toString().trim();
+    }
+
+    private static void putNestedPatientFields(Map<String, Object> attrs, JsonNode node, String... keys) {
+        if (node == null || node.isNull() || !node.isObject()) {
+            return;
+        }
+        for (String key : keys) {
+            String value = textOrNull(node, key);
+            if (value != null) {
+                attrs.put(key, value);
+            }
+        }
+    }
+
+    /**
+     * Maps Vito client-registry {@code identifiers[]} onto patient attributes for GET read-back.
+     */
+    private static void putPassportReferenceFromIdentifiers(Map<String, Object> attrs, JsonNode profile) {
+        if (profile == null || profile.isNull()) {
+            return;
+        }
+        JsonNode identifiers = profile.get("identifiers");
+        if (identifiers == null || identifiers.isNull() || !identifiers.isArray()) {
+            return;
+        }
+        for (JsonNode identifier : identifiers) {
+            if (identifier == null || identifier.isNull()) {
+                continue;
+            }
+            if (!"PASSPORT_REFERENCE".equals(textOrNull(identifier, "identifierType"))) {
+                continue;
+            }
+            String value = textOrNull(identifier, "identifierValue");
+            if (value != null && !value.isBlank()) {
+                attrs.put("passportReference", value.trim());
+            }
+            return;
+        }
     }
 
     private static Map<String, Object> mapClientEntityToPatient(JsonNode entity) {

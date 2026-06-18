@@ -1,12 +1,15 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -57,8 +60,176 @@ class PatientControllerTest {
         assertEquals("pat-001", data.get("id"));
     }
 
+    @Test
+    void toClientRegistryRegistration_mapsExtendedDemographics() {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("given_name", "Tendai");
+        body.put("middle_name", "Ruvarashe");
+        body.put("family_name", "Moyo");
+        body.put("date_of_birth", "1992-04-07");
+        body.put("sex", "male");
+        body.put("phone", "+263771234567");
+        body.put("email", "tendai.moyo@example.zw");
+        body.put("passport_reference", "P12345678");
+        body.put("address_line", "12 Samora Machel Ave");
+        body.put("city", "Harare");
+        body.put("preferred_language", "en-ZW");
+        body.put("marital_status", "MARRIED");
+        body.put("emergency_contact_name", "Rudo Moyo");
+        body.put("emergency_contact_phone", "+263772345678");
+        body.put("registration_mode", "HEALTH_WORKER_INITIATED");
+        body.put("source_workflow", "EXPERIENCE_VITO_WIZARD");
+
+        Map<String, Object> reg = PatientController.toClientRegistryRegistration(body);
+
+        assertEquals("Tendai", reg.get("firstName"));
+        assertEquals("Ruvarashe", reg.get("middleName"));
+        assertEquals("Moyo", reg.get("lastName"));
+        assertEquals("tendai.moyo@example.zw", reg.get("email"));
+        assertEquals("P12345678", reg.get("passportReference"));
+        assertEquals("12 Samora Machel Ave", reg.get("addressLine1"));
+        assertEquals("Harare", reg.get("city"));
+        assertEquals("en-ZW", reg.get("preferredLanguage"));
+        assertEquals("MARRIED", reg.get("maritalStatus"));
+        assertEquals("Rudo Moyo", reg.get("emergencyContactName"));
+        assertEquals("+263772345678", reg.get("emergencyContactPhone"));
+        assertEquals("FACILITY_REGISTRATION", reg.get("registrationType"));
+    }
+
+    @Test
+    void createPatient_returnsExtendedDemographicsFromRegistryProfile() {
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode profile = mapper.createObjectNode();
+        ObjectNode master = profile.putObject("master");
+        master.put("healthId", "11111111-1111-1111-1111-111111111111");
+        master.put("firstName", "Tendai");
+        master.put("middleName", "Ruvarashe");
+        master.put("lastName", "Moyo");
+        master.put("dateOfBirth", "1992-04-07");
+        master.put("sex", "male");
+        master.put("lifecycleStatus", "PROVISIONAL");
+        master.putObject("contacts")
+                .put("email", "tendai.moyo@example.zw")
+                .put("phone", "+263771234567")
+                .put("emergencyContactName", "Rudo Moyo")
+                .put("emergencyContactPhone", "+263772345678");
+        master.putObject("address")
+                .put("addressLine1", "12 Samora Machel Ave")
+                .put("city", "Harare");
+        master.putObject("demographics")
+                .put("preferredLanguage", "en-ZW")
+                .put("maritalStatus", "MARRIED");
+
+        PatientController controller = new PatientController(new RegistryCapturingVitoClient(profile));
+
+        ResponseEntity<Map<String, Object>> response = controller.createPatient(
+                "tenant-1",
+                "req-ext",
+                "corr-ext",
+                null,
+                Map.of(
+                        "given_name", "Tendai",
+                        "middle_name", "Ruvarashe",
+                        "family_name", "Moyo",
+                        "date_of_birth", "1992-04-07",
+                        "sex", "male",
+                        "email", "tendai.moyo@example.zw",
+                        "preferred_language", "en-ZW"
+                )
+        );
+
+        assertEquals(201, response.getStatusCode().value());
+        Map<?, ?> attrs = (Map<?, ?>) ((Map<?, ?>) response.getBody().get("data")).get("attributes");
+        assertEquals("Ruvarashe", attrs.get("middleName"));
+        assertEquals("tendai.moyo@example.zw", attrs.get("email"));
+        assertEquals("en-ZW", attrs.get("preferredLanguage"));
+        assertEquals("MARRIED", attrs.get("maritalStatus"));
+        assertEquals("Harare", attrs.get("city"));
+        assertEquals(true, attrs.get("registryDelegation"));
+    }
+
+    @Test
+    void getPatient_mapsPassportReferenceFromProfileIdentifiers() {
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode profile = mapper.createObjectNode();
+        ObjectNode master = profile.putObject("master");
+        master.put("healthId", "11111111-1111-1111-1111-111111111111");
+        master.put("firstName", "Tendai");
+        master.put("lastName", "Moyo");
+        master.put("dateOfBirth", "1992-04-07");
+        master.put("sex", "male");
+        master.put("lifecycleStatus", "PROVISIONAL");
+        var identifiers = profile.putArray("identifiers");
+        ObjectNode passport = identifiers.addObject();
+        passport.put("identifierType", "PASSPORT_REFERENCE");
+        passport.put("identifierValue", "P12345678");
+
+        PatientController controller = new PatientController(new ProfileReturningVitoClient(profile));
+
+        ResponseEntity<Map<String, Object>> response = controller.getPatient(
+                "11111111-1111-1111-1111-111111111111",
+                "req-passport-get",
+                "corr-passport-get");
+
+        assertEquals(200, response.getStatusCode().value());
+        Map<?, ?> attrs = (Map<?, ?>) ((Map<?, ?>) response.getBody().get("data")).get("attributes");
+        assertEquals("P12345678", attrs.get("passportReference"));
+    }
+
+    @Test
+    void getPatient_omitsPassportReferenceWhenIdentifiersAbsent() {
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode profile = mapper.createObjectNode();
+        ObjectNode master = profile.putObject("master");
+        master.put("healthId", "22222222-2222-2222-2222-222222222222");
+        master.put("firstName", "Tendai");
+        master.put("lastName", "Moyo");
+        master.put("dateOfBirth", "1992-04-07");
+        master.put("sex", "male");
+        master.put("lifecycleStatus", "PROVISIONAL");
+
+        PatientController controller = new PatientController(new ProfileReturningVitoClient(profile));
+
+        ResponseEntity<Map<String, Object>> response = controller.getPatient(
+                "22222222-2222-2222-2222-222222222222",
+                "req-minimal-get",
+                "corr-minimal-get");
+
+        assertEquals(200, response.getStatusCode().value());
+        Map<?, ?> attrs = (Map<?, ?>) ((Map<?, ?>) response.getBody().get("data")).get("attributes");
+        assertFalse(attrs.containsKey("passportReference"));
+    }
+
     private static ServiceClientConfig.ServiceEndpoints endpoints() {
         return ServiceClientConfig.testServiceEndpoints();
+    }
+
+    private static final class RegistryCapturingVitoClient extends VitoServiceClient {
+        private final JsonNode profile;
+
+        RegistryCapturingVitoClient(JsonNode profile) {
+            super(new RestTemplate(), endpoints());
+            this.profile = profile;
+        }
+
+        @Override
+        public JsonNode createClientRegistration(Map<String, Object> body) {
+            return profile;
+        }
+    }
+
+    private static final class ProfileReturningVitoClient extends VitoServiceClient {
+        private final JsonNode profile;
+
+        ProfileReturningVitoClient(JsonNode profile) {
+            super(new RestTemplate(), endpoints());
+            this.profile = profile;
+        }
+
+        @Override
+        public JsonNode getClientRegistryProfile(String id) {
+            return profile;
+        }
     }
 
     private static final class UnavailableVitoClient extends VitoServiceClient {
@@ -73,6 +244,11 @@ class PatientControllerTest {
 
         @Override
         public JsonNode getClientRegistryProfile(String id) {
+            throw new RuntimeException("vito unavailable");
+        }
+
+        @Override
+        public JsonNode createClientRegistration(Map<String, Object> body) {
             throw new RuntimeException("vito unavailable");
         }
 
