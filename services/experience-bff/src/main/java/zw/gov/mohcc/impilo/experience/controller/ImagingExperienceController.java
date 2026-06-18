@@ -255,6 +255,35 @@ public class ImagingExperienceController {
         return ResponseEntity.ok(envelope(raw));
     }
 
+    @PostMapping("/studies/{studyId}/annotations")
+    public ResponseEntity<Map<String, Object>> createAnnotation(
+            HttpServletRequest request,
+            @PathVariable String studyId,
+            @RequestBody Map<String, Object> body,
+            @RequestParam(name = "chart_patient_cpid", required = false) String chartPatientCpid) {
+        imagingGovernanceService.assertGovernedMutate();
+        JsonNode study = pacsServiceClient.getStudy(studyId);
+        imagingAccessPolicyService.assertStudyMatchesPatient(study, chartPatientCpid);
+        JsonNode raw = pacsServiceClient.createAnnotation(studyId, body);
+        audit(request, "IMAGING_ANNOTATION_CREATED", "POST:imaging/annotations", "SUCCESS",
+                "imaging_study", studyId, Map.copyOf(body));
+        return ResponseEntity.ok(envelope(raw));
+    }
+
+    @GetMapping("/studies/{studyId}/annotations")
+    public ResponseEntity<Map<String, Object>> listAnnotations(
+            HttpServletRequest request,
+            @PathVariable String studyId,
+            @RequestParam(name = "chart_patient_cpid", required = false) String chartPatientCpid) {
+        imagingGovernanceService.assertGovernedRead();
+        JsonNode study = pacsServiceClient.getStudy(studyId);
+        imagingAccessPolicyService.assertStudyMatchesPatient(study, chartPatientCpid);
+        JsonNode raw = pacsServiceClient.listAnnotations(studyId);
+        audit(request, "IMAGING_ANNOTATION_LIST", "GET:imaging/annotations", "SUCCESS",
+                "imaging_study", studyId, Map.of());
+        return ResponseEntity.ok(envelope(raw));
+    }
+
     private void audit(
             HttpServletRequest request,
             String eventType,

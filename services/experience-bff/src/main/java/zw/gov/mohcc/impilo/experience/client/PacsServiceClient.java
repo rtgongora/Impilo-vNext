@@ -131,6 +131,19 @@ public class PacsServiceClient {
         return extractData(response);
     }
 
+    public JsonNode createAnnotation(String studyId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/imaging-studies/" + studyId + "/annotations";
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(body), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listAnnotations(String studyId) {
+        String url = baseUrl + "/internal/v1/imaging-studies/" + studyId + "/annotations";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
     public JsonNode opsStatus() {
         String url = baseUrl + "/internal/v1/imaging-studies/ops/status";
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);

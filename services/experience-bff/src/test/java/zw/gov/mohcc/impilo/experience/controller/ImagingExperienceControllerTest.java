@@ -206,4 +206,62 @@ class ImagingExperienceControllerTest {
         assertEquals(200, r1.getStatusCode().value());
         assertEquals(200, r2.getStatusCode().value());
     }
+
+    @Test
+    void createAnnotation_invokesMutateGovernanceAndAudit() {
+        ObjectNode study = mapper.createObjectNode().put("id", "st-ann").put("patientCpid", "cpid-1");
+        ObjectNode created = mapper.createObjectNode().put("id", 7).put("note", "Review note");
+        Mockito.when(pacs.getStudy("st-ann")).thenReturn(study);
+        Mockito.when(pacs.createAnnotation(Mockito.eq("st-ann"), Mockito.anyMap())).thenReturn(created);
+        Mockito.doNothing().when(governance).assertGovernedMutate();
+        Mockito.doNothing().when(policy).assertStudyMatchesPatient(study, "cpid-1");
+
+        ResponseEntity<Map<String, Object>> response = controller.createAnnotation(
+                request, "st-ann", Map.of("annotationType", "REVIEW_NOTE", "note", "Review note"), "cpid-1");
+
+        Mockito.verify(governance).assertGovernedMutate();
+        Mockito.verify(governance).recordImagingAudit(
+                Mockito.any(),
+                Mockito.any(),
+                Mockito.any(),
+                Mockito.any(),
+                Mockito.eq("IMAGING_ANNOTATION_CREATED"),
+                Mockito.eq("POST:imaging/annotations"),
+                Mockito.eq("SUCCESS"),
+                Mockito.any(),
+                Mockito.any(),
+                Mockito.any(),
+                Mockito.eq("imaging_study"),
+                Mockito.eq("st-ann"),
+                Mockito.anyMap());
+        assertEquals(200, response.getStatusCode().value());
+    }
+
+    @Test
+    void listAnnotations_invokesReadGovernanceAndAudit() {
+        ObjectNode study = mapper.createObjectNode().put("id", "st-ann").put("patientCpid", "cpid-1");
+        Mockito.when(pacs.getStudy("st-ann")).thenReturn(study);
+        Mockito.when(pacs.listAnnotations("st-ann")).thenReturn(mapper.createArrayNode());
+        Mockito.doNothing().when(governance).assertGovernedRead();
+        Mockito.doNothing().when(policy).assertStudyMatchesPatient(study, "cpid-1");
+
+        ResponseEntity<Map<String, Object>> response = controller.listAnnotations(request, "st-ann", "cpid-1");
+
+        Mockito.verify(governance).assertGovernedRead();
+        Mockito.verify(governance).recordImagingAudit(
+                Mockito.any(),
+                Mockito.any(),
+                Mockito.any(),
+                Mockito.any(),
+                Mockito.eq("IMAGING_ANNOTATION_LIST"),
+                Mockito.eq("GET:imaging/annotations"),
+                Mockito.eq("SUCCESS"),
+                Mockito.any(),
+                Mockito.any(),
+                Mockito.any(),
+                Mockito.eq("imaging_study"),
+                Mockito.eq("st-ann"),
+                Mockito.anyMap());
+        assertEquals(200, response.getStatusCode().value());
+    }
 }
