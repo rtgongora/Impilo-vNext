@@ -42,6 +42,7 @@ function extractDuplicateRows(data: unknown): unknown[] {
 export function VitoClientRegistrationWizard({ facilityId, sourceWorkflow, onRegistered, onCancel }: Props) {
   const [familyName, setFamilyName] = useState("");
   const [givenName, setGivenName] = useState("");
+  const [middleName, setMiddleName] = useState("");
   const [dob, setDob] = useState("");
   const [sex, setSex] = useState("male");
   const [dobCertainty, setDobCertainty] = useState("EXACT");
@@ -62,6 +63,14 @@ export function VitoClientRegistrationWizard({ facilityId, sourceWorkflow, onReg
   const [localityProposal, setLocalityProposal] = useState("");
   const [nationalId, setNationalId] = useState("");
   const [primaryPhone, setPrimaryPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [passportReference, setPassportReference] = useState("");
+  const [addressLine, setAddressLine] = useState("");
+  const [city, setCity] = useState("");
+  const [preferredLanguage, setPreferredLanguage] = useState("");
+  const [maritalStatus, setMaritalStatus] = useState("");
+  const [emergencyContactName, setEmergencyContactName] = useState("");
+  const [emergencyContactPhone, setEmergencyContactPhone] = useState("");
 
   const [coverageStatus, setCoverageStatus] = useState("NO_COVER");
   const [membershipNumber, setMembershipNumber] = useState("");
@@ -129,6 +138,7 @@ export function VitoClientRegistrationWizard({ facilityId, sourceWorkflow, onReg
       const body: Record<string, unknown> = {
         family_name: familyName,
         given_name: givenName,
+        middle_name: middleName || undefined,
         date_of_birth: dob,
         sex,
         dob_certainty: dobCertainty,
@@ -150,6 +160,14 @@ export function VitoClientRegistrationWizard({ facilityId, sourceWorkflow, onReg
         locality_proposal_text: localityProposal || undefined,
         national_id: nationalId || undefined,
         phone: primaryPhone || undefined,
+        email: email || undefined,
+        passport_reference: passportReference || undefined,
+        address_line: addressLine || undefined,
+        city: city || undefined,
+        preferred_language: preferredLanguage || undefined,
+        marital_status: maritalStatus || undefined,
+        emergency_contact_name: emergencyContactName || undefined,
+        emergency_contact_phone: emergencyContactPhone || undefined,
         facility_id: facilityId,
         source_workflow: sourceWorkflow ?? "EXPERIENCE_VITO_WIZARD",
         coverage: {
@@ -268,6 +286,15 @@ export function VitoClientRegistrationWizard({ facilityId, sourceWorkflow, onReg
           />
         </div>
         <div>
+          <label className="block text-xs font-medium text-muted-foreground mb-1">Middle name (optional)</label>
+          <input
+            value={middleName}
+            onChange={(e) => setMiddleName(e.target.value)}
+            disabled={unknownName}
+            className="w-full px-3 py-2 border border-border rounded-lg text-sm"
+          />
+        </div>
+        <div>
           <label className="block text-xs font-medium text-muted-foreground mb-1">Date of birth</label>
           <input
             type="date"
@@ -311,6 +338,79 @@ export function VitoClientRegistrationWizard({ facilityId, sourceWorkflow, onReg
             onChange={(e) => setPrimaryPhone(e.target.value)}
             className="w-full px-3 py-2 border border-border rounded-lg text-sm"
           />
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-border bg-card p-3 space-y-3">
+        <p className="text-sm font-medium text-foreground">Extended demographics (optional, persisted via Vito)</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-3 py-2 border border-border rounded-lg text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Passport reference</label>
+            <input
+              value={passportReference}
+              onChange={(e) => setPassportReference(e.target.value)}
+              className="w-full px-3 py-2 border border-border rounded-lg text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Address line</label>
+            <input
+              value={addressLine}
+              onChange={(e) => setAddressLine(e.target.value)}
+              className="w-full px-3 py-2 border border-border rounded-lg text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">City</label>
+            <input
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              className="w-full px-3 py-2 border border-border rounded-lg text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Preferred language</label>
+            <input
+              value={preferredLanguage}
+              onChange={(e) => setPreferredLanguage(e.target.value)}
+              placeholder="e.g. en-ZW"
+              className="w-full px-3 py-2 border border-border rounded-lg text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Marital status</label>
+            <input
+              value={maritalStatus}
+              onChange={(e) => setMaritalStatus(e.target.value)}
+              placeholder="e.g. MARRIED"
+              className="w-full px-3 py-2 border border-border rounded-lg text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Emergency contact name</label>
+            <input
+              value={emergencyContactName}
+              onChange={(e) => setEmergencyContactName(e.target.value)}
+              className="w-full px-3 py-2 border border-border rounded-lg text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Emergency contact phone</label>
+            <input
+              value={emergencyContactPhone}
+              onChange={(e) => setEmergencyContactPhone(e.target.value)}
+              className="w-full px-3 py-2 border border-border rounded-lg text-sm"
+            />
+          </div>
         </div>
       </div>
 
