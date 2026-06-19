@@ -11,3 +11,4 @@ export * from "./resolver/session-experience-resolver";
 export * from "./types/public-sector-employment-truth";
 export * from "./resolver/organisation-governance";
 export * from "./resolver/hsc-workforce-governance";
+export * from "./resolver/vashandi-workforce-governance";

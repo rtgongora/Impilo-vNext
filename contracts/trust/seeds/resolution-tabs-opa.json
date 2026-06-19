@@ -775,6 +775,155 @@
     {
       "status": "active",
       "auditSensitivity": "medium",
+      "id": "frs-vashandi_workforce_profile_not_found",
+      "code": "vashandi_workforce_profile_not_found",
+      "displayName": "Workforce profile not found",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Workforce profile not found",
+        "userFacingMessage": "No operational workforce profile was found for this person.",
+        "explanation": "No operational workforce profile was found for this person.",
+        "allowedActions": [
+          "Reconcile Workforce Profile",
+          "Contact Support"
+        ],
+        "auditCode": "TRUST.VASHANDI_PROFILE_NOT_FOUND"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-vashandi_assignment_pending_approval",
+      "code": "vashandi_assignment_pending_approval",
+      "displayName": "Assignment pending approval",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Assignment pending approval",
+        "userFacingMessage": "Your workforce assignment is awaiting approval before Work tools appear.",
+        "explanation": "Your workforce assignment is awaiting approval before Work tools appear.",
+        "allowedActions": [
+          "View Assignment Status"
+        ],
+        "auditCode": "TRUST.VASHANDI_ASSIGNMENT_PENDING"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-vashandi_council_status_blocks_activation",
+      "code": "vashandi_council_status_blocks_activation",
+      "displayName": "Council status blocks activation",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Council status blocks activation",
+        "userFacingMessage": "Professional council or HPA status prevents workforce assignment activation.",
+        "explanation": "Professional council or HPA status prevents workforce assignment activation.",
+        "allowedActions": [
+          "View Professional Status",
+          "Contact Council"
+        ],
+        "auditCode": "TRUST.VASHANDI_COUNCIL_BLOCKS"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-vashandi_hsc_status_blocks_activation",
+      "code": "vashandi_hsc_status_blocks_activation",
+      "displayName": "HSC status blocks activation",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "HSC status blocks activation",
+        "userFacingMessage": "Public-sector HSC employment status prevents workforce assignment activation.",
+        "explanation": "Public-sector HSC employment status prevents workforce assignment activation.",
+        "allowedActions": [
+          "View HSC Employment Status",
+          "Contact HSC"
+        ],
+        "auditCode": "TRUST.VASHANDI_HSC_BLOCKS"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-vashandi_check_in_requires_assignment",
+      "code": "vashandi_check_in_requires_assignment",
+      "displayName": "Check-in requires active assignment",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Check-in requires active assignment",
+        "userFacingMessage": "Check-in alone does not create Work access — an active assignment and shift are required.",
+        "explanation": "Check-in alone does not create Work access — an active assignment and shift are required.",
+        "allowedActions": [
+          "View Assignments",
+          "Request Assignment"
+        ],
+        "auditCode": "TRUST.VASHANDI_CHECKIN_REQUIRES_ASSIGNMENT"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-vashandi_workforce_suspended",
+      "code": "vashandi_workforce_suspended",
+      "displayName": "Workforce access suspended",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Workforce access suspended",
+        "userFacingMessage": "Operational workforce access is suspended.",
+        "explanation": "Operational workforce access is suspended.",
+        "allowedActions": [
+          "View Workforce Status",
+          "Contact Manager"
+        ],
+        "auditCode": "TRUST.VASHANDI_WORKFORCE_SUSPENDED"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-vashandi_scope_required",
+      "code": "vashandi_scope_required",
+      "displayName": "Vashandi scope required",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "Vashandi scope required",
+        "userFacingMessage": "Your workforce manager scope must be assigned before Vashandi tools appear.",
+        "explanation": "Your workforce manager scope must be assigned before Vashandi tools appear.",
+        "allowedActions": [
+          "Request Scope Assignment"
+        ],
+        "auditCode": "TRUST.VASHANDI_SCOPE_REQUIRED"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "frs-vashandi_on_leave",
+      "code": "vashandi_on_leave",
+      "displayName": "On leave or unavailable",
+      "category": "friendly_resolution_state",
+      "ownerService": "tshepo",
+      "metadata": {
+        "userTitle": "On leave or unavailable",
+        "userFacingMessage": "You are recorded as on leave or unavailable for rostered shifts.",
+        "explanation": "You are recorded as on leave or unavailable for rostered shifts.",
+        "allowedActions": [
+          "View Leave Status"
+        ],
+        "auditCode": "TRUST.VASHANDI_ON_LEAVE"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
       "id": "tab-personal",
       "code": "personal",
       "displayName": "Personal",
@@ -1073,6 +1222,16 @@
       "category": "opa_policy_package",
       "ownerService": "tshepo",
       "policyMapping": "impilo.hsc"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "opa-impilo-vashandi",
+      "code": "impilo.vashandi",
+      "displayName": "Vashandi",
+      "category": "opa_policy_package",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.vashandi"
     },
     {
       "status": "active",

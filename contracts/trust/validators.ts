@@ -14,6 +14,7 @@ import zimbabweMohccSeed from "./seeds/zimbabwe-mohcc.json";
 import regulatoryInstitutionsSeed from "./seeds/regulatory-institutions.json";
 import organisationGovernanceSeed from "./seeds/organisation-governance.json";
 import hscWorkforceGovernanceSeed from "./seeds/hsc-workforce-governance.json";
+import vashandiWorkforceSeed from "./seeds/vashandi-workforce.json";
 import bootstrapOnboardingSeed from "./seeds/bootstrap-onboarding.json";
 import type { TrustCatalogueBundle } from "./catalogue-schema";
 
@@ -24,6 +25,7 @@ const ALL_BUNDLES: TrustCatalogueBundle[] = [
   regulatoryInstitutionsSeed as TrustCatalogueBundle,
   organisationGovernanceSeed as TrustCatalogueBundle,
   hscWorkforceGovernanceSeed as TrustCatalogueBundle,
+  vashandiWorkforceSeed as TrustCatalogueBundle,
   workContextSeed as TrustCatalogueBundle,
   permissionsSeed as TrustCatalogueBundle,
   governanceMarketplaceSeed as TrustCatalogueBundle,
@@ -59,7 +61,7 @@ export function catalogueCodesByCategory(category: string): Set<string> {
 export function validateAllCataloguesLoad(): string[] {
   const errors: string[] = [];
   try {
-    if (ALL_BUNDLES.length < 11) errors.push(`expected >= 11 bundles, got ${ALL_BUNDLES.length}`);
+    if (ALL_BUNDLES.length < 12) errors.push(`expected >= 12 bundles, got ${ALL_BUNDLES.length}`);
     for (const b of ALL_BUNDLES) {
       if (!b.version) errors.push(`bundle ${b.catalogueId} missing version`);
       if (!b.entries?.length) errors.push(`bundle ${b.catalogueId} has no entries`);
@@ -395,7 +397,86 @@ export function validateHscWorkforceGovernance(): string[] {
   return errors;
 }
 
-function findRoleTemplateMeta(code: string): { defaultPermissions?: string[] } | undefined {
+export function validateVashandiWorkforce(): string[] {
+  const errors: string[] = [];
+  for (const code of ["active", "suspended", "on_leave", "offboarded"]) {
+    if (!findEntry(code, "workforce_status")) errors.push(`missing workforce status ${code}`);
+  }
+  for (const code of ["facility_assignment", "emergency_surge_assignment", "acting_assignment"]) {
+    if (!findEntry(code, "vashandi_assignment_type")) errors.push(`missing vashandi assignment type ${code}`);
+  }
+  for (const code of ["draft", "active", "approved", "rejected"]) {
+    if (!findEntry(code, "vashandi_assignment_status")) errors.push(`missing vashandi assignment status ${code}`);
+  }
+  for (const code of ["facility_roster", "telemedicine_roster", "emergency_roster"]) {
+    if (!findEntry(code, "roster_type")) errors.push(`missing roster type ${code}`);
+  }
+  for (const code of ["check_in", "check_out", "supervisor_confirmed_check_in"]) {
+    if (!findEntry(code, "attendance_event_type")) errors.push(`missing attendance event type ${code}`);
+  }
+  for (const code of ["self_check_in", "offline_check_in", "manual_supervisor_confirmed"]) {
+    if (!findEntry(code, "check_in_mode")) errors.push(`missing check-in mode ${code}`);
+  }
+  for (const code of ["active_access_without_assignment", "public_sector_access_with_hsc_suspension"]) {
+    if (!findEntry(code, "access_risk_type")) errors.push(`missing access risk type ${code}`);
+  }
+  for (const code of [
+    "vashandi_national_workforce_admin",
+    "vashandi_facility_workforce_manager",
+    "vashandi_self_service_worker",
+  ]) {
+    if (!findRoleTemplateMeta(code)) errors.push(`missing Vashandi role template ${code}`);
+  }
+  for (const code of [
+    "vashandi.dashboard",
+    "vashandi.workforce_registry",
+    "vashandi.my_roster",
+    "vashandi.facility_staff",
+    "vashandi.access_review",
+  ]) {
+    if (
+      !findEntry(code, "workspace_type")
+      && !findEntry(code, "registry_owner_workspace")
+      && !findEntry(code, "regulator_workspace")
+      && !findEntry(code, "management_workspace")
+    ) {
+      errors.push(`missing Vashandi workspace ${code}`);
+    }
+  }
+  for (const code of ["vashandi.workforce.view", "vashandi.assignments.activate", "vashandi.attendance.check_in"]) {
+    if (!findEntry(code, "permission")) errors.push(`missing Vashandi permission ${code}`);
+  }
+  if (!findEntry("impilo.vashandi", "opa_policy_package")) {
+    errors.push("missing impilo.vashandi OPA package");
+  }
+  for (const code of ["vashandi_check_in_requires_assignment", "vashandi_council_status_blocks_activation"]) {
+    if (!findEntry(code, "friendly_resolution_state")) errors.push(`missing Vashandi friendly state ${code}`);
+  }
+  const facilityManager = findRoleTemplateMeta("vashandi_facility_workforce_manager");
+  const managerPerms = facilityManager?.defaultPermissions ?? [];
+  if (managerPerms.some((p) => p.startsWith("clinical."))) {
+    errors.push("vashandi_facility_workforce_manager must not have clinical permissions by default");
+  }
+  if (!managerPerms.includes("vashandi.assignments.activate")) {
+    errors.push("vashandi_facility_workforce_manager must include vashandi.assignments.activate");
+  }
+  const selfService = findRoleTemplateMeta("vashandi_self_service_worker");
+  const selfPerms = selfService?.defaultPermissions ?? [];
+  if (!selfPerms.includes("vashandi.attendance.check_in")) {
+    errors.push("vashandi_self_service_worker must include vashandi.attendance.check_in");
+  }
+  if (selfPerms.some((p) => p.startsWith("clinical."))) {
+    errors.push("vashandi_self_service_worker must not have clinical permissions by default");
+  }
+  const nationalAdmin = findRoleTemplateMeta("vashandi_national_workforce_admin");
+  const adminMeta = nationalAdmin as { opaPolicyMapping?: string } | undefined;
+  if (adminMeta?.opaPolicyMapping !== "impilo.vashandi") {
+    errors.push("vashandi_national_workforce_admin must map to impilo.vashandi OPA package");
+  }
+  return errors;
+}
+
+function findRoleTemplateMeta(code: string): { defaultPermissions?: string[]; opaPolicyMapping?: string } | undefined {
   const entry = findEntry(code, "role_template");
   return entry?.metadata as { defaultPermissions?: string[] } | undefined;
 }
@@ -419,20 +500,21 @@ export const REQUIRED_CATALOGUE_CODES: Record<string, string[]> = {
   cpd_compliance_status: ["compliant", "overdue", "restricted_until_complete"],
   approved_work_context_type: ["facility_clinical", "marketplace_operations", "registry_governance", "public_sector_workforce_governance"],
   workplace_place_type: ["clinic", "district_hospital", "marketplace_organisation"],
-  workspace_type: ["pharmacy", "facility_staff_management", "marketplace_vendor_portal"],
+  workspace_type: ["pharmacy", "facility_staff_management", "marketplace_vendor_portal", "vashandi.dashboard", "vashandi.my_roster"],
   assignment_type: ["facility_assignment", "marketplace_organisation_assignment"],
   assignment_status: ["active", "pending_approval", "ended"],
-  role_template_category: ["medical", "pharmacy", "registry_governance", "marketplace_operations"],
+  role_template_category: ["medical", "pharmacy", "registry_governance", "marketplace_operations", "vashandi_workforce_operations"],
   role_template: [
     "chief_pharmacist", "facility_administrator", "telemedicine_provider",
     "marketplace_organisation_admin", "district_medical_officer", "provincial_medical_director",
     "district_nursing_officer", "sister_in_charge_community", "hsc_administrator", "hsc_workforce_governance_officer",
     "national_bootstrap_administrator", "organisation_authorised_representative", "organisation_data_uploader",
+    "vashandi_national_workforce_admin", "vashandi_facility_workforce_manager", "vashandi_self_service_worker",
   ],
   health_administrative_level: ["national", "province", "district", "facility", "community"],
   organisational_structure: ["mohcc_national_headquarters", "provincial_medical_office", "district_medical_office"],
-  permission_domain: ["personal", "work", "registry", "marketplace", "madi.donor"],
-  permission: ["work.context.enter", "registry.provider.verify", "break_glass.authorize", "madi.donor.view"],
+  permission_domain: ["personal", "work", "registry", "marketplace", "madi.donor", "vashandi.workforce"],
+  permission: ["work.context.enter", "registry.provider.verify", "break_glass.authorize", "madi.donor.view", "vashandi.workforce.view"],
   registry_governance_role: ["provider_registry_steward", "client_registry_steward"],
   regulatory_organisation: ["health_professions_authority", "medical_dental_practitioners_council", "nurses_council"],
   organisation_type: ["sovereign_public_owner", "private_hospital", "city_health_department", "health_service_commission"],
@@ -444,6 +526,16 @@ export const REQUIRED_CATALOGUE_CODES: Record<string, string[]> = {
   public_sector_employment_status: ["active", "suspended_from_employment", "transferred_pending_assumption"],
   hsc_organisation: ["health_service_commission"],
   hsc_workforce_governance_role: ["hsc_administrator", "hsc_workforce_governance_officer"],
+  workforce_status: ["active", "suspended", "on_leave"],
+  vashandi_assignment_type: ["facility_assignment", "emergency_surge_assignment"],
+  vashandi_assignment_status: ["active", "approved", "draft"],
+  roster_type: ["facility_roster", "emergency_roster"],
+  shift_status: ["scheduled", "checked_in"],
+  attendance_event_type: ["check_in", "check_out"],
+  check_in_mode: ["self_check_in", "offline_check_in"],
+  leave_type: ["annual_leave", "sick_leave"],
+  access_risk_type: ["active_access_without_assignment", "public_sector_access_with_hsc_suspension"],
+  vashandi_workforce_role: ["vashandi_national_workforce_admin", "vashandi_facility_workforce_manager"],
   management_workspace: ["private_facility_user_management", "municipal_user_management", "council_user_management"],
   regulator_role: ["mdpc_reviewer", "marketplace_certification_reviewer"],
   workplace_manager_role: ["facility_administrator"],
@@ -458,9 +550,10 @@ export const REQUIRED_CATALOGUE_CODES: Record<string, string[]> = {
     "marketplace_sandbox_only", "device_context_requires_user_login",
     "organisation_suspended", "organisation_user_not_assigned", "sandbox_only_access",
     "hsc_employment_not_found", "hsc_employment_suspended", "hsc_posting_required",
+    "vashandi_check_in_requires_assignment", "vashandi_council_status_blocks_activation",
   ],
   session_tab: ["personal", "professional", "work"],
-  opa_policy_package: ["impilo.tabs", "impilo.work", "impilo.registry", "impilo.marketplace", "impilo.break_glass", "impilo.madi", "impilo.organisation", "impilo.hsc"],
+  opa_policy_package: ["impilo.tabs", "impilo.work", "impilo.registry", "impilo.marketplace", "impilo.break_glass", "impilo.madi", "impilo.organisation", "impilo.hsc", "impilo.vashandi"],
 };
 
 export function runAllCatalogueValidators(): { ok: boolean; errors: string[] } {
@@ -476,6 +569,7 @@ export function runAllCatalogueValidators(): { ok: boolean; errors: string[] } {
     ...validateRegulatorMunicipalityMadi(),
     ...validateMultiOrganisationGovernance(),
     ...validateHscWorkforceGovernance(),
+    ...validateVashandiWorkforce(),
   ];
   return { ok: errors.length === 0, errors };
 }

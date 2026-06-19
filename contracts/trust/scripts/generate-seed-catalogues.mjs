@@ -58,6 +58,25 @@ import {
   PUBLIC_SECTOR_EMPLOYMENT_STATUSES,
   HSC_FRIENDLY_RESOLUTION_STATES,
 } from "./hsc-workforce-governance-data.mjs";
+import {
+  WORKFORCE_STATUSES,
+  ASSIGNMENT_TYPES as VASHANDI_ASSIGNMENT_TYPES,
+  ASSIGNMENT_STATUSES as VASHANDI_ASSIGNMENT_STATUSES,
+  ROSTER_TYPES,
+  SHIFT_STATUSES,
+  ATTENDANCE_EVENT_TYPES,
+  CHECK_IN_MODES,
+  LEAVE_TYPES,
+  ACCESS_RISK_TYPES,
+  VASHANDI_WORKSPACES,
+  VASHANDI_PERMISSIONS,
+  VASHANDI_PERMISSION_BASELINE,
+  VASHANDI_DENIED_ACTIONS,
+  VASHANDI_ROLE_DEFINITIONS,
+  VASHANDI_ROLE_TEMPLATE_SPECS,
+  VASHANDI_WORKFORCE_ROLES,
+  VASHANDI_FRIENDLY_RESOLUTION_STATES,
+} from "./vashandi-workforce-data.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SEEDS_DIR = join(__dirname, "..", "seeds");
@@ -484,6 +503,121 @@ const hscWorkforceEntries = [
 
 writeSeed("hsc-workforce-governance", bundle("hsc-workforce-governance", "Health Service Commission Workforce Governance", hscWorkforceEntries));
 
+const vashandiWorkforceEntries = [
+  ...WORKFORCE_STATUSES.map((code) =>
+    entry({
+      id: `vws-${code.replace(/_/g, "-")}`,
+      code,
+      displayName: titleCase(code),
+      category: "workforce_status",
+      ownerService: "vashandi-workforce",
+      policyMapping: ["suspended", "dismissed", "offboarded", "under_review"].includes(code)
+        ? "impilo.vashandi.block"
+        : "impilo.vashandi",
+    }),
+  ),
+  ...VASHANDI_ASSIGNMENT_TYPES.map((code) =>
+    entry({
+      id: `vat-${code.replace(/_/g, "-")}`,
+      code,
+      displayName: titleCase(code),
+      category: "vashandi_assignment_type",
+      ownerService: "vashandi-workforce",
+      policyMapping: "impilo.vashandi",
+    }),
+  ),
+  ...VASHANDI_ASSIGNMENT_STATUSES.map((code) => {
+    const allow = ["active", "approved"].includes(code);
+    return entry({
+      id: `vas-${code.replace(/_/g, "-")}`,
+      code,
+      displayName: titleCase(code),
+      category: "vashandi_assignment_status",
+      ownerService: "vashandi-workforce",
+      policyMapping: allow ? "impilo.vashandi.allow" : "impilo.vashandi.block",
+    });
+  }),
+  ...ROSTER_TYPES.map((code) =>
+    entry({
+      id: `vrt-${code.replace(/_/g, "-")}`,
+      code,
+      displayName: titleCase(code),
+      category: "roster_type",
+      ownerService: "vashandi-workforce",
+      policyMapping: "impilo.vashandi",
+    }),
+  ),
+  ...SHIFT_STATUSES.map((code) =>
+    entry({
+      id: `vss-${code.replace(/_/g, "-")}`,
+      code,
+      displayName: titleCase(code),
+      category: "shift_status",
+      ownerService: "vashandi-workforce",
+      policyMapping: ["checked_in", "confirmed", "scheduled"].includes(code) ? "impilo.vashandi.allow" : "impilo.vashandi",
+    }),
+  ),
+  ...ATTENDANCE_EVENT_TYPES.map((code) =>
+    entry({
+      id: `vaet-${code.replace(/_/g, "-")}`,
+      code,
+      displayName: titleCase(code),
+      category: "attendance_event_type",
+      ownerService: "vashandi-workforce",
+      policyMapping: "impilo.vashandi",
+    }),
+  ),
+  ...CHECK_IN_MODES.map((code) =>
+    entry({
+      id: `vcm-${code.replace(/_/g, "-")}`,
+      code,
+      displayName: titleCase(code),
+      category: "check_in_mode",
+      ownerService: "vashandi-workforce",
+      policyMapping: "impilo.vashandi",
+    }),
+  ),
+  ...LEAVE_TYPES.map((code) =>
+    entry({
+      id: `vlt-${code.replace(/_/g, "-")}`,
+      code,
+      displayName: titleCase(code),
+      category: "leave_type",
+      ownerService: "vashandi-workforce",
+      policyMapping: "impilo.vashandi",
+    }),
+  ),
+  ...ACCESS_RISK_TYPES.map((code) =>
+    entry({
+      id: `vart-${code.replace(/_/g, "-")}`,
+      code,
+      displayName: titleCase(code),
+      category: "access_risk_type",
+      ownerService: "vashandi-workforce",
+      auditSensitivity: "high",
+      policyMapping: "impilo.vashandi",
+    }),
+  ),
+  ...VASHANDI_WORKFORCE_ROLES.map((code) =>
+    entry({
+      id: `vrole-${code.replace(/_/g, "-")}`,
+      code,
+      displayName: titleCase(code),
+      category: "vashandi_workforce_role",
+      ownerService: "vashandi-workforce",
+      policyMapping: "impilo.vashandi",
+      auditSensitivity: code.includes("admin") ? "critical" : "high",
+      metadata: {
+        operationalWorkforceRole: true,
+        notClinicalByDefault: true,
+        notSystemSuperuser: true,
+      },
+    }),
+  ),
+];
+
+writeSeed("vashandi-workforce", bundle("vashandi-workforce", "Vashandi Operational Workforce", vashandiWorkforceEntries));
+
 // ── Work context ──────────────────────────────────────────────────────────────
 const workContextTypes = [
   "facility_clinical", "facility_administration", "facility_operations", "virtual_care",
@@ -534,6 +668,7 @@ const workspaceTypes = [
   ...MULTI_ORG_MANAGEMENT_WORKSPACES.map((w) => w.code),
   ...HSC_WORKSPACES.map((w) => w.code),
   ...HSC_MANAGEMENT_WORKSPACES.map((w) => w.code),
+  ...VASHANDI_WORKSPACES.map((w) => w.code),
   "varapi_provider_worker_registry_governance", "vito_client_registry_governance",
   "tuso_facility_registry_governance", "zibo_terminology_registry_governance",
   "msika_product_service_registry_governance", "indawo_public_health_places_governance",
@@ -565,6 +700,7 @@ const roleTemplateCategories = [
   "governance", "curative_services", "support_services", "digital_health", "executive_leadership",
   "municipal_health", "madi_blood_service", "madi_clinical_transfusion", "madi_haemovigilance",
   "hsc_workforce_governance",
+  "vashandi_workforce_operations",
 ];
 
 const workContextEntries = [
@@ -590,7 +726,8 @@ const workContextEntries = [
   ),
   ...workspaceTypes.map((code) => {
     let category = "workspace_type";
-    if (code.endsWith("_governance") || code.endsWith("_review")) category = code.includes("registry") || code.includes("governance") ? "registry_owner_workspace" : "regulator_workspace";
+    if (code.startsWith("vashandi.")) category = "workspace_type";
+    else if (code.endsWith("_governance") || code.endsWith("_review")) category = code.includes("registry") || code.includes("governance") ? "registry_owner_workspace" : "regulator_workspace";
     const organogramWs = ORGANOGRAM_WORKSPACES.find((w) => w.code === code);
     const regulatorWs = REGULATOR_WORKSPACES.find((w) => w.code === code);
     const municipalWs = MUNICIPAL_WORKSPACES.find((w) => w.code === code);
@@ -599,7 +736,8 @@ const workContextEntries = [
     const multiMgmtWs = MULTI_ORG_MANAGEMENT_WORKSPACES.find((w) => w.code === code);
     const hscWs = HSC_WORKSPACES.find((w) => w.code === code);
     const hscMgmtWs = HSC_MANAGEMENT_WORKSPACES.find((w) => w.code === code);
-    const scoped = regulatorWs ?? municipalWs ?? madiWs ?? hscMgmtWs ?? hscWs ?? multiMgmtWs ?? mgmtWs ?? organogramWs;
+    const vashandiWs = VASHANDI_WORKSPACES.find((w) => w.code === code);
+    const scoped = regulatorWs ?? municipalWs ?? madiWs ?? vashandiWs ?? hscMgmtWs ?? hscWs ?? multiMgmtWs ?? mgmtWs ?? organogramWs;
     if (regulatorWs?.category) category = regulatorWs.category;
     if (mgmtWs || multiMgmtWs || hscMgmtWs) category = "management_workspace";
     if (hscWs && !hscMgmtWs) category = "workspace_type";
@@ -608,8 +746,18 @@ const workContextEntries = [
       code,
       displayName: scoped?.displayName ?? titleCase(code),
       category,
-      ownerService: code.includes("marketplace") ? "msika" : code.includes("registry") || code.includes("trust") ? "tshepo" : code.includes("madi") || code.includes("blood") ? "blood-bank-service" : code.startsWith("hsc_") ? "workforce-governance" : "workforce-governance",
-      policyMapping: code.startsWith("hsc_") ? "impilo.hsc" : undefined,
+      ownerService: code.startsWith("vashandi.")
+        ? "vashandi-workforce"
+        : code.includes("marketplace")
+          ? "msika"
+          : code.includes("registry") || code.includes("trust")
+            ? "tshepo"
+            : code.includes("madi") || code.includes("blood")
+              ? "blood-bank-service"
+              : code.startsWith("hsc_")
+                ? "workforce-governance"
+                : "workforce-governance",
+      policyMapping: code.startsWith("vashandi.") ? "impilo.vashandi" : code.startsWith("hsc_") ? "impilo.hsc" : undefined,
       metadata: scoped
         ? {
             scopeLevel: scoped.level ?? scoped.scope,
@@ -659,6 +807,9 @@ const permissionDomains = [
   "hsc", "hsc.workforce", "hsc.establishment", "hsc.posts", "hsc.appointments", "hsc.transfers",
   "hsc.promotions", "hsc.discipline", "hsc.posting", "hsc.employment", "hsc.registry", "hsc.audit",
   "hsc.scope", "hsc.users",
+  "vashandi", "vashandi.workforce", "vashandi.assignments", "vashandi.rosters", "vashandi.shifts",
+  "vashandi.attendance", "vashandi.leave", "vashandi.access_risk", "vashandi.analytics",
+  "vashandi.imports", "vashandi.hsc_postings", "vashandi.organisation_workforce", "vashandi.emergency_surge",
 ];
 const permissions = [
   "personal.profile.view", "personal.profile.update", "personal.records.view",
@@ -699,6 +850,7 @@ const permissions = [
   "nompilo.knowledge.manage", "nompilo.actions.approve", "break_glass.authorize", "break_glass.audit",
   ...MADI_PERMISSIONS,
   ...HSC_PERMISSIONS,
+  ...VASHANDI_PERMISSIONS,
 ];
 
 function permDomain(code) {
@@ -723,6 +875,7 @@ const permissionEntries = [
       : code.startsWith("break_glass.") ? "impilo.break_glass"
       : code.startsWith("madi.") ? "impilo.madi"
       : code.startsWith("hsc.") ? "impilo.hsc"
+      : code.startsWith("vashandi.") ? "impilo.vashandi"
       : code.startsWith("system.") || code.startsWith("security.") || code.startsWith("trust.") || code.startsWith("policy.") ? "impilo.system_admin"
       : "impilo.work";
     return entry({
@@ -901,13 +1054,19 @@ function roleOpaPackage(category) {
     madi_clinical_transfusion: "impilo.madi",
     madi_haemovigilance: "impilo.madi",
     hsc_workforce_governance: "impilo.hsc",
+    vashandi_workforce_operations: "impilo.vashandi",
   };
   return map[category] ?? "impilo.work";
 }
 
 function resolvePermissions(permsOrBaseline) {
   if (typeof permsOrBaseline === "string") {
-    return ROLE_PERMISSION_BASELINES[permsOrBaseline] ?? HSC_PERMISSION_BASELINE[permsOrBaseline] ?? ["work.context.enter"];
+    return (
+      ROLE_PERMISSION_BASELINES[permsOrBaseline]
+      ?? HSC_PERMISSION_BASELINE[permsOrBaseline]
+      ?? VASHANDI_PERMISSION_BASELINE[permsOrBaseline]
+      ?? ["work.context.enter"]
+    );
   }
   return permsOrBaseline ?? ["work.context.enter"];
 }
@@ -936,6 +1095,9 @@ function restrictedPermissionsForRole(code) {
   ];
   if (code.startsWith("hsc_")) {
     return HSC_DENIED_ACTIONS;
+  }
+  if (code.startsWith("vashandi_")) {
+    return VASHANDI_DENIED_ACTIONS;
   }
   if (
     code.startsWith("hpa_") ||
@@ -1004,7 +1166,8 @@ function restrictedPermissionsForRole(code) {
   return [];
 }
 
-const roleTemplateEntries = ZW_ROLE_TEMPLATE_SPECS.map(
+const roleTemplateEntries = [
+  ...ZW_ROLE_TEMPLATE_SPECS.map(
   ([code, roleCategory, contexts, workspaces, cadres, permsOrBaseline, scopeLevel]) => {
     const zw = ZW_ROLE_PROFILES[code] ?? {};
     const hscDef = HSC_ROLE_DEFINITIONS[code];
@@ -1080,7 +1243,47 @@ const roleTemplateEntries = ZW_ROLE_TEMPLATE_SPECS.map(
       },
     });
   },
-);
+),
+  ...VASHANDI_ROLE_TEMPLATE_SPECS.map(
+    ([code, roleCategory, contexts, workspaces, cadres, permsOrBaseline, scopeLevel, approvalRequirements]) => {
+      const vashandiDef = VASHANDI_ROLE_DEFINITIONS[code];
+      const perms = resolvePermissions(permsOrBaseline);
+      return entry({
+        id: `rt-${code.replace(/_/g, "-")}`,
+        code,
+        displayName: titleCase(code),
+        category: "role_template",
+        status: "active",
+        ownerService: "vashandi-workforce",
+        policyMapping: "impilo.vashandi",
+        auditSensitivity: code.includes("admin") ? "critical" : "high",
+        metadata: {
+          roleTemplateId: code,
+          roleCategory,
+          displayName: titleCase(code),
+          policyScopeLevel: scopeLevel ?? vashandiDef?.[2],
+          allowedContextTypes: contexts,
+          allowedWorkspaces: workspaces,
+          requiredCadres: cadres,
+          defaultPermissions: perms,
+          restrictedPermissions: VASHANDI_DENIED_ACTIONS,
+          deniedActions: VASHANDI_DENIED_ACTIONS,
+          approvalRequirements: approvalRequirements ?? vashandiDef?.[3] ?? [],
+          operationalWorkforceRole: true,
+          notClinicalByDefault: true,
+          notSystemSuperuser: true,
+          opaPolicyMapping: "impilo.vashandi",
+          approvalStatus: "approved_baseline",
+          catalogueVersion: VERSION,
+          effectiveDate: "2026-06-19",
+          extensible: true,
+          governanceNote:
+            "Vashandi operational workforce role; extensions require Tshepo Trust Console approval",
+        },
+      });
+    },
+  ),
+];
 
 writeSeed("role-templates", bundle("role-templates", "Standard Role Templates (Zimbabwe MoHCC Baseline)", roleTemplateEntries));
 
@@ -1108,6 +1311,7 @@ const friendlyStates = [
   ["device_context_requires_user_login", "Personal login required", "This device is linked to a facility, but you must still sign in as yourself.", ["Sign In"], "TRUST.DEVICE_LOGIN_REQUIRED"],
   ...ORGANISATION_FRIENDLY_RESOLUTION_STATES,
   ...HSC_FRIENDLY_RESOLUTION_STATES.map((s) => [s.code, s.displayName, s.description, s.allowedActions, s.policyKey]),
+  ...VASHANDI_FRIENDLY_RESOLUTION_STATES.map((s) => [s.code, s.displayName, s.description, s.allowedActions, s.policyKey]),
 ];
 
 const opaPackages = [
@@ -1117,6 +1321,7 @@ const opaPackages = [
   "impilo.registry", "impilo.regulator", "impilo.marketplace", "impilo.client_registration",
   "impilo.provider_registration", "impilo.nompilo", "impilo.consent", "impilo.audit",
   "impilo.system_admin", "impilo.break_glass", "impilo.madi", "impilo.organisation", "impilo.hsc",
+  "impilo.vashandi",
 ];
 
 const nompiloDomains = [

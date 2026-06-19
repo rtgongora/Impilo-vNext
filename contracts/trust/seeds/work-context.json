@@ -5155,6 +5155,216 @@
     {
       "status": "active",
       "auditSensitivity": "medium",
+      "id": "wst-vashandi.dashboard",
+      "code": "vashandi.dashboard",
+      "displayName": "Vashandi Dashboard",
+      "category": "workspace_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "scopeLevel": "workforce",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-vashandi.workforce_registry",
+      "code": "vashandi.workforce_registry",
+      "displayName": "Workforce Registry",
+      "category": "workspace_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "scopeLevel": "workforce",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-vashandi.my_roster",
+      "code": "vashandi.my_roster",
+      "displayName": "My Roster",
+      "category": "workspace_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "scopeLevel": "self_service",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-vashandi.my_attendance",
+      "code": "vashandi.my_attendance",
+      "displayName": "My Attendance",
+      "category": "workspace_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "scopeLevel": "self_service",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-vashandi.facility_staff",
+      "code": "vashandi.facility_staff",
+      "displayName": "Facility Staff",
+      "category": "workspace_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "scopeLevel": "facility",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-vashandi.rosters",
+      "code": "vashandi.rosters",
+      "displayName": "Rosters",
+      "category": "workspace_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "scopeLevel": "facility",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-vashandi.leave_availability",
+      "code": "vashandi.leave_availability",
+      "displayName": "Leave & Availability",
+      "category": "workspace_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "scopeLevel": "workforce",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-vashandi.assignments",
+      "code": "vashandi.assignments",
+      "displayName": "Assignments",
+      "category": "workspace_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "scopeLevel": "workforce",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-vashandi.access_review",
+      "code": "vashandi.access_review",
+      "displayName": "Access Review",
+      "category": "workspace_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "scopeLevel": "workforce",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-vashandi.analytics",
+      "code": "vashandi.analytics",
+      "displayName": "Workforce Analytics",
+      "category": "workspace_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "scopeLevel": "workforce",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-vashandi.imports",
+      "code": "vashandi.imports",
+      "displayName": "Workforce Imports",
+      "category": "workspace_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "scopeLevel": "workforce",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-vashandi.hsc_postings",
+      "code": "vashandi.hsc_postings",
+      "displayName": "HSC Postings",
+      "category": "workspace_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "scopeLevel": "hsc_national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-vashandi.organisation_workforce",
+      "code": "vashandi.organisation_workforce",
+      "displayName": "Organisation Workforce",
+      "category": "workspace_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "scopeLevel": "organisation",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "wst-vashandi.emergency_surge",
+      "code": "vashandi.emergency_surge",
+      "displayName": "Emergency Surge",
+      "category": "workspace_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "scopeLevel": "national",
+        "organogramWorkspace": false,
+        "managementWorkspace": false
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
       "id": "wst-varapi_provider_worker_registry_governance",
       "code": "varapi_provider_worker_registry_governance",
       "displayName": "Varapi Provider Worker Registry Governance",
@@ -5909,6 +6119,15 @@
       "id": "rtc-hsc_workforce_governance",
       "code": "hsc_workforce_governance",
       "displayName": "Hsc Workforce Governance",
+      "category": "role_template_category",
+      "ownerService": "workforce-governance"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "rtc-vashandi_workforce_operations",
+      "code": "vashandi_workforce_operations",
+      "displayName": "Vashandi Workforce Operations",
       "category": "role_template_category",
       "ownerService": "workforce-governance"
     }

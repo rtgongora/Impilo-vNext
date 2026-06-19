@@ -845,4 +845,63 @@ describe("Health Service Commission workforce governance", () => {
     expect(hscPerms.some((p) => p.startsWith("hsc."))).toBe(true);
     expect(hscPerms.some((p) => p.startsWith("regulator."))).toBe(false);
   });
+
+  it("Vashandi role templates map to impilo.vashandi policy", () => {
+    const selfService = findRoleTemplate("vashandi_self_service_worker");
+    expect(selfService).toBeDefined();
+    const meta = selfService?.metadata as {
+      opaPolicyMapping?: string;
+      allowedWorkspaces?: string[];
+    };
+    expect(meta?.opaPolicyMapping).toBe("impilo.vashandi");
+    expect(meta?.allowedWorkspaces).toContain("vashandi.my_roster");
+    expect(meta?.allowedWorkspaces).toContain("vashandi.my_attendance");
+  });
+
+  it("council user does not receive Vashandi facility assignment workspaces", () => {
+    const contract = resolveSessionExperienceContract({
+      authenticated: true,
+      providerWorkerId: "P-COUNCIL",
+      organisation: {
+        organisationId: "org-hpa",
+        organisationType: "health_professions_authority",
+        organisationName: "HPA",
+      },
+      workAssignments: [
+        {
+          assignmentId: "A-C",
+          subjectId: "P-COUNCIL",
+          subjectType: "provider_worker",
+          contextType: "regulatory",
+          assignmentType: "regulator_assignment",
+          assignmentStatus: "active",
+          roleTemplateId: "nc_reviewer",
+        },
+      ],
+    });
+    expect(contract.visibleVashandiWorkspaces ?? []).not.toContain("vashandi.assignments");
+    expect(contract.blockedVashandiWorkspaces ?? []).toContain("vashandi.assignments");
+  });
+
+  it("ordinary provider sees self-service Vashandi workspaces only", () => {
+    const contract = resolveSessionExperienceContract({
+      authenticated: true,
+      providerWorkerId: "P-NURSE",
+      workAssignments: [
+        {
+          assignmentId: "A-N",
+          subjectId: "P-NURSE",
+          subjectType: "provider_worker",
+          contextType: "facility_clinical",
+          assignmentType: "facility_assignment",
+          assignmentStatus: "active",
+          roleTemplateId: "vashandi_self_service_worker",
+        },
+      ],
+    });
+    const visible = contract.visibleVashandiWorkspaces ?? [];
+    expect(visible).toContain("vashandi.my_roster");
+    expect(visible).toContain("vashandi.my_attendance");
+    expect(visible).not.toContain("vashandi.access_review");
+  });
 });

@@ -40,6 +40,9 @@ import {
   type SessionTabDefinition,
 } from "../types/session-experience-contract";
 import {
+  resolveVashandiWorkspaces,
+} from "./vashandi-workforce-governance";
+import {
   isActiveWorkAssignment,
   type WorkAssignment,
 } from "../types/work-assignment";
@@ -62,6 +65,17 @@ export interface SessionExperienceInput {
   hasSelectedFacility?: boolean;
   organisation?: OrganisationGovernanceInput;
   publicSectorEmployment?: Partial<PublicSectorEmploymentTruth> | null;
+  vashandiWorkforceProfileId?: string | null;
+  currentWorkforceStatus?: string | null;
+  vashandiCurrentAssignments?: WorkAssignment[];
+  activeRosteredShifts?: Array<Record<string, unknown>>;
+  attendanceStatus?: string | null;
+  leaveAvailabilityStatus?: string | null;
+  workforceAccessRisks?: Array<Record<string, unknown>>;
+  visibleVashandiWorkspaces?: string[];
+  blockedVashandiWorkspaces?: string[];
+  vashandiFriendlyResolutionState?: string | null;
+  vashandiIntegrationStatus?: "LIVE" | "UPSTREAM_UNAVAILABLE" | "DEGRADED" | "DENIED" | "PENDING_BACKEND";
 }
 
 const OPA_PACKAGES = [
@@ -75,6 +89,7 @@ const OPA_PACKAGES = [
   "impilo.nompilo",
   "impilo.organisation",
   "impilo.hsc",
+  "impilo.vashandi",
 ];
 
 function tab(
@@ -329,6 +344,20 @@ export function resolveSessionExperienceContract(input: SessionExperienceInput):
           input.organisation?.activeOrganisationAssignment ?? !!(input.organisationId || input.organisation?.organisationId),
       }
     : undefined;
+  const vashandiWorkspaces = resolveVashandiWorkspaces({
+    workVisible,
+    roleTemplates,
+    organisation,
+    activeAssignments: assignments,
+    currentWorkforceStatus: input.currentWorkforceStatus,
+    providerWorkerStatus: input.professionalTruth?.providerWorkerStatus,
+  });
+  const visibleVashandiWorkspaces = input.visibleVashandiWorkspaces?.length
+    ? input.visibleVashandiWorkspaces
+    : vashandiWorkspaces.visible;
+  const blockedVashandiWorkspaces = input.blockedVashandiWorkspaces?.length
+    ? input.blockedVashandiWorkspaces
+    : vashandiWorkspaces.blocked;
 
   let defaultRoute = tabs.personal.route;
   if (defaultTab === "work") {
@@ -389,6 +418,18 @@ export function resolveSessionExperienceContract(input: SessionExperienceInput):
     visibleManagementWorkspaces: mgmt.visible,
     blockedManagementWorkspaces: mgmt.blocked,
     publicSectorEmployment,
+    vashandiWorkforceProfileId: input.vashandiWorkforceProfileId ?? undefined,
+    currentWorkforceStatus: input.currentWorkforceStatus ?? undefined,
+    currentAssignments: input.vashandiCurrentAssignments ?? assignments,
+    activeRosteredShifts: input.activeRosteredShifts ?? [],
+    attendanceStatus: input.attendanceStatus ?? undefined,
+    leaveAvailabilityStatus: input.leaveAvailabilityStatus ?? undefined,
+    workforceAccessRisks: input.workforceAccessRisks ?? [],
+    visibleVashandiWorkspaces,
+    blockedVashandiWorkspaces,
+    vashandiFriendlyResolutionState:
+      input.vashandiFriendlyResolutionState ?? vashandiWorkspaces.friendlyResolutionState,
+    vashandiIntegrationStatus: input.vashandiIntegrationStatus,
   };
 }
 

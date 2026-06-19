@@ -1,11 +1,12 @@
 {
   "version": "1.6.0",
-  "displayName": "Impilo Trust Plane Seed Catalogues (HSC Workforce Governance)",
+  "displayName": "Impilo Trust Plane Seed Catalogues (Vashandi Operational Workforce)",
   "generator": "contracts/trust/scripts/generate-seed-catalogues.mjs",
   "zimbabweData": "contracts/trust/scripts/zimbabwe-catalogue-data.mjs",
   "domainExpansionData": "contracts/trust/scripts/regulator-municipality-madi-data.mjs",
   "multiOrganisationData": "contracts/trust/scripts/multi-organisation-governance-data.mjs",
   "hscWorkforceData": "contracts/trust/scripts/hsc-workforce-governance-data.mjs",
+  "vashandiWorkforceData": "contracts/trust/scripts/vashandi-workforce-data.mjs",
   "organogramSource": {
     "title": "MoHCC Organogram",
     "approvedBy": "Health Service Commission",
@@ -19,6 +20,7 @@
     { "file": "seeds/regulatory-institutions.json", "catalogueId": "regulatory-institutions", "categories": ["regulatory_organisation", "regulator_organisation_type"] },
     { "file": "seeds/organisation-governance.json", "catalogueId": "organisation-governance", "categories": ["organisation_type", "organisation_trust_tier", "organisation_lifecycle_state", "organisation_access_environment", "organisation_linked_user_type", "organisation_registry_schema", "organisation_registry_record"] },
     { "file": "seeds/hsc-workforce-governance.json", "catalogueId": "hsc-workforce-governance", "categories": ["hsc_organisation", "public_sector_employment_status", "hsc_workforce_governance_role"] },
+    { "file": "seeds/vashandi-workforce.json", "catalogueId": "vashandi-workforce", "categories": ["workforce_status", "vashandi_assignment_type", "vashandi_assignment_status", "roster_type", "shift_status", "attendance_event_type", "check_in_mode", "leave_type", "access_risk_type", "vashandi_workforce_role"] },
     { "file": "seeds/work-context.json", "catalogueId": "work-context", "categories": ["approved_work_context_type", "workplace_place_type", "workspace_type", "registry_owner_workspace", "regulator_workspace", "management_workspace", "assignment_type", "assignment_status", "role_template_category"] },
     { "file": "seeds/permissions.json", "catalogueId": "permissions", "categories": ["permission_domain", "permission"] },
     { "file": "seeds/governance-marketplace.json", "catalogueId": "governance-marketplace", "categories": ["registry_governance_role", "regulator_role", "workplace_manager_role", "system_admin_role", "marketplace_participant_type", "marketplace_access_pipeline_state", "marketplace_role", "hsc_workforce_governance_role"] },

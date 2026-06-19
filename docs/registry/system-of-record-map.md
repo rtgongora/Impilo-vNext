@@ -90,4 +90,5 @@
 | `wellness-service` | enterprise | — |
 | `workflow-service` | integration | Workflow canonical records |
 | `workforce-governance-service` | enterprise | Workforce Governance canonical records |
+| `vashandi-workforce-service` | enterprise | Operational workforce profile, assignment, roster, shift, attendance, leave/availability, access risk |
 | `zibo-service` | registry | Zibo canonical records |

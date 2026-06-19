@@ -14,6 +14,7 @@ import zimbabweMohccSeed from "./seeds/zimbabwe-mohcc.json";
 import regulatoryInstitutionsSeed from "./seeds/regulatory-institutions.json";
 import organisationGovernanceSeed from "./seeds/organisation-governance.json";
 import hscWorkforceGovernanceSeed from "./seeds/hsc-workforce-governance.json";
+import vashandiWorkforceSeed from "./seeds/vashandi-workforce.json";
 import bootstrapOnboardingSeed from "./seeds/bootstrap-onboarding.json";
 import {
   REQUIRED_CATALOGUE_CODES,
@@ -29,6 +30,7 @@ const ALL_BUNDLES: TrustCatalogueBundle[] = [
   regulatoryInstitutionsSeed as TrustCatalogueBundle,
   organisationGovernanceSeed as TrustCatalogueBundle,
   hscWorkforceGovernanceSeed as TrustCatalogueBundle,
+  vashandiWorkforceSeed as TrustCatalogueBundle,
   workContextSeed as TrustCatalogueBundle,
   permissionsSeed as TrustCatalogueBundle,
   governanceMarketplaceSeed as TrustCatalogueBundle,

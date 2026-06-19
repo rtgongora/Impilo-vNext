@@ -663,6 +663,123 @@
     {
       "status": "active",
       "auditSensitivity": "medium",
+      "id": "dom-vashandi",
+      "code": "vashandi",
+      "displayName": "Vashandi",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-vashandi-workforce",
+      "code": "vashandi.workforce",
+      "displayName": "Vashandi Workforce",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-vashandi-assignments",
+      "code": "vashandi.assignments",
+      "displayName": "Vashandi Assignments",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-vashandi-rosters",
+      "code": "vashandi.rosters",
+      "displayName": "Vashandi Rosters",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-vashandi-shifts",
+      "code": "vashandi.shifts",
+      "displayName": "Vashandi Shifts",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-vashandi-attendance",
+      "code": "vashandi.attendance",
+      "displayName": "Vashandi Attendance",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-vashandi-leave",
+      "code": "vashandi.leave",
+      "displayName": "Vashandi Leave",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-vashandi-access_risk",
+      "code": "vashandi.access_risk",
+      "displayName": "Vashandi Access Risk",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-vashandi-analytics",
+      "code": "vashandi.analytics",
+      "displayName": "Vashandi Analytics",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-vashandi-imports",
+      "code": "vashandi.imports",
+      "displayName": "Vashandi Imports",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-vashandi-hsc_postings",
+      "code": "vashandi.hsc_postings",
+      "displayName": "Vashandi Hsc Postings",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-vashandi-organisation_workforce",
+      "code": "vashandi.organisation_workforce",
+      "displayName": "Vashandi Organisation Workforce",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "dom-vashandi-emergency_surge",
+      "code": "vashandi.emergency_surge",
+      "displayName": "Vashandi Emergency Surge",
+      "category": "permission_domain",
+      "ownerService": "tshepo"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
       "id": "perm-personal-profile-view",
       "code": "personal.profile.view",
       "displayName": "Personal Profile View",
@@ -2647,6 +2764,409 @@
       "policyMapping": "impilo.hsc",
       "metadata": {
         "domain": "hsc.users"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-vashandi-workforce-view",
+      "code": "vashandi.workforce.view",
+      "displayName": "Vashandi Workforce View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "domain": "vashandi.workforce"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-vashandi-workforce-manage",
+      "code": "vashandi.workforce.manage",
+      "displayName": "Vashandi Workforce Manage",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "domain": "vashandi.workforce"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-vashandi-workforce-reconcile",
+      "code": "vashandi.workforce.reconcile",
+      "displayName": "Vashandi Workforce Reconcile",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "domain": "vashandi.workforce"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-vashandi-assignments-view",
+      "code": "vashandi.assignments.view",
+      "displayName": "Vashandi Assignments View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "domain": "vashandi.assignments"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-vashandi-assignments-create",
+      "code": "vashandi.assignments.create",
+      "displayName": "Vashandi Assignments Create",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "domain": "vashandi.assignments"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-vashandi-assignments-precheck",
+      "code": "vashandi.assignments.precheck",
+      "displayName": "Vashandi Assignments Precheck",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "domain": "vashandi.assignments"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-vashandi-assignments-approve",
+      "code": "vashandi.assignments.approve",
+      "displayName": "Vashandi Assignments Approve",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "domain": "vashandi.assignments"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-vashandi-assignments-activate",
+      "code": "vashandi.assignments.activate",
+      "displayName": "Vashandi Assignments Activate",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "domain": "vashandi.assignments"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-vashandi-assignments-suspend",
+      "code": "vashandi.assignments.suspend",
+      "displayName": "Vashandi Assignments Suspend",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "domain": "vashandi.assignments"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-vashandi-assignments-end",
+      "code": "vashandi.assignments.end",
+      "displayName": "Vashandi Assignments End",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "domain": "vashandi.assignments"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-vashandi-rosters-view",
+      "code": "vashandi.rosters.view",
+      "displayName": "Vashandi Rosters View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "domain": "vashandi.rosters"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-vashandi-rosters-manage",
+      "code": "vashandi.rosters.manage",
+      "displayName": "Vashandi Rosters Manage",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "domain": "vashandi.rosters"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-vashandi-rosters-approve",
+      "code": "vashandi.rosters.approve",
+      "displayName": "Vashandi Rosters Approve",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "domain": "vashandi.rosters"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-vashandi-shifts-view",
+      "code": "vashandi.shifts.view",
+      "displayName": "Vashandi Shifts View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "domain": "vashandi.shifts"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-vashandi-shifts-manage",
+      "code": "vashandi.shifts.manage",
+      "displayName": "Vashandi Shifts Manage",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "domain": "vashandi.shifts"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-vashandi-attendance-view",
+      "code": "vashandi.attendance.view",
+      "displayName": "Vashandi Attendance View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "domain": "vashandi.attendance"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-vashandi-attendance-check_in",
+      "code": "vashandi.attendance.check_in",
+      "displayName": "Vashandi Attendance Check In",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "domain": "vashandi.attendance"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-vashandi-attendance-check_out",
+      "code": "vashandi.attendance.check_out",
+      "displayName": "Vashandi Attendance Check Out",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "domain": "vashandi.attendance"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-vashandi-attendance-supervisor_confirm",
+      "code": "vashandi.attendance.supervisor_confirm",
+      "displayName": "Vashandi Attendance Supervisor Confirm",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "domain": "vashandi.attendance"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-vashandi-leave-view",
+      "code": "vashandi.leave.view",
+      "displayName": "Vashandi Leave View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "domain": "vashandi.leave"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-vashandi-leave-create",
+      "code": "vashandi.leave.create",
+      "displayName": "Vashandi Leave Create",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "domain": "vashandi.leave"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-vashandi-leave-approve",
+      "code": "vashandi.leave.approve",
+      "displayName": "Vashandi Leave Approve",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "domain": "vashandi.leave"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-vashandi-access_risk-view",
+      "code": "vashandi.access_risk.view",
+      "displayName": "Vashandi Access Risk View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "domain": "vashandi.access_risk"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-vashandi-access_risk-scan",
+      "code": "vashandi.access_risk.scan",
+      "displayName": "Vashandi Access Risk Scan",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "domain": "vashandi.access_risk"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-vashandi-access_risk-resolve",
+      "code": "vashandi.access_risk.resolve",
+      "displayName": "Vashandi Access Risk Resolve",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "domain": "vashandi.access_risk"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-vashandi-access_revoke",
+      "code": "vashandi.access_revoke",
+      "displayName": "Vashandi Access Revoke",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "domain": "vashandi"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-vashandi-analytics-view",
+      "code": "vashandi.analytics.view",
+      "displayName": "Vashandi Analytics View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "domain": "vashandi.analytics"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-vashandi-imports-manage",
+      "code": "vashandi.imports.manage",
+      "displayName": "Vashandi Imports Manage",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "domain": "vashandi.imports"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-vashandi-hsc_postings-view",
+      "code": "vashandi.hsc_postings.view",
+      "displayName": "Vashandi Hsc Postings View",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "domain": "vashandi.hsc_postings"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-vashandi-organisation_workforce-manage",
+      "code": "vashandi.organisation_workforce.manage",
+      "displayName": "Vashandi Organisation Workforce Manage",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "domain": "vashandi.organisation_workforce"
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "perm-vashandi-emergency_surge-manage",
+      "code": "vashandi.emergency_surge.manage",
+      "displayName": "Vashandi Emergency Surge Manage",
+      "category": "permission",
+      "ownerService": "tshepo",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "domain": "vashandi.emergency_surge"
       }
     }
   ]

@@ -1,0 +1,1187 @@
+{
+  "version": "1.6.0",
+  "catalogueId": "vashandi-workforce",
+  "displayName": "Vashandi Operational Workforce",
+  "entries": [
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vws-active",
+      "code": "active",
+      "displayName": "Active",
+      "category": "workforce_status",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vws-pending-appointment",
+      "code": "pending_appointment",
+      "displayName": "Pending Appointment",
+      "category": "workforce_status",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vws-on-leave",
+      "code": "on_leave",
+      "displayName": "On Leave",
+      "category": "workforce_status",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vws-transferred-pending-assumption",
+      "code": "transferred_pending_assumption",
+      "displayName": "Transferred Pending Assumption",
+      "category": "workforce_status",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vws-seconded",
+      "code": "seconded",
+      "displayName": "Seconded",
+      "category": "workforce_status",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vws-suspended",
+      "code": "suspended",
+      "displayName": "Suspended",
+      "category": "workforce_status",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi.block"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vws-dismissed",
+      "code": "dismissed",
+      "displayName": "Dismissed",
+      "category": "workforce_status",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi.block"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vws-retired",
+      "code": "retired",
+      "displayName": "Retired",
+      "category": "workforce_status",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vws-resigned",
+      "code": "resigned",
+      "displayName": "Resigned",
+      "category": "workforce_status",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vws-contract-expired",
+      "code": "contract_expired",
+      "displayName": "Contract Expired",
+      "category": "workforce_status",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vws-under-review",
+      "code": "under_review",
+      "displayName": "Under Review",
+      "category": "workforce_status",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi.block"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vws-offboarded",
+      "code": "offboarded",
+      "displayName": "Offboarded",
+      "category": "workforce_status",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi.block"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vat-facility-assignment",
+      "code": "facility_assignment",
+      "displayName": "Facility Assignment",
+      "category": "vashandi_assignment_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vat-department-assignment",
+      "code": "department_assignment",
+      "displayName": "Department Assignment",
+      "category": "vashandi_assignment_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vat-unit-assignment",
+      "code": "unit_assignment",
+      "displayName": "Unit Assignment",
+      "category": "vashandi_assignment_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vat-ward-assignment",
+      "code": "ward_assignment",
+      "displayName": "Ward Assignment",
+      "category": "vashandi_assignment_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vat-programme-assignment",
+      "code": "programme_assignment",
+      "displayName": "Programme Assignment",
+      "category": "vashandi_assignment_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vat-telemedicine-pool-assignment",
+      "code": "telemedicine_pool_assignment",
+      "displayName": "Telemedicine Pool Assignment",
+      "category": "vashandi_assignment_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vat-outreach-assignment",
+      "code": "outreach_assignment",
+      "displayName": "Outreach Assignment",
+      "category": "vashandi_assignment_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vat-municipal-public-health-assignment",
+      "code": "municipal_public_health_assignment",
+      "displayName": "Municipal Public Health Assignment",
+      "category": "vashandi_assignment_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vat-madi-blood-bank-assignment",
+      "code": "madi_blood_bank_assignment",
+      "displayName": "Madi Blood Bank Assignment",
+      "category": "vashandi_assignment_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vat-marketplace-assignment",
+      "code": "marketplace_assignment",
+      "displayName": "Marketplace Assignment",
+      "category": "vashandi_assignment_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vat-payer-assignment",
+      "code": "payer_assignment",
+      "displayName": "Payer Assignment",
+      "category": "vashandi_assignment_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vat-partner-assignment",
+      "code": "partner_assignment",
+      "displayName": "Partner Assignment",
+      "category": "vashandi_assignment_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vat-system-support-assignment",
+      "code": "system_support_assignment",
+      "displayName": "System Support Assignment",
+      "category": "vashandi_assignment_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vat-temporary-assignment",
+      "code": "temporary_assignment",
+      "displayName": "Temporary Assignment",
+      "category": "vashandi_assignment_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vat-emergency-surge-assignment",
+      "code": "emergency_surge_assignment",
+      "displayName": "Emergency Surge Assignment",
+      "category": "vashandi_assignment_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vat-acting-assignment",
+      "code": "acting_assignment",
+      "displayName": "Acting Assignment",
+      "category": "vashandi_assignment_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vas-draft",
+      "code": "draft",
+      "displayName": "Draft",
+      "category": "vashandi_assignment_status",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi.block"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vas-requested",
+      "code": "requested",
+      "displayName": "Requested",
+      "category": "vashandi_assignment_status",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi.block"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vas-prechecked",
+      "code": "prechecked",
+      "displayName": "Prechecked",
+      "category": "vashandi_assignment_status",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi.block"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vas-pending-approval",
+      "code": "pending_approval",
+      "displayName": "Pending Approval",
+      "category": "vashandi_assignment_status",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi.block"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vas-approved",
+      "code": "approved",
+      "displayName": "Approved",
+      "category": "vashandi_assignment_status",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi.allow"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vas-active",
+      "code": "active",
+      "displayName": "Active",
+      "category": "vashandi_assignment_status",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi.allow"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vas-suspended",
+      "code": "suspended",
+      "displayName": "Suspended",
+      "category": "vashandi_assignment_status",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi.block"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vas-ended",
+      "code": "ended",
+      "displayName": "Ended",
+      "category": "vashandi_assignment_status",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi.block"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vas-expired",
+      "code": "expired",
+      "displayName": "Expired",
+      "category": "vashandi_assignment_status",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi.block"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vas-rejected",
+      "code": "rejected",
+      "displayName": "Rejected",
+      "category": "vashandi_assignment_status",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi.block"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vrt-facility-roster",
+      "code": "facility_roster",
+      "displayName": "Facility Roster",
+      "category": "roster_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vrt-ward-roster",
+      "code": "ward_roster",
+      "displayName": "Ward Roster",
+      "category": "roster_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vrt-department-roster",
+      "code": "department_roster",
+      "displayName": "Department Roster",
+      "category": "roster_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vrt-on-call-roster",
+      "code": "on_call_roster",
+      "displayName": "On Call Roster",
+      "category": "roster_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vrt-telemedicine-roster",
+      "code": "telemedicine_roster",
+      "displayName": "Telemedicine Roster",
+      "category": "roster_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vrt-outreach-roster",
+      "code": "outreach_roster",
+      "displayName": "Outreach Roster",
+      "category": "roster_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vrt-emergency-roster",
+      "code": "emergency_roster",
+      "displayName": "Emergency Roster",
+      "category": "roster_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vrt-laboratory-roster",
+      "code": "laboratory_roster",
+      "displayName": "Laboratory Roster",
+      "category": "roster_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vrt-pharmacy-roster",
+      "code": "pharmacy_roster",
+      "displayName": "Pharmacy Roster",
+      "category": "roster_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vrt-radiology-roster",
+      "code": "radiology_roster",
+      "displayName": "Radiology Roster",
+      "category": "roster_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vrt-madi-blood-bank-roster",
+      "code": "madi_blood_bank_roster",
+      "displayName": "Madi Blood Bank Roster",
+      "category": "roster_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vrt-support-roster",
+      "code": "support_roster",
+      "displayName": "Support Roster",
+      "category": "roster_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vss-scheduled",
+      "code": "scheduled",
+      "displayName": "Scheduled",
+      "category": "shift_status",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi.allow"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vss-confirmed",
+      "code": "confirmed",
+      "displayName": "Confirmed",
+      "category": "shift_status",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi.allow"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vss-checked-in",
+      "code": "checked_in",
+      "displayName": "Checked In",
+      "category": "shift_status",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi.allow"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vss-late",
+      "code": "late",
+      "displayName": "Late",
+      "category": "shift_status",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vss-missed",
+      "code": "missed",
+      "displayName": "Missed",
+      "category": "shift_status",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vss-checked-out",
+      "code": "checked_out",
+      "displayName": "Checked Out",
+      "category": "shift_status",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vss-completed",
+      "code": "completed",
+      "displayName": "Completed",
+      "category": "shift_status",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vss-cancelled",
+      "code": "cancelled",
+      "displayName": "Cancelled",
+      "category": "shift_status",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vss-swapped",
+      "code": "swapped",
+      "displayName": "Swapped",
+      "category": "shift_status",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vss-covered",
+      "code": "covered",
+      "displayName": "Covered",
+      "category": "shift_status",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vaet-check-in",
+      "code": "check_in",
+      "displayName": "Check In",
+      "category": "attendance_event_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vaet-check-out",
+      "code": "check_out",
+      "displayName": "Check Out",
+      "category": "attendance_event_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vaet-supervisor-confirmed-check-in",
+      "code": "supervisor_confirmed_check_in",
+      "displayName": "Supervisor Confirmed Check In",
+      "category": "attendance_event_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vaet-supervisor-confirmed-check-out",
+      "code": "supervisor_confirmed_check_out",
+      "displayName": "Supervisor Confirmed Check Out",
+      "category": "attendance_event_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vaet-missed-shift",
+      "code": "missed_shift",
+      "displayName": "Missed Shift",
+      "category": "attendance_event_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vaet-late-arrival",
+      "code": "late_arrival",
+      "displayName": "Late Arrival",
+      "category": "attendance_event_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vaet-early-departure",
+      "code": "early_departure",
+      "displayName": "Early Departure",
+      "category": "attendance_event_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vaet-offline-check-in",
+      "code": "offline_check_in",
+      "displayName": "Offline Check In",
+      "category": "attendance_event_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vaet-offline-check-out",
+      "code": "offline_check_out",
+      "displayName": "Offline Check Out",
+      "category": "attendance_event_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vaet-reconciliation",
+      "code": "reconciliation",
+      "displayName": "Reconciliation",
+      "category": "attendance_event_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vcm-manual-supervisor-confirmed",
+      "code": "manual_supervisor_confirmed",
+      "displayName": "Manual Supervisor Confirmed",
+      "category": "check_in_mode",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vcm-self-check-in",
+      "code": "self_check_in",
+      "displayName": "Self Check In",
+      "category": "check_in_mode",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vcm-facility-device-check-in",
+      "code": "facility_device_check_in",
+      "displayName": "Facility Device Check In",
+      "category": "check_in_mode",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vcm-qr-check-in",
+      "code": "qr_check_in",
+      "displayName": "Qr Check In",
+      "category": "check_in_mode",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vcm-biometric-check-in",
+      "code": "biometric_check_in",
+      "displayName": "Biometric Check In",
+      "category": "check_in_mode",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vcm-geofenced-check-in",
+      "code": "geofenced_check_in",
+      "displayName": "Geofenced Check In",
+      "category": "check_in_mode",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vcm-telemedicine-session-check-in",
+      "code": "telemedicine_session_check_in",
+      "displayName": "Telemedicine Session Check In",
+      "category": "check_in_mode",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vcm-offline-check-in",
+      "code": "offline_check_in",
+      "displayName": "Offline Check In",
+      "category": "check_in_mode",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vlt-annual-leave",
+      "code": "annual_leave",
+      "displayName": "Annual Leave",
+      "category": "leave_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vlt-sick-leave",
+      "code": "sick_leave",
+      "displayName": "Sick Leave",
+      "category": "leave_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vlt-maternity-leave",
+      "code": "maternity_leave",
+      "displayName": "Maternity Leave",
+      "category": "leave_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vlt-paternity-leave",
+      "code": "paternity_leave",
+      "displayName": "Paternity Leave",
+      "category": "leave_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vlt-study-leave",
+      "code": "study_leave",
+      "displayName": "Study Leave",
+      "category": "leave_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vlt-compassionate-leave",
+      "code": "compassionate_leave",
+      "displayName": "Compassionate Leave",
+      "category": "leave_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vlt-unpaid-leave",
+      "code": "unpaid_leave",
+      "displayName": "Unpaid Leave",
+      "category": "leave_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vlt-suspension",
+      "code": "suspension",
+      "displayName": "Suspension",
+      "category": "leave_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vlt-secondment",
+      "code": "secondment",
+      "displayName": "Secondment",
+      "category": "leave_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vlt-conference-training",
+      "code": "conference_training",
+      "displayName": "Conference Training",
+      "category": "leave_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "medium",
+      "id": "vlt-unauthorised-absence",
+      "code": "unauthorised_absence",
+      "displayName": "Unauthorised Absence",
+      "category": "leave_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "vart-active-access-without-assignment",
+      "code": "active_access_without_assignment",
+      "displayName": "Active Access Without Assignment",
+      "category": "access_risk_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "vart-facility-access-after-transfer",
+      "code": "facility_access_after_transfer",
+      "displayName": "Facility Access After Transfer",
+      "category": "access_risk_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "vart-clinical-access-with-expired-council-status",
+      "code": "clinical_access_with_expired_council_status",
+      "displayName": "Clinical Access With Expired Council Status",
+      "category": "access_risk_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "vart-public-sector-access-with-hsc-suspension",
+      "code": "public_sector_access_with_hsc_suspension",
+      "displayName": "Public Sector Access With Hsc Suspension",
+      "category": "access_risk_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "vart-rostered-while-on-leave",
+      "code": "rostered_while_on_leave",
+      "displayName": "Rostered While On Leave",
+      "category": "access_risk_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "vart-marketplace-access-after-org-suspension",
+      "code": "marketplace_access_after_org_suspension",
+      "displayName": "Marketplace Access After Org Suspension",
+      "category": "access_risk_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "vart-stale-system-admin-access",
+      "code": "stale_system_admin_access",
+      "displayName": "Stale System Admin Access",
+      "category": "access_risk_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "vart-dormant-account-with-active-roles",
+      "code": "dormant_account_with_active_roles",
+      "displayName": "Dormant Account With Active Roles",
+      "category": "access_risk_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "vart-duplicate-worker-profile",
+      "code": "duplicate_worker_profile",
+      "displayName": "Duplicate Worker Profile",
+      "category": "access_risk_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "vart-missing-training-for-role",
+      "code": "missing_training_for_role",
+      "displayName": "Missing Training For Role",
+      "category": "access_risk_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "vart-expired-role-assignment",
+      "code": "expired_role_assignment",
+      "displayName": "Expired Role Assignment",
+      "category": "access_risk_type",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi"
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "vrole-vashandi-national-workforce-admin",
+      "code": "vashandi_national_workforce_admin",
+      "displayName": "Vashandi National Workforce Admin",
+      "category": "vashandi_workforce_role",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "operationalWorkforceRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "vrole-vashandi-hsc-workforce-admin",
+      "code": "vashandi_hsc_workforce_admin",
+      "displayName": "Vashandi Hsc Workforce Admin",
+      "category": "vashandi_workforce_role",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "operationalWorkforceRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "vrole-vashandi-facility-workforce-manager",
+      "code": "vashandi_facility_workforce_manager",
+      "displayName": "Vashandi Facility Workforce Manager",
+      "category": "vashandi_workforce_role",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "operationalWorkforceRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "vrole-vashandi-department-supervisor",
+      "code": "vashandi_department_supervisor",
+      "displayName": "Vashandi Department Supervisor",
+      "category": "vashandi_workforce_role",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "operationalWorkforceRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "vrole-vashandi-roster-manager",
+      "code": "vashandi_roster_manager",
+      "displayName": "Vashandi Roster Manager",
+      "category": "vashandi_workforce_role",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "operationalWorkforceRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "vrole-vashandi-attendance-supervisor",
+      "code": "vashandi_attendance_supervisor",
+      "displayName": "Vashandi Attendance Supervisor",
+      "category": "vashandi_workforce_role",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "operationalWorkforceRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "vrole-vashandi-leave-approver",
+      "code": "vashandi_leave_approver",
+      "displayName": "Vashandi Leave Approver",
+      "category": "vashandi_workforce_role",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "operationalWorkforceRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "vrole-vashandi-access-reviewer",
+      "code": "vashandi_access_reviewer",
+      "displayName": "Vashandi Access Reviewer",
+      "category": "vashandi_workforce_role",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "operationalWorkforceRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "vrole-vashandi-analytics-viewer",
+      "code": "vashandi_analytics_viewer",
+      "displayName": "Vashandi Analytics Viewer",
+      "category": "vashandi_workforce_role",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "operationalWorkforceRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "critical",
+      "id": "vrole-vashandi-organisation-workforce-admin",
+      "code": "vashandi_organisation_workforce_admin",
+      "displayName": "Vashandi Organisation Workforce Admin",
+      "category": "vashandi_workforce_role",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "operationalWorkforceRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "vrole-vashandi-emergency-surge-coordinator",
+      "code": "vashandi_emergency_surge_coordinator",
+      "displayName": "Vashandi Emergency Surge Coordinator",
+      "category": "vashandi_workforce_role",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "operationalWorkforceRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    },
+    {
+      "status": "active",
+      "auditSensitivity": "high",
+      "id": "vrole-vashandi-self-service-worker",
+      "code": "vashandi_self_service_worker",
+      "displayName": "Vashandi Self Service Worker",
+      "category": "vashandi_workforce_role",
+      "ownerService": "vashandi-workforce",
+      "policyMapping": "impilo.vashandi",
+      "metadata": {
+        "operationalWorkforceRole": true,
+        "notClinicalByDefault": true,
+        "notSystemSuperuser": true
+      }
+    }
+  ]
+}

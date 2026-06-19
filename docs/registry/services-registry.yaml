@@ -2775,6 +2775,41 @@ services:
     api_contract_status: partial
     authz_audit_status: partial
     observability_status: partial
+  - id: vashandi-workforce-service
+    maven_module: vashandi-workforce-service
+    primary_plane: enterprise
+    plane: enterprise
+    domain: workforce-operations
+    secondary_planes: []
+    sovereign: false
+    sovereign_group: null
+    primary_protocol: rest
+    default_http_port: 8167
+    product_names:
+      - Vashandi
+    owner_team: TBD
+    system_of_record_for:
+      - Operational workforce profile membership assignment roster shift attendance leave access risk
+    consumes_from:
+      - tshepo-authz-service
+      - varapi-service
+      - workforce-governance-service
+      - tuso-service
+      - fundo-service
+    exposes_to:
+      - experience-bff
+    forbidden_responsibilities:
+      - must-not-store-clinical-records-as-source-of-truth
+      - must-not-own-person-identity-as-source-of-truth
+      - must-not-own-provider-professional-registry-as-source-of-truth
+      - must-not-own-facility-registry-as-source-of-truth
+      - must-not-own-hsc-employment-as-source-of-truth
+    production_status: baseline-assessed
+    implementation_status: implemented-or-partial
+    frontend_wiring_status: partial
+    api_contract_status: partial
+    authz_audit_status: partial
+    observability_status: partial
   - id: zibo-service
     maven_module: zibo-service
     primary_plane: registry

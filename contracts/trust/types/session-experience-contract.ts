@@ -5,6 +5,28 @@
 import type { WorkAssignment } from "./work-assignment";
 import type { PublicSectorEmploymentSessionContext } from "./public-sector-employment-truth";
 
+export type VashandiIntegrationStatus =
+  | "LIVE"
+  | "UPSTREAM_UNAVAILABLE"
+  | "DEGRADED"
+  | "DENIED"
+  | "PENDING_BACKEND";
+
+/** Vashandi operational workforce context bound to Work tab rendering */
+export interface VashandiSessionContext {
+  vashandiWorkforceProfileId?: string;
+  currentWorkforceStatus?: string;
+  currentAssignments?: WorkAssignment[];
+  activeRosteredShifts?: Array<Record<string, unknown>>;
+  attendanceStatus?: string;
+  leaveAvailabilityStatus?: string;
+  workforceAccessRisks?: Array<Record<string, unknown>>;
+  visibleVashandiWorkspaces: string[];
+  blockedVashandiWorkspaces: string[];
+  vashandiFriendlyResolutionState?: string;
+  vashandiIntegrationStatus?: VashandiIntegrationStatus;
+}
+
 export type SessionLoginMethod =
   | "health_id"
   | "provider_id"
@@ -82,6 +104,17 @@ export interface SessionExperienceContract {
   visibleManagementWorkspaces: string[];
   blockedManagementWorkspaces: string[];
   publicSectorEmployment?: PublicSectorEmploymentSessionContext;
+  vashandiWorkforceProfileId?: string;
+  currentWorkforceStatus?: string;
+  currentAssignments?: WorkAssignment[];
+  activeRosteredShifts?: Array<Record<string, unknown>>;
+  attendanceStatus?: string;
+  leaveAvailabilityStatus?: string;
+  workforceAccessRisks?: Array<Record<string, unknown>>;
+  visibleVashandiWorkspaces: string[];
+  blockedVashandiWorkspaces: string[];
+  vashandiFriendlyResolutionState?: string;
+  vashandiIntegrationStatus?: VashandiIntegrationStatus;
 }
 
 /** Organisation context bound to non-citizen Work and management workspaces */
@@ -100,4 +133,4 @@ export interface SessionOrganisationContext {
   activeOrganisationAssignment?: boolean;
 }
 
-export const SESSION_EXPERIENCE_CONTRACT_VERSION = "1.2.0";
+export const SESSION_EXPERIENCE_CONTRACT_VERSION = "1.3.0";
