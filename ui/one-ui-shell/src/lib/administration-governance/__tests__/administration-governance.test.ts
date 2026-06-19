@@ -288,6 +288,6 @@ describe("Management tiles", () => {
   });
 
   it("registers ninety administration-governance routes for parity", () => {
-    expect(ADMINISTRATION_GOVERNANCE_ROUTE_COUNT).toBe(90);
+    expect(ADMINISTRATION_GOVERNANCE_ROUTE_COUNT).toBe(100);
   });
 });

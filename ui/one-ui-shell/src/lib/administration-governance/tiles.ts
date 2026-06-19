@@ -19,6 +19,7 @@ import {
   Settings,
   FileSearch,
   UserPlus,
+  CalendarClock,
 } from "lucide-react";
 
 export interface AdministrationTile {
@@ -122,6 +123,22 @@ export const MANAGEMENT_TILES: AdministrationTile[] = [
       "private_facility_user_management",
       "private_clinician_assignment",
     ],
+  },
+  {
+    id: "vashandi",
+    title: "Vashandi Operational Workforce",
+    description: "Roster, shift, attendance, leave and access risk — operational workforce SoR.",
+    href: "/work/vashandi",
+    icon: CalendarClock,
+    requiredWorkspaces: [
+      "vashandi.dashboard",
+      "vashandi.workforce_registry",
+      "vashandi.facility_staff",
+      "vashandi.assignments",
+      "vashandi.rosters",
+      "vashandi.my_attendance",
+    ],
+    blockedWorkspaceHint: "vashandi.dashboard",
   },
   {
     id: "hsc",

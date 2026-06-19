@@ -165,6 +165,22 @@ export const ADMINISTRATION_SURFACES: Record<string, AdministrationSurface> = {
       { title: "Register organisation", description: "Start organisation onboarding.", href: "/work/administration-governance/organisations/new" },
     ],
   },
+  vashandi: {
+    id: "vashandi",
+    title: "Vashandi Operational Workforce",
+    subtitle: "Roster, shift, attendance, leave and access risk — operational SoR, not HSC employment authority.",
+    requiredWorkspaces: ["vashandi.dashboard", "vashandi.workforce_registry", "vashandi.facility_staff"],
+    sections: [
+      { title: "Workforce registry", description: "Operational workforce profiles and memberships.", href: "/work/vashandi/workforce" },
+      { title: "Assignments", description: "Facility and programme assignment lifecycle.", href: "/work/vashandi/assignments" },
+      { title: "Rosters", description: "Roster planning, shifts and coverage.", href: "/work/vashandi/rosters" },
+      { title: "Attendance", description: "Check-in, check-out and supervisor confirmation.", href: "/work/vashandi/attendance" },
+      { title: "Leave & availability", description: "Leave records and availability windows.", href: "/work/vashandi/leave-availability" },
+      { title: "Access review", description: "Workforce access risk scan and remediation.", href: "/work/vashandi/access-review" },
+      { title: "Analytics", description: "Staffing, roster coverage and attendance metrics.", href: "/work/vashandi/analytics" },
+      { title: "Imports", description: "Bulk workforce import bridge.", href: "/work/vashandi/imports" },
+    ],
+  },
   training: {
     id: "training",
     title: "Training & Fundo Partner Management",

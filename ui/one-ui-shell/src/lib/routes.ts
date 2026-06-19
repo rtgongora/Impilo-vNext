@@ -697,7 +697,8 @@ export const ROUTES: RouteDefinition[] = [
 // haemovigilance (services/madi-service). New canonical total is 452.
 // Impilo Live (Jun 2026): 14 routes under /live incl. /live/admin (services/live-service).
 // Trust & Access Administration (Jun 2026): 90 contract-governed routes under /work/** (administration-governance scaffold).
-export const EXPECTED_ROUTE_COUNT = 579;
+// Vashandi (Jun 2026): 10 routes under /work/vashandi for operational workforce UI. New canonical total is 589.
+export const EXPECTED_ROUTE_COUNT = 589;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

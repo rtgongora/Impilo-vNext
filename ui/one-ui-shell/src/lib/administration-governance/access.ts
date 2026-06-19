@@ -4,6 +4,7 @@
 
 import type { SessionExperienceContract } from "@/lib/trust";
 import { findFriendlyResolution } from "@/lib/trust";
+import { canAccessVashandiPath } from "@/lib/vashandi/access";
 
 export function hasAdministrationGovernanceEntry(contract: SessionExperienceContract | undefined): boolean {
   if (!contract?.tabs.work.visible) return false;
@@ -115,6 +116,10 @@ export function canAccessAdministrationPath(
     if (pathname === rule.prefix || pathname.startsWith(`${rule.prefix}/`)) {
       return tileEnabled(contract, rule.workspaces);
     }
+  }
+
+  if (pathname.startsWith("/work/vashandi")) {
+    return canAccessVashandiPath(contract, pathname);
   }
 
   if (pathname.startsWith("/work/administration-governance")) {

@@ -95,6 +95,16 @@ export const ADMINISTRATION_GOVERNANCE_ROUTES = [
   { path: "/work/system-admin/scopes", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Scopes", navLabel: "Scopes", navZone: "work" },
   { path: "/work/system-admin/tshepo", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Tshepo", navLabel: "Tshepo", navZone: "work" },
   { path: "/work/system-admin/users", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Users", navLabel: "Users", navZone: "work" },
+  { path: "/work/vashandi", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Vashandi Workforce", navLabel: "Vashandi", navZone: "work" },
+  { path: "/work/vashandi/workforce", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Workforce Registry", navLabel: "Workforce", navZone: "work" },
+  { path: "/work/vashandi/workforce/[id]", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Workforce Profile", navLabel: "Workforce", navZone: "work" },
+  { path: "/work/vashandi/assignments", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Assignments", navLabel: "Assignments", navZone: "work" },
+  { path: "/work/vashandi/rosters", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Rosters", navLabel: "Rosters", navZone: "work" },
+  { path: "/work/vashandi/attendance", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Attendance", navLabel: "Attendance", navZone: "work" },
+  { path: "/work/vashandi/leave-availability", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Leave Availability", navLabel: "Leave", navZone: "work" },
+  { path: "/work/vashandi/imports", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Imports", navLabel: "Imports", navZone: "work" },
+  { path: "/work/vashandi/access-review", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Access Review", navLabel: "Access Review", navZone: "work" },
+  { path: "/work/vashandi/analytics", zone: "operations", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Analytics", navLabel: "Analytics", navZone: "work" },
 ] as const;
 
-export const ADMINISTRATION_GOVERNANCE_ROUTE_COUNT = 90;
+export const ADMINISTRATION_GOVERNANCE_ROUTE_COUNT = 100;
