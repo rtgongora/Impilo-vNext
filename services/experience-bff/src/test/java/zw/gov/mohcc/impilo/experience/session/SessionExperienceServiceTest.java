@@ -10,11 +10,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
 import zw.gov.mohcc.impilo.experience.client.WorkforceGovernanceClient;
+import zw.gov.mohcc.impilo.experience.vashandi.VashandiSessionContextResolver;
 
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -26,6 +29,9 @@ class SessionExperienceServiceTest {
     @Mock
     private WorkforceGovernanceClient workforceGovernanceClient;
 
+    @Mock
+    private VashandiSessionContextResolver vashandiSessionContextResolver;
+
     private SessionExperienceService service;
 
     @BeforeEach
@@ -33,8 +39,11 @@ class SessionExperienceServiceTest {
         service = new SessionExperienceService(
                 varapiClient,
                 workforceGovernanceClient,
+                vashandiSessionContextResolver,
                 new ObjectMapper()
         );
+        when(vashandiSessionContextResolver.applyToContract(any(), anyString(), any()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     @Test
@@ -95,6 +104,6 @@ class SessionExperienceServiceTest {
         @SuppressWarnings("unchecked")
         Map<String, Object> policy = (Map<String, Object>) contract.get("policyMetadata");
         assertNull(policy.get("previewProductOwnerAccess"));
-        assertEquals("1.2.0", policy.get("contractVersion"));
+        assertEquals("1.3.0", policy.get("contractVersion"));
     }
 }

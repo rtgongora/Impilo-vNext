@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
 import zw.gov.mohcc.impilo.experience.client.WorkforceGovernanceClient;
+import zw.gov.mohcc.impilo.experience.vashandi.VashandiSessionContextResolver;
 
 import java.util.*;
 
@@ -21,13 +22,16 @@ public class SessionExperienceService {
 
     private final VarapiServiceClient varapiClient;
     private final WorkforceGovernanceClient workforceGovernanceClient;
+    private final VashandiSessionContextResolver vashandiSessionContextResolver;
     private final ObjectMapper objectMapper;
 
     public SessionExperienceService(VarapiServiceClient varapiClient,
                                       WorkforceGovernanceClient workforceGovernanceClient,
+                                      VashandiSessionContextResolver vashandiSessionContextResolver,
                                       ObjectMapper objectMapper) {
         this.varapiClient = varapiClient;
         this.workforceGovernanceClient = workforceGovernanceClient;
+        this.vashandiSessionContextResolver = vashandiSessionContextResolver;
         this.objectMapper = objectMapper;
     }
 
@@ -92,7 +96,7 @@ public class SessionExperienceService {
         contract.put("roleTemplates", activeAssignments.stream().map(a -> stringVal(a.get("roleTemplateId"))).filter(Objects::nonNull).toList());
         contract.put("policyMetadata", Map.of(
                 "contractVersion", CONTRACT_VERSION,
-                "opaPackages", List.of("impilo.tabs", "impilo.work", "impilo.professional", "impilo.registry", "impilo.marketplace", "impilo.organisation"),
+                "opaPackages", List.of("impilo.tabs", "impilo.work", "impilo.professional", "impilo.registry", "impilo.marketplace", "impilo.organisation", "impilo.vashandi"),
                 "enforcement", "bff_and_opa"
         ));
         if (!organisationContext.isEmpty()) {
@@ -111,6 +115,7 @@ public class SessionExperienceService {
         contract.put("facilityModeAvailable", workVisible && activeAssignments.stream().anyMatch(a -> a.get("facilityId") != null));
         contract.put("facilityModeActive", hasSelectedFacility);
         contract.put("defaultRoute", resolveDefaultRoute(defaultTab, friendlyState, activeAssignments, hasSelectedFacility));
+        vashandiSessionContextResolver.applyToContract(contract, actorId, resolvedProviderId);
         return contract;
     }
 
@@ -338,7 +343,7 @@ public class SessionExperienceService {
             "private_facility_user_management", "private_clinician_assignment");
 
     /** Session Experience Contract version — kept in lockstep with the TS contract constant. */
-    private static final String CONTRACT_VERSION = "1.2.0";
+    private static final String CONTRACT_VERSION = "1.3.0";
 
     private static final Map<String, List<String>> MANAGEMENT_WORKSPACE_DEFAULTS = Map.ofEntries(
             Map.entry("sovereign_public_owner", List.of("national_organisation_registry", "national_trust_console", "national_platform_user_administration")),

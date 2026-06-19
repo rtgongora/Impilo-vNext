@@ -112,6 +112,8 @@ public class ServiceClientConfig {
             String supportBaseUrl,
             String wellnessBaseUrl,
             String workforceGovernanceBaseUrl,
+            /** vashandi-workforce-service — operational workforce SoR (roster, attendance, leave, access risk) */
+            String vashandiBaseUrl,
             /** scheduling-service MVP — slot templates + holds (distinct default port from inpatient-service) */
             String schedulingServiceBaseUrl,
             /** booking-service — sovereign Booking + Appointment aggregates (port 8265) */
@@ -195,6 +197,7 @@ public class ServiceClientConfig {
             if (supportBaseUrl == null) supportBaseUrl = "http://localhost:8292";
             if (wellnessBaseUrl == null) wellnessBaseUrl = "http://localhost:8125";
             if (workforceGovernanceBaseUrl == null) workforceGovernanceBaseUrl = "http://localhost:8165";
+            if (vashandiBaseUrl == null) vashandiBaseUrl = "http://localhost:8167";
             if (schedulingServiceBaseUrl == null) schedulingServiceBaseUrl = "http://localhost:8128";
             if (bookingBaseUrl == null) bookingBaseUrl = "http://localhost:8265";
             if (msikaAppsBaseUrl == null) msikaAppsBaseUrl = "http://localhost:8181";
@@ -220,7 +223,8 @@ public class ServiceClientConfig {
                 null, null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null
+                null, null, null, null, null, null, null, null, null, null,
+                null
         );
     }
 
@@ -240,7 +244,7 @@ public class ServiceClientConfig {
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null
+                null, null, null, null, null, null, null, null, null, null, null, null
         );
     }
 

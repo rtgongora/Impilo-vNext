@@ -5,8 +5,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import zw.gov.mohcc.impilo.experience.client.TshepoAuditServiceClient;
+import zw.gov.mohcc.impilo.experience.client.VashandiServiceClient;
 import zw.gov.mohcc.impilo.experience.client.WorkforceGovernanceClient;
 import zw.gov.mohcc.impilo.experience.session.SessionExperienceService;
+import zw.gov.mohcc.impilo.experience.vashandi.VashandiDtos;
 
 import java.util.*;
 
@@ -20,6 +22,7 @@ public class AdminGovernanceService {
     private final AdminGovernanceAccessRequestPersistence accessRequestPersistence;
     private final AdminGovernanceAccessRequestStore accessRequestStore;
     private final WorkforceGovernanceClient workforceGovernanceClient;
+    private final VashandiServiceClient vashandiServiceClient;
     private final TshepoAuditServiceClient auditClient;
     private final AdminGovernanceAuditHelper auditHelper;
     private final AdminGovernanceOrganisationService organisationService;
@@ -30,6 +33,7 @@ public class AdminGovernanceService {
                                   AdminGovernanceAccessRequestPersistence accessRequestPersistence,
                                   AdminGovernanceAccessRequestStore accessRequestStore,
                                   WorkforceGovernanceClient workforceGovernanceClient,
+                                  VashandiServiceClient vashandiServiceClient,
                                   TshepoAuditServiceClient auditClient,
                                   AdminGovernanceAuditHelper auditHelper,
                                   AdminGovernanceOrganisationService organisationService,
@@ -39,6 +43,7 @@ public class AdminGovernanceService {
         this.accessRequestPersistence = accessRequestPersistence;
         this.accessRequestStore = accessRequestStore;
         this.workforceGovernanceClient = workforceGovernanceClient;
+        this.vashandiServiceClient = vashandiServiceClient;
         this.auditClient = auditClient;
         this.auditHelper = auditHelper;
         this.organisationService = organisationService;
@@ -351,6 +356,8 @@ public class AdminGovernanceService {
         }
 
         String assignmentId = downstream.has("id") ? downstream.get("id").asText() : null;
+        Map<String, Object> vashandiMeta = recordVashandiFacilityAssignment(
+                request, assignmentId, decision.decisionId());
         var audit = auditHelper.emit("facility_assignment.created", actorId, assignmentId, assignmentBody);
         return AdminGovernanceResponses.of(
                 request.assumptionOfDutyRequired() ? "pending" : "completed",
@@ -365,9 +372,63 @@ public class AdminGovernanceService {
                 null,
                 decision,
                 audit,
-                "live",
-                Map.of("assignment", downstream, "eligibility", eligibilityData)
+                vashandiMeta.containsKey("integrationStatus") ? str(vashandiMeta.get("integrationStatus")) : "live",
+                Map.of("assignment", downstream, "eligibility", eligibilityData, "vashandi", vashandiMeta)
         );
+    }
+
+    /**
+     * Mirrors facility staff assignment into Vashandi operational workforce records when upstream is live.
+     */
+    private Map<String, Object> recordVashandiFacilityAssignment(
+            AdminGovernanceDtos.FacilityStaffAssignmentRequest request,
+            String governanceAssignmentId,
+            String opaDecisionId) {
+        Map<String, Object> meta = new LinkedHashMap<>();
+        Map<String, Object> reconcileBody = new LinkedHashMap<>();
+        reconcileBody.put("providerWorkerId", request.providerWorkerId());
+        reconcileBody.put("healthId", request.providerWorkerId());
+        VashandiDtos.UpstreamResult reconcile = vashandiServiceClient.post("/workforce-profiles/reconcile", reconcileBody);
+        if (reconcile.status() != VashandiDtos.IntegrationStatus.LIVE) {
+            meta.put("integrationStatus", "pending_backend");
+            meta.put("friendlyMessage", reconcile.message());
+            return meta;
+        }
+        JsonNode profileNode = reconcile.data();
+        String profileId = profileNode != null && profileNode.has("profile")
+                ? profileNode.path("profile").path("id").asText(null)
+                : profileNode != null ? profileNode.path("id").asText(null) : null;
+        if (profileId == null || profileId.isBlank()) {
+            meta.put("integrationStatus", "pending_backend");
+            meta.put("friendlyMessage", "Vashandi workforce profile reconcile did not return a profile id.");
+            return meta;
+        }
+        Map<String, Object> assignmentBody = new LinkedHashMap<>();
+        assignmentBody.put("workforceProfileId", profileId);
+        assignmentBody.put("assignmentType", "facility_assignment");
+        assignmentBody.put("facilityId", request.facilityId());
+        assignmentBody.put("departmentId", request.departmentId());
+        assignmentBody.put("roleTemplateId", request.roleTemplate());
+        assignmentBody.put("sourceAuthority", "admin_governance_facility_staff");
+        VashandiDtos.UpstreamResult created = vashandiServiceClient.post("/assignments", assignmentBody);
+        if (created.status() != VashandiDtos.IntegrationStatus.LIVE) {
+            meta.put("integrationStatus", "pending_backend");
+            meta.put("friendlyMessage", created.message());
+            return meta;
+        }
+        String vashandiAssignmentId = created.data() != null ? created.data().path("id").asText(null) : null;
+        if (vashandiAssignmentId != null && opaDecisionId != null) {
+            vashandiServiceClient.post("/assignments/" + vashandiAssignmentId + "/precheck",
+                    Map.of("opaDecisionId", opaDecisionId));
+            if (!request.assumptionOfDutyRequired()) {
+                vashandiServiceClient.post("/assignments/" + vashandiAssignmentId + "/approve", Map.of());
+                vashandiServiceClient.post("/assignments/" + vashandiAssignmentId + "/activate", Map.of());
+            }
+        }
+        meta.put("integrationStatus", "live");
+        meta.put("vashandiAssignmentId", vashandiAssignmentId);
+        meta.put("governanceAssignmentId", governanceAssignmentId);
+        return meta;
     }
 
     public AdminGovernanceDtos.ActionResponse domainAction(
