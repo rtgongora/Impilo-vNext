@@ -29,3 +29,9 @@ export { resolveMobileIdentityContext } from "./identityContext";
 export type { LoginMethod, MobileWorkAssignment } from "./identityContext";
 export { MOBILE_ADMIN_NAV_ITEMS, resolveMobileAdministrationNav } from "./administrationGovernanceNav";
 export type { MobileAdminNavItem } from "./administrationGovernanceNav";
+export {
+  MOBILE_VASHANDI_NAV_ITEMS,
+  resolveMobileVashandiNav,
+  hasMobileVashandiEntry,
+} from "./vashandiNav";
+export type { MobileVashandiNavItem, VashandiMobileScreen } from "./vashandiNav";

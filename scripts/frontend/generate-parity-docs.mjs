@@ -173,6 +173,25 @@ const CAPABILITIES = [
     action: "Unified operator UX + maturity labels",
   },
   {
+    plane: "Enterprise",
+    domain: "Vashandi",
+    capability: "Operational workforce roster, attendance, leave, facility staff",
+    backend:
+      "/internal/v1/vashandi/**, /internal/v1/mobile/provider/vashandi/roster, /internal/v1/mobile/provider/vashandi/attendance, /internal/v1/mobile/provider/vashandi/attendance/check-in, /internal/v1/mobile/provider/vashandi/attendance/check-out, /internal/v1/mobile/provider/vashandi/availability",
+    contract: "contracts/openapi/vashandi.openapi.yaml",
+    webRoute:
+      "/work/vashandi, /work/vashandi/rosters, /work/vashandi/attendance, /work/vashandi/leave-availability, /work/vashandi/workforce",
+    webClient: "VashandiShell.tsx, lib/vashandi/access.ts",
+    web: "partial",
+    mobile: "partial",
+    nompilo: "partial",
+    maturity: "Partial",
+    priority: "HIGH",
+    gap: "Web route scaffolds thin; mobile lacks assignment/admin depth",
+    action:
+      "Surface provider VashandiRosterScreen, VashandiAttendanceScreen, VashandiAvailabilityScreen, VashandiFacilityStaffScreen; complete web /work/vashandi/* journeys",
+  },
+  {
     plane: "Experience",
     domain: "Comms Hub",
     capability: "Omnichannel, messaging, notifications",

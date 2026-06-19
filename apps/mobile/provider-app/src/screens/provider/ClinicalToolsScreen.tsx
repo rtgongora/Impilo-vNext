@@ -35,6 +35,7 @@ import { FundoLearningShellScreen } from "./FundoLearningShellScreen";
 import { ProductionReadinessJourneyScreen } from "./ProductionReadinessJourneyScreen";
 import { CoreTransactionJourneyShellScreen } from "./CoreTransactionJourneyShellScreen";
 import { WorkflowDispatchOpsScreen } from "./WorkflowDispatchOpsScreen";
+import { VashandiWorkforceHubScreen } from "./VashandiWorkforceHubScreen";
 import { MadiOrdersScreen } from "../madi/MadiOrdersScreen";
 import { MadiTransfusionScreen } from "../madi/MadiTransfusionScreen";
 import { MadiDriveCaptureScreen } from "../madi/MadiDriveCaptureScreen";
@@ -80,6 +81,7 @@ type ToolTab =
   | "core_transaction"
   | "workflow_dispatch"
   | "ph_field_tasks"
+  | "vashandi"
   | "prod_ready"
   | "madi_orders"
   | "madi_transfusion"
@@ -115,6 +117,7 @@ const TABS: { id: ToolTab; label: string }[] = [
   { id: "core_transaction", label: "Core Tx" },
   { id: "workflow_dispatch", label: "Flow/Ops" },
   { id: "ph_field_tasks", label: "PH Field" },
+  { id: "vashandi", label: "Vashandi" },
   { id: "prod_ready", label: "Prod Ready" },
 ];
 
@@ -184,6 +187,7 @@ export function ClinicalToolsScreen() {
         {tab === "core_transaction" && <CoreTransactionJourneyShellScreen />}
         {tab === "workflow_dispatch" && <WorkflowDispatchOpsScreen />}
         {tab === "ph_field_tasks" && <PublicHealthFieldTasksScreen />}
+        {tab === "vashandi" && <VashandiWorkforceHubScreen />}
         {tab === "prod_ready" && (
           <ProductionReadinessJourneyScreen onNavigateTab={(nextTab) => setTab(nextTab as ToolTab)} />
         )}
