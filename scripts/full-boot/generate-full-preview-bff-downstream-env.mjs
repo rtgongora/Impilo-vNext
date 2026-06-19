@@ -93,6 +93,7 @@ const SERVICE_ENV = [
   ["CHANNELS_BASE_URL", "channels-service"],
   ["SUPPORT_BASE_URL", "support-service"],
   ["WORKFORCE_GOVERNANCE_BASE_URL", "workforce-governance-service"],
+  ["VASHANDI_BASE_URL", "vashandi-workforce-service"],
   // Wave-1 product completion — previously missing downstream mappings
   ["AUDIT_LEDGER_BASE_URL", "audit-ledger-service"],
   ["BUTANO_FHIR_BASE_URL", "butano-fhir"],
