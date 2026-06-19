@@ -171,6 +171,7 @@ experienceBff:
     VARAPI_BASE_URL: http://varapi-service:8083
     TUSO_BASE_URL: http://tuso-service:8084
     WORKFORCE_GOVERNANCE_BASE_URL: http://workforce-governance-service:8165
+    VASHANDI_BASE_URL: http://vashandi-workforce-service:8167
     FHIR_GATEWAY_BASE_URL: http://fhir-gateway-service:8091
     # Booking/scheduling downstreams — unset previously, so the BFF called localhost
     # and citizen/provider appointment surfaces returned 500 (connection refused).
@@ -196,6 +197,9 @@ oneUiShell:
 #
 # Governed login orchestration requires workforce-governance (wave 7 optional) even when
 # FULL_BOOT_MAX_WAVE=0 — session contract work-tab resolution depends on it.
+# Vashandi operational workforce BFF routes require vashandi-workforce-service.
 fullBootServices:
   workforce-governance-service:
+    enabled: true
+  vashandi-workforce-service:
     enabled: true

@@ -1,8 +1,8 @@
 metadata:
-  generated_at: '2026-06-14T23:06:31.227Z'
+  generated_at: '2026-06-19T08:57:12.729Z'
   source: docs/registry/services-registry.yaml
   doctrine: docs/environment/RUNTIME_IMAGE_STRATEGY_DOCTRINE.md
-  total_entries: 146
+  total_entries: 147
 classifications:
   - id: ai-model-registry-service
     canonical_name: ai-model-registry-service
@@ -5779,6 +5779,49 @@ classifications:
     default_http_port: 8083
     priority: P0
     blocker: not_deployed_in_preview
+    reason: Thin JAR-copy Dockerfile — equivalent to shared template
+    classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
+  - id: vashandi-workforce-service
+    canonical_name: vashandi-workforce-service
+    plane: enterprise
+    domain: workforce-operations
+    component_type: backend_service
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
+    estate_role: wave_sequenced_full_estate
+    runtime_kind: kubernetes_service
+    deploy_order_group: domain_services
+    build_required: true
+    image_required: false
+    runtime_image_required: false
+    image_strategy: shared-dockerfile-template
+    image_strategy_reclass: shared-template-candidate
+    image_strategy_status: valid
+    image_build_command: >-
+      docker build -f services/vashandi-workforce-service/Dockerfile OR build-runtime-image-from-jar.sh
+      vashandi-workforce-service
+    image_name: impilo/vashandi-workforce-service
+    official_image: null
+    official_chart: null
+    dockerfile_path: services/vashandi-workforce-service/Dockerfile
+    shared_template: scripts/build/templates/impilo-jre-runtime.Dockerfile
+    jib_module: services/vashandi-workforce-service
+    buildpack_builder: null
+    container_required: false
+    helm_required: false
+    health_check_required: false
+    contract_check_required: true
+    frontend_surface_expected: true
+    mobile_surface_expected: false
+    doctrine_compliance_required: false
+    source_path: services/vashandi-workforce-service
+    build_tool: maven
+    default_http_port: 8167
+    priority: P2
+    blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
     deployment_lane: runtime_k8s_microservice

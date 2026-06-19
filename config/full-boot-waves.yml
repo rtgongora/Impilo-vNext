@@ -144,6 +144,7 @@ waves:
       - simba-service
       - wellness-service
       - workforce-governance-service
+      - vashandi-workforce-service
   - id: 8
     name: preview-finance-pilot
     plane: enterprise

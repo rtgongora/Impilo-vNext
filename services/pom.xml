@@ -189,6 +189,8 @@
         <module>rtc-gateway-service</module>
         <!-- Workforce Governance — organisations, jurisdictions, assignments -->
         <module>workforce-governance-service</module>
+        <!-- Vashandi — operational workforce SoR (roster, shift, attendance, leave, access risk) -->
+        <module>vashandi-workforce-service</module>
         <!-- Clinical Knowledge & EDLIZ-aligned guidance platform -->
         <module>clinical-knowledge-platform-service</module>
         <module>guidance-service</module>
