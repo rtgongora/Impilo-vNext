@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-14T22:57:02.843Z",
+  "generatedAt": "2026-06-19T14:18:24.531Z",
   "services": {
     "tech-companion-mock": "unknown-or-partial",
     "ops-instrumentation": "unknown-or-partial",
@@ -91,6 +91,7 @@
     "wellness-service": "not-applicable",
     "workflow-service": "unknown-or-partial",
     "workforce-governance-service": "unknown-or-partial",
+    "vashandi-workforce-service": "partial",
     "zibo-service": "unknown-or-partial"
   }
 }

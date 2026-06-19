@@ -1,6 +1,6 @@
 # Backend capability inventory
 
-> Generated: 2026-06-14. Regenerate: `node scripts/architecture/generate-parity-inventories.mjs`
+> Generated: 2026-06-19. Regenerate: `node scripts/architecture/generate-parity-inventories.mjs`
 
 Canonical matrix: [BACKEND_CAPABILITY_TO_FRONTEND_SURFACING_MATRIX.md](../frontend/BACKEND_CAPABILITY_TO_FRONTEND_SURFACING_MATRIX.md)
 
@@ -16,6 +16,7 @@ Canonical matrix: [BACKEND_CAPABILITY_TO_FRONTEND_SURFACING_MATRIX.md](../fronte
 | Public Health Ops | Data & Intelligence | /internal/v1/public-health/*, /internal/v1/mobile/provider/public-health/* | Surveillance, investigations, campaigns, intelligence, field ops | /internal/v1/public-health/*, /internal/v1/mobile/provider/public-health/* | yes | /public-health/* | yes | fully surfaced |
 | Ndila | Integration & Edge | /api/v1/ndila/* | Geocode, routes, PH/site ops maps | /api/v1/ndila/* | yes | NdilaPublicHealthRiskMap, SiteRegistryGeoMapPanel | yes | fully surfaced |
 | Nhume | Enterprise | /api/v1/nhume/*, /internal/v1/mobile/*/nhume/* | Dispatch, delivery, fleet tracking | /api/v1/nhume/*, /internal/v1/mobile/*/nhume/* | yes | /nhume/*, /operations/dispatch | yes | partially surfaced |
+| Vashandi | Enterprise | /internal/v1/vashandi/**, /internal/v1/mobile/provider/vashandi/roster, /internal/v1/mobile/provider/vashandi/attendance, /internal/v1/mobile/provider/vashandi/attendance/check-in, /internal/v1/mobile/provider/vashandi/attendance/check-out, /internal/v1/mobile/provider/vashandi/availability | Operational workforce roster, attendance, leave, facility staff | /internal/v1/vashandi/**, /internal/v1/mobile/provider/vashandi/roster, /internal/v1/mobile/provider/vashandi/attendance, /internal/v1/mobile/provider/vashandi/attendance/check-in, /internal/v1/mobile/provider/vashandi/attendance/check-out, /internal/v1/mobile/provider/vashandi/availability | yes | /work/vashandi, /work/vashandi/rosters, /work/vashandi/attendance, /work/vashandi/leave-availability, /work/vashandi/workforce | yes | partially surfaced |
 | Comms Hub | Experience | /internal/v1/omnichannel/*, /internal/v1/communication/* | Omnichannel, messaging, notifications | /internal/v1/omnichannel/*, /internal/v1/communication/* | yes | /communication, /omnichannel | yes | partially surfaced |
 | Telemedicine | Clinical | /internal/v1/teleconsult/* | Teleconsult sessions, scheduling | /internal/v1/teleconsult/* | yes | /telemedicine/* | yes | partially surfaced |
 | Telemedicine analytics | Data | /internal/v1/telemedicine/sla, /internal/v1/telemedicine/events | Telemedicine lifecycle SLA aggregates + event ingest | /internal/v1/telemedicine/sla, /internal/v1/telemedicine/events | yes | /telemedicine/analytics | yes | fully surfaced |

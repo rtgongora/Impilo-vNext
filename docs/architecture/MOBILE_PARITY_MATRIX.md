@@ -1,6 +1,6 @@
 # Mobile parity matrix
 
-> Generated: 2026-06-14. Regenerate: `node scripts/architecture/generate-parity-inventories.mjs`
+> Generated: 2026-06-19. Regenerate: `node scripts/architecture/generate-parity-inventories.mjs`
 
 Apps: **citizen-app**, **provider-app** (Expo, pnpm workspace). See [MOBILE_APP_INVENTORY.md](./MOBILE_APP_INVENTORY.md).
 
@@ -18,6 +18,7 @@ Tier matrices: `docs/mobile/full-mobile-parity-matrix.md` (from `node tools/pari
 | Surveillance, investigations, campaigns, intelligence, field ops | Public Health Ops | /internal/v1/public-health/*, /internal/v1/mobile/provider/public-health/* | /public-health/* | partial screens | Expo (citizen + provider) | apps/mobile/citizen-app, apps/mobile/provider-app | partial | partial | advisory | Citizen outbreak/alert depth on mobile |
 | Geocode, routes, PH/site ops maps | Ndila | /api/v1/ndila/* | NdilaPublicHealthRiskMap, SiteRegistryGeoMapPanel | partial screens | Expo (citizen + provider) | apps/mobile/citizen-app, apps/mobile/provider-app | partial | partial | advisory | Provider field map overlay |
 | Dispatch, delivery, fleet tracking | Nhume | /api/v1/nhume/*, /internal/v1/mobile/*/nhume/* | /nhume/*, /operations/dispatch | partial screens | Expo (citizen + provider) | apps/mobile/citizen-app, apps/mobile/provider-app | partial | partial | advisory | Unified operator UX + maturity labels |
+| Operational workforce roster, attendance, leave, facility staff | Vashandi | /internal/v1/vashandi/**, /internal/v1/mobile/provider/vashandi/roster, /internal/v1/mobile/provider/vashandi/attendance, /internal/v1/mobile/provider/vashandi/attendance/check-in, /internal/v1/mobile/provider/vashandi/attendance/check-out, /internal/v1/mobile/provider/vashandi/availability | /work/vashandi, /work/vashandi/rosters, /work/vashandi/attendance, /work/vashandi/leave-availability, /work/vashandi/workforce | partial screens | Expo (citizen + provider) | apps/mobile/citizen-app, apps/mobile/provider-app | partial | partial | advisory | Surface provider VashandiRosterScreen, VashandiAttendanceScreen, VashandiAvailabilityScreen, VashandiFacilityStaffScreen; complete web /work/vashandi/* journeys |
 | Omnichannel, messaging, notifications | Comms Hub | /internal/v1/omnichannel/*, /internal/v1/communication/* | /communication, /omnichannel | partial screens | Expo (citizen + provider) | apps/mobile/citizen-app, apps/mobile/provider-app | partial | partial | advisory | Comms dashboard actionable tasks |
 | Teleconsult sessions, scheduling | Telemedicine | /internal/v1/teleconsult/* | /telemedicine/* | partial screens | Expo (citizen + provider) | apps/mobile/citizen-app, apps/mobile/provider-app | partial | partial | advisory | Label Blocked for RTC; live scheduling/records |
 | Telemedicine lifecycle SLA aggregates + event ingest | Telemedicine analytics | /internal/v1/telemedicine/sla, /internal/v1/telemedicine/events | /telemedicine/analytics | missing | Expo (citizen + provider) | apps/mobile/citizen-app, apps/mobile/provider-app | partial | intentionally deferred | advisory | Provider telemedicine SLA strip |

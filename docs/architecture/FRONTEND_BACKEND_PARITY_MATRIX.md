@@ -1,6 +1,6 @@
 # Frontend ↔ backend parity matrix
 
-> Generated: 2026-06-14. Regenerate: `node scripts/architecture/generate-parity-inventories.mjs`
+> Generated: 2026-06-19. Regenerate: `node scripts/architecture/generate-parity-inventories.mjs`
 
 | capability | endpoint | webRoute | webClient | realData | mockRisk | parity | priority | remediation | gate |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -14,6 +14,7 @@
 | Public Health Ops: Surveillance, investigations, campaigns, intelligence, field ops | /internal/v1/public-health/*, /internal/v1/mobile/provider/public-health/* | /public-health/* | usePublicHealth.ts, useSurveillance.ts, useCampaigns.ts | yes | no | complete | HIGH | Citizen outbreak/alert depth on mobile | existing |
 | Ndila: Geocode, routes, PH/site ops maps | /api/v1/ndila/* | NdilaPublicHealthRiskMap, SiteRegistryGeoMapPanel | lib/ndila/ndila-client.ts, NdilaMapLibre | yes | no | complete | MEDIUM | Provider field map overlay | existing |
 | Nhume: Dispatch, delivery, fleet tracking | /api/v1/nhume/*, /internal/v1/mobile/*/nhume/* | /nhume/*, /operations/dispatch | lib/nhume.ts, useDispatchOps.ts | partial | no | partial | HIGH | Unified operator UX + maturity labels | advisory |
+| Vashandi: Operational workforce roster, attendance, leave, facility staff | /internal/v1/vashandi/**, /internal/v1/mobile/provider/vashandi/roster, /internal/v1/mobile/provider/vashandi/attendance, /internal/v1/mobile/provider/vashandi/attendance/check-in, /internal/v1/mobile/provider/vashandi/attendance/check-out, /internal/v1/mobile/provider/vashandi/availability | /work/vashandi, /work/vashandi/rosters, /work/vashandi/attendance, /work/vashandi/leave-availability, /work/vashandi/workforce | VashandiShell.tsx, lib/vashandi/access.ts | partial | no | partial | HIGH | Surface provider VashandiRosterScreen, VashandiAttendanceScreen, VashandiAvailabilityScreen, VashandiFacilityStaffScreen; complete web /work/vashandi/* journeys | advisory |
 | Comms Hub: Omnichannel, messaging, notifications | /internal/v1/omnichannel/*, /internal/v1/communication/* | /communication, /omnichannel | useOmnichannel.ts, useCommunication.ts | partial | no | partial | MEDIUM | Comms dashboard actionable tasks | advisory |
 | Telemedicine: Teleconsult sessions, scheduling | /internal/v1/teleconsult/* | /telemedicine/* | useTelemedicine.ts | partial | no | partial | HIGH | Label Blocked for RTC; live scheduling/records | advisory |
 | Telemedicine analytics: Telemedicine lifecycle SLA aggregates + event ingest | /internal/v1/telemedicine/sla, /internal/v1/telemedicine/events | /telemedicine/analytics | useTelemedicineAnalytics.ts | yes | no | complete | MEDIUM | Provider telemedicine SLA strip | existing |
