@@ -29,6 +29,18 @@ bash scripts/guard/check-doctrine-compliance.sh
 bash scripts/full-boot/generate-blocker-triage.sh
 ```
 
+### Preview deploy entrypoints (operator)
+
+See **[PREVIEW_DEPLOY_OPERATOR_GUIDE.md](PREVIEW_DEPLOY_OPERATOR_GUIDE.md)** for targeted vs full-boot workflows.
+
+```bash
+bash scripts/preview/explain-blast-radius.sh      # dry-run: what would rebuild
+bash scripts/preview/targeted-deploy.sh --dry-run # affected services only
+bash scripts/preview/full-boot.sh                 # release-quality full estate
+```
+
+Audit references: `docs/audits/preview-full-boot-pipeline-truth.md`, `preview-blast-radius-strategy.md`, `preview-deploy-speedup-plan.md`.
+
 ## Source of truth
 
 - Registry: `docs/registry/services-registry.yaml`

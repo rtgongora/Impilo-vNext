@@ -1,8 +1,28 @@
 #!/usr/bin/env bash
 # Build all required/optional full-boot targets; fail on required failures.
+# Optional: --only-modules svc1,svc2 (Maven -pl -am + matching npm workspaces)
 set -uo pipefail
 source "$(dirname "$0")/../full-boot/_full-boot-common.sh"
 full_boot_ensure_artifacts
+
+ONLY_MODULES_CSV=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --only-modules)
+      [[ $# -ge 2 ]] || { echo "--only-modules requires comma-separated module ids"; exit 2; }
+      ONLY_MODULES_CSV="$2"
+      shift 2
+      ;;
+    -h|--help)
+      grep -E '^#( |$)' "$0" | sed 's/^# \{0,1\}//'; exit 0
+      ;;
+    *)
+      echo "Unknown argument: $1" >&2
+      echo "Usage: bash scripts/build/build-full-vnext.sh [--only-modules id1,id2]" >&2
+      exit 2
+      ;;
+  esac
+done
 
 LOG_DIR="$FULL_BOOT_REPORTS/build-logs"
 mkdir -p "$LOG_DIR"
@@ -59,23 +79,47 @@ run_npm_ui() {
 
 bash scripts/build/discover-build-targets.sh "$FULL_BOOT_REPORTS/build-targets.tsv"
 
-# Parent reactor build (all Java modules) — single pass when available
-MVN="$(mvn_cmd 2>/dev/null || true)"
-if [[ -n "$MVN" && -f services/pom.xml ]]; then
-  reactor_log="$LOG_DIR/_reactor.log"
-  echo "Running Maven reactor (services/pom.xml) via $MVN..."
-  if (cd services && $MVN -q install -DskipTests >"$reactor_log" 2>&1); then
-    echo "PASS reactor" | tee -a "$reactor_log"
-    REACTOR_OK=1
-  else
-    echo "FAIL reactor — per-module logs below" | tee -a "$reactor_log"
-    REACTOR_OK=0
-  fi
+REACTOR_OK=0
+if [[ -n "$ONLY_MODULES_CSV" ]]; then
+  MVN="$(mvn_cmd 2>/dev/null || true)"
+  IFS=',' read -ra ONLY_MODS <<<"$ONLY_MODULES_CSV"
+  for mod in "${ONLY_MODS[@]}"; do
+    mod="${mod// /}"
+    [[ -z "$mod" ]] && continue
+    if [[ "$mod" == "one-ui-shell" ]]; then
+      run_npm_ui "one-ui-shell" || true
+      continue
+    fi
+    if [[ -n "$MVN" ]]; then
+      run_maven "$mod" || true
+    fi
+  done
 else
-  REACTOR_OK=0
+  # Parent reactor build (all Java modules) — single pass when available
+  MVN="$(mvn_cmd 2>/dev/null || true)"
+  if [[ -n "$MVN" && -f services/pom.xml ]]; then
+    reactor_log="$LOG_DIR/_reactor.log"
+    echo "Running Maven reactor (services/pom.xml) via $MVN..."
+    if (cd services && $MVN -q install -DskipTests >"$reactor_log" 2>&1); then
+      echo "PASS reactor" | tee -a "$reactor_log"
+      REACTOR_OK=1
+    else
+      echo "FAIL reactor — per-module logs below" | tee -a "$reactor_log"
+      REACTOR_OK=0
+    fi
+  fi
 fi
 
 while IFS=$'\t' read -r id tool path class; do
+  if [[ -n "$ONLY_MODULES_CSV" ]]; then
+    want=0
+    IFS=',' read -ra ONLY_MODS <<<"$ONLY_MODULES_CSV"
+    for mod in "${ONLY_MODS[@]}"; do
+      mod="${mod// /}"
+      [[ "$id" == "$mod" ]] && want=1
+    done
+    [[ $want -eq 1 ]] || continue
+  fi
   [[ "$id" == "id" ]] && continue
   rc=0
   case "$tool" in

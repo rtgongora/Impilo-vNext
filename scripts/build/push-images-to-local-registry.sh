@@ -13,6 +13,7 @@ PARALLEL="${IMPILO_PUSH_PARALLEL:-4}"
 MODE="${1:-required}"
 ONLY_IDS="${IMPILO_PUSH_ONLY:-}"
 WAVE_MAX="${IMPILO_PUSH_WAVE:-}"
+PUSH_FORCE="${IMPILO_PUSH_FORCE:-0}"
 
 bash "$REPO/scripts/operator/registry-up.sh"
 
@@ -110,8 +111,8 @@ push_one() {
     return 0
   fi
   local sid="${src#impilo/}"; sid="${sid%%:*}"
-  if curl -sf "http://${REGISTRY}/v2/impilo/${sid}/manifests/${TAG}" >/dev/null 2>&1; then
-    echo "SKIP  $dest  (tag already in registry)"
+  if [[ "$PUSH_FORCE" != "1" ]] && curl -sf "http://${REGISTRY}/v2/impilo/${sid}/manifests/${TAG}" >/dev/null 2>&1; then
+    echo "SKIP  $dest  (tag already in registry; set IMPILO_PUSH_FORCE=1 to override)"
     return 0
   fi
   docker tag "$src" "$dest"
@@ -123,7 +124,7 @@ push_one() {
   fi
 }
 export -f push_one
-export REGISTRY TAG
+export REGISTRY TAG PUSH_FORCE
 
 FAIL=0
 while read -r ref; do

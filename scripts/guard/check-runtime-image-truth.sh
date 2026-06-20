@@ -14,7 +14,7 @@
 # READ-ONLY. Never runs `ctr images rm`, prune, import, helm, or `kubectl set image`.
 #
 # Usage:
-#   scripts/guard/check-runtime-image-truth.sh [--json] [--service <id>] \
+#   scripts/guard/check-runtime-image-truth.sh [--json] [--service <id>] [--only id1,id2] \
 #       [--phase pre-rollout|post-rollout] [--ns <namespace>]
 #
 # Exit codes: 0 aligned (or all non-aligned are exempt) | 1 stale non-exempt service(s) found
@@ -34,6 +34,7 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --json) AS_JSON=1; shift ;;
     --service) ONLY_SERVICE="${2:-}"; shift 2 ;;
+    --only) ONLY_SERVICE="${2:-}"; shift 2 ;;
     --phase) PHASE="${2:-}"; shift 2 ;;
     --ns) NS="${2:-}"; shift 2 ;;
     -h|--help)
@@ -95,7 +96,11 @@ for dedicated in ("experience-bff", "one-ui-shell"):
 runtime_services = sorted(set(runtime_services))
 
 if only_service:
-    runtime_services = [s for s in runtime_services if s == only_service]
+    if "," in only_service:
+        allowed = {s.strip() for s in only_service.split(",") if s.strip()}
+        runtime_services = [s for s in runtime_services if s in allowed]
+    else:
+        runtime_services = [s for s in runtime_services if s == only_service]
 
 # --- Load exemptions.
 exempt = {}
