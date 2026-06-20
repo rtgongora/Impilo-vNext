@@ -24,7 +24,16 @@ export default function FundoStudioMediaAssetPage({ params }: { params: { mediaI
             {asset.mediaType ?? "VIDEO"} · {asset.status ?? "DRAFT"}
           </p>
           {asset.metadata ? (
-            <pre className="overflow-x-auto rounded bg-muted p-2 text-xs">{JSON.stringify(asset.metadata, null, 2)}</pre>
+            <dl className="space-y-2 rounded bg-muted p-3 text-xs">
+              {Object.entries(asset.metadata).map(([key, value]) => (
+                <div key={key} className="grid grid-cols-[minmax(8rem,30%)_1fr] gap-2">
+                  <dt className="font-medium text-muted-foreground">{key}</dt>
+                  <dd className="break-all font-mono text-foreground">
+                    {value == null ? "—" : typeof value === "object" ? JSON.stringify(value) : String(value)}
+                  </dd>
+                </div>
+              ))}
+            </dl>
           ) : null}
           <Link href="/learning/studio/media" className="text-teal-700 hover:underline">
             Back to studio media
