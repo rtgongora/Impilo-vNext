@@ -19,7 +19,8 @@
     "sync-bff-downstreams": "node sync-registry-bff-downstreams.mjs",
     "add-springdoc": "node add-springdoc-to-service-poms.mjs",
     "add-spring-kafka": "node add-spring-kafka-to-service-poms.mjs",
-    "sync-platform-wave": "npm run sync-bff-downstreams && npm run sync-ui-refs && npm run add-springdoc && npm run add-spring-kafka && npm run report"
+    "sync-platform-wave": "npm run sync-bff-downstreams && npm run sync-ui-refs && npm run add-springdoc && npm run add-spring-kafka && npm run report",
+    "product-truth": "node generate-product-truth.mjs"
   },
   "dependencies": {
     "js-yaml": "^4.1.0"

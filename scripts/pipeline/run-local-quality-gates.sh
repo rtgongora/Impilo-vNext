@@ -57,6 +57,12 @@ pipeline_run_phase parity-web "Backend-to-frontend parity" 1 \
 pipeline_run_phase parity-mobile "Mobile parity" 1 \
   bash scripts/guard/check-mobile-parity.sh
 
+# 9b. Product Truth audit gate (advisory — ratchet PRODUCT_TRUTH_VIOLATION_THRESHOLD)
+product_truth_blocking=0
+[[ "${PRODUCT_TRUTH_GATE_BLOCKING:-0}" == "1" ]] && product_truth_blocking=1
+pipeline_run_phase product-truth "Product Truth audit gate" "$product_truth_blocking" \
+  bash scripts/guard/check-product-truth.sh || true
+
 # 10. API contracts
 pipeline_run_phase api-contracts "API contract checks" 1 \
   bash scripts/test/run-api-contract-checks.sh
