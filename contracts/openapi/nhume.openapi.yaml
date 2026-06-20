@@ -1,0 +1,578 @@
+# =============================================================================
+# nhume-service — handler-synced OpenAPI (Wave 2)
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: "Nhume Service"
+  version: "1.0.0"
+  description: |
+    Sovereign HTTP surface for `nhume-service`, generated from Spring handler paths.
+    Extend schemas as DTOs stabilise.
+
+servers:
+  - url: /
+    description: Service-relative paths (Envoy/BFF may prefix)
+
+security:
+  - bearerAuth: []
+
+paths:
+  /internal/v1/nhume/autonomous-missions:
+    get:
+      operationId: nhume_get_internal_v1_nhume_autonomous-missions
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: nhume_post_internal_v1_nhume_autonomous-missions
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/nhume/autonomous-missions/{id}:
+    get:
+      operationId: nhume_get_internal_v1_nhume_autonomous-missions_id
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/nhume/autonomous-missions/{id}/cancel:
+    post:
+      operationId: nhume_post_internal_v1_nhume_autonomous-missions_id_cancel
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/nhume/couriers:
+    get:
+      operationId: nhume_get_internal_v1_nhume_couriers
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: nhume_post_internal_v1_nhume_couriers
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/nhume/couriers/{id}:
+    get:
+      operationId: nhume_get_internal_v1_nhume_couriers_id
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    patch:
+      operationId: nhume_patch_internal_v1_nhume_couriers_id
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/nhume/dashboard:
+    get:
+      operationId: nhume_get_internal_v1_nhume_dashboard
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/nhume/deliveries:
+    get:
+      operationId: nhume_get_internal_v1_nhume_deliveries
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: nhume_post_internal_v1_nhume_deliveries
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/nhume/deliveries/{id}:
+    delete:
+      operationId: nhume_delete_internal_v1_nhume_deliveries_id
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    get:
+      operationId: nhume_get_internal_v1_nhume_deliveries_id
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/nhume/deliveries/{id}/accept:
+    post:
+      operationId: nhume_post_internal_v1_nhume_deliveries_id_accept
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/nhume/deliveries/{id}/approve:
+    post:
+      operationId: nhume_post_internal_v1_nhume_deliveries_id_approve
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/nhume/deliveries/{id}/assign:
+    post:
+      operationId: nhume_post_internal_v1_nhume_deliveries_id_assign
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/nhume/deliveries/{id}/cancel:
+    post:
+      operationId: nhume_post_internal_v1_nhume_deliveries_id_cancel
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/nhume/deliveries/{id}/custody:
+    post:
+      operationId: nhume_post_internal_v1_nhume_deliveries_id_custody
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/nhume/deliveries/{id}/decline:
+    post:
+      operationId: nhume_post_internal_v1_nhume_deliveries_id_decline
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/nhume/deliveries/{id}/fail:
+    post:
+      operationId: nhume_post_internal_v1_nhume_deliveries_id_fail
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/nhume/deliveries/{id}/items:
+    get:
+      operationId: nhume_get_internal_v1_nhume_deliveries_id_items
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/nhume/deliveries/{id}/location:
+    post:
+      operationId: nhume_post_internal_v1_nhume_deliveries_id_location
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/nhume/deliveries/{id}/pickup:
+    post:
+      operationId: nhume_post_internal_v1_nhume_deliveries_id_pickup
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/nhume/deliveries/{id}/proof:
+    post:
+      operationId: nhume_post_internal_v1_nhume_deliveries_id_proof
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/nhume/deliveries/{id}/reassign:
+    post:
+      operationId: nhume_post_internal_v1_nhume_deliveries_id_reassign
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/nhume/deliveries/{id}/reject:
+    post:
+      operationId: nhume_post_internal_v1_nhume_deliveries_id_reject
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/nhume/deliveries/{id}/return:
+    post:
+      operationId: nhume_post_internal_v1_nhume_deliveries_id_return
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/nhume/deliveries/{id}/start:
+    post:
+      operationId: nhume_post_internal_v1_nhume_deliveries_id_start
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/nhume/deliveries/{id}/submit:
+    post:
+      operationId: nhume_post_internal_v1_nhume_deliveries_id_submit
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/nhume/deliveries/{id}/timeline:
+    get:
+      operationId: nhume_get_internal_v1_nhume_deliveries_id_timeline
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/nhume/deliveries/{id}/tracking:
+    get:
+      operationId: nhume_get_internal_v1_nhume_deliveries_id_tracking
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/nhume/dispatcher-console:
+    get:
+      operationId: nhume_get_internal_v1_nhume_dispatcher-console
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/nhume/fleet:
+    get:
+      operationId: nhume_get_internal_v1_nhume_fleet
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: nhume_post_internal_v1_nhume_fleet
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/nhume/fleet/{id}:
+    get:
+      operationId: nhume_get_internal_v1_nhume_fleet_id
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    patch:
+      operationId: nhume_patch_internal_v1_nhume_fleet_id
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/nhume/integrations:
+    get:
+      operationId: nhume_get_internal_v1_nhume_integrations
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: nhume_post_internal_v1_nhume_integrations
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/nhume/map-token:
+    get:
+      operationId: nhume_get_internal_v1_nhume_map-token
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/nhume/policies:
+    get:
+      operationId: nhume_get_internal_v1_nhume_policies
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: nhume_post_internal_v1_nhume_policies
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/nhume/policies/{policyId}:
+    put:
+      operationId: nhume_put_internal_v1_nhume_policies_policyId
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/nhume/zones:
+    get:
+      operationId: nhume_get_internal_v1_nhume_zones
+      tags: [Generated-From-Handler]
+      summary: Documented from nhume-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas: {}

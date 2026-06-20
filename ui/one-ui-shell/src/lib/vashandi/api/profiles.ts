@@ -13,6 +13,40 @@ export async function reconcileWorkforceProfile(profileId: string) {
   return postVashandi("/workforce-profiles/reconcile", { profileId });
 }
 
+export type ImportWorkforceRow = {
+  healthId?: string;
+  providerWorkerId?: string;
+  keycloakUserId?: string;
+  organisationId?: string;
+  organisationType?: string;
+  membershipType?: string;
+  workerType?: string;
+  profession?: string;
+  cadre?: string;
+  currentStatus?: string;
+  assignmentType?: string;
+  facilityId?: string;
+  departmentId?: string;
+  roleTemplateId?: string;
+};
+
+export type ImportBridgeRequest = {
+  source: string;
+  rows: ImportWorkforceRow[];
+};
+
+export type ImportBridgeResult = {
+  profilesImported?: number;
+  assignmentsImported?: number;
+  profileIds?: string[];
+  assignmentIds?: string[];
+  status?: string;
+};
+
+export async function importWorkforceBridge(body: ImportBridgeRequest) {
+  return postVashandi<ImportBridgeResult>("/workforce-profiles/import-bridge", body);
+}
+
 export async function runVashandiPrecheck(body: VashandiPrecheckRequest) {
   return postVashandi("/precheck", body);
 }

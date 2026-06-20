@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-06-19T08:57:07.850Z",
+  "generatedAt": "2026-06-20T11:43:44.918Z",
   "counts": {
-    "totalOpenApiOperations": 4513,
+    "totalOpenApiOperations": 4591,
     "totalAsyncChannels": 84,
-    "implemented": 4539,
+    "implemented": 4652,
     "partial": 0,
     "missing": 0,
-    "unownedContract": 58,
+    "unownedContract": 23,
     "orphanHandlers": 3,
     "violations": 3,
     "contractParseErrors": 0
@@ -39487,6 +39487,565 @@
       "stubPattern": null
     },
     {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_get_internal_v1_nhume_autonomous-missions",
+      "method": "GET",
+      "path": "/internal/v1/nhume/autonomous-missions",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeAutonomousController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_post_internal_v1_nhume_autonomous-missions",
+      "method": "POST",
+      "path": "/internal/v1/nhume/autonomous-missions",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeAutonomousController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_get_internal_v1_nhume_autonomous-missions_id",
+      "method": "GET",
+      "path": "/internal/v1/nhume/autonomous-missions/{id}",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeAutonomousController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_post_internal_v1_nhume_autonomous-missions_id_cancel",
+      "method": "POST",
+      "path": "/internal/v1/nhume/autonomous-missions/{id}/cancel",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeAutonomousController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_get_internal_v1_nhume_couriers",
+      "method": "GET",
+      "path": "/internal/v1/nhume/couriers",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeCourierController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_post_internal_v1_nhume_couriers",
+      "method": "POST",
+      "path": "/internal/v1/nhume/couriers",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeCourierController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_get_internal_v1_nhume_couriers_id",
+      "method": "GET",
+      "path": "/internal/v1/nhume/couriers/{id}",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeCourierController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_patch_internal_v1_nhume_couriers_id",
+      "method": "PATCH",
+      "path": "/internal/v1/nhume/couriers/{id}",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeCourierController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_get_internal_v1_nhume_dashboard",
+      "method": "GET",
+      "path": "/internal/v1/nhume/dashboard",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeDashboardController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_get_internal_v1_nhume_deliveries",
+      "method": "GET",
+      "path": "/internal/v1/nhume/deliveries",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeDeliveryController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_post_internal_v1_nhume_deliveries",
+      "method": "POST",
+      "path": "/internal/v1/nhume/deliveries",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeDeliveryController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_delete_internal_v1_nhume_deliveries_id",
+      "method": "DELETE",
+      "path": "/internal/v1/nhume/deliveries/{id}",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeDeliveryController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_get_internal_v1_nhume_deliveries_id",
+      "method": "GET",
+      "path": "/internal/v1/nhume/deliveries/{id}",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeDeliveryController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_post_internal_v1_nhume_deliveries_id_accept",
+      "method": "POST",
+      "path": "/internal/v1/nhume/deliveries/{id}/accept",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeDeliveryController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_post_internal_v1_nhume_deliveries_id_approve",
+      "method": "POST",
+      "path": "/internal/v1/nhume/deliveries/{id}/approve",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeDeliveryController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_post_internal_v1_nhume_deliveries_id_assign",
+      "method": "POST",
+      "path": "/internal/v1/nhume/deliveries/{id}/assign",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeDeliveryController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_post_internal_v1_nhume_deliveries_id_cancel",
+      "method": "POST",
+      "path": "/internal/v1/nhume/deliveries/{id}/cancel",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeDeliveryController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_post_internal_v1_nhume_deliveries_id_custody",
+      "method": "POST",
+      "path": "/internal/v1/nhume/deliveries/{id}/custody",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeDeliveryController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_post_internal_v1_nhume_deliveries_id_decline",
+      "method": "POST",
+      "path": "/internal/v1/nhume/deliveries/{id}/decline",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeDeliveryController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_post_internal_v1_nhume_deliveries_id_fail",
+      "method": "POST",
+      "path": "/internal/v1/nhume/deliveries/{id}/fail",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeDeliveryController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_get_internal_v1_nhume_deliveries_id_items",
+      "method": "GET",
+      "path": "/internal/v1/nhume/deliveries/{id}/items",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeDeliveryController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_post_internal_v1_nhume_deliveries_id_location",
+      "method": "POST",
+      "path": "/internal/v1/nhume/deliveries/{id}/location",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeDeliveryController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_post_internal_v1_nhume_deliveries_id_pickup",
+      "method": "POST",
+      "path": "/internal/v1/nhume/deliveries/{id}/pickup",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeDeliveryController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_post_internal_v1_nhume_deliveries_id_proof",
+      "method": "POST",
+      "path": "/internal/v1/nhume/deliveries/{id}/proof",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeDeliveryController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_post_internal_v1_nhume_deliveries_id_reassign",
+      "method": "POST",
+      "path": "/internal/v1/nhume/deliveries/{id}/reassign",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeDeliveryController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_post_internal_v1_nhume_deliveries_id_reject",
+      "method": "POST",
+      "path": "/internal/v1/nhume/deliveries/{id}/reject",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeDeliveryController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_post_internal_v1_nhume_deliveries_id_return",
+      "method": "POST",
+      "path": "/internal/v1/nhume/deliveries/{id}/return",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeDeliveryController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_post_internal_v1_nhume_deliveries_id_start",
+      "method": "POST",
+      "path": "/internal/v1/nhume/deliveries/{id}/start",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeDeliveryController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_post_internal_v1_nhume_deliveries_id_submit",
+      "method": "POST",
+      "path": "/internal/v1/nhume/deliveries/{id}/submit",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeDeliveryController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_get_internal_v1_nhume_deliveries_id_timeline",
+      "method": "GET",
+      "path": "/internal/v1/nhume/deliveries/{id}/timeline",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeDeliveryController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_get_internal_v1_nhume_deliveries_id_tracking",
+      "method": "GET",
+      "path": "/internal/v1/nhume/deliveries/{id}/tracking",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeDeliveryController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_get_internal_v1_nhume_dispatcher-console",
+      "method": "GET",
+      "path": "/internal/v1/nhume/dispatcher-console",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeDashboardController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_get_internal_v1_nhume_fleet",
+      "method": "GET",
+      "path": "/internal/v1/nhume/fleet",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeFleetController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_post_internal_v1_nhume_fleet",
+      "method": "POST",
+      "path": "/internal/v1/nhume/fleet",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeFleetController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_get_internal_v1_nhume_fleet_id",
+      "method": "GET",
+      "path": "/internal/v1/nhume/fleet/{id}",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeFleetController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_patch_internal_v1_nhume_fleet_id",
+      "method": "PATCH",
+      "path": "/internal/v1/nhume/fleet/{id}",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeFleetController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_get_internal_v1_nhume_integrations",
+      "method": "GET",
+      "path": "/internal/v1/nhume/integrations",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumePolicyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_post_internal_v1_nhume_integrations",
+      "method": "POST",
+      "path": "/internal/v1/nhume/integrations",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumePolicyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_get_internal_v1_nhume_map-token",
+      "method": "GET",
+      "path": "/internal/v1/nhume/map-token",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeDashboardController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_get_internal_v1_nhume_policies",
+      "method": "GET",
+      "path": "/internal/v1/nhume/policies",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumePolicyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_post_internal_v1_nhume_policies",
+      "method": "POST",
+      "path": "/internal/v1/nhume/policies",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumePolicyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_put_internal_v1_nhume_policies_policyId",
+      "method": "PUT",
+      "path": "/internal/v1/nhume/policies/{policyId}",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumePolicyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "nhume.openapi.yaml",
+      "operationId": "nhume_get_internal_v1_nhume_zones",
+      "method": "GET",
+      "path": "/internal/v1/nhume/zones",
+      "summary": "Documented from nhume-service handler (Wave 2 contract sync)",
+      "modules": [
+        "nhume-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeDashboardController.java",
+      "stubPattern": null
+    },
+    {
       "contract": "notification.openapi.yaml",
       "operationId": "notificationEnqueue",
       "method": "POST",
@@ -53861,14 +54420,471 @@
       "stubPattern": null
     },
     {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_delete_v1_internal_vashandi_access-risks",
+      "method": "DELETE",
+      "path": "/v1/internal/vashandi/access-risks",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiAccessReviewController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_get_v1_internal_vashandi_access-risks",
+      "method": "GET",
+      "path": "/v1/internal/vashandi/access-risks",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiAccessReviewController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_patch_v1_internal_vashandi_access-risks",
+      "method": "PATCH",
+      "path": "/v1/internal/vashandi/access-risks",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiAccessReviewController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_post_v1_internal_vashandi_access-risks",
+      "method": "POST",
+      "path": "/v1/internal/vashandi/access-risks",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiAccessReviewController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_put_v1_internal_vashandi_access-risks",
+      "method": "PUT",
+      "path": "/v1/internal/vashandi/access-risks",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiAccessReviewController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_delete_v1_internal_vashandi_analytics",
+      "method": "DELETE",
+      "path": "/v1/internal/vashandi/analytics",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiAnalyticsController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_get_v1_internal_vashandi_analytics",
+      "method": "GET",
+      "path": "/v1/internal/vashandi/analytics",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiAnalyticsController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_patch_v1_internal_vashandi_analytics",
+      "method": "PATCH",
+      "path": "/v1/internal/vashandi/analytics",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiAnalyticsController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_post_v1_internal_vashandi_analytics",
+      "method": "POST",
+      "path": "/v1/internal/vashandi/analytics",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiAnalyticsController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_put_v1_internal_vashandi_analytics",
+      "method": "PUT",
+      "path": "/v1/internal/vashandi/analytics",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiAnalyticsController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_delete_v1_internal_vashandi_assignments",
+      "method": "DELETE",
+      "path": "/v1/internal/vashandi/assignments",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiAssignmentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_get_v1_internal_vashandi_assignments",
+      "method": "GET",
+      "path": "/v1/internal/vashandi/assignments",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiAssignmentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_patch_v1_internal_vashandi_assignments",
+      "method": "PATCH",
+      "path": "/v1/internal/vashandi/assignments",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiAssignmentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_post_v1_internal_vashandi_assignments",
+      "method": "POST",
+      "path": "/v1/internal/vashandi/assignments",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiAssignmentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_put_v1_internal_vashandi_assignments",
+      "method": "PUT",
+      "path": "/v1/internal/vashandi/assignments",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiAssignmentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_delete_v1_internal_vashandi_attendance",
+      "method": "DELETE",
+      "path": "/v1/internal/vashandi/attendance",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiAttendanceController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_get_v1_internal_vashandi_attendance",
+      "method": "GET",
+      "path": "/v1/internal/vashandi/attendance",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiAnalyticsController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_patch_v1_internal_vashandi_attendance",
+      "method": "PATCH",
+      "path": "/v1/internal/vashandi/attendance",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiAttendanceController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_post_v1_internal_vashandi_attendance",
+      "method": "POST",
+      "path": "/v1/internal/vashandi/attendance",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiAttendanceController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_put_v1_internal_vashandi_attendance",
+      "method": "PUT",
+      "path": "/v1/internal/vashandi/attendance",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiAttendanceController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_get_v1_internal_vashandi_availability",
+      "method": "GET",
+      "path": "/v1/internal/vashandi/availability",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiLeaveController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_post_v1_internal_vashandi_leave",
+      "method": "POST",
+      "path": "/v1/internal/vashandi/leave",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiLeaveController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_patch_v1_internal_vashandi_leave_id",
+      "method": "PATCH",
+      "path": "/v1/internal/vashandi/leave/{id}",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiAssignmentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_get_v1_internal_vashandi_rosters",
+      "method": "GET",
+      "path": "/v1/internal/vashandi/rosters",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiRosterController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_post_v1_internal_vashandi_rosters",
+      "method": "POST",
+      "path": "/v1/internal/vashandi/rosters",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiRosterController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_get_v1_internal_vashandi_rosters_id",
+      "method": "GET",
+      "path": "/v1/internal/vashandi/rosters/{id}",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiAssignmentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_post_v1_internal_vashandi_rosters_id_approve",
+      "method": "POST",
+      "path": "/v1/internal/vashandi/rosters/{id}/approve",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiAssignmentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_get_v1_internal_vashandi_rosters_id_shifts",
+      "method": "GET",
+      "path": "/v1/internal/vashandi/rosters/{id}/shifts",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiRosterController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_post_v1_internal_vashandi_shifts",
+      "method": "POST",
+      "path": "/v1/internal/vashandi/shifts",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiRosterController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_patch_v1_internal_vashandi_shifts_id",
+      "method": "PATCH",
+      "path": "/v1/internal/vashandi/shifts/{id}",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiAssignmentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_delete_v1_internal_vashandi_workforce-profiles",
+      "method": "DELETE",
+      "path": "/v1/internal/vashandi/workforce-profiles",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiWorkforceController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_get_v1_internal_vashandi_workforce-profiles",
+      "method": "GET",
+      "path": "/v1/internal/vashandi/workforce-profiles",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiWorkforceController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_patch_v1_internal_vashandi_workforce-profiles",
+      "method": "PATCH",
+      "path": "/v1/internal/vashandi/workforce-profiles",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiWorkforceController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_post_v1_internal_vashandi_workforce-profiles",
+      "method": "POST",
+      "path": "/v1/internal/vashandi/workforce-profiles",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiWorkforceController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi-workforce.openapi.yaml",
+      "operationId": "vashandi-workforce_put_v1_internal_vashandi_workforce-profiles",
+      "method": "PUT",
+      "path": "/v1/internal/vashandi/workforce-profiles",
+      "summary": "Documented from vashandi-workforce-service handler (Wave 2 contract sync)",
+      "modules": [
+        "vashandi-workforce-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiWorkforceController.java",
+      "stubPattern": null
+    },
+    {
       "contract": "vashandi.openapi.yaml",
       "operationId": "vashandiPrecheck",
       "method": "POST",
       "path": "/precheck",
       "summary": "OPA-aligned policy precheck for a Vashandi action",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminGovernanceController.java",
       "stubPattern": null
     },
     {
@@ -53877,9 +54893,11 @@
       "method": "GET",
       "path": "/workforce-profiles",
       "summary": "List workforce profiles in scope",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VashandiController.java",
       "stubPattern": null
     },
     {
@@ -53888,9 +54906,11 @@
       "method": "GET",
       "path": "/workforce-profiles/{id}",
       "summary": "Get a workforce profile by id",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminUserController.java",
       "stubPattern": null
     },
     {
@@ -53899,9 +54919,11 @@
       "method": "POST",
       "path": "/workforce-profiles/reconcile",
       "summary": "Reconcile workforce profile against upstream registries",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VashandiController.java",
       "stubPattern": null
     },
     {
@@ -53910,9 +54932,11 @@
       "method": "GET",
       "path": "/assignments",
       "summary": "List workforce assignments",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VashandiController.java",
       "stubPattern": null
     },
     {
@@ -53921,9 +54945,11 @@
       "method": "POST",
       "path": "/assignments",
       "summary": "Create a workforce assignment",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PublicHealthController.java",
       "stubPattern": null
     },
     {
@@ -53932,9 +54958,11 @@
       "method": "GET",
       "path": "/assignments/{id}",
       "summary": "Get assignment by id",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminUserController.java",
       "stubPattern": null
     },
     {
@@ -53943,9 +54971,11 @@
       "method": "PATCH",
       "path": "/assignments/{id}",
       "summary": "Update assignment fields",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VashandiController.java",
       "stubPattern": null
     },
     {
@@ -53954,9 +54984,11 @@
       "method": "POST",
       "path": "/assignments/{id}/precheck",
       "summary": "OPA precheck before assignment activation",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminGovernanceController.java",
       "stubPattern": null
     },
     {
@@ -53965,9 +54997,11 @@
       "method": "POST",
       "path": "/assignments/{id}/approve",
       "summary": "Approve a pending assignment",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/BookingController.java",
       "stubPattern": null
     },
     {
@@ -53976,9 +55010,11 @@
       "method": "POST",
       "path": "/assignments/{id}/activate",
       "summary": "Activate an approved assignment",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/BootstrapController.java",
       "stubPattern": null
     },
     {
@@ -53987,9 +55023,11 @@
       "method": "POST",
       "path": "/assignments/{id}/suspend",
       "summary": "Suspend an active assignment",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VashandiController.java",
       "stubPattern": null
     },
     {
@@ -53998,9 +55036,11 @@
       "method": "POST",
       "path": "/assignments/{id}/end",
       "summary": "End an assignment",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ShiftController.java",
       "stubPattern": null
     },
     {
@@ -54009,9 +55049,11 @@
       "method": "GET",
       "path": "/rosters",
       "summary": "List rosters",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VashandiController.java",
       "stubPattern": null
     },
     {
@@ -54020,9 +55062,11 @@
       "method": "POST",
       "path": "/rosters",
       "summary": "Create a roster",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VashandiController.java",
       "stubPattern": null
     },
     {
@@ -54031,9 +55075,11 @@
       "method": "GET",
       "path": "/rosters/{id}",
       "summary": "Get roster by id",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminUserController.java",
       "stubPattern": null
     },
     {
@@ -54042,9 +55088,11 @@
       "method": "POST",
       "path": "/rosters/{id}/approve",
       "summary": "Approve a roster",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/BookingController.java",
       "stubPattern": null
     },
     {
@@ -54053,9 +55101,11 @@
       "method": "POST",
       "path": "/shifts",
       "summary": "Create a shift on a roster",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ShiftController.java",
       "stubPattern": null
     },
     {
@@ -54064,9 +55114,11 @@
       "method": "PATCH",
       "path": "/shifts/{id}",
       "summary": "Update a shift",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VashandiController.java",
       "stubPattern": null
     },
     {
@@ -54075,9 +55127,11 @@
       "method": "POST",
       "path": "/attendance/check-in",
       "summary": "Record attendance check-in",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VashandiController.java",
       "stubPattern": null
     },
     {
@@ -54086,9 +55140,11 @@
       "method": "POST",
       "path": "/attendance/check-out",
       "summary": "Record attendance check-out",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VashandiController.java",
       "stubPattern": null
     },
     {
@@ -54097,9 +55153,11 @@
       "method": "POST",
       "path": "/attendance/supervisor-confirm",
       "summary": "Supervisor confirms attendance event",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VashandiController.java",
       "stubPattern": null
     },
     {
@@ -54108,9 +55166,11 @@
       "method": "GET",
       "path": "/attendance",
       "summary": "List attendance events",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ErpHrBffController.java",
       "stubPattern": null
     },
     {
@@ -54119,9 +55179,11 @@
       "method": "GET",
       "path": "/availability",
       "summary": "List leave and availability records",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/BookingController.java",
       "stubPattern": null
     },
     {
@@ -54130,9 +55192,11 @@
       "method": "POST",
       "path": "/leave",
       "summary": "Create a leave record",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/LiveController.java",
       "stubPattern": null
     },
     {
@@ -54141,9 +55205,11 @@
       "method": "PATCH",
       "path": "/leave/{id}",
       "summary": "Update a leave record",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VashandiController.java",
       "stubPattern": null
     },
     {
@@ -54152,9 +55218,11 @@
       "method": "GET",
       "path": "/access-risks",
       "summary": "List workforce access risks",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VashandiController.java",
       "stubPattern": null
     },
     {
@@ -54163,9 +55231,11 @@
       "method": "POST",
       "path": "/access-risks/scan",
       "summary": "Scan for workforce access risks",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VashandiController.java",
       "stubPattern": null
     },
     {
@@ -54174,9 +55244,11 @@
       "method": "POST",
       "path": "/access-risks/{id}/resolve",
       "summary": "Resolve an access risk",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ConditionsController.java",
       "stubPattern": null
     },
     {
@@ -54185,9 +55257,11 @@
       "method": "POST",
       "path": "/access-risks/{id}/revoke-access",
       "summary": "Revoke access for an access risk",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VashandiController.java",
       "stubPattern": null
     },
     {
@@ -54196,9 +55270,11 @@
       "method": "GET",
       "path": "/analytics/staffing",
       "summary": "Staffing analytics counts",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VashandiController.java",
       "stubPattern": null
     },
     {
@@ -54207,9 +55283,11 @@
       "method": "GET",
       "path": "/analytics/roster-coverage",
       "summary": "Roster coverage analytics",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VashandiController.java",
       "stubPattern": null
     },
     {
@@ -54218,9 +55296,11 @@
       "method": "GET",
       "path": "/analytics/attendance",
       "summary": "Attendance analytics",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ErpHrBffController.java",
       "stubPattern": null
     },
     {
@@ -54229,9 +55309,11 @@
       "method": "GET",
       "path": "/analytics/vacancies",
       "summary": "Vacancy analytics",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VashandiController.java",
       "stubPattern": null
     },
     {
@@ -54240,9 +55322,11 @@
       "method": "GET",
       "path": "/analytics/access-risk",
       "summary": "Access risk analytics",
-      "modules": [],
-      "implStatus": "unowned-contract",
-      "serviceHandler": null,
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VashandiController.java",
       "stubPattern": null
     },
     {

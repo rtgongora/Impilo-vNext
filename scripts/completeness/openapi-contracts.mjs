@@ -52,6 +52,7 @@ export const OPENAPI_BY_MODULE = {
   'ndila-service': 'ndila.openapi.yaml',
   'referral-service': 'referral.openapi.yaml',
   'scheduling-service': 'scheduling.openapi.yaml',
+  'vashandi-workforce-service': 'vashandi-workforce.openapi.yaml',
   'inpatient-service': 'inpatient.openapi.yaml',
   'dispatch-service': 'dispatch.openapi.yaml',
   'offline-sync-service': 'offline-sync.openapi.yaml',

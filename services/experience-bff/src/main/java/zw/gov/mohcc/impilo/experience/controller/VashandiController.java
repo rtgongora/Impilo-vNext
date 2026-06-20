@@ -82,6 +82,21 @@ public class VashandiController {
                 "vashandi.workforce_profile.reconciled"));
     }
 
+    @PostMapping("/workforce-profiles/import-bridge")
+    public ResponseEntity<Map<String, Object>> importWorkforceBridge(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.ACTOR_ID) String actorId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.PROVIDER_ID, required = false) String providerId,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestBody Map<String, Object> body) {
+        return wrap(vashandiService.proxyPost("WORKFORCE_PROFILE_IMPORT_BRIDGE", "/workforce-profiles/import-bridge", body,
+                tenantId, actorId, providerId, hasFacility(facilityId), requestId, correlationId, purposeOfUse,
+                "vashandi.workforce_profile.created"));
+    }
+
     @GetMapping("/assignments")
     public ResponseEntity<Map<String, Object>> listAssignments(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,

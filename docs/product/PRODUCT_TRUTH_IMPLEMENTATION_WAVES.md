@@ -15,45 +15,35 @@
 
 **Result:** gaps **355 → 203** | Categories **F, G, M, N, O = 0**
 
-### Delivered
+See git history on `claude/product-truth-recovery` for F/G/N/O closure details.
 
-| Category | Outcome |
-|----------|---------|
-| **F** | Cleared — scanner heuristics; media metadata display fix |
-| **G** | Cleared — form persistence false positives; `/operations/assets` wired to BFF |
-| **N** | Cleared (64 → 0) — authz readiness scanner, `SecurityBaselineConfig` rollout, `TrustContextFilter` fixes, referral/rtc/scheduling Postgres + outbox |
-| **M** | Cleared — oros, pct, simba already have mobile surfaces (scanner confirms) |
-| **O** | Cleared (5 → 0) — contract-surface tests for general-ledger, guidance, hr-payroll, mushe-wallet, procurement |
-| **E triage** | Reduced **91 → 67** — navigation-hub / route-delegation detection for shell pages, redirects, and card-grid hubs |
+## Wave 2 — Complete (BFF and contract completion)
 
-### Replace, not remove
+**Result:** gaps **203 → 69** | Categories **C = 0** | **D priority 7 = 0** | Gate ratchet **69**
 
-Wave 1 treats “remove mock/stub” as **replace with real service-backed features**, never delete routes.
+### Wave 2a — Complete
 
-### Remaining after Wave 1 (Wave 2+ scope)
+| Item | Outcome |
+|------|---------|
+| **Category C** | Closed — `nhume.openapi.yaml` + `vashandi-workforce.openapi.yaml` handler-synced contracts |
+| **Contract matrix** | `vashandi.openapi.yaml` marked BFF-only; sovereign mapping for vashandi-workforce |
+| **Scanner** | `route-registry.ts` merged into product-truth route scan; recursive hook/lib resolution for Vashandi/Nhume |
+| **Tooling** | `scripts/completeness/emit-handler-synced-openapi.mjs` for handler→contract sync |
 
-| Cat | Count | Notes |
-|-----|------:|-------|
-| **D** | 134 | Partial frontend/BFF wiring — primary Wave 2 target |
-| **E** | 67 | Thin feature pages without detected hooks (not shell hubs); wire or implement in Wave 2 |
-| **C** | 2 | nhume-service, vashandi-workforce-service contract gaps |
+### Wave 2b — Complete
 
-## Wave 2 — BFF and contract completion (next)
+| Step | Outcome |
+|------|---------|
+| **1 — D partial wiring** | `SERVICE_UI_ALIASES` for GL, Msika flow/apps, Tshepo audit/identity/offline, butano-fhir — all seven now `frontendUi: real` |
+| **2 — E thin pages** | `admin-governance-scaffold` backing signal for `/work/**` `ScopedAdministrationSurface` pages |
+| **3 — Vashandi imports** | BFF `POST /internal/v1/vashandi/workforce-profiles/import-bridge`, OpenAPI schemas, `/work/vashandi/imports` wired via `useWorkforceImportBridge` |
+| **4 — Gate ratchet** | `PRODUCT_TRUTH_VIOLATION_THRESHOLD` default **69** (was 99999) |
 
-- Close remaining category **C** contract gaps
-- Category **D** partial wiring (hooks exist but pages thin)
-- Remaining **E** thin pages — wire to BFF or implement domain flows
-- Ratchet `PRODUCT_TRUTH_VIOLATION_THRESHOLD` from 99999 toward measured baseline
+**Remaining (Wave 3+):** 69 gaps — **E: 43** (unwired feature pages), **D: 26** (other partial wiring).
 
-## Wave 3 — Cross-service cohesion
+## Wave 3 — Cross-service cohesion (planned)
 
-Validate journeys in [product-truth-cross-service-cohesion.md](../audits/product-truth-cross-service-cohesion.md):
-
-- identity → registry → SHR
-- orders → labs/imaging/inventory
-- telemedicine → PCT
-- learning → provider registry
-- costing → payments
+Validate journeys in [product-truth-cross-service-cohesion.md](../audits/product-truth-cross-service-cohesion.md).
 
 ## Definition of done (per service)
 
@@ -64,4 +54,5 @@ Real user opens UI → performs workflow → saves/retrieves via BFF/API → per
 ```bash
 cd scripts/completeness && npm run product-truth
 bash scripts/guard/check-product-truth.sh
+node scripts/completeness/emit-handler-synced-openapi.mjs <maven-module> [path-prefix]
 ```

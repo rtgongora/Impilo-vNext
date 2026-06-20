@@ -1,6 +1,6 @@
 # Service Completion Blueprints
 
-> Generated: 2026-06-20T11:02:04.418Z
+> Generated: 2026-06-20T11:50:37.471Z
 > End-to-end product expectation per service for mature vNext.
 
 Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and tests required.
@@ -103,7 +103,7 @@ Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and
 
 **Product names:** BUTANO FHIR
 **Plane/domain:** clinical / care-delivery
-**Current status:** mostly-real
+**Current status:** real
 
 ### Primary personas
 - Operators and domain users for care-delivery plane capabilities
@@ -668,7 +668,7 @@ Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and
 
 **Product names:** Guidance
 **Plane/domain:** clinical / clinical-knowledge
-**Current status:** mostly-real
+**Current status:** real
 
 ### Primary personas
 - Operators and domain users for clinical-knowledge plane capabilities
@@ -1030,7 +1030,7 @@ Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and
 
 **Product names:** Msika Flow
 **Plane/domain:** enterprise / marketplace
-**Current status:** mostly-real
+**Current status:** real
 
 ### Primary personas
 - Operators and domain users for marketplace plane capabilities
@@ -1088,7 +1088,7 @@ Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and
 
 **Product names:** Mushe Wallet
 **Plane/domain:** enterprise / finance
-**Current status:** mostly-real
+**Current status:** real
 
 ### Primary personas
 - Operators and domain users for finance plane capabilities
@@ -1228,7 +1228,7 @@ Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and
 
 **Product names:** Nhume
 **Plane/domain:** integration / interoperability
-**Current status:** mostly-real
+**Current status:** real
 
 ### Primary personas
 - Operators and domain users for interoperability plane capabilities
@@ -1892,7 +1892,7 @@ Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and
 
 **Product names:** TSHEPO Identity
 **Plane/domain:** trust / identity-governance
-**Current status:** mostly-real
+**Current status:** real
 
 ### Primary personas
 - Operators and domain users for identity-governance plane capabilities
@@ -2194,7 +2194,7 @@ Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and
 
 **Product names:** Vashandi
 **Plane/domain:** enterprise / workforce-operations
-**Current status:** mostly-real
+**Current status:** real
 
 ### Primary personas
 - Operators and domain users for workforce-operations plane capabilities

@@ -1,16 +1,16 @@
 # Contract Implementation Matrix
 
-> Generated: 2026-06-19T08:57:07.850Z
-> OpenAPI operations: **4513** | AsyncAPI channels: **84**
+> Generated: 2026-06-20T11:43:44.918Z
+> OpenAPI operations: **4591** | AsyncAPI channels: **84**
 
 ## Summary
 
 | Status | Count |
 |--------|------:|
-| implemented | 4539 |
+| implemented | 4652 |
 | partial | 0 |
 | missing | 0 |
-| unowned-contract | 58 |
+| unowned-contract | 23 |
 | contract-gap (handler exists — extend OpenAPI) | 3 |
 | contract-parse-errors | 0 |
 | **violations (partial + missing + orphan + invalid contract)** | **3** |

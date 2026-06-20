@@ -1,6 +1,6 @@
 # Full Product Truth Recovery Report
 
-> Generated: 2026-06-20T11:32:53.006Z
+> Generated: 2026-06-20T11:50:37.471Z
 > Branch: `claude/product-truth-recovery`
 
 ## Executive summary
@@ -12,17 +12,17 @@
 | Shared libraries | 12 |
 | Frontend surfaces (routes) | 615 |
 | Mobile screens | 174 |
-| BFF route handlers | 2144 |
-| OpenAPI contracts | 100 |
+| BFF route handlers | 2145 |
+| OpenAPI contracts | 102 |
 | Services with DB persistence | 92 |
 | Services fully/mostly complete | 67 |
 | Services partially complete | 0 |
 | Services backend-only (no UI) | 0 |
 | Services UI-only (no backend) | 0 |
 | Services with mock/stub hits | 0 |
-| Total classified gaps | 203 |
+| Total classified gaps | 69 |
 | Blocker gaps | 0 |
-| High severity gaps | 67 |
+| High severity gaps | 43 |
 
 ## Quality gates added
 
@@ -42,9 +42,8 @@
 
 ## Remaining gaps by severity
 
-- **high:** 67
-- **medium:** 9
-- **low:** 127
+- **high:** 43
+- **low:** 26
 
 ## Implementation status
 

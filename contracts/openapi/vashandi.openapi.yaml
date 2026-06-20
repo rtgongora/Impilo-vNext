@@ -175,6 +175,45 @@ paths:
               schema:
                 $ref: '#/components/schemas/VashandiActionResponse'
 
+  /workforce-profiles/import-bridge:
+    post:
+      operationId: vashandiImportWorkforceBridge
+      tags: [WorkforceProfiles]
+      summary: Bulk import workforce profiles and assignments via import bridge
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ProviderId'
+        - $ref: '#/components/parameters/FacilityId'
+        - $ref: '#/components/parameters/PurposeOfUse'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VashandiImportBridgeRequest'
+      responses:
+        '200':
+          description: Import bridge completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VashandiActionResponse'
+        '403':
+          description: Policy denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VashandiActionResponse'
+        '502':
+          description: Upstream unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VashandiActionResponse'
+
   /assignments:
     get:
       operationId: vashandiListAssignments
@@ -1154,6 +1193,51 @@ components:
         context:
           type: object
           additionalProperties: true
+
+    VashandiImportWorkforceRow:
+      type: object
+      properties:
+        healthId:
+          type: string
+        providerWorkerId:
+          type: string
+        keycloakUserId:
+          type: string
+        organisationId:
+          type: string
+          format: uuid
+        organisationType:
+          type: string
+        membershipType:
+          type: string
+        workerType:
+          type: string
+        profession:
+          type: string
+        cadre:
+          type: string
+        currentStatus:
+          type: string
+        assignmentType:
+          type: string
+        facilityId:
+          type: string
+          format: uuid
+        departmentId:
+          type: string
+        roleTemplateId:
+          type: string
+
+    VashandiImportBridgeRequest:
+      type: object
+      required: [source, rows]
+      properties:
+        source:
+          type: string
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/VashandiImportWorkforceRow'
 
     PolicyDecision:
       type: object

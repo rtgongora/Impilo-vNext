@@ -75,6 +75,13 @@ const SERVICE_UI_ALIASES = {
   'pct-service': ['usePct', 'PatientJourney', 'queue', 'encounter'],
   'simba-service': ['wellness', 'simba', 'useWellness', 'useSimba'],
   'data-access-governance-service': ['dags', 'DataAccessGovernance', 'access-request'],
+  'general-ledger-service': ['useGeneralLedger', 'useGlAccounts', '/internal/v1/erp/gl', 'erp/gl'],
+  'msika-flow-service': ['useCommerceFlow', '/internal/v1/commerce', 'marketplace/cart', 'marketplace/substitutions'],
+  'msika-apps-service': ['useHealthOsLauncher', '/internal/v1/marketplace', 'marketplace/apps'],
+  'tshepo-audit-service': ['useAudit', '/internal/v1/admin/audit', 'admin/audit', 'AuditPanel'],
+  'tshepo-identity-service': ['useIdentityOperations', 'useIdentity', 'useIdentitySearch', '/internal/v1/identity', 'id-services', 'app/registry'],
+  'tshepo-offline-service': ['useOfflineClinicalQueue', '/internal/v1/clinical-tools/offline', 'OfflineClinicalQueue'],
+  'butano-fhir': ['useFhirInterop', 'useFhirCapabilityStatement', '/internal/v1/fhir', 'operations/butano'],
 };
 
 const BFF_CLIENT_MODULE_OVERRIDES = {
@@ -387,37 +394,58 @@ function buildBffClientMap() {
   return map;
 }
 
-function resolveHookSignals(pageText, visited = new Set()) {
-  const paths = new Set();
-  const persist = { mutation: false, persistHint: false };
-  const hookImports = [
-    ...pageText.matchAll(/from\s+["']@\/hooks\/(?:queries\/)?([^"']+)["']/g),
-    ...pageText.matchAll(/from\s+["']@\/lib\/([^"']+)["']/g),
+function ingestModuleText(moduleText, visited, paths, persist, modulePath) {
+  if (modulePath && visited.has(modulePath)) return;
+  if (modulePath) visited.add(modulePath);
+  for (const m of moduleText.matchAll(/["'](\/internal\/v1\/[^"']+)["']/g)) paths.add(m[1]);
+  for (const m of moduleText.matchAll(/["'](\/api\/v1\/[^"']+)["']/g)) paths.add(m[1]);
+  if (/VASHANDI_BASE_PATH\s*=\s*["'](\/internal\/v1\/[^"']+)["']/.test(moduleText)) {
+    paths.add(moduleText.match(/VASHANDI_BASE_PATH\s*=\s*["'](\/internal\/v1\/[^"']+)["']/)[1]);
+  }
+  if (/useMutation|mutateAsync/.test(moduleText)) persist.mutation = true;
+  if (/invalidateQueries|refetch|onSuccess/.test(moduleText)) persist.persistHint = true;
+  if (/buildSearchPath|apiClient\.(get|post|put|patch|delete)/.test(moduleText)) {
+    paths.add('apiClient-dynamic');
+  }
+  const libImports = [
+    ...moduleText.matchAll(/from\s+["']@\/lib\/([^"']+)["']/g),
+    ...moduleText.matchAll(/from\s+["']@\/hooks\/(?:queries\/)?([^"']+)["']/g),
   ].map((m) => m[1]);
-
-  for (const hookName of hookImports) {
+  for (const libRef of libImports) {
     const candidates = [
-      path.join(UI_SHELL, 'src/hooks/queries', `${hookName}.ts`),
-      path.join(UI_SHELL, 'src/hooks/queries', `${hookName}.tsx`),
-      path.join(UI_SHELL, 'src/hooks', `${hookName}.ts`),
-      path.join(UI_SHELL, 'src/hooks', `${hookName}.tsx`),
-      path.join(UI_SHELL, 'src/lib', `${hookName}.ts`),
+      path.join(UI_SHELL, 'src/lib', `${libRef}.ts`),
+      path.join(UI_SHELL, 'src/lib', `${libRef}.tsx`),
+      path.join(UI_SHELL, 'src/hooks/queries', `${libRef}.ts`),
+      path.join(UI_SHELL, 'src/hooks/queries', `${libRef}.tsx`),
+      path.join(UI_SHELL, 'src/hooks', `${libRef}.ts`),
+      path.join(UI_SHELL, 'src/hooks', `${libRef}.tsx`),
     ];
-    for (const hookPath of candidates) {
-      if (visited.has(hookPath) || !fs.existsSync(hookPath)) continue;
-      visited.add(hookPath);
-      const hookText = readText(hookPath);
-      for (const m of hookText.matchAll(/["'](\/internal\/v1\/[^"']+)["']/g)) paths.add(m[1]);
-      for (const m of hookText.matchAll(/["'](\/api\/v1\/[^"']+)["']/g)) paths.add(m[1]);
-      if (/useMutation|mutateAsync/.test(hookText)) persist.mutation = true;
-      if (/invalidateQueries|refetch|onSuccess/.test(hookText)) persist.persistHint = true;
-      if (/buildSearchPath|apiClient\.(get|post|put|patch|delete)/.test(hookText)) {
-        paths.add('apiClient-dynamic');
+    for (const candidate of candidates) {
+      if (!fs.existsSync(candidate)) continue;
+      ingestModuleText(readText(candidate), visited, paths, persist, candidate);
+    }
+  }
+  if (modulePath) {
+    const dir = path.dirname(modulePath);
+    for (const m of moduleText.matchAll(/from\s+["']\.\/([^"']+)["']/g)) {
+      for (const ext of ['.ts', '.tsx']) {
+        const candidate = path.join(dir, `${m[1]}${ext}`);
+        if (!fs.existsSync(candidate)) continue;
+        ingestModuleText(readText(candidate), visited, paths, persist, candidate);
       }
     }
   }
+}
+
+function resolveHookSignals(pageText, visited = new Set()) {
+  const paths = new Set();
+  const persist = { mutation: false, persistHint: false };
+  ingestModuleText(pageText, visited, paths, persist, null);
   if (/citizenPortalApi|nhumeApi|credentialVerifyUrlForToken|apiClient\.(get|post|put|patch|delete)/.test(pageText)) {
     paths.add('domain-client');
+  }
+  if (/useVashandi|useNhume|useWorkforceProfiles|useNhumeDelivery/.test(pageText)) {
+    paths.add('domain-hook-module');
   }
   if (/fetch\s*\(\s*[`'"]\/internal\/v1\//.test(pageText)) {
     paths.add('inline-bff-fetch');
@@ -446,6 +474,14 @@ function isNavigationHubPage(text) {
   return false;
 }
 
+/** Administration & Governance scoped surfaces — link grids with OPA/session contract, not orphan UI. */
+function isAdminGovernanceScaffoldPage(text) {
+  if (!text) return false;
+  if (/ScopedAdministrationSurface|AdministrationGovernanceShell/.test(text)) return true;
+  if (/useSessionExperienceContract/.test(text) && /ADMINISTRATION_SURFACES|surfaceId/.test(text)) return true;
+  return false;
+}
+
 function resolveHookBffPaths(pageText, visited = new Set()) {
   const paths = new Set();
   const { paths: hookPaths, persist } = resolveHookSignals(pageText, visited);
@@ -461,6 +497,12 @@ function resolveHookBffPaths(pageText, visited = new Set()) {
   }
   if (isNavigationHubPage(pageText)) {
     paths.add('navigation-hub');
+  }
+  if (isAdminGovernanceScaffoldPage(pageText)) {
+    paths.add('admin-governance-scaffold');
+  }
+  if (/VashandiShell/.test(pageText) && /useVashandi|useWorkforce|useAssignments|useRosters|useAttendance/.test(pageText)) {
+    paths.add('domain-hook-module');
   }
   if (/from\s+["']next\/navigation["']/.test(pageText) && /redirect\s*\(/.test(pageText)) {
     paths.add('route-delegation');
@@ -494,74 +536,97 @@ function isAllowlistedShellRoute(routePath) {
   );
 }
 
+function parseRouteRegistryEntries(source) {
+  return [...source.matchAll(/\{\s*path:\s*"([^"]+)"[^}]*zone:\s*"([^"]+)"[^}]*pageTitle:\s*"([^"]+)"/g)].map(
+    (m) => ({ path: m[1], zone: m[2], pageTitle: m[3] }),
+  );
+}
+
+function buildFrontendSurface(routePath, zone, pageTitle) {
+  const pageRel = routePath.replace(/^\//, '');
+  const pagePath = path.join(UI_SHELL, 'src/app', pageRel, 'page.tsx');
+  const exists = fs.existsSync(pagePath);
+  const text = exists ? readText(pagePath) : '';
+  const resolved = exists ? resolveHookBffPaths(text) : { paths: [], persist: { mutation: false, persistHint: false } };
+  const inlineBff = exists ? [...text.matchAll(/["'](\/internal\/v1\/[^"']+)["']/g)].map((m) => m[1]) : [];
+  const bffPaths = [...new Set([...resolved.paths, ...inlineBff])];
+  const gatewayPaths = exists ? [...text.matchAll(/["'](\/api\/v1\/[^"']+)["']/g)].map((m) => m[1]) : [];
+  const mockStubHits = exists ? scanMockStubHits(text, pagePath) : [];
+  const hasMutation =
+    /useMutation|mutate\(|onSubmit|handleSubmit|formAction/.test(text) || resolved.persist.mutation;
+  const hasPersistHint =
+    /invalidateQueries|refetch|router\.refresh|toast\.success|mutateAsync/.test(text) ||
+    resolved.persist.persistHint;
+  const deadActionHints = exists ? (text.match(/onClick=\{\(\)\s*=>\s*\{\s*\}\}/g) || []) : [];
+  const hardcodedDataHints = exists ? (text.match(/mockData|sampleData|hardcoded|demoPatient/gi) || []) : [];
+  const allowlisted = isAllowlistedShellRoute(routePath);
+  const hasBacking =
+    bffPaths.filter((p) => p.startsWith('/')).length > 0 ||
+    gatewayPaths.length > 0 ||
+    bffPaths.some((p) => !p.startsWith('/')) ||
+    allowlisted;
+
+  const surface = {
+    path: routePath,
+    pageTitle,
+    zone,
+    pageFile: exists ? rel(pagePath) : null,
+    bffPaths: bffPaths.filter((p) => p.startsWith('/')).slice(0, 8),
+    backingSignals: bffPaths.filter((p) => !p.startsWith('/')),
+    gatewayPaths: [...new Set(gatewayPaths)].slice(0, 5),
+    mockStubHits,
+    hasMutation,
+    hasPersistHint,
+    deadActionHints: deadActionHints.length,
+    hardcodedDataHints: hardcodedDataHints.length,
+    readsRealData: hasBacking,
+    writesRealData: hasMutation && hasPersistHint,
+    completeVsCosmetic: mockStubHits.length === 0 && (hasBacking || !exists),
+    allowlistedShell: allowlisted,
+  };
+  surface.gaps = allowlisted ? [] : classifySurfaceGaps(surface);
+  return surface;
+}
+
 function scanFrontendSurfaces() {
   const surfaces = [];
   const routesTs = readText(path.join(UI_SHELL, 'src/lib/routes.ts'));
-  const routeMatches = [
-    ...routesTs.matchAll(/\{\s*path:\s*"([^"]+)"[^}]*zone:\s*"([^"]+)"[^}]*pageTitle:\s*"([^"]+)"/g),
+  const adminRegistryPath = path.join(UI_SHELL, 'src/lib/administration-governance/route-registry.ts');
+  const adminRegistry = fs.existsSync(adminRegistryPath) ? readText(adminRegistryPath) : '';
+
+  const routeEntries = [
+    ...parseRouteRegistryEntries(routesTs),
+    ...parseRouteRegistryEntries(adminRegistry),
   ];
-
-  for (const [, routePath, zone, pageTitle] of routeMatches) {
-    const pageRel = routePath.replace(/^\//, '');
-    const pagePath = path.join(UI_SHELL, 'src/app', pageRel, 'page.tsx');
-    const exists = fs.existsSync(pagePath);
-    const text = exists ? readText(pagePath) : '';
-    const resolved = exists ? resolveHookBffPaths(text) : { paths: [], persist: { mutation: false, persistHint: false } };
-    const inlineBff = exists ? [...text.matchAll(/["'](\/internal\/v1\/[^"']+)["']/g)].map((m) => m[1]) : [];
-    const bffPaths = [...new Set([...resolved.paths, ...inlineBff])];
-    const gatewayPaths = exists ? [...text.matchAll(/["'](\/api\/v1\/[^"']+)["']/g)].map((m) => m[1]) : [];
-    const mockStubHits = exists ? scanMockStubHits(text, pagePath) : [];
-    const hasMutation =
-      /useMutation|mutate\(|onSubmit|handleSubmit|formAction/.test(text) || resolved.persist.mutation;
-    const hasPersistHint =
-      /invalidateQueries|refetch|router\.refresh|toast\.success|mutateAsync/.test(text) ||
-      resolved.persist.persistHint;
-    const deadActionHints = exists ? (text.match(/onClick=\{\(\)\s*=>\s*\{\s*\}\}/g) || []) : [];
-    const hardcodedDataHints = exists ? (text.match(/mockData|sampleData|hardcoded|demoPatient/gi) || []) : [];
-    const allowlisted = isAllowlistedShellRoute(routePath);
-    const hasBacking =
-      bffPaths.filter((p) => p.startsWith('/')).length > 0 ||
-      gatewayPaths.length > 0 ||
-      bffPaths.some((p) => !p.startsWith('/')) ||
-      allowlisted;
-
-    const surface = {
-      path: routePath,
-      pageTitle,
-      zone,
-      pageFile: exists ? rel(pagePath) : null,
-      bffPaths: bffPaths.filter((p) => p.startsWith('/')).slice(0, 8),
-      backingSignals: bffPaths.filter((p) => !p.startsWith('/')),
-      gatewayPaths: [...new Set(gatewayPaths)].slice(0, 5),
-      mockStubHits,
-      hasMutation,
-      hasPersistHint,
-      deadActionHints: deadActionHints.length,
-      hardcodedDataHints: hardcodedDataHints.length,
-      readsRealData: hasBacking,
-      writesRealData: hasMutation && hasPersistHint,
-      completeVsCosmetic: mockStubHits.length === 0 && (hasBacking || !exists),
-      allowlistedShell: allowlisted,
-    };
-    surface.gaps = allowlisted ? [] : classifySurfaceGaps(surface);
-    surfaces.push(surface);
+  const seen = new Set();
+  for (const entry of routeEntries) {
+    if (seen.has(entry.path)) continue;
+    seen.add(entry.path);
+    surfaces.push(buildFrontendSurface(entry.path, entry.zone, entry.pageTitle));
   }
 
-  // Unregistered pages
+  // Unregistered pages (app routes with no registry entry)
   const registered = new Set(surfaces.map((s) => s.path));
   walkFiles(path.join(UI_SHELL, 'src/app'), (p) => p.endsWith('page.tsx')).forEach((page) => {
     const routePath = '/' + rel(page).replace('ui/one-ui-shell/src/app/', '').replace(/\/page\.tsx$/, '');
     if (registered.has(routePath)) return;
     const text = readText(page);
+    const resolved = resolveHookBffPaths(text);
+    const inlineBff = [...text.matchAll(/["'](\/internal\/v1\/[^"']+)["']/g)].map((m) => m[1]);
+    const bffPaths = [...new Set([...resolved.paths, ...inlineBff])];
+    const hasBacking =
+      bffPaths.filter((p) => p.startsWith('/')).length > 0 ||
+      bffPaths.some((p) => !p.startsWith('/'));
     surfaces.push({
       path: routePath,
       pageTitle: '(unregistered)',
       zone: 'unregistered',
       pageFile: rel(page),
-      bffPaths: [...new Set([...text.matchAll(/["'](\/internal\/v1\/[^"']+)["']/g)].map((m) => m[1]))].slice(0, 5),
+      bffPaths: bffPaths.filter((p) => p.startsWith('/')).slice(0, 5),
+      backingSignals: bffPaths.filter((p) => !p.startsWith('/')),
       gatewayPaths: [],
       mockStubHits: scanMockStubHits(text, page),
-      readsRealData: /\/internal\/v1\//.test(text),
+      readsRealData: hasBacking,
       writesRealData: false,
       completeVsCosmetic: false,
       gaps: [{ category: 'D', severity: 'low', description: 'Unregistered route', impactScore: 1 }],

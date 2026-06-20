@@ -1,6 +1,6 @@
 # Product Truth — Service Inventory
 
-> Generated: 2026-06-20T11:32:53.006Z
+> Generated: 2026-06-20T11:50:37.471Z
 > Scanner: `scripts/completeness/generate-product-truth.mjs`
 > Total services: **92** | Libraries: **12** | UI workspaces: **24**
 
@@ -9,8 +9,8 @@
 | Status | Count |
 |--------|------:|
 | internal-only | 24 |
-| mostly-real | 27 |
-| real | 40 |
+| mostly-real | 22 |
+| real | 45 |
 | deprecated | 1 |
 
 ## Service inventory
@@ -22,7 +22,7 @@
 | asset-registry-service | integration | real | real | real | real | real | absent | real | mostly-real |
 | audit-ledger-service | integration | real | real | real | absent | thin | absent | real | internal-only |
 | booking-service | experience | real | real | real | real | real | real | real | real |
-| butano-fhir | clinical | real | real | real | real | thin | absent | real | mostly-real |
+| butano-fhir | clinical | real | real | real | real | real | real | real | real |
 | butano-service | clinical | real | real | real | real | real | absent | real | mostly-real |
 | campaigns-service | data | real | real | real | real | real | real | real | real |
 | card-print-agent | integration | real | real | real | absent | thin | absent | real | internal-only |
@@ -44,7 +44,7 @@
 | experience-bff | experience | real | real | real | absent | real | real | real | mostly-real |
 | fhir-gateway-service | clinical | real | real | real | real | thin | absent | real | internal-only |
 | forms-service | clinical | real | real | real | real | real | absent | real | mostly-real |
-| general-ledger-service | enterprise | real | real | real | real | thin | absent | real | mostly-real |
+| general-ledger-service | enterprise | real | real | real | real | real | absent | real | mostly-real |
 | guidance-service | clinical | real | real | real | real | real | real | real | real |
 | hr-payroll-service | enterprise | real | real | real | real | real | absent | real | mostly-real |
 | identity-assurance-service | trust | real | real | real | real | real | absent | real | mostly-real |
@@ -60,8 +60,8 @@
 | live-service | experience | real | real | real | real | real | real | real | real |
 | llm-orchestration-service | integration | real | real | absent | absent | absent | absent | real | internal-only |
 | madi-service | clinical | real | real | real | real | real | real | real | real |
-| msika-apps-service | enterprise | real | real | real | real | thin | real | real | real |
-| msika-flow-service | enterprise | real | real | real | real | thin | absent | real | mostly-real |
+| msika-apps-service | enterprise | real | real | real | real | real | real | real | real |
+| msika-flow-service | enterprise | real | real | real | real | real | real | real | real |
 | msika-service | enterprise | real | real | real | real | real | real | real | real |
 | mushe-wallet-service | enterprise | real | real | real | real | real | real | real | real |
 | mushex-service | enterprise | real | real | real | real | real | absent | real | mostly-real |
@@ -69,7 +69,7 @@
 | national-data-repository-service | data | real | real | real | absent | thin | absent | real | internal-only |
 | ndila-service | integration | real | real | real | real | real | real | real | real |
 | ndr-service | data | real | real | real | real | real | absent | real | internal-only |
-| nhume-service | integration | real | real | absent | real | real | real | real | mostly-real |
+| nhume-service | integration | real | real | real | real | real | real | real | real |
 | notification-service | integration | real | real | real | real | real | real | real | real |
 | observability-service | integration | real | real | real | real | real | absent | real | internal-only |
 | offline-edge-service | integration | real | real | real | absent | thin | real | real | internal-only |
@@ -93,12 +93,12 @@
 | simba-service | enterprise | real | real | real | real | real | real | real | real |
 | support-service | integration | real | real | real | real | real | real | real | real |
 | surveillance-service | data | real | real | real | real | real | real | real | real |
-| tshepo-audit-service | trust | real | real | real | real | thin | absent | real | mostly-real |
+| tshepo-audit-service | trust | real | real | real | real | real | absent | real | mostly-real |
 | tshepo-authz-service | trust | real | real | real | real | real | absent | real | mostly-real |
 | tshepo-consent-service | trust | real | real | real | real | real | absent | real | mostly-real |
-| tshepo-identity-service | trust | real | real | real | real | thin | absent | real | mostly-real |
+| tshepo-identity-service | trust | real | real | real | real | real | real | real | real |
 | tshepo-keys-service | trust | real | real | real | real | real | absent | real | mostly-real |
-| tshepo-offline-service | trust | real | real | real | real | thin | absent | real | mostly-real |
+| tshepo-offline-service | trust | real | real | real | real | real | absent | real | mostly-real |
 | tshepo-service | trust | real | real | real | real | real | real | real | real |
 | tuso-service | registry | real | real | real | real | real | real | real | real |
 | ubomi-service | registry | real | real | real | real | real | real | real | real |
@@ -107,7 +107,7 @@
 | wellness-service | enterprise | real | real | real | real | real | real | real | deprecated |
 | workflow-service | integration | real | real | real | real | real | real | real | real |
 | workforce-governance-service | enterprise | real | real | real | real | real | absent | real | mostly-real |
-| vashandi-workforce-service | enterprise | real | real | absent | real | real | real | real | mostly-real |
+| vashandi-workforce-service | enterprise | real | real | real | real | real | real | real | real |
 | zibo-service | registry | real | real | real | real | real | real | real | real |
 
 ## Libraries

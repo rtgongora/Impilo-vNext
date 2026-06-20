@@ -1,0 +1,462 @@
+# =============================================================================
+# vashandi-workforce-service — handler-synced OpenAPI (Wave 2)
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: "Vashandi Workforce Service"
+  version: "1.0.0"
+  description: |
+    Sovereign HTTP surface for `vashandi-workforce-service`, generated from Spring handler paths.
+    Extend schemas as DTOs stabilise.
+
+servers:
+  - url: /
+    description: Service-relative paths (Envoy/BFF may prefix)
+
+security:
+  - bearerAuth: []
+
+paths:
+  /v1/internal/vashandi/access-risks:
+    delete:
+      operationId: vashandi-workforce_delete_v1_internal_vashandi_access-risks
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    get:
+      operationId: vashandi-workforce_get_v1_internal_vashandi_access-risks
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    patch:
+      operationId: vashandi-workforce_patch_v1_internal_vashandi_access-risks
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: vashandi-workforce_post_v1_internal_vashandi_access-risks
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    put:
+      operationId: vashandi-workforce_put_v1_internal_vashandi_access-risks
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /v1/internal/vashandi/analytics:
+    delete:
+      operationId: vashandi-workforce_delete_v1_internal_vashandi_analytics
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    get:
+      operationId: vashandi-workforce_get_v1_internal_vashandi_analytics
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    patch:
+      operationId: vashandi-workforce_patch_v1_internal_vashandi_analytics
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: vashandi-workforce_post_v1_internal_vashandi_analytics
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    put:
+      operationId: vashandi-workforce_put_v1_internal_vashandi_analytics
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /v1/internal/vashandi/assignments:
+    delete:
+      operationId: vashandi-workforce_delete_v1_internal_vashandi_assignments
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    get:
+      operationId: vashandi-workforce_get_v1_internal_vashandi_assignments
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    patch:
+      operationId: vashandi-workforce_patch_v1_internal_vashandi_assignments
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: vashandi-workforce_post_v1_internal_vashandi_assignments
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    put:
+      operationId: vashandi-workforce_put_v1_internal_vashandi_assignments
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /v1/internal/vashandi/attendance:
+    delete:
+      operationId: vashandi-workforce_delete_v1_internal_vashandi_attendance
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    get:
+      operationId: vashandi-workforce_get_v1_internal_vashandi_attendance
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    patch:
+      operationId: vashandi-workforce_patch_v1_internal_vashandi_attendance
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: vashandi-workforce_post_v1_internal_vashandi_attendance
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    put:
+      operationId: vashandi-workforce_put_v1_internal_vashandi_attendance
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /v1/internal/vashandi/availability:
+    get:
+      operationId: vashandi-workforce_get_v1_internal_vashandi_availability
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /v1/internal/vashandi/leave:
+    post:
+      operationId: vashandi-workforce_post_v1_internal_vashandi_leave
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /v1/internal/vashandi/leave/{id}:
+    patch:
+      operationId: vashandi-workforce_patch_v1_internal_vashandi_leave_id
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /v1/internal/vashandi/rosters:
+    get:
+      operationId: vashandi-workforce_get_v1_internal_vashandi_rosters
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: vashandi-workforce_post_v1_internal_vashandi_rosters
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /v1/internal/vashandi/rosters/{id}:
+    get:
+      operationId: vashandi-workforce_get_v1_internal_vashandi_rosters_id
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /v1/internal/vashandi/rosters/{id}/approve:
+    post:
+      operationId: vashandi-workforce_post_v1_internal_vashandi_rosters_id_approve
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /v1/internal/vashandi/rosters/{id}/shifts:
+    get:
+      operationId: vashandi-workforce_get_v1_internal_vashandi_rosters_id_shifts
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /v1/internal/vashandi/shifts:
+    post:
+      operationId: vashandi-workforce_post_v1_internal_vashandi_shifts
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /v1/internal/vashandi/shifts/{id}:
+    patch:
+      operationId: vashandi-workforce_patch_v1_internal_vashandi_shifts_id
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /v1/internal/vashandi/workforce-profiles:
+    delete:
+      operationId: vashandi-workforce_delete_v1_internal_vashandi_workforce-profiles
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    get:
+      operationId: vashandi-workforce_get_v1_internal_vashandi_workforce-profiles
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    patch:
+      operationId: vashandi-workforce_patch_v1_internal_vashandi_workforce-profiles
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: vashandi-workforce_post_v1_internal_vashandi_workforce-profiles
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    put:
+      operationId: vashandi-workforce_put_v1_internal_vashandi_workforce-profiles
+      tags: [Generated-From-Handler]
+      summary: Documented from vashandi-workforce-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas: {}

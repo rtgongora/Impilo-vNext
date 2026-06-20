@@ -37,6 +37,7 @@ const BFF_ONLY_CONTRACTS = new Set([
   'health-os-launcher.openapi.yaml',
   'imaging-viewer-launch.openapi.yaml',
   'monitoring.openapi.yaml',
+  'vashandi.openapi.yaml',
 ]);
 
 const CONTRACT_MODULE_OVERRIDES = {
@@ -55,6 +56,7 @@ const CONTRACT_MODULE_OVERRIDES = {
   'nhume.openapi.yaml': ['nhume-service'],
   'ndila.openapi.yaml': ['ndila-service'],
   'referral.openapi.yaml': ['referral-service'],
+  'vashandi-workforce.openapi.yaml': ['vashandi-workforce-service'],
   'integration-registry.openapi.yaml': ['integration-hub'],
   'msika-apps.openapi.yaml': ['msika-apps-service'],
   'scheduling.openapi.yaml': ['scheduling-service', 'booking-service'],

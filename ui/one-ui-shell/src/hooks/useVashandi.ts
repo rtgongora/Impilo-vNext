@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { listWorkforceProfiles, getWorkforceProfile, reconcileWorkforceProfile, runVashandiPrecheck, profilesFromResponse } from "@/lib/vashandi/api/profiles";
+import { listWorkforceProfiles, getWorkforceProfile, reconcileWorkforceProfile, importWorkforceBridge, runVashandiPrecheck, profilesFromResponse, type ImportBridgeRequest } from "@/lib/vashandi/api/profiles";
 import {
   listAssignments,
   getAssignment,
@@ -50,6 +50,17 @@ export function useReconcileWorkforceProfile() {
     mutationFn: (profileId: string) => reconcileWorkforceProfile(profileId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["vashandi", "workforce-profiles"] });
+    },
+  });
+}
+
+export function useWorkforceImportBridge() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: ImportBridgeRequest) => importWorkforceBridge(body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["vashandi", "workforce-profiles"] });
+      void queryClient.invalidateQueries({ queryKey: ["vashandi", "assignments"] });
     },
   });
 }
