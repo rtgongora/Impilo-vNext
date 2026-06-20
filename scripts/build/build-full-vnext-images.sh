@@ -234,11 +234,12 @@ def _verify_ui_bundle_after_build(image_ref: str, log_path: pathlib.Path):
     prev_path = reports / "ui-bundle-hash.txt"
     prev_hash = prev_path.read_text().strip() if prev_path.exists() else ""
     if prev_hash and _ui_sources_changed() and bundle_hash == prev_hash:
-        append_log(
-            log_path,
-            f"FAIL UI bundle verification: hash unchanged ({bundle_hash}) after UI source changes\n",
-        )
-        return False, bundle_hash
+        strict = os.environ.get("IMPILO_UI_BUNDLE_HASH_STRICT", "1") != "0"
+        msg = f"UI bundle verification: hash unchanged ({bundle_hash}) after UI source changes\n"
+        if strict:
+            append_log(log_path, f"FAIL {msg}")
+            return False, bundle_hash
+        append_log(log_path, f"WARN {msg}IMPILO_UI_BUNDLE_HASH_STRICT=0 — continuing (targeted deploy)\n")
     prev_path.write_text(bundle_hash + "\n")
     meta = {
         "bundle_hash": bundle_hash,

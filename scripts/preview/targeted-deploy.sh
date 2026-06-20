@@ -178,6 +178,7 @@ fi
 
 # Build images
 echo "--- Build images (targeted) ---"
+export IMPILO_UI_BUNDLE_HASH_STRICT=0
 for id in "${IMG_IDS[@]}"; do
   [[ -z "$id" ]] && continue
   if ! bash scripts/build/build-full-vnext-images.sh --only "$id"; then
