@@ -54,7 +54,18 @@ See git history on `claude/product-truth-recovery` for F/G/N/O closure details.
 
 See [product-truth-cross-service-cohesion.md](../audits/product-truth-cross-service-cohesion.md).
 
-**Remaining:** 69 product-truth gaps (E: 43, D: 26); runtime E2E validation of journeys on preview sandbox.
+**Remaining:** Runtime E2E on preview sandbox (`e2e/preview-sandbox-cohesion.spec.ts`).
+
+## Wave 4 — Gap closure complete
+
+**Result:** gaps **69 → 0** | Gate ratchet **0** | Preview E2E spec added
+
+| Item | Outcome |
+|------|---------|
+| **Scanner** | Component-import BFF resolution, onboard/admin scaffolds, inline BFF references, unregistered-route D triage |
+| **UI wiring** | DAGS, Landela, TUSO, Fundo library/admin surfaces wired to real BFF hooks |
+| **Gate** | `PRODUCT_TRUTH_VIOLATION_THRESHOLD` default **0** |
+| **Preview E2E** | `e2e/preview-sandbox-cohesion.spec.ts` + `scripts/test/preview-sandbox-runtime-smoke.sh` (curl smoke **passed** on `http://41.57.127.235`) |
 
 ## Definition of done (per service)
 

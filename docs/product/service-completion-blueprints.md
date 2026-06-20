@@ -1,6 +1,6 @@
 # Service Completion Blueprints
 
-> Generated: 2026-06-20T11:50:37.471Z
+> Generated: 2026-06-20T12:31:06.437Z
 > End-to-end product expectation per service for mature vNext.
 
 Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and tests required.

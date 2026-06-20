@@ -1,6 +1,6 @@
 # Product Truth — Backend-to-UI Traceability
 
-> Generated: 2026-06-20T11:50:37.471Z
+> Generated: 2026-06-20T12:31:06.437Z
 
 For each service: backend capabilities → API → BFF → UI → mobile → persistence.
 
@@ -129,7 +129,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (2 controllers, 7 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: butano.custom.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (1 clients) |
-| 4 | Visible in UI? | Yes (12 refs) |
+| 4 | Visible in UI? | Yes (13 refs) |
 | 5 | Visible on mobile? | Yes (1 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
@@ -405,7 +405,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (3 controllers, 9 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: data-access-governance.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (3 clients) |
-| 4 | Visible in UI? | Yes (20 refs) |
+| 4 | Visible in UI? | Yes (21 refs) |
 | 5 | Visible on mobile? | No (0 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
@@ -417,8 +417,8 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/access/governance/page.tsx`
 - `ui/one-ui-shell/src/app/admin/data-governance/page.tsx`
 - `ui/one-ui-shell/src/app/dags/page.tsx`
+- `ui/one-ui-shell/src/app/dags/policy/page.tsx`
 - `ui/one-ui-shell/src/app/intelligence/page.tsx`
-- `ui/one-ui-shell/src/components/administration-governance/GovernanceActionResult.tsx`
 
 ## data-governance-service
 
@@ -551,7 +551,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (4 controllers, 34 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: dispatch.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (13 clients) |
-| 4 | Visible in UI? | Yes (45 refs) |
+| 4 | Visible in UI? | Yes (46 refs) |
 | 5 | Visible on mobile? | Yes (7 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
@@ -600,7 +600,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (254 controllers, 2145 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: experience-bff.openapi.yaml) |
 | 3 | Wired via BFF? | No (0 clients) |
-| 4 | Visible in UI? | Yes (155 refs) |
+| 4 | Visible in UI? | Yes (161 refs) |
 | 5 | Visible on mobile? | Yes (52 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
@@ -1072,7 +1072,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (0 controllers, 33 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: msika-apps.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (3 clients) |
-| 4 | Visible in UI? | Yes (17 refs) |
+| 4 | Visible in UI? | Yes (18 refs) |
 | 5 | Visible on mobile? | Yes (4 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
@@ -1098,7 +1098,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (11 controllers, 69 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: msika-flow.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (7 clients) |
-| 4 | Visible in UI? | Yes (27 refs) |
+| 4 | Visible in UI? | Yes (28 refs) |
 | 5 | Visible on mobile? | Yes (1 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
@@ -1299,7 +1299,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (7 controllers, 93 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: nhume.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (4 clients) |
-| 4 | Visible in UI? | Yes (40 refs) |
+| 4 | Visible in UI? | Yes (41 refs) |
 | 5 | Visible on mobile? | Yes (15 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
@@ -1420,7 +1420,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (10 controllers, 45 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: oros.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (11 clients) |
-| 4 | Visible in UI? | Yes (52 refs) |
+| 4 | Visible in UI? | Yes (53 refs) |
 | 5 | Visible on mobile? | Yes (10 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
@@ -1469,7 +1469,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (17 controllers, 115 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: pct.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (39 clients) |
-| 4 | Visible in UI? | Yes (412 refs) |
+| 4 | Visible in UI? | Yes (413 refs) |
 | 5 | Visible on mobile? | Yes (95 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
@@ -1517,7 +1517,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (10 controllers, 38 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: pharmacy.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (11 clients) |
-| 4 | Visible in UI? | Yes (52 refs) |
+| 4 | Visible in UI? | Yes (53 refs) |
 | 5 | Visible on mobile? | Yes (7 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
@@ -1745,7 +1745,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (1 controllers, 5 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: search.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (34 clients) |
-| 4 | Visible in UI? | Yes (355 refs) |
+| 4 | Visible in UI? | Yes (354 refs) |
 | 5 | Visible on mobile? | Yes (36 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
@@ -1970,7 +1970,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (6 controllers, 20 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: tshepo-identity.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (1 clients) |
-| 4 | Visible in UI? | Yes (38 refs) |
+| 4 | Visible in UI? | Yes (41 refs) |
 | 5 | Visible on mobile? | Yes (6 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
@@ -2071,7 +2071,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (15 controllers, 80 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: tuso.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (15 clients) |
-| 4 | Visible in UI? | Yes (15 refs) |
+| 4 | Visible in UI? | Yes (16 refs) |
 | 5 | Visible on mobile? | Yes (1 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
@@ -2253,7 +2253,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (7 controllers, 42 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: vashandi-workforce.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (1 clients) |
-| 4 | Visible in UI? | Yes (35 refs) |
+| 4 | Visible in UI? | Yes (36 refs) |
 | 5 | Visible on mobile? | Yes (8 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |

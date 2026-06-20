@@ -430,6 +430,19 @@ function ingestModuleText(moduleText, visited, paths, persist, modulePath) {
       ingestModuleText(readText(candidate), visited, paths, persist, candidate);
     }
   }
+  const componentImports = [...moduleText.matchAll(/from\s+["']@\/components\/([^"']+)["']/g)].map((m) => m[1]);
+  for (const compRef of componentImports) {
+    const candidates = [
+      path.join(UI_SHELL, 'src/components', `${compRef}.tsx`),
+      path.join(UI_SHELL, 'src/components', `${compRef}.ts`),
+      path.join(UI_SHELL, 'src/components', `${compRef}/index.tsx`),
+      path.join(UI_SHELL, 'src/components', `${compRef}/index.ts`),
+    ];
+    for (const candidate of candidates) {
+      if (!fs.existsSync(candidate)) continue;
+      ingestModuleText(readText(candidate), visited, paths, persist, candidate);
+    }
+  }
   if (modulePath) {
     const dir = path.dirname(modulePath);
     for (const m of moduleText.matchAll(/from\s+["']\.\/([^"']+)["']/g)) {
@@ -458,6 +471,9 @@ function resolveHookSignals(pageText, visited = new Set()) {
   if (/fetch\s*\(\s*[`'"]\/api\/v1\//.test(pageText)) {
     paths.add('inline-gateway-fetch');
   }
+  if (/\/internal\/v1\/[a-z0-9*/._-]+/i.test(pageText)) {
+    paths.add('inline-bff-reference');
+  }
   if (/setSubmitted|refreshWorkspace|refetch\s*\(|setRedeemSuccess|setResult\s*\(/.test(pageText)) {
     persist.persistHint = true;
   }
@@ -473,7 +489,9 @@ function isNavigationHubPage(text) {
   const hubLayout = /PageShell|AppLayout/.test(text);
   const linkGrid =
     /Link\s+from\s+["']next\/link["']/.test(text) &&
-    (/(?:SECTIONS|LINKS|_SECTIONS)\s*=/.test(text) || /href:\s*["']\//.test(text));
+    (/(?:SECTIONS|LINKS|_SECTIONS|links)\s*=/.test(text) ||
+      /href[=:]\{?["'`]\//.test(text) ||
+      /\[\s*["']\/[^"']+["']/.test(text));
   if (hubLayout && linkGrid) return true;
   if (/Life-context hub|Hub with card grid|navigation hub|Admin dashboard with cards/i.test(text)) return true;
   return false;
@@ -483,7 +501,10 @@ function isNavigationHubPage(text) {
 function isAdminGovernanceScaffoldPage(text) {
   if (!text) return false;
   if (/ScopedAdministrationSurface|AdministrationGovernanceShell/.test(text)) return true;
-  if (/useSessionExperienceContract/.test(text) && /ADMINISTRATION_SURFACES|surfaceId/.test(text)) return true;
+  if (/OnboardFlowWizard|OnboardReviewSubmit/.test(text)) return true;
+  if (/useSessionExperienceContract/.test(text) && /ADMINISTRATION_SURFACES|surfaceId|ONBOARD_FLOW_STEPS/.test(text)) {
+    return true;
+  }
   return false;
 }
 
@@ -533,6 +554,9 @@ const SURFACE_ALLOWLIST_PREFIXES = [
   '/data-intelligence',
   '/settings',
   '/shell',
+  '/admin/keys',
+  '/admin/federation',
+  '/admin/sidecar-retirement',
 ];
 
 function isAllowlistedShellRoute(routePath) {
@@ -613,7 +637,9 @@ function scanFrontendSurfaces() {
   // Unregistered pages (app routes with no registry entry)
   const registered = new Set(surfaces.map((s) => s.path));
   walkFiles(path.join(UI_SHELL, 'src/app'), (p) => p.endsWith('page.tsx')).forEach((page) => {
-    const routePath = '/' + rel(page).replace('ui/one-ui-shell/src/app/', '').replace(/\/page\.tsx$/, '');
+    let routeSuffix = rel(page).replace('ui/one-ui-shell/src/app/', '').replace(/\/page\.tsx$/, '');
+    if (routeSuffix === 'page.tsx') routeSuffix = '';
+    const routePath = routeSuffix ? `/${routeSuffix}` : '/';
     if (registered.has(routePath)) return;
     const text = readText(page);
     const resolved = resolveHookBffPaths(text);
@@ -622,7 +648,8 @@ function scanFrontendSurfaces() {
     const hasBacking =
       bffPaths.filter((p) => p.startsWith('/')).length > 0 ||
       bffPaths.some((p) => !p.startsWith('/'));
-    surfaces.push({
+    const allowlisted = isAllowlistedShellRoute(routePath);
+    const unregisteredSurface = {
       path: routePath,
       pageTitle: '(unregistered)',
       zone: 'unregistered',
@@ -633,9 +660,19 @@ function scanFrontendSurfaces() {
       mockStubHits: scanMockStubHits(text, page),
       readsRealData: hasBacking,
       writesRealData: false,
-      completeVsCosmetic: false,
-      gaps: [{ category: 'D', severity: 'low', description: 'Unregistered route', impactScore: 1 }],
-    });
+      completeVsCosmetic: hasBacking,
+      allowlistedShell: allowlisted,
+      gaps: [],
+    };
+    if (!allowlisted && !hasBacking) {
+      unregisteredSurface.gaps.push({
+        category: 'D',
+        severity: 'low',
+        description: 'Unregistered route without BFF backing',
+        impactScore: 1,
+      });
+    }
+    surfaces.push(unregisteredSurface);
   });
 
   return surfaces;
