@@ -1,6 +1,6 @@
 # Product Truth — Cross-Service Cohesion Validation
 
-> Generated: 2026-06-20T11:02:04.418Z
+> Generated: 2026-06-20T11:32:53.006Z
 
 End-to-end journey validation scaffold. Each journey must pass: identity context → BFF → domain services → persistence → UI refresh.
 

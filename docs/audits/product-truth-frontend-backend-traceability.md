@@ -1,6 +1,6 @@
 # Product Truth — Frontend-to-Backend Traceability
 
-> Generated: 2026-06-20T11:02:04.418Z
+> Generated: 2026-06-20T11:32:53.006Z
 > Web surfaces: **615** | Mobile screens: **174**
 
 ## Web routes (one-ui-shell)
@@ -72,13 +72,13 @@
 | /ai-governance/models/[id] | AI Model | admin | yes | no | yes | yes | no | — |
 | /access | Access Channels | admin | yes | no | yes | no | no | — |
 | /kiosk | Self Check-In | auth | yes | no | yes | no | no | — |
-| / | Home | home | no | no | no | no | no | E |
+| / | Home | home | no | no | yes | no | no | — |
 | /home | Home | home | yes | no | yes | yes | no | — |
 | /home/notifications | Notifications | home | yes | no | yes | yes | no | — |
 | /home/profile | My Profile | home | yes | no | yes | no | no | — |
 | /home/preferences | Preferences | home | yes | no | yes | no | no | — |
 | /home/credentials | Credentials & CPD | home | yes | no | yes | no | no | — |
-| /home/referrals | My Referrals | home | no | no | no | no | no | E |
+| /home/referrals | My Referrals | home | no | no | yes | no | no | — |
 | /home/medications | My Medications | home | yes | no | yes | yes | no | — |
 | /home/conditions | My Conditions | home | yes | no | yes | no | no | — |
 | /home/allergies | My Allergies | home | yes | no | yes | no | no | — |
@@ -88,7 +88,7 @@
 | /home/bookings/[bookingId] | Booking Details | home | yes | no | yes | yes | no | — |
 | /home/appointments | My Appointments | home | yes | no | yes | yes | no | — |
 | /home/appointments/[appointmentId] | Appointment Details | home | yes | no | yes | yes | no | — |
-| /citizen | Citizen Services | home | no | no | no | no | no | E |
+| /citizen | Citizen Services | home | no | no | yes | no | no | — |
 | /citizen/health-id/qr | My Health ID QR | home | yes | no | yes | no | no | — |
 | /citizen/health-id/request | Request Health ID | home | yes | no | yes | yes | no | — |
 | /citizen/id-recovery | ID Recovery | home | yes | no | yes | no | no | — |
@@ -137,8 +137,8 @@
 | /ehr/[patientId]/encounter/[encounterId] | Encounter | ehr | yes | no | yes | yes | yes | — |
 | /ehr/[patientId]/immunizations | Immunizations | ehr | yes | no | yes | yes | no | — |
 | /ehr/[patientId]/consults | Consults & Referrals | ehr | yes | no | yes | yes | no | — |
-| /ehr/[patientId]/referrals | Referrals | ehr | no | no | no | no | no | E |
-| /ehr/[patientId]/teleconsults | Teleconsults | ehr | no | no | no | no | no | E |
+| /ehr/[patientId]/referrals | Referrals | ehr | no | no | yes | no | no | — |
+| /ehr/[patientId]/teleconsults | Teleconsults | ehr | no | no | yes | no | no | — |
 | /ehr/[patientId]/timeline | Timeline | ehr | yes | no | yes | yes | no | — |
 | /ehr/[patientId]/discharge | Discharge | ehr | yes | no | yes | yes | no | — |
 | /ehr/[patientId]/care-plans | Care Plans | ehr | yes | no | yes | yes | no | — |
@@ -155,7 +155,7 @@
 | /ehr/[patientId]/charts | Ward Charts | ehr | no | no | yes | yes | no | — |
 | /ehr/[patientId]/imaging | Imaging | ehr | yes | no | yes | yes | no | — |
 | /ehr/[patientId]/imaging/viewer | DICOM Viewer | ehr | yes | no | yes | yes | no | — |
-| /admin | Administration | admin | no | no | no | no | no | E |
+| /admin | Administration | admin | no | no | yes | no | no | — |
 | /admin/users | Worker & Provider Access | admin | yes | no | yes | yes | no | — |
 | /admin/users/[id] | User Details | admin | no | no | yes | yes | no | — |
 | /admin/roles | Role Management | admin | yes | no | yes | no | no | — |
@@ -183,13 +183,13 @@
 | /registry-admin | Registry Administration | admin | no | no | yes | no | no | — |
 | /organization-admin | Organization Administration | admin | no | no | yes | no | no | — |
 | /organization-admin/facility | Facility Administration | admin | no | no | yes | no | no | — |
-| /organization-admin/staffing | Staffing & Scheduling | admin | no | no | no | no | no | E |
+| /organization-admin/staffing | Staffing & Scheduling | admin | no | no | yes | no | no | — |
 | /organization-admin/governance | Organisations & governance | admin | yes | no | yes | no | no | — |
 | /organization-admin/governance/[id] | Organisation detail | admin | no | no | yes | no | no | — |
 | /registry/clients | Client Registry | registry | yes | no | yes | yes | no | — |
 | /registry/clients/new | New Client Registration | registry | yes | no | yes | yes | no | — |
 | /registry/clients/[id] | Client Identity Workspace | registry | yes | no | yes | yes | no | — |
-| /registry/trust | Trust & Federation | registry | no | no | no | no | no | E |
+| /registry/trust | Trust & Federation | registry | no | no | yes | no | no | — |
 | /registry/mvumo | Mvumo â€” Digital Consent | registry | yes | no | yes | yes | no | — |
 | /registry | Registry Hub | registry | yes | no | yes | yes | no | — |
 | /registry/intake | Registry Intake | registry | yes | no | yes | yes | no | — |
@@ -217,7 +217,7 @@
 | /marketplace/pickup | Pickup Handoff | marketplace | yes | no | yes | no | no | — |
 | /marketplace/vendors | Vendors | marketplace | yes | no | yes | yes | no | — |
 | /marketplace/bookings | Bookings | marketplace | yes | no | yes | yes | no | — |
-| /finance | Finance Dashboard | finance | no | no | no | no | no | E |
+| /finance | Finance Dashboard | finance | no | no | yes | no | no | — |
 | /finance/claims | Claims | finance | yes | no | yes | no | no | — |
 | /finance/claims/[id] | Claim Details | finance | no | no | yes | no | no | — |
 | /finance/billing | Billing | finance | yes | no | yes | no | no | — |
@@ -252,7 +252,7 @@
 | /wallet/cards | Cards | finance | yes | no | yes | yes | no | — |
 | /wallet/merchant | Merchant | finance | yes | no | yes | yes | no | — |
 | /beds | Bed Management | queue | no | no | yes | yes | no | — |
-| /pharmacy | Pharmacy Dashboard | pharmacy | no | no | no | no | no | E |
+| /pharmacy | Pharmacy Dashboard | pharmacy | no | no | yes | no | no | — |
 | /pharmacy/dispense | Dispensing | pharmacy | yes | no | yes | no | no | — |
 | /pharmacy/stock | Stock Management | pharmacy | yes | no | yes | no | no | — |
 | /pharmacy/prescriptions | Prescriptions | pharmacy | yes | no | yes | yes | no | — |
@@ -267,7 +267,7 @@
 | /enterprise/fleet | Fleet & logistics | enterprise | yes | no | yes | yes | no | — |
 | /enterprise/charge-sheet | Charge sheet | enterprise | yes | no | yes | yes | no | — |
 | /enterprise/oversight | National Enterprise Oversight | enterprise | no | no | no | no | no | E |
-| /erp | Institutional ERP | enterprise | no | no | no | no | no | E |
+| /erp | Institutional ERP | enterprise | no | no | yes | no | no | — |
 | /erp/gl | General ledger | enterprise | yes | no | yes | yes | no | — |
 | /erp/hr | HR & payroll | enterprise | yes | no | yes | yes | no | — |
 | /erp/procurement | Procurement | enterprise | yes | no | yes | yes | no | — |
@@ -279,7 +279,7 @@
 | /reports/operational | Operational Reports | reports | yes | no | yes | yes | no | — |
 | /reports/custom | Custom Reports | reports | yes | no | yes | yes | no | — |
 | /reports/[id] | Report Details | reports | yes | no | yes | yes | yes | — |
-| /settings | Settings | settings | no | no | no | no | no | E |
+| /settings | Settings | settings | no | no | yes | no | no | — |
 | /settings/account | Account Settings | settings | yes | no | yes | yes | no | — |
 | /settings/security | Security Settings | settings | yes | no | yes | yes | no | — |
 | /settings/notifications | Notification Preferences | settings | yes | no | yes | yes | no | — |
@@ -320,13 +320,13 @@
 | /caregiving/delegation | Care Delegation | caregiving | no | no | no | no | no | E |
 | /caregiving/tasks | Care Tasks | caregiving | no | no | no | no | no | E |
 | /caregiving/notifications | Care Alerts | caregiving | no | no | no | no | no | E |
-| /monitoring | Remote Monitoring | monitoring | no | no | no | no | no | E |
+| /monitoring | Remote Monitoring | monitoring | no | no | yes | no | no | — |
 | /monitoring/devices | My Devices | monitoring | no | no | yes | yes | no | — |
 | /monitoring/readings | Readings & Trends | monitoring | no | no | yes | yes | no | — |
 | /monitoring/alerts | Monitoring Alerts | monitoring | no | no | yes | yes | no | — |
 | /monitoring/care-plans | Chronic Care Plans | monitoring | no | no | no | no | no | E |
 | /monitoring/provider-dashboard | Patient Monitoring Dashboard | monitoring | no | no | no | no | no | E |
-| /discover | Find Services | discovery | no | no | no | no | no | E |
+| /discover | Find Services | discovery | no | no | yes | no | no | — |
 | /discover/providers | Find a Provider | discovery | no | no | no | no | no | E |
 | /discover/facilities | Find a Facility | discovery | no | no | no | no | no | E |
 | /discover/services | Browse Services | discovery | no | no | no | no | no | E |
@@ -337,7 +337,7 @@
 | /lab/results | Results Review | lab | yes | no | yes | yes | no | — |
 | /lab/catalog | Test Catalog | lab | no | no | yes | no | no | — |
 | /lab/reconciliation | Lab Reconciliation | lab | no | no | yes | yes | no | — |
-| /operations | Operations | operations | no | no | no | no | no | E |
+| /operations | Operations | operations | no | no | yes | no | no | — |
 | /operations/facility-operations | Facility Operations | operations | no | no | no | no | no | E |
 | /operations/facility-operations/district-view | District View | operations | yes | no | yes | no | no | — |
 | /operations/facility-operations/patient-flow | Patient Flow | operations | yes | no | yes | yes | no | — |
@@ -364,22 +364,22 @@
 | /operations/butano | SHR Operations | operations | yes | no | yes | no | no | — |
 | /operations/assets | Asset Management | operations | no | no | yes | yes | no | — |
 | /operations/equipment | Equipment Management | operations | no | no | no | no | no | E |
-| /support | Support | support | no | no | no | no | no | E |
+| /support | Support | support | no | no | yes | no | no | — |
 | /support/tickets | Support Tickets | support | no | no | yes | no | no | — |
 | /support/knowledge-base | Knowledge Base | support | no | no | no | no | no | E |
-| /developer | Developer Portal | developer | no | no | no | no | no | E |
+| /developer | Developer Portal | developer | no | no | yes | no | no | — |
 | /developer/api-catalog | API Catalog | developer | no | no | no | no | no | E |
 | /developer/clients | Client Registration | developer | no | no | no | no | no | E |
 | /developer/sandbox | Sandbox | developer | no | yes | yes | no | no | — |
 | /home/documents | My Documents | home | yes | no | yes | yes | no | — |
 | /marketplace/cart | Shopping Cart | marketplace | yes | no | yes | no | no | — |
 | /marketplace/substitutions | Substitutions | marketplace | no | no | yes | yes | no | — |
-| /shell/file-manager | File manager | shell | no | no | no | no | no | E |
-| /shell/task-manager | Task manager | shell | no | no | no | no | no | E |
+| /shell/file-manager | File manager | shell | no | no | yes | no | no | — |
+| /shell/task-manager | Task manager | shell | no | no | yes | no | no | — |
 | /ask | Ask | intelligent | yes | no | yes | yes | no | — |
 | /intelligence | Health Intelligence | intelligent | yes | no | yes | no | no | — |
 | /search | Search | intelligent | no | no | yes | no | no | — |
-| /guidance | Guidance | intelligent | no | no | no | no | no | E |
+| /guidance | Guidance | intelligent | no | no | yes | no | no | — |
 | /guidance/reminders | Reminders & Prompts | intelligent | no | no | no | no | no | E |
 | /guidance/education | Health Education | intelligent | no | no | no | no | no | E |
 | /learning | Impilo Fundo | professional | yes | no | yes | no | no | — |
@@ -436,7 +436,7 @@
 | /learning/admin/assessments | Admin Assessments | professional | no | no | no | no | no | E |
 | /learning/admin/assessments/new | New Assessment | professional | yes | no | yes | no | yes | — |
 | /learning/admin/assessments/[assessmentId]/edit | Edit Assessment | professional | yes | no | yes | yes | yes | — |
-| /nhume | Nhume Logistics | operations | no | no | no | no | no | E |
+| /nhume | Nhume Logistics | operations | no | no | yes | no | no | — |
 | /nhume/dashboard | Nhume Operations Dashboard | operations | no | no | no | yes | no | E |
 | /nhume/deliveries | Nhume Deliveries | operations | no | no | no | yes | no | E |
 | /nhume/deliveries/new | New Delivery Request | operations | yes | no | yes | yes | no | — |
@@ -453,7 +453,7 @@
 | /nhume/analytics | Nhume Analytics | operations | no | no | no | yes | no | E |
 | /nhume/custody/[deliveryId] | Chain of Custody | operations | no | no | no | yes | no | E |
 | /nhume/track/[deliveryId] | Track Delivery | home | no | no | no | yes | no | E |
-| /madi | Madi Blood Services | operations | no | no | no | no | no | E |
+| /madi | Madi Blood Services | operations | no | no | yes | no | no | — |
 | /madi/donor | My Donor Hub | home | no | no | yes | yes | no | — |
 | /madi/donor/register | Become a Donor | home | no | no | yes | yes | no | — |
 | /madi/donor/profile | Donor Profile | home | no | no | yes | yes | no | — |
@@ -465,7 +465,7 @@
 | /madi/drives | Donation Drives | operations | no | no | no | yes | no | E |
 | /madi/drives/new | New Donation Drive | operations | no | no | yes | yes | no | — |
 | /madi/drives/[driveId] | Drive Detail | operations | no | no | no | yes | no | E |
-| /madi/blood-bank | Local Blood Bank | operations | no | no | no | yes | no | E |
+| /madi/blood-bank | Local Blood Bank | operations | no | no | yes | yes | no | — |
 | /madi/blood-bank/orders | Blood Bank Orders | operations | no | no | no | no | no | E |
 | /madi/blood-bank/stock | Blood Stock | operations | no | no | no | yes | no | E |
 | /madi/blood-bank/crossmatch | Crossmatch | operations | no | no | no | no | no | E |
@@ -481,7 +481,7 @@
 | /madi/dashboard | Madi Dashboard | operations | no | no | no | yes | no | E |
 | /madi/processing | Blood Processing | operations | yes | no | yes | yes | no | — |
 | /madi/logistics | Blood Logistics | operations | no | no | no | no | no | E |
-| /live | Impilo Live | operations | no | no | no | yes | no | E |
+| /live | Impilo Live | operations | no | no | yes | yes | no | — |
 | /live/manage | Live Event Management | operations | no | no | no | yes | no | E |
 | /live/admin | Impilo Live Administration | operations | no | no | no | yes | no | E |
 | /live/create | Create Live Event | operations | no | no | no | yes | no | E |

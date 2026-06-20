@@ -1,6 +1,6 @@
 # Product Truth — Backend-to-UI Traceability
 
-> Generated: 2026-06-20T11:02:04.418Z
+> Generated: 2026-06-20T11:32:53.006Z
 
 For each service: backend capabilities → API → BFF → UI → mobile → persistence.
 
@@ -686,13 +686,12 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 
 **Gaps:**
 - [D] general-ledger-service: partial frontend/BFF wiring (medium)
-- [O] general-ledger-service: no automated tests detected (medium)
 
 ## guidance-service
 
 - **Path:** `services/guidance-service`
 - **Domain:** clinical-knowledge (clinical)
-- **Product status:** mostly-real
+- **Product status:** real
 
 | # | Question | Answer |
 |---|----------|--------|
@@ -713,9 +712,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/ehr/[patientId]/encounter/[encounterId]/page.test.tsx`
 - `ui/one-ui-shell/src/app/ehr/[patientId]/encounter/[encounterId]/page.tsx`
 - `ui/one-ui-shell/src/app/ehr/[patientId]/encounters/page.tsx`
-
-**Gaps:**
-- [O] guidance-service: no automated tests detected (medium)
 
 ## hr-payroll-service
 
@@ -739,9 +735,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 **UI references (sample):**
 - `ui/one-ui-shell/src/app/erp/hr/page.tsx`
 - `ui/one-ui-shell/src/hooks/queries/useHrPayroll.ts`
-
-**Gaps:**
-- [O] hr-payroll-service: no automated tests detected (medium)
 
 ## identity-assurance-service
 
@@ -1147,7 +1140,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 
 - **Path:** `services/mushe-wallet-service`
 - **Domain:** finance (enterprise)
-- **Product status:** mostly-real
+- **Product status:** real
 
 | # | Question | Answer |
 |---|----------|--------|
@@ -1168,9 +1161,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/marketplace/cart/page.tsx`
 - `ui/one-ui-shell/src/app/wallet/page.tsx`
 - `ui/one-ui-shell/src/components/navigation/ExperienceSidebar.tsx`
-
-**Gaps:**
-- [O] mushe-wallet-service: no automated tests detected (medium)
 
 ## mushex-service
 
@@ -1567,9 +1557,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/erp/page.tsx`
 - `ui/one-ui-shell/src/app/erp/procurement/page.tsx`
 - `ui/one-ui-shell/src/app/inventory/stock-management/page.tsx`
-
-**Gaps:**
-- [O] procurement-service: no automated tests detected (medium)
 
 ## product-registry-service
 

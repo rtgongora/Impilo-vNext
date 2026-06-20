@@ -1,6 +1,6 @@
 # Product Truth — Service Inventory
 
-> Generated: 2026-06-20T11:02:04.418Z
+> Generated: 2026-06-20T11:32:53.006Z
 > Scanner: `scripts/completeness/generate-product-truth.mjs`
 > Total services: **92** | Libraries: **12** | UI workspaces: **24**
 
@@ -9,8 +9,8 @@
 | Status | Count |
 |--------|------:|
 | internal-only | 24 |
-| mostly-real | 29 |
-| real | 38 |
+| mostly-real | 27 |
+| real | 40 |
 | deprecated | 1 |
 
 ## Service inventory
@@ -44,9 +44,9 @@
 | experience-bff | experience | real | real | real | absent | real | real | real | mostly-real |
 | fhir-gateway-service | clinical | real | real | real | real | thin | absent | real | internal-only |
 | forms-service | clinical | real | real | real | real | real | absent | real | mostly-real |
-| general-ledger-service | enterprise | real | real | real | real | thin | absent | absent | mostly-real |
-| guidance-service | clinical | real | real | real | real | real | real | absent | mostly-real |
-| hr-payroll-service | enterprise | real | real | real | real | real | absent | absent | mostly-real |
+| general-ledger-service | enterprise | real | real | real | real | thin | absent | real | mostly-real |
+| guidance-service | clinical | real | real | real | real | real | real | real | real |
+| hr-payroll-service | enterprise | real | real | real | real | real | absent | real | mostly-real |
 | identity-assurance-service | trust | real | real | real | real | real | absent | real | mostly-real |
 | indawo-service | registry | real | real | real | real | real | real | real | real |
 | inpatient-service | clinical | real | real | real | real | real | real | real | real |
@@ -63,7 +63,7 @@
 | msika-apps-service | enterprise | real | real | real | real | thin | real | real | real |
 | msika-flow-service | enterprise | real | real | real | real | thin | absent | real | mostly-real |
 | msika-service | enterprise | real | real | real | real | real | real | real | real |
-| mushe-wallet-service | enterprise | real | real | real | real | real | real | absent | mostly-real |
+| mushe-wallet-service | enterprise | real | real | real | real | real | real | real | real |
 | mushex-service | enterprise | real | real | real | real | real | absent | real | mostly-real |
 | mvumo-service | trust | real | real | real | real | real | real | real | real |
 | national-data-repository-service | data | real | real | real | absent | thin | absent | real | internal-only |
@@ -79,7 +79,7 @@
 | pct-service | clinical | real | real | real | real | real | real | real | real |
 | pharmacy-elmis-adapter | clinical | real | real | real | absent | thin | absent | real | internal-only |
 | pharmacy-service | clinical | real | real | real | real | real | real | real | real |
-| procurement-service | enterprise | real | real | real | real | real | absent | absent | mostly-real |
+| procurement-service | enterprise | real | real | real | real | real | absent | real | mostly-real |
 | product-registry-service | registry | real | real | real | real | real | absent | real | mostly-real |
 | referral-service | integration | real | real | real | real | real | real | real | real |
 | reporting-service | data | real | real | real | real | real | real | real | real |

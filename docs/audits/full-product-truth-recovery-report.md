@@ -1,6 +1,6 @@
 # Full Product Truth Recovery Report
 
-> Generated: 2026-06-20T11:02:04.418Z
+> Generated: 2026-06-20T11:32:53.006Z
 > Branch: `claude/product-truth-recovery`
 
 ## Executive summary
@@ -20,9 +20,9 @@
 | Services backend-only (no UI) | 0 |
 | Services UI-only (no backend) | 0 |
 | Services with mock/stub hits | 0 |
-| Total classified gaps | 232 |
+| Total classified gaps | 203 |
 | Blocker gaps | 0 |
-| High severity gaps | 91 |
+| High severity gaps | 67 |
 
 ## Quality gates added
 
@@ -42,8 +42,8 @@
 
 ## Remaining gaps by severity
 
-- **high:** 91
-- **medium:** 14
+- **high:** 67
+- **medium:** 9
 - **low:** 127
 
 ## Implementation status

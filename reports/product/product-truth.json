@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-20T11:02:04.418Z",
+  "generatedAt": "2026-06-20T11:32:53.006Z",
   "branch": "claude/product-truth-recovery",
   "registryDrift": {
     "unregisteredModules": [],
@@ -13,23 +13,22 @@
     "contractCount": 100,
     "byProductStatus": {
       "internal-only": 24,
-      "mostly-real": 29,
-      "real": 38,
+      "mostly-real": 27,
+      "real": 40,
       "deprecated": 1
     },
     "gapCounts": {
       "byCategory": {
-        "E": 91,
+        "E": 67,
         "D": 134,
-        "O": 5,
         "C": 2
       },
       "bySeverity": {
-        "high": 91,
-        "medium": 14,
+        "high": 67,
+        "medium": 9,
         "low": 127
       },
-      "total": 232
+      "total": 203
     }
   },
   "services": [
@@ -2967,7 +2966,7 @@
         "bffClients": 2,
         "uiReferences": 1,
         "mobileReferences": 0,
-        "tests": 0
+        "tests": 1
       },
       "dimensions": {
         "database": "real",
@@ -2978,7 +2977,7 @@
         "bffWiring": "real",
         "frontendUi": "thin",
         "mobileUi": "absent",
-        "tests": "absent",
+        "tests": "real",
         "authzAudit": "real"
       },
       "productStatus": "mostly-real",
@@ -3014,12 +3013,6 @@
           "category": "D",
           "severity": "medium",
           "description": "general-ledger-service: partial frontend/BFF wiring",
-          "impactScore": 2
-        },
-        {
-          "category": "O",
-          "severity": "medium",
-          "description": "general-ledger-service: no automated tests detected",
           "impactScore": 2
         }
       ]
@@ -3073,7 +3066,7 @@
         "bffClients": 5,
         "uiReferences": 36,
         "mobileReferences": 1,
-        "tests": 0
+        "tests": 1
       },
       "dimensions": {
         "database": "real",
@@ -3084,10 +3077,10 @@
         "bffWiring": "real",
         "frontendUi": "real",
         "mobileUi": "real",
-        "tests": "absent",
+        "tests": "real",
         "authzAudit": "real"
       },
-      "productStatus": "mostly-real",
+      "productStatus": "real",
       "contractFile": "guidance.openapi.yaml",
       "bffClients": [
         "GuidanceServiceClient",
@@ -3139,14 +3132,7 @@
         "q9_persistsToDb": true,
         "q10_fixtureOnly": false
       },
-      "gaps": [
-        {
-          "category": "O",
-          "severity": "medium",
-          "description": "guidance-service: no automated tests detected",
-          "impactScore": 2
-        }
-      ]
+      "gaps": []
     },
     {
       "id": "hr-payroll-service",
@@ -3197,7 +3183,7 @@
         "bffClients": 2,
         "uiReferences": 2,
         "mobileReferences": 0,
-        "tests": 0
+        "tests": 1
       },
       "dimensions": {
         "database": "real",
@@ -3208,7 +3194,7 @@
         "bffWiring": "real",
         "frontendUi": "real",
         "mobileUi": "absent",
-        "tests": "absent",
+        "tests": "real",
         "authzAudit": "real"
       },
       "productStatus": "mostly-real",
@@ -3240,14 +3226,7 @@
         "q9_persistsToDb": true,
         "q10_fixtureOnly": false
       },
-      "gaps": [
-        {
-          "category": "O",
-          "severity": "medium",
-          "description": "hr-payroll-service: no automated tests detected",
-          "impactScore": 2
-        }
-      ]
+      "gaps": []
     },
     {
       "id": "identity-assurance-service",
@@ -5023,7 +5002,7 @@
         "bffClients": 3,
         "uiReferences": 7,
         "mobileReferences": 7,
-        "tests": 0
+        "tests": 1
       },
       "dimensions": {
         "database": "real",
@@ -5034,10 +5013,10 @@
         "bffWiring": "real",
         "frontendUi": "real",
         "mobileUi": "real",
-        "tests": "absent",
+        "tests": "real",
         "authzAudit": "real"
       },
-      "productStatus": "mostly-real",
+      "productStatus": "real",
       "contractFile": "mushe-wallet.openapi.yaml",
       "bffClients": [
         "MusheWalletServiceClient",
@@ -5080,14 +5059,7 @@
         "q9_persistsToDb": true,
         "q10_fixtureOnly": false
       },
-      "gaps": [
-        {
-          "category": "O",
-          "severity": "medium",
-          "description": "mushe-wallet-service: no automated tests detected",
-          "impactScore": 2
-        }
-      ]
+      "gaps": []
     },
     {
       "id": "mushex-service",
@@ -6825,7 +6797,7 @@
         "bffClients": 2,
         "uiReferences": 12,
         "mobileReferences": 0,
-        "tests": 0
+        "tests": 1
       },
       "dimensions": {
         "database": "real",
@@ -6836,7 +6808,7 @@
         "bffWiring": "real",
         "frontendUi": "real",
         "mobileUi": "absent",
-        "tests": "absent",
+        "tests": "real",
         "authzAudit": "real"
       },
       "productStatus": "mostly-real",
@@ -6878,14 +6850,7 @@
         "q9_persistsToDb": true,
         "q10_fixtureOnly": false
       },
-      "gaps": [
-        {
-          "category": "O",
-          "severity": "medium",
-          "description": "procurement-service: no automated tests detected",
-          "impactScore": 2
-        }
-      ]
+      "gaps": []
     },
     {
       "id": "product-registry-service",
@@ -10553,7 +10518,10 @@
       "zone": "auth",
       "pageFile": "ui/one-ui-shell/src/app/auth/page.tsx",
       "bffPaths": [],
-      "backingSignals": [],
+      "backingSignals": [
+        "navigation-hub",
+        "route-delegation"
+      ],
       "gatewayPaths": [],
       "mockStubHits": [],
       "hasMutation": false,
@@ -10800,7 +10768,9 @@
       "zone": "queue",
       "pageFile": "ui/one-ui-shell/src/app/clinical/page.tsx",
       "bffPaths": [],
-      "backingSignals": [],
+      "backingSignals": [
+        "navigation-hub"
+      ],
       "gatewayPaths": [],
       "mockStubHits": [],
       "hasMutation": false,
@@ -10825,7 +10795,8 @@
       ],
       "backingSignals": [
         "apiClient-dynamic",
-        "shell-composition"
+        "shell-composition",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -11102,7 +11073,8 @@
       "pageFile": "ui/one-ui-shell/src/app/clinical/inpatient/page.tsx",
       "bffPaths": [],
       "backingSignals": [
-        "shell-composition"
+        "shell-composition",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -11126,7 +11098,8 @@
       ],
       "backingSignals": [
         "apiClient-dynamic",
-        "shell-composition"
+        "shell-composition",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -11150,7 +11123,8 @@
       ],
       "backingSignals": [
         "apiClient-dynamic",
-        "shell-composition"
+        "shell-composition",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -11171,7 +11145,8 @@
       "pageFile": "ui/one-ui-shell/src/app/clinical/inpatient/ward-board/page.tsx",
       "bffPaths": [],
       "backingSignals": [
-        "shell-composition"
+        "shell-composition",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -11195,7 +11170,8 @@
       ],
       "backingSignals": [
         "apiClient-dynamic",
-        "shell-composition"
+        "shell-composition",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -11219,7 +11195,8 @@
       ],
       "backingSignals": [
         "apiClient-dynamic",
-        "shell-composition"
+        "shell-composition",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -11243,7 +11220,8 @@
       ],
       "backingSignals": [
         "apiClient-dynamic",
-        "shell-composition"
+        "shell-composition",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -11263,7 +11241,9 @@
       "zone": "admin",
       "pageFile": "ui/one-ui-shell/src/app/production-command-centre/page.tsx",
       "bffPaths": [],
-      "backingSignals": [],
+      "backingSignals": [
+        "navigation-hub"
+      ],
       "gatewayPaths": [],
       "mockStubHits": [],
       "hasMutation": false,
@@ -11301,7 +11281,10 @@
       "zone": "admin",
       "pageFile": "ui/one-ui-shell/src/app/health-os/command-centre/page.tsx",
       "bffPaths": [],
-      "backingSignals": [],
+      "backingSignals": [
+        "navigation-hub",
+        "route-delegation"
+      ],
       "gatewayPaths": [],
       "mockStubHits": [],
       "hasMutation": false,
@@ -11321,7 +11304,8 @@
       "pageFile": "ui/one-ui-shell/src/app/data-intelligence/page.tsx",
       "bffPaths": [],
       "backingSignals": [
-        "shell-composition"
+        "shell-composition",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -11342,7 +11326,8 @@
       "pageFile": "ui/one-ui-shell/src/app/data-intelligence/quality/page.tsx",
       "bffPaths": [],
       "backingSignals": [
-        "shell-composition"
+        "shell-composition",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -11371,7 +11356,8 @@
       ],
       "backingSignals": [
         "apiClient-dynamic",
-        "shell-composition"
+        "shell-composition",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -11392,7 +11378,8 @@
       "pageFile": "ui/one-ui-shell/src/app/data-intelligence/integration/page.tsx",
       "bffPaths": [],
       "backingSignals": [
-        "shell-composition"
+        "shell-composition",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -11413,7 +11400,8 @@
       "pageFile": "ui/one-ui-shell/src/app/data-intelligence/reports/page.tsx",
       "bffPaths": [],
       "backingSignals": [
-        "shell-composition"
+        "shell-composition",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -11434,7 +11422,8 @@
       "pageFile": "ui/one-ui-shell/src/app/data-intelligence/audit/page.tsx",
       "bffPaths": [],
       "backingSignals": [
-        "shell-composition"
+        "shell-composition",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -11455,7 +11444,8 @@
       "pageFile": "ui/one-ui-shell/src/app/ndila/page.tsx",
       "bffPaths": [],
       "backingSignals": [
-        "shell-composition"
+        "shell-composition",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -11511,7 +11501,8 @@
         "/internal/v1/public-health/investigations"
       ],
       "backingSignals": [
-        "apiClient-dynamic"
+        "apiClient-dynamic",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -11534,7 +11525,8 @@
         "/internal/v1/public-health/campaigns"
       ],
       "backingSignals": [
-        "apiClient-dynamic"
+        "apiClient-dynamic",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [
@@ -11927,25 +11919,21 @@
       "zone": "home",
       "pageFile": "ui/one-ui-shell/src/app/page.tsx",
       "bffPaths": [],
-      "backingSignals": [],
+      "backingSignals": [
+        "navigation-hub",
+        "route-delegation"
+      ],
       "gatewayPaths": [],
       "mockStubHits": [],
       "hasMutation": false,
       "hasPersistHint": false,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
-      "readsRealData": false,
+      "readsRealData": true,
       "writesRealData": false,
-      "completeVsCosmetic": false,
+      "completeVsCosmetic": true,
       "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "E",
-          "severity": "high",
-          "description": "/: no BFF/API backing detected",
-          "impactScore": 4
-        }
-      ]
+      "gaps": []
     },
     {
       "path": "/home",
@@ -11966,7 +11954,8 @@
         "apiClient-dynamic",
         "domain-client",
         "auth-keycloak",
-        "shell-composition"
+        "shell-composition",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -12085,25 +12074,21 @@
       "zone": "home",
       "pageFile": "ui/one-ui-shell/src/app/home/referrals/page.tsx",
       "bffPaths": [],
-      "backingSignals": [],
+      "backingSignals": [
+        "navigation-hub",
+        "route-delegation"
+      ],
       "gatewayPaths": [],
       "mockStubHits": [],
       "hasMutation": false,
       "hasPersistHint": false,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
-      "readsRealData": false,
+      "readsRealData": true,
       "writesRealData": false,
-      "completeVsCosmetic": false,
+      "completeVsCosmetic": true,
       "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "E",
-          "severity": "high",
-          "description": "/home/referrals: no BFF/API backing detected",
-          "impactScore": 4
-        }
-      ]
+      "gaps": []
     },
     {
       "path": "/home/medications",
@@ -12319,25 +12304,20 @@
       "zone": "home",
       "pageFile": "ui/one-ui-shell/src/app/citizen/page.tsx",
       "bffPaths": [],
-      "backingSignals": [],
+      "backingSignals": [
+        "navigation-hub"
+      ],
       "gatewayPaths": [],
       "mockStubHits": [],
       "hasMutation": false,
       "hasPersistHint": false,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
-      "readsRealData": false,
+      "readsRealData": true,
       "writesRealData": false,
-      "completeVsCosmetic": false,
+      "completeVsCosmetic": true,
       "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "E",
-          "severity": "high",
-          "description": "/citizen: no BFF/API backing detected",
-          "impactScore": 4
-        }
-      ]
+      "gaps": []
     },
     {
       "path": "/citizen/health-id/qr",
@@ -12713,7 +12693,8 @@
       "backingSignals": [
         "apiClient-dynamic",
         "domain-client",
-        "auth-keycloak"
+        "auth-keycloak",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -12736,7 +12717,8 @@
         "/internal/v1/staffing/on-call/swaps"
       ],
       "backingSignals": [
-        "apiClient-dynamic"
+        "apiClient-dynamic",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -12759,7 +12741,8 @@
         "/internal/v1/staffing/on-call/swaps"
       ],
       "backingSignals": [
-        "apiClient-dynamic"
+        "apiClient-dynamic",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -12783,7 +12766,8 @@
       ],
       "backingSignals": [
         "domain-client",
-        "apiClient-dynamic"
+        "apiClient-dynamic",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -12806,7 +12790,8 @@
         "/internal/v1/bookings"
       ],
       "backingSignals": [
-        "apiClient-dynamic"
+        "apiClient-dynamic",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -12830,7 +12815,8 @@
       ],
       "backingSignals": [
         "apiClient-dynamic",
-        "domain-client"
+        "domain-client",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -12853,7 +12839,8 @@
         "/internal/v1/bookings"
       ],
       "backingSignals": [
-        "apiClient-dynamic"
+        "apiClient-dynamic",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -12957,7 +12944,8 @@
       "backingSignals": [
         "apiClient-dynamic",
         "domain-client",
-        "auth-keycloak"
+        "auth-keycloak",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -12999,7 +12987,8 @@
       "pageFile": "ui/one-ui-shell/src/app/queue/search/page.tsx",
       "bffPaths": [],
       "backingSignals": [
-        "apiClient-dynamic"
+        "apiClient-dynamic",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -13023,7 +13012,8 @@
       ],
       "backingSignals": [
         "apiClient-dynamic",
-        "domain-client"
+        "domain-client",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -13046,7 +13036,8 @@
         "/internal/v1/appointments"
       ],
       "backingSignals": [
-        "apiClient-dynamic"
+        "apiClient-dynamic",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -13097,7 +13088,8 @@
         "/internal/v1/inpatient/admissions"
       ],
       "backingSignals": [
-        "apiClient-dynamic"
+        "apiClient-dynamic",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -13548,25 +13540,21 @@
       "zone": "ehr",
       "pageFile": "ui/one-ui-shell/src/app/ehr/[patientId]/referrals/page.tsx",
       "bffPaths": [],
-      "backingSignals": [],
+      "backingSignals": [
+        "navigation-hub",
+        "route-delegation"
+      ],
       "gatewayPaths": [],
       "mockStubHits": [],
       "hasMutation": false,
       "hasPersistHint": false,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
-      "readsRealData": false,
+      "readsRealData": true,
       "writesRealData": false,
-      "completeVsCosmetic": false,
+      "completeVsCosmetic": true,
       "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "E",
-          "severity": "high",
-          "description": "/ehr/[patientId]/referrals: no BFF/API backing detected",
-          "impactScore": 4
-        }
-      ]
+      "gaps": []
     },
     {
       "path": "/ehr/[patientId]/teleconsults",
@@ -13574,25 +13562,21 @@
       "zone": "ehr",
       "pageFile": "ui/one-ui-shell/src/app/ehr/[patientId]/teleconsults/page.tsx",
       "bffPaths": [],
-      "backingSignals": [],
+      "backingSignals": [
+        "navigation-hub",
+        "route-delegation"
+      ],
       "gatewayPaths": [],
       "mockStubHits": [],
       "hasMutation": false,
       "hasPersistHint": false,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
-      "readsRealData": false,
+      "readsRealData": true,
       "writesRealData": false,
-      "completeVsCosmetic": false,
+      "completeVsCosmetic": true,
       "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "E",
-          "severity": "high",
-          "description": "/ehr/[patientId]/teleconsults: no BFF/API backing detected",
-          "impactScore": 4
-        }
-      ]
+      "gaps": []
     },
     {
       "path": "/ehr/[patientId]/timeline",
@@ -13994,25 +13978,20 @@
       "zone": "admin",
       "pageFile": "ui/one-ui-shell/src/app/admin/page.tsx",
       "bffPaths": [],
-      "backingSignals": [],
+      "backingSignals": [
+        "navigation-hub"
+      ],
       "gatewayPaths": [],
       "mockStubHits": [],
       "hasMutation": false,
       "hasPersistHint": false,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
-      "readsRealData": false,
+      "readsRealData": true,
       "writesRealData": false,
-      "completeVsCosmetic": false,
+      "completeVsCosmetic": true,
       "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "E",
-          "severity": "high",
-          "description": "/admin: no BFF/API backing detected",
-          "impactScore": 4
-        }
-      ]
+      "gaps": []
     },
     {
       "path": "/admin/users",
@@ -14095,7 +14074,8 @@
         "/internal/v1/admin/trust/audit/chain/verify"
       ],
       "backingSignals": [
-        "apiClient-dynamic"
+        "apiClient-dynamic",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -14188,7 +14168,8 @@
       ],
       "backingSignals": [
         "domain-client",
-        "apiClient-dynamic"
+        "apiClient-dynamic",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -14660,7 +14641,8 @@
       "pageFile": "ui/one-ui-shell/src/app/organization-admin/facility/page.tsx",
       "bffPaths": [],
       "backingSignals": [
-        "auth-keycloak"
+        "auth-keycloak",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -14680,25 +14662,20 @@
       "zone": "admin",
       "pageFile": "ui/one-ui-shell/src/app/organization-admin/staffing/page.tsx",
       "bffPaths": [],
-      "backingSignals": [],
+      "backingSignals": [
+        "navigation-hub"
+      ],
       "gatewayPaths": [],
       "mockStubHits": [],
       "hasMutation": false,
       "hasPersistHint": false,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
-      "readsRealData": false,
+      "readsRealData": true,
       "writesRealData": false,
-      "completeVsCosmetic": false,
+      "completeVsCosmetic": true,
       "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "E",
-          "severity": "high",
-          "description": "/organization-admin/staffing: no BFF/API backing detected",
-          "impactScore": 4
-        }
-      ]
+      "gaps": []
     },
     {
       "path": "/organization-admin/governance",
@@ -14710,7 +14687,8 @@
       ],
       "backingSignals": [
         "domain-client",
-        "apiClient-dynamic"
+        "apiClient-dynamic",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -14732,7 +14710,8 @@
       "bffPaths": [],
       "backingSignals": [
         "domain-client",
-        "apiClient-dynamic"
+        "apiClient-dynamic",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -14831,25 +14810,20 @@
       "zone": "registry",
       "pageFile": "ui/one-ui-shell/src/app/registry/trust/page.tsx",
       "bffPaths": [],
-      "backingSignals": [],
+      "backingSignals": [
+        "navigation-hub"
+      ],
       "gatewayPaths": [],
       "mockStubHits": [],
       "hasMutation": false,
       "hasPersistHint": false,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
-      "readsRealData": false,
+      "readsRealData": true,
       "writesRealData": false,
-      "completeVsCosmetic": false,
+      "completeVsCosmetic": true,
       "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "E",
-          "severity": "high",
-          "description": "/registry/trust: no BFF/API backing detected",
-          "impactScore": 4
-        }
-      ]
+      "gaps": []
     },
     {
       "path": "/registry/mvumo",
@@ -14889,7 +14863,8 @@
         "/internal/v1/identity/provider/create"
       ],
       "backingSignals": [
-        "apiClient-dynamic"
+        "apiClient-dynamic",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -15514,25 +15489,20 @@
       "zone": "finance",
       "pageFile": "ui/one-ui-shell/src/app/finance/page.tsx",
       "bffPaths": [],
-      "backingSignals": [],
+      "backingSignals": [
+        "navigation-hub"
+      ],
       "gatewayPaths": [],
       "mockStubHits": [],
       "hasMutation": false,
       "hasPersistHint": false,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
-      "readsRealData": false,
+      "readsRealData": true,
       "writesRealData": false,
-      "completeVsCosmetic": false,
+      "completeVsCosmetic": true,
       "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "E",
-          "severity": "high",
-          "description": "/finance: no BFF/API backing detected",
-          "impactScore": 4
-        }
-      ]
+      "gaps": []
     },
     {
       "path": "/finance/claims",
@@ -15590,7 +15560,8 @@
       ],
       "backingSignals": [
         "domain-client",
-        "apiClient-dynamic"
+        "apiClient-dynamic",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -15612,7 +15583,8 @@
       "bffPaths": [],
       "backingSignals": [
         "domain-client",
-        "apiClient-dynamic"
+        "apiClient-dynamic",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -15829,7 +15801,8 @@
         "/internal/v1/finance/payer-ops/adapters"
       ],
       "backingSignals": [
-        "apiClient-dynamic"
+        "apiClient-dynamic",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -15921,7 +15894,8 @@
         "/internal/v1/finance/service-access-decisions"
       ],
       "backingSignals": [
-        "apiClient-dynamic"
+        "apiClient-dynamic",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -16005,7 +15979,8 @@
         "/internal/v1/finance/mushex-platform/**"
       ],
       "backingSignals": [
-        "apiClient-dynamic"
+        "apiClient-dynamic",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -16183,7 +16158,8 @@
         "/internal/v1/finance/reports/close-period"
       ],
       "backingSignals": [
-        "apiClient-dynamic"
+        "apiClient-dynamic",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -16426,25 +16402,20 @@
       "zone": "pharmacy",
       "pageFile": "ui/one-ui-shell/src/app/pharmacy/page.tsx",
       "bffPaths": [],
-      "backingSignals": [],
+      "backingSignals": [
+        "navigation-hub"
+      ],
       "gatewayPaths": [],
       "mockStubHits": [],
       "hasMutation": false,
       "hasPersistHint": false,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
-      "readsRealData": false,
+      "readsRealData": true,
       "writesRealData": false,
-      "completeVsCosmetic": false,
+      "completeVsCosmetic": true,
       "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "E",
-          "severity": "high",
-          "description": "/pharmacy: no BFF/API backing detected",
-          "impactScore": 4
-        }
-      ]
+      "gaps": []
     },
     {
       "path": "/pharmacy/dispense",
@@ -16531,7 +16502,8 @@
       ],
       "backingSignals": [
         "apiClient-dynamic",
-        "shell-composition"
+        "shell-composition",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -16831,25 +16803,20 @@
       "zone": "enterprise",
       "pageFile": "ui/one-ui-shell/src/app/erp/page.tsx",
       "bffPaths": [],
-      "backingSignals": [],
+      "backingSignals": [
+        "navigation-hub"
+      ],
       "gatewayPaths": [],
       "mockStubHits": [],
       "hasMutation": false,
       "hasPersistHint": false,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
-      "readsRealData": false,
+      "readsRealData": true,
       "writesRealData": false,
-      "completeVsCosmetic": false,
+      "completeVsCosmetic": true,
       "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "E",
-          "severity": "high",
-          "description": "/erp: no BFF/API backing detected",
-          "impactScore": 4
-        }
-      ]
+      "gaps": []
     },
     {
       "path": "/erp/gl",
@@ -16985,7 +16952,8 @@
       ],
       "backingSignals": [
         "domain-client",
-        "apiClient-dynamic"
+        "apiClient-dynamic",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -17125,25 +17093,20 @@
       "zone": "settings",
       "pageFile": "ui/one-ui-shell/src/app/settings/page.tsx",
       "bffPaths": [],
-      "backingSignals": [],
+      "backingSignals": [
+        "navigation-hub"
+      ],
       "gatewayPaths": [],
       "mockStubHits": [],
       "hasMutation": false,
       "hasPersistHint": false,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
-      "readsRealData": false,
+      "readsRealData": true,
       "writesRealData": false,
-      "completeVsCosmetic": false,
-      "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "E",
-          "severity": "high",
-          "description": "/settings: no BFF/API backing detected",
-          "impactScore": 4
-        }
-      ]
+      "completeVsCosmetic": true,
+      "allowlistedShell": true,
+      "gaps": []
     },
     {
       "path": "/settings/account",
@@ -17166,7 +17129,7 @@
       "readsRealData": true,
       "writesRealData": true,
       "completeVsCosmetic": true,
-      "allowlistedShell": false,
+      "allowlistedShell": true,
       "gaps": []
     },
     {
@@ -17192,7 +17155,7 @@
       "readsRealData": true,
       "writesRealData": true,
       "completeVsCosmetic": true,
-      "allowlistedShell": false,
+      "allowlistedShell": true,
       "gaps": []
     },
     {
@@ -17216,7 +17179,7 @@
       "readsRealData": true,
       "writesRealData": true,
       "completeVsCosmetic": true,
-      "allowlistedShell": false,
+      "allowlistedShell": true,
       "gaps": []
     },
     {
@@ -17240,7 +17203,7 @@
       "readsRealData": true,
       "writesRealData": true,
       "completeVsCosmetic": true,
-      "allowlistedShell": false,
+      "allowlistedShell": true,
       "gaps": []
     },
     {
@@ -17264,7 +17227,7 @@
       "readsRealData": true,
       "writesRealData": true,
       "completeVsCosmetic": true,
-      "allowlistedShell": false,
+      "allowlistedShell": true,
       "gaps": []
     },
     {
@@ -17292,7 +17255,7 @@
       "readsRealData": true,
       "writesRealData": true,
       "completeVsCosmetic": true,
-      "allowlistedShell": false,
+      "allowlistedShell": true,
       "gaps": []
     },
     {
@@ -17443,7 +17406,8 @@
       "pageFile": "ui/one-ui-shell/src/app/wellness/page.tsx",
       "bffPaths": [],
       "backingSignals": [
-        "auth-keycloak"
+        "auth-keycloak",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -18068,7 +18032,8 @@
         "/internal/v1/caregiving/linkages"
       ],
       "backingSignals": [
-        "apiClient-dynamic"
+        "apiClient-dynamic",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -18192,25 +18157,20 @@
       "zone": "monitoring",
       "pageFile": "ui/one-ui-shell/src/app/monitoring/page.tsx",
       "bffPaths": [],
-      "backingSignals": [],
+      "backingSignals": [
+        "navigation-hub"
+      ],
       "gatewayPaths": [],
       "mockStubHits": [],
       "hasMutation": false,
       "hasPersistHint": false,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
-      "readsRealData": false,
+      "readsRealData": true,
       "writesRealData": false,
-      "completeVsCosmetic": false,
+      "completeVsCosmetic": true,
       "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "E",
-          "severity": "high",
-          "description": "/monitoring: no BFF/API backing detected",
-          "impactScore": 4
-        }
-      ]
+      "gaps": []
     },
     {
       "path": "/monitoring/devices",
@@ -18333,25 +18293,20 @@
       "zone": "discovery",
       "pageFile": "ui/one-ui-shell/src/app/discover/page.tsx",
       "bffPaths": [],
-      "backingSignals": [],
+      "backingSignals": [
+        "navigation-hub"
+      ],
       "gatewayPaths": [],
       "mockStubHits": [],
       "hasMutation": false,
       "hasPersistHint": false,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
-      "readsRealData": false,
+      "readsRealData": true,
       "writesRealData": false,
-      "completeVsCosmetic": false,
+      "completeVsCosmetic": true,
       "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "E",
-          "severity": "high",
-          "description": "/discover: no BFF/API backing detected",
-          "impactScore": 4
-        }
-      ]
+      "gaps": []
     },
     {
       "path": "/discover/providers",
@@ -18438,7 +18393,8 @@
       "pageFile": "ui/one-ui-shell/src/app/lab/page.tsx",
       "bffPaths": [],
       "backingSignals": [
-        "apiClient-dynamic"
+        "apiClient-dynamic",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -18586,25 +18542,20 @@
       "zone": "operations",
       "pageFile": "ui/one-ui-shell/src/app/operations/page.tsx",
       "bffPaths": [],
-      "backingSignals": [],
+      "backingSignals": [
+        "navigation-hub"
+      ],
       "gatewayPaths": [],
       "mockStubHits": [],
       "hasMutation": false,
       "hasPersistHint": false,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
-      "readsRealData": false,
+      "readsRealData": true,
       "writesRealData": false,
-      "completeVsCosmetic": false,
+      "completeVsCosmetic": true,
       "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "E",
-          "severity": "high",
-          "description": "/operations: no BFF/API backing detected",
-          "impactScore": 4
-        }
-      ]
+      "gaps": []
     },
     {
       "path": "/operations/facility-operations",
@@ -18839,7 +18790,8 @@
         "/internal/v1/identity/assurance/upgrade/request"
       ],
       "backingSignals": [
-        "apiClient-dynamic"
+        "apiClient-dynamic",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -19281,25 +19233,20 @@
       "zone": "support",
       "pageFile": "ui/one-ui-shell/src/app/support/page.tsx",
       "bffPaths": [],
-      "backingSignals": [],
+      "backingSignals": [
+        "navigation-hub"
+      ],
       "gatewayPaths": [],
       "mockStubHits": [],
       "hasMutation": false,
       "hasPersistHint": false,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
-      "readsRealData": false,
+      "readsRealData": true,
       "writesRealData": false,
-      "completeVsCosmetic": false,
+      "completeVsCosmetic": true,
       "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "E",
-          "severity": "high",
-          "description": "/support: no BFF/API backing detected",
-          "impactScore": 4
-        }
-      ]
+      "gaps": []
     },
     {
       "path": "/support/tickets",
@@ -19355,25 +19302,20 @@
       "zone": "developer",
       "pageFile": "ui/one-ui-shell/src/app/developer/page.tsx",
       "bffPaths": [],
-      "backingSignals": [],
+      "backingSignals": [
+        "navigation-hub"
+      ],
       "gatewayPaths": [],
       "mockStubHits": [],
       "hasMutation": false,
       "hasPersistHint": false,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
-      "readsRealData": false,
+      "readsRealData": true,
       "writesRealData": false,
-      "completeVsCosmetic": false,
+      "completeVsCosmetic": true,
       "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "E",
-          "severity": "high",
-          "description": "/developer: no BFF/API backing detected",
-          "impactScore": 4
-        }
-      ]
+      "gaps": []
     },
     {
       "path": "/developer/api-catalog",
@@ -19530,18 +19472,11 @@
       "hasPersistHint": false,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
-      "readsRealData": false,
+      "readsRealData": true,
       "writesRealData": false,
-      "completeVsCosmetic": false,
-      "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "E",
-          "severity": "high",
-          "description": "/shell/file-manager: no BFF/API backing detected",
-          "impactScore": 4
-        }
-      ]
+      "completeVsCosmetic": true,
+      "allowlistedShell": true,
+      "gaps": []
     },
     {
       "path": "/shell/task-manager",
@@ -19556,18 +19491,11 @@
       "hasPersistHint": false,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
-      "readsRealData": false,
+      "readsRealData": true,
       "writesRealData": false,
-      "completeVsCosmetic": false,
-      "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "E",
-          "severity": "high",
-          "description": "/shell/task-manager: no BFF/API backing detected",
-          "impactScore": 4
-        }
-      ]
+      "completeVsCosmetic": true,
+      "allowlistedShell": true,
+      "gaps": []
     },
     {
       "path": "/ask",
@@ -19649,25 +19577,20 @@
       "zone": "intelligent",
       "pageFile": "ui/one-ui-shell/src/app/guidance/page.tsx",
       "bffPaths": [],
-      "backingSignals": [],
+      "backingSignals": [
+        "navigation-hub"
+      ],
       "gatewayPaths": [],
       "mockStubHits": [],
       "hasMutation": false,
       "hasPersistHint": false,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
-      "readsRealData": false,
+      "readsRealData": true,
       "writesRealData": false,
-      "completeVsCosmetic": false,
+      "completeVsCosmetic": true,
       "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "E",
-          "severity": "high",
-          "description": "/guidance: no BFF/API backing detected",
-          "impactScore": 4
-        }
-      ]
+      "gaps": []
     },
     {
       "path": "/guidance/reminders",
@@ -19733,7 +19656,8 @@
         "/internal/v1/learning/v11/progress"
       ],
       "backingSignals": [
-        "apiClient-dynamic"
+        "apiClient-dynamic",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -21209,25 +21133,20 @@
       "zone": "operations",
       "pageFile": "ui/one-ui-shell/src/app/nhume/page.tsx",
       "bffPaths": [],
-      "backingSignals": [],
+      "backingSignals": [
+        "navigation-hub"
+      ],
       "gatewayPaths": [],
       "mockStubHits": [],
       "hasMutation": false,
       "hasPersistHint": false,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
-      "readsRealData": false,
+      "readsRealData": true,
       "writesRealData": false,
-      "completeVsCosmetic": false,
+      "completeVsCosmetic": true,
       "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "E",
-          "severity": "high",
-          "description": "/nhume: no BFF/API backing detected",
-          "impactScore": 4
-        }
-      ]
+      "gaps": []
     },
     {
       "path": "/nhume/dashboard",
@@ -21648,25 +21567,20 @@
       "zone": "operations",
       "pageFile": "ui/one-ui-shell/src/app/madi/page.tsx",
       "bffPaths": [],
-      "backingSignals": [],
+      "backingSignals": [
+        "navigation-hub"
+      ],
       "gatewayPaths": [],
       "mockStubHits": [],
       "hasMutation": false,
       "hasPersistHint": false,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
-      "readsRealData": false,
+      "readsRealData": true,
       "writesRealData": false,
-      "completeVsCosmetic": false,
+      "completeVsCosmetic": true,
       "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "E",
-          "severity": "high",
-          "description": "/madi: no BFF/API backing detected",
-          "impactScore": 4
-        }
-      ]
+      "gaps": []
     },
     {
       "path": "/madi/donor",
@@ -21675,7 +21589,8 @@
       "pageFile": "ui/one-ui-shell/src/app/madi/donor/page.tsx",
       "bffPaths": [],
       "backingSignals": [
-        "auth-keycloak"
+        "auth-keycloak",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -21920,25 +21835,20 @@
       "zone": "operations",
       "pageFile": "ui/one-ui-shell/src/app/madi/blood-bank/page.tsx",
       "bffPaths": [],
-      "backingSignals": [],
+      "backingSignals": [
+        "navigation-hub"
+      ],
       "gatewayPaths": [],
       "mockStubHits": [],
       "hasMutation": true,
       "hasPersistHint": true,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
-      "readsRealData": false,
+      "readsRealData": true,
       "writesRealData": true,
-      "completeVsCosmetic": false,
+      "completeVsCosmetic": true,
       "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "E",
-          "severity": "high",
-          "description": "/madi/blood-bank: no BFF/API backing detected",
-          "impactScore": 4
-        }
-      ]
+      "gaps": []
     },
     {
       "path": "/madi/blood-bank/orders",
@@ -22308,25 +22218,20 @@
       "zone": "operations",
       "pageFile": "ui/one-ui-shell/src/app/live/page.tsx",
       "bffPaths": [],
-      "backingSignals": [],
+      "backingSignals": [
+        "navigation-hub"
+      ],
       "gatewayPaths": [],
       "mockStubHits": [],
       "hasMutation": true,
       "hasPersistHint": true,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
-      "readsRealData": false,
+      "readsRealData": true,
       "writesRealData": true,
-      "completeVsCosmetic": false,
+      "completeVsCosmetic": true,
       "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "E",
-          "severity": "high",
-          "description": "/live: no BFF/API backing detected",
-          "impactScore": 4
-        }
-      ]
+      "gaps": []
     },
     {
       "path": "/live/manage",
