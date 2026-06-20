@@ -15,7 +15,7 @@ kc_token() {
     "http://keycloak:8080/realms/impilo/protocol/openid-connect/token" \
     -H "Content-Type: application/x-www-form-urlencoded" \
     -d "grant_type=password" \
-    -d "client_id=impilo-web" \
+    -d "client_id=experience-ui" \
     -d "username=${email}" \
     -d "password=${PASSWORD}" \
     | python3 -c "import json,sys; print(json.load(sys.stdin).get('access_token',''))"
@@ -45,15 +45,19 @@ assert_session() {
     -H "X-Correlation-ID: smoke-vashandi" \
     -H "X-Actor-ID: ${health_id}" \
     -H "X-Actor-Type: PROVIDER" \
-    -H "X-Purpose-Of-Use: TREATMENT")"
+    -H "X-Purpose-Of-Use: TREATMENT" \
+    -H "X-Login-Method: email")"
 
   visible_json="$(python3 -c "
 import json, sys
 payload = json.loads(sys.argv[1])
-data = payload.get('data') or payload
-visible = data.get('visibleVashandiWorkspaces') or []
-roles = data.get('roleTemplates') or []
-work = ((data.get('tabs') or {}).get('work') or {}).get('visible')
+data = payload.get('data') or {}
+attrs = data.get('attributes') if isinstance(data, dict) else {}
+if not attrs and isinstance(data, dict):
+    attrs = data
+visible = attrs.get('visibleVashandiWorkspaces') or []
+roles = attrs.get('roleTemplates') or []
+work = ((attrs.get('tabs') or {}).get('work') or {}).get('visible')
 print(json.dumps({'visible': visible, 'roleTemplates': roles, 'workVisible': work}))
 " "$raw")"
 
