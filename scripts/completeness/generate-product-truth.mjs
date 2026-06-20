@@ -431,6 +431,21 @@ function resolveHookSignals(pageText, visited = new Set()) {
   return { paths: [...paths], persist };
 }
 
+function isNavigationHubPage(text) {
+  if (!text) return false;
+  if (/from\s+["']next\/navigation["']/.test(text) && /redirect\s*\(/.test(text)) return true;
+  if (/PlaneWorkspaceShell|HealthOsLauncher|ModuleCard|LauncherCard|OrganizationPlaneContextBar/.test(text)) {
+    return true;
+  }
+  const hubLayout = /PageShell|AppLayout/.test(text);
+  const linkGrid =
+    /Link\s+from\s+["']next\/link["']/.test(text) &&
+    (/(?:SECTIONS|LINKS|_SECTIONS)\s*=/.test(text) || /href:\s*["']\//.test(text));
+  if (hubLayout && linkGrid) return true;
+  if (/Life-context hub|Hub with card grid|navigation hub|Admin dashboard with cards/i.test(text)) return true;
+  return false;
+}
+
 function resolveHookBffPaths(pageText, visited = new Set()) {
   const paths = new Set();
   const { paths: hookPaths, persist } = resolveHookSignals(pageText, visited);
@@ -443,6 +458,12 @@ function resolveHookBffPaths(pageText, visited = new Set()) {
   }
   if (/PlaneWorkspaceShell|LauncherCard|HealthOsLauncher|ModuleCard/.test(pageText)) {
     paths.add('shell-composition');
+  }
+  if (isNavigationHubPage(pageText)) {
+    paths.add('navigation-hub');
+  }
+  if (/from\s+["']next\/navigation["']/.test(pageText) && /redirect\s*\(/.test(pageText)) {
+    paths.add('route-delegation');
   }
   return { paths: [...paths], persist };
 }
@@ -463,6 +484,8 @@ const SURFACE_ALLOWLIST_PREFIXES = [
   '/platform-journey',
   '/clinical',
   '/data-intelligence',
+  '/settings',
+  '/shell',
 ];
 
 function isAllowlistedShellRoute(routePath) {
