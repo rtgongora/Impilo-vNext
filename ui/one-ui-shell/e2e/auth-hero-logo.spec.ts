@@ -17,8 +17,11 @@ test.describe("Auth hero logo prominence", () => {
 
       if (viewport.width < 1024) {
         await expect(page.getByTestId("auth-mobile-hero-logo")).toBeVisible();
+        await expect(page.getByText("Your health-life experience, connected.")).toBeVisible();
       } else {
         await expect(page.getByTestId("auth-desktop-hero-logo")).toBeVisible();
+        await expect(page.getByTestId("auth-desktop-hero-copy")).toBeVisible();
+        await expect(page.getByText("One Health OS.")).toBeVisible();
       }
 
       const box = await heroLogo.boundingBox();

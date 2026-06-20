@@ -195,6 +195,108 @@
     pointer-events: none;
   }
 
+  /* Auth landing — Afro-futurist hero motion (subtle; disabled for reduced motion) */
+  .auth-hero-afro-bg .auth-hero-weave-line {
+    animation: auth-hero-weave-shimmer 14s ease-in-out infinite;
+  }
+
+  .auth-hero-afro-bg .auth-hero-route-line {
+    stroke-dasharray: 12 8;
+    animation: auth-hero-route-flow 22s linear infinite;
+  }
+
+  .auth-hero-afro-bg .auth-hero-route-line-delayed {
+    animation-duration: 28s;
+    animation-delay: -6s;
+  }
+
+  .auth-hero-afro-bg .auth-hero-route-line-slow {
+    animation-duration: 32s;
+    animation-delay: -12s;
+  }
+
+  .auth-hero-afro-bg .auth-hero-circuit-line {
+    stroke-dasharray: 4 6;
+    animation: auth-hero-route-flow 18s linear infinite reverse;
+  }
+
+  .auth-hero-afro-bg .auth-hero-heartbeat {
+    animation: auth-hero-heartbeat-pulse 4.5s ease-in-out infinite;
+  }
+
+  .auth-hero-afro-bg .auth-hero-node-pulse {
+    animation: auth-hero-node-glow 5s ease-in-out infinite;
+  }
+
+  .auth-hero-afro-bg .auth-hero-orb {
+    animation: auth-hero-orb-drift 20s ease-in-out infinite;
+  }
+
+  .auth-hero-afro-bg .auth-hero-orb-b {
+    animation-delay: -8s;
+    animation-duration: 26s;
+  }
+
+  @keyframes auth-hero-weave-shimmer {
+    0%,
+    100% {
+      opacity: 0.35;
+    }
+    50% {
+      opacity: 0.7;
+    }
+  }
+
+  @keyframes auth-hero-route-flow {
+    to {
+      stroke-dashoffset: -120;
+    }
+  }
+
+  @keyframes auth-hero-heartbeat-pulse {
+    0%,
+    100% {
+      opacity: 0.35;
+    }
+    45% {
+      opacity: 0.85;
+    }
+    55% {
+      opacity: 0.5;
+    }
+  }
+
+  @keyframes auth-hero-node-glow {
+    0%,
+    100% {
+      opacity: 0.45;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes auth-hero-orb-drift {
+    0%,
+    100% {
+      transform: translate(0, 0);
+    }
+    50% {
+      transform: translate(12px, -8px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .auth-hero-afro-bg .auth-hero-weave-line,
+    .auth-hero-afro-bg .auth-hero-route-line,
+    .auth-hero-afro-bg .auth-hero-circuit-line,
+    .auth-hero-afro-bg .auth-hero-heartbeat,
+    .auth-hero-afro-bg .auth-hero-node-pulse,
+    .auth-hero-afro-bg .auth-hero-orb {
+      animation: none !important;
+    }
+  }
+
   .learning-module-shell > .space-y-5 {
     @apply space-y-3;
   }
