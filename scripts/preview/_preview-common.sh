@@ -245,3 +245,81 @@ PY
 preview_run_blast_resolver() {
   node "$REPO_PATH/scripts/preview/resolve-blast-radius.mjs" "$@"
 }
+
+# --- k3s image import preflight (no silent skip on execute paths) ---
+
+preview_k3s_import_helper_ready() {
+  [[ -x /usr/local/sbin/impilo-k3s-import-images && -x /usr/local/sbin/impilo-k3s-list-images ]] \
+    && sudo -n /usr/local/sbin/impilo-k3s-list-images "${FULL_BOOT_IMAGE_TAG:-preview}" "$REPO_PATH" >/dev/null 2>&1
+}
+
+preview_k3s_import_preflight() {
+  local mode="${1:-report}"  # report | require
+  local image_tag="${2:-${FULL_BOOT_IMAGE_TAG:-preview}}"
+  local import_mode="passwordless-helper"
+
+  echo "=== k3s import preflight ==="
+  if preview_k3s_import_helper_ready; then
+    echo "OK: passwordless k3s import helper ready (mode=$import_mode)"
+    echo "K3S_IMPORT_MODE=$import_mode"
+    return 0
+  fi
+
+  if [[ -x /usr/local/sbin/impilo-k3s-import-images ]]; then
+    echo "FAIL: k3s import helper installed but passwordless sudo is not configured" >&2
+    echo "  Install/configure: sudo bash scripts/operator/install-k3s-image-helper.sh" >&2
+    echo "  Or product-owner checkpoint: bash scripts/operator/fullboot.sh sudo-checkpoint-run" >&2
+  else
+    echo "FAIL: k3s import helper missing at /usr/local/sbin/impilo-k3s-import-images" >&2
+    echo "  Install: sudo bash scripts/operator/install-k3s-image-helper.sh" >&2
+  fi
+
+  if preview_check_registry; then
+    import_mode="registry-pull"
+    echo ""
+    echo "Fallback path: registry-pull (cluster pulls from ${LOCAL_REGISTRY} at rollout)"
+    echo "  Requires digest pinning + runtime-image-truth PASS after deploy."
+    echo "  To proceed without passwordless import: export PREVIEW_K3S_IMPORT_MODE=registry-pull"
+    if [[ "${PREVIEW_K3S_IMPORT_MODE:-}" == "registry-pull" ]]; then
+      echo "OK: PREVIEW_K3S_IMPORT_MODE=registry-pull acknowledged (mode=$import_mode)"
+      echo "K3S_IMPORT_MODE=$import_mode"
+      return 0
+    fi
+  fi
+
+  if [[ "$mode" == "require" ]]; then
+    echo "FAIL: k3s import required but helper unavailable and registry-pull not acknowledged" >&2
+    return 1
+  fi
+
+  echo "WARN: k3s import helper unavailable (dry-run/report only)"
+  echo "K3S_IMPORT_MODE=unavailable"
+  return 1
+}
+
+preview_run_k3s_import() {
+  local image_tag="${1:-${FULL_BOOT_IMAGE_TAG:-preview}}"
+  local images_csv="${2:-}"
+  local import_mode="${PREVIEW_K3S_IMPORT_MODE:-}"
+
+  if preview_k3s_import_helper_ready; then
+    echo "--- k3s import (mode=passwordless-helper) ---"
+    if [[ -n "$images_csv" ]]; then
+      sudo -n /usr/local/sbin/impilo-k3s-import-images "$image_tag" "$REPO_PATH" \
+        --runtime-only --only "$images_csv" --force
+    else
+      sudo -n /usr/local/sbin/impilo-k3s-import-images "$image_tag" "$REPO_PATH"
+    fi
+    return $?
+  fi
+
+  if [[ "$import_mode" == "registry-pull" ]]; then
+    echo "--- k3s import skipped (mode=registry-pull; relying on registry pull at rollout) ---"
+    preview_check_registry || return 1
+    return 0
+  fi
+
+  echo "FAIL: k3s import required but no viable path (helper missing; PREVIEW_K3S_IMPORT_MODE not set)" >&2
+  preview_k3s_import_preflight require "$image_tag" || true
+  return 1
+}

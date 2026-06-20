@@ -5,6 +5,7 @@ REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
 cd "$REPO_PATH"
 source scripts/preview/_preview-common.sh
 source scripts/deploy/_preview-deploy-metadata.sh
+source scripts/preview/_preview-deploy-provenance.sh
 source scripts/full-boot/_full-boot-common.sh
 
 BASE_REF=""
@@ -21,6 +22,7 @@ VALUES_FILE="$CHART_DIR/values-full-preview.yaml"
 RUNTIME_VALUES="$CHART_DIR/values-full-preview-runtime.generated.yaml"
 BFF_ENV_VALUES="$CHART_DIR/values-full-preview-bff-env.generated.yaml"
 DIGESTS_VALUES="$CHART_DIR/values-full-preview-digests.generated.yaml"
+PROVENANCE_VALUES="$CHART_DIR/values-preview-provenance.generated.yaml"
 IMAGE_TAG="${FULL_BOOT_IMAGE_TAG:-preview}"
 
 usage() {
@@ -62,9 +64,14 @@ if [[ "$MODE" == "dry-run" ]]; then
   preview_check_kube || echo "WARN: kubectl not reachable (dry-run continues)"
   preview_check_registry || true
   preview_check_helm_release || echo "WARN: Helm release not found (first deploy needs full boot)"
+  preview_k3s_import_preflight report || true
 else
   preview_preflight_common "$ALLOW_DIRTY" 1 || {
     preview_write_deploy_report "$REPORT_PATH" "FAIL" "targeted" "" "Preflight failed."
+    exit 1
+  }
+  preview_k3s_import_preflight require || {
+    preview_write_deploy_report "$REPORT_PATH" "FAIL" "targeted" "" "k3s import preflight failed."
     exit 1
   }
 fi
@@ -178,7 +185,9 @@ fi
 
 # Build images
 echo "--- Build images (targeted) ---"
+export IMPILO_UI_BUNDLE_HASH_MODE=relaxed
 export IMPILO_UI_BUNDLE_HASH_STRICT=0
+echo "UI bundle hash policy: relaxed (targeted deploy path)"
 for id in "${IMG_IDS[@]}"; do
   [[ -z "$id" ]] && continue
   if ! bash scripts/build/build-full-vnext-images.sh --only "$id"; then
@@ -204,40 +213,56 @@ if ! bash scripts/full-boot/resolve-image-digests.sh --tag "$IMAGE_TAG" --only "
 fi
 
 # k3s import
-echo "--- Import images into k3s ---"
-if [[ -x /usr/local/sbin/impilo-k3s-import-images ]] && sudo -n true 2>/dev/null; then
-  if ! sudo -n /usr/local/sbin/impilo-k3s-import-images "$IMAGE_TAG" "$REPO_PATH" \
-    --runtime-only --only "$IMAGES_CSV" --force; then
-    preview_write_deploy_report "$REPORT_PATH" "FAIL" "targeted" "$BLAST_JSON" "k3s import failed."
-    exit 1
-  fi
-else
-  echo "WARN: passwordless k3s import helper unavailable — run: bash scripts/operator/fullboot.sh import-images"
+if ! preview_run_k3s_import "$IMAGE_TAG" "$IMAGES_CSV"; then
+  preview_write_deploy_report "$REPORT_PATH" "FAIL" "targeted" "$BLAST_JSON" "k3s import failed."
+  exit 1
 fi
 
 # Regenerate helm values if needed
 node scripts/full-boot/generate-full-preview-runtime-values.mjs >/dev/null
 node scripts/full-boot/generate-full-preview-bff-downstream-env.mjs >/dev/null
 
+resolve_preview_deploy_metadata
+preview_resolve_targeted_provenance "$PREVIEW_DEPLOY_COMMIT" "$IMAGES_CSV"
+DIGESTS_JSON="$(preview_digest_json_for_images "$IMAGES_CSV" "$DIGESTS_VALUES")"
+HELM_REV="$(preview_helm_current_revision)"
+NEXT_REV=$((HELM_REV + 1))
+preview_write_provenance_values "targeted" \
+  "$PREVIEW_PROV_SHELL_COMMIT" "$PREVIEW_PROV_BFF_COMMIT" "$PREVIEW_PROV_ESTATE_COMMIT" \
+  "$PREVIEW_PROV_CERTIFIED_COMMIT" "$NEXT_REV" "$DIGESTS_JSON"
+
 HELM_ARGS=(-f "$VALUES_FILE")
 [[ -f "$RUNTIME_VALUES" ]] && HELM_ARGS+=(-f "$RUNTIME_VALUES")
 [[ -f "$BFF_ENV_VALUES" ]] && HELM_ARGS+=(-f "$BFF_ENV_VALUES")
 [[ -f "$DIGESTS_VALUES" ]] && HELM_ARGS+=(-f "$DIGESTS_VALUES")
+[[ -f "$PROVENANCE_VALUES" ]] && HELM_ARGS+=(-f "$PROVENANCE_VALUES")
 
 echo "--- Helm upgrade (targeted digest update) ---"
 EXTRA=()
 [[ -f "$DIGESTS_VALUES" ]] && EXTRA+=(--set global.imagePullPolicy=Always)
 
+HELM_PROV=(
+  --set global.gitBranch="$PREVIEW_DEPLOY_BRANCH"
+  --set global.buildDate="$PREVIEW_DEPLOY_BUILD_DATE"
+  --set global.imageTag="$IMAGE_TAG"
+  --set global.deploymentMode=targeted
+  --set global.shellGitCommit="$PREVIEW_PROV_SHELL_COMMIT"
+  --set global.bffGitCommit="$PREVIEW_PROV_BFF_COMMIT"
+  --set global.fullEstateCommit="$PREVIEW_PROV_ESTATE_COMMIT"
+  --set global.fullEstateCertifiedCommit="$PREVIEW_PROV_CERTIFIED_COMMIT"
+  --set images.experienceBff.tag="$IMAGE_TAG"
+  --set images.oneUiShell.tag="$IMAGE_TAG"
+)
+# Only override legacy global.gitCommit when BFF is rebuilt (full-boot parity field).
+if [[ "$IMAGES_CSV" == *"experience-bff"* ]]; then
+  HELM_PROV+=(--set global.gitCommit="$PREVIEW_PROV_BFF_COMMIT")
+fi
+
 helm upgrade --install "$RELEASE_NAME" "$CHART_DIR" \
   -n "$NAMESPACE" \
   "${HELM_ARGS[@]}" \
   "${EXTRA[@]}" \
-  --set global.gitBranch="$PREVIEW_DEPLOY_BRANCH" \
-  --set global.gitCommit="$PREVIEW_DEPLOY_COMMIT" \
-  --set global.buildDate="$PREVIEW_DEPLOY_BUILD_DATE" \
-  --set global.imageTag="$IMAGE_TAG" \
-  --set images.experienceBff.tag="$IMAGE_TAG" \
-  --set images.oneUiShell.tag="$IMAGE_TAG" \
+  "${HELM_PROV[@]}" \
   --wait --timeout "${TARGETED_HELM_WAIT_TIMEOUT:-20m}" --atomic=false
 
 # Rollout status for affected deployments only
@@ -268,12 +293,26 @@ if [[ "$IMAGES_CSV" == *"experience-bff"* ]]; then
 fi
 
 HEALTH="$(preview_fetch_health_version)"
-LIVE_COMMIT="$(echo "$HEALTH" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("commit",""))' 2>/dev/null || true)"
-COMMIT_OK=0
-[[ "$LIVE_COMMIT" == "$(preview_head_sha)" ]] && COMMIT_OK=1
+VERSION_OK=1
+LIVE_MODE="$(echo "$HEALTH" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("deploymentMode",""))' 2>/dev/null || true)"
+LIVE_SHELL="$(echo "$HEALTH" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("shellCommit",""))' 2>/dev/null || true)"
+LIVE_BFF="$(echo "$HEALTH" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("bffCommit", d.get("commit","")))' 2>/dev/null || true)"
+HEAD_SHA="$(preview_head_sha)"
+
+if [[ -n "$LIVE_MODE" && "$LIVE_MODE" != "targeted" && "$LIVE_MODE" != "unknown" ]]; then
+  echo "WARN: /health/version deploymentMode=$LIVE_MODE (expected targeted once BFF rolls out)"
+fi
+if [[ "$IMAGES_CSV" == *"one-ui-shell"* ]]; then
+  [[ "$LIVE_SHELL" == "$HEAD_SHA" ]] || VERSION_OK=0
+fi
+if [[ "$IMAGES_CSV" == *"experience-bff"* ]]; then
+  [[ "$LIVE_BFF" == "$HEAD_SHA" ]] || VERSION_OK=0
+else
+  [[ "$LIVE_BFF" == "$PREVIEW_PROV_BFF_COMMIT" ]] || VERSION_OK=0
+fi
 
 STATUS="PASS"
-[[ "$ROLLOUT_FAIL" != "0" || "$TRUTH_OK" != "1" || "$COMMIT_OK" != "1" ]] && STATUS="FAIL"
+[[ "$ROLLOUT_FAIL" != "0" || "$TRUTH_OK" != "1" || "$VERSION_OK" != "1" ]] && STATUS="FAIL"
 
 EXTRA_MD="**Note:** Targeted deploy does not assert FULL_ESTATE_PASS. Run \`scripts/preview/full-boot.sh\` before release promotion."
 preview_write_deploy_report "$REPORT_PATH" "$STATUS" "targeted" "$BLAST_JSON" "$EXTRA_MD"

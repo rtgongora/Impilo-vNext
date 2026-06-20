@@ -33,7 +33,7 @@ spec:
             - name: NEXT_PUBLIC_GIT_BRANCH
               value: {{ .Values.global.gitBranch | default "" | quote }}
             - name: NEXT_PUBLIC_GIT_COMMIT
-              value: {{ .Values.global.gitCommit | default "" | quote }}
+              value: {{ .Values.global.shellGitCommit | default .Values.global.gitCommit | default "" | quote }}
             - name: NEXT_PUBLIC_BUILD_DATE
               value: {{ .Values.global.buildDate | default "" | quote }}
             {{- range $k, $v := .Values.oneUiShell.env }}

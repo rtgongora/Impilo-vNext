@@ -193,18 +193,58 @@ def _extract_ui_bundle_hash(image_ref: str) -> str:
     return match.group(1) if match else ""
 
 
-def _ui_sources_changed() -> bool:
-    for cmd in (
-        ["git", "diff", "--name-only", "HEAD", "--", "ui/one-ui-shell", "ui/shared-ui"],
-        ["git", "status", "--porcelain", "--", "ui/one-ui-shell", "ui/shared-ui"],
-    ):
+def _ui_bundle_hash_mode() -> str:
+    mode = os.environ.get("IMPILO_UI_BUNDLE_HASH_MODE", "").strip().lower()
+    if mode in ("strict", "relaxed"):
+        return mode
+    return "relaxed" if os.environ.get("IMPILO_UI_BUNDLE_HASH_STRICT", "1") == "0" else "strict"
+
+
+def _ui_git_tree_fingerprint() -> str:
+    """Committed tree fingerprint for ui/one-ui-shell + ui/shared-ui at HEAD."""
+    import hashlib
+
+    parts: list[str] = []
+    for rel in ("ui/one-ui-shell", "ui/shared-ui"):
         try:
-            out = subprocess.run(cmd, cwd=root, capture_output=True, text=True)
+            out = subprocess.run(
+                ["git", "rev-parse", f"HEAD:{rel}"],
+                cwd=root,
+                capture_output=True,
+                text=True,
+            )
             if out.returncode == 0 and out.stdout.strip():
-                return True
+                parts.append(out.stdout.strip())
         except Exception:
             pass
-    return False
+    if not parts:
+        return ""
+    return hashlib.sha256(":".join(parts).encode()).hexdigest()[:16]
+
+
+def _ui_committed_sources_changed(baseline_commit: str) -> bool:
+    """True only when committed UI paths differ between baseline and HEAD (not working tree)."""
+    if not baseline_commit:
+        return True
+    try:
+        out = subprocess.run(
+            [
+                "git",
+                "diff",
+                "--name-only",
+                baseline_commit,
+                "HEAD",
+                "--",
+                "ui/one-ui-shell",
+                "ui/shared-ui",
+            ],
+            cwd=root,
+            capture_output=True,
+            text=True,
+        )
+        return out.returncode == 0 and bool(out.stdout.strip())
+    except Exception:
+        return True
 
 
 def _verify_ui_bundle_after_build(image_ref: str, log_path: pathlib.Path):
@@ -231,23 +271,53 @@ def _verify_ui_bundle_after_build(image_ref: str, log_path: pathlib.Path):
                 "rebuild with empty NEXT_PUBLIC_BFF_URL for same-origin preview\n",
             )
             return False, bundle_hash
+    mode = _ui_bundle_hash_mode()
+    append_log(log_path, f"UI bundle hash policy: {mode}\n")
+
+    meta_path = reports / "ui-bundle-build-meta.json"
+    prev_meta: dict = {}
+    if meta_path.exists():
+        try:
+            prev_meta = json.loads(meta_path.read_text())
+        except Exception:
+            prev_meta = {}
+
     prev_path = reports / "ui-bundle-hash.txt"
     prev_hash = prev_path.read_text().strip() if prev_path.exists() else ""
-    if prev_hash and _ui_sources_changed() and bundle_hash == prev_hash:
-        strict = os.environ.get("IMPILO_UI_BUNDLE_HASH_STRICT", "1") != "0"
-        msg = f"UI bundle verification: hash unchanged ({bundle_hash}) after UI source changes\n"
-        if strict:
-            append_log(log_path, f"FAIL {msg}")
-            return False, bundle_hash
-        append_log(log_path, f"WARN {msg}IMPILO_UI_BUNDLE_HASH_STRICT=0 — continuing (targeted deploy)\n")
+    baseline_commit = prev_meta.get("source_commit", "")
+    tree_fp = _ui_git_tree_fingerprint()
+
+    if prev_hash and bundle_hash == prev_hash:
+        committed_changed = _ui_committed_sources_changed(baseline_commit)
+        if committed_changed:
+            msg = (
+                f"UI bundle verification: hash unchanged ({bundle_hash}) after committed UI "
+                f"source changes ({baseline_commit[:8]}..HEAD)\n"
+            )
+            if mode == "strict":
+                append_log(log_path, f"FAIL {msg}")
+                return False, bundle_hash
+            append_log(
+                log_path,
+                f"WARN {msg}policy={mode} — continuing (targeted deploy path)\n",
+            )
+        else:
+            append_log(
+                log_path,
+                f"OK UI bundle hash unchanged ({bundle_hash}); committed UI tree unchanged "
+                f"(idempotent rebuild, policy={mode})\n",
+            )
+
     prev_path.write_text(bundle_hash + "\n")
     meta = {
         "bundle_hash": bundle_hash,
         "source_commit": _git_commit(),
+        "source_tree_fingerprint": tree_fp,
+        "policy_mode": mode,
         "built_at": datetime.now(timezone.utc).isoformat(),
     }
-    (reports / "ui-bundle-build-meta.json").write_text(json.dumps(meta, indent=2))
-    append_log(log_path, f"UI bundle hash verified: layout-{bundle_hash}.js\n")
+    meta_path.write_text(json.dumps(meta, indent=2))
+    append_log(log_path, f"UI bundle hash verified: layout-{bundle_hash}.js (policy={mode})\n")
     return True, bundle_hash
 
 

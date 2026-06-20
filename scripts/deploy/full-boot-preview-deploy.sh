@@ -14,6 +14,8 @@ cd "$REPO_PATH"
 source scripts/full-boot/_full-boot-common.sh
 source scripts/full-boot/_estate-guard.sh
 source scripts/deploy/_preview-deploy-metadata.sh
+source scripts/preview/_preview-common.sh
+source scripts/preview/_preview-deploy-provenance.sh
 
 AUTH_PHRASE="AUTHORIZE FULL BOOT PREVIEW DEPLOY"
 NAMESPACE="${FULL_BOOT_NAMESPACE:-impilo-full-preview}"
@@ -22,6 +24,7 @@ VALUES_FILE="$CHART_DIR/values-full-preview.yaml"
 RUNTIME_VALUES="$CHART_DIR/values-full-preview-runtime.generated.yaml"
 BFF_ENV_VALUES="$CHART_DIR/values-full-preview-bff-env.generated.yaml"
 DIGESTS_VALUES="$CHART_DIR/values-full-preview-digests.generated.yaml"
+PROVENANCE_VALUES="$CHART_DIR/values-preview-provenance.generated.yaml"
 RELEASE_NAME="impilo-full-preview"
 MODE="deploy"
 # DEFAULT is the FULL ESTATE. 'all' => no --max-wave passed downstream (every microservice enabled).
@@ -102,9 +105,13 @@ verify_public_ip() {
     echo "FAIL: public IP environment '$live_env' != full-preview (is the full-stack ingress active?)"
     return 1
   fi
-  if [[ -n "$PREVIEW_DEPLOY_COMMIT" && "$live_commit" != "$PREVIEW_DEPLOY_COMMIT" ]]; then
-    echo "FAIL: public IP commit '$live_commit' != deployed '$PREVIEW_DEPLOY_COMMIT'"
-    return 1
+  if [[ -n "$PREVIEW_DEPLOY_COMMIT" ]]; then
+    local live_estate
+    live_estate="$(echo "$vjson" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("fullEstateCommit", d.get("commit","")))' 2>/dev/null || true)"
+    if [[ "$live_estate" != "$PREVIEW_DEPLOY_COMMIT" ]]; then
+      echo "FAIL: public IP fullEstateCommit '$live_estate' != deployed '$PREVIEW_DEPLOY_COMMIT'"
+      return 1
+    fi
   fi
   echo "OK: $PREVIEW_URL serves full-preview at commit ${live_commit:0:8}"
 }
@@ -173,6 +180,9 @@ helm_values_args() {
     args+=(-f "$BFF_ENV_VALUES")
   else
     echo "WARN: missing $BFF_ENV_VALUES"
+  fi
+  if [[ -f "$PROVENANCE_VALUES" ]]; then
+    args+=(-f "$PROVENANCE_VALUES")
   fi
   printf '%s\0' "${args[@]}"
 }
@@ -311,6 +321,9 @@ else
     echo "ABORT: full build failed for required targets."
     exit 1
   fi
+  export IMPILO_UI_BUNDLE_HASH_MODE=strict
+  export IMPILO_UI_BUNDLE_HASH_STRICT=1
+  echo "UI bundle hash policy: strict (full-boot path)"
   if ! bash scripts/build/build-full-vnext-images.sh "$IMAGE_BUILD_FLAG"; then
     echo "ABORT: estate image build failed ($IMAGE_BUILD_FLAG)."
     exit 1
@@ -390,6 +403,15 @@ fi
 
 kubectl create namespace "$NAMESPACE" 2>/dev/null || true
 
+preview_resolve_full_boot_provenance "$PREVIEW_DEPLOY_COMMIT"
+RUNTIME_IDS="$(bash scripts/full-boot/list-runtime-service-ids.sh)"
+DIGESTS_JSON="$(preview_digest_json_for_images "experience-bff,one-ui-shell,$RUNTIME_IDS" "$DIGESTS_VALUES")"
+HELM_REV="$(preview_helm_current_revision)"
+NEXT_REV=$((HELM_REV + 1))
+preview_write_provenance_values "full-boot" \
+  "$PREVIEW_PROV_SHELL_COMMIT" "$PREVIEW_PROV_BFF_COMMIT" "$PREVIEW_PROV_ESTATE_COMMIT" \
+  "$PREVIEW_PROV_CERTIFIED_COMMIT" "$NEXT_REV" "$DIGESTS_JSON"
+
 HELM_DIGEST_PIN_SETS=()
 if [[ -f "$DIGESTS_VALUES" ]] && [[ "${IMPILO_DEPLOY_NO_DIGEST_PIN:-}" != "1" ]]; then
   HELM_DIGEST_PIN_SETS+=(--set global.imagePullPolicy=Always)
@@ -402,6 +424,11 @@ helm upgrade --install "$RELEASE_NAME" "$CHART_DIR" \
   "${HELM_DIGEST_PIN_SETS[@]}" \
   --set global.gitBranch="$PREVIEW_DEPLOY_BRANCH" \
   --set global.gitCommit="$PREVIEW_DEPLOY_COMMIT" \
+  --set global.bffGitCommit="$PREVIEW_DEPLOY_COMMIT" \
+  --set global.shellGitCommit="$PREVIEW_DEPLOY_COMMIT" \
+  --set global.fullEstateCommit="$PREVIEW_DEPLOY_COMMIT" \
+  --set global.fullEstateCertifiedCommit="$PREVIEW_DEPLOY_COMMIT" \
+  --set global.deploymentMode=full-boot \
   --set global.buildDate="$PREVIEW_DEPLOY_BUILD_DATE" \
   --set global.imageTag="$IMAGE_TAG" \
   --set images.experienceBff.tag="$IMAGE_TAG" \
@@ -421,6 +448,18 @@ RUNTIME_TRUTH_OK=1
 bash scripts/guard/check-runtime-image-truth.sh || RUNTIME_TRUTH_OK=0
 
 bash scripts/guard/check-full-boot-runtime-completeness.sh || true
+if python3 -c "
+import json,sys
+p='$REPO_PATH/reports/full-boot/full-boot-runtime-report.json'
+try:
+    d=json.load(open(p))
+except FileNotFoundError:
+    sys.exit(1)
+sys.exit(0 if d.get('estate_status')=='FULL_ESTATE_PASS' else 1)
+" 2>/dev/null; then
+  preview_record_certified_commit "$PREVIEW_DEPLOY_COMMIT"
+  echo "OK: recorded full-estate certified commit $PREVIEW_DEPLOY_COMMIT"
+fi
 
 # --- BFF/shell image pinning report (Area 10) ---
 echo "--- Image pinning report ---"

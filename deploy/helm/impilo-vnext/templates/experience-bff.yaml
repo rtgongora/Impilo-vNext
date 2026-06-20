@@ -31,19 +31,52 @@ spec:
           env:
             - name: IMPILO_ENV
               value: {{ .Values.global.environment | quote }}
-            {{- /* Only override the image-baked provenance when explicitly provided, so an
-                   empty Helm value never blanks out the commit/branch baked into the image. */}}
             {{- if .Values.global.gitBranch }}
             - name: IMPILO_GIT_BRANCH
               value: {{ .Values.global.gitBranch | quote }}
             {{- end }}
-            {{- if .Values.global.gitCommit }}
+            {{- $bffCommit := .Values.global.bffGitCommit | default .Values.global.gitCommit }}
+            {{- if $bffCommit }}
             - name: IMPILO_GIT_COMMIT
-              value: {{ .Values.global.gitCommit | quote }}
+              value: {{ $bffCommit | quote }}
+            - name: IMPILO_BFF_GIT_COMMIT
+              value: {{ $bffCommit | quote }}
             {{- end }}
             {{- if .Values.global.buildDate }}
             - name: IMPILO_BUILD_DATE
               value: {{ .Values.global.buildDate | quote }}
+            {{- end }}
+            {{- if .Values.global.deploymentMode }}
+            - name: IMPILO_DEPLOYMENT_MODE
+              value: {{ .Values.global.deploymentMode | quote }}
+            {{- end }}
+            {{- if .Values.global.shellGitCommit }}
+            - name: IMPILO_SHELL_GIT_COMMIT
+              value: {{ .Values.global.shellGitCommit | quote }}
+            {{- end }}
+            {{- if .Values.global.fullEstateCommit }}
+            - name: IMPILO_FULL_ESTATE_COMMIT
+              value: {{ .Values.global.fullEstateCommit | quote }}
+            {{- end }}
+            {{- if .Values.global.fullEstateCertifiedCommit }}
+            - name: IMPILO_FULL_ESTATE_CERTIFIED_COMMIT
+              value: {{ .Values.global.fullEstateCertifiedCommit | quote }}
+            {{- end }}
+            {{- if .Values.global.helmRelease }}
+            - name: IMPILO_HELM_RELEASE
+              value: {{ .Values.global.helmRelease | quote }}
+            {{- end }}
+            {{- if .Values.global.helmRevision }}
+            - name: IMPILO_HELM_REVISION
+              value: {{ .Values.global.helmRevision | quote }}
+            {{- end }}
+            {{- if .Values.global.versionGeneratedAt }}
+            - name: IMPILO_VERSION_GENERATED_AT
+              value: {{ .Values.global.versionGeneratedAt | quote }}
+            {{- end }}
+            {{- if .Values.global.imageDigestsJson }}
+            - name: IMPILO_IMAGE_DIGESTS_JSON
+              value: {{ .Values.global.imageDigestsJson | quote }}
             {{- end }}
             {{- range $k, $v := .Values.experienceBff.env }}
             - name: {{ $k }}
