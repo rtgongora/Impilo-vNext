@@ -1,6 +1,6 @@
 # Product Truth — Backend-to-UI Traceability
 
-> Generated: 2026-06-20T10:28:53.343Z
+> Generated: 2026-06-20T11:02:04.418Z
 
 For each service: backend capabilities → API → BFF → UI → mobile → persistence.
 
@@ -57,7 +57,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (4 controllers, 16 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: asset-registry.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (2 clients) |
-| 4 | Visible in UI? | Yes (2 refs) |
+| 4 | Visible in UI? | Yes (3 refs) |
 | 5 | Visible on mobile? | No (0 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
@@ -66,11 +66,9 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 10 | Fixture-only flows? | No |
 
 **UI references (sample):**
+- `ui/one-ui-shell/src/app/operations/assets/page.tsx`
 - `ui/one-ui-shell/src/hooks/queries/useAssets.ts`
 - `ui/one-ui-shell/src/lib/registry-service-module-refs.ts`
-
-**Gaps:**
-- [N] asset-registry-service: auth/policy/audit readiness thin (medium)
 
 ## audit-ledger-service
 
@@ -120,9 +118,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/home/bookings/new/page.test.tsx`
 - `ui/one-ui-shell/src/app/home/bookings/new/page.tsx`
 
-**Gaps:**
-- [N] booking-service: auth/policy/audit readiness thin (medium)
-
 ## butano-fhir
 
 - **Path:** `services/butano-fhir`
@@ -147,7 +142,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 
 **Gaps:**
 - [D] butano-fhir: partial frontend/BFF wiring (medium)
-- [N] butano-fhir: auth/policy/audit readiness thin (medium)
 
 ## butano-service
 
@@ -175,9 +169,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/operations/page.tsx`
 - `ui/one-ui-shell/src/components/intelligent/SmartEncounterFlow.tsx`
 
-**Gaps:**
-- [N] butano-service: auth/policy/audit readiness thin (medium)
-
 ## campaigns-service
 
 - **Path:** `services/campaigns-service`
@@ -203,9 +194,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/public-health/campaigns/page.tsx`
 - `ui/one-ui-shell/src/app/public-health/page.tsx`
 - `ui/one-ui-shell/src/components/platform/NotificationCommsOrchestrationRail.test.tsx`
-
-**Gaps:**
-- [N] campaigns-service: auth/policy/audit readiness thin (medium)
 
 ## card-print-agent
 
@@ -255,9 +243,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/communication/secure-messaging/page.tsx`
 - `ui/one-ui-shell/src/app/omnichannel/page.tsx`
 
-**Gaps:**
-- [N] channels-service: auth/policy/audit readiness thin (medium)
-
 ## clinical-knowledge-platform-service
 
 - **Path:** `services/clinical-knowledge-platform-service`
@@ -281,9 +266,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/clinical-tools/page.tsx`
 - `ui/one-ui-shell/src/components/intelligent/SmartEncounterFlow.tsx`
 - `ui/one-ui-shell/src/lib/registry-service-module-refs.ts`
-
-**Gaps:**
-- [N] clinical-knowledge-platform-service: auth/policy/audit readiness thin (medium)
 
 ## community-service
 
@@ -310,9 +292,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/communities/[id]/page.tsx`
 - `ui/one-ui-shell/src/app/communities/page.tsx`
 - `ui/one-ui-shell/src/app/home/bookings/new/page.tsx`
-
-**Gaps:**
-- [N] community-service: auth/policy/audit readiness thin (medium)
 
 ## connector-fhir-adapter
 
@@ -361,9 +340,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/finance/commerce-integrations/page.tsx`
 - `ui/one-ui-shell/src/app/finance/costa/encounter/[encounterId]/page.test.tsx`
 - `ui/one-ui-shell/src/app/finance/costa/encounter/[encounterId]/page.tsx`
-
-**Gaps:**
-- [N] costing-engine-service: auth/policy/audit readiness thin (medium)
 
 ## coverage-service
 
@@ -417,9 +393,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/lib/credentialVerifyPublic.test.ts`
 - `ui/one-ui-shell/src/lib/credentialVerifyPublic.ts`
 
-**Gaps:**
-- [N] credential-verification-service: auth/policy/audit readiness thin (medium)
-
 ## data-access-governance-service
 
 - **Path:** `services/data-access-governance-service`
@@ -446,9 +419,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/intelligence/page.tsx`
 - `ui/one-ui-shell/src/components/administration-governance/GovernanceActionResult.tsx`
 
-**Gaps:**
-- [N] data-access-governance-service: auth/policy/audit readiness thin (medium)
-
 ## data-governance-service
 
 - **Path:** `services/data-governance-service`
@@ -474,9 +444,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/hooks/queries/useDataGovernance.ts`
 - `ui/one-ui-shell/src/lib/registry-service-module-refs.ts`
 - `ui/one-ui-shell/src/lib/routes.ts`
-
-**Gaps:**
-- [N] data-governance-service: auth/policy/audit readiness thin (medium)
 
 ## data-ingestion-service
 
@@ -572,9 +539,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/lib/registry-service-module-refs.ts`
 - `ui/one-ui-shell/src/lib/routes.ts`
 
-**Gaps:**
-- [N] developer-portal-service: auth/policy/audit readiness thin (medium)
-
 ## dispatch-service
 
 - **Path:** `services/dispatch-service`
@@ -601,9 +565,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/madi/logistics/page.tsx`
 - `ui/one-ui-shell/src/app/madi/page.tsx`
 
-**Gaps:**
-- [N] dispatch-service: auth/policy/audit readiness thin (medium)
-
 ## document-service
 
 - **Path:** `services/document-service`
@@ -626,9 +587,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 **UI references (sample):**
 - `ui/one-ui-shell/src/app/ehr/[patientId]/procedures/[episodeId]/page.tsx`
 - `ui/one-ui-shell/src/lib/registry-service-module-refs.ts`
-
-**Gaps:**
-- [N] document-service: auth/policy/audit readiness thin (medium)
 
 ## experience-bff
 
@@ -655,9 +613,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/admin/data-export/page.tsx`
 - `ui/one-ui-shell/src/app/admin/federation/page.tsx`
 - `ui/one-ui-shell/src/app/admin/integration-status/page.tsx`
-
-**Gaps:**
-- [N] experience-bff: auth/policy/audit readiness thin (medium)
 
 ## fhir-gateway-service
 
@@ -707,9 +662,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/components/ehr/EncounterDocumentsSheet.tsx`
 - `ui/one-ui-shell/src/components/encounter/StructuredEncounterForms.tsx`
 
-**Gaps:**
-- [N] forms-service: auth/policy/audit readiness thin (medium)
-
 ## general-ledger-service
 
 - **Path:** `services/general-ledger-service`
@@ -734,7 +686,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 
 **Gaps:**
 - [D] general-ledger-service: partial frontend/BFF wiring (medium)
-- [N] general-ledger-service: auth/policy/audit readiness thin (medium)
 - [O] general-ledger-service: no automated tests detected (medium)
 
 ## guidance-service
@@ -764,7 +715,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/ehr/[patientId]/encounters/page.tsx`
 
 **Gaps:**
-- [N] guidance-service: auth/policy/audit readiness thin (medium)
 - [O] guidance-service: no automated tests detected (medium)
 
 ## hr-payroll-service
@@ -791,7 +741,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/hooks/queries/useHrPayroll.ts`
 
 **Gaps:**
-- [N] hr-payroll-service: auth/policy/audit readiness thin (medium)
 - [O] hr-payroll-service: no automated tests detected (medium)
 
 ## identity-assurance-service
@@ -820,9 +769,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/lib/registry-service-module-refs.ts`
 - `ui/one-ui-shell/src/lib/routes.ts`
 
-**Gaps:**
-- [N] identity-assurance-service: auth/policy/audit readiness thin (medium)
-
 ## indawo-service
 
 - **Path:** `services/indawo-service`
@@ -849,9 +795,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/config/serviceBranding.ts`
 - `ui/one-ui-shell/src/data/workSurfaceModules.ts`
 
-**Gaps:**
-- [N] indawo-service: auth/policy/audit readiness thin (medium)
-
 ## inpatient-service
 
 - **Path:** `services/inpatient-service`
@@ -877,9 +820,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/clinical/inpatient/discharge/[admissionId]/page.tsx`
 - `ui/one-ui-shell/src/app/clinical/inpatient/nursing/page.tsx`
 - `ui/one-ui-shell/src/app/clinical/inpatient/page.tsx`
-
-**Gaps:**
-- [N] inpatient-service: auth/policy/audit readiness thin (medium)
 
 ## integration-hub
 
@@ -954,9 +894,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/enterprise/charge-sheet/page.tsx`
 - `ui/one-ui-shell/src/app/enterprise/warehousing/page.test.tsx`
 - `ui/one-ui-shell/src/app/enterprise/warehousing/page.tsx`
-
-**Gaps:**
-- [N] inventory-service: auth/policy/audit readiness thin (medium)
 
 ## iot-ingestion-service
 
@@ -1085,9 +1022,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/live/event/[eventId]/page.tsx`
 - `ui/one-ui-shell/src/app/live/page.test.tsx`
 
-**Gaps:**
-- [N] live-service: auth/policy/audit readiness thin (medium)
-
 ## llm-orchestration-service
 
 - **Path:** `services/llm-orchestration-service`
@@ -1133,9 +1067,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/madi/blood-bank/stock/page.tsx`
 - `ui/one-ui-shell/src/app/madi/central-bank/page.tsx`
 
-**Gaps:**
-- [N] madi-service: auth/policy/audit readiness thin (medium)
-
 ## msika-apps-service
 
 - **Path:** `services/msika-apps-service`
@@ -1160,7 +1091,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 
 **Gaps:**
 - [D] msika-apps-service: partial frontend/BFF wiring (medium)
-- [N] msika-apps-service: auth/policy/audit readiness thin (medium)
 
 ## msika-flow-service
 
@@ -1186,7 +1116,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 
 **Gaps:**
 - [D] msika-flow-service: partial frontend/BFF wiring (medium)
-- [N] msika-flow-service: auth/policy/audit readiness thin (medium)
 
 ## msika-service
 
@@ -1213,9 +1142,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/finance/commerce-integrations/page.tsx`
 - `ui/one-ui-shell/src/app/finance/costa/page.tsx`
 - `ui/one-ui-shell/src/app/finance/msika-governance/page.test.tsx`
-
-**Gaps:**
-- [N] msika-service: auth/policy/audit readiness thin (medium)
 
 ## mushe-wallet-service
 
@@ -1244,7 +1170,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/components/navigation/ExperienceSidebar.tsx`
 
 **Gaps:**
-- [N] mushe-wallet-service: auth/policy/audit readiness thin (medium)
 - [O] mushe-wallet-service: no automated tests detected (medium)
 
 ## mushex-service
@@ -1260,7 +1185,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 3 | Wired via BFF? | Yes (11 clients) |
 | 4 | Visible in UI? | Yes (5 refs) |
 | 5 | Visible on mobile? | No (0 refs) |
-| 6 | Fake/partial/disconnected? | Yes — review |
+| 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
 | 8 | UI without backend? | No |
 | 9 | Persists to DB? | Yes (8 migrations) |
@@ -1272,10 +1197,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/config/serviceBranding.ts`
 - `ui/one-ui-shell/src/hooks/queries/useMushexPlatformAdmin.ts`
 - `ui/one-ui-shell/src/lib/registry-service-module-refs.ts`
-
-**Gaps:**
-- [F] mushex-service: mock/stub/fixture patterns detected (3 hits) (high)
-- [N] mushex-service: auth/policy/audit readiness thin (medium)
 
 ## mvumo-service
 
@@ -1302,9 +1223,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/home/bookings/[bookingId]/page.tsx`
 - `ui/one-ui-shell/src/app/home/bookings/new/page.test.tsx`
 - `ui/one-ui-shell/src/app/home/bookings/new/page.tsx`
-
-**Gaps:**
-- [N] mvumo-service: auth/policy/audit readiness thin (medium)
 
 ## national-data-repository-service
 
@@ -1353,9 +1271,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/madi/donor/drives/page.tsx`
 - `ui/one-ui-shell/src/app/ndila/page.tsx`
 - `ui/one-ui-shell/src/app/nhume/dashboard/page.tsx`
-
-**Gaps:**
-- [N] ndila-service: auth/policy/audit readiness thin (medium)
 
 ## ndr-service
 
@@ -1408,7 +1323,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 
 **Gaps:**
 - [C] nhume-service: no matched OpenAPI contract (medium)
-- [N] nhume-service: auth/policy/audit readiness thin (medium)
 
 ## notification-service
 
@@ -1435,9 +1349,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/admin/page.tsx`
 - `ui/one-ui-shell/src/app/api/mobile/provider/hubs/[hub]/route.ts`
 - `ui/one-ui-shell/src/app/caregiving/notifications/page.tsx`
-
-**Gaps:**
-- [N] notification-service: auth/policy/audit readiness thin (medium)
 
 ## observability-service
 
@@ -1534,9 +1445,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/developer/sandbox/page.tsx`
 - `ui/one-ui-shell/src/app/ehr/[patientId]/encounter/[encounterId]/page.test.tsx`
 
-**Gaps:**
-- [N] oros-service: auth/policy/audit readiness thin (medium)
-
 ## pacs-adapter-service
 
 - **Path:** `services/pacs-adapter-service`
@@ -1586,9 +1494,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/admin/clinical-curation/page.test.tsx`
 - `ui/one-ui-shell/src/app/admin/clinical-curation/page.tsx`
 
-**Gaps:**
-- [N] pct-service: auth/policy/audit readiness thin (medium)
-
 ## pharmacy-elmis-adapter
 
 - **Path:** `services/pharmacy-elmis-adapter`
@@ -1637,9 +1542,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/clinical/inpatient/rounds/page.tsx`
 - `ui/one-ui-shell/src/app/ehr/[patientId]/discharge/page.tsx`
 
-**Gaps:**
-- [N] pharmacy-service: auth/policy/audit readiness thin (medium)
-
 ## procurement-service
 
 - **Path:** `services/procurement-service`
@@ -1667,7 +1569,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/inventory/stock-management/page.tsx`
 
 **Gaps:**
-- [N] procurement-service: auth/policy/audit readiness thin (medium)
 - [O] procurement-service: no automated tests detected (medium)
 
 ## product-registry-service
@@ -1694,14 +1595,11 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/lib/registry-service-module-refs.ts`
 - `ui/one-ui-shell/src/lib/routes.ts`
 
-**Gaps:**
-- [N] product-registry-service: auth/policy/audit readiness thin (medium)
-
 ## referral-service
 
 - **Path:** `services/referral-service`
 - **Domain:** platform-ops (integration)
-- **Product status:** mostly-real
+- **Product status:** real
 
 | # | Question | Answer |
 |---|----------|--------|
@@ -1713,7 +1611,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
 | 8 | UI without backend? | No |
-| 9 | Persists to DB? | No (0 migrations) |
+| 9 | Persists to DB? | Yes (1 migrations) |
 | 10 | Fixture-only flows? | No |
 
 **UI references (sample):**
@@ -1722,10 +1620,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/clinical-tools/page.tsx`
 - `ui/one-ui-shell/src/app/ehr/[patientId]/__tests__/coordination-journey.test.tsx`
 - `ui/one-ui-shell/src/app/ehr/[patientId]/consults/page.tsx`
-
-**Gaps:**
-- [I] referral-service: API routes without database migrations (medium)
-- [N] referral-service: auth/policy/audit readiness thin (medium)
 
 ## reporting-service
 
@@ -1753,14 +1647,11 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/data-intelligence/reports/page.tsx`
 - `ui/one-ui-shell/src/app/reports/page.tsx`
 
-**Gaps:**
-- [N] reporting-service: auth/policy/audit readiness thin (medium)
-
 ## rtc-gateway-service
 
 - **Path:** `services/rtc-gateway-service`
 - **Domain:** platform-ops (integration)
-- **Product status:** mostly-real
+- **Product status:** real
 
 | # | Question | Answer |
 |---|----------|--------|
@@ -1772,7 +1663,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
 | 8 | UI without backend? | No |
-| 9 | Persists to DB? | No (0 migrations) |
+| 9 | Persists to DB? | Yes (1 migrations) |
 | 10 | Fixture-only flows? | No |
 
 **UI references (sample):**
@@ -1781,9 +1672,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/clinical/control-tower/page.tsx`
 - `ui/one-ui-shell/src/app/communication/page.test.tsx`
 - `ui/one-ui-shell/src/app/communication/page.tsx`
-
-**Gaps:**
-- [N] rtc-gateway-service: auth/policy/audit readiness thin (medium)
 
 ## rules-service
 
@@ -1811,9 +1699,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/clinical-tools/page.tsx`
 - `ui/one-ui-shell/src/app/clinical-tools/rules/page.tsx`
 
-**Gaps:**
-- [N] rules-service: auth/policy/audit readiness thin (medium)
-
 ## scheduling-service
 
 - **Path:** `services/scheduling-service`
@@ -1830,7 +1715,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
 | 8 | UI without backend? | No |
-| 9 | Persists to DB? | No (0 migrations) |
+| 9 | Persists to DB? | Yes (1 migrations) |
 | 10 | Fixture-only flows? | No |
 
 **UI references (sample):**
@@ -1839,11 +1724,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/scheduling/page.test.tsx`
 - `ui/one-ui-shell/src/app/scheduling/page.tsx`
 - `ui/one-ui-shell/src/app/scheduling/today/page.tsx`
-
-**Gaps:**
-- [I] scheduling-service: API routes without database migrations (medium)
-- [N] scheduling-service: auth/policy/audit readiness thin (medium)
-- [O] scheduling-service: no automated tests detected (medium)
 
 ## schema-registry-service
 
@@ -1893,9 +1773,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/admin/beds/page.test.tsx`
 - `ui/one-ui-shell/src/app/admin/beds/page.tsx`
 
-**Gaps:**
-- [N] search-service: auth/policy/audit readiness thin (medium)
-
 ## security-hardening-service
 
 - **Path:** `services/security-hardening-service`
@@ -1943,9 +1820,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/lib/shareSlipPublic.ts`
 - `ui/one-ui-shell/src/lib/sidecar-retirement-ledger-v2.ts`
 - `ui/one-ui-shell/src/lib/sidecar-retirement-ledger.ts`
-
-**Gaps:**
-- [N] share-slip-service: auth/policy/audit readiness thin (medium)
 
 ## simba-service
 
@@ -1999,9 +1873,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/ehr/[patientId]/encounter/[encounterId]/page.tsx`
 - `ui/one-ui-shell/src/app/ehr/[patientId]/growth-chart/page.tsx`
 
-**Gaps:**
-- [N] support-service: auth/policy/audit readiness thin (medium)
-
 ## surveillance-service
 
 - **Path:** `services/surveillance-service`
@@ -2028,9 +1899,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/public-health/publicHealthTabParams.test.ts`
 - `ui/one-ui-shell/src/app/public-health/surveillance/page.tsx`
 
-**Gaps:**
-- [N] surveillance-service: auth/policy/audit readiness thin (medium)
-
 ## tshepo-audit-service
 
 - **Path:** `services/tshepo-audit-service`
@@ -2055,7 +1923,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 
 **Gaps:**
 - [D] tshepo-audit-service: partial frontend/BFF wiring (medium)
-- [N] tshepo-audit-service: auth/policy/audit readiness thin (medium)
 
 ## tshepo-authz-service
 
@@ -2079,9 +1946,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 **UI references (sample):**
 - `ui/one-ui-shell/src/components/trust/BreakGlassRequestPanel.tsx`
 - `ui/one-ui-shell/src/lib/registry-service-module-refs.ts`
-
-**Gaps:**
-- [N] tshepo-authz-service: auth/policy/audit readiness thin (medium)
 
 ## tshepo-consent-service
 
@@ -2107,9 +1971,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/hooks/queries/useConsent.ts`
 - `ui/one-ui-shell/src/lib/registry-service-module-refs.ts`
 
-**Gaps:**
-- [N] tshepo-consent-service: auth/policy/audit readiness thin (medium)
-
 ## tshepo-identity-service
 
 - **Path:** `services/tshepo-identity-service`
@@ -2134,7 +1995,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 
 **Gaps:**
 - [D] tshepo-identity-service: partial frontend/BFF wiring (medium)
-- [N] tshepo-identity-service: auth/policy/audit readiness thin (medium)
 
 ## tshepo-keys-service
 
@@ -2158,9 +2018,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 **UI references (sample):**
 - `ui/one-ui-shell/src/app/admin/keys/page.tsx`
 - `ui/one-ui-shell/src/lib/registry-service-module-refs.ts`
-
-**Gaps:**
-- [N] tshepo-keys-service: auth/policy/audit readiness thin (medium)
 
 ## tshepo-offline-service
 
@@ -2186,7 +2043,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 
 **Gaps:**
 - [D] tshepo-offline-service: partial frontend/BFF wiring (medium)
-- [N] tshepo-offline-service: auth/policy/audit readiness thin (medium)
 
 ## tshepo-service
 
@@ -2214,9 +2070,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/developer/api-catalog/page.tsx`
 - `ui/one-ui-shell/src/app/developer/sandbox/page.tsx`
 
-**Gaps:**
-- [N] tshepo-service: auth/policy/audit readiness thin (medium)
-
 ## tuso-service
 
 - **Path:** `services/tuso-service`
@@ -2242,9 +2095,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/scheduling/page.tsx`
 - `ui/one-ui-shell/src/app/tuso/page.tsx`
 - `ui/one-ui-shell/src/components/facility/FacilityDigitalReadinessOrchestrationPanel.tsx`
-
-**Gaps:**
-- [N] tuso-service: auth/policy/audit readiness thin (medium)
 
 ## ubomi-service
 
@@ -2272,9 +2122,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/config/serviceBranding.ts`
 - `ui/one-ui-shell/src/hooks/queries/useUbomiRegistry.ts`
 
-**Gaps:**
-- [N] ubomi-service: auth/policy/audit readiness thin (medium)
-
 ## varapi-service
 
 - **Path:** `services/varapi-service`
@@ -2301,9 +2148,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/home/page.tsx`
 - `ui/one-ui-shell/src/app/id-services/page.tsx`
 
-**Gaps:**
-- [N] varapi-service: auth/policy/audit readiness thin (medium)
-
 ## vito-service
 
 - **Path:** `services/vito-service`
@@ -2329,9 +2173,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/citizen/id-recovery/page.tsx`
 - `ui/one-ui-shell/src/app/citizen/page.tsx`
 - `ui/one-ui-shell/src/app/collaboration/access/page.tsx`
-
-**Gaps:**
-- [N] vito-service: auth/policy/audit readiness thin (medium)
 
 ## wellness-service
 
@@ -2385,9 +2226,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/ehr/[patientId]/consults/page.tsx`
 - `ui/one-ui-shell/src/app/finance/billing/[id]/page.tsx`
 
-**Gaps:**
-- [N] workflow-service: auth/policy/audit readiness thin (medium)
-
 ## workforce-governance-service
 
 - **Path:** `services/workforce-governance-service`
@@ -2413,9 +2251,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/lib/administration-governance/onboard-options.ts`
 - `ui/one-ui-shell/src/lib/administration-governance/surfaces.ts`
 - `ui/one-ui-shell/src/lib/administration-governance/tiles.ts`
-
-**Gaps:**
-- [N] workforce-governance-service: auth/policy/audit readiness thin (medium)
 
 ## vashandi-workforce-service
 
@@ -2445,7 +2280,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 
 **Gaps:**
 - [C] vashandi-workforce-service: no matched OpenAPI contract (medium)
-- [N] vashandi-workforce-service: auth/policy/audit readiness thin (medium)
 
 ## zibo-service
 
@@ -2472,7 +2306,4 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/registry/terminology/[id]/page.tsx`
 - `ui/one-ui-shell/src/app/registry/terminology/page.tsx`
 - `ui/one-ui-shell/src/config/serviceBranding.ts`
-
-**Gaps:**
-- [N] zibo-service: auth/policy/audit readiness thin (medium)
 

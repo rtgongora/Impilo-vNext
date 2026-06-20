@@ -1,6 +1,6 @@
 # Product Truth — Service Inventory
 
-> Generated: 2026-06-20T10:28:53.343Z
+> Generated: 2026-06-20T11:02:04.418Z
 > Scanner: `scripts/completeness/generate-product-truth.mjs`
 > Total services: **92** | Libraries: **12** | UI workspaces: **24**
 
@@ -9,8 +9,8 @@
 | Status | Count |
 |--------|------:|
 | internal-only | 24 |
-| mostly-real | 31 |
-| real | 36 |
+| mostly-real | 29 |
+| real | 38 |
 | deprecated | 1 |
 
 ## Service inventory
@@ -81,11 +81,11 @@
 | pharmacy-service | clinical | real | real | real | real | real | real | real | real |
 | procurement-service | enterprise | real | real | real | real | real | absent | absent | mostly-real |
 | product-registry-service | registry | real | real | real | real | real | absent | real | mostly-real |
-| referral-service | integration | absent | real | real | real | real | real | real | mostly-real |
+| referral-service | integration | real | real | real | real | real | real | real | real |
 | reporting-service | data | real | real | real | real | real | real | real | real |
-| rtc-gateway-service | integration | absent | real | real | real | real | real | real | mostly-real |
+| rtc-gateway-service | integration | real | real | real | real | real | real | real | real |
 | rules-service | clinical | real | real | real | real | real | real | real | real |
-| scheduling-service | clinical | absent | real | real | real | real | absent | absent | mostly-real |
+| scheduling-service | clinical | real | real | real | real | real | absent | real | mostly-real |
 | schema-registry-service | integration | real | real | real | absent | thin | absent | real | internal-only |
 | search-service | data | real | real | real | real | real | real | real | real |
 | security-hardening-service | integration | real | real | real | absent | thin | absent | real | internal-only |

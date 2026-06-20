@@ -1,6 +1,6 @@
 # Product Truth — Cross-Service Cohesion Validation
 
-> Generated: 2026-06-20T10:28:53.343Z
+> Generated: 2026-06-20T11:02:04.418Z
 
 End-to-end journey validation scaffold. Each journey must pass: identity context → BFF → domain services → persistence → UI refresh.
 
@@ -11,7 +11,7 @@ End-to-end journey validation scaffold. Each journey must pass: identity context
 | facility-workplace-context | tuso-service, indawo-service, experience-bff | review | Weakest link: real / real / mostly-real |
 | registry-to-shr | vito-service, butano-service, pct-service | review | Weakest link: real / mostly-real / real |
 | orders-inventory-labs-imaging | oros-service, inventory-service, pacs-adapter-service, pharmacy-service | review | Weakest link: real / real / internal-only / real |
-| telemedicine-to-pct | rtc-gateway-service, pct-service, live-service | review | Weakest link: mostly-real / real / real |
+| telemedicine-to-pct | rtc-gateway-service, pct-service, live-service | review | Weakest link: real / real / real |
 | learning-to-provider-registry | learning-service, varapi-service | review | Weakest link: real / real |
 | costing-billing-payments | costing-engine-service, mushex-service, coverage-service | review | Weakest link: real / mostly-real / real |
 | facility-licensing-workspace | tuso-service, indawo-service, credential-verification-service | review | Weakest link: real / real / real |

@@ -1,6 +1,6 @@
 # Service Completion Blueprints
 
-> Generated: 2026-06-20T10:28:53.343Z
+> Generated: 2026-06-20T11:02:04.418Z
 > End-to-end product expectation per service for mature vNext.
 
 Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and tests required.
@@ -1491,7 +1491,7 @@ Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and
 
 **Product names:** Referral
 **Plane/domain:** integration / platform-ops
-**Current status:** mostly-real
+**Current status:** real
 
 ### Primary personas
 - Operators and domain users for platform-ops plane capabilities
@@ -1549,7 +1549,7 @@ Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and
 
 **Product names:** Rtc Gateway
 **Plane/domain:** integration / platform-ops
-**Current status:** mostly-real
+**Current status:** real
 
 ### Primary personas
 - Operators and domain users for platform-ops plane capabilities
