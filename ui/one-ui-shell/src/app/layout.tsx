@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Providers } from "@/providers/Providers";
 import "@/styles/globals.css";
 
+// Preview blast-radius validation marker (2026-06-20): targeted-deploy frontend-only probe.
+
 export const metadata: Metadata = {
   title: "Impilo — Health Operating System",
   description: "One Health Operating System — Experience Platform",
