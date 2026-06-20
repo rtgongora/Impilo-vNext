@@ -4,6 +4,25 @@ server:
 spring:
   application:
     name: rtc-gateway-service
+  datasource:
+    url: ${RTC_DB_URL:jdbc:postgresql://localhost:5432/impilo_rtc}
+    username: ${RTC_DB_USER:impilo}
+    password: ${RTC_DB_PASSWORD:impilo}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        default_schema: rtc
+  flyway:
+    enabled: true
+    schemas: rtc
+    default-schema: rtc
+
+impilo:
+  security:
+    disable-oauth-for-tests: false
 
 management:
   endpoints:
@@ -21,6 +40,8 @@ springdoc:
     path: /swagger-ui.html
 
 rtc:
+  outbox:
+    poll-interval-ms: ${RTC_OUTBOX_POLL_MS:2000}
   gateway:
     provider: ${RTC_PROVIDER:LIVEKIT}
     fail-closed: ${RTC_FAIL_CLOSED:true}

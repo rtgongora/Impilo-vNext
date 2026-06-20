@@ -10,6 +10,7 @@ import zw.gov.mohcc.impilo.rtc.model.RtcParticipantTokenRequest;
 import zw.gov.mohcc.impilo.rtc.model.RtcSessionProvisionRequest;
 import zw.gov.mohcc.impilo.rtc.model.RtcSessionRecord;
 import zw.gov.mohcc.impilo.rtc.model.RtcSessionResponse;
+import zw.gov.mohcc.impilo.rtc.persistence.RtcSessionPersistence;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -21,17 +22,20 @@ import java.util.UUID;
 public class RtcGatewayService {
     private final RtcGatewayProperties properties;
     private final LiveKitTokenService tokenService;
-    private final RtcSessionStore store;
+    private final RtcSessionPersistence sessions;
+    private final RtcOutboxPublisher outboxPublisher;
     private final MeterRegistry meterRegistry;
     private final RestTemplate restTemplate = new RestTemplate();
 
     public RtcGatewayService(RtcGatewayProperties properties,
                              LiveKitTokenService tokenService,
-                             RtcSessionStore store,
+                             RtcSessionPersistence sessions,
+                             RtcOutboxPublisher outboxPublisher,
                              MeterRegistry meterRegistry) {
         this.properties = properties;
         this.tokenService = tokenService;
-        this.store = store;
+        this.sessions = sessions;
+        this.outboxPublisher = outboxPublisher;
         this.meterRegistry = meterRegistry;
     }
 
@@ -62,7 +66,8 @@ public class RtcGatewayService {
                     Instant.now(),
                     Instant.now()
             );
-            store.save(record);
+            sessions.save(record);
+            outboxPublisher.append("RtcSession", record.id(), "RTC_SESSION_PROVISIONED", sessionPayload(record));
             meterRegistry.counter("impilo_rtc_session_provisioned_total", "provider", provider()).increment();
             return toResponse(record, token);
         } catch (RuntimeException ex) {
@@ -74,13 +79,13 @@ public class RtcGatewayService {
     }
 
     public RtcSessionResponse get(String sessionId) {
-        RtcSessionRecord record = store.get(sessionId)
+        RtcSessionRecord record = sessions.findById(sessionId)
                 .orElseThrow(() -> new RtcNotFoundException("RTC session not found"));
         return toResponse(record, null);
     }
 
     public RtcSessionResponse issueToken(String sessionId, RtcParticipantTokenRequest request) {
-        RtcSessionRecord record = store.get(sessionId)
+        RtcSessionRecord record = sessions.findById(sessionId)
                 .orElseThrow(() -> new RtcNotFoundException("RTC session not found"));
         LiveKitTokenService.TokenResult token = tokenService.issueParticipantToken(record.roomName(), request.participant());
         meterRegistry.counter("impilo_rtc_token_issued_total", "provider", record.provider()).increment();
@@ -99,17 +104,18 @@ public class RtcGatewayService {
         out.put("livekitConfigured", livekitConfigured);
         out.put("productionReady", productionReady);
         out.put("serverUrl", serverUrl());
-        out.put("activeSessions", store.size());
+        out.put("activeSessions", sessions.countAll());
         return out;
     }
 
     public RtcSessionResponse end(String sessionId) {
-        RtcSessionRecord record = store.get(sessionId)
+        RtcSessionRecord record = sessions.findById(sessionId)
                 .orElseThrow(() -> new RtcNotFoundException("RTC session not found"));
         if (!properties.getGateway().isDevModeEnabled() && properties.getLivekit().isEnabled()) {
             deleteLiveKitRoom(record.roomName());
         }
-        RtcSessionRecord ended = store.save(record.withStatus("ENDED"));
+        RtcSessionRecord ended = sessions.save(record.withStatus("ENDED"));
+        outboxPublisher.append("RtcSession", ended.id(), "RTC_SESSION_ENDED", sessionPayload(ended));
         meterRegistry.counter("impilo_rtc_session_ended_total", "provider", ended.provider()).increment();
         return toResponse(ended, null);
     }
@@ -279,6 +285,18 @@ public class RtcGatewayService {
             return "TREATMENT";
         }
         return value.trim().replace('-', '_').toUpperCase(Locale.ROOT);
+    }
+
+    private Map<String, Object> sessionPayload(RtcSessionRecord record) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("tenantId", record.tenantId());
+        payload.put("status", record.status());
+        payload.put("roomName", record.roomName());
+        payload.put("patientId", record.patientId());
+        payload.put("providerId", record.providerId());
+        payload.put("encounterId", record.encounterId());
+        payload.put("referralId", record.referralId());
+        return payload;
     }
 
     private String classifyFailure(Throwable ex) {

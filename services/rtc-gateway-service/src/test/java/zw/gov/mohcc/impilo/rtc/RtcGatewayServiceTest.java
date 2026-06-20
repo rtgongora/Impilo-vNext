@@ -1,11 +1,13 @@
 package zw.gov.mohcc.impilo.rtc;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import zw.gov.mohcc.impilo.rtc.model.RtcParticipant;
 import zw.gov.mohcc.impilo.rtc.model.RtcParticipantTokenRequest;
 import zw.gov.mohcc.impilo.rtc.model.RtcSessionProvisionRequest;
 import zw.gov.mohcc.impilo.rtc.model.RtcSessionResponse;
+import zw.gov.mohcc.impilo.rtc.persistence.InMemoryRtcSessionPersistence;
 
 import java.util.Map;
 
@@ -14,15 +16,34 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
 
 class RtcGatewayServiceTest {
 
-    @Test
-    void provisionsDevModeRoomWithoutLiveKitSecrets() {
+    private InMemoryRtcSessionPersistence sessions;
+    private RtcOutboxPublisher outboxPublisher;
+    private RtcGatewayService service;
+
+    @BeforeEach
+    void setUp() {
+        sessions = new InMemoryRtcSessionPersistence();
+        outboxPublisher = mock(RtcOutboxPublisher.class);
+        doNothing().when(outboxPublisher).append(anyString(), anyString(), anyString(), any());
         RtcGatewayProperties props = properties();
         props.getGateway().setDevModeEnabled(true);
-        RtcGatewayService service = new RtcGatewayService(props, new LiveKitTokenService(props), new RtcSessionStore(), new SimpleMeterRegistry());
+        service = new RtcGatewayService(
+                props,
+                new LiveKitTokenService(props),
+                sessions,
+                outboxPublisher,
+                new SimpleMeterRegistry());
+    }
 
+    @Test
+    void provisionsDevModeRoomWithoutLiveKitSecrets() {
         RtcSessionResponse response = service.provision(request());
 
         assertEquals("LIVEKIT", response.provider());
@@ -36,16 +57,14 @@ class RtcGatewayServiceTest {
     void failsClosedWhenLiveKitDisabledOutsideDevMode() {
         RtcGatewayProperties props = properties();
         props.getGateway().setDevModeEnabled(false);
-        RtcGatewayService service = new RtcGatewayService(props, new LiveKitTokenService(props), new RtcSessionStore(), new SimpleMeterRegistry());
+        RtcGatewayService strictService = new RtcGatewayService(
+                props, new LiveKitTokenService(props), sessions, outboxPublisher, new SimpleMeterRegistry());
 
-        assertThrows(IllegalStateException.class, () -> service.provision(request()));
+        assertThrows(IllegalStateException.class, () -> strictService.provision(request()));
     }
 
     @Test
     void issuesAdditionalParticipantTokenForProvisionedRoom() {
-        RtcGatewayProperties props = properties();
-        props.getGateway().setDevModeEnabled(true);
-        RtcGatewayService service = new RtcGatewayService(props, new LiveKitTokenService(props), new RtcSessionStore(), new SimpleMeterRegistry());
         service.provision(request());
 
         RtcSessionResponse token = service.issueToken(
@@ -58,11 +77,6 @@ class RtcGatewayServiceTest {
 
     @Test
     void opsHealthReportsDevPreviewBoundaryWithoutSecrets() {
-        RtcGatewayProperties props = properties();
-        props.getGateway().setDevModeEnabled(true);
-        RtcSessionStore store = new RtcSessionStore();
-        RtcGatewayService service = new RtcGatewayService(
-                props, new LiveKitTokenService(props), store, new SimpleMeterRegistry());
         service.provision(request());
 
         Map<String, Object> health = service.opsHealth();
@@ -81,7 +95,8 @@ class RtcGatewayServiceTest {
         RtcGatewayProperties props = properties();
         props.getGateway().setDevModeEnabled(true);
         props.getGateway().setRequireConsentReferenceForMedia(true);
-        RtcGatewayService service = new RtcGatewayService(props, new LiveKitTokenService(props), new RtcSessionStore(), new SimpleMeterRegistry());
+        RtcGatewayService strictService = new RtcGatewayService(
+                props, new LiveKitTokenService(props), sessions, outboxPublisher, new SimpleMeterRegistry());
 
         RtcSessionProvisionRequest request = new RtcSessionProvisionRequest(
                 "tenant-1",
@@ -98,7 +113,7 @@ class RtcGatewayServiceTest {
                 Map.of()
         );
 
-        assertThrows(IllegalArgumentException.class, () -> service.provision(request));
+        assertThrows(IllegalArgumentException.class, () -> strictService.provision(request));
     }
 
     private RtcGatewayProperties properties() {
