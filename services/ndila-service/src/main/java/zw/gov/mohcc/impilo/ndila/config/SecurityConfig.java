@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.ndila.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,8 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import zw.gov.mohcc.impilo.shared.auth.TrustContextFilter;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -78,10 +81,16 @@ public class SecurityConfig {
     private boolean allowAnonymous;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public TrustContextFilter trustContextFilter(ObjectMapper objectMapper) {
+        return new TrustContextFilter(objectMapper);
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, TrustContextFilter trustContextFilter) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(trustContextFilter, UsernamePasswordAuthenticationFilter.class);
 
         if (jwtDecoder != null) {
             log.info("Ndila JWT validation ENABLED — enforcing RBAC");

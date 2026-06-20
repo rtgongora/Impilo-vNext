@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.coverage.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,17 +11,25 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import zw.gov.mohcc.impilo.shared.auth.TrustContextFilter;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
     @Bean
+    public TrustContextFilter trustContextFilter(ObjectMapper objectMapper) {
+        return new TrustContextFilter(objectMapper);
+    }
+
+    @Bean
     @Order(1)
     @Profile("test")
-    public SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain testSecurityFilterChain(HttpSecurity http, TrustContextFilter trustContextFilter) throws Exception {
         http.csrf(csrf -> csrf.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(trustContextFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
         return http.build();
     }
@@ -30,9 +39,11 @@ public class SecurityConfig {
     @Profile("!test")
     public SecurityFilterChain productionSecurityFilterChain(
             HttpSecurity http,
+            TrustContextFilter trustContextFilter,
             @Value("${coverage.security.oauth2-enabled:true}") boolean oauth2Enabled) throws Exception {
         http.csrf(csrf -> csrf.disable())
-                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(trustContextFilter, UsernamePasswordAuthenticationFilter.class);
         if (oauth2Enabled) {
             http.authorizeHttpRequests(auth -> auth
                             .requestMatchers(
