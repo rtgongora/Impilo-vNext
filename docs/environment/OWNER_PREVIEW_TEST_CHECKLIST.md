@@ -46,6 +46,21 @@ Expert-user validation for the **Dev Preview Sandbox** (not formal staging).
 | 26 | Impilo Live — resources tab in live room | | Host adds resource; attendees see list (no 404 on `/resources`) |
 | 27 | Impilo Live — replay after event ends | | Status `PUBLISHED_REPLAY`; replay page tracks watch minutes |
 
+### Vashandi workforce preview personas (2026-06)
+
+Preview-only fixtures in `contracts/trust/seeds/preview-vashandi-session-fixtures.json`. Password for all listed personas: `Vashandi@2024!`. Login page shows a **PREVIEW — Vashandi validation sign-in** panel when `NEXT_PUBLIC_IMPILO_ENV=full-preview`.
+
+| Persona | Email | Expected Vashandi surfaces |
+|---------|-------|----------------------------|
+| National Workforce Admin | vashandi.national@mohcc.gov.zw | Dashboard, workforce registry, analytics |
+| Facility Workforce Manager | vashandi.facility@mohcc.gov.zw | Facility staff, rosters, assignments, analytics |
+| Ordinary Worker | vashandi.worker@mohcc.gov.zw | My roster, my attendance, leave/availability only |
+| HSC Workforce User | vashandi.hsc@mohcc.gov.zw | HSC postings, workforce registry |
+| Access Reviewer | vashandi.reviewer@mohcc.gov.zw | Access review, analytics |
+| Negative control (citizen) | tatenda.moyo@example.com | No Vashandi nav or routes |
+
+Smoke script: `bash scripts/test/smoke-vashandi-preview-personas.sh` (after BFF/Keycloak redeploy applies fixture wiring).
+
 ### Gap-closure journeys (2026-06-08)
 
 | # | Check | Pass? | Notes |

@@ -61,6 +61,8 @@ apply_seed zibo   "$SEED_DIR/06-seed-zibo.sql"   "ZIBO terminology" "SELECT coun
 apply_seed pct    "$SEED_DIR/07-seed-pct.sql"    "PCT queue" "SELECT count(*) FROM pct_encounters;"
 apply_seed oros   "$SEED_DIR/08-seed-oros.sql"   "OROS orders" "SELECT count(*) FROM oros_orders;"
 apply_seed workforce_governance "$SEED_DIR/09-seed-workforce-governance.sql" "Workforce governance assignments" "SELECT count(*) FROM wgv_organisation WHERE organisation_code='MOHCC-NATIONAL';"
+apply_seed varapi "$SEED_DIR/10-seed-vashandi-preview-varapi.sql" "Vashandi preview VARAPI providers" "SELECT count(*) FROM varapi.provider WHERE provider_public_id='PROV-ZW-VASH-001';"
+apply_seed workforce_governance "$SEED_DIR/11-seed-vashandi-preview-wgv.sql" "Vashandi preview WGV personas" "SELECT count(*) FROM wgv_assignment WHERE id='f5000000-0000-4000-8000-000000000101'::uuid;"
 
 echo ""
 echo "Verification:"

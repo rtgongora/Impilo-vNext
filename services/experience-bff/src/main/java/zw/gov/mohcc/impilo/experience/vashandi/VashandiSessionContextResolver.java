@@ -127,12 +127,15 @@ public class VashandiSessionContextResolver {
             }
             if (normalized.contains("access_reviewer")) {
                 visible.add("vashandi.access_review");
+                visible.add("vashandi.analytics");
             }
             if (normalized.contains("hsc_workforce")) {
                 visible.add("vashandi.hsc_postings");
+                visible.add("vashandi.workforce_registry");
             }
             if (normalized.contains("national_workforce")) {
                 visible.add("vashandi.workforce_registry");
+                visible.add("vashandi.analytics");
             }
             if (normalized.contains("organisation_workforce")) {
                 visible.add("vashandi.organisation_workforce");

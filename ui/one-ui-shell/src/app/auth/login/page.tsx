@@ -36,6 +36,17 @@ import { useConsentStore, CURRENT_CONSENT_VERSION } from "@/hooks/useConsentStor
 import { useWorkModeStore } from "@/hooks/useWorkModeStore";
 import { buildPostLoginResolvingPath } from "@/lib/resolve-post-login-destination";
 
+const PREVIEW_VASHANDI_PASSWORD = "Vashandi@2024!";
+
+const PREVIEW_VASHANDI_ACCOUNTS = [
+  { email: "vashandi.national@mohcc.gov.zw", label: "National Admin", desc: "Workforce registry + analytics", color: "bg-indigo-50 border-indigo-200 text-indigo-800" },
+  { email: "vashandi.facility@mohcc.gov.zw", label: "Facility Manager", desc: "Rosters + assignments", color: "bg-sky-50 border-sky-200 text-sky-800" },
+  { email: "vashandi.worker@mohcc.gov.zw", label: "Ordinary Worker", desc: "My roster + attendance", color: "bg-emerald-50 border-emerald-200 text-emerald-800" },
+  { email: "vashandi.hsc@mohcc.gov.zw", label: "HSC Workforce", desc: "HSC postings", color: "bg-violet-50 border-violet-200 text-violet-800" },
+  { email: "vashandi.reviewer@mohcc.gov.zw", label: "Access Reviewer", desc: "Access review + analytics", color: "bg-amber-50 border-amber-200 text-amber-800" },
+  { email: "tatenda.moyo@example.com", label: "Citizen (negative)", desc: "No Vashandi access", color: "bg-primary-soft border-primary/25 text-primary-hover" },
+] as const;
+
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -114,6 +125,45 @@ export default function LoginPage() {
       }
     );
   }
+
+  function handleQuickLogin(email: string, quickPassword: string) {
+    setError(null);
+    setIdentifier(email);
+    setPassword(quickPassword);
+    login.mutate(
+      { email, password: quickPassword },
+      {
+        onSuccess: (res) => {
+          const attrs = res.data.attributes;
+          const { token, user: u } = attrs;
+          setAuth(
+            {
+              id: u.id,
+              healthId: (u as { healthId?: string }).healthId ?? u.id,
+              email: u.email,
+              displayName: u.displayName,
+              roles: u.roles,
+              actorType: u.actorType as "PROVIDER" | "OPERATOR" | "CITIZEN" | "SYSTEM",
+              assuranceLevel: "VERIFIED",
+              providerActivated: false,
+              loginMethod: "email",
+            },
+            token,
+            null,
+            (attrs as Record<string, unknown>).expiresAt as string | undefined,
+          );
+          useWorkModeStore.getState().deriveFromRoles(u.roles);
+          useConsentStore.getState().hydrate(u.id);
+          router.push(buildPostLoginResolvingPath(returnTo));
+        },
+        onError: () => {
+          setError(`Login failed for ${email}. Check Keycloak is running.`);
+        },
+      },
+    );
+  }
+
+  const showPreviewVashandiQuickLogin = process.env.NEXT_PUBLIC_IMPILO_ENV === "full-preview";
 
   return (
     <AuthLayout>
@@ -293,41 +343,7 @@ export default function LoginPage() {
                 key={acct.email}
                 type="button"
                 disabled={login.isPending}
-                onClick={() => {
-                  setError(null);
-                  setIdentifier(acct.email);
-                  setPassword("test123");
-                  login.mutate(
-                    { email: acct.email, password: "test123" },
-                    {
-                      onSuccess: (res) => {
-                        const attrs = res.data.attributes;
-                        const { token, user: u } = attrs;
-                        setAuth(
-                          {
-                            id: u.id,
-                            email: u.email,
-                            displayName: u.displayName,
-                            roles: u.roles,
-                            actorType: u.actorType as "PROVIDER" | "OPERATOR" | "CITIZEN" | "SYSTEM",
-                            assuranceLevel: "VERIFIED",
-                            providerActivated: false,
-              loginMethod: "email",
-                          },
-                          token,
-                          null,
-                          (attrs as Record<string, unknown>).expiresAt as string | undefined,
-                        );
-                        useWorkModeStore.getState().deriveFromRoles(u.roles);
-                        useConsentStore.getState().hydrate(u.id);
-                        router.push(buildPostLoginResolvingPath(returnTo));
-                      },
-                      onError: () => {
-                        setError(`Login failed for ${acct.email}. Check Keycloak is running.`);
-                      },
-                    },
-                  );
-                }}
+                onClick={() => handleQuickLogin(acct.email, "test123")}
                 className={`text-left px-3 py-2 rounded-lg border text-xs transition-colors hover:shadow-sm ${acct.color} ${login.isPending ? "opacity-50" : ""}`}
               >
                 <p className="font-semibold">{acct.label}</p>
@@ -337,6 +353,31 @@ export default function LoginPage() {
           </div>
           <p className="text-[10px] text-amber-400 text-center mt-2">
             All test accounts use password: test123
+          </p>
+        </div>
+      )}
+
+      {showPreviewVashandiQuickLogin && (
+        <div className="mt-6 pt-4 border-t-2 border-dashed border-violet-300">
+          <p className="text-xs font-semibold text-violet-700 text-center mb-3">
+            PREVIEW — Vashandi validation sign-in
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            {PREVIEW_VASHANDI_ACCOUNTS.map((acct) => (
+              <button
+                key={acct.email}
+                type="button"
+                disabled={login.isPending}
+                onClick={() => handleQuickLogin(acct.email, PREVIEW_VASHANDI_PASSWORD)}
+                className={`text-left px-3 py-2 rounded-lg border text-xs transition-colors hover:shadow-sm ${acct.color} ${login.isPending ? "opacity-50" : ""}`}
+              >
+                <p className="font-semibold">{acct.label}</p>
+                <p className="opacity-70">{acct.desc}</p>
+              </button>
+            ))}
+          </div>
+          <p className="text-[10px] text-violet-500 text-center mt-2">
+            Preview Vashandi personas use password: {PREVIEW_VASHANDI_PASSWORD}
           </p>
         </div>
       )}

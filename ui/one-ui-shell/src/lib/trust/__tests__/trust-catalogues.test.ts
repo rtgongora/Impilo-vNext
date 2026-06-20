@@ -1,3 +1,4 @@
+import previewVashandiFixtures from "../../../../../../contracts/trust/seeds/preview-vashandi-session-fixtures.json";
 import { describe, expect, it } from "vitest";
 import {
   loadTrustCatalogueBundles,
@@ -903,5 +904,68 @@ describe("Health Service Commission workforce governance", () => {
     expect(visible).toContain("vashandi.my_roster");
     expect(visible).toContain("vashandi.my_attendance");
     expect(visible).not.toContain("vashandi.access_review");
+  });
+
+  it("preview Vashandi session fixtures resolve expected workspaces", () => {
+    const fixtures = previewVashandiFixtures as {
+      personas: Array<{
+        label: string;
+        healthId: string;
+        providerPublicId: string;
+        roleTemplateId: string;
+        wgvOrganisationCode: string;
+        expectedVisibleVashandiWorkspaces: string[];
+      }>;
+      negativeControl: {
+        healthId: string;
+        expectedVisibleVashandiWorkspaces: string[];
+      };
+    };
+
+    const orgTypeByCode: Record<string, string> = {
+      "MOHCC-NATIONAL": "sovereign_public_owner",
+      "MOHCC-HCH": "public_facility",
+      "MOHCC-HSC": "health_service_commission",
+    };
+
+    for (const persona of fixtures.personas) {
+      const organisationType = orgTypeByCode[persona.wgvOrganisationCode];
+      const contract = resolveSessionExperienceContract({
+        authenticated: true,
+        healthId: persona.healthId,
+        providerWorkerId: persona.providerPublicId,
+        professionalTruth: { providerWorkerStatus: "active" },
+        publicSectorEmployment: {
+          employmentStatus: "active",
+          employerOrganisationType: organisationType,
+        },
+        organisation: {
+          organisationId: `org-${persona.wgvOrganisationCode}`,
+          organisationType,
+          organisationName: persona.wgvOrganisationCode,
+          activeOrganisationAssignment: true,
+        },
+        workAssignments: [
+          {
+            assignmentId: `A-${persona.providerPublicId}`,
+            subjectId: persona.providerPublicId,
+            subjectType: "provider_worker",
+            contextType: "facility_clinical",
+            assignmentType: "facility_assignment",
+            assignmentStatus: "active",
+            roleTemplateId: persona.roleTemplateId,
+          },
+        ],
+      });
+      for (const workspace of persona.expectedVisibleVashandiWorkspaces) {
+        expect(contract.visibleVashandiWorkspaces ?? [], persona.label).toContain(workspace);
+      }
+    }
+
+    const citizen = resolveSessionExperienceContract({
+      authenticated: true,
+      healthId: fixtures.negativeControl.healthId,
+    });
+    expect(citizen.visibleVashandiWorkspaces ?? []).toEqual([]);
   });
 });

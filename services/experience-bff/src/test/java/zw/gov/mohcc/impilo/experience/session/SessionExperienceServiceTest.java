@@ -106,4 +106,36 @@ class SessionExperienceServiceTest {
         assertNull(policy.get("previewProductOwnerAccess"));
         assertEquals("1.3.0", policy.get("contractVersion"));
     }
+
+    @Test
+    void buildExperienceContract_readsRoleTemplateIdFromAssignmentExtensionJson() throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode provider = mapper.createObjectNode();
+        provider.put("providerId", "PROV-ZW-VASH-002");
+        provider.put("status", "ACTIVE");
+        when(varapiClient.getProviderByHealthId("c0000000-0000-4000-8000-000000000102")).thenReturn(provider);
+
+        ArrayNode assignments = mapper.createArrayNode();
+        ObjectNode assignment = mapper.createObjectNode();
+        assignment.put("organisationId", "f2000000-0000-4000-8000-000000000001");
+        assignment.put("status", "ACTIVE");
+        assignment.put("extensionJson", "{\"roleTemplateId\":\"vashandi_facility_workforce_manager\"}");
+        assignments.add(assignment);
+        when(workforceGovernanceClient.searchAssignments("PROVIDER", "PROV-ZW-VASH-002", "ACTIVE"))
+                .thenReturn(assignments);
+
+        ObjectNode organisation = mapper.createObjectNode();
+        organisation.put("organisationType", "PUBLIC_FACILITY");
+        organisation.put("name", "Harare Central Hospital");
+        organisation.put("status", "ACTIVE");
+        when(workforceGovernanceClient.getJson("/v1/internal/governance/organisations/f2000000-0000-4000-8000-000000000001"))
+                .thenReturn(organisation);
+
+        Map<String, Object> contract = service.buildExperienceContract(
+                "c0000000-0000-4000-8000-000000000102", "email", null, false);
+
+        @SuppressWarnings("unchecked")
+        List<String> roleTemplates = (List<String>) contract.get("roleTemplates");
+        assertEquals(List.of("vashandi_facility_workforce_manager"), roleTemplates);
+    }
 }

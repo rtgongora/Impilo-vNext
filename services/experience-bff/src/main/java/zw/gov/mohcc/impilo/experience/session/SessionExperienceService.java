@@ -159,6 +159,7 @@ public class SessionExperienceService {
                 Map<String, Object> row = objectMapper.convertValue(n, Map.class);
                 row.putIfAbsent("assignmentStatus", "active");
                 row.putIfAbsent("contextType", "facility_clinical");
+                enrichAssignmentRoleTemplate(row);
                 out.add(row);
             }
             return out;
@@ -430,6 +431,25 @@ public class SessionExperienceService {
         }
         String value = node.get(field).asText();
         return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private void enrichAssignmentRoleTemplate(Map<String, Object> row) {
+        if (stringVal(row.get("roleTemplateId")) != null) {
+            return;
+        }
+        String extensionJson = stringVal(row.get("extensionJson"));
+        if (extensionJson == null || extensionJson.isBlank()) {
+            return;
+        }
+        try {
+            JsonNode ext = objectMapper.readTree(extensionJson);
+            String roleTemplateId = jsonText(ext, "roleTemplateId");
+            if (roleTemplateId != null) {
+                row.put("roleTemplateId", roleTemplateId);
+            }
+        } catch (Exception ignored) {
+            // Invalid extension payload — leave roleTemplates empty for this assignment.
+        }
     }
 
     private static String resolveProviderPublicId(JsonNode node) {

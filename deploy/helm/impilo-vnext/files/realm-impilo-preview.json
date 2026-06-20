@@ -1050,6 +1050,97 @@
         "DISPENSER",
         "QUEUE_MANAGER"
       ]
+    },
+    {
+      "username": "vashandi.national",
+      "email": "vashandi.national@mohcc.gov.zw",
+      "firstName": "Tariro",
+      "lastName": "Mhlanga",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "health_id": ["c0000000-0000-4000-8000-000000000101"],
+        "actor_id": ["c0000000-0000-4000-8000-000000000101"],
+        "actor_type": ["PROVIDER"]
+      },
+      "credentials": [{ "type": "password", "value": "Vashandi@2024!", "temporary": false }],
+      "realmRoles": ["CLINICIAN", "ADMIN"]
+    },
+    {
+      "username": "vashandi.facility",
+      "email": "vashandi.facility@mohcc.gov.zw",
+      "firstName": "Rutendo",
+      "lastName": "Chidza",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "health_id": ["c0000000-0000-4000-8000-000000000102"],
+        "actor_id": ["c0000000-0000-4000-8000-000000000102"],
+        "actor_type": ["PROVIDER"],
+        "facility_id": ["1"]
+      },
+      "credentials": [{ "type": "password", "value": "Vashandi@2024!", "temporary": false }],
+      "realmRoles": ["FACILITY_ADMIN", "CLINICIAN"]
+    },
+    {
+      "username": "vashandi.worker",
+      "email": "vashandi.worker@mohcc.gov.zw",
+      "firstName": "Farai",
+      "lastName": "Dube",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "health_id": ["c0000000-0000-4000-8000-000000000103"],
+        "actor_id": ["c0000000-0000-4000-8000-000000000103"],
+        "actor_type": ["PROVIDER"]
+      },
+      "credentials": [{ "type": "password", "value": "Vashandi@2024!", "temporary": false }],
+      "realmRoles": ["NURSE", "CLINICIAN"]
+    },
+    {
+      "username": "vashandi.hsc",
+      "email": "vashandi.hsc@mohcc.gov.zw",
+      "firstName": "Chipo",
+      "lastName": "Moyo",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "health_id": ["c0000000-0000-4000-8000-000000000104"],
+        "actor_id": ["c0000000-0000-4000-8000-000000000104"],
+        "actor_type": ["PROVIDER"]
+      },
+      "credentials": [{ "type": "password", "value": "Vashandi@2024!", "temporary": false }],
+      "realmRoles": ["ADMIN", "CLINICIAN"]
+    },
+    {
+      "username": "vashandi.reviewer",
+      "email": "vashandi.reviewer@mohcc.gov.zw",
+      "firstName": "Brian",
+      "lastName": "Mutasa",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "health_id": ["c0000000-0000-4000-8000-000000000105"],
+        "actor_id": ["c0000000-0000-4000-8000-000000000105"],
+        "actor_type": ["PROVIDER"]
+      },
+      "credentials": [{ "type": "password", "value": "Vashandi@2024!", "temporary": false }],
+      "realmRoles": ["ADMIN", "CLINICIAN"]
+    },
+    {
+      "username": "citizen.moyo",
+      "email": "tatenda.moyo@example.com",
+      "firstName": "Tatenda",
+      "lastName": "Moyo",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "health_id": ["b0000000-0000-4000-8000-000000000001"],
+        "actor_id": ["b0000000-0000-4000-8000-000000000001"],
+        "actor_type": ["CITIZEN"]
+      },
+      "credentials": [{ "type": "password", "value": "Vashandi@2024!", "temporary": false }],
+      "realmRoles": ["CITIZEN"]
     }
   ],
   "accessTokenLifespanForImplicitFlow": 900,

@@ -1,0 +1,134 @@
+{
+  "version": "1.0.0",
+  "catalogueId": "preview-vashandi-session-fixtures",
+  "displayName": "Preview Vashandi Session Experience Fixtures",
+  "description": "Canonical preview personas for live Vashandi validation. Authority resolves through VITO/VARAPI/WGV only — no allowlist bypass.",
+  "tenantId": "00000000-0000-4000-8000-000000000001",
+  "previewPassword": "Vashandi@2024!",
+  "negativeControl": {
+    "label": "Citizen (no Vashandi)",
+    "email": "tatenda.moyo@example.com",
+    "healthId": "b0000000-0000-4000-8000-000000000001",
+    "expectedVisibleVashandiWorkspaces": []
+  },
+  "personas": [
+    {
+      "id": "vashandi-national-admin",
+      "label": "Vashandi National Workforce Admin",
+      "email": "vashandi.national@mohcc.gov.zw",
+      "healthId": "c0000000-0000-4000-8000-000000000101",
+      "providerPublicId": "PROV-ZW-VASH-001",
+      "wgvOrganisationCode": "MOHCC-NATIONAL",
+      "roleTemplateId": "vashandi_national_workforce_admin",
+      "expectedVisibleVashandiWorkspaces": [
+        "vashandi.dashboard",
+        "vashandi.my_roster",
+        "vashandi.my_attendance",
+        "vashandi.leave_availability",
+        "vashandi.workforce_registry",
+        "vashandi.analytics"
+      ],
+      "smokeRoutes": [
+        "/work/vashandi",
+        "/work/vashandi/workforce",
+        "/work/vashandi/analytics"
+      ]
+    },
+    {
+      "id": "vashandi-facility-manager",
+      "label": "Facility Workforce Manager",
+      "email": "vashandi.facility@mohcc.gov.zw",
+      "healthId": "c0000000-0000-4000-8000-000000000102",
+      "providerPublicId": "PROV-ZW-VASH-002",
+      "wgvOrganisationCode": "MOHCC-HCH",
+      "roleTemplateId": "vashandi_facility_workforce_manager",
+      "expectedVisibleVashandiWorkspaces": [
+        "vashandi.dashboard",
+        "vashandi.my_roster",
+        "vashandi.my_attendance",
+        "vashandi.leave_availability",
+        "vashandi.facility_staff",
+        "vashandi.rosters",
+        "vashandi.assignments",
+        "vashandi.analytics"
+      ],
+      "smokeRoutes": [
+        "/work/vashandi",
+        "/work/vashandi/workforce",
+        "/work/vashandi/assignments",
+        "/work/vashandi/rosters",
+        "/work/vashandi/attendance",
+        "/work/vashandi/leave-availability",
+        "/work/vashandi/analytics"
+      ]
+    },
+    {
+      "id": "vashandi-ordinary-worker",
+      "label": "Ordinary Worker",
+      "email": "vashandi.worker@mohcc.gov.zw",
+      "healthId": "c0000000-0000-4000-8000-000000000103",
+      "providerPublicId": "PROV-ZW-VASH-003",
+      "wgvOrganisationCode": "MOHCC-NATIONAL",
+      "roleTemplateId": "vashandi_self_service_worker",
+      "expectedVisibleVashandiWorkspaces": [
+        "vashandi.dashboard",
+        "vashandi.my_roster",
+        "vashandi.my_attendance",
+        "vashandi.leave_availability"
+      ],
+      "smokeRoutes": [
+        "/work/vashandi",
+        "/work/vashandi/rosters",
+        "/work/vashandi/attendance",
+        "/work/vashandi/leave-availability"
+      ],
+      "blockedRoutes": [
+        "/work/vashandi/access-review",
+        "/work/vashandi/assignments"
+      ]
+    },
+    {
+      "id": "vashandi-hsc-user",
+      "label": "HSC Workforce User",
+      "email": "vashandi.hsc@mohcc.gov.zw",
+      "healthId": "c0000000-0000-4000-8000-000000000104",
+      "providerPublicId": "PROV-ZW-VASH-004",
+      "wgvOrganisationCode": "MOHCC-HSC",
+      "roleTemplateId": "vashandi_hsc_workforce_admin",
+      "expectedVisibleVashandiWorkspaces": [
+        "vashandi.dashboard",
+        "vashandi.my_roster",
+        "vashandi.my_attendance",
+        "vashandi.leave_availability",
+        "vashandi.hsc_postings",
+        "vashandi.workforce_registry"
+      ],
+      "smokeRoutes": [
+        "/work/vashandi",
+        "/work/vashandi/workforce"
+      ]
+    },
+    {
+      "id": "vashandi-access-reviewer",
+      "label": "Workforce Access Reviewer",
+      "email": "vashandi.reviewer@mohcc.gov.zw",
+      "healthId": "c0000000-0000-4000-8000-000000000105",
+      "providerPublicId": "PROV-ZW-VASH-005",
+      "wgvOrganisationCode": "MOHCC-NATIONAL",
+      "roleTemplateId": "vashandi_access_reviewer",
+      "expectedVisibleVashandiWorkspaces": [
+        "vashandi.dashboard",
+        "vashandi.my_roster",
+        "vashandi.my_attendance",
+        "vashandi.leave_availability",
+        "vashandi.access_review",
+        "vashandi.analytics"
+      ],
+      "smokeRoutes": [
+        "/work/vashandi",
+        "/work/vashandi/access-review",
+        "/work/vashandi/analytics"
+      ]
+    }
+  ]
+}
