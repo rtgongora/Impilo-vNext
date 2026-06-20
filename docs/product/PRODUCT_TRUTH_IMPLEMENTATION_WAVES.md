@@ -41,9 +41,20 @@ See git history on `claude/product-truth-recovery` for F/G/N/O closure details.
 
 **Remaining (Wave 3+):** 69 gaps — **E: 43** (unwired feature pages), **D: 26** (other partial wiring).
 
-## Wave 3 — Cross-service cohesion (planned)
+## Wave 3 — Cross-service cohesion (in progress)
 
-Validate journeys in [product-truth-cross-service-cohesion.md](../audits/product-truth-cross-service-cohesion.md).
+**Result:** **14/14 journeys pass** cohesion evaluation with golden-thread tests
+
+| Item | Outcome |
+|------|---------|
+| **Journey registry** | `scripts/completeness/cross-service-journeys.mjs` — 14 canonical multi-service journeys |
+| **Scanner** | `generate-product-truth.mjs` evaluates pass / needs-work / missing-test per journey |
+| **Golden-thread tests** | 9 new cross-service vitest files under `ui/one-ui-shell/src/lib/__tests__/` |
+| **Gate** | `scripts/guard/check-cross-service-cohesion.sh` (advisory; `COHESION_GATE_BLOCKING=1` to block) |
+
+See [product-truth-cross-service-cohesion.md](../audits/product-truth-cross-service-cohesion.md).
+
+**Remaining:** 69 product-truth gaps (E: 43, D: 26); runtime E2E validation of journeys on preview sandbox.
 
 ## Definition of done (per service)
 

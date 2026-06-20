@@ -34,6 +34,11 @@ import {
   authzDimFromReadiness,
 } from './product-truth-gaps.mjs';
 import { scanAuthzAuditReadiness } from './authz-audit-readiness.mjs';
+import {
+  CROSS_SERVICE_JOURNEYS,
+  evaluateCrossServiceCohesion,
+  summarizeCohesion,
+} from './cross-service-journeys.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '../..');
@@ -1017,6 +1022,9 @@ function main() {
     ...frontendSurfaces.flatMap((s) => s.gaps || []),
   ]);
 
+  const cohesionEvaluations = evaluateCrossServiceCohesion({ services }, REPO_ROOT);
+  const cohesionSummary = summarizeCohesion(cohesionEvaluations);
+
   const data = {
     generatedAt: new Date().toISOString(),
     branch,
@@ -1029,28 +1037,14 @@ function main() {
       contractCount: walkFiles(CONTRACTS_OPENAPI, (p) => p.endsWith('.yaml')).length,
       byProductStatus,
       gapCounts: aggregateGapCounts(allGaps),
+      crossServiceCohesion: cohesionSummary,
     },
     services,
     libraries,
     uiWorkspaces,
     frontendSurfaces,
     mobileSurfaces,
-    crossServiceJourneys: [
-      'identity-login-context',
-      'provider-workforce-context',
-      'facility-workplace-context',
-      'registry-to-shr',
-      'orders-inventory-labs-imaging',
-      'telemedicine-to-pct',
-      'learning-to-provider-registry',
-      'costing-billing-payments',
-      'facility-licensing-workspace',
-      'public-health-surveillance',
-      'blood-services-chain',
-      'maps-geospatial-logistics',
-      'marketplace-procurement-claims',
-      'admin-governance-onboarding',
-    ],
+    crossServiceJourneys: cohesionEvaluations,
   };
 
   fs.mkdirSync(path.dirname(OUT_JSON), { recursive: true });
@@ -1086,41 +1080,29 @@ function main() {
 }
 
 function renderCohesionReport(data) {
+  const summary = data.summary?.crossServiceCohesion || summarizeCohesion(data.crossServiceJourneys || []);
   const lines = [
     '# Product Truth — Cross-Service Cohesion Validation',
     '',
     `> Generated: ${data.generatedAt}`,
     '',
-    'End-to-end journey validation scaffold. Each journey must pass: identity context → BFF → domain services → persistence → UI refresh.',
+    'End-to-end journey validation. Each journey must pass: identity context → BFF → domain services → persistence → UI refresh.',
     '',
-    '| Journey | Services involved | Status | Notes |',
-    '|---------|-------------------|--------|-------|',
+    `**Summary:** ${summary.pass}/${summary.total} pass | ${summary.needsWork} needs-work | ${summary.missingTest} missing-test`,
+    '',
+    '| Journey | Services involved | Status | Golden-thread tests | Notes |',
+    '|---------|-------------------|--------|---------------------|-------|',
   ];
 
-  const journeyMap = {
-    'identity-login-context': ['tshepo-authz-service', 'tshepo-identity-service', 'vito-service', 'experience-bff'],
-    'provider-workforce-context': ['varapi-service', 'vashandi-workforce-service', 'workforce-governance-service'],
-    'facility-workplace-context': ['tuso-service', 'indawo-service', 'experience-bff'],
-    'registry-to-shr': ['vito-service', 'butano-service', 'pct-service'],
-    'orders-inventory-labs-imaging': ['oros-service', 'inventory-service', 'pacs-adapter-service', 'pharmacy-service'],
-    'telemedicine-to-pct': ['rtc-gateway-service', 'pct-service', 'live-service'],
-    'learning-to-provider-registry': ['learning-service', 'varapi-service'],
-    'costing-billing-payments': ['costing-engine-service', 'mushex-service', 'coverage-service'],
-    'facility-licensing-workspace': ['tuso-service', 'indawo-service', 'credential-verification-service'],
-    'public-health-surveillance': ['surveillance-service', 'campaigns-service', 'ndila-service'],
-    'blood-services-chain': ['oros-service', 'inventory-service', 'pct-service'],
-    'maps-geospatial-logistics': ['ndila-service', 'nhume-service', 'dispatch-service'],
-    'marketplace-procurement-claims': ['msika-service', 'msika-flow-service', 'procurement-service', 'mushex-service'],
-    'admin-governance-onboarding': ['tshepo-authz-service', 'data-access-governance-service', 'experience-bff'],
-  };
+  for (const row of data.crossServiceJourneys || []) {
+    lines.push(
+      `| ${row.id} | ${row.services.join(', ')} | **${row.status}** | ${(row.testsFound || []).join(', ') || '—'} | ${row.notes} |`,
+    );
+  }
 
-  for (const [journey, svcIds] of Object.entries(journeyMap)) {
-    const statuses = svcIds.map((id) => {
-      const s = data.services.find((x) => x.id === id);
-      return s ? s.productStatus : 'missing';
-    });
-    const weakest = statuses.includes('thin-or-stubbed') || statuses.includes('partial') ? 'needs-work' : 'review';
-    lines.push(`| ${journey} | ${svcIds.join(', ')} | ${weakest} | Weakest link: ${statuses.join(' / ')} |`);
+  lines.push('', '## Journey definitions', '');
+  for (const journey of CROSS_SERVICE_JOURNEYS) {
+    lines.push(`- **${journey.id}**: UI ${journey.uiRoutes.join(', ')} → BFF ${journey.bffPaths.join(', ')}`);
   }
 
   return lines.join('\n') + '\n';

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-20T11:50:37.471Z",
+  "generatedAt": "2026-06-20T12:18:44.897Z",
   "branch": "claude/product-truth-recovery",
   "registryDrift": {
     "unregisteredModules": [],
@@ -27,6 +27,15 @@
         "low": 26
       },
       "total": 69
+    },
+    "crossServiceCohesion": {
+      "total": 14,
+      "byStatus": {
+        "pass": 14
+      },
+      "pass": 14,
+      "needsWork": 0,
+      "missingTest": 0
     }
   },
   "services": [
@@ -582,7 +591,7 @@
         "contractOperations": 21,
         "contractViolations": 0,
         "bffClients": 1,
-        "uiReferences": 12,
+        "uiReferences": 13,
         "mobileReferences": 1,
         "tests": 1
       },
@@ -612,6 +621,7 @@
         "ui/one-ui-shell/src/config/serviceBranding.test.ts",
         "ui/one-ui-shell/src/config/serviceBranding.ts",
         "ui/one-ui-shell/src/hooks/queries/useFhirInterop.ts",
+        "ui/one-ui-shell/src/lib/__tests__/registry-to-shr-golden-thread.test.ts",
         "ui/one-ui-shell/src/lib/registry-service-module-refs.ts",
         "ui/one-ui-shell/src/lib/routes.ts",
         "ui/one-ui-shell/src/lib/sidecar-retirement-ledger.ts",
@@ -2406,7 +2416,7 @@
         "contractOperations": 32,
         "contractViolations": 0,
         "bffClients": 13,
-        "uiReferences": 45,
+        "uiReferences": 46,
         "mobileReferences": 7,
         "tests": 2
       },
@@ -2650,7 +2660,7 @@
         "contractOperations": 1537,
         "contractViolations": 0,
         "bffClients": 0,
-        "uiReferences": 155,
+        "uiReferences": 160,
         "mobileReferences": 52,
         "tests": 161
       },
@@ -4661,7 +4671,7 @@
         "contractOperations": 28,
         "contractViolations": 0,
         "bffClients": 3,
-        "uiReferences": 17,
+        "uiReferences": 18,
         "mobileReferences": 4,
         "tests": 4
       },
@@ -4701,7 +4711,8 @@
         "ui/one-ui-shell/src/components/shell/ShellStartMenu.tsx",
         "ui/one-ui-shell/src/hooks/queries/useHealthOsLauncher.ts",
         "ui/one-ui-shell/src/hooks/queries/useMarketplace.ts",
-        "ui/one-ui-shell/src/lib/__tests__/marketplace-order-golden-thread.test.ts"
+        "ui/one-ui-shell/src/lib/__tests__/marketplace-order-golden-thread.test.ts",
+        "ui/one-ui-shell/src/lib/__tests__/marketplace-procurement-claims-golden-thread.test.ts"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/screens/marketplace/HealthOsAppsScreen.tsx",
@@ -4776,7 +4787,7 @@
         "contractOperations": 84,
         "contractViolations": 0,
         "bffClients": 7,
-        "uiReferences": 27,
+        "uiReferences": 28,
         "mobileReferences": 1,
         "tests": 9
       },
@@ -5665,7 +5676,7 @@
         "contractOperations": 43,
         "contractViolations": 0,
         "bffClients": 4,
-        "uiReferences": 40,
+        "uiReferences": 41,
         "mobileReferences": 15,
         "tests": 1
       },
@@ -6209,7 +6220,7 @@
         "contractOperations": 58,
         "contractViolations": 0,
         "bffClients": 11,
-        "uiReferences": 52,
+        "uiReferences": 53,
         "mobileReferences": 10,
         "tests": 7
       },
@@ -6432,7 +6443,7 @@
         "contractOperations": 120,
         "contractViolations": 0,
         "bffClients": 39,
-        "uiReferences": 412,
+        "uiReferences": 413,
         "mobileReferences": 95,
         "tests": 12
       },
@@ -6682,7 +6693,7 @@
         "contractOperations": 52,
         "contractViolations": 0,
         "bffClients": 11,
-        "uiReferences": 52,
+        "uiReferences": 53,
         "mobileReferences": 7,
         "tests": 9
       },
@@ -8750,7 +8761,7 @@
         "contractOperations": 27,
         "contractViolations": 0,
         "bffClients": 1,
-        "uiReferences": 38,
+        "uiReferences": 41,
         "mobileReferences": 6,
         "tests": 6
       },
@@ -9194,7 +9205,7 @@
         "contractOperations": 90,
         "contractViolations": 0,
         "bffClients": 15,
-        "uiReferences": 15,
+        "uiReferences": 16,
         "mobileReferences": 1,
         "tests": 13
       },
@@ -9242,6 +9253,7 @@
         "ui/one-ui-shell/src/features/core-transaction/types.ts",
         "ui/one-ui-shell/src/hooks/useTusoRegistry.ts",
         "ui/one-ui-shell/src/hooks/useTusoShellCompanion.ts",
+        "ui/one-ui-shell/src/lib/__tests__/facility-workplace-context-golden-thread.test.ts",
         "ui/one-ui-shell/src/lib/maturity.ts",
         "ui/one-ui-shell/src/lib/registry-service-module-refs.ts",
         "ui/one-ui-shell/src/lib/shell/app-registry.ts"
@@ -10069,7 +10081,7 @@
         "contractOperations": 35,
         "contractViolations": 0,
         "bffClients": 1,
-        "uiReferences": 35,
+        "uiReferences": 36,
         "mobileReferences": 8,
         "tests": 4
       },
@@ -10109,8 +10121,8 @@
         "ui/one-ui-shell/src/components/vashandi/VashandiFriendlyBlockedState.tsx",
         "ui/one-ui-shell/src/components/vashandi/VashandiShell.tsx",
         "ui/one-ui-shell/src/hooks/useVashandi.ts",
-        "ui/one-ui-shell/src/lib/administration-governance/access.ts",
-        "ui/one-ui-shell/src/lib/administration-governance/route-registry.ts"
+        "ui/one-ui-shell/src/lib/__tests__/provider-workforce-context-golden-thread.test.ts",
+        "ui/one-ui-shell/src/lib/administration-governance/access.ts"
       ],
       "mobilePaths": [
         "provider-app:apps/mobile/provider-app/src/screens/provider/ClinicalToolsScreen.tsx",
@@ -26784,19 +26796,441 @@
     }
   ],
   "crossServiceJourneys": [
-    "identity-login-context",
-    "provider-workforce-context",
-    "facility-workplace-context",
-    "registry-to-shr",
-    "orders-inventory-labs-imaging",
-    "telemedicine-to-pct",
-    "learning-to-provider-registry",
-    "costing-billing-payments",
-    "facility-licensing-workspace",
-    "public-health-surveillance",
-    "blood-services-chain",
-    "maps-geospatial-logistics",
-    "marketplace-procurement-claims",
-    "admin-governance-onboarding"
+    {
+      "id": "identity-login-context",
+      "services": [
+        "tshepo-authz-service",
+        "tshepo-identity-service",
+        "vito-service",
+        "experience-bff"
+      ],
+      "goldenThreadTests": [
+        "identity-login-context-golden-thread.test.ts"
+      ],
+      "uiRoutes": [
+        "/auth/login/provider-id",
+        "/registry"
+      ],
+      "bffPaths": [
+        "/internal/v1/auth",
+        "/internal/v1/identity"
+      ],
+      "status": "pass",
+      "serviceStatuses": [
+        "mostly-real",
+        "real",
+        "real",
+        "mostly-real"
+      ],
+      "testsFound": [
+        "identity-login-context-golden-thread.test.ts"
+      ],
+      "testsMissing": [],
+      "notes": "services: mostly-real / real / real / mostly-real; tests: 1"
+    },
+    {
+      "id": "provider-workforce-context",
+      "services": [
+        "varapi-service",
+        "vashandi-workforce-service",
+        "workforce-governance-service"
+      ],
+      "goldenThreadTests": [
+        "provider-workforce-context-golden-thread.test.ts"
+      ],
+      "uiRoutes": [
+        "/work/vashandi/workforce",
+        "/registry/providers"
+      ],
+      "bffPaths": [
+        "/internal/v1/vashandi",
+        "/internal/v1/registry"
+      ],
+      "status": "pass",
+      "serviceStatuses": [
+        "real",
+        "real",
+        "mostly-real"
+      ],
+      "testsFound": [
+        "provider-workforce-context-golden-thread.test.ts"
+      ],
+      "testsMissing": [],
+      "notes": "services: real / real / mostly-real; tests: 1"
+    },
+    {
+      "id": "facility-workplace-context",
+      "services": [
+        "tuso-service",
+        "indawo-service",
+        "experience-bff"
+      ],
+      "goldenThreadTests": [
+        "facility-workplace-context-golden-thread.test.ts"
+      ],
+      "uiRoutes": [
+        "/facility",
+        "/home"
+      ],
+      "bffPaths": [
+        "/internal/v1/facilities"
+      ],
+      "status": "pass",
+      "serviceStatuses": [
+        "real",
+        "real",
+        "mostly-real"
+      ],
+      "testsFound": [
+        "facility-workplace-context-golden-thread.test.ts"
+      ],
+      "testsMissing": [],
+      "notes": "services: real / real / mostly-real; tests: 1"
+    },
+    {
+      "id": "registry-to-shr",
+      "services": [
+        "vito-service",
+        "butano-service",
+        "pct-service"
+      ],
+      "goldenThreadTests": [
+        "registry-to-shr-golden-thread.test.ts"
+      ],
+      "uiRoutes": [
+        "/registry",
+        "/ehr"
+      ],
+      "bffPaths": [
+        "/internal/v1/identity",
+        "/internal/v1/fhir",
+        "/internal/v1/patients"
+      ],
+      "status": "pass",
+      "serviceStatuses": [
+        "real",
+        "mostly-real",
+        "real"
+      ],
+      "testsFound": [
+        "registry-to-shr-golden-thread.test.ts"
+      ],
+      "testsMissing": [],
+      "notes": "services: real / mostly-real / real; tests: 1"
+    },
+    {
+      "id": "orders-inventory-labs-imaging",
+      "services": [
+        "oros-service",
+        "inventory-service",
+        "pacs-adapter-service",
+        "pharmacy-service"
+      ],
+      "goldenThreadTests": [
+        "orders-inventory-labs-imaging-golden-thread.test.ts",
+        "imaging-order-result-golden-thread.test.ts"
+      ],
+      "uiRoutes": [
+        "/lab",
+        "/pharmacy",
+        "/imaging"
+      ],
+      "bffPaths": [
+        "/internal/v1/lab",
+        "/internal/v1/pharmacy",
+        "/internal/v1/imaging"
+      ],
+      "status": "pass",
+      "serviceStatuses": [
+        "real",
+        "real",
+        "internal-only",
+        "real"
+      ],
+      "testsFound": [
+        "orders-inventory-labs-imaging-golden-thread.test.ts",
+        "imaging-order-result-golden-thread.test.ts"
+      ],
+      "testsMissing": [],
+      "notes": "services: real / real / internal-only / real; tests: 2"
+    },
+    {
+      "id": "telemedicine-to-pct",
+      "services": [
+        "rtc-gateway-service",
+        "pct-service",
+        "live-service"
+      ],
+      "goldenThreadTests": [
+        "telemedicine-encounter-golden-thread.test.ts"
+      ],
+      "uiRoutes": [
+        "/telemedicine/session"
+      ],
+      "bffPaths": [
+        "/internal/v1/teleconsult",
+        "/internal/v1/encounters"
+      ],
+      "status": "pass",
+      "serviceStatuses": [
+        "real",
+        "real",
+        "real"
+      ],
+      "testsFound": [
+        "telemedicine-encounter-golden-thread.test.ts"
+      ],
+      "testsMissing": [],
+      "notes": "services: real / real / real; tests: 1"
+    },
+    {
+      "id": "learning-to-provider-registry",
+      "services": [
+        "learning-service",
+        "varapi-service"
+      ],
+      "goldenThreadTests": [
+        "fundo-learning-golden-thread.test.ts",
+        "provider-registry-onboarding-golden-thread.test.ts"
+      ],
+      "uiRoutes": [
+        "/learning",
+        "/registry/providers"
+      ],
+      "bffPaths": [
+        "/internal/v1/learning",
+        "/internal/v1/registry"
+      ],
+      "status": "pass",
+      "serviceStatuses": [
+        "real",
+        "real"
+      ],
+      "testsFound": [
+        "fundo-learning-golden-thread.test.ts",
+        "provider-registry-onboarding-golden-thread.test.ts"
+      ],
+      "testsMissing": [],
+      "notes": "services: real / real; tests: 2"
+    },
+    {
+      "id": "costing-billing-payments",
+      "services": [
+        "costing-engine-service",
+        "mushex-service",
+        "coverage-service"
+      ],
+      "goldenThreadTests": [
+        "payment-billing-claim-golden-thread.test.ts"
+      ],
+      "uiRoutes": [
+        "/finance/payer-ops",
+        "/coverage"
+      ],
+      "bffPaths": [
+        "/internal/v1/finance",
+        "/internal/v1/coverage"
+      ],
+      "status": "pass",
+      "serviceStatuses": [
+        "real",
+        "mostly-real",
+        "real"
+      ],
+      "testsFound": [
+        "payment-billing-claim-golden-thread.test.ts"
+      ],
+      "testsMissing": [],
+      "notes": "services: real / mostly-real / real; tests: 1"
+    },
+    {
+      "id": "facility-licensing-workspace",
+      "services": [
+        "tuso-service",
+        "indawo-service",
+        "credential-verification-service"
+      ],
+      "goldenThreadTests": [
+        "facility-context-selection-golden-thread.test.ts",
+        "credential-verification-golden-thread.test.ts"
+      ],
+      "uiRoutes": [
+        "/facility",
+        "/verify/credential"
+      ],
+      "bffPaths": [
+        "/internal/v1/facilities",
+        "/internal/v1/credential"
+      ],
+      "status": "pass",
+      "serviceStatuses": [
+        "real",
+        "real",
+        "real"
+      ],
+      "testsFound": [
+        "facility-context-selection-golden-thread.test.ts",
+        "credential-verification-golden-thread.test.ts"
+      ],
+      "testsMissing": [],
+      "notes": "services: real / real / real; tests: 2"
+    },
+    {
+      "id": "public-health-surveillance",
+      "services": [
+        "surveillance-service",
+        "campaigns-service",
+        "ndila-service"
+      ],
+      "goldenThreadTests": [
+        "surveillance-outbreak-golden-thread.test.ts"
+      ],
+      "uiRoutes": [
+        "/public-health"
+      ],
+      "bffPaths": [
+        "/internal/v1/public-health"
+      ],
+      "status": "pass",
+      "serviceStatuses": [
+        "real",
+        "real",
+        "real"
+      ],
+      "testsFound": [
+        "surveillance-outbreak-golden-thread.test.ts"
+      ],
+      "testsMissing": [],
+      "notes": "services: real / real / real; tests: 1"
+    },
+    {
+      "id": "blood-services-chain",
+      "services": [
+        "oros-service",
+        "inventory-service",
+        "pct-service"
+      ],
+      "goldenThreadTests": [
+        "blood-services-chain-golden-thread.test.ts",
+        "madi-golden-thread.test.ts"
+      ],
+      "uiRoutes": [
+        "/madi/orders",
+        "/madi/transfusion"
+      ],
+      "bffPaths": [
+        "/internal/v1/madi"
+      ],
+      "status": "pass",
+      "serviceStatuses": [
+        "real",
+        "real",
+        "real"
+      ],
+      "testsFound": [
+        "blood-services-chain-golden-thread.test.ts",
+        "madi-golden-thread.test.ts"
+      ],
+      "testsMissing": [],
+      "notes": "services: real / real / real; tests: 2"
+    },
+    {
+      "id": "maps-geospatial-logistics",
+      "services": [
+        "ndila-service",
+        "nhume-service",
+        "dispatch-service"
+      ],
+      "goldenThreadTests": [
+        "maps-geospatial-logistics-golden-thread.test.ts",
+        "dispatch-delivery-golden-thread.test.ts"
+      ],
+      "uiRoutes": [
+        "/nhume/map",
+        "/operations/dispatch"
+      ],
+      "bffPaths": [
+        "/internal/v1/nhume",
+        "/internal/v1/dispatch"
+      ],
+      "status": "pass",
+      "serviceStatuses": [
+        "real",
+        "real",
+        "real"
+      ],
+      "testsFound": [
+        "maps-geospatial-logistics-golden-thread.test.ts",
+        "dispatch-delivery-golden-thread.test.ts"
+      ],
+      "testsMissing": [],
+      "notes": "services: real / real / real; tests: 2"
+    },
+    {
+      "id": "marketplace-procurement-claims",
+      "services": [
+        "msika-service",
+        "msika-flow-service",
+        "procurement-service",
+        "mushex-service"
+      ],
+      "goldenThreadTests": [
+        "marketplace-procurement-claims-golden-thread.test.ts",
+        "marketplace-order-golden-thread.test.ts"
+      ],
+      "uiRoutes": [
+        "/marketplace",
+        "/marketplace/cart",
+        "/finance/payer-ops"
+      ],
+      "bffPaths": [
+        "/internal/v1/marketplace",
+        "/internal/v1/commerce",
+        "/internal/v1/finance"
+      ],
+      "status": "pass",
+      "serviceStatuses": [
+        "real",
+        "real",
+        "mostly-real",
+        "mostly-real"
+      ],
+      "testsFound": [
+        "marketplace-procurement-claims-golden-thread.test.ts",
+        "marketplace-order-golden-thread.test.ts"
+      ],
+      "testsMissing": [],
+      "notes": "services: real / real / mostly-real / mostly-real; tests: 2"
+    },
+    {
+      "id": "admin-governance-onboarding",
+      "services": [
+        "tshepo-authz-service",
+        "data-access-governance-service",
+        "experience-bff"
+      ],
+      "goldenThreadTests": [
+        "admin-governance-onboarding-golden-thread.test.ts"
+      ],
+      "uiRoutes": [
+        "/work/administration-governance",
+        "/work/administration-governance/access-requests"
+      ],
+      "bffPaths": [
+        "/internal/v1/admin/trust",
+        "/internal/v1/admin-governance"
+      ],
+      "status": "pass",
+      "serviceStatuses": [
+        "mostly-real",
+        "mostly-real",
+        "mostly-real"
+      ],
+      "testsFound": [
+        "admin-governance-onboarding-golden-thread.test.ts"
+      ],
+      "testsMissing": [],
+      "notes": "services: mostly-real / mostly-real / mostly-real; tests: 1"
+    }
   ]
 }
