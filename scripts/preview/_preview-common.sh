@@ -38,7 +38,7 @@ preview_branch() {
 }
 
 preview_dirty_files() {
-  git status --porcelain 2>/dev/null || true
+  git status --porcelain --untracked-files=no 2>/dev/null || true
 }
 
 preview_is_dirty() {
