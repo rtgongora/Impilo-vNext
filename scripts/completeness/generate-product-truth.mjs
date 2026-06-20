@@ -31,7 +31,9 @@ import {
   overallProductStatus,
   GAP_CATEGORIES,
   MOBILE_PARITY_REQUIRED,
+  authzDimFromReadiness,
 } from './product-truth-gaps.mjs';
+import { scanAuthzAuditReadiness } from './authz-audit-readiness.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '../..');
@@ -46,11 +48,15 @@ const CONTRACT_MATRIX = path.join(REPO_ROOT, 'reports/product/contract-implement
 
 const MOCK_STUB_PATTERNS = [
   { re: /mockData|fakeResponse|demoPatient|sampleData|fixtureData/gi, label: 'mock-data-var' },
-  { re: /BLOCKED_NOT_LIVE|NOT_LIVE_CAPABLE|coming soon|under construction|placeholder page/gi, label: 'placeholder-copy' },
-  { re: /JSON\.stringify\s*\(\s*\{/g, label: 'json-stringify-debug' },
+  { re: /coming soon|under construction|placeholder page/gi, label: 'placeholder-copy' },
+  { re: /<pre[^>]*>\s*\{JSON\.stringify/gi, label: 'json-debug-pre' },
+  { re: /\{[^}]*JSON\.stringify\s*\([^)]*\)[^}]*\}/g, label: 'json-stringify-render' },
   { re: /onClick=\{\(\)\s*=>\s*\{\s*\}\}/g, label: 'empty-onClick' },
   { re: /TODO:\s*implement/gi, label: 'todo-implement' },
 ];
+
+/** Production rail safety tokens — not UX mock/stub indicators. */
+const BACKEND_SAFETY_TOKENS = /BLOCKED_NOT_LIVE|NOT_LIVE_CAPABLE|BLOCKED_PRE_LIVE/g;
 
 /** Services reached via public URL or FHIR layer rather than BFF /internal/v1. */
 const DIRECT_PUBLIC_OR_FHIR = new Set([
@@ -133,10 +139,22 @@ function loadContractMatrix() {
   }
 }
 
-function scanMockStubHits(text, filePath) {
+function scanMockStubHits(text, filePath, options = {}) {
   const hits = [];
+  const fp = rel(filePath);
+  const isTest = /\/test\/|\.test\.|\.spec\.|Test\.java$|IT\.java$/i.test(fp);
   for (const { re, label } of MOCK_STUB_PATTERNS) {
-    if (re.test(text)) hits.push({ file: rel(filePath), pattern: label });
+    if (re.test(text)) {
+      if (options.backendOnly && label === 'placeholder-copy' && BACKEND_SAFETY_TOKENS.test(text)) {
+        re.lastIndex = 0;
+        continue;
+      }
+      if (isTest && (label === 'placeholder-copy' || label === 'mock-data-var')) {
+        re.lastIndex = 0;
+        continue;
+      }
+      hits.push({ file: fp, pattern: label });
+    }
     re.lastIndex = 0;
   }
   return hits;
@@ -225,14 +243,13 @@ function scanServiceModule(svc, contractMatrix, bffClientMap) {
 
   const mockStubHits = [];
   if (exists) {
-    walkFiles(modulePath, (p) => p.endsWith('.java')).slice(0, 200).forEach((f) => {
-      mockStubHits.push(...scanMockStubHits(readText(f), f));
+    walkFiles(modulePath, (p) => p.endsWith('.java') && !/\/test\/java\//.test(p)).slice(0, 200).forEach((f) => {
+      mockStubHits.push(...scanMockStubHits(readText(f), f, { backendOnly: true }));
     });
   }
 
-  const authzAuditStatus = svc.authz_audit_status || 'unknown';
-  const authzDim =
-    authzAuditStatus === 'wired' ? 'real' : authzAuditStatus === 'partial' ? 'thin' : 'absent';
+  const authzReadiness = exists ? scanAuthzAuditReadiness(modulePath, svc.id) : { status: 'absent', checks: {}, missing: ['missing-module'], isTrustPlane: false };
+  const authzDim = authzDimFromReadiness(authzReadiness);
 
   const dimensions = {
     database: triState(migrationCount, 0),
@@ -268,7 +285,9 @@ function scanServiceModule(svc, contractMatrix, bffClientMap) {
       frontendWiring: svc.frontend_wiring_status,
       apiContract: svc.api_contract_status,
       authzAudit: svc.authz_audit_status,
+      authzAuditCode: authzReadiness.status,
     },
+    authzReadiness,
     counts: {
       migrations: migrationCount,
       entities: entityCount,
@@ -371,11 +390,18 @@ function buildBffClientMap() {
 function resolveHookSignals(pageText, visited = new Set()) {
   const paths = new Set();
   const persist = { mutation: false, persistHint: false };
-  const hookImports = [...pageText.matchAll(/from\s+["']@\/hooks\/queries\/([^"']+)["']/g)].map((m) => m[1]);
+  const hookImports = [
+    ...pageText.matchAll(/from\s+["']@\/hooks\/(?:queries\/)?([^"']+)["']/g),
+    ...pageText.matchAll(/from\s+["']@\/lib\/([^"']+)["']/g),
+  ].map((m) => m[1]);
+
   for (const hookName of hookImports) {
     const candidates = [
       path.join(UI_SHELL, 'src/hooks/queries', `${hookName}.ts`),
       path.join(UI_SHELL, 'src/hooks/queries', `${hookName}.tsx`),
+      path.join(UI_SHELL, 'src/hooks', `${hookName}.ts`),
+      path.join(UI_SHELL, 'src/hooks', `${hookName}.tsx`),
+      path.join(UI_SHELL, 'src/lib', `${hookName}.ts`),
     ];
     for (const hookPath of candidates) {
       if (visited.has(hookPath) || !fs.existsSync(hookPath)) continue;
@@ -385,7 +411,22 @@ function resolveHookSignals(pageText, visited = new Set()) {
       for (const m of hookText.matchAll(/["'](\/api\/v1\/[^"']+)["']/g)) paths.add(m[1]);
       if (/useMutation|mutateAsync/.test(hookText)) persist.mutation = true;
       if (/invalidateQueries|refetch|onSuccess/.test(hookText)) persist.persistHint = true;
+      if (/buildSearchPath|apiClient\.(get|post|put|patch|delete)/.test(hookText)) {
+        paths.add('apiClient-dynamic');
+      }
     }
+  }
+  if (/citizenPortalApi|nhumeApi|credentialVerifyUrlForToken|apiClient\.(get|post|put|patch|delete)/.test(pageText)) {
+    paths.add('domain-client');
+  }
+  if (/fetch\s*\(\s*[`'"]\/internal\/v1\//.test(pageText)) {
+    paths.add('inline-bff-fetch');
+  }
+  if (/fetch\s*\(\s*[`'"]\/api\/v1\//.test(pageText)) {
+    paths.add('inline-gateway-fetch');
+  }
+  if (/setSubmitted|refreshWorkspace|refetch\s*\(|setRedeemSuccess|setResult\s*\(/.test(pageText)) {
+    persist.persistHint = true;
   }
   return { paths: [...paths], persist };
 }
@@ -455,7 +496,11 @@ function scanFrontendSurfaces() {
     const deadActionHints = exists ? (text.match(/onClick=\{\(\)\s*=>\s*\{\s*\}\}/g) || []) : [];
     const hardcodedDataHints = exists ? (text.match(/mockData|sampleData|hardcoded|demoPatient/gi) || []) : [];
     const allowlisted = isAllowlistedShellRoute(routePath);
-    const hasBacking = bffPaths.length > 0 || gatewayPaths.length > 0 || allowlisted;
+    const hasBacking =
+      bffPaths.filter((p) => p.startsWith('/')).length > 0 ||
+      gatewayPaths.length > 0 ||
+      bffPaths.some((p) => !p.startsWith('/')) ||
+      allowlisted;
 
     const surface = {
       path: routePath,

@@ -99,6 +99,13 @@ export function overallProductStatus(dimensions, svc) {
   return 'unknown';
 }
 
+export function authzDimFromReadiness(readiness) {
+  if (!readiness) return 'absent';
+  if (readiness.status === 'wired') return 'real';
+  if (readiness.status === 'partial') return 'thin';
+  return 'absent';
+}
+
 /**
  * @param {object} svc - service scan record
  * @returns {Array<{category: string, severity: string, description: string, impactScore: number}>}
@@ -222,11 +229,13 @@ export function classifyServiceGaps(svc) {
       impactScore: 2,
     });
   }
-  if (d.authzAudit === 'absent' || d.authzAudit === 'thin') {
+  if (hasBackend && (d.authzAudit === 'absent' || d.authzAudit === 'thin')) {
+    const missing = svc.authzReadiness?.missing?.filter((m) => m !== 'missing-module') ?? [];
+    const detail = missing.length ? missing.join(', ') : d.authzAudit;
     gaps.push({
       category: 'N',
       severity: d.controllers === 'real' ? 'medium' : 'low',
-      description: `${id}: auth/policy/audit readiness ${d.authzAudit}`,
+      description: `${id}: auth/policy/audit gaps (${detail})`,
       impactScore: d.controllers === 'real' ? 2 : 1,
     });
   }
@@ -253,7 +262,14 @@ export function classifyServiceGaps(svc) {
 export function classifySurfaceGaps(surface) {
   const gaps = [];
   if (surface.allowlistedShell) return gaps;
-  if (surface.mockStubHits?.length > 0) {
+  const cosmeticJsonOnly =
+    surface.mockStubHits?.length > 0 &&
+    surface.mockStubHits.every((h) => h.pattern === 'json-stringify-render' || h.pattern === 'json-debug-pre') &&
+    ((surface.bffPaths?.length ?? 0) > 0 ||
+      (surface.gatewayPaths?.length ?? 0) > 0 ||
+      (surface.backingSignals?.length ?? 0) > 0) &&
+    surface.readsRealData;
+  if (surface.mockStubHits?.length > 0 && !cosmeticJsonOnly) {
     gaps.push({ category: 'F', severity: 'high', description: `${surface.path}: mock/stub data`, impactScore: 3 });
   }
   const hasBacking =
