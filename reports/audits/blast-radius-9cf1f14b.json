@@ -1,0 +1,34 @@
+{
+  "generated_at": "2026-06-20T09:01:25.885Z",
+  "base_ref": "fbaf3670",
+  "head_commit": "9cf1f14b8980013ad009773632c5944a25328c54",
+  "short_sha": "9cf1f14b",
+  "changed_file_count": 3,
+  "changed_files": [
+    "scripts/preview/_preview-common.sh",
+    "scripts/preview/_validation-timing.sh",
+    "ui/one-ui-shell/src/app/layout.tsx"
+  ],
+  "areas": [
+    "frontend"
+  ],
+  "change_class": "B",
+  "change_classes": [
+    "B"
+  ],
+  "full_boot_required": false,
+  "targeted_deploy_allowed": true,
+  "direct_services": [
+    "one-ui-shell"
+  ],
+  "expanded_services": [
+    "one-ui-shell"
+  ],
+  "images_to_build": [
+    "one-ui-shell"
+  ],
+  "pipeline_only": "change-safety,frontend,parity-web,security,static",
+  "expansion_threshold": 10,
+  "refusal_reasons": [],
+  "rationale": []
+}
