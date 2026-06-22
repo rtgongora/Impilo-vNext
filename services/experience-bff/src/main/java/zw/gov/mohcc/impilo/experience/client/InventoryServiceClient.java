@@ -138,7 +138,16 @@ public class InventoryServiceClient {
     }
 
     public JsonNode createRequisition(JsonNode body) {
-        return exchangeJson(HttpMethod.POST, baseUrl + "/v1/requisitions", body);
+        return extractData(exchangeJson(HttpMethod.POST, baseUrl + "/v1/requisitions", body));
+    }
+
+    public JsonNode listRequisitions(UUID facilityId, int page, int size) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/requisitions")
+                .queryParam("facilityId", facilityId)
+                .queryParam("page", page)
+                .queryParam("size", size)
+                .toUriString();
+        return extractData(getJsonEntity(url));
     }
 
     public JsonNode submitRequisition(UUID id) {
@@ -180,9 +189,26 @@ public class InventoryServiceClient {
     }
 
     private JsonNode getJson(String url) {
+        return getJsonEntity(url).getBody();
+    }
+
+    private ResponseEntity<JsonNode> getJsonEntity(String url) {
         log.debug("Inventory GET {}", url);
-        ResponseEntity<JsonNode> r = restTemplate.exchange(url, HttpMethod.GET, emptyEntity(), JsonNode.class);
-        return r.getBody();
+        return restTemplate.exchange(url, HttpMethod.GET, emptyEntity(), JsonNode.class);
+    }
+
+    private JsonNode extractData(JsonNode body) {
+        if (body != null && body.has("data")) {
+            return body.get("data");
+        }
+        return body;
+    }
+
+    private JsonNode extractData(ResponseEntity<JsonNode> response) {
+        if (response.getBody() == null) {
+            return null;
+        }
+        return extractData(response.getBody());
     }
 
     private JsonNode exchangeJson(HttpMethod method, String url, JsonNode body) {
@@ -196,7 +222,7 @@ public class InventoryServiceClient {
             entity = new HttpEntity<>(body, headers);
         }
         ResponseEntity<JsonNode> r = restTemplate.exchange(url, method, entity, JsonNode.class);
-        return r.getBody();
+        return extractData(r);
     }
 
     private static HttpEntity<Void> emptyEntity() {

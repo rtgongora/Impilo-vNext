@@ -18,4 +18,7 @@ public interface RequisitionRepository extends JpaRepository<RequisitionEntity, 
     List<RequisitionEntity> findByToStoreIdAndStatus(UUID toStoreId, RequisitionStatus status);
 
     Page<RequisitionEntity> findByTenantIdAndStatus(UUID tenantId, RequisitionStatus status, Pageable pageable);
+
+    Page<RequisitionEntity> findByTenantIdAndFacilityIdOrderByCreatedAtDesc(
+            UUID tenantId, UUID facilityId, Pageable pageable);
 }

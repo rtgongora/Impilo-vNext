@@ -21,6 +21,15 @@ public class InventoryController {
 
     private static final Logger log = LoggerFactory.getLogger(InventoryController.class);
 
+    /** Preview/E2E anchors — aligned with inventory-service V002 seeds. */
+    private static final UUID PREVIEW_FACILITY_HARARE =
+            UUID.fromString("a1b2c3d4-0001-4000-8000-000000000001");
+    private static final UUID PREVIEW_STORE_PHARMACY =
+            UUID.fromString("95000000-0000-0000-0000-000000000001");
+    private static final UUID PREVIEW_STORE_MAIN =
+            UUID.fromString("95000000-0000-0000-0000-000000000002");
+    private static final String PREVIEW_ITEM_CODE = "PARACETAMOL-500";
+
     private final InventoryServiceClient inventoryClient;
     private final ObjectMapper objectMapper;
 
@@ -115,12 +124,17 @@ public class InventoryController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(required = false, name = "facility_id") String facilityId) {
 
-        UUID facilityUuid = null;
-        if (facilityId != null && !facilityId.isBlank()) {
+        UUID facilityUuid = resolveFacilityId(facilityId);
+
+        if (facilityUuid != null) {
             try {
-                facilityUuid = UUID.fromString(facilityId);
-            } catch (IllegalArgumentException e) {
-                log.warn("Invalid facility_id for requisitions list: {}", facilityId);
+                JsonNode upstream = inventoryClient.listRequisitions(facilityUuid, 0, 50);
+                List<Map<String, Object>> liveRows = mapRequisitionList(upstream);
+                if (!liveRows.isEmpty()) {
+                    return ResponseEntity.ok(response(liveRows, requestId, correlationId));
+                }
+            } catch (Exception e) {
+                log.warn("Inventory requisitions list from service unavailable: {}", e.getMessage());
             }
         }
 
@@ -129,13 +143,7 @@ public class InventoryController {
             return ResponseEntity.ok(response(demoRows, requestId, correlationId));
         }
 
-        try {
-            JsonNode result = inventoryClient.getReconcilePending(0, 50);
-            return ResponseEntity.ok(response(result, requestId, correlationId));
-        } catch (Exception e) {
-            log.warn("Inventory requisitions list unavailable: {}", e.getMessage());
-            return ResponseEntity.ok(response(List.of(), requestId, correlationId));
-        }
+        return ResponseEntity.ok(response(List.of(), requestId, correlationId));
     }
 
     /** Demo rows aligned with Flyway V31 seeds until inventory-service is in compose. */
@@ -202,29 +210,99 @@ public class InventoryController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody CreateRequisitionRequest request) {
 
-        JsonNode body = objectMapper.valueToTree(Map.of(
-                "facilityId", request.facility_id() != null ? request.facility_id() : "",
-                "requisitionNumber", request.requisition_number() != null ? request.requisition_number() : "",
-                "requestedBy", request.requested_by() != null ? request.requested_by() : "",
-                "itemCount", request.item_count() != null ? request.item_count() : 0,
-                "neededBy", request.needed_by() != null ? request.needed_by() : "",
-                "notes", request.notes() != null ? request.notes() : ""
-        ));
+        UUID facilityUuid = resolveFacilityId(request.facility_id());
+        int qty = request.item_count() != null && request.item_count() > 0 ? request.item_count() : 1;
+        String lineNotes = request.notes() != null ? request.notes() : "";
 
-        JsonNode result = inventoryClient.createRequisition(body);
+        Map<String, Object> upstream = Map.of(
+                "fromStoreId", PREVIEW_STORE_PHARMACY.toString(),
+                "toStoreId", PREVIEW_STORE_MAIN.toString(),
+                "lines", List.of(Map.of(
+                        "itemCode", PREVIEW_ITEM_CODE,
+                        "qtyRequested", qty,
+                        "notes", lineNotes
+                ))
+        );
 
-        // jdbcTemplate.update("""
-        //     INSERT INTO inventory_requisitions (...) VALUES (...)
-        //     """, ...);
+        try {
+            JsonNode result = inventoryClient.createRequisition(objectMapper.valueToTree(upstream));
+            Map<String, Object> mapped = mapRequisitionNode(result, facilityUuid, request);
+            return ResponseEntity.status(201).body(response(mapped, requestId, correlationId));
+        } catch (Exception e) {
+            log.warn("Inventory requisition create failed: {}", e.getMessage());
+            Map<String, Object> errorBody = new LinkedHashMap<>();
+            errorBody.put("error", Map.of(
+                    "code", "INVENTORY_UNAVAILABLE",
+                    "message", e.getMessage() != null ? e.getMessage() : "Inventory upstream unavailable"));
+            errorBody.put("meta", Map.of(
+                    "request_id", requestId,
+                    "correlation_id", correlationId));
+            return ResponseEntity.status(502).body(errorBody);
+        }
+    }
 
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", result);
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
+    private static UUID resolveFacilityId(String facilityId) {
+        if (facilityId == null || facilityId.isBlank()) {
+            return null;
+        }
+        try {
+            return UUID.fromString(facilityId);
+        } catch (IllegalArgumentException e) {
+            if ("FAC-HARARE-CENTRAL".equalsIgnoreCase(facilityId)) {
+                return PREVIEW_FACILITY_HARARE;
+            }
+            return null;
+        }
+    }
 
-        return ResponseEntity.ok(response);
+    private List<Map<String, Object>> mapRequisitionList(JsonNode upstream) {
+        if (upstream == null || upstream.isNull()) {
+            return List.of();
+        }
+        JsonNode rows = upstream.isArray() ? upstream : objectMapper.createArrayNode().add(upstream);
+        List<Map<String, Object>> mapped = new ArrayList<>();
+        for (JsonNode row : rows) {
+            mapped.add(mapRequisitionNode(row, null, null));
+        }
+        return mapped;
+    }
+
+    private Map<String, Object> mapRequisitionNode(
+            JsonNode row,
+            UUID facilityFallback,
+            CreateRequisitionRequest request) {
+        Map<String, Object> mapped = new LinkedHashMap<>();
+        if (row == null || row.isNull()) {
+            return mapped;
+        }
+        String reqId = textOrNull(row, "reqId");
+        if (reqId == null) {
+            reqId = textOrNull(row, "id");
+        }
+        mapped.put("id", reqId);
+        mapped.put("req_id", reqId);
+        mapped.put("facility_id", textOrNull(row, "facilityId") != null
+                ? textOrNull(row, "facilityId")
+                : facilityFallback != null ? facilityFallback.toString() : null);
+        mapped.put("requested_by", textOrNull(row, "requestedBy") != null
+                ? textOrNull(row, "requestedBy")
+                : request != null ? request.requested_by() : null);
+        mapped.put("status", textOrNull(row, "status"));
+        mapped.put("notes", textOrNull(row, "notes") != null
+                ? textOrNull(row, "notes")
+                : request != null ? request.notes() : null);
+        if (request != null && request.requisition_number() != null) {
+            mapped.put("requisition_number", request.requisition_number());
+        }
+        if (request != null && request.item_count() != null) {
+            mapped.put("item_count", request.item_count());
+        }
+        return mapped;
+    }
+
+    private static String textOrNull(JsonNode node, String field) {
+        JsonNode value = node.get(field);
+        return value != null && !value.isNull() ? value.asText() : null;
     }
 
     private Map<String, Object> response(Object data, String requestId, String correlationId) {

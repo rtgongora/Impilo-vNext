@@ -49,7 +49,7 @@ class InventoryControllerTest {
                         UUID.randomUUID().toString(), "REQ-001", "user-1", 5, "2026-04-20", "Urgent");
         ResponseEntity<Map<String, Object>> response =
                 controller.createRequisition("t1", "req-3", "corr-3", request);
-        assertEquals(200, response.getStatusCode().value());
+        assertEquals(201, response.getStatusCode().value());
         assertEquals("req-3", ((Map<?, ?>) response.getBody().get("meta")).get("request_id"));
     }
 
@@ -81,9 +81,14 @@ class InventoryControllerTest {
 
         @Override public JsonNode createRequisition(JsonNode body) {
             ObjectNode node = mapper.createObjectNode();
-            node.put("id", UUID.randomUUID().toString());
+            node.put("reqId", UUID.randomUUID().toString());
             node.put("status", "DRAFT");
+            node.put("requestedBy", "user-1");
             return node;
+        }
+
+        @Override public JsonNode listRequisitions(UUID facilityId, int page, int size) {
+            return mapper.createArrayNode();
         }
     }
 }

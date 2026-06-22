@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import {
-  PREVIEW_ORIGIN,
+  PREVIEW_FACILITY_ID,
   RUN_PREVIEW,
   installPreviewSession,
   uniqueMarker,
@@ -11,8 +11,17 @@ import {
   isPreviewLoginScreen,
 } from "./preview-sandbox-helpers";
 
+function extractReqId(json: unknown): string | null {
+  if (!json || typeof json !== "object") return null;
+  const data = (json as { data?: Record<string, unknown> }).data;
+  if (!data) return null;
+  const id = data.reqId ?? data.req_id ?? data.id;
+  return typeof id === "string" ? id : null;
+}
+
 /**
  * Preview sandbox runtime persistence — POST via BFF, re-navigate, assert persisted state.
+ * Write-path failures are hard failures (no test.skip on POST).
  */
 test.describe("Preview sandbox persistence proofs", () => {
   test.beforeAll(() => {
@@ -20,7 +29,7 @@ test.describe("Preview sandbox persistence proofs", () => {
   });
 
   test.beforeEach(async ({ context, baseURL }) => {
-    await installPreviewSession(context, baseURL ?? PREVIEW_ORIGIN);
+    await installPreviewSession(context, baseURL ?? process.env.PLAYWRIGHT_BASE_URL ?? "http://41.57.127.235");
   });
 
   async function openStableShell(page: import("@playwright/test").Page) {
@@ -40,9 +49,9 @@ test.describe("Preview sandbox persistence proofs", () => {
       description: "Preview E2E persistence policy",
       resourceType: "CLINICAL_RECORD",
       effect: "ALLOW",
-      dataClassification: "CONFIDENTIAL",
+      conditions: "purpose=TREATMENT",
     });
-    test.skip(!post.ok, `Governance POST failed (${post.status}) — DAGS unavailable on preview`);
+    expect(post.ok, `Governance POST failed (${post.status}): ${JSON.stringify(post.json)}`).toBeTruthy();
 
     const list = await bffGetFromBrowser(page, "/internal/v1/governance/access/policies");
     expect(list.ok).toBeTruthy();
@@ -55,31 +64,34 @@ test.describe("Preview sandbox persistence proofs", () => {
   });
 
   test("inventory: requisition POST persists across re-navigation", async ({ page }) => {
-    const requestedBy = uniqueMarker("e2e-pharmacy-ward");
+    const notes = uniqueMarker("e2e-requisition-notes");
     await openStableShell(page);
 
     const post = await bffPostFromBrowser(page, "/internal/v1/inventory/requisitions", {
-      facility_id: "FAC-HARARE-CENTRAL",
-      requested_by: requestedBy,
+      facility_id: PREVIEW_FACILITY_ID,
+      requested_by: "preview-persist-e2e",
       item_count: 2,
-      notes: "Preview E2E persistence requisition",
+      notes,
     });
-    test.skip(!post.ok, `Inventory requisition POST failed (${post.status}) on preview`);
+    expect(post.ok, `Inventory POST failed (${post.status}): ${JSON.stringify(post.json)}`).toBeTruthy();
+
+    const reqId = extractReqId(post.json);
+    expect(reqId, "POST response must include reqId").toBeTruthy();
 
     const list = await bffGetFromBrowser(
       page,
-      "/internal/v1/inventory/requisitions?facility_id=FAC-HARARE-CENTRAL",
+      `/internal/v1/inventory/requisitions?facility_id=${PREVIEW_FACILITY_ID}`,
     );
     expect(list.ok).toBeTruthy();
-    expect(list.text).toContain(requestedBy);
+    expect(list.text).toContain(reqId!);
 
     await gotoAppPath(page, "/enterprise");
     const listAfter = await bffGetFromBrowser(
       page,
-      "/internal/v1/inventory/requisitions?facility_id=FAC-HARARE-CENTRAL",
+      `/internal/v1/inventory/requisitions?facility_id=${PREVIEW_FACILITY_ID}`,
     );
     expect(listAfter.ok).toBeTruthy();
-    expect(listAfter.text).toContain(requestedBy);
+    expect(listAfter.text).toContain(reqId!);
   });
 
   test("enterprise: dashboard content survives re-navigation", async ({ page }) => {
@@ -105,7 +117,7 @@ test.describe("Preview sandbox persistence proofs", () => {
       page,
       "/internal/v1/learning/v11/library/resources?page=0&size=20",
     );
-    test.skip(!getBefore.ok, "Learning library GET failed on preview");
+    expect(getBefore.ok, `Learning GET failed (${getBefore.status})`).toBeTruthy();
 
     await gotoAppPath(page, "/enterprise");
     const getAfter = await bffGetFromBrowser(

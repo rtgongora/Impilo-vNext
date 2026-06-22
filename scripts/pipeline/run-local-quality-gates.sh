@@ -95,6 +95,12 @@ else
     bash scripts/test/run-preview-sandbox-persistence-e2e.sh
 fi
 
+# 9f. Runtime truth heuristics (advisory by default)
+runtime_truth_blocking=0
+[[ "${RUNTIME_TRUTH_GATE_BLOCKING:-0}" == "1" ]] && runtime_truth_blocking=1
+pipeline_run_phase runtime-truth-heuristics "Runtime truth heuristics" "$runtime_truth_blocking" \
+  bash scripts/guard/check-runtime-truth-heuristics.sh
+
 # 10. API contracts
 pipeline_run_phase api-contracts "API contract checks" 1 \
   bash scripts/test/run-api-contract-checks.sh

@@ -75,6 +75,11 @@ public interface RequisitionService {
     RequisitionEntity fulfillRequisition(UUID reqId, List<FulfillLineData> fulfillments);
 
     /**
+     * List requisitions for a facility (newest first).
+     */
+    List<RequisitionEntity> listByFacility(UUID facilityId, int page, int size);
+
+    /**
      * Data carrier for a requisition line item request.
      */
     record RequisitionLineData(

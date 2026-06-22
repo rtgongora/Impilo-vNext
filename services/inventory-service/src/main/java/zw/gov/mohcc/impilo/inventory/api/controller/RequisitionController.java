@@ -37,6 +37,21 @@ public class RequisitionController {
     }
 
     /**
+     * List requisitions for a facility.
+     */
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<RequisitionSummary>>> listRequisitions(
+            @RequestParam UUID facilityId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        List<RequisitionSummary> summaries = requisitionService.listByFacility(facilityId, page, size).stream()
+                .map(RequisitionSummary::from)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.ok(summaries, correlationId));
+    }
+
+    /**
      * Create a new requisition with line items.
      */
     @PostMapping

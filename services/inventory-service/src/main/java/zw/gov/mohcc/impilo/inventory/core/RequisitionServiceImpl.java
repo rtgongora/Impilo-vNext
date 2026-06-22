@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.inventory.core;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.inventory.domain.LedgerEventType;
@@ -41,6 +42,9 @@ import java.util.UUID;
 public class RequisitionServiceImpl implements RequisitionService {
 
     private static final Logger log = LoggerFactory.getLogger(RequisitionServiceImpl.class);
+    /** Canonical dev tenant — matches one-ui-shell api-client default. */
+    private static final UUID PREVIEW_TENANT_ID =
+            UUID.fromString("00000000-0000-4000-8000-000000000001");
 
     private final RequisitionRepository requisitionRepository;
     private final RequisitionLineRepository lineRepository;
@@ -77,8 +81,15 @@ public class RequisitionServiceImpl implements RequisitionService {
         }
 
         RequisitionEntity requisition = new RequisitionEntity();
-        requisition.setTenantId(ctx.tenantId());
-        requisition.setFacilityId(ctx.facilityId());
+        requisition.setTenantId(resolveTenantId(ctx));
+        UUID facilityId = ctx.facilityId();
+        if (facilityId == null) {
+            facilityId = resolveStoreFacility(fromStoreId);
+        }
+        if (facilityId == null) {
+            throw new IllegalArgumentException("facilityId could not be resolved from trust context or stores");
+        }
+        requisition.setFacilityId(facilityId);
         requisition.setFromStoreId(fromStoreId);
         requisition.setToStoreId(toStoreId);
         requisition.setStatus(RequisitionStatus.DRAFT);
@@ -328,6 +339,24 @@ public class RequisitionServiceImpl implements RequisitionService {
     // ------------------------------------------------------------------
     // Internal helpers
     // ------------------------------------------------------------------
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RequisitionEntity> listByFacility(UUID facilityId, int page, int size) {
+        TrustContext ctx = TrustContextHolder.require();
+        if (facilityId == null) {
+            throw new IllegalArgumentException("facilityId is required");
+        }
+        int safeSize = Math.min(Math.max(size, 1), 200);
+        return requisitionRepository
+                .findByTenantIdAndFacilityIdOrderByCreatedAtDesc(
+                        resolveTenantId(ctx), facilityId, PageRequest.of(Math.max(page, 0), safeSize))
+                .getContent();
+    }
+
+    private static UUID resolveTenantId(TrustContext ctx) {
+        return ctx.tenantId() != null ? ctx.tenantId() : PREVIEW_TENANT_ID;
+    }
 
     private RequisitionEntity loadRequisition(UUID reqId) {
         return requisitionRepository.findById(reqId)

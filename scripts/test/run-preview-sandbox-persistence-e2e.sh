@@ -25,6 +25,7 @@ gate_run "preview-persistence-e2e" bash -c "
   npx playwright test \
     e2e/preview-sandbox-persistence.spec.ts \
     e2e/preview-sandbox-cohesion.spec.ts \
+    e2e/preview-sandbox-journeys.spec.ts \
     --project=chromium \
     --reporter=list \
     --workers=1

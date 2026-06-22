@@ -2,6 +2,12 @@ import type { BrowserContext } from "@playwright/test";
 
 export const PREVIEW_ORIGIN = process.env.PLAYWRIGHT_BASE_URL ?? "http://41.57.127.235";
 
+/** Canonical dev tenant — matches ui/one-ui-shell api-client default. */
+export const PREVIEW_TENANT_ID = "00000000-0000-4000-8000-000000000001";
+
+/** Harare Central — aligned with inventory-service V002 preview seeds. */
+export const PREVIEW_FACILITY_ID = "a1b2c3d4-0001-4000-8000-000000000001";
+
 export const RUN_PREVIEW =
   process.env.PREVIEW_SANDBOX_E2E === "1" || /41\.57\.127\.235|127\.0\.0\.1|localhost/.test(PREVIEW_ORIGIN);
 
@@ -18,7 +24,7 @@ export const PREVIEW_USER = {
 };
 
 export const PREVIEW_FACILITY = {
-  id: "FAC-HARARE-CENTRAL",
+  id: PREVIEW_FACILITY_ID,
   name: "Harare Central Hospital",
   code: "HCH-001",
   facilityType: "HOSPITAL",
@@ -68,7 +74,7 @@ export async function bffPostFromBrowser(
           : `req-${Date.now()}-${Math.random().toString(16).slice(2)}`;
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
-        "X-Tenant-ID": "default",
+        "X-Tenant-ID": PREVIEW_TENANT_ID,
         "X-Pod-ID": "default",
         "X-Request-ID": requestId,
         "X-Correlation-ID": requestId,
@@ -103,7 +109,7 @@ export async function bffGetFromBrowser(page: import("@playwright/test").Page, p
         ? crypto.randomUUID()
         : `req-${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const headers: Record<string, string> = {
-      "X-Tenant-ID": "default",
+      "X-Tenant-ID": PREVIEW_TENANT_ID,
       "X-Pod-ID": "default",
       "X-Request-ID": requestId,
       "X-Correlation-ID": requestId,
