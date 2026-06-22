@@ -51,6 +51,10 @@ vi.mock("@/components/navigation/ExperienceSidebar", () => ({
   ExperienceSidebar: () => null,
 }));
 
+vi.mock("@/components/shell/ShellTopAccountActions", () => ({
+  ShellTopAccountActions: () => <div data-testid="shell-top-account-actions">account</div>,
+}));
+
 vi.mock("@/components/clinical/ClinicalSupportStrip", () => ({
   ClinicalSupportStrip: () => null,
 }));
@@ -91,6 +95,7 @@ describe("journey shell components", () => {
     expect(screen.queryByTitle("Nompilo — contextual help")).not.toBeInTheDocument();
     expect(screen.queryByRole("navigation", { name: "Journey shortcuts" })).not.toBeInTheDocument();
     expect(screen.queryByText("Accessibility")).not.toBeInTheDocument();
+    expect(screen.getByTestId("shell-top-account-actions")).toBeInTheDocument();
     expect(screen.getByText("content")).toBeInTheDocument();
   });
 

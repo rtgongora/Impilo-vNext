@@ -8,7 +8,9 @@ describe("AuthHeroContent", () => {
 
     expect(screen.getByText("One Health OS.")).toBeInTheDocument();
     expect(screen.getByText("Your health-life experience, connected.")).toBeInTheDocument();
-    expect(screen.getByText("Care in motion. Work in rhythm. Life in sync.")).toBeInTheDocument();
+    expect(screen.getByText("Care in motion.")).toBeInTheDocument();
+    expect(screen.getByText("Work in rhythm.")).toBeInTheDocument();
+    expect(screen.getByText("Life in sync.")).toBeInTheDocument();
     expect(screen.getByText("Human first.")).toBeInTheDocument();
     expect(screen.getByText("Trust locked.")).toBeInTheDocument();
     expect(screen.getByText("Live now.")).toBeInTheDocument();

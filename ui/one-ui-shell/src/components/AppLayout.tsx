@@ -2,7 +2,7 @@
 
 /**
  * AppLayout - Standard application layout with off-canvas zone navigation.
- * Slim top chrome only; profile/sign-out live on the taskbar.
+ * Slim top chrome: navigation + global account controls. Workspace tools live on the bottom dock.
  */
 
 import { type ReactNode } from "react";
@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Home, Menu } from "lucide-react";
 import { ExperienceSidebar } from "./navigation/ExperienceSidebar";
 import { ModuleBreadcrumb } from "./navigation/ModuleBreadcrumb";
+import { ShellTopAccountActions } from "./shell/ShellTopAccountActions";
 import { useShellStore } from "@/hooks/useShellStore";
 import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
 
@@ -74,6 +75,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             )}
             <ModuleBreadcrumb />
           </div>
+          <ShellTopAccountActions />
         </header>
         <main className="impilo-canvas flex-1 overflow-auto px-3 pb-[var(--shell-taskbar-height,0px)] pt-0 md:px-4">{children}</main>
       </div>

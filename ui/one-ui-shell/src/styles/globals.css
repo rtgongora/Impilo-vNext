@@ -195,6 +195,41 @@
     pointer-events: none;
   }
 
+  /* Module / workspace branded hero strip */
+  .impilo-module-hero {
+    background-color: color-mix(in srgb, var(--surface) 92%, var(--background-deep) 8%);
+    background-image:
+      var(--impilo-african-print),
+      radial-gradient(circle at 12% 20%, rgba(15, 45, 35, 0.06) 0, transparent 36%),
+      radial-gradient(circle at 88% 18%, rgba(212, 175, 55, 0.08) 0, transparent 28%),
+      linear-gradient(
+        115deg,
+        color-mix(in srgb, var(--primary-soft) 55%, transparent) 0%,
+        transparent 42%,
+        color-mix(in srgb, var(--surface-warm) 35%, transparent) 100%
+      );
+    background-size: 48px 48px, auto, auto, auto;
+  }
+
+  .module-hero-logo-tile {
+    min-height: 4.5rem;
+    min-width: 4.5rem;
+  }
+
+  @media (min-width: 768px) {
+    .module-hero-logo-tile {
+      min-height: 4.75rem;
+      min-width: 4.75rem;
+    }
+  }
+
+  /* Floating shell dock — app-level, not OS taskbar */
+  .shell-floating-dock {
+    box-shadow:
+      0 10px 40px rgba(11, 15, 14, 0.14),
+      0 2px 8px rgba(15, 45, 35, 0.08);
+  }
+
   /* Auth landing — Afro-futurist hero motion (subtle; disabled for reduced motion) */
   .auth-hero-afro-bg .auth-hero-weave-line {
     animation: auth-hero-weave-shimmer 14s ease-in-out infinite;

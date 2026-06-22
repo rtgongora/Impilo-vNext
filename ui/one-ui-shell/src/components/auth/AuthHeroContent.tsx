@@ -1,6 +1,12 @@
 "use client";
 
-const VALUE_CHIPS = ["Human first.", "Trust locked.", "Live now."] as const;
+import { Heart, Lock, Sparkles } from "lucide-react";
+
+const VALUE_CHIPS = [
+  { label: "Human first.", Icon: Heart },
+  { label: "Trust locked.", Icon: Lock },
+  { label: "Live now.", Icon: Sparkles },
+] as const;
 
 type AuthHeroContentProps = {
   /** Compact layout for mobile/tablet strip above the auth form */
@@ -12,14 +18,14 @@ export function AuthHeroContent({ variant = "desktop" }: AuthHeroContentProps) {
 
   return (
     <div
-      className={isCompact ? "space-y-3 text-left" : "space-y-5"}
+      className={isCompact ? "relative z-10 space-y-3 text-left" : "relative z-10 space-y-5"}
       data-testid={isCompact ? "auth-mobile-hero-copy" : "auth-desktop-hero-copy"}
     >
       <p
         className={
           isCompact
-            ? "text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-200/90"
-            : "text-xs font-semibold uppercase tracking-[0.22em] text-amber-200/90"
+            ? "text-[11px] font-semibold uppercase tracking-[0.2em] text-[#D4AF37]"
+            : "text-xs font-semibold uppercase tracking-[0.24em] text-[#D4AF37]"
         }
       >
         One Health OS.
@@ -28,42 +34,41 @@ export function AuthHeroContent({ variant = "desktop" }: AuthHeroContentProps) {
       <h2
         className={
           isCompact
-            ? "font-serif text-xl font-semibold leading-snug text-white sm:text-2xl"
-            : "max-w-lg font-serif text-3xl font-semibold leading-tight text-white xl:text-4xl"
+            ? "max-w-sm font-sans text-xl font-medium leading-snug tracking-tight text-white sm:text-2xl"
+            : "max-w-lg font-sans text-3xl font-medium leading-[1.15] tracking-tight text-white xl:text-[2.25rem]"
         }
       >
         Your health-life experience, connected.
       </h2>
 
-      <p
-        className={
-          isCompact
-            ? "text-sm leading-relaxed text-white/80"
-            : "max-w-md text-lg leading-relaxed text-white/85"
-        }
-      >
-        Care in motion. Work in rhythm. Life in sync.
-      </p>
-
       <div
         className={
           isCompact
-            ? "flex flex-wrap gap-2 pt-1"
-            : "flex flex-wrap gap-2.5 pt-2"
+            ? "space-y-0.5 text-sm leading-relaxed text-white/80"
+            : "max-w-md space-y-1 text-base leading-relaxed text-white/85 xl:text-lg"
         }
+      >
+        <p>Care in motion.</p>
+        <p>Work in rhythm.</p>
+        <p>Life in sync.</p>
+      </div>
+
+      <div
+        className={isCompact ? "flex flex-wrap gap-2 pt-1" : "flex flex-wrap gap-2.5 pt-2"}
         role="list"
         aria-label="Platform values"
       >
-        {VALUE_CHIPS.map((label) => (
+        {VALUE_CHIPS.map(({ label, Icon }) => (
           <span
             key={label}
             role="listitem"
             className={
               isCompact
-                ? "inline-flex items-center rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-medium text-white/95 backdrop-blur-sm"
-                : "inline-flex items-center rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 text-xs font-medium text-white/95 backdrop-blur-sm"
+                ? "inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.08] px-3 py-1 text-[11px] font-medium text-white/95 backdrop-blur-sm"
+                : "inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/[0.08] px-3.5 py-1.5 text-xs font-medium text-white/95 backdrop-blur-sm"
             }
           >
+            <Icon className="h-3 w-3 shrink-0 text-[#D4AF37]" aria-hidden />
             {label}
           </span>
         ))}

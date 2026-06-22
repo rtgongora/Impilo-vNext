@@ -21,6 +21,7 @@ test.describe("Auth hero logo prominence", () => {
       } else {
         await expect(page.getByTestId("auth-desktop-hero-logo")).toBeVisible();
         await expect(page.getByTestId("auth-desktop-hero-copy")).toBeVisible();
+        await expect(page.getByTestId("auth-hero-watermark")).toBeAttached();
         await expect(page.getByText("One Health OS.")).toBeVisible();
       }
 

@@ -15,6 +15,7 @@ import { Shield } from "lucide-react";
 import { ImpiloBrandLogo } from "@/components/brand/ImpiloBrandLogo";
 import { AuthHeroAfroFuturistBackground } from "@/components/auth/AuthHeroAfroFuturistBackground";
 import { AuthHeroContent } from "@/components/auth/AuthHeroContent";
+import { AuthHeroWatermark } from "@/components/auth/AuthHeroWatermark";
 
 export function AuthLayout({ children }: { children: ReactNode }) {
   return (
@@ -24,6 +25,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
         <AuthHeroAfroFuturistBackground />
 
         <div className="relative z-10 flex w-full flex-col justify-between p-10 text-white xl:p-12">
+          <AuthHeroWatermark />
           <div data-testid="auth-desktop-hero-logo">
             <ImpiloBrandLogo variant="hero" tone="white" />
             <p className="mt-2 text-sm text-white/75">Health Operating System</p>
@@ -45,6 +47,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
           >
             <div className="relative min-h-[11rem] sm:min-h-[12rem]">
               <AuthHeroAfroFuturistBackground />
+              <AuthHeroWatermark compact />
               <div className="relative z-10 flex flex-col gap-4 p-5 sm:p-6">
                 <div className="flex justify-center">
                   <ImpiloBrandLogo variant="hero" tone="white" />

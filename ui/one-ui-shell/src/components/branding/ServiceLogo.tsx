@@ -7,18 +7,20 @@ import {
   type ServiceBrandingSlug,
 } from "@/config/serviceBranding";
 
-export type ServiceLogoSize = "compact" | "card" | "header";
+export type ServiceLogoSize = "compact" | "card" | "header" | "hero";
 
 const SIZE_CLASSES: Record<ServiceLogoSize, string> = {
   compact: "h-6 w-6",
   card: "h-10 w-10",
   header: "h-14 w-14",
+  hero: "h-14 w-14 sm:h-16 sm:w-16",
 };
 
 const ICON_SIZE_CLASSES: Record<ServiceLogoSize, string> = {
   compact: "h-4 w-4",
   card: "h-5 w-5",
   header: "h-7 w-7",
+  hero: "h-8 w-8",
 };
 
 export interface ServiceLogoProps {

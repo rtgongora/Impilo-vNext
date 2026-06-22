@@ -5,7 +5,10 @@
 import { matchesRequiredRole } from "@/lib/auth/role-groups";
 import type { AppDefinition, ShellCommand } from "./types";
 
-export const SHELL_TASKBAR_HEIGHT_PX = 56;
+/** Reserved bottom canvas space: floating dock height + inset + safe buffer */
+export const SHELL_DOCK_HEIGHT_PX = 48;
+export const SHELL_DOCK_BOTTOM_INSET_PX = 12;
+export const SHELL_TASKBAR_HEIGHT_PX = SHELL_DOCK_HEIGHT_PX + SHELL_DOCK_BOTTOM_INSET_PX + 8;
 
 export const SHELL_APPS: AppDefinition[] = [
   {

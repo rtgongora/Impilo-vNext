@@ -5,7 +5,7 @@
  * Used by all route pages to display correct headings/labels from 02.
  */
 
-import { ServiceLogo } from "@/components/branding/ServiceLogo";
+import { ModuleWorkspaceHero } from "@/components/workspace/ModuleWorkspaceHero";
 import { useInferredServiceSlug } from "@/hooks/useInferredServiceSlug";
 
 interface PageShellProps {
@@ -26,17 +26,12 @@ export function PageShell({ title, subtitle, icon, hideHeader, serviceSlug, empt
   return (
     <div className={hideHeader ? "" : "space-y-5"}>
       {!hideHeader ? (
-        <div className="impilo-surface-card impilo-subtle-african-accent relative mb-4 overflow-hidden border-l-4 border-l-primary p-4 md:p-5">
-          <div className="flex items-center gap-3">
-            {resolvedSlug ? (
-              <ServiceLogo slug={resolvedSlug} size="header" />
-            ) : icon ? (
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-soft text-primary">{icon}</div>
-            ) : null}
-            <h1 className="text-xl font-bold text-foreground md:text-2xl">{title}</h1>
-          </div>
-          {subtitle && <p className="mt-1.5 max-w-3xl text-sm text-muted-foreground">{subtitle}</p>}
-        </div>
+        <ModuleWorkspaceHero
+          title={title}
+          subtitle={subtitle}
+          serviceSlug={resolvedSlug}
+          icon={resolvedSlug ? undefined : icon}
+        />
       ) : null}
       {children || (
         <div className="impilo-surface-card relative overflow-hidden p-12 text-center">

@@ -46,24 +46,23 @@ vi.mock("./ShellAccessibilityMenu", () => ({
   ),
 }));
 
-vi.mock("./ShellNotificationTray", () => ({
-  ShellNotificationTray: () => <span data-testid="notif-tray">tray</span>,
-}));
-
 vi.mock("@/components/brand/ImpiloBrandLogo", () => ({
   ImpiloBrandLogo: () => <span data-testid="logo">logo</span>,
 }));
 
 describe("ShellTaskbar", () => {
-  it("renders universal shell actions with accessible names", () => {
+  it("renders floating workspace dock actions without global account controls", () => {
     render(<ShellTaskbar />);
     expect(screen.getByRole("navigation", { name: /experience shell/i })).toBeInTheDocument();
+    expect(screen.getByTestId("shell-floating-dock")).toBeInTheDocument();
     expect(screen.getByLabelText(/start menu/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/open search and commands/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/open nompilo ask/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/open sos/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/accessibility options/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/profile/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/sign out/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/open modules/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/profile/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/sign out/i)).not.toBeInTheDocument();
+    expect(screen.queryByText("Alerts")).not.toBeInTheDocument();
   });
 });
