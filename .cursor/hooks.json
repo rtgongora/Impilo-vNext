@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeShellExecution": [
+      {
+        "command": ".cursor/hooks/require-gates-before-deploy.sh",
+        "matcher": "(^|[;&|]\\s*|\\$\\(\\s*|\\n\\s*)(kubectl|helm)\\s|(manual-authorized|full-boot)-preview-deploy\\.sh",
+        "failClosed": true,
+        "timeout": 30
+      }
+    ]
+  }
+}

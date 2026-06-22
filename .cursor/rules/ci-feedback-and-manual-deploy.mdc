@@ -10,6 +10,7 @@ alwaysApply: true
 
 1. **GitHub Actions is not the only test source.** Canonical logic: `scripts/pipeline/run-local-quality-gates.sh`.
 2. **Always run VM local quality gates** before asking the user to authorize preview deploy.
+   - Gates are **never skippable**: a project `beforeShellExecution` hook (`.cursor/hooks/require-gates-before-deploy.sh`) blocks any preview-mutating command (`kubectl set image|apply|patch|scale|replace|create|delete|rollout restart`, `helm upgrade|install`, `BYPASS_CI=1`, the preview-deploy scripts) unless `scripts/pipeline/require-fresh-gates.sh` confirms `reports/pipeline/latest-summary.json` PASSED at the current `HEAD`. Both deploy scripts enforce the same check. Re-run gates after every commit before deploying.
 3. If GitHub Actions shows billing/runner lock (0-step jobs), run VM gates and report **CI infrastructure failure** — not code pass/fail.
 4. Present **both** GitHub CI (`collect-ci-feedback.sh`) and VM local results (`cursor-local-feedback.sh`).
 5. Deploy only after explicit user approval.
