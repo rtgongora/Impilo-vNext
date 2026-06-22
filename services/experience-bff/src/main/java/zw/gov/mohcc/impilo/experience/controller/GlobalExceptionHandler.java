@@ -7,6 +7,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 
 import java.util.LinkedHashMap;
@@ -29,6 +31,20 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR",
                 "Request body validation failed", request);
+    }
+
+    /**
+     * Unmapped routes (no controller handler / no static resource) are client errors, not server
+     * faults. Without this, Spring's NoResourceFoundException/NoHandlerFoundException fall through
+     * to the generic handler below and surface as 500 INTERNAL_ERROR, which misrepresents a
+     * not-implemented BFF read path as a crash.
+     */
+    @ExceptionHandler({NoResourceFoundException.class, NoHandlerFoundException.class})
+    public ResponseEntity<Map<String, Object>> handleNoHandler(
+            Exception ex,
+            HttpServletRequest request) {
+        return buildErrorResponse(HttpStatus.NOT_FOUND, "NOT_FOUND",
+                "No BFF endpoint for " + request.getMethod() + " " + request.getRequestURI(), request);
     }
 
     @ExceptionHandler(ResponseStatusException.class)
