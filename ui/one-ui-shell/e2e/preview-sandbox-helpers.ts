@@ -78,6 +78,7 @@ export async function bffPostFromBrowser(
         "X-Pod-ID": "default",
         "X-Request-ID": requestId,
         "X-Correlation-ID": requestId,
+        "Idempotency-Key": requestId,
         "X-Actor-ID": user.id || "preview-persist-e2e",
         "X-Actor-Type": user.actorType || "PROVIDER",
         "X-Purpose-Of-Use": "TREATMENT",
