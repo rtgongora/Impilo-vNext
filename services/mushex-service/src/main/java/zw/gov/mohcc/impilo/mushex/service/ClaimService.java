@@ -520,8 +520,11 @@ public class ClaimService {
     }
 
     public Page<ClaimEntity> listClaims(UUID tenantId, ClaimStatus status, String insurerId, Pageable pageable) {
+        // A tenant-less list request scopes to no tenant and yields an empty page, consistent
+        // with the sibling ops/fraud list endpoints (which pass a possibly-null tenant straight
+        // to their repositories). Listing must not 500 when the trust-context tenant is absent.
         if (tenantId == null) {
-            throw new IllegalArgumentException("tenantId is required");
+            return Page.empty(pageable);
         }
 
         if (insurerId != null && !insurerId.isBlank() && status != null) {
