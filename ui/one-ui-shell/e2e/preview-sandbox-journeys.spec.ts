@@ -73,8 +73,11 @@ test.describe("Preview sandbox cross-service journey proofs", () => {
         `${journey.id} BFF GET ${journey.bffGet} must not 5xx (got ${get.status})`,
       ).toBeLessThan(500);
 
-      const bodyText = await page.locator("body").innerText();
-      expect(bodyText.length).toBeGreaterThan(20);
+      // Poll for rendered content: SPA routes (e.g. /enterprise) hydrate after
+      // domcontentloaded, so a single innerText read can race the render.
+      await expect
+        .poll(async () => (await page.locator("body").innerText()).length, { timeout: 15_000 })
+        .toBeGreaterThan(20);
     });
   }
 });
