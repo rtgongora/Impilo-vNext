@@ -58,8 +58,8 @@ describe("PageShell", () => {
     render(<PageShell title="Styled" />);
     const heading = screen.getByRole("heading", { level: 1 });
     expect(heading.className).toContain("text-xl");
-    expect(heading.className).toContain("font-bold");
-    expect(heading.className).toContain("text-foreground");
+    expect(heading.className).toContain("font-semibold");
+    expect(heading.className).toContain("tracking-tight");
   });
 
   it("renders service logo when serviceSlug is provided", () => {
@@ -67,10 +67,10 @@ describe("PageShell", () => {
     expect(screen.getByRole("img", { name: "Fundo logo" })).toBeInTheDocument();
   });
 
-  it("applies mb-4 to the title container", () => {
+  it("applies bottom margin to the hero header container", () => {
     const { container } = render(<PageShell title="Test" />);
     const titleContainer = container.firstElementChild?.firstElementChild;
-    expect(titleContainer?.className).toContain("mb-4");
+    expect(titleContainer?.className).toContain("mb-5");
   });
 
   it("skips the title card when hideHeader is set", () => {
