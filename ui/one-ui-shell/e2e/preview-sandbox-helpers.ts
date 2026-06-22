@@ -65,7 +65,7 @@ export async function bffPostFromBrowser(
   body: Record<string, unknown>,
 ) {
   return page.evaluate(
-    async ({ path, body }) => {
+    async ({ path, body, tenantId }) => {
       const user = JSON.parse(sessionStorage.getItem("exp:auth_user") || "{}");
       const facility = JSON.parse(sessionStorage.getItem("exp:facility") || "{}");
       const requestId =
@@ -74,7 +74,7 @@ export async function bffPostFromBrowser(
           : `req-${Date.now()}-${Math.random().toString(16).slice(2)}`;
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
-        "X-Tenant-ID": PREVIEW_TENANT_ID,
+        "X-Tenant-ID": tenantId,
         "X-Pod-ID": "default",
         "X-Request-ID": requestId,
         "X-Correlation-ID": requestId,
@@ -95,13 +95,14 @@ export async function bffPostFromBrowser(
       }
       return { ok: res.ok, status: res.status, json };
     },
-    { path, body },
+    { path, body, tenantId: PREVIEW_TENANT_ID },
   );
 }
 
 /** GET from same-origin BFF with trust headers. */
 export async function bffGetFromBrowser(page: import("@playwright/test").Page, path: string) {
-  return page.evaluate(async (path) => {
+  return page.evaluate(
+    async ({ path, tenantId }) => {
     const user = JSON.parse(sessionStorage.getItem("exp:auth_user") || "{}");
     const facility = JSON.parse(sessionStorage.getItem("exp:facility") || "{}");
     const requestId =
@@ -109,7 +110,7 @@ export async function bffGetFromBrowser(page: import("@playwright/test").Page, p
         ? crypto.randomUUID()
         : `req-${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const headers: Record<string, string> = {
-      "X-Tenant-ID": PREVIEW_TENANT_ID,
+      "X-Tenant-ID": tenantId,
       "X-Pod-ID": "default",
       "X-Request-ID": requestId,
       "X-Correlation-ID": requestId,
@@ -122,7 +123,7 @@ export async function bffGetFromBrowser(page: import("@playwright/test").Page, p
     const res = await fetch(path, { headers });
     const text = await res.text();
     return { ok: res.ok, status: res.status, text };
-  }, path);
+  }, { path, tenantId: PREVIEW_TENANT_ID });
 }
 
 export function uniqueMarker(prefix: string) {
