@@ -1,6 +1,9 @@
 package zw.gov.mohcc.impilo.dags.core;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,6 +14,8 @@ import zw.gov.mohcc.impilo.dags.persistence.repository.PolicyRepository;
 
 @Service
 public class PolicyService {
+
+    private static final ObjectMapper JSON = new ObjectMapper();
 
     private final PolicyRepository policyRepository;
     private final EventOutboxRepository outboxRepository;
@@ -34,7 +39,7 @@ public class PolicyService {
         policy.setName(name);
         policy.setDescription(description);
         policy.setResourceType(resourceType);
-        policy.setConditions(conditions != null ? conditions : "{}");
+        policy.setConditions(normalizeConditionsToJson(conditions));
         policy.setEffect(effect != null ? effect : PolicyEffect.DENY);
         policy.setCreatedBy(actorId);
         policy = policyRepository.save(policy);
@@ -71,6 +76,46 @@ public class PolicyService {
         event.setTenantId(tenantId);
         event.setCorrelationId(correlationId != null ? correlationId.toString() : null);
         outboxRepository.save(event);
+    }
+
+    /**
+     * The {@code conditions} column is JSONB. Callers may pass already-valid JSON, a simple
+     * {@code key=value[,key=value]} condition expression (e.g. {@code "purpose=TREATMENT"}), or
+     * an opaque string. Normalise all of these to valid JSON so the insert does not fail with
+     * "invalid input syntax for type json".
+     */
+    static String normalizeConditionsToJson(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return "{}";
+        }
+        String trimmed = raw.trim();
+        try {
+            JSON.readTree(trimmed);
+            return trimmed;
+        } catch (Exception notJson) {
+            // fall through to structured/opaque handling
+        }
+        if (trimmed.contains("=")) {
+            Map<String, String> parsed = new LinkedHashMap<>();
+            for (String part : trimmed.split("[,;]")) {
+                String[] kv = part.split("=", 2);
+                if (kv.length == 2 && !kv[0].trim().isEmpty()) {
+                    parsed.put(kv[0].trim(), kv[1].trim());
+                }
+            }
+            if (!parsed.isEmpty()) {
+                try {
+                    return JSON.writeValueAsString(parsed);
+                } catch (Exception ignored) {
+                    // fall through to opaque wrapping
+                }
+            }
+        }
+        try {
+            return JSON.writeValueAsString(trimmed);
+        } catch (Exception unexpected) {
+            return "{}";
+        }
     }
 
     private String buildPolicyPayload(PolicyEntity policy) {
