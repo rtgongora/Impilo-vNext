@@ -44,7 +44,12 @@ function main() {
     const schema = readiness.checks.outboxSchema;
     const serviceKey = baselineServiceKey(svc.id, schema);
     const envPrefix = baselineEnvPrefix(svc.id, schema);
-    const content = readiness.checks.outboxCompatible
+    // The full template injects a DataSource into AdminAuditEmitter. Only emit it when the
+    // module actually has a JDBC datasource on the classpath; otherwise the bean fails to
+    // start ("required a bean of type 'javax.sql.DataSource'"). Composition/BFF layers carry
+    // an event_outbox migration aspirationally but have no datasource, so they must stay
+    // rate-only — admin audit is owned by the domain service of record.
+    const content = readiness.checks.outboxCompatible && moduleHasDataSource(modulePath)
       ? fullTemplate(pkg, serviceKey, schema ?? 'public', envPrefix)
       : rateOnlyTemplate(pkg, envPrefix);
 
@@ -59,6 +64,23 @@ function main() {
   }
 
   console.log(`emit-security-baseline-config: created=${created} skipped=${skipped}${dryRun ? ' (dry-run)' : ''}`);
+}
+
+/**
+ * True when the module declares a JDBC datasource on the classpath (JPA/JDBC starter,
+ * a JDBC driver, or Flyway). Without one, Spring autoconfigures no DataSource bean and a
+ * DataSource-backed AdminAuditEmitter would crash on startup.
+ */
+function moduleHasDataSource(modulePath) {
+  const pom = path.join(modulePath, 'pom.xml');
+  if (!fs.existsSync(pom)) return false;
+  const text = fs.readFileSync(pom, 'utf8');
+  return (
+    /spring-boot-starter-data-jpa/.test(text) ||
+    /spring-boot-starter-jdbc/.test(text) ||
+    /<artifactId>postgresql<\/artifactId>/.test(text) ||
+    /<artifactId>flyway-core<\/artifactId>/.test(text)
+  );
 }
 
 function resolveConfigPackage(modulePath) {
