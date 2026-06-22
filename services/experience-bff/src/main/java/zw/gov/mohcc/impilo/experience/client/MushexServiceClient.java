@@ -206,12 +206,14 @@ public class MushexServiceClient {
     }
 
     public ResponseEntity<String> listAdapters() {
-        log.info("MusheX: Listing adapters");
-        return restTemplate.getForEntity(baseUrl + "/mushex/v1/adapters", String.class);
+        // mushex-service exposes the adapter inventory via the platform adapter-readiness
+        // endpoint; there is no bare GET /mushex/v1/adapters (that path is webhook-POST only).
+        log.info("MusheX: Listing adapters (adapter-readiness)");
+        return restTemplate.getForEntity(baseUrl + "/mushex/v1/platform/adapter-readiness", String.class);
     }
 
     public ResponseEntity<String> listFraudFlags(MultiValueMap<String, String> queryParams) {
-        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/mushex/v1/fraud-flags")
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/mushex/v1/fraud/flags")
                 .queryParams(copy(queryParams))
                 .toUriString();
         log.info("MusheX: Listing fraud flags");
@@ -219,21 +221,21 @@ public class MushexServiceClient {
     }
 
     public ResponseEntity<String> listOpsReviews(MultiValueMap<String, String> queryParams) {
-        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/mushex/v1/ops-reviews")
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/mushex/v1/ops/reviews/pending")
                 .queryParams(copy(queryParams))
                 .toUriString();
-        log.info("MusheX: Listing ops reviews");
+        log.info("MusheX: Listing ops reviews (pending)");
         return restTemplate.getForEntity(url, String.class);
     }
 
     public ResponseEntity<String> approveOpsReview(String reviewId, String requestBody) {
         log.info("MusheX: Approving ops review={}", reviewId);
-        return postJson(baseUrl + "/mushex/v1/ops-reviews/" + reviewId + "/approve", requestBody);
+        return postJson(baseUrl + "/mushex/v1/ops/reviews/" + reviewId + "/approve", requestBody);
     }
 
     public ResponseEntity<String> rejectOpsReview(String reviewId, String requestBody) {
         log.info("MusheX: Rejecting ops review={}", reviewId);
-        return postJson(baseUrl + "/mushex/v1/ops-reviews/" + reviewId + "/reject", requestBody);
+        return postJson(baseUrl + "/mushex/v1/ops/reviews/" + reviewId + "/reject", requestBody);
     }
 
     public ResponseEntity<String> getLedger(MultiValueMap<String, String> queryParams) {

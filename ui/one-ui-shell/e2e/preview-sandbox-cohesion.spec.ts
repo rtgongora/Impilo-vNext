@@ -42,7 +42,7 @@ test.describe("Preview sandbox runtime cohesion", () => {
       (response) => response.url().includes("/internal/v1/identity") && response.request().method() === "GET",
       { timeout: 20_000 },
     );
-    await page.goto("/registry");
+    await page.goto("/registry", { waitUntil: "domcontentloaded" });
     const response = await registryResponse.catch(() => null);
     if (response) {
       expect(response.status()).toBeLessThan(500);
@@ -64,12 +64,12 @@ test.describe("Preview sandbox runtime cohesion", () => {
   });
 
   test("fundo learning library calls learning BFF", async ({ page }) => {
-    await page.goto("/learning/library");
+    await page.goto("/learning/library", { waitUntil: "domcontentloaded" });
     test.skip(await isPreviewLoginScreen(page), "Preview redirected to login for /learning/library");
 
     const learningResponse = page.waitForResponse(
       (response) => response.url().includes("/internal/v1/learning") && response.status() < 500,
-      { timeout: 30_000 },
+      { timeout: 10_000 },
     );
     await learningResponse.catch(() => null);
     const hasLibrary = await page
