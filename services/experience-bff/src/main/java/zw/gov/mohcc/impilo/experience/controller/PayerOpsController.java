@@ -1,5 +1,7 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -10,18 +12,69 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpStatusCodeException;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.MushexServiceClient;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/internal/v1/finance/payer-ops")
 public class PayerOpsController {
 
     private static final Logger log = LoggerFactory.getLogger(PayerOpsController.class);
+    private static final ObjectMapper SUMMARY_MAPPER = new ObjectMapper();
 
     private final MushexServiceClient mushexClient;
 
     public PayerOpsController(MushexServiceClient mushexClient) {
         this.mushexClient = mushexClient;
+    }
+
+    /**
+     * Payer-ops dashboard summary (cross-service journey read-path).
+     * GET /internal/v1/finance/payer-ops/summary
+     *
+     * <p>BFF-side composition of the MusheX ops surfaces — claims worklist, pending ops
+     * reviews, fraud flags, and adapter inventory. The BFF is the composition layer for these
+     * sovereign reads; each section degrades independently so the summary still returns 200
+     * (with a {@code sources} availability map) when one upstream surface is unavailable.</p>
+     */
+    @GetMapping("/summary")
+    public ResponseEntity<Map<String, Object>> summary(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId
+    ) {
+        Map<String, Object> data = new LinkedHashMap<>();
+        Map<String, Object> sources = new LinkedHashMap<>();
+        data.put("claims", summarySection(() -> mushexClient.listClaims(new LinkedMultiValueMap<>()), sources, "claims"));
+        data.put("ops_reviews", summarySection(() -> mushexClient.listOpsReviews(new LinkedMultiValueMap<>()), sources, "ops_reviews"));
+        data.put("fraud_flags", summarySection(() -> mushexClient.listFraudFlags(new LinkedMultiValueMap<>()), sources, "fraud_flags"));
+        data.put("adapters", summarySection(mushexClient::listAdapters, sources, "adapters"));
+        data.put("sources", sources);
+        return ResponseEntity.ok()
+                .header(CompanionHeaders.REQUEST_ID, requestId)
+                .header(CompanionHeaders.CORRELATION_ID, correlationId)
+                .body(Map.of("data", data, "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    private Object summarySection(UpstreamCall call, Map<String, Object> sources, String key) {
+        try {
+            ResponseEntity<String> response = call.run();
+            if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null || response.getBody().isBlank()) {
+                sources.put(key, "unavailable");
+                return List.of();
+            }
+            JsonNode parsed = SUMMARY_MAPPER.readTree(response.getBody());
+            sources.put(key, "ok");
+            return parsed.has("data") ? parsed.get("data") : parsed;
+        } catch (HttpStatusCodeException upstreamStatus) {
+            log.warn("Payer ops summary section {} upstream status={}", key, upstreamStatus.getStatusCode());
+            sources.put(key, "unavailable");
+            return List.of();
+        } catch (Exception ex) {
+            log.warn("Payer ops summary section {} failed: {}", key, ex.getMessage());
+            sources.put(key, "error");
+            return List.of();
+        }
     }
 
     @GetMapping("/payment-intents/{intentId}")

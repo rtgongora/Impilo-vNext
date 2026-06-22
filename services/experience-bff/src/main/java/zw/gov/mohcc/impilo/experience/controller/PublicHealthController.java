@@ -140,6 +140,27 @@ public class PublicHealthController {
         return proxy(campaignsUrl + "/internal/v1/campaigns", requestId);
     }
 
+    /**
+     * Public-health programmes (cross-service journey read-path).
+     * GET /internal/v1/public-health/programmes?page=&size=
+     *
+     * <p>Programmes are surfaced from campaigns-service (outreach / public-health programmes
+     * are modelled as campaigns); surveillance has no separate programmes registry.</p>
+     */
+    @GetMapping("/programmes")
+    public ResponseEntity<Map<String, Object>> listProgrammes(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedRead();
+        String url = org.springframework.web.util.UriComponentsBuilder
+                .fromHttpUrl(campaignsUrl + "/internal/v1/campaigns")
+                .queryParam("page", page)
+                .queryParam("size", size)
+                .toUriString();
+        return proxy(url, requestId);
+    }
+
     @PostMapping("/campaigns")
     public ResponseEntity<Map<String, Object>> createCampaign(
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,

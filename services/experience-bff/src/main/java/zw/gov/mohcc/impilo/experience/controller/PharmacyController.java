@@ -165,6 +165,39 @@ public class PharmacyController {
 
     // ── Sovereign pharmacy-service (dispense orders / worklists) ─────────────
 
+    /**
+     * Facility dispense-order worklist (cross-service journey read-path).
+     * GET /internal/v1/pharmacy/orders?status=&page=&size=
+     *
+     * <p>Resolves the facility from the {@code X-Facility-ID} trust header and returns the
+     * pharmacy-service worklist. When no facility context is supplied the endpoint returns an
+     * empty list with 200 so the worklist surface can still render rather than erroring.</p>
+     */
+    @GetMapping("/orders")
+    public ResponseEntity<Map<String, Object>> listOrders(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        if (facilityId == null || facilityId.isBlank()) {
+            return ResponseEntity.ok(Map.of(
+                    "data", List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId,
+                            "note", "no facility context; supply X-Facility-ID for the worklist")));
+        }
+        try {
+            JsonNode data = pharmacyClient.getWorklist(facilityId, status);
+            return ResponseEntity.ok(Map.of(
+                    "data", data != null ? data : List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId, "facility_id", facilityId)));
+        } catch (Exception e) {
+            return upstreamFailure("PHARMACY_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
+    }
+
     @GetMapping("/upstream/dispense-orders/patient/{cpid}")
     public ResponseEntity<Map<String, Object>> listUpstreamDispenseOrdersForPatient(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
