@@ -22,11 +22,15 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain chain(HttpSecurity http, TrustContextFilter trustContextFilter, @Value("${procurement.security.oauth2-enabled:true}") boolean oauth2) throws Exception {
+    public SecurityFilterChain chain(HttpSecurity http, TrustContextFilter trustContextFilter,
+            @Value("${procurement.security.oauth2-enabled:true}") boolean oauth2,
+            @Value("${impilo.security.disable-oauth-for-tests:false}") boolean disableOauthForTests) throws Exception {
         http.csrf(c -> c.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(trustContextFilter, UsernamePasswordAuthenticationFilter.class);
-        if (oauth2) {
+        // Honour the estate-wide preview/test flag so internal trust-plane calls (e.g. BFF) are
+        // permitted in the sandbox, consistent with pharmacy/campaigns. Production keeps oauth2.
+        if (oauth2 && !disableOauthForTests) {
             http.authorizeHttpRequests(a -> a.requestMatchers(
                     "/actuator/health", "/actuator/health/**", "/actuator/info",
                     "/actuator/prometheus", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",

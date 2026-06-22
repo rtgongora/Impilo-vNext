@@ -24,13 +24,16 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http, TrustContextFilter trustContextFilter,
-            @Value("${madi.security.oauth2-enabled:true}") boolean oauth2Enabled) throws Exception {
+            @Value("${madi.security.oauth2-enabled:true}") boolean oauth2Enabled,
+            @Value("${impilo.security.disable-oauth-for-tests:false}") boolean disableOauthForTests) throws Exception {
 
         http.csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(trustContextFilter, UsernamePasswordAuthenticationFilter.class);
 
-        if (oauth2Enabled) {
+        // Honour the estate-wide preview/test flag so internal trust-plane calls (e.g. BFF) are
+        // permitted in the sandbox, consistent with pharmacy/campaigns. Production keeps oauth2.
+        if (oauth2Enabled && !disableOauthForTests) {
             http.authorizeHttpRequests(auth -> auth
                             .requestMatchers(
                                     "/actuator/health",
