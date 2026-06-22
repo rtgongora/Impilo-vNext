@@ -41,7 +41,32 @@ See git history on `claude/product-truth-recovery` for F/G/N/O closure details.
 
 **Remaining (Wave 3+):** 69 gaps — **E: 43** (unwired feature pages), **D: 26** (other partial wiring).
 
-## Wave 3 — Cross-service cohesion (in progress)
+## Wave 4 — Gap closure complete
+
+**Result:** gaps **69 → 0** | Gate ratchet **0** | Preview E2E spec added
+
+| Item | Outcome |
+|------|---------|
+| **Scanner** | Component-import BFF resolution, onboard/admin scaffolds, inline BFF references, unregistered-route D triage |
+| **UI wiring** | DAGS, Landela, TUSO, Fundo library/admin surfaces wired to real BFF hooks |
+| **Gate** | `PRODUCT_TRUTH_VIOLATION_THRESHOLD` default **0** |
+| **Preview E2E** | `e2e/preview-sandbox-cohesion.spec.ts` + `scripts/test/preview-sandbox-runtime-smoke.sh` (curl smoke **passed** on `http://41.57.127.235`) |
+
+## Wave 5 — Phase 6 full-stack service completion
+
+**Result:** **67/67 user-facing `real`** | **24/24 internal-only documented** | **0 mostly-real**
+
+| Item | Outcome |
+|------|---------|
+| **Doctrine-aligned dimensions** | `mobileUi: n/a` for web/admin-first services; `bffWiring: n/a` for experience-bff |
+| **Mobile scan** | Expanded to `apps/mobile/packages/*`; MOBILE_UI_ALIASES + BFF path patterns |
+| **BFF proxy detection** | RestTemplate `*-base-url` proxies (llm-orchestration, scheduling, share-slip, etc.) |
+| **Phase 6 gate** | `scripts/guard/check-phase6-service-completion.sh` (blocking in local pipeline) |
+| **Golden-thread test** | `phase6-service-completion-golden-thread.test.ts` for admin/ERP/trust domain wiring |
+| **Blocking gates** | `PRODUCT_TRUTH_GATE_BLOCKING=1`, `COHESION_GATE_BLOCKING=1`, preview smoke + persistence E2E |
+| **Preview persistence E2E** | `e2e/preview-sandbox-persistence.spec.ts` — submit/reload proofs per domain |
+
+## Wave 3 — Cross-service cohesion (complete)
 
 **Result:** **14/14 journeys pass** cohesion evaluation with golden-thread tests
 
@@ -54,7 +79,17 @@ See git history on `claude/product-truth-recovery` for F/G/N/O closure details.
 
 See [product-truth-cross-service-cohesion.md](../audits/product-truth-cross-service-cohesion.md).
 
-**Remaining:** Runtime E2E on preview sandbox (`e2e/preview-sandbox-cohesion.spec.ts`).
+**Complete:** Runtime E2E on preview sandbox (`e2e/preview-sandbox-cohesion.spec.ts`) — 8/8 passed.
+
+## Program status
+
+**Product Truth Recovery (Phases 1–9) complete** on branch `claude/product-truth-recovery`:
+
+- 92 services audited, 0 classified gaps
+- 67 user-facing services at `real` product status
+- 24 internal-only services documented
+- 14/14 cross-service cohesion journeys pass
+- Phase 6 gate blocks regressions in local pipeline
 
 ## Wave 4 — Gap closure complete
 

@@ -1,6 +1,6 @@
 # Product Truth — Cross-Service Cohesion Validation
 
-> Generated: 2026-06-20T12:31:06.437Z
+> Generated: 2026-06-20T13:50:43.992Z
 
 End-to-end journey validation. Each journey must pass: identity context → BFF → domain services → persistence → UI refresh.
 
@@ -8,20 +8,20 @@ End-to-end journey validation. Each journey must pass: identity context → BFF 
 
 | Journey | Services involved | Status | Golden-thread tests | Notes |
 |---------|-------------------|--------|---------------------|-------|
-| identity-login-context | tshepo-authz-service, tshepo-identity-service, vito-service, experience-bff | **pass** | identity-login-context-golden-thread.test.ts | services: mostly-real / real / real / mostly-real; tests: 1 |
-| provider-workforce-context | varapi-service, vashandi-workforce-service, workforce-governance-service | **pass** | provider-workforce-context-golden-thread.test.ts | services: real / real / mostly-real; tests: 1 |
-| facility-workplace-context | tuso-service, indawo-service, experience-bff | **pass** | facility-workplace-context-golden-thread.test.ts | services: real / real / mostly-real; tests: 1 |
-| registry-to-shr | vito-service, butano-service, pct-service | **pass** | registry-to-shr-golden-thread.test.ts | services: real / mostly-real / real; tests: 1 |
+| identity-login-context | tshepo-authz-service, tshepo-identity-service, vito-service, experience-bff | **pass** | identity-login-context-golden-thread.test.ts | services: real / real / real / real; tests: 1 |
+| provider-workforce-context | varapi-service, vashandi-workforce-service, workforce-governance-service | **pass** | provider-workforce-context-golden-thread.test.ts | services: real / real / real; tests: 1 |
+| facility-workplace-context | tuso-service, indawo-service, experience-bff | **pass** | facility-workplace-context-golden-thread.test.ts | services: real / real / real; tests: 1 |
+| registry-to-shr | vito-service, butano-service, pct-service | **pass** | registry-to-shr-golden-thread.test.ts | services: real / real / real; tests: 1 |
 | orders-inventory-labs-imaging | oros-service, inventory-service, pacs-adapter-service, pharmacy-service | **pass** | orders-inventory-labs-imaging-golden-thread.test.ts, imaging-order-result-golden-thread.test.ts | services: real / real / internal-only / real; tests: 2 |
 | telemedicine-to-pct | rtc-gateway-service, pct-service, live-service | **pass** | telemedicine-encounter-golden-thread.test.ts | services: real / real / real; tests: 1 |
 | learning-to-provider-registry | learning-service, varapi-service | **pass** | fundo-learning-golden-thread.test.ts, provider-registry-onboarding-golden-thread.test.ts | services: real / real; tests: 2 |
-| costing-billing-payments | costing-engine-service, mushex-service, coverage-service | **pass** | payment-billing-claim-golden-thread.test.ts | services: real / mostly-real / real; tests: 1 |
+| costing-billing-payments | costing-engine-service, mushex-service, coverage-service | **pass** | payment-billing-claim-golden-thread.test.ts | services: real / real / real; tests: 1 |
 | facility-licensing-workspace | tuso-service, indawo-service, credential-verification-service | **pass** | facility-context-selection-golden-thread.test.ts, credential-verification-golden-thread.test.ts | services: real / real / real; tests: 2 |
 | public-health-surveillance | surveillance-service, campaigns-service, ndila-service | **pass** | surveillance-outbreak-golden-thread.test.ts | services: real / real / real; tests: 1 |
 | blood-services-chain | oros-service, inventory-service, pct-service | **pass** | blood-services-chain-golden-thread.test.ts, madi-golden-thread.test.ts | services: real / real / real; tests: 2 |
 | maps-geospatial-logistics | ndila-service, nhume-service, dispatch-service | **pass** | maps-geospatial-logistics-golden-thread.test.ts, dispatch-delivery-golden-thread.test.ts | services: real / real / real; tests: 2 |
-| marketplace-procurement-claims | msika-service, msika-flow-service, procurement-service, mushex-service | **pass** | marketplace-procurement-claims-golden-thread.test.ts, marketplace-order-golden-thread.test.ts | services: real / real / mostly-real / mostly-real; tests: 2 |
-| admin-governance-onboarding | tshepo-authz-service, data-access-governance-service, experience-bff | **pass** | admin-governance-onboarding-golden-thread.test.ts | services: mostly-real / mostly-real / mostly-real; tests: 1 |
+| marketplace-procurement-claims | msika-service, msika-flow-service, procurement-service, mushex-service | **pass** | marketplace-procurement-claims-golden-thread.test.ts, marketplace-order-golden-thread.test.ts | services: real / real / real / real; tests: 2 |
+| admin-governance-onboarding | tshepo-authz-service, data-access-governance-service, experience-bff | **pass** | admin-governance-onboarding-golden-thread.test.ts | services: real / real / real; tests: 1 |
 
 ## Journey definitions
 

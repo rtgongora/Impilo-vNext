@@ -76,6 +76,11 @@ export function isInternalOnly(serviceId) {
   return false;
 }
 
+/** Actor-facing flows that require a mobile surface (see MOBILE_PARITY_MATRIX). */
+export function mobileParityRequired(serviceId) {
+  return MOBILE_PARITY_REQUIRED.has(serviceId);
+}
+
 export function triState(count, thinThreshold = 1) {
   if (!count || count === 0) return 'absent';
   if (count <= thinThreshold) return 'thin';

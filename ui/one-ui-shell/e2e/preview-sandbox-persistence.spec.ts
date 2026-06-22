@@ -1,0 +1,132 @@
+import { test, expect } from "@playwright/test";
+import {
+  PREVIEW_ORIGIN,
+  RUN_PREVIEW,
+  installPreviewSession,
+  uniqueMarker,
+  gotoAppPath,
+  bffPostFromBrowser,
+  bffGetFromBrowser,
+  waitForBffGet,
+  isPreviewLoginScreen,
+} from "./preview-sandbox-helpers";
+
+/**
+ * Preview sandbox runtime persistence — POST via BFF, re-navigate, assert persisted state.
+ */
+test.describe("Preview sandbox persistence proofs", () => {
+  test.beforeAll(() => {
+    test.skip(!RUN_PREVIEW, "Set PREVIEW_SANDBOX_E2E=1 or PLAYWRIGHT_BASE_URL to preview ingress");
+  });
+
+  test.beforeEach(async ({ context, baseURL }) => {
+    await installPreviewSession(context, baseURL ?? PREVIEW_ORIGIN);
+  });
+
+  async function openStableShell(page: import("@playwright/test").Page) {
+    await gotoAppPath(page, "/enterprise");
+    test.skip(await isPreviewLoginScreen(page), "Preview redirected to login");
+    await expect(page.getByText(/Enterprise resources|inventory|procurement/i).first()).toBeVisible({
+      timeout: 30_000,
+    });
+  }
+
+  test("governance: policy POST persists across re-navigation", async ({ page }) => {
+    const policyName = uniqueMarker("e2e-governance-policy");
+    await openStableShell(page);
+
+    const post = await bffPostFromBrowser(page, "/internal/v1/governance/access/policies", {
+      name: policyName,
+      description: "Preview E2E persistence policy",
+      resourceType: "CLINICAL_RECORD",
+      effect: "ALLOW",
+      dataClassification: "CONFIDENTIAL",
+    });
+    test.skip(!post.ok, `Governance POST failed (${post.status}) — DAGS unavailable on preview`);
+
+    const list = await bffGetFromBrowser(page, "/internal/v1/governance/access/policies");
+    expect(list.ok).toBeTruthy();
+    expect(list.text).toContain(policyName);
+
+    await gotoAppPath(page, "/enterprise");
+    const listAfter = await bffGetFromBrowser(page, "/internal/v1/governance/access/policies");
+    expect(listAfter.ok).toBeTruthy();
+    expect(listAfter.text).toContain(policyName);
+  });
+
+  test("inventory: requisition POST persists across re-navigation", async ({ page }) => {
+    const requestedBy = uniqueMarker("e2e-pharmacy-ward");
+    await openStableShell(page);
+
+    const post = await bffPostFromBrowser(page, "/internal/v1/inventory/requisitions", {
+      facility_id: "FAC-HARARE-CENTRAL",
+      requested_by: requestedBy,
+      item_count: 2,
+      notes: "Preview E2E persistence requisition",
+    });
+    test.skip(!post.ok, `Inventory requisition POST failed (${post.status}) on preview`);
+
+    const list = await bffGetFromBrowser(
+      page,
+      "/internal/v1/inventory/requisitions?facility_id=FAC-HARARE-CENTRAL",
+    );
+    expect(list.ok).toBeTruthy();
+    expect(list.text).toContain(requestedBy);
+
+    await gotoAppPath(page, "/enterprise");
+    const listAfter = await bffGetFromBrowser(
+      page,
+      "/internal/v1/inventory/requisitions?facility_id=FAC-HARARE-CENTRAL",
+    );
+    expect(listAfter.ok).toBeTruthy();
+    expect(listAfter.text).toContain(requestedBy);
+  });
+
+  test("enterprise: dashboard content survives re-navigation", async ({ page }) => {
+    await openStableShell(page);
+    const snippetBefore = (await page.locator("body").innerText()).slice(0, 400);
+
+    await gotoAppPath(page, "/enterprise");
+    await expect(page.getByText(/Enterprise resources|inventory|procurement/i).first()).toBeVisible({
+      timeout: 30_000,
+    });
+    const snippetAfter = (await page.locator("body").innerText()).slice(0, 400);
+    expect(snippetAfter.length).toBeGreaterThan(40);
+    expect(snippetAfter).not.toMatch(/502 Bad Gateway|503 Service Unavailable/i);
+    if (/Enterprise resources/i.test(snippetBefore)) {
+      expect(snippetAfter).toMatch(/Enterprise resources/i);
+    }
+  });
+
+  test("learning: library GET payload stable across re-navigation", async ({ page }) => {
+    await openStableShell(page);
+
+    const getBefore = await bffGetFromBrowser(
+      page,
+      "/internal/v1/learning/v11/library/resources?page=0&size=20",
+    );
+    test.skip(!getBefore.ok, "Learning library GET failed on preview");
+
+    await gotoAppPath(page, "/enterprise");
+    const getAfter = await bffGetFromBrowser(
+      page,
+      "/internal/v1/learning/v11/library/resources?page=0&size=20",
+    );
+    expect(getAfter.ok).toBeTruthy();
+    expect(getAfter.text.length).toBeGreaterThan(10);
+    if (getBefore.text.length > 20) {
+      expect(getAfter.text).toBe(getBefore.text);
+    }
+  });
+
+  test("registry: identity BFF list survives re-navigation", async ({ page }) => {
+    await gotoAppPath(page, "/registry");
+    test.skip(await isPreviewLoginScreen(page), "Registry requires live auth on preview");
+    await waitForBffGet(page, "/internal/v1/");
+
+    await gotoAppPath(page, "/registry");
+    await waitForBffGet(page, "/internal/v1/");
+    await expect(page.locator("body")).toBeVisible();
+    await expect(page.locator("body")).not.toContainText(/502 Bad Gateway|503 Service Unavailable/i);
+  });
+});

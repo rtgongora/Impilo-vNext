@@ -39,5 +39,5 @@ if [[ "$FAIL" -ne 0 ]]; then
 fi
 
 echo "Preview runtime smoke PASSED"
-echo "For browser proof run:"
-echo "  cd ui/one-ui-shell && PREVIEW_SANDBOX_E2E=1 PLAYWRIGHT_SKIP_WEBSERVER=1 PLAYWRIGHT_BASE_URL=${PREVIEW_URL} npx playwright test e2e/preview-sandbox-cohesion.spec.ts"
+echo "For browser persistence proof run:"
+echo "  bash scripts/test/run-preview-sandbox-persistence-e2e.sh"

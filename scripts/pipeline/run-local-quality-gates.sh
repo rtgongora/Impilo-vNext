@@ -10,6 +10,13 @@ source "$REPO_PATH/scripts/pipeline/_pipeline-common.sh"
 export REPO_PATH GATE_LOG_DIR="$PIPELINE_LOG_DIR"
 export GUARD_SUMMARY_FILE="/tmp/impilo-change-summary.txt"
 
+# Blocking gate defaults (override with *_BLOCKING=0 or PREVIEW_SMOKE_SKIP=1 to relax locally)
+export PRODUCT_TRUTH_GATE_BLOCKING="${PRODUCT_TRUTH_GATE_BLOCKING:-1}"
+export COHESION_GATE_BLOCKING="${COHESION_GATE_BLOCKING:-1}"
+export PHASE6_GATE_BLOCKING="${PHASE6_GATE_BLOCKING:-1}"
+export PREVIEW_SMOKE_BLOCKING="${PREVIEW_SMOKE_BLOCKING:-1}"
+export PREVIEW_URL="${PREVIEW_URL:-http://41.57.127.235}"
+
 echo "Impilo local quality pipeline"
 echo "Started: $PIPELINE_STARTED_AT"
 echo "Reports: $PIPELINE_REPORT_DIR"
@@ -57,11 +64,36 @@ pipeline_run_phase parity-web "Backend-to-frontend parity" 1 \
 pipeline_run_phase parity-mobile "Mobile parity" 1 \
   bash scripts/guard/check-mobile-parity.sh
 
-# 9b. Product Truth audit gate (advisory — ratchet PRODUCT_TRUTH_VIOLATION_THRESHOLD)
-product_truth_blocking=0
-[[ "${PRODUCT_TRUTH_GATE_BLOCKING:-0}" == "1" ]] && product_truth_blocking=1
+# 9b. Product Truth audit gate (blocking by default — PRODUCT_TRUTH_VIOLATION_THRESHOLD=0)
+product_truth_blocking=1
+[[ "${PRODUCT_TRUTH_GATE_BLOCKING:-1}" != "1" ]] && product_truth_blocking=0
 pipeline_run_phase product-truth "Product Truth audit gate" "$product_truth_blocking" \
-  bash scripts/guard/check-product-truth.sh || true
+  bash scripts/guard/check-product-truth.sh
+
+# 9c. Phase 6 full-stack service completion
+phase6_blocking=1
+[[ "${PHASE6_GATE_BLOCKING:-1}" != "1" ]] && phase6_blocking=0
+pipeline_run_phase phase6-completion "Phase 6 service completion" "$phase6_blocking" \
+  bash scripts/guard/check-phase6-service-completion.sh
+
+# 9d. Cross-service cohesion (blocking by default)
+cohesion_blocking=1
+[[ "${COHESION_GATE_BLOCKING:-1}" != "1" ]] && cohesion_blocking=0
+pipeline_run_phase cohesion "Cross-service cohesion" "$cohesion_blocking" \
+  bash scripts/guard/check-cross-service-cohesion.sh
+
+# 9e. Preview sandbox runtime smoke + persistence E2E (blocking when preview reachable)
+preview_blocking=1
+[[ "${PREVIEW_SMOKE_BLOCKING:-1}" != "1" ]] && preview_blocking=0
+if [[ "${PREVIEW_SMOKE_SKIP:-0}" == "1" ]]; then
+  pipeline_run_phase preview-smoke "Preview sandbox smoke (skipped)" 0 \
+    bash -c 'echo "SKIP preview smoke — PREVIEW_SMOKE_SKIP=1"'
+else
+  pipeline_run_phase preview-smoke "Preview sandbox runtime smoke" "$preview_blocking" \
+    bash scripts/test/preview-sandbox-runtime-smoke.sh
+  pipeline_run_phase preview-persistence-e2e "Preview persistence E2E" "$preview_blocking" \
+    bash scripts/test/run-preview-sandbox-persistence-e2e.sh
+fi
 
 # 10. API contracts
 pipeline_run_phase api-contracts "API contract checks" 1 \

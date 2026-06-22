@@ -27,8 +27,8 @@ print(s.get("pass", 0), s.get("total", 0), s.get("needsWork", 0), s.get("missing
 PY
 )"
 
-BLOCKING="${COHESION_GATE_BLOCKING:-0}"
-MIN_PASS="${COHESION_MIN_PASS:-10}"
+BLOCKING="${COHESION_GATE_BLOCKING:-1}"
+MIN_PASS="${COHESION_MIN_PASS:-14}"
 
 if [[ "$NEEDS" -gt 0 ]]; then
   if [[ "$BLOCKING" == "1" ]]; then
@@ -37,9 +37,17 @@ if [[ "$NEEDS" -gt 0 ]]; then
     guard_warn "cross-service cohesion needs-work=$NEEDS (pass=$PASS/$TOTAL)"
   fi
 elif [[ "$MISSING" -gt 0 ]]; then
-  guard_warn "cross-service cohesion missing-test=$MISSING (pass=$PASS/$TOTAL)"
+  if [[ "$BLOCKING" == "1" ]]; then
+    guard_fail "cross-service cohesion missing-test=$MISSING (pass=$PASS/$TOTAL)"
+  else
+    guard_warn "cross-service cohesion missing-test=$MISSING (pass=$PASS/$TOTAL)"
+  fi
 elif [[ "$PASS" -lt "$MIN_PASS" ]]; then
-  guard_warn "cross-service cohesion pass=$PASS below minimum=$MIN_PASS"
+  if [[ "$BLOCKING" == "1" ]]; then
+    guard_fail "cross-service cohesion pass=$PASS below minimum=$MIN_PASS"
+  else
+    guard_warn "cross-service cohesion pass=$PASS below minimum=$MIN_PASS"
+  fi
 else
   guard_pass "cross-service cohesion — pass=$PASS/$TOTAL"
 fi

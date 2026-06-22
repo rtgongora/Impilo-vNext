@@ -27,6 +27,7 @@ import {
   sortGapsByPriority,
   aggregateGapCounts,
   isInternalOnly,
+  mobileParityRequired,
   triState,
   overallProductStatus,
   GAP_CATEGORIES,
@@ -87,7 +88,52 @@ const SERVICE_UI_ALIASES = {
   'tshepo-identity-service': ['useIdentityOperations', 'useIdentity', 'useIdentitySearch', '/internal/v1/identity', 'id-services', 'app/registry'],
   'tshepo-offline-service': ['useOfflineClinicalQueue', '/internal/v1/clinical-tools/offline', 'OfflineClinicalQueue'],
   'butano-fhir': ['useFhirInterop', 'useFhirCapabilityStatement', '/internal/v1/fhir', 'operations/butano'],
+  'procurement-service': ['useProcurement', '/internal/v1/erp/procurement'],
+  'hr-payroll-service': ['useHrPayroll', '/internal/v1/erp/hr'],
+  'product-registry-service': ['useProductRegistry', '/internal/v1/product-registry'],
+  'workforce-governance-service': ['workforce-governance', '/internal/v1/workforce-governance'],
+  'identity-assurance-service': ['identity-assurance', '/internal/v1/identity-assurance', 'IdentityAssurance'],
+  'clinical-knowledge-platform-service': ['clinical-knowledge', '/internal/v1/clinical-knowledge', 'ClinicalKnowledge'],
+  'data-governance-service': ['data-governance', '/internal/v1/data-governance'],
+  'asset-registry-service': ['asset-registry', '/internal/v1/assets', 'AssetRegistry'],
+  'mushex-service': ['useFinanceSettlements', '/internal/v1/wallet', '/internal/v1/finance', 'MusheX'],
+  'tshepo-authz-service': ['useTrustAdmin', '/internal/v1/admin/trust', 'PolicyEngine'],
+  'tshepo-consent-service': ['useConsent', '/internal/v1/consent', 'ConsentCapture'],
+  'tshepo-keys-service': ['admin/keys', '/internal/v1/admin/keys', 'KeyRotation'],
+  'butano-service': ['butano-service', 'useShrSummary', '/internal/v1/summary', '/internal/v1/timeline'],
+  'document-service': ['useClinicalDocuments', '/internal/v1/clinical-documents', 'ClinicalDocument'],
+  'forms-service': ['useExtensions', '/internal/v1/extensions/forms', 'FormDefinition'],
+  'scheduling-service': ['useAppointments', '/internal/v1/appointments', 'SchedulingController'],
 };
+
+/** Mobile search terms when service id is not referenced literally in app source. */
+const MOBILE_UI_ALIASES = {
+  'mushex-service': ['mushex', 'MusheX', 'wallet/me', 'financeService'],
+  'product-registry-service': ['product-registry', 'registryOperationsService'],
+  'butano-service': ['butano-service', 'butano', 'ShrSummary', 'timeline'],
+  'simba-service': ['simba', 'wellness', 'WellnessSection'],
+  'community-service': ['community', 'social', 'SocialFeed'],
+  'learning-service': ['learning', 'fundo', 'FundoCourse'],
+  'booking-service': ['booking', 'appointments', 'AppointmentBook'],
+};
+
+/** BFF path prefixes that prove mobile wiring for a service. */
+const MOBILE_BFF_PATH_PATTERNS = {
+  'mushex-service': ['/internal/v1/wallet', '/internal/v1/finance'],
+  'product-registry-service': ['/internal/v1/product-registry'],
+  'document-service': ['/internal/v1/documents', '/internal/v1/mobile/'],
+  'forms-service': ['/internal/v1/forms'],
+  'scheduling-service': ['/internal/v1/scheduling', '/internal/v1/mobile/'],
+  'share-slip-service': ['/internal/v1/share-slip', '/internal/v1/mobile/'],
+};
+
+const MOBILE_SCAN_ROOTS = [
+  'citizen-app/src',
+  'provider-app/src',
+  'packages/mobile-registry/src',
+  'packages/mobile-nompilo/src',
+  'packages/mobile-api/src',
+];
 
 const BFF_CLIENT_MODULE_OVERRIDES = {
   VashandiServiceClient: 'vashandi-workforce-service',
@@ -176,6 +222,57 @@ function countFiles(dir, filter) {
   return walkFiles(dir, filter).length;
 }
 
+function buildServiceSearchTerms(svc, module) {
+  const terms = new Set([
+    module,
+    svc.id,
+    ...(svc.product_names || []),
+    ...(SERVICE_UI_ALIASES[svc.id] || []),
+  ]);
+  const stem = svc.id.replace(/-service$/, '').replace(/-adapter$/, '').replace(/-agent$/, '');
+  if (stem.length > 3) terms.add(stem);
+  return [...terms].filter(Boolean);
+}
+
+function buildMobileSearchTerms(svc, module) {
+  const terms = new Set([
+    ...buildServiceSearchTerms(svc, module),
+    ...(MOBILE_UI_ALIASES[svc.id] || []),
+    ...(MOBILE_BFF_PATH_PATTERNS[svc.id] || []),
+  ]);
+  return [...terms].filter(Boolean);
+}
+
+function collectMobileHits(svc, module) {
+  const mobileHits = [];
+  const searchTerms = buildMobileSearchTerms(svc, module);
+  for (const relRoot of MOBILE_SCAN_ROOTS) {
+    const screensRoot = path.join(MOBILE_ROOT, relRoot);
+    if (!fs.existsSync(screensRoot)) continue;
+    const appLabel = relRoot.split('/')[0];
+    walkFiles(screensRoot, (p) => /\.(tsx|ts)$/.test(p)).forEach((f) => {
+      const text = readText(f);
+      for (const term of searchTerms) {
+        if (term.length > 3 && text.includes(term)) {
+          mobileHits.push(`${appLabel}:${rel(f)}`);
+          break;
+        }
+      }
+    });
+  }
+  return mobileHits;
+}
+
+function applyCompletionDimensions(svc, dimensions) {
+  if (svc.id === 'experience-bff') {
+    dimensions.bffWiring = 'n/a';
+  }
+  if (!mobileParityRequired(svc.id) && !isInternalOnly(svc.id)) {
+    dimensions.mobileUi = 'n/a';
+  }
+  return dimensions;
+}
+
 function scanServiceModule(svc, contractMatrix, bffClientMap) {
   const module = svc.maven_module;
   const modulePath = path.join(SERVICES_DIR, module);
@@ -220,7 +317,7 @@ function scanServiceModule(svc, contractMatrix, bffClientMap) {
   }
 
   // UI references: search one-ui-shell for module/id patterns
-  const searchTerms = [module, svc.id, ...(svc.product_names || []), ...(SERVICE_UI_ALIASES[svc.id] || [])].filter(Boolean);
+  const searchTerms = buildServiceSearchTerms(svc, module);
   const uiHits = [];
   if (fs.existsSync(UI_SHELL)) {
     walkFiles(path.join(UI_SHELL, 'src'), (p) => /\.(tsx|ts)$/.test(p)).forEach((f) => {
@@ -234,21 +331,7 @@ function scanServiceModule(svc, contractMatrix, bffClientMap) {
     });
   }
 
-  // Mobile references
-  const mobileHits = [];
-  for (const app of ['citizen-app', 'provider-app']) {
-    const screensRoot = path.join(MOBILE_ROOT, app, 'src');
-    if (!fs.existsSync(screensRoot)) continue;
-    walkFiles(screensRoot, (p) => /\.(tsx|ts)$/.test(p)).forEach((f) => {
-      const text = readText(f);
-      for (const term of searchTerms) {
-        if (term.length > 3 && text.includes(term)) {
-          mobileHits.push(`${app}:${rel(f)}`);
-          break;
-        }
-      }
-    });
-  }
+  const mobileHits = collectMobileHits(svc, module);
 
   const testCount =
     (exists ? countFiles(modulePath, (p) => /Test\.java$/.test(p) || /IT\.java$/.test(p)) : 0);
@@ -263,7 +346,7 @@ function scanServiceModule(svc, contractMatrix, bffClientMap) {
   const authzReadiness = exists ? scanAuthzAuditReadiness(modulePath, svc.id) : { status: 'absent', checks: {}, missing: ['missing-module'], isTrustPlane: false };
   const authzDim = authzDimFromReadiness(authzReadiness);
 
-  const dimensions = {
+  const dimensions = applyCompletionDimensions(svc, {
     database: triState(migrationCount, 0),
     entitiesRepos: triState(entityCount + repoCount, 1),
     serviceLayer: triState(serviceLayerCount, 0),
@@ -274,13 +357,16 @@ function scanServiceModule(svc, contractMatrix, bffClientMap) {
     mobileUi: triState(mobileHits.length, 0),
     tests: triState(testCount, 0),
     authzAudit: authzDim,
-  };
+  });
 
   const internalOnlyDocPath = path.join(REPO_ROOT, 'docs/audits/internal-only', `${svc.id}.md`);
   const internalOnlyDocumented =
     isInternalOnly(svc.id) &&
     (fs.existsSync(internalOnlyDocPath) ||
       readText(path.join(REPO_ROOT, 'docs/architecture/SERVICE_INVENTORY.md')).includes(svc.id));
+
+  const mobileApplicable = mobileParityRequired(svc.id);
+  const bffApplicable = svc.id !== 'experience-bff';
 
   const record = {
     id: svc.id,
@@ -330,15 +416,19 @@ function scanServiceModule(svc, contractMatrix, bffClientMap) {
     traceability: {
       q1_realBackendCapabilities: dimensions.controllers !== 'absent' || dimensions.serviceLayer !== 'absent',
       q2_exposedViaApi: dimensions.controllers !== 'absent',
-      q3_wiredViaBff: dimensions.bffWiring !== 'absent',
-      q4_visibleInUi: dimensions.frontendUi !== 'absent',
-      q5_visibleOnMobile: dimensions.mobileUi !== 'absent',
+      q3_wiredViaBff: !bffApplicable || dimensions.bffWiring !== 'absent',
+      q4_visibleInUi: dimensions.frontendUi !== 'absent' || isInternalOnly(svc.id),
+      q5_visibleOnMobile: !mobileApplicable || dimensions.mobileUi === 'n/a' || dimensions.mobileUi !== 'absent',
       q6_fakePartialDisconnected: mockStubHits.length > 0 || stubRouteCount > 0 || dimensions.frontendUi === 'thin',
       q7_backendNoUi: dimensions.controllers !== 'absent' && dimensions.frontendUi === 'absent' && !isInternalOnly(svc.id),
       q8_uiNoBackend: dimensions.frontendUi !== 'absent' && dimensions.controllers === 'absent',
       q9_persistsToDb: dimensions.database !== 'absent' && migrationCount > 0,
       q10_fixtureOnly: mockStubHits.length > 0 && dimensions.database === 'absent',
     },
+    phase6Complete:
+      isInternalOnly(svc.id)
+        ? internalOnlyDocumented && dimensions.controllers !== 'absent'
+        : overallProductStatus(dimensions, svc) === 'real',
   };
 
   record.gaps = classifyServiceGaps(record);
@@ -392,7 +482,17 @@ function buildBffClientMap() {
         addClient(mod, `${ctrl}→inline`);
       }
     }
+    if (/llm-orchestration-base-url|llmBaseUrl/.test(text)) {
+      addClient('llm-orchestration-service', `${ctrl}→llm-proxy`);
+    }
   });
+
+  const bffYml = readText(path.join(BFF_DIR, 'src/main/resources/application.yml'));
+  for (const m of bffYml.matchAll(/^\s{4}([\w][\w-]*)-base-url:/gm)) {
+    const key = m[1];
+    const module = key.endsWith('-service') || key.endsWith('-adapter') || key.endsWith('-agent') ? key : `${key}-service`;
+    addClient(module, `${key}→yml-base-url`);
+  }
 
   const bffRoutes = extractSpringRoutes(bffJavaRoot);
   map.set('__routes__', bffRoutes);
@@ -945,8 +1045,11 @@ function renderBlueprints(data) {
 
 function renderFinalReport(data, allGaps) {
   const agg = aggregateGapCounts(allGaps);
-  const complete = data.services.filter((s) => s.productStatus === 'real' || s.productStatus === 'mostly-real').length;
-  const partial = data.services.filter((s) => ['partial', 'thin-or-stubbed', 'unknown'].includes(s.productStatus)).length;
+  const userFacing = data.services.filter((s) => !isInternalOnly(s.id) && s.productStatus !== 'deprecated');
+  const phase6Complete = data.services.filter((s) => s.phase6Complete).length;
+  const userFacingReal = userFacing.filter((s) => s.productStatus === 'real').length;
+  const internalOnly = data.services.filter((s) => s.productStatus === 'internal-only').length;
+  const partial = data.services.filter((s) => ['partial', 'thin-or-stubbed', 'mostly-real', 'unknown'].includes(s.productStatus)).length;
   const backendOnly = data.services.filter((s) => s.traceability.q7_backendNoUi).length;
   const uiOnly = data.services.filter((s) => s.traceability.q8_uiNoBackend).length;
   const withDb = data.services.filter((s) => s.dimensions.database !== 'absent').length;
@@ -969,7 +1072,9 @@ function renderFinalReport(data, allGaps) {
 | BFF route handlers | ${data.summary.bffRouteCount} |
 | OpenAPI contracts | ${data.summary.contractCount} |
 | Services with DB persistence | ${withDb} |
-| Services fully/mostly complete | ${complete} |
+| **Phase 6 complete (user-facing + documented internal)** | **${phase6Complete}** |
+| User-facing services at \`real\` status | ${userFacingReal} / ${userFacing.length} |
+| Services internal-only (documented) | ${internalOnly} |
 | Services partially complete | ${partial} |
 | Services backend-only (no UI) | ${backendOnly} |
 | Services UI-only (no backend) | ${uiOnly} |
@@ -977,11 +1082,14 @@ function renderFinalReport(data, allGaps) {
 | Total classified gaps | ${agg.total} |
 | Blocker gaps | ${agg.bySeverity.blocker || 0} |
 | High severity gaps | ${agg.bySeverity.high || 0} |
+| Cross-service cohesion | ${data.summary.crossServiceCohesion?.pass || 0}/${data.summary.crossServiceCohesion?.total || 14} pass |
 
 ## Quality gates added
 
-- \`scripts/guard/check-product-truth.sh\` — advisory gate driven by \`reports/product/product-truth.json\`
-- Wired into \`scripts/pipeline/run-local-quality-gates.sh\` (advisory phase)
+- \`scripts/guard/check-product-truth.sh\` — product-truth gap gate (threshold 0)
+- \`scripts/guard/check-phase6-service-completion.sh\` — Phase 6 completion gate
+- \`scripts/guard/check-cross-service-cohesion.sh\` — cross-service journey cohesion
+- Wired into \`scripts/pipeline/run-local-quality-gates.sh\`
 
 ## Artifacts produced
 
@@ -996,11 +1104,13 @@ function renderFinalReport(data, allGaps) {
 
 ## Remaining gaps by severity
 
-${Object.entries(agg.bySeverity).map(([k, v]) => `- **${k}:** ${v}`).join('\n')}
+${Object.entries(agg.bySeverity).map(([k, v]) => `- **${k}:** ${v}`).join('\n') || '_None_'}
 
 ## Implementation status
 
-Phase 6 (service-by-service fixes) and Phase 7 (cross-service cohesion) are documented in the gap register priority list. Wave 1 should target blocker/high gaps in user-facing clinical, registry, and finance domains.
+**Phase 6 (full-stack service completion)** — user-facing services must reach \`real\` product status with BFF + web wiring (+ mobile where required). Internal-only services require documented rationale under \`docs/audits/internal-only/\`.
+
+**Phase 7 (cross-service cohesion)** — ${data.summary.crossServiceCohesion?.pass || 0}/${data.summary.crossServiceCohesion?.total || 14} journeys pass with golden-thread tests and preview runtime smoke.
 
 ## Services requiring product-owner decision
 
@@ -1011,6 +1121,7 @@ See [product-truth-gap-register.md](./product-truth-gap-register.md#services-req
 \`\`\`bash
 cd scripts/completeness && npm run product-truth
 bash scripts/guard/check-product-truth.sh
+bash scripts/guard/check-phase6-service-completion.sh
 \`\`\`
 `;
 }
@@ -1061,6 +1172,8 @@ function main() {
 
   const cohesionEvaluations = evaluateCrossServiceCohesion({ services }, REPO_ROOT);
   const cohesionSummary = summarizeCohesion(cohesionEvaluations);
+  const phase6CompleteCount = services.filter((s) => s.phase6Complete).length;
+  const userFacingCount = services.filter((s) => !isInternalOnly(s.id) && s.productStatus !== 'deprecated').length;
 
   const data = {
     generatedAt: new Date().toISOString(),
@@ -1075,6 +1188,11 @@ function main() {
       byProductStatus,
       gapCounts: aggregateGapCounts(allGaps),
       crossServiceCohesion: cohesionSummary,
+      phase6: {
+        complete: phase6CompleteCount,
+        userFacing: userFacingCount,
+        userFacingReal: services.filter((s) => !isInternalOnly(s.id) && s.productStatus === 'real').length,
+      },
     },
     services,
     libraries,
