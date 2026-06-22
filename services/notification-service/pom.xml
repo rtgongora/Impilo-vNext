@@ -84,6 +84,14 @@
             <artifactId>shared-kernel-java</artifactId>
             <version>0.1.0-SNAPSHOT</version>
         </dependency>
+        <!-- Shared security baseline (RateLimitFilter, SecurityBaselineExceptionHandler;
+             transitively brings security-baseline RateLimitGuard/SecretProvider) required by
+             the generated SecurityBaselineConfig. -->
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>shared-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <!-- Ops Instrumentation (structured logging, metrics, health) -->
         <dependency>

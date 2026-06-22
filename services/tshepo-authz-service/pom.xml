@@ -151,6 +151,14 @@
             <artifactId>tech-companion</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!-- Shared security baseline (RateLimitFilter, SecurityBaselineExceptionHandler;
+             transitively brings security-baseline RateLimitGuard/SecretProvider) required by
+             the generated SecurityBaselineConfig. -->
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>shared-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <!-- Tech Companion Harness — golden contract tests -->
         <dependency>
