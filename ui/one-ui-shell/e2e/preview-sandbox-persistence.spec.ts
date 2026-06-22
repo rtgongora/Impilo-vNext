@@ -42,7 +42,8 @@ test.describe("Preview sandbox persistence proofs", () => {
 
   test("governance: policy POST persists across re-navigation", async ({ page }) => {
     const policyName = uniqueMarker("e2e-governance-policy");
-    await openStableShell(page);
+    await installPreviewSession(page.context(), process.env.PLAYWRIGHT_BASE_URL ?? "http://41.57.127.235");
+    await gotoAppPath(page, "/");
 
     const post = await bffPostFromBrowser(page, "/internal/v1/governance/access/policies", {
       name: policyName,
@@ -57,7 +58,7 @@ test.describe("Preview sandbox persistence proofs", () => {
     expect(list.ok).toBeTruthy();
     expect(list.text).toContain(policyName);
 
-    await gotoAppPath(page, "/enterprise");
+    await gotoAppPath(page, "/");
     const listAfter = await bffGetFromBrowser(page, "/internal/v1/governance/access/policies");
     expect(listAfter.ok).toBeTruthy();
     expect(listAfter.text).toContain(policyName);
@@ -65,7 +66,8 @@ test.describe("Preview sandbox persistence proofs", () => {
 
   test("inventory: requisition POST persists across re-navigation", async ({ page }) => {
     const notes = uniqueMarker("e2e-requisition-notes");
-    await openStableShell(page);
+    await installPreviewSession(page.context(), process.env.PLAYWRIGHT_BASE_URL ?? "http://41.57.127.235");
+    await gotoAppPath(page, "/");
 
     const post = await bffPostFromBrowser(page, "/internal/v1/inventory/requisitions", {
       facility_id: PREVIEW_FACILITY_ID,
@@ -85,7 +87,7 @@ test.describe("Preview sandbox persistence proofs", () => {
     expect(list.ok).toBeTruthy();
     expect(list.text).toContain(reqId!);
 
-    await gotoAppPath(page, "/enterprise");
+    await gotoAppPath(page, "/");
     const listAfter = await bffGetFromBrowser(
       page,
       `/internal/v1/inventory/requisitions?facility_id=${PREVIEW_FACILITY_ID}`,
