@@ -242,11 +242,69 @@ public class SocialService {
         SocialPostEntity p = postRepo.findById(id)
                 .filter(e -> tenantId.equals(e.getTenantId()))
                 .orElseThrow(() -> notFound("post"));
-        // TODO(role-check): integrate with TSHEPO authz to gate moderator/admin pin
+        // Pinning is a moderation action: the coarse "may this actor reach the
+        // service" decision is enforced upstream at the Envoy→TSHEPO gateway; here
+        // we enforce the resource-level rule that the actor moderates the post's
+        // container (community moderator, group moderator, or page admin), mirroring
+        // the author-only checks used by the other post-mutating actions.
+        requirePinAuthority(p, actorId);
         p.setPinned(pinned);
         postRepo.save(p);
         events.emit(tenantId, "post.pinned", "social-post", id.toString(),
                 Map.of("postId", id.toString(), "pinned", pinned));
+    }
+
+    /**
+     * Authorizes a pin/unpin against the post's container. Community posts require
+     * a community moderator, group posts a group moderator, page posts a page admin.
+     * A post with no container (personal feed) may only be pinned by its author.
+     */
+    private void requirePinAuthority(SocialPostEntity post, String actorId) {
+        if (actorId == null || actorId.isBlank()) {
+            throw forbidden("an actor identity is required to pin posts");
+        }
+        if (post.getCommunityId() != null) {
+            if (isCommunityModerator(post.getCommunityId(), actorId)) return;
+            throw forbidden("only a moderator of this community can pin posts");
+        }
+        if (post.getGroupId() != null) {
+            if (isGroupModerator(post.getGroupId(), actorId)) return;
+            throw forbidden("only a moderator of this group can pin posts");
+        }
+        if (post.getPageId() != null) {
+            if (isPageAdmin(post.getPageId(), actorId)) return;
+            throw forbidden("only an admin of this page can pin posts");
+        }
+        if (!Objects.equals(actorId, post.getAuthorActorId())) {
+            throw forbidden("only the author can pin this post");
+        }
+    }
+
+    private boolean isCommunityModerator(UUID communityId, String actorId) {
+        SocialCommunityEntity c = communityRepo.findById(communityId).orElse(null);
+        if (c != null && SocialJson.readStringList(json, c.getModeratorIdsJson()).contains(actorId)) {
+            return true;
+        }
+        return communityMembershipRepo.findFirstByCommunityIdAndActorId(communityId, actorId)
+                .map(m -> isElevatedRole(m.getRole()))
+                .orElse(false);
+    }
+
+    private boolean isGroupModerator(UUID groupId, String actorId) {
+        return groupMembershipRepo.findFirstByGroupIdAndActorId(groupId, actorId)
+                .map(m -> isElevatedRole(m.getRole()))
+                .orElse(false);
+    }
+
+    private boolean isPageAdmin(UUID pageId, String actorId) {
+        SocialPageEntity p = pageRepo.findById(pageId).orElse(null);
+        return p != null && SocialJson.readStringList(json, p.getAdminIdsJson()).contains(actorId);
+    }
+
+    private static boolean isElevatedRole(String role) {
+        if (role == null) return false;
+        String r = role.trim().toLowerCase();
+        return r.equals("moderator") || r.equals("admin") || r.equals("owner");
     }
 
     // ── Reactions ──────────────────────────────────────────────────────────
