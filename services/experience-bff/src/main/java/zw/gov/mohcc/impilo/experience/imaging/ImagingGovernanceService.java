@@ -48,7 +48,9 @@ public class ImagingGovernanceService {
     }
 
     public void assertGovernedRead() {
-        imagingAccessPolicyService.requireClinicalImagingActor();
+        if (!allowAnonymous) {
+            imagingAccessPolicyService.requireClinicalImagingActor();
+        }
         if (allowAnonymous || !requireTshepoAuthorize) {
             return;
         }
@@ -62,7 +64,9 @@ public class ImagingGovernanceService {
     }
 
     public void assertGovernedMutate() {
-        imagingAccessPolicyService.requireClinicalImagingActor();
+        if (!allowAnonymous) {
+            imagingAccessPolicyService.requireClinicalImagingActor();
+        }
         if (allowAnonymous || !requireTshepoAuthorize) {
             return;
         }
@@ -76,7 +80,9 @@ public class ImagingGovernanceService {
     }
 
     public void assertViewerLaunch() {
-        imagingAccessPolicyService.requireClinicalImagingActor();
+        if (!allowAnonymous) {
+            imagingAccessPolicyService.requireClinicalImagingActor();
+        }
         if (allowAnonymous || !requireTshepoAuthorize) {
             return;
         }

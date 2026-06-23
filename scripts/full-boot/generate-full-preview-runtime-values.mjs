@@ -86,6 +86,12 @@ function specialEnv(serviceId) {
       IMPILO_SECURITY_ALLOW_ANONYMOUS: "true",
     };
   }
+  if (serviceId === "pct-service") {
+    return {
+      KEYCLOAK_ISSUER: "",
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "",
+    };
+  }
   if (serviceId === "ndila-service") {
     return {
       NDILA_ALLOW_ANONYMOUS: "true",

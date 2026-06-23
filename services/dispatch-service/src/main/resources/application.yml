@@ -9,6 +9,9 @@ spring:
     username: ${POSTGRES_USER:impilo}
     password: ${POSTGRES_PASSWORD:impilo}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 3
+      minimum-idle: 1
   jpa:
     hibernate:
       ddl-auto: validate
