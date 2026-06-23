@@ -1,7 +1,7 @@
 # Full Product Truth Recovery Report
 
-> Generated: 2026-06-20T13:50:43.992Z
-> Branch: `claude/product-truth-recovery`
+> Generated: 2026-06-23T17:23:54.424Z
+> Branch: `intake/product-truth-scanner-honesty`
 
 ## Executive summary
 
@@ -12,20 +12,34 @@
 | Shared libraries | 12 |
 | Frontend surfaces (routes) | 614 |
 | Mobile screens | 174 |
-| BFF route handlers | 2145 |
+| BFF route handlers | 2152 |
 | OpenAPI contracts | 102 |
 | Services with DB persistence | 92 |
-| **Phase 6 complete (user-facing + documented internal)** | **92** |
-| User-facing services at `real` status | 67 / 67 |
+| **Phase 6 complete (user-facing + documented internal)** | **88** |
+| User-facing services with `real` code present (file-existence axis) | 67 / 67 |
+| — of those, **runtime-proven** (REAL_PROVEN) | **0** |
 | Services internal-only (documented) | 24 |
 | Services partially complete | 0 |
 | Services backend-only (no UI) | 0 |
 | Services UI-only (no backend) | 0 |
-| Services with mock/stub hits | 0 |
-| Total classified gaps | 0 |
-| Blocker gaps | 0 |
-| High severity gaps | 0 |
+| Services with mock/stub hits | 1 |
+| Total classified gaps | 7 |
+| Blocker gaps | 1 |
+| High severity gaps | 6 |
 | Cross-service cohesion | 14/14 pass |
+
+> **Honesty note:** `real` above is the file-existence axis (code present + wired),
+> NOT proof the capability runs. The honest maturity axis is below; this static scan
+> can never emit `REAL_PROVEN` — that requires a runtime/test probe artifact (Wave 5/6).
+
+## Maturity breakdown (honest)
+
+| Maturity | Count |
+|----------|------:|
+| INTERNAL_ONLY | 24 |
+| REAL_CODE_NOT_PROBED | 63 |
+| FIXTURE_BACKED | 4 |
+| DEFERRED_WITH_ADR | 1 |
 
 ## Quality gates added
 
@@ -47,7 +61,8 @@
 
 ## Remaining gaps by severity
 
-_None_
+- **blocker:** 1
+- **high:** 6
 
 ## Implementation status
 

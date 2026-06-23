@@ -1,6 +1,6 @@
 # Product Truth — Backend-to-UI Traceability
 
-> Generated: 2026-06-20T13:50:43.992Z
+> Generated: 2026-06-23T17:23:54.424Z
 
 For each service: backend capabilities → API → BFF → UI → mobile → persistence.
 
@@ -271,6 +271,9 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/components/clinical/ClinicalKnowledgeDock.tsx`
 - `ui/one-ui-shell/src/components/clinical/EdlizPrescribingPanel.tsx`
 
+**Gaps:**
+- [S] clinical-knowledge-platform-service: security/crypto/authz placeholder in product path (1 hits) (high)
+
 ## community-service
 
 - **Path:** `services/community-service`
@@ -282,7 +285,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (6 controllers, 47 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: social.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (20 clients) |
-| 4 | Visible in UI? | Yes (60 refs) |
+| 4 | Visible in UI? | Yes (59 refs) |
 | 5 | Visible on mobile? | Yes (35 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
@@ -296,6 +299,9 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/communities/[id]/page.tsx`
 - `ui/one-ui-shell/src/app/communities/page.tsx`
 - `ui/one-ui-shell/src/app/home/bookings/new/page.tsx`
+
+**Gaps:**
+- [S] community-service: security/crypto/authz placeholder in product path (2 hits) (high)
 
 ## connector-fhir-adapter
 
@@ -604,12 +610,12 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 
 | # | Question | Answer |
 |---|----------|--------|
-| 1 | Real backend capabilities? | Yes (254 controllers, 2145 routes) |
+| 1 | Real backend capabilities? | Yes (256 controllers, 2152 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: experience-bff.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (0 clients) |
 | 4 | Visible in UI? | Yes (162 refs) |
 | 5 | Visible on mobile? | Yes (54 refs) |
-| 6 | Fake/partial/disconnected? | No |
+| 6 | Fake/partial/disconnected? | Yes — review |
 | 7 | Backend without UI? | No |
 | 8 | UI without backend? | No |
 | 9 | Persists to DB? | Yes (45 migrations) |
@@ -621,6 +627,10 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/admin/data-export/page.tsx`
 - `ui/one-ui-shell/src/app/admin/federation/page.tsx`
 - `ui/one-ui-shell/src/app/admin/integration-status/page.tsx`
+
+**Gaps:**
+- [F] experience-bff: mock/stub/fixture/in-memory patterns in product path (2 hits) (high)
+- [S] experience-bff: security/crypto/authz placeholder in product path (2 hits) (high)
 
 ## fhir-gateway-service
 
@@ -880,15 +890,15 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 
 | # | Question | Answer |
 |---|----------|--------|
-| 1 | Real backend capabilities? | Yes (10 controllers, 51 routes) |
+| 1 | Real backend capabilities? | Yes (10 controllers, 52 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: inventory.openapi.yaml) |
-| 3 | Wired via BFF? | Yes (7 clients) |
+| 3 | Wired via BFF? | Yes (9 clients) |
 | 4 | Visible in UI? | Yes (59 refs) |
 | 5 | Visible on mobile? | Yes (16 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
 | 8 | UI without backend? | No |
-| 9 | Persists to DB? | Yes (3 migrations) |
+| 9 | Persists to DB? | Yes (4 migrations) |
 | 10 | Fixture-only flows? | No |
 
 **UI references (sample):**
@@ -1010,7 +1020,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (11 controllers, 68 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: impilo-live.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (2 clients) |
-| 4 | Visible in UI? | Yes (262 refs) |
+| 4 | Visible in UI? | Yes (263 refs) |
 | 5 | Visible on mobile? | Yes (58 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
@@ -1065,10 +1075,10 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 
 **UI references (sample):**
 - `ui/one-ui-shell/src/app/ehr/[patientId]/orders/page.tsx`
-- `ui/one-ui-shell/src/app/home/page.tsx`
 - `ui/one-ui-shell/src/app/madi/blood-bank/crossmatch/page.tsx`
 - `ui/one-ui-shell/src/app/madi/blood-bank/fridges/page.tsx`
 - `ui/one-ui-shell/src/app/madi/blood-bank/issue/page.tsx`
+- `ui/one-ui-shell/src/app/madi/blood-bank/orders/page.tsx`
 
 ## msika-apps-service
 
@@ -1173,6 +1183,9 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/marketplace/cart/page.tsx`
 - `ui/one-ui-shell/src/app/wallet/page.tsx`
 - `ui/one-ui-shell/src/components/navigation/ExperienceSidebar.tsx`
+
+**Gaps:**
+- [S] mushe-wallet-service: security/crypto/authz placeholder in product path (2 hits) (blocker)
 
 ## mushex-service
 
@@ -1556,7 +1569,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 |---|----------|--------|
 | 1 | Real backend capabilities? | Yes (1 controllers, 21 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: procurement.openapi.yaml) |
-| 3 | Wired via BFF? | Yes (3 clients) |
+| 3 | Wired via BFF? | Yes (4 clients) |
 | 4 | Visible in UI? | Yes (23 refs) |
 | 5 | Visible on mobile? | Yes (0 refs) |
 | 6 | Fake/partial/disconnected? | No |
