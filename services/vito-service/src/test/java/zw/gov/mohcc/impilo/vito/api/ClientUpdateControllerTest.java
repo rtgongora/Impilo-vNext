@@ -93,7 +93,8 @@ class ClientUpdateControllerTest {
     void update_validRequest_patchesFields() throws Exception {
         ClientDemographicsUpdateRequest request = new ClientDemographicsUpdateRequest(
                 "NewGiven", null, "NewFamily",
-                null, null, null, null, null, null, null
+                null, null, null, null, null, null, null,
+                null, null, null, null, null, null
         );
 
         ClientEntity updatedClient = buildClient(healthId, tenantId, "NewGiven", "NewFamily");
@@ -117,7 +118,8 @@ class ClientUpdateControllerTest {
     void update_partialRequest_onlyPatchesProvidedFields() throws Exception {
         ClientDemographicsUpdateRequest request = new ClientDemographicsUpdateRequest(
                 "UpdatedGiven", null, null,
-                null, null, null, null, null, null, null
+                null, null, null, null, null, null, null,
+                null, null, null, null, null, null
         );
 
         ClientEntity clientWithOriginalFamily = buildClient(healthId, tenantId, "UpdatedGiven", "OriginalFamily");
@@ -140,7 +142,8 @@ class ClientUpdateControllerTest {
     void update_nonExistentHealthId_returns404() throws Exception {
         ClientDemographicsUpdateRequest request = new ClientDemographicsUpdateRequest(
                 "Ghost", null, null,
-                null, null, null, null, null, null, null
+                null, null, null, null, null, null, null,
+                null, null, null, null, null, null
         );
 
         when(clientUpdateService.update(eq(tenantId), eq(healthId), any(), anyString(), anyString()))
@@ -169,7 +172,8 @@ class ClientUpdateControllerTest {
 
         ClientDemographicsUpdateRequest request = new ClientDemographicsUpdateRequest(
                 "NewGiven", null, null,
-                null, null, null, null, null, null, null
+                null, null, null, null, null, null, null,
+                null, null, null, null, null, null
         );
 
         mockMvc.perform(put("/v1/clients/{healthId}", healthId)
@@ -182,7 +186,8 @@ class ClientUpdateControllerTest {
     void update_publishes_CLIENT_DEMOGRAPHICS_UPDATED_event() throws Exception {
         ClientDemographicsUpdateRequest request = new ClientDemographicsUpdateRequest(
                 "Event", null, "Test",
-                null, null, null, null, null, null, null
+                null, null, null, null, null, null, null,
+                null, null, null, null, null, null
         );
 
         ClientEntity updatedClient = buildClient(healthId, tenantId, "Event", "Test");
