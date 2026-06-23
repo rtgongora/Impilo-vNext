@@ -21,6 +21,7 @@
     "add-spring-kafka": "node add-spring-kafka-to-service-poms.mjs",
     "sync-platform-wave": "npm run sync-bff-downstreams && npm run sync-ui-refs && npm run add-springdoc && npm run add-spring-kafka && npm run report",
     "product-truth": "node generate-product-truth.mjs",
+    "test": "node --test __tests__/",
     "emit-security-baseline": "node emit-security-baseline-config.mjs",
     "emit-service-security-config": "node emit-service-security-config.mjs"
   },
