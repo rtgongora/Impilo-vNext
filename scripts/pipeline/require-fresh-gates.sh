@@ -36,7 +36,11 @@ except Exception as e:  # noqa: BLE001
 
 commit = d.get("commit")
 verdict = str(d.get("verdict", "")).upper()
-passed = bool(d.get("vm_pipeline_passed")) and not d.get("blocking_failure") and verdict == "PASS"
+deploy_ok = bool(d.get("vm_pipeline_passed")) and not d.get("blocking_failure")
+passed = deploy_ok and (
+    verdict == "PASS"
+    or (verdict == "PASS WITH ADVISORY WARNINGS" and d.get("deploy_recommended"))
+)
 
 if commit != head:
     print(

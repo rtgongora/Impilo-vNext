@@ -79,6 +79,11 @@ function specialEnv(serviceId) {
   if (serviceId === "vito-service") {
     return { VITO_HMAC_PEPPER: "preview-vito-hmac-pepper-change-me-0123456789" };
   }
+  if (serviceId === "dispatch-service") {
+    return {
+      DISPATCH_SECURITY_OAUTH2_ENABLED: "false",
+    };
+  }
   if (serviceId === "product-registry-service") {
     return {
       KEYCLOAK_ISSUER: "",

@@ -105,6 +105,8 @@ fullBootServices:
     enabled: true
     port: 8320
     database: dispatch
+    env:
+      DISPATCH_SECURITY_OAUTH2_ENABLED: 'false'
   document-service:
     enabled: true
     port: 8093
