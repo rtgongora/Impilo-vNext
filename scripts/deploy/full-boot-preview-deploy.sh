@@ -445,6 +445,12 @@ helm upgrade --install "$RELEASE_NAME" "$CHART_DIR" \
 # rollout restart — that caused RollingUpdate surge pods and exceeded the node cap.
 echo "--- Waiting for estate rollouts (timeout ${FULL_BOOT_ROLLOUT_TIMEOUT:-45m}) ---"
 kubectl rollout status deployment -n "$NAMESPACE" --timeout="${FULL_BOOT_ROLLOUT_TIMEOUT:-45m}" || true
+
+echo "--- Sovereign preview seeds (VARAPI, WGV, domain truth) ---"
+bash "$REPO_PATH/scripts/deploy/seed-full-preview-sovereign-data.sh" || {
+  echo "WARN: sovereign seed script failed — continuing with smoke tests"
+}
+
 bash scripts/test/run-full-boot-smoke-tests.sh
 
 # --- RUNTIME IMAGE TRUTH: prove the running estate, not the deployment story. ---

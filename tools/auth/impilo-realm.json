@@ -242,6 +242,49 @@
           }
         }
       ]
+    },
+    {
+      "name": "impilo-identity",
+      "description": "Adds Health ID and Provider ID claims for VARAPI linked-ids resolution",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "health_id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "health_id",
+            "claim.name": "health_id",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "multivalued": "false",
+            "aggregate.attrs": "false"
+          }
+        },
+        {
+          "name": "provider_id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "provider_id",
+            "claim.name": "provider_id",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "multivalued": "false",
+            "aggregate.attrs": "false"
+          }
+        }
+      ]
     }
   ],
   "defaultDefaultClientScopes": [
@@ -249,7 +292,8 @@
     "profile",
     "email",
     "roles",
-    "impilo-tenant"
+    "impilo-tenant",
+    "impilo-identity"
   ],
   "clients": [
     {
@@ -277,7 +321,8 @@
         "profile",
         "email",
         "roles",
-        "impilo-tenant"
+        "impilo-tenant",
+        "impilo-identity"
       ]
     },
     {
@@ -295,7 +340,7 @@
       "webOrigins": ["http://localhost:3003", "http://197.221.242.150:3003"],
       "protocol": "openid-connect",
       "fullScopeAllowed": true,
-      "defaultClientScopes": ["openid", "profile", "email", "impilo-tenant"]
+      "defaultClientScopes": ["openid", "profile", "email", "impilo-tenant", "impilo-identity"]
     },
     {
       "clientId": "impilo-backend",
@@ -358,7 +403,7 @@
       "webOrigins": [],
       "protocol": "openid-connect",
       "fullScopeAllowed": true,
-      "defaultClientScopes": ["openid", "profile", "email", "impilo-tenant"]
+      "defaultClientScopes": ["openid", "profile", "email", "impilo-tenant", "impilo-identity"]
     },
     {
       "clientId": "citizen-app",
@@ -540,7 +585,9 @@
       "email": "mapfumo@mohcc.gov.zw",
       "attributes": {
         "facility_id": ["f1000000-0000-0000-0000-000000000001"],
-        "provider_number": ["PROV-ZW-001"]
+        "health_id": ["c0000000-0000-4000-8000-000000000001"],
+        "provider_id": ["PROV-ZW-00001"],
+        "provider_number": ["PROV-ZW-00001"]
       },
       "credentials": [
         {
