@@ -72,14 +72,28 @@ EOF
 BLOCKING="${PHASE6_GATE_BLOCKING:-1}"
 TOTAL=$((USER_FACING + INTERNAL_OK))
 
-if [[ "$INCOMPLETE" -gt 0 ]]; then
+# Honest baseline-ratchet (mirrors check-product-truth.sh): phase6Complete now
+# reflects maturity (a fixture-backed/placeholder service is NOT complete), so the
+# count of incomplete services is the TRUE number. Block on REGRESSION above the
+# recorded baseline; ratchet the baseline down as Waves 3-4 land fixes.
+PHASE6_BASELINE="${PHASE6_INCOMPLETE_BASELINE:-$(python3 - <<'PY'
+import json
+try:
+    with open("reports/product/product-truth-baseline.json") as f:
+        print(int(json.load(f).get("phase6IncompleteBaseline", 0)))
+except FileNotFoundError:
+    print(0)
+PY
+)}"
+
+if [[ "$INCOMPLETE" -gt "$PHASE6_BASELINE" ]]; then
   if [[ "$BLOCKING" == "1" ]]; then
-    guard_fail "phase6 incomplete services=$INCOMPLETE (user-facing real=$REAL_COUNT/$USER_FACING phase6_ok=$PHASE6_OK)"
+    guard_fail "phase6 REGRESSION: incomplete services=$INCOMPLETE > baseline=$PHASE6_BASELINE (user-facing real=$REAL_COUNT/$USER_FACING phase6_ok=$PHASE6_OK). Fix the service; do not raise the baseline. See reports/product/product-truth-baseline.json"
   else
-    guard_warn "phase6 incomplete services=$INCOMPLETE (advisory)"
+    guard_warn "phase6 incomplete services=$INCOMPLETE > baseline=$PHASE6_BASELINE (advisory)"
   fi
 else
-  guard_pass "phase6 service completion — user-facing real=$REAL_COUNT/$USER_FACING internal-only=$INTERNAL_OK phase6_ok=$PHASE6_OK"
+  guard_pass "phase6 service completion — incomplete=$INCOMPLETE at/below baseline=$PHASE6_BASELINE (user-facing real=$REAL_COUNT/$USER_FACING phase6_ok=$PHASE6_OK). TRUE incomplete count reported; ratchet baseline down as fixes land."
 fi
 
 exit 0

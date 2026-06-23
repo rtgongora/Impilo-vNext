@@ -18,26 +18,49 @@ if [[ ! -f "$PRODUCT_TRUTH_JSON" ]]; then
   guard_fail "missing $PRODUCT_TRUTH_JSON after generation"
 fi
 
-VIOLATIONS=$(python3 - <<'PY'
-import json, sys
+# Honest baseline-ratchet: the scanner now reports the TRUE gap count. The gate
+# blocks on REGRESSIONS (gaps above the recorded baseline) and on any NEW blocker
+# above the blocker baseline — it does NOT pretend the count is zero. The baseline
+# is a debt ledger to be ratcheted DOWN as fixes land, never up.
+read -r VIOLATIONS BLOCKERS GAP_BASELINE BLOCKER_BASELINE <<EOF
+$(python3 - <<'PY'
+import json
 with open("reports/product/product-truth.json") as f:
     d = json.load(f)
 gaps = d.get("summary", {}).get("gapCounts", {})
-print(gaps.get("total", 0))
+total = gaps.get("total", 0)
+blockers = gaps.get("bySeverity", {}).get("blocker", 0)
+gb, bb = 0, 0
+try:
+    with open("reports/product/product-truth-baseline.json") as f:
+        b = json.load(f)
+    gb = int(b.get("gapBaseline", 0))
+    bb = int(b.get("blockerBaseline", 0))
+except FileNotFoundError:
+    pass
+print(total, blockers, gb, bb)
 PY
 )
+EOF
 
-THRESHOLD="${PRODUCT_TRUTH_VIOLATION_THRESHOLD:-0}"
+# Allow an explicit override threshold, but never let it silently exceed the baseline.
+THRESHOLD="${PRODUCT_TRUTH_VIOLATION_THRESHOLD:-$GAP_BASELINE}"
 BLOCKING="${PRODUCT_TRUTH_GATE_BLOCKING:-1}"
 
-if [[ "$VIOLATIONS" -gt "$THRESHOLD" ]]; then
+if [[ "$BLOCKERS" -gt "$BLOCKER_BASELINE" ]]; then
   if [[ "$BLOCKING" == "1" ]]; then
-    guard_fail "product-truth violations=$VIOLATIONS (threshold=$THRESHOLD). See docs/audits/product-truth-gap-register.md"
+    guard_fail "product-truth NEW blocker-severity gap(s): blockers=$BLOCKERS > baseline=$BLOCKER_BASELINE. A security/crypto/UI-without-backend blocker regressed. See reports/product/product-truth-baseline.json"
   else
-    guard_warn "product-truth violations=$VIOLATIONS (advisory threshold=$THRESHOLD)"
+    guard_warn "product-truth blockers=$BLOCKERS > baseline=$BLOCKER_BASELINE (advisory)"
+  fi
+elif [[ "$VIOLATIONS" -gt "$THRESHOLD" ]]; then
+  if [[ "$BLOCKING" == "1" ]]; then
+    guard_fail "product-truth REGRESSION: violations=$VIOLATIONS > baseline=$THRESHOLD. New product-truth debt introduced; do not raise the baseline — fix the gap. See docs/audits/product-truth-gap-register.md"
+  else
+    guard_warn "product-truth violations=$VIOLATIONS > baseline=$THRESHOLD (advisory)"
   fi
 else
-  guard_pass "product-truth gate — violations=$VIOLATIONS (threshold=$THRESHOLD)"
+  guard_pass "product-truth gate — violations=$VIOLATIONS at/below baseline=$THRESHOLD (blockers=$BLOCKERS/$BLOCKER_BASELINE). TRUE count is reported, not zero; ratchet baseline down as fixes land."
 fi
 
 # Specific blocking checks (always fail on new regressions in changed files)

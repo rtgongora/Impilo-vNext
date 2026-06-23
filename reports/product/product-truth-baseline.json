@@ -1,0 +1,22 @@
+{
+  "_doc": "Honest product-truth debt baseline. The scanner now reports the TRUE gap count instead of a false 0. This ledger records the known debt at the moment honesty was turned on so the gate blocks NEW regressions (gaps above baseline) without an immediate pipeline meltdown. INTENT: ratchet every number DOWN toward 0 in Waves 3-4 as real fixes land. Never ratchet UP to absorb new debt — lower the baseline as gaps are fixed.",
+  "establishedAt": "2026-06-23",
+  "establishedBy": "Wave 2 — product-truth scanner honesty (intake/product-truth-scanner-honesty)",
+  "gapBaseline": 7,
+  "blockerBaseline": 1,
+  "phase6IncompleteBaseline": 4,
+  "knownDebt": [
+    { "id": "mushe-wallet-service", "category": "S", "severity": "blocker", "issue": "placeholder crypto key derivation (CardHealthDataService) — must wire tshepo-keys", "ratchetWave": 3 },
+    { "id": "community-service", "category": "S", "severity": "high", "issue": "moderation action without TSHEPO authz (SocialService TODO(role-check))", "ratchetWave": 3 },
+    { "id": "clinical-knowledge-platform-service", "category": "S", "severity": "high", "issue": "controller placeholder", "ratchetWave": 3 },
+    { "id": "experience-bff", "category": "S", "severity": "high", "issue": "controller placeholders (IdentityAssurance / TempIdReview)", "ratchetWave": 3 },
+    { "id": "experience-bff", "category": "F", "severity": "high", "issue": "in-memory history stores presented as persistence (Telemedicine/AppointmentComms)", "ratchetWave": 3 },
+    { "path": "/operations/facility-operations", "category": "F", "severity": "high", "issue": "workspace-ops panels render hardcoded financial/stock data (Billing/Stock fixtures)", "ratchetWave": 4 },
+    { "path": "/wellness/commodities", "category": "F", "severity": "high", "issue": "StockManagementPanel renders hardcoded PO/transfer data", "ratchetWave": 4 }
+  ],
+  "knownBlindSpots": [
+    "HR roster/shift fixtures (STAFF_ROSTER, ACTIVE_SHIFTS) are not yet flagged — they lack transactional/temporal fields, so the high-precision hardcoded-collection detector does not match. Recall improvement deferred to a tuning pass.",
+    "PortalHealthReporting (MY_REPORTS) is not statically mounted in any app route, so it is not attributed to a surface. If it becomes reachable, it will be flagged.",
+    "Maturity REAL_CODE_NOT_PROBED means code present + wired, NOT runtime-proven. REAL_PROVEN requires a probe-evidence artifact (Wave 5/6)."
+  ]
+}
