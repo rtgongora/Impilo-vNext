@@ -12,5 +12,13 @@ public record ClientDemographicsUpdateRequest(
         String addressLine1,
         String city,
         String district,
-        String province
+        String province,
+        // Extended demographics — update parity with the create path (Wave 3A).
+        // Appended (not reordered) to preserve positional/JSON contract compatibility.
+        String email,
+        String passportReference,
+        String preferredLanguage,
+        String maritalStatus,
+        String emergencyContactName,
+        String emergencyContactPhone
 ) {}
