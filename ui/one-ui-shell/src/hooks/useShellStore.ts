@@ -91,11 +91,22 @@ export interface ShellStore {
     appId: string;
     taskType: RunningTaskType;
     contextRef?: string;
+    instanceKey?: string;
+    forceNew?: boolean;
   }) => void;
+  /** Open another dock instance for the same route (new instanceKey). */
+  openNewTaskInstance: (args: {
+    route: string;
+    title: string;
+    appId: string;
+    taskType: RunningTaskType;
+    contextRef?: string;
+  }) => string;
   setActiveTask: (id: string | null) => void;
   minimizeTask: (id: string) => void;
   restoreTask: (id: string) => void;
   closeTask: (id: string) => void;
+  closeOtherTasks: (keepId: string) => void;
   clearClosedTasks: () => void;
 
   /** Refine task title when async context resolves (e.g. patient display name). */
@@ -105,6 +116,22 @@ export interface ShellStore {
   launchApp: (app: AppDefinition, routerPush: (href: string) => void) => void;
 
   clearSessionShellState: () => void;
+}
+
+function taskInstanceKey(route: string, contextRef?: string, instanceKey?: string): string {
+  return instanceKey ?? contextRef ?? route;
+}
+
+function findTaskByInstance(
+  tasks: RunningTask[],
+  route: string,
+  contextRef?: string,
+  instanceKey?: string,
+): RunningTask | undefined {
+  const key = taskInstanceKey(route, contextRef, instanceKey);
+  return tasks.find(
+    (t) => t.route === route && taskInstanceKey(t.route, t.contextRef, t.instanceKey) === key,
+  );
 }
 
 function sortTasks(tasks: RunningTask[]): RunningTask[] {
@@ -265,12 +292,13 @@ export const useShellStore = create<ShellStore>()(
       }
     },
 
-    touchRouteTask: ({ route, title, appId, taskType, contextRef }) => {
+    touchRouteTask: ({ route, title, appId, taskType, contextRef, instanceKey, forceNew }) => {
       const now = new Date().toISOString();
       const tasks = get().openTasks;
-      const existing = tasks.find((t) => t.route === route);
+      const existing = forceNew ? undefined : findTaskByInstance(tasks, route, contextRef, instanceKey);
       let nextTasks: RunningTask[];
       let activeId: string;
+      const resolvedKey = forceNew ? newId() : taskInstanceKey(route, contextRef, instanceKey);
 
       if (existing) {
         nextTasks = tasks.map((t) =>
@@ -286,6 +314,7 @@ export const useShellStore = create<ShellStore>()(
           taskType,
           title,
           route,
+          instanceKey: resolvedKey,
           contextRef,
           openedAt: now,
           lastActiveAt: now,
@@ -310,9 +339,21 @@ export const useShellStore = create<ShellStore>()(
         title,
         subtitle: route,
         href: route,
-        refKey: `route:${route}`,
+        refKey: `route:${route}:${resolvedKey}`,
         sensitivity: taskType === "patient_chart" || taskType === "dicom_viewer" ? "clinical" : "normal",
       });
+    },
+
+    openNewTaskInstance: ({ route, title, appId, taskType, contextRef }) => {
+      get().touchRouteTask({
+        route,
+        title,
+        appId,
+        taskType,
+        contextRef,
+        forceNew: true,
+      });
+      return get().activeTaskId ?? route;
     },
 
     setActiveTask: (id) => {
@@ -352,6 +393,15 @@ export const useShellStore = create<ShellStore>()(
       });
       saveJson(STORAGE_TASKS, next);
       emitShellEvent("task_closed", { taskId: id });
+    },
+
+    closeOtherTasks: (keepId) => {
+      const next = get().openTasks.filter((t) => t.id === keepId);
+      set({
+        openTasks: next,
+        activeTaskId: keepId,
+      });
+      saveJson(STORAGE_TASKS, next);
     },
 
     updateTaskTitleForRoute: (route, title) => {

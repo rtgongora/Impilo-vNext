@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { LogOut, UserCircle } from "lucide-react";
 import { ShellNotificationTray } from "./ShellNotificationTray";
+import { ShellSystemClock } from "./ShellSystemClock";
 
 /**
  * Global account and alert controls for the uppermost app strip.
@@ -14,6 +15,7 @@ export function ShellTopAccountActions() {
       className="flex shrink-0 items-center gap-0.5 sm:gap-1"
       data-testid="shell-top-account-actions"
     >
+      <ShellSystemClock />
       <Link
         href="/home/notifications"
         className="hidden items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-[color:var(--text-muted)] transition hover:bg-[color:var(--surface-soft)] hover:text-[color:var(--text-primary)] sm:inline-flex"

@@ -63,6 +63,8 @@ export interface RunningTask {
   taskType: RunningTaskType;
   title: string;
   route: string;
+  /** Disambiguates multiple dock instances for the same route */
+  instanceKey?: string;
   contextRef?: string;
   openedAt: string;
   lastActiveAt: string;
