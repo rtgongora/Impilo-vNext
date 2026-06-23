@@ -1,7 +1,7 @@
 # Full Product Truth Recovery Report
 
-> Generated: 2026-06-23T17:23:54.424Z
-> Branch: `intake/product-truth-scanner-honesty`
+> Generated: 2026-06-23T21:07:40.752Z
+> Branch: `claude/staging-ux-orchestration-remediation-Yypyl`
 
 ## Executive summary
 
@@ -15,7 +15,7 @@
 | BFF route handlers | 2152 |
 | OpenAPI contracts | 102 |
 | Services with DB persistence | 92 |
-| **Phase 6 complete (user-facing + documented internal)** | **88** |
+| **Phase 6 complete (user-facing + documented internal)** | **90** |
 | User-facing services with `real` code present (file-existence axis) | 67 / 67 |
 | — of those, **runtime-proven** (REAL_PROVEN) | **0** |
 | Services internal-only (documented) | 24 |
@@ -23,9 +23,9 @@
 | Services backend-only (no UI) | 0 |
 | Services UI-only (no backend) | 0 |
 | Services with mock/stub hits | 1 |
-| Total classified gaps | 7 |
+| Total classified gaps | 5 |
 | Blocker gaps | 1 |
-| High severity gaps | 6 |
+| High severity gaps | 4 |
 | Cross-service cohesion | 14/14 pass |
 
 > **Honesty note:** `real` above is the file-existence axis (code present + wired),
@@ -37,8 +37,8 @@
 | Maturity | Count |
 |----------|------:|
 | INTERNAL_ONLY | 24 |
-| REAL_CODE_NOT_PROBED | 63 |
-| FIXTURE_BACKED | 4 |
+| REAL_CODE_NOT_PROBED | 65 |
+| FIXTURE_BACKED | 2 |
 | DEFERRED_WITH_ADR | 1 |
 
 ## Quality gates added
@@ -62,7 +62,7 @@
 ## Remaining gaps by severity
 
 - **blocker:** 1
-- **high:** 6
+- **high:** 4
 
 ## Implementation status
 

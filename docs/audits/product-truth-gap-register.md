@@ -1,7 +1,7 @@
 # Product Truth — Gap Register
 
-> Generated: 2026-06-23T17:23:54.424Z
-> Total gaps: **7**
+> Generated: 2026-06-23T21:07:40.752Z
+> Total gaps: **5**
 
 ## Gap categories (A–R)
 
@@ -25,26 +25,24 @@
 | P | Workflow incomplete across services | 0 |
 | Q | Service is internal-only and needs documentation instead of UI | 0 |
 | R | Duplicate/overlapping capability requiring consolidation | 0 |
-| S | Security/crypto/authz placeholder in a product path | 4 |
+| S | Security/crypto/authz placeholder in a product path | 2 |
 
 ## By severity
 
 | Severity | Count |
 |----------|------:|
 | blocker | 1 |
-| high | 6 |
+| high | 4 |
 
 ## Prioritized gaps (top 100)
 
 | Rank | Entity | Category | Severity | Description |
 |------|--------|----------|----------|-------------|
 | 1 | mushe-wallet-service | S | blocker | mushe-wallet-service: security/crypto/authz placeholder in product path (2 hits) |
-| 2 | clinical-knowledge-platform-service | S | high | clinical-knowledge-platform-service: security/crypto/authz placeholder in product path (1 hits) |
-| 3 | community-service | S | high | community-service: security/crypto/authz placeholder in product path (2 hits) |
-| 4 | experience-bff | F | high | experience-bff: mock/stub/fixture/in-memory patterns in product path (2 hits) |
-| 5 | experience-bff | S | high | experience-bff: security/crypto/authz placeholder in product path (2 hits) |
-| 6 | /wellness/commodities | F | high | /wellness/commodities: mock/stub data |
-| 7 | /operations/facility-operations | F | high | /operations/facility-operations: mock/stub data |
+| 2 | experience-bff | F | high | experience-bff: mock/stub/fixture/in-memory patterns in product path (2 hits) |
+| 3 | experience-bff | S | high | experience-bff: security/crypto/authz placeholder in product path (2 hits) |
+| 4 | /wellness/commodities | F | high | /wellness/commodities: mock/stub data |
+| 5 | /operations/facility-operations | F | high | /operations/facility-operations: mock/stub data |
 
 ## Services requiring product-owner decision
 

@@ -2,13 +2,15 @@
   "_doc": "Honest product-truth debt baseline. The scanner now reports the TRUE gap count instead of a false 0. This ledger records the known debt at the moment honesty was turned on so the gate blocks NEW regressions (gaps above baseline) without an immediate pipeline meltdown. INTENT: ratchet every number DOWN toward 0 in Waves 3-4 as real fixes land. Never ratchet UP to absorb new debt — lower the baseline as gaps are fixed.",
   "establishedAt": "2026-06-23",
   "establishedBy": "Wave 2 — product-truth scanner honesty (intake/product-truth-scanner-honesty)",
-  "gapBaseline": 7,
+  "ratchetLog": [
+    "2026-06-23 Wave 2: established gap=7 blocker=1 phase6Incomplete=4.",
+    "2026-06-23 Wave A1 (land 3A/3B/3C onto Product Truth): community-service + clinical-knowledge-platform-service S gaps cleared (resource-level pin authz + specialist-only level-of-care gating). Reconciled DOWN to gap=5 blocker=1 phase6Incomplete=2."
+  ],
+  "gapBaseline": 5,
   "blockerBaseline": 1,
-  "phase6IncompleteBaseline": 4,
+  "phase6IncompleteBaseline": 2,
   "knownDebt": [
-    { "id": "mushe-wallet-service", "category": "S", "severity": "blocker", "issue": "placeholder crypto key derivation (CardHealthDataService) — must wire tshepo-keys", "ratchetWave": 3 },
-    { "id": "community-service", "category": "S", "severity": "high", "issue": "moderation action without TSHEPO authz (SocialService TODO(role-check))", "ratchetWave": 3 },
-    { "id": "clinical-knowledge-platform-service", "category": "S", "severity": "high", "issue": "controller placeholder", "ratchetWave": 3 },
+    { "id": "mushe-wallet-service", "category": "S", "severity": "blocker", "issue": "placeholder crypto key derivation (CardHealthDataService) — must wire tshepo-keys", "ratchetWave": "E3" },
     { "id": "experience-bff", "category": "S", "severity": "high", "issue": "controller placeholders (IdentityAssurance / TempIdReview)", "ratchetWave": 3 },
     { "id": "experience-bff", "category": "F", "severity": "high", "issue": "in-memory history stores presented as persistence (Telemedicine/AppointmentComms)", "ratchetWave": 3 },
     { "path": "/operations/facility-operations", "category": "F", "severity": "high", "issue": "workspace-ops panels render hardcoded financial/stock data (Billing/Stock fixtures)", "ratchetWave": 4 },

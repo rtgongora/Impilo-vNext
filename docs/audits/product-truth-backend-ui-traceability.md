@@ -1,6 +1,6 @@
 # Product Truth — Backend-to-UI Traceability
 
-> Generated: 2026-06-23T17:23:54.424Z
+> Generated: 2026-06-23T21:07:40.752Z
 
 For each service: backend capabilities → API → BFF → UI → mobile → persistence.
 
@@ -271,9 +271,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/components/clinical/ClinicalKnowledgeDock.tsx`
 - `ui/one-ui-shell/src/components/clinical/EdlizPrescribingPanel.tsx`
 
-**Gaps:**
-- [S] clinical-knowledge-platform-service: security/crypto/authz placeholder in product path (1 hits) (high)
-
 ## community-service
 
 - **Path:** `services/community-service`
@@ -299,9 +296,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/communities/[id]/page.tsx`
 - `ui/one-ui-shell/src/app/communities/page.tsx`
 - `ui/one-ui-shell/src/app/home/bookings/new/page.tsx`
-
-**Gaps:**
-- [S] community-service: security/crypto/authz placeholder in product path (2 hits) (high)
 
 ## connector-fhir-adapter
 
