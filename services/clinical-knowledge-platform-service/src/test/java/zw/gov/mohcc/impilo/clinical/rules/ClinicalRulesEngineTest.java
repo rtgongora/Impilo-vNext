@@ -22,7 +22,7 @@ class ClinicalRulesEngineTest {
                 70.0,
                 "C",
                 List.of("ASTHMA"),
-                List.of(new MedicationLine("salbutamol", "Salbutamol", null, "INHALATION", 30, false)),
+                List.of(new MedicationLine("salbutamol", "Salbutamol", null, "INHALATION", 30, false, false)),
                 null,
                 null,
                 null
@@ -70,5 +70,62 @@ class ClinicalRulesEngineTest {
         var ctx = ClinicalEvaluationContext.fromMap(m);
         assertThat(engine.evaluate(ctx).stream().map(RuleAlert::code))
                 .contains("NEONATAL_GENTAMICIN_SPECIALIST");
+    }
+
+    // ── Specialist-only level-of-care gating (Block 3C) ──────────────────────
+
+    @Test
+    void specialistOnlyMedicineBelowSpecialistFacility_firesLevelOfCareGate() {
+        Map<String, Object> m = Map.of(
+                "facilityLevel", "C",
+                "activeMedications", List.of(Map.of(
+                        "genericName", "vancomycin",
+                        "displayName", "Vancomycin",
+                        "specialistOnly", true
+                ))
+        );
+        var ctx = ClinicalEvaluationContext.fromMap(m);
+        assertThat(engine.evaluate(ctx).stream().map(RuleAlert::code))
+                .contains("LEVEL_OF_CARE_SPECIALIST_ONLY_MEDICINE");
+    }
+
+    @Test
+    void specialistOnlyMedicineAtSpecialistFacility_doesNotFire() {
+        Map<String, Object> m = Map.of(
+                "facilityLevel", "S",
+                "activeMedications", List.of(Map.of(
+                        "genericName", "vancomycin",
+                        "specialistOnly", true
+                ))
+        );
+        var ctx = ClinicalEvaluationContext.fromMap(m);
+        assertThat(engine.evaluate(ctx).stream().map(RuleAlert::code))
+                .doesNotContain("LEVEL_OF_CARE_SPECIALIST_ONLY_MEDICINE");
+    }
+
+    @Test
+    void nonSpecialistMedicineBelowSpecialistFacility_doesNotFire() {
+        Map<String, Object> m = Map.of(
+                "facilityLevel", "C",
+                "activeMedications", List.of(Map.of(
+                        "genericName", "amoxicillin",
+                        "specialistOnly", false
+                ))
+        );
+        var ctx = ClinicalEvaluationContext.fromMap(m);
+        assertThat(engine.evaluate(ctx).stream().map(RuleAlert::code))
+                .doesNotContain("LEVEL_OF_CARE_SPECIALIST_ONLY_MEDICINE");
+    }
+
+    @Test
+    void specialistOnlyDefaultsFalseWhenNotSupplied_noFalsePositive() {
+        Map<String, Object> m = Map.of(
+                "facilityLevel", "C",
+                "activeMedications", List.of(Map.of("genericName", "amoxicillin"))
+        );
+        var ctx = ClinicalEvaluationContext.fromMap(m);
+        assertThat(ctx.activeMedications().get(0).specialistOnly()).isFalse();
+        assertThat(engine.evaluate(ctx).stream().map(RuleAlert::code))
+                .doesNotContain("LEVEL_OF_CARE_SPECIALIST_ONLY_MEDICINE");
     }
 }
