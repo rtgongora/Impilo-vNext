@@ -21,7 +21,60 @@ export const GAP_CATEGORIES = {
   P: 'Workflow incomplete across services',
   Q: 'Service is internal-only and needs documentation instead of UI',
   R: 'Duplicate/overlapping capability requiring consolidation',
+  S: 'Security/crypto/authz placeholder in a product path',
 };
+
+/**
+ * Honest product-maturity model.
+ *
+ * The scanner is static: it reads files, it does not exercise the running
+ * system. The strongest claim a static pass can make is REAL_CODE_NOT_PROBED —
+ * "the code is present and wired, but no runtime/test artifact proves it works".
+ * REAL_PROVEN is reserved and is ONLY emitted when a probe-evidence input
+ * (runtime smoke / passing integration test artifact) is supplied. The static
+ * generator must NEVER emit REAL_PROVEN on its own — that is the lie this model
+ * exists to prevent.
+ */
+export const MATURITY = {
+  REAL_PROVEN: 'REAL_PROVEN', // reserved: requires runtime/test probe evidence
+  REAL_CODE_NOT_PROBED: 'REAL_CODE_NOT_PROBED',
+  PARTIAL: 'PARTIAL',
+  FIXTURE_BACKED: 'FIXTURE_BACKED',
+  BACKEND_ONLY: 'BACKEND_ONLY',
+  UI_ONLY: 'UI_ONLY',
+  INTERNAL_ONLY: 'INTERNAL_ONLY',
+  DEFERRED_WITH_ADR: 'DEFERRED_WITH_ADR',
+  UNKNOWN: 'UNKNOWN',
+};
+
+/**
+ * Classify a service's honest maturity from its static dimensions + scan hits.
+ * @param {object} svc full service record (id, dimensions, mockStubHits, securityPlaceholderHits, productStatus, internalOnlyDocumented, frontendExpected, probeEvidence)
+ * @returns {string} a MATURITY value
+ */
+export function classifyMaturity(svc) {
+  const d = svc.dimensions || {};
+  if (svc.productStatus === 'deprecated') return MATURITY.DEFERRED_WITH_ADR;
+  if (isInternalOnly(svc.id)) return MATURITY.INTERNAL_ONLY;
+
+  const fixtureHit = (svc.mockStubHits?.length ?? 0) > 0;
+  const securityHit = (svc.securityPlaceholderHits?.length ?? 0) > 0;
+  const hasBackend =
+    d.controllers !== 'absent' || d.serviceLayer !== 'absent' || d.database !== 'absent';
+  const hasUi = d.frontendUi !== 'absent';
+
+  // Fixtures/placeholders in a product path dominate — it cannot be called "real".
+  if (fixtureHit || securityHit) return MATURITY.FIXTURE_BACKED;
+  if (hasUi && !hasBackend) return MATURITY.UI_ONLY;
+  if (hasBackend && !hasUi && svc.frontendExpected !== false) return MATURITY.BACKEND_ONLY;
+
+  if (svc.productStatus === 'real') {
+    // Only a supplied probe artifact can upgrade this to REAL_PROVEN.
+    return svc.probeEvidence?.passed ? MATURITY.REAL_PROVEN : MATURITY.REAL_CODE_NOT_PROBED;
+  }
+  if (svc.productStatus === 'mostly-real' || svc.productStatus === 'partial') return MATURITY.PARTIAL;
+  return MATURITY.UNKNOWN;
+}
 
 /** Services expected to be internal-only (no actor-facing UI). */
 export const INTERNAL_ONLY_PATTERNS = [
@@ -190,8 +243,17 @@ export function classifyServiceGaps(svc) {
     gaps.push({
       category: 'F',
       severity: 'high',
-      description: `${id}: mock/stub/fixture patterns detected (${svc.mockStubHits.length} hits)`,
+      description: `${id}: mock/stub/fixture/in-memory patterns in product path (${svc.mockStubHits.length} hits)`,
       impactScore: 3,
+    });
+  }
+  if (svc.securityPlaceholderHits?.length > 0) {
+    const crypto = svc.securityPlaceholderHits.some((h) => /key|crypto|secret/i.test(h.pattern));
+    gaps.push({
+      category: 'S',
+      severity: crypto ? 'blocker' : 'high',
+      description: `${id}: security/crypto/authz placeholder in product path (${svc.securityPlaceholderHits.length} hits)`,
+      impactScore: crypto ? 4 : 3,
     });
   }
   if (d.controllers !== 'absent' && d.database === 'absent' && svc.expectsPersistence !== false) {
