@@ -30,6 +30,8 @@ import {
   mobileParityRequired,
   triState,
   overallProductStatus,
+  classifyMaturity,
+  MATURITY,
   GAP_CATEGORIES,
   MOBILE_PARITY_REQUIRED,
   authzDimFromReadiness,
@@ -218,6 +220,83 @@ function scanMockStubHits(text, filePath, options = {}) {
   return hits;
 }
 
+/**
+ * Detect a hardcoded data collection that is rendered as product data:
+ *   const UPPER_SNAKE = [ { ... }, ... ]   ...later...   UPPER_SNAKE.map(
+ * This is the real-world shape of fixture panels (UNBILLED_CHARGES, STAFF_ROSTER,
+ * PURCHASE_ORDERS) that the simple mockData|sampleData regex misses. Config-style
+ * collections (nav/menu/steps/columns/options) are excluded — those are legitimate
+ * static config, not fake product data.
+ */
+const CONFIG_COLLECTION_NAME =
+  /(NAV|MENU|TAB|STEP|ROUTE|LINK|ICON|COLOR|COLOUR|OPTION|FILTER|COLUMN|CONFIG|LABEL|KEY|FIELD|SCHEMA|SORT|VARIANT|SIZE|BREAKPOINT|LOCALE|PERMISSION|ROLE|ZONE|PLANE|SURFACE|LEVEL|TYPE|CATEGOR|SECTION|ACTION|LANE|PROVINCE|CHANNEL|TEMPLATE|DEFINITION|DESCRIPTOR)/;
+// Transactional / temporal / clinical fields mark a *data row* (a fake invoice,
+// charge, roster entry, report) as opposed to presentational config/taxonomy.
+const DATA_ROW_FIELD =
+  /\b(amount|total|subtotal|price|cost|balance|due|paid|unpaid|outstanding|invoice|charge|payment|claim|qty|quantity|stock|onHand|reorder|reference|patient|mrn|account|date|dueDate|issuedAt|createdAt|timestamp|requestedAt|submittedAt)\s*:/i;
+function scanHardcodedCollections(text, filePath) {
+  const fp = rel(filePath);
+  if (/\/test\/|\.test\.|\.spec\.|\/fixtures\//i.test(fp)) return [];
+  const hits = [];
+  const declRe = /const\s+([A-Z][A-Z0-9_]{3,})\s*(?::[^=]+)?=\s*\[\s*(\{[\s\S]*?\})/g;
+  let m;
+  while ((m = declRe.exec(text)) !== null) {
+    const name = m[1];
+    const firstRecord = m[2] || '';
+    if (CONFIG_COLLECTION_NAME.test(name)) continue;
+    // Must look like fabricated DATA (transactional/temporal/clinical fields),
+    // and must actually be rendered (.map) — not just a constant lookup table.
+    if (!DATA_ROW_FIELD.test(firstRecord)) continue;
+    if (new RegExp(`\\b${name}\\b\\.map\\s*\\(`).test(text)) {
+      hits.push({ file: fp, pattern: 'hardcoded-collection', detail: name });
+    }
+  }
+  return hits;
+}
+
+/**
+ * Detect a process-memory store presented as durable persistence.
+ *
+ * Deliberately narrow to avoid false positives: a class named *Store.java (the
+ * codebase convention for a backing store) whose state lives in a concurrent
+ * in-memory collection and which has NO JPA/JDBC/repository in the same file —
+ * i.e. the in-memory collection IS the sole backing. A broader "any controller
+ * with a Map field" rule flagged 56/92 services (noise); this precise rule
+ * catches exactly the genuine in-memory history stores. *Cache* stores are
+ * excluded — a cache in front of a real store is legitimate.
+ */
+function scanInMemoryStore(text, filePath) {
+  const fp = rel(filePath);
+  if (!/Store\.java$/.test(fp) || /Cache/.test(path.basename(fp))) return [];
+  const concurrentField =
+    /=\s*new\s+(?:ConcurrentHashMap|ConcurrentLinkedDeque|CopyOnWriteArrayList|ArrayDeque|ConcurrentLinkedQueue|ConcurrentSkipListMap)\s*</.test(text);
+  const hasDurableBacking = /Repository|jpa|jdbcTemplate|@Entity|entityManager|@Cacheable/i.test(text);
+  if (concurrentField && !hasDurableBacking) {
+    return [{ file: fp, pattern: 'in-memory-store' }];
+  }
+  return [];
+}
+
+/**
+ * Detect security/crypto/authz placeholders left in product paths.
+ */
+const SECURITY_PLACEHOLDER_PATTERNS = [
+  { re: /TODO[^\n]*(?:real key|key material|tshepo-keys|fetch real)/i, label: 'crypto-key-placeholder' },
+  { re: /deriv(?:e|es)\s+a\s+local\s+key/i, label: 'crypto-key-placeholder' },
+  { re: /TODO\s*\(\s*role-check\s*\)/i, label: 'authz-placeholder' },
+  { re: /TODO[^\n]*(?:authz|authorization|permission|tshepo)/i, label: 'authz-placeholder' },
+  { re: /Placeholder:/, label: 'controller-placeholder' },
+];
+function scanSecurityPlaceholders(text, filePath) {
+  const fp = rel(filePath);
+  if (/\/test\/java\/|Test\.java$|IT\.java$/.test(fp)) return [];
+  const hits = [];
+  for (const { re, label } of SECURITY_PLACEHOLDER_PATTERNS) {
+    if (re.test(text)) hits.push({ file: fp, pattern: label });
+  }
+  return hits;
+}
+
 function countFiles(dir, filter) {
   return walkFiles(dir, filter).length;
 }
@@ -337,9 +416,16 @@ function scanServiceModule(svc, contractMatrix, bffClientMap) {
     (exists ? countFiles(modulePath, (p) => /Test\.java$/.test(p) || /IT\.java$/.test(p)) : 0);
 
   const mockStubHits = [];
+  const securityPlaceholderHits = [];
   if (exists) {
-    walkFiles(modulePath, (p) => p.endsWith('.java') && !/\/test\/java\//.test(p)).slice(0, 200).forEach((f) => {
-      mockStubHits.push(...scanMockStubHits(readText(f), f, { backendOnly: true }));
+    // Cap is generous headroom over the largest module (~456 files) so the
+    // composition layer (experience-bff) is fully scanned — a silent low cap was
+    // hiding its in-memory stores ("green by exclusion").
+    walkFiles(modulePath, (p) => p.endsWith('.java') && !/\/test\/java\//.test(p)).slice(0, 1200).forEach((f) => {
+      const t = readText(f);
+      mockStubHits.push(...scanMockStubHits(t, f, { backendOnly: true }));
+      mockStubHits.push(...scanInMemoryStore(t, f));
+      securityPlaceholderHits.push(...scanSecurityPlaceholders(t, f));
     });
   }
 
@@ -408,6 +494,7 @@ function scanServiceModule(svc, contractMatrix, bffClientMap) {
     uiPaths: uiHits.slice(0, 20),
     mobilePaths: mobileHits.slice(0, 10),
     mockStubHits: mockStubHits.slice(0, 10),
+    securityPlaceholderHits: securityPlaceholderHits.slice(0, 10),
     stubRouteCount,
     bffOrphanRoutes: 0,
     internalOnlyDocumented,
@@ -432,6 +519,13 @@ function scanServiceModule(svc, contractMatrix, bffClientMap) {
   };
 
   record.gaps = classifyServiceGaps(record);
+  record.maturity = classifyMaturity(record);
+  // Honest phase-6: a fixture-backed or placeholder-carrying service is NOT
+  // "complete", even if every file-existence dimension is present. Internal-only
+  // services still complete on documented rationale + backend.
+  record.phase6Complete = isInternalOnly(svc.id)
+    ? internalOnlyDocumented && dimensions.controllers !== 'absent'
+    : record.maturity === MATURITY.REAL_PROVEN || record.maturity === MATURITY.REAL_CODE_NOT_PROBED;
   return record;
 }
 
@@ -499,9 +593,16 @@ function buildBffClientMap() {
   return map;
 }
 
-function ingestModuleText(moduleText, visited, paths, persist, modulePath) {
+function ingestModuleText(moduleText, visited, paths, persist, modulePath, fixtureHits = null) {
   if (modulePath && visited.has(modulePath)) return;
   if (modulePath) visited.add(modulePath);
+  // Surface-level fixture detection: scan imported components/libs (not the entry
+  // page itself — buildFrontendSurface scans that) so fixtures living inside a
+  // mounted component are attributed to the surface that renders them.
+  if (fixtureHits && modulePath) {
+    fixtureHits.push(...scanMockStubHits(moduleText, modulePath));
+    fixtureHits.push(...scanHardcodedCollections(moduleText, modulePath));
+  }
   for (const m of moduleText.matchAll(/["'](\/internal\/v1\/[^"']+)["']/g)) paths.add(m[1]);
   for (const m of moduleText.matchAll(/["'](\/api\/v1\/[^"']+)["']/g)) paths.add(m[1]);
   if (/VASHANDI_BASE_PATH\s*=\s*["'](\/internal\/v1\/[^"']+)["']/.test(moduleText)) {
@@ -527,7 +628,7 @@ function ingestModuleText(moduleText, visited, paths, persist, modulePath) {
     ];
     for (const candidate of candidates) {
       if (!fs.existsSync(candidate)) continue;
-      ingestModuleText(readText(candidate), visited, paths, persist, candidate);
+      ingestModuleText(readText(candidate), visited, paths, persist, candidate, fixtureHits);
     }
   }
   const componentImports = [...moduleText.matchAll(/from\s+["']@\/components\/([^"']+)["']/g)].map((m) => m[1]);
@@ -540,7 +641,7 @@ function ingestModuleText(moduleText, visited, paths, persist, modulePath) {
     ];
     for (const candidate of candidates) {
       if (!fs.existsSync(candidate)) continue;
-      ingestModuleText(readText(candidate), visited, paths, persist, candidate);
+      ingestModuleText(readText(candidate), visited, paths, persist, candidate, fixtureHits);
     }
   }
   if (modulePath) {
@@ -549,16 +650,16 @@ function ingestModuleText(moduleText, visited, paths, persist, modulePath) {
       for (const ext of ['.ts', '.tsx']) {
         const candidate = path.join(dir, `${m[1]}${ext}`);
         if (!fs.existsSync(candidate)) continue;
-        ingestModuleText(readText(candidate), visited, paths, persist, candidate);
+        ingestModuleText(readText(candidate), visited, paths, persist, candidate, fixtureHits);
       }
     }
   }
 }
 
-function resolveHookSignals(pageText, visited = new Set()) {
+function resolveHookSignals(pageText, visited = new Set(), fixtureHits = null) {
   const paths = new Set();
   const persist = { mutation: false, persistHint: false };
-  ingestModuleText(pageText, visited, paths, persist, null);
+  ingestModuleText(pageText, visited, paths, persist, null, fixtureHits);
   if (/citizenPortalApi|nhumeApi|credentialVerifyUrlForToken|apiClient\.(get|post|put|patch|delete)/.test(pageText)) {
     paths.add('domain-client');
   }
@@ -608,9 +709,9 @@ function isAdminGovernanceScaffoldPage(text) {
   return false;
 }
 
-function resolveHookBffPaths(pageText, visited = new Set()) {
+function resolveHookBffPaths(pageText, visited = new Set(), fixtureHits = null) {
   const paths = new Set();
-  const { paths: hookPaths, persist } = resolveHookSignals(pageText, visited);
+  const { paths: hookPaths, persist } = resolveHookSignals(pageText, visited, fixtureHits);
   hookPaths.forEach((p) => paths.add(p));
   if (/apiClient\.(get|post|put|patch|delete)/.test(pageText)) {
     paths.add('apiClient-dynamic');
@@ -676,11 +777,18 @@ function buildFrontendSurface(routePath, zone, pageTitle) {
   const pagePath = path.join(UI_SHELL, 'src/app', pageRel, 'page.tsx');
   const exists = fs.existsSync(pagePath);
   const text = exists ? readText(pagePath) : '';
-  const resolved = exists ? resolveHookBffPaths(text) : { paths: [], persist: { mutation: false, persistHint: false } };
+  const componentFixtureHits = [];
+  const resolved = exists
+    ? resolveHookBffPaths(text, new Set(), componentFixtureHits)
+    : { paths: [], persist: { mutation: false, persistHint: false } };
   const inlineBff = exists ? [...text.matchAll(/["'](\/internal\/v1\/[^"']+)["']/g)].map((m) => m[1]) : [];
   const bffPaths = [...new Set([...resolved.paths, ...inlineBff])];
   const gatewayPaths = exists ? [...text.matchAll(/["'](\/api\/v1\/[^"']+)["']/g)].map((m) => m[1]) : [];
-  const mockStubHits = exists ? scanMockStubHits(text, pagePath) : [];
+  // Page-level + component-level fixture detection (component fixtures are the
+  // ones the old page-only scan missed — e.g. BillingPanel/PortalHealthReporting).
+  const mockStubHits = exists
+    ? [...scanMockStubHits(text, pagePath), ...scanHardcodedCollections(text, pagePath), ...componentFixtureHits]
+    : [];
   const hasMutation =
     /useMutation|mutate\(|onSubmit|handleSubmit|formAction/.test(text) || resolved.persist.mutation;
   const hasPersistHint =
@@ -1073,7 +1181,8 @@ function renderFinalReport(data, allGaps) {
 | OpenAPI contracts | ${data.summary.contractCount} |
 | Services with DB persistence | ${withDb} |
 | **Phase 6 complete (user-facing + documented internal)** | **${phase6Complete}** |
-| User-facing services at \`real\` status | ${userFacingReal} / ${userFacing.length} |
+| User-facing services with \`real\` code present (file-existence axis) | ${userFacingReal} / ${userFacing.length} |
+| — of those, **runtime-proven** (REAL_PROVEN) | **${data.summary.phase6.userFacingRealProven}** |
 | Services internal-only (documented) | ${internalOnly} |
 | Services partially complete | ${partial} |
 | Services backend-only (no UI) | ${backendOnly} |
@@ -1083,6 +1192,16 @@ function renderFinalReport(data, allGaps) {
 | Blocker gaps | ${agg.bySeverity.blocker || 0} |
 | High severity gaps | ${agg.bySeverity.high || 0} |
 | Cross-service cohesion | ${data.summary.crossServiceCohesion?.pass || 0}/${data.summary.crossServiceCohesion?.total || 14} pass |
+
+> **Honesty note:** \`real\` above is the file-existence axis (code present + wired),
+> NOT proof the capability runs. The honest maturity axis is below; this static scan
+> can never emit \`REAL_PROVEN\` — that requires a runtime/test probe artifact (Wave 5/6).
+
+## Maturity breakdown (honest)
+
+| Maturity | Count |
+|----------|------:|
+${Object.entries(data.summary.byMaturity || {}).map(([m, n]) => `| ${m} | ${n} |`).join('\n')}
 
 ## Quality gates added
 
@@ -1154,8 +1273,10 @@ function main() {
   const mobileSurfaces = scanMobileSurfaces();
 
   const byProductStatus = {};
+  const byMaturity = {};
   for (const s of services) {
     byProductStatus[s.productStatus] = (byProductStatus[s.productStatus] || 0) + 1;
+    byMaturity[s.maturity] = (byMaturity[s.maturity] || 0) + 1;
   }
 
   let branch = 'unknown';
@@ -1186,12 +1307,16 @@ function main() {
       bffRouteCount: (bffClientMap.get('__routes__') || []).length,
       contractCount: walkFiles(CONTRACTS_OPENAPI, (p) => p.endsWith('.yaml')).length,
       byProductStatus,
+      byMaturity,
       gapCounts: aggregateGapCounts(allGaps),
       crossServiceCohesion: cohesionSummary,
       phase6: {
         complete: phase6CompleteCount,
         userFacing: userFacingCount,
         userFacingReal: services.filter((s) => !isInternalOnly(s.id) && s.productStatus === 'real').length,
+        // Honest: file-existence "real" is NOT runtime-proven. REAL_PROVEN is only
+        // emitted when a probe-evidence artifact is supplied (see classifyMaturity).
+        userFacingRealProven: services.filter((s) => s.maturity === MATURITY.REAL_PROVEN).length,
       },
     },
     services,
@@ -1263,4 +1388,10 @@ function renderCohesionReport(data) {
   return lines.join('\n') + '\n';
 }
 
-main();
+// Export pure detectors for unit testing; only run the full scan when invoked
+// directly (node generate-product-truth.mjs), not when imported by tests.
+export { scanMockStubHits, scanHardcodedCollections, scanInMemoryStore, scanSecurityPlaceholders };
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main();
+}
