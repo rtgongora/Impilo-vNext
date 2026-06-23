@@ -334,16 +334,19 @@ export function PersonalScreen() {
             <Pressable
               testID="personal-tab-sos"
               onPress={() => setActiveSection("sos")}
-              style={({ pressed }) => [s.sosCard, pressed && { opacity: 0.9 }]}
+              style={({ pressed }) => [s.sosCard, pressed && { opacity: 0.88 }]}
             >
               <View style={s.sosIconWrap}>
-                <Ionicons name="warning" size={22} color={APP_RED} />
+                <Ionicons name="call" size={20} color="#FFFFFF" />
               </View>
               <View style={s.sosBody}>
-                <Text style={s.sosTitle}>Emergency SOS</Text>
-                <Text style={s.sosSub}>Emergency contacts & critical health info</Text>
+                <View style={s.sosTitleRow}>
+                  <Text style={s.sosTitle}>Emergency SOS</Text>
+                  <View style={s.sosDot} />
+                </View>
+                <Text style={s.sosSub}>Hold to activate · emergency contacts</Text>
               </View>
-              <Ionicons name="chevron-forward" size={15} color={APP_RED} />
+              <Ionicons name="chevron-forward" size={15} color="rgba(255,255,255,0.6)" />
             </Pressable>
           </View>
         </ScrollView>
@@ -468,26 +471,34 @@ const s = StyleSheet.create({
     marginLeft: 66, // aligns with text (icon 36 + gap 14 + padding 16)
   },
 
-  /* Emergency SOS — standalone full-width card, visually distinct */
+  /* Emergency SOS — standalone full-width card, solid red */
   sosCard: {
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
-    backgroundColor: APP_RED_LIGHT,
+    backgroundColor: APP_RED,
     borderRadius: 16,
     padding: 16,
-    borderWidth: 1.5,
-    borderColor: "#FECACA",
+    shadowColor: APP_RED,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 6,
   },
   sosIconWrap: {
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: "#FEE2E2",
+    backgroundColor: "rgba(255,255,255,0.18)",
     alignItems: "center",
     justifyContent: "center",
   },
   sosBody: { flex: 1 },
-  sosTitle: { fontSize: 15, fontWeight: "700", color: APP_RED },
-  sosSub: { fontSize: 12, color: "#B91C1C", marginTop: 2 },
+  sosTitleRow: { flexDirection: "row", alignItems: "center", gap: 7, marginBottom: 2 },
+  sosTitle: { fontSize: 15, fontWeight: "700", color: "#FFFFFF" },
+  sosDot: {
+    width: 6, height: 6, borderRadius: 3,
+    backgroundColor: "rgba(255,255,255,0.65)",
+  },
+  sosSub: { fontSize: 12, color: "rgba(255,255,255,0.72)" },
 });

@@ -46,7 +46,7 @@ export interface AppState {
 }
 
 export const appStore = createStore<AppState>((set) => ({
-  activeTab: "home",
+  activeTab: "social",
   isOnline: true,
   profile: null,
   selectedFacilityId: null,

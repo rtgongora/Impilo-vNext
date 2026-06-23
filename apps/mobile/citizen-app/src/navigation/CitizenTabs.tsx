@@ -19,6 +19,7 @@ import { MarketplaceScreen } from "../screens/marketplace/MarketplaceScreen";
 import { MessagingInboxScreen } from "../screens/messaging/MessagingInboxScreen";
 import { TelehealthListScreen } from "../screens/telehealth/TelehealthListScreen";
 import { APP_GREEN } from "../lib/colors";
+import { FloatingSOSButton } from "../components/FloatingSOSButton";
 
 const TAB_SCREENS: Record<CitizenTab, React.FC> = {
   home: HomeScreen,
@@ -73,6 +74,7 @@ export function CitizenTabs() {
       <View style={styles.content}>
         <ScreenComponent />
       </View>
+      <FloatingSOSButton />
       <TabBar
         tabs={tabs}
         activeTab={activeTab}

@@ -247,7 +247,10 @@ async function executeRequest<T>(
       throw error;
     }
 
-    if (error instanceof DOMException && error.name === "AbortError") {
+    if (
+      (typeof DOMException !== "undefined" && error instanceof DOMException && error.name === "AbortError") ||
+      (error instanceof Error && error.name === "AbortError")
+    ) {
       throw new TimeoutError(timeoutMs, correlationId);
     }
 

@@ -3,7 +3,8 @@ import { ExpoConfig, ConfigContext } from "expo/config";
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "Impilo Health",
-  slug: "impilo-citizen",
+  slug: "impilo",
+  owner: "tndangana",
   version: "0.1.0",
   orientation: "portrait",
   icon: "./assets/icon.png",
@@ -75,7 +76,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     redirectUri:
       process.env.EXPO_PUBLIC_REDIRECT_URI ?? "impilo.citizen://callback",
     eas: {
-      projectId: "impilo-citizen",
+      projectId: "5daaf1dc-90e8-4e5c-abb4-cf779f6e8780",
     },
   },
 });

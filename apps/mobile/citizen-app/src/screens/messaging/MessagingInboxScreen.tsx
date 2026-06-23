@@ -8,13 +8,12 @@ import {
   RefreshControl,
   KeyboardAvoidingView,
   Platform,
+  TextInput,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
   Screen,
   Header,
-  TextField,
-  Select,
   Avatar,
   LoadingSpinner,
 } from "@impilo/mobile-design-system";
@@ -45,24 +44,46 @@ const FILTERS = [
   { label: "Support",  value: "SUPPORT" },
 ];
 
+// Initials from a display name for avatar fallback
+function initials(name: string): string {
+  return name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+function formatDate(iso: string): string {
+  const d = new Date(iso);
+  const now = new Date();
+  const diffDays = Math.floor((now.getTime() - d.getTime()) / 86_400_000);
+  if (diffDays === 0) return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays < 7)  return d.toLocaleDateString([], { weekday: "short" });
+  return d.toLocaleDateString([], { day: "numeric", month: "short" });
+}
+
 export function MessagingInboxScreen() {
-  const toast = useToast();
+  const toast    = useToast();
   const toastRef = useRef(toast);
   toastRef.current = toast;
 
   const setUnreadMessages = useAppStore((s) => s.setUnreadMessages);
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading,    setIsLoading]    = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [filter, setFilter] = useState("");
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
-  const [showCompose, setShowCompose] = useState(false);
+
+  // Compose state
+  const [showCompose,    setShowCompose]    = useState(false);
+  const [newType,        setNewType]        = useState<"DIRECT" | "SUPPORT">("DIRECT");
   const [newRecipientId, setNewRecipientId] = useState("");
-  const [newSubject, setNewSubject] = useState("");
-  const [newMessage, setNewMessage] = useState("");
-  const [newType, setNewType] = useState<"DIRECT" | "SUPPORT">("DIRECT");
-  const [submitting, setSubmitting] = useState(false);
+  const [newSubject,     setNewSubject]     = useState("");
+  const [newMessage,     setNewMessage]     = useState("");
+  const [submitting,     setSubmitting]     = useState(false);
 
   const load = useCallback(async (silent = false) => {
     if (!silent) setIsLoading(true);
@@ -77,11 +98,9 @@ export function MessagingInboxScreen() {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [filter, setUnreadMessages]); // toast via ref — not a dep
+  }, [filter, setUnreadMessages]);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useEffect(() => { void load(); }, [load]);
 
   const onRefresh = useCallback(() => {
     setIsRefreshing(true);
@@ -115,6 +134,13 @@ export function MessagingInboxScreen() {
     }
   }, [newRecipientId, newSubject, newMessage, newType, load]);
 
+  const closeCompose = useCallback(() => {
+    setShowCompose(false);
+    setNewRecipientId("");
+    setNewSubject("");
+    setNewMessage("");
+  }, []);
+
   if (selectedConversation) {
     return (
       <ThreadViewScreen
@@ -127,79 +153,105 @@ export function MessagingInboxScreen() {
     );
   }
 
+  const totalUnread = conversations.reduce((s, c) => s + c.unreadCount, 0);
+
   return (
     <Screen>
       <Header
         title="Messages"
         rightElement={
           <Pressable
-            onPress={() => setShowCompose(!showCompose)}
+            onPress={() => (showCompose ? closeCompose() : setShowCompose(true))}
             style={[styles.composeBtn, showCompose && styles.composeBtnActive]}
             hitSlop={8}
           >
             <Ionicons
               name={showCompose ? "close" : "create-outline"}
-              size={20}
+              size={19}
               color={showCompose ? APP_TEXT_2 : APP_GREEN}
             />
           </Pressable>
         }
       />
 
-      {/* Compose Panel */}
+      {/* Compose panel */}
       {showCompose ? (
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-        >
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
           <View style={styles.composePanel}>
             <Text style={styles.composePanelTitle}>New Message</Text>
-            <Select
-              label="Type"
-              value={newType}
-              onChange={(v: string) => setNewType(v as "DIRECT" | "SUPPORT")}
-              options={[
-                { label: "Message a Provider", value: "DIRECT" },
-                { label: "Contact Support", value: "SUPPORT" },
-              ]}
-              testID="new-msg-type"
-            />
-            <View style={styles.recipientHintRow}>
-              <TextField
-                label={newType === "DIRECT" ? "Provider ID" : "Support Team ID"}
-                value={newRecipientId}
-                onChange={setNewRecipientId}
-                placeholder={newType === "DIRECT" ? "Enter your provider's ID" : "Enter support team ID"}
-                testID="new-msg-recipient"
-              />
-              <View style={styles.recipientHint}>
-                <Ionicons name="information-circle-outline" size={14} color={APP_TEXT_3} />
-                <Text style={styles.recipientHintText}>
-                  {newType === "DIRECT"
-                    ? "Find your provider's ID in your care team section"
-                    : "Use 'general-support' for general enquiries"}
-                </Text>
+
+            {/* Type toggle */}
+            <View style={styles.typeToggleRow}>
+              {(["DIRECT", "SUPPORT"] as const).map((t) => (
+                <Pressable
+                  key={t}
+                  onPress={() => setNewType(t)}
+                  style={[styles.typeToggleBtn, newType === t && styles.typeToggleBtnActive]}
+                >
+                  <Ionicons
+                    name={t === "DIRECT" ? "person-outline" : "headset-outline"}
+                    size={13}
+                    color={newType === t ? APP_GREEN : APP_TEXT_3}
+                  />
+                  <Text style={[styles.typeToggleText, newType === t && styles.typeToggleTextActive]}>
+                    {t === "DIRECT" ? "Provider" : "Support"}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.fieldLabel}>
+                {newType === "DIRECT" ? "Provider ID" : "Team ID"}
+              </Text>
+              <View style={styles.inputWrap}>
+                <TextInput
+                  style={styles.input}
+                  value={newRecipientId}
+                  onChangeText={setNewRecipientId}
+                  placeholder={newType === "DIRECT" ? "Enter your provider's ID" : "e.g. general-support"}
+                  placeholderTextColor={APP_TEXT_3}
+                  autoCapitalize="none"
+                  testID="new-msg-recipient"
+                />
               </View>
             </View>
-            <TextField
-              label="Subject (optional)"
-              value={newSubject}
-              onChange={setNewSubject}
-              placeholder="What is this about?"
-              testID="new-msg-subject"
-            />
-            <TextField
-              label="Message"
-              value={newMessage}
-              onChange={setNewMessage}
-              placeholder="Type your message..."
-              testID="new-msg-body"
-            />
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.fieldLabel}>Subject (optional)</Text>
+              <View style={styles.inputWrap}>
+                <TextInput
+                  style={styles.input}
+                  value={newSubject}
+                  onChangeText={setNewSubject}
+                  placeholder="What is this about?"
+                  placeholderTextColor={APP_TEXT_3}
+                  testID="new-msg-subject"
+                />
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.fieldLabel}>Message</Text>
+              <View style={[styles.inputWrap, { alignItems: "flex-start", paddingTop: 12 }]}>
+                <TextInput
+                  style={[styles.input, { minHeight: 72, textAlignVertical: "top" }]}
+                  value={newMessage}
+                  onChangeText={setNewMessage}
+                  placeholder="Type your message..."
+                  placeholderTextColor={APP_TEXT_3}
+                  multiline
+                  testID="new-msg-body"
+                />
+              </View>
+            </View>
+
             <Pressable
               onPress={handleCompose}
-              disabled={submitting}
+              disabled={submitting || !newRecipientId.trim() || !newMessage.trim()}
               style={[
                 styles.sendBtn,
-                (submitting || !newRecipientId.trim() || !newMessage.trim()) && styles.sendBtnDisabled,
+                (submitting || !newRecipientId.trim() || !newMessage.trim()) && { opacity: 0.45 },
               ]}
               testID="send-new-message"
             >
@@ -207,7 +259,7 @@ export function MessagingInboxScreen() {
                 <LoadingSpinner size="sm" />
               ) : (
                 <>
-                  <Ionicons name="send" size={16} color="#FFFFFF" />
+                  <Ionicons name="send" size={15} color="#fff" />
                   <Text style={styles.sendBtnText}>Send Message</Text>
                 </>
               )}
@@ -216,23 +268,25 @@ export function MessagingInboxScreen() {
         </KeyboardAvoidingView>
       ) : null}
 
-      {/* Filter Pills */}
+      {/* Filter + count row */}
       <View style={styles.filterBar}>
         {FILTERS.map((f) => (
           <Pressable
             key={f.value}
             onPress={() => setFilter(f.value)}
-            style={[styles.filterPill, filter === f.value && styles.filterPillActive]}
+            style={[styles.chip, filter === f.value && styles.chipActive]}
             testID={`filter-${f.value || "all"}`}
           >
-            <Text style={[styles.filterPillText, filter === f.value && styles.filterPillTextActive]}>
+            <Text style={[styles.chipText, filter === f.value && styles.chipTextActive]}>
               {f.label}
             </Text>
           </Pressable>
         ))}
-        <View style={styles.filterSpacer} />
-        {conversations.length > 0 ? (
-          <Text style={styles.countText}>{conversations.length} conversations</Text>
+        <View style={{ flex: 1 }} />
+        {totalUnread > 0 ? (
+          <View style={styles.unreadSummary}>
+            <Text style={styles.unreadSummaryText}>{totalUnread} unread</Text>
+          </View>
         ) : null}
       </View>
 
@@ -242,108 +296,88 @@ export function MessagingInboxScreen() {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={onRefresh}
-            tintColor={APP_GREEN}
-            colors={[APP_GREEN]}
-          />
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={APP_GREEN} colors={[APP_GREEN]} />
         }
       >
         {isLoading ? (
           <SkeletonConversationList />
         ) : conversations.length === 0 ? (
-          <View style={styles.emptyBox}>
-            <View style={styles.emptyIconWrap}>
-              <Ionicons name="chatbubbles-outline" size={32} color={APP_TEXT_3} />
-            </View>
+          <View style={styles.emptyWrap}>
+            <Ionicons name="chatbubbles-outline" size={36} color={APP_TEXT_3} />
             <Text style={styles.emptyTitle}>No conversations</Text>
-            <Text style={styles.emptyMessage}>
+            <Text style={styles.emptyMsg}>
               {filter
                 ? "No conversations match this filter"
                 : "Start a conversation with your provider or support team"}
             </Text>
-            <Pressable
-              style={styles.emptyAction}
-              onPress={() => setShowCompose(true)}
-            >
-              <Ionicons name="create-outline" size={16} color="#FFFFFF" />
+            <Pressable style={styles.emptyAction} onPress={() => setShowCompose(true)}>
+              <Ionicons name="create-outline" size={15} color="#fff" />
               <Text style={styles.emptyActionText}>New Message</Text>
             </Pressable>
           </View>
         ) : (
-          conversations.map((conv) => (
-            <Pressable
-              key={conv.id}
-              testID={`conversation-${conv.id}`}
-              onPress={() => setSelectedConversation(conv)}
-              style={({ pressed }) => [
-                styles.convCard,
-                conv.unreadCount > 0 && styles.convCardUnread,
-                pressed && { opacity: 0.92 },
-              ]}
-            >
-              <View style={styles.avatarWrap}>
-                <Avatar
-                  name={conv.participants?.[0]?.displayName ?? "?"}
-                  size="md"
-                />
-                {conv.unreadCount > 0 ? (
-                  <View style={styles.unreadBadge}>
-                    <Text style={styles.unreadBadgeText}>
-                      {conv.unreadCount > 9 ? "9+" : String(conv.unreadCount)}
-                    </Text>
-                  </View>
-                ) : null}
-              </View>
+          conversations.map((conv) => {
+            const name = conv.participants?.[0]?.displayName ?? "Unknown";
+            const isUnread = conv.unreadCount > 0;
+            const isSupport = conv.type === "SUPPORT";
 
-              <View style={styles.convInfo}>
-                <View style={styles.convTopRow}>
-                  <Text
-                    style={[styles.convTitle, conv.unreadCount > 0 && styles.convTitleUnread]}
-                    numberOfLines={1}
-                  >
-                    {conv.subject ?? conv.participants?.map((p) => p.displayName).join(", ") ?? "Conversation"}
-                  </Text>
-                  <Text style={styles.convDate}>
-                    {new Date(conv.updatedAt).toLocaleDateString()}
-                  </Text>
+            return (
+              <Pressable
+                key={conv.id}
+                testID={`conversation-${conv.id}`}
+                onPress={() => setSelectedConversation(conv)}
+                style={({ pressed }) => [styles.convCard, pressed && { opacity: 0.94 }]}
+              >
+                {/* Avatar + unread dot */}
+                <View style={styles.avatarWrap}>
+                  <Avatar name={name} size="md" />
+                  {isUnread ? <View style={styles.unreadDot} /> : null}
                 </View>
-                {conv.lastMessage ? (
-                  <Text
-                    style={[styles.convPreview, conv.unreadCount > 0 && styles.convPreviewUnread]}
-                    numberOfLines={1}
-                  >
-                    {conv.lastMessage.body}
-                  </Text>
-                ) : null}
-                <View style={styles.convMeta}>
-                  <View
-                    style={[
-                      styles.typePill,
-                      conv.type === "DIRECT" ? styles.typePillDirect : styles.typePillSupport,
-                    ]}
-                  >
-                    <Ionicons
-                      name={conv.type === "DIRECT" ? "person-outline" : "headset-outline"}
-                      size={11}
-                      color={conv.type === "DIRECT" ? "#1E40AF" : "#7C3AED"}
-                    />
+
+                {/* Content */}
+                <View style={styles.convContent}>
+                  <View style={styles.convTopRow}>
                     <Text
-                      style={[
-                        styles.typePillText,
-                        conv.type === "DIRECT" ? styles.typePillDirect_text : styles.typePillSupport_text,
-                      ]}
+                      style={[styles.convName, isUnread && styles.convNameUnread]}
+                      numberOfLines={1}
                     >
-                      {conv.type === "DIRECT" ? "Provider" : "Support"}
+                      {name}
                     </Text>
+                    <Text style={styles.convDate}>{formatDate(conv.updatedAt)}</Text>
+                  </View>
+
+                  {conv.subject ? (
+                    <Text style={styles.convSubject} numberOfLines={1}>{conv.subject}</Text>
+                  ) : null}
+
+                  {conv.lastMessage ? (
+                    <Text
+                      style={[styles.convPreview, isUnread && styles.convPreviewUnread]}
+                      numberOfLines={1}
+                    >
+                      {conv.lastMessage.body}
+                    </Text>
+                  ) : null}
+
+                  {/* Type label + unread count */}
+                  <View style={styles.convFooter}>
+                    <Text style={[styles.typeLabel, isSupport && styles.typeLabelSupport]}>
+                      {isSupport ? "Support" : "Provider"}
+                    </Text>
+                    {isUnread ? (
+                      <View style={styles.unreadBadge}>
+                        <Text style={styles.unreadBadgeText}>
+                          {conv.unreadCount > 9 ? "9+" : String(conv.unreadCount)}
+                        </Text>
+                      </View>
+                    ) : null}
                   </View>
                 </View>
-              </View>
 
-              <Ionicons name="chevron-forward" size={16} color={APP_TEXT_3} />
-            </Pressable>
-          ))
+                <Ionicons name="chevron-forward" size={15} color={APP_BORDER} />
+              </Pressable>
+            );
+          })
         )}
       </ScrollView>
     </Screen>
@@ -351,54 +385,67 @@ export function MessagingInboxScreen() {
 }
 
 const styles = StyleSheet.create({
+  // ── Header compose button ─────────────────────────────────────────────────
   composeBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: APP_GREEN_LIGHT,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: APP_GREEN_XLIGHT,
     alignItems: "center",
     justifyContent: "center",
   },
-  composeBtnActive: { backgroundColor: "#F3F4F6" },
+  composeBtnActive: { backgroundColor: APP_BG },
 
+  // ── Compose panel ─────────────────────────────────────────────────────────
   composePanel: {
     backgroundColor: APP_SURFACE,
     padding: 16,
     gap: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: APP_BORDER,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 4,
   },
-  composePanelTitle: { fontSize: 15, fontWeight: "700", color: APP_TEXT },
-  recipientHintRow: { gap: 6 },
-  recipientHint: {
+  composePanelTitle: { fontSize: 14, fontWeight: "700", color: APP_TEXT },
+  typeToggleRow: { flexDirection: "row", gap: 8 },
+  typeToggleBtn: {
+    flex: 1,
     flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 6,
-    paddingHorizontal: 4,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 5,
+    paddingVertical: 9,
+    borderRadius: 12,
+    backgroundColor: APP_BG,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: APP_BORDER,
   },
-  recipientHintText: { fontSize: 12, color: APP_TEXT_3, flex: 1, lineHeight: 16 },
+  typeToggleBtnActive: { backgroundColor: APP_GREEN_XLIGHT, borderColor: APP_GREEN_LIGHT },
+  typeToggleText: { fontSize: 13, fontWeight: "500", color: APP_TEXT_3 },
+  typeToggleTextActive: { color: APP_GREEN, fontWeight: "700" },
+  inputGroup: { gap: 5 },
+  fieldLabel: { fontSize: 12, fontWeight: "600", color: APP_TEXT_3, textTransform: "uppercase", letterSpacing: 0.7 },
+  inputWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: APP_BG,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: APP_BORDER,
+  },
+  input: { flex: 1, fontSize: 14, color: APP_TEXT, padding: 0 },
   sendBtn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
     backgroundColor: APP_GREEN,
-    paddingVertical: 14,
-    borderRadius: 14,
-    shadowColor: APP_GREEN,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
+    paddingVertical: 13,
+    borderRadius: 13,
   },
-  sendBtnDisabled: { opacity: 0.5, shadowOpacity: 0 },
-  sendBtnText: { fontSize: 15, fontWeight: "700", color: "#FFFFFF" },
+  sendBtnText: { fontSize: 14, fontWeight: "700", color: "#fff" },
 
+  // ── Filter bar ────────────────────────────────────────────────────────────
   filterBar: {
     flexDirection: "row",
     alignItems: "center",
@@ -409,51 +456,30 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: APP_BORDER,
   },
-  filterPill: {
+  chip: {
     paddingHorizontal: 14,
-    paddingVertical: 6,
+    paddingVertical: 7,
     borderRadius: 20,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: APP_BG,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: APP_BORDER,
   },
-  filterPillActive: { backgroundColor: APP_GREEN_XLIGHT, borderWidth: 1, borderColor: APP_GREEN_LIGHT },
-  filterPillText: { fontSize: 13, fontWeight: "500", color: APP_TEXT_2 },
-  filterPillTextActive: { color: APP_GREEN, fontWeight: "700" },
-  filterSpacer: { flex: 1 },
-  countText: { fontSize: 12, color: APP_TEXT_3 },
+  chipActive: { backgroundColor: APP_GREEN_XLIGHT, borderColor: APP_GREEN_LIGHT },
+  chipText: { fontSize: 13, fontWeight: "500", color: APP_TEXT_2 },
+  chipTextActive: { color: APP_GREEN, fontWeight: "700" },
+  unreadSummary: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: APP_GREEN_XLIGHT,
+    borderRadius: 12,
+  },
+  unreadSummaryText: { fontSize: 11, fontWeight: "700", color: APP_GREEN },
 
+  // ── List ──────────────────────────────────────────────────────────────────
   scroll: { flex: 1, backgroundColor: APP_BG },
-  container: { padding: 14, gap: 10, paddingBottom: 40 },
+  container: { padding: 16, gap: 8, paddingBottom: 48 },
 
-  emptyBox: { alignItems: "center", paddingVertical: 64, gap: 12 },
-  emptyIconWrap: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: "#F3F4F6",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 4,
-  },
-  emptyTitle: { fontSize: 17, fontWeight: "700", color: APP_TEXT },
-  emptyMessage: {
-    fontSize: 14,
-    color: APP_TEXT_3,
-    textAlign: "center",
-    paddingHorizontal: 32,
-    lineHeight: 20,
-  },
-  emptyAction: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginTop: 4,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    backgroundColor: APP_GREEN,
-    borderRadius: 14,
-  },
-  emptyActionText: { color: "#FFFFFF", fontWeight: "700", fontSize: 14 },
-
+  // ── Conversation card ─────────────────────────────────────────────────────
   convCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -461,60 +487,56 @@ const styles = StyleSheet.create({
     backgroundColor: APP_SURFACE,
     borderRadius: 16,
     padding: 14,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: APP_BORDER,
   },
-  convCardUnread: {
-    borderLeftWidth: 3,
-    borderLeftColor: APP_GREEN,
-    shadowOpacity: 0.08,
-    elevation: 4,
-  },
-  avatarWrap: { position: "relative" },
-  unreadBadge: {
+  avatarWrap: { position: "relative", flexShrink: 0 },
+  unreadDot: {
     position: "absolute",
-    top: -4,
-    right: -4,
+    top: 0,
+    right: 0,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: APP_GREEN,
+    borderWidth: 2,
+    borderColor: APP_SURFACE,
+  },
+  convContent: { flex: 1, gap: 2 },
+  convTopRow: { flexDirection: "row", alignItems: "baseline", gap: 6 },
+  convName: { flex: 1, fontSize: 14, fontWeight: "600", color: APP_TEXT },
+  convNameUnread: { fontWeight: "800" },
+  convDate: { fontSize: 11, color: APP_TEXT_3, flexShrink: 0 },
+  convSubject: { fontSize: 13, fontWeight: "600", color: APP_TEXT_2 },
+  convPreview: { fontSize: 13, color: APP_TEXT_3, lineHeight: 18 },
+  convPreviewUnread: { color: APP_TEXT_2 },
+  convFooter: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4 },
+  typeLabel: { fontSize: 11, fontWeight: "600", color: APP_GREEN },
+  typeLabelSupport: { color: APP_TEXT_3 },
+  unreadBadge: {
     backgroundColor: APP_GREEN,
     borderRadius: 10,
     minWidth: 18,
     height: 18,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 4,
-    borderWidth: 2,
-    borderColor: APP_SURFACE,
+    paddingHorizontal: 5,
   },
-  unreadBadgeText: { fontSize: 10, fontWeight: "700", color: "#FFFFFF" },
+  unreadBadgeText: { fontSize: 10, fontWeight: "800", color: "#fff" },
 
-  convInfo: { flex: 1 },
-  convTopRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 3,
-  },
-  convTitle: { fontSize: 14, fontWeight: "600", color: APP_TEXT, flex: 1, marginRight: 8 },
-  convTitleUnread: { fontWeight: "800" },
-  convDate: { fontSize: 11, color: APP_TEXT_3 },
-  convPreview: { fontSize: 13, color: APP_TEXT_2, marginBottom: 6, lineHeight: 17 },
-  convPreviewUnread: { color: APP_TEXT, fontWeight: "500" },
-  convMeta: { flexDirection: "row", gap: 8 },
-
-  typePill: {
+  // ── Empty state ───────────────────────────────────────────────────────────
+  emptyWrap: { alignItems: "center", paddingVertical: 60, gap: 8 },
+  emptyTitle: { fontSize: 16, fontWeight: "700", color: APP_TEXT, marginTop: 4 },
+  emptyMsg: { fontSize: 14, color: APP_TEXT_3, textAlign: "center", paddingHorizontal: 40, lineHeight: 20 },
+  emptyAction: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 10,
+    gap: 7,
+    marginTop: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 11,
+    backgroundColor: APP_GREEN,
+    borderRadius: 12,
   },
-  typePillDirect: { backgroundColor: "#EFF6FF" },
-  typePillSupport: { backgroundColor: "#F5F3FF" },
-  typePillText: { fontSize: 11, fontWeight: "600" },
-  typePillDirect_text: { color: "#1E40AF" },
-  typePillSupport_text: { color: "#7C3AED" },
+  emptyActionText: { color: "#fff", fontWeight: "700", fontSize: 13 },
 });

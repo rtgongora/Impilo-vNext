@@ -169,7 +169,7 @@ export const authStore = createStore<AuthState>((set, get) => ({
       const session: SessionContext = {
         tenantId,
         podId: "national-spine",
-        actorId: (userInfo as Record<string, unknown>).cpid as string ?? userInfo.sub,
+        actorId: (userInfo as unknown as Record<string, unknown>).cpid as string ?? userInfo.sub,
         actorType: resolveActorType(userInfo),
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
@@ -214,6 +214,10 @@ export const authStore = createStore<AuthState>((set, get) => ({
   },
 
   getValidToken: async () => {
+    if (process.env.EXPO_PUBLIC_DEV_BYPASS_AUTH === "true") {
+      const session = get().session;
+      if (session) return session.accessToken;
+    }
     const tm = requireTokenManager();
     return tm.getValidToken();
   },
