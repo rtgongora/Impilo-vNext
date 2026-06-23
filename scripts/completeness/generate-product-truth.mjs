@@ -55,7 +55,7 @@ const OUT_JSON = path.join(REPO_ROOT, 'reports/product/product-truth.json');
 const CONTRACT_MATRIX = path.join(REPO_ROOT, 'reports/product/contract-implementation-matrix.json');
 
 const MOCK_STUB_PATTERNS = [
-  { re: /mockData|fakeResponse|demoPatient|sampleData|fixtureData/gi, label: 'mock-data-var' },
+  { re: /mockData|fakeResponse|demoPatient|sampleData|fixtureData|mock[- ]data|mockedData|fakeData|demoData/gi, label: 'mock-data-var' },
   { re: /coming soon|under construction|placeholder page/gi, label: 'placeholder-copy' },
   { re: /<pre[^>]*>\s*\{JSON\.stringify/gi, label: 'json-debug-pre' },
   { re: /\{[^}]*JSON\.stringify\s*\([^)]*\)[^}]*\}/g, label: 'json-stringify-render' },
@@ -267,14 +267,55 @@ function scanHardcodedCollections(text, filePath) {
  */
 function scanInMemoryStore(text, filePath) {
   const fp = rel(filePath);
-  if (!/Store\.java$/.test(fp) || /Cache/.test(path.basename(fp))) return [];
+  if (/Cache/.test(path.basename(fp)) || /@Cacheable/.test(text)) return [];
+  const hasDurableBacking = /Repository|jpa|jdbcTemplate|@Entity|entityManager/i.test(text);
+  if (hasDurableBacking) return [];
   const concurrentField =
     /=\s*new\s+(?:ConcurrentHashMap|ConcurrentLinkedDeque|CopyOnWriteArrayList|ArrayDeque|ConcurrentLinkedQueue|ConcurrentSkipListMap)\s*</.test(text);
-  const hasDurableBacking = /Repository|jpa|jdbcTemplate|@Entity|entityManager|@Cacheable/i.test(text);
-  if (concurrentField && !hasDurableBacking) {
+  // Rule 1 (original, narrow): a *Store class whose state is a concurrent in-memory collection.
+  if (/Store\.java$/.test(fp) && concurrentField) {
     return [{ file: fp, pattern: 'in-memory-store' }];
   }
+  // Rule 2 (widened, precise): a Controller/Service holding a STATIC mutable collection
+  // as its backing data and serving/mutating it — e.g. PatientController's seeded
+  // CopyOnWriteArrayList. Requires a static field initializer + a mutation call, so a
+  // local variable or a config map does not trip it.
+  if (/(?:Controller|Service)\.java$/.test(fp)) {
+    // Tolerate nested generics (e.g. List<Map<String,Object>>) between the type and `=`.
+    const staticCollectionField =
+      /\bstatic\s+(?:final\s+)?[\w.]+(?:<[^=;{}]*>)?\s+\w+\s*=\s*new\s+(?:ConcurrentHashMap|CopyOnWriteArrayList|ConcurrentLinkedDeque|ArrayDeque|ConcurrentLinkedQueue|LinkedHashMap|HashMap|ArrayList|LinkedList|TreeMap)\s*</.test(text);
+    const mutated = /\.\s*(?:add|put|remove|removeIf|set|clear)\s*\(/.test(text);
+    const served = /@(?:Get|Post|Put|Patch|Delete)Mapping|@RequestMapping/.test(text);
+    if (staticCollectionField && mutated && served) {
+      return [{ file: fp, pattern: 'in-memory-backing' }];
+    }
+  }
   return [];
+}
+
+/**
+ * General incomplete/stub markers in a product Java path that the security and
+ * mock-data detectors miss. High-precision, actionable markers only: a bare
+ * `Placeholder` (no colon — colon form is the security detector's), and
+ * actionable `TODO: wire/implement/...`. Honest 501 NOT_IMPLEMENTED responses and
+ * UnsupportedOperationException are intentionally NOT gate-flagged here (they are
+ * honest contract behaviour) — they are tracked in the full register instead.
+ */
+const STUB_MARKER_PATTERNS = [
+  // A genuine stub-placeholder promises future replacement of CODE behaviour
+  // ("Placeholder — actual summary fetched later"). Require that promise so domain
+  // uses of the word ("placeholder row", "placeholder document id") are excluded.
+  { re: /\bPlaceholder\b[\s:—–-]+[^.\n]*\b(?:actual|real|fetch|wire|implement|integrat|will be|to be|for now|TODO|not yet|temporar|stub)/i, label: 'stub-placeholder' },
+  { re: /TODO:?\s*(?:wire|implement|hook\s*up|finish|complete|replace with real)\b/i, label: 'todo-wire' },
+];
+function scanStubMarkers(text, filePath) {
+  const fp = rel(filePath);
+  if (/\/test\/java\/|Test\.java$|IT\.java$/.test(fp)) return [];
+  const hits = [];
+  for (const { re, label } of STUB_MARKER_PATTERNS) {
+    if (re.test(text)) hits.push({ file: fp, pattern: label });
+  }
+  return hits;
 }
 
 /**
@@ -425,6 +466,7 @@ function scanServiceModule(svc, contractMatrix, bffClientMap) {
       const t = readText(f);
       mockStubHits.push(...scanMockStubHits(t, f, { backendOnly: true }));
       mockStubHits.push(...scanInMemoryStore(t, f));
+      mockStubHits.push(...scanStubMarkers(t, f));
       securityPlaceholderHits.push(...scanSecurityPlaceholders(t, f));
     });
   }
@@ -1390,7 +1432,7 @@ function renderCohesionReport(data) {
 
 // Export pure detectors for unit testing; only run the full scan when invoked
 // directly (node generate-product-truth.mjs), not when imported by tests.
-export { scanMockStubHits, scanHardcodedCollections, scanInMemoryStore, scanSecurityPlaceholders };
+export { scanMockStubHits, scanHardcodedCollections, scanInMemoryStore, scanSecurityPlaceholders, scanStubMarkers };
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   main();
