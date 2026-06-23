@@ -67,6 +67,7 @@ import { useShellStore } from "@/hooks/useShellStore";
 import { ServiceLogo } from "@/components/branding/ServiceLogo";
 import { WORK_MODE_LABELS } from "@/hooks/useWorkModeStore";
 import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
+import { useOperationalContextStore } from "@/hooks/useOperationalContextStore";
 import { expandRoleGroup } from "@/lib/auth/privileged-roles";
 
 interface SidebarItem {
@@ -443,6 +444,7 @@ export function ExperienceSidebar() {
   const { currentRoute, facility, workspace, stage, shiftActive, workMode } = useExperienceEntry();
   const navDrawerOpen = useShellStore((s) => s.navDrawerOpen);
   const setNavDrawerOpen = useShellStore((s) => s.setNavDrawerOpen);
+  const focusedWorkMode = useOperationalContextStore((s) => s.focusedWorkMode);
   const [collapsed, setCollapsed] = useState(false);
   const [switcherOpen, setSwitcherOpen] = useState(false);
 
@@ -462,6 +464,9 @@ export function ExperienceSidebar() {
 
   const orderedZones = [...ZONES]
     .filter((zone) => {
+      if (focusedWorkMode) {
+        return zone.id === "work";
+      }
       // Citizens only see "life" unless the BFF session contract grants work/professional tabs.
       if (citizenOnly && zone.id !== "life") {
         if (zone.id === "work" && sessionWorkZone) return true;

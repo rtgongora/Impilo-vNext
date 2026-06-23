@@ -13,6 +13,7 @@ import { AuthLayout } from "@/components/AuthLayout";
 import { useLogin } from "@/hooks/queries/useAuth";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useConsentStore } from "@/hooks/useConsentStore";
+import { useOperationalContextStore } from "@/hooks/useOperationalContextStore";
 import { useWorkModeStore } from "@/hooks/useWorkModeStore";
 import { buildPostLoginResolvingPath } from "@/lib/resolve-post-login-destination";
 
@@ -22,9 +23,11 @@ export default function ProviderIdLoginPage() {
   const returnTo = searchParams.get("returnTo");
   const login = useLogin();
   const setAuth = useAuthStore((s) => s.setAuth);
+  const setFocusedWorkMode = useOperationalContextStore((s) => s.setFocusedWorkMode);
 
   const [providerId, setProviderId] = useState("");
   const [pin, setPin] = useState("");
+  const [signInFocusedWorkMode, setSignInFocusedWorkMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   function handleSubmit(e: FormEvent) {
@@ -69,6 +72,9 @@ export default function ProviderIdLoginPage() {
           );
           useWorkModeStore.getState().deriveFromRoles(user.roles);
           useConsentStore.getState().hydrate(user.id);
+          if (signInFocusedWorkMode) {
+            setFocusedWorkMode(true);
+          }
           router.push(buildPostLoginResolvingPath(returnTo));
         },
         onError: () => {
@@ -154,6 +160,21 @@ export default function ProviderIdLoginPage() {
             />
           </div>
         </div>
+
+        <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border bg-background px-3 py-3">
+          <input
+            type="checkbox"
+            className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary/40"
+            checked={signInFocusedWorkMode}
+            onChange={(e) => setSignInFocusedWorkMode(e.target.checked)}
+          />
+          <span>
+            <span className="block text-sm font-medium text-foreground">Sign in to focused work mode</span>
+            <span className="mt-0.5 block text-xs text-muted-foreground">
+              Hide personal and professional tabs; show only work zones after sign-in
+            </span>
+          </span>
+        </label>
 
         <button
           type="submit"

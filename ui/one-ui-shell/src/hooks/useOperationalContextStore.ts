@@ -22,6 +22,7 @@ import {
 } from "@/lib/operational-context";
 
 const KEY_MODE = "exp:operational_mode";
+const KEY_FOCUSED = "exp:focused_work_mode";
 const KEY_FACILITY_SUB = "exp:facility_work_subcontext";
 const KEY_REGISTRY_SUB = "exp:registry_admin_subtype";
 const KEY_ORG_SURFACE = "exp:organization_admin_surface";
@@ -41,6 +42,11 @@ const FACILITY_SUB_VALUES: FacilityWorkSubcontext[] = [
 
 function isFacilityWorkSubcontext(value: string): value is FacilityWorkSubcontext {
   return (FACILITY_SUB_VALUES as string[]).includes(value);
+}
+
+function loadFocusedWorkMode(): boolean {
+  if (typeof window === "undefined") return false;
+  return sessionStorage.getItem(KEY_FOCUSED) === "1";
 }
 
 function loadOperationalMode(): OperationalMode {
@@ -73,10 +79,12 @@ function loadOrganizationAdminSurface(): OrganizationAdminSurface | null {
 
 interface OperationalContextState {
   operationalMode: OperationalMode;
+  focusedWorkMode: boolean;
   facilityWorkSubcontext: FacilityWorkSubcontext | null;
   registryAdminSubtype: RegistryAdminSubtype | null;
   organizationAdminSurface: OrganizationAdminSurface | null;
   setOperationalMode: (mode: OperationalMode) => void;
+  setFocusedWorkMode: (focused: boolean) => void;
   setFacilityWorkSubcontext: (sub: FacilityWorkSubcontext | null) => void;
   setRegistryAdminSubtype: (sub: RegistryAdminSubtype | null) => void;
   setOrganizationAdminSurface: (surface: OrganizationAdminSurface | null) => void;
@@ -89,6 +97,7 @@ interface OperationalContextState {
 
 export const useOperationalContextStore = create<OperationalContextState>((set) => ({
   operationalMode: loadOperationalMode(),
+  focusedWorkMode: loadFocusedWorkMode(),
   facilityWorkSubcontext: loadFacilityWorkSubcontext(),
   registryAdminSubtype: loadRegistryAdminSubtype(),
   organizationAdminSurface: loadOrganizationAdminSurface(),
@@ -98,6 +107,17 @@ export const useOperationalContextStore = create<OperationalContextState>((set) 
       sessionStorage.setItem(KEY_MODE, mode);
     }
     set({ operationalMode: mode });
+  },
+
+  setFocusedWorkMode: (focused) => {
+    if (typeof window !== "undefined") {
+      if (focused) sessionStorage.setItem(KEY_FOCUSED, "1");
+      else sessionStorage.removeItem(KEY_FOCUSED);
+    }
+    set({ focusedWorkMode: focused, operationalMode: focused ? "facility_work" : loadOperationalMode() });
+    if (focused && typeof window !== "undefined") {
+      sessionStorage.setItem(KEY_MODE, "facility_work");
+    }
   },
 
   setFacilityWorkSubcontext: (sub) => {
@@ -139,6 +159,7 @@ export const useOperationalContextStore = create<OperationalContextState>((set) 
   rehydrateFromSession: () => {
     set({
       operationalMode: loadOperationalMode(),
+      focusedWorkMode: loadFocusedWorkMode(),
       facilityWorkSubcontext: loadFacilityWorkSubcontext(),
       registryAdminSubtype: loadRegistryAdminSubtype(),
       organizationAdminSurface: loadOrganizationAdminSurface(),
@@ -148,12 +169,14 @@ export const useOperationalContextStore = create<OperationalContextState>((set) 
   reset: () => {
     if (typeof window !== "undefined") {
       sessionStorage.removeItem(KEY_MODE);
+      sessionStorage.removeItem(KEY_FOCUSED);
       sessionStorage.removeItem(KEY_FACILITY_SUB);
       sessionStorage.removeItem(KEY_REGISTRY_SUB);
       sessionStorage.removeItem(KEY_ORG_SURFACE);
     }
     set({
       operationalMode: "my_life",
+      focusedWorkMode: false,
       facilityWorkSubcontext: null,
       registryAdminSubtype: null,
       organizationAdminSurface: null,

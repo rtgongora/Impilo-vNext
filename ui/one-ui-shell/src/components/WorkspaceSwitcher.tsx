@@ -22,6 +22,7 @@ import {
   ArrowLeftRight,
   Building2,
   Clock,
+  Focus,
   LogOut,
   Play,
   Stethoscope,
@@ -29,6 +30,7 @@ import {
   X,
 } from "lucide-react";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { useOperationalContextStore } from "@/hooks/useOperationalContextStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
 import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
 import { SafeSwitchWarning } from "@/components/SafeSwitchWarning";
@@ -69,9 +71,12 @@ export function WorkspaceSwitcher({ open, onClose }: WorkspaceSwitcherProps) {
   const { user, deactivateProvider } = useAuthStore();
   const shift = useShiftStore((s) => s.shift);
   const { facility, workspace, shiftActive, clearEntry } = useExperienceEntry();
+  const focusedWorkMode = useOperationalContextStore((s) => s.focusedWorkMode);
+  const setFocusedWorkMode = useOperationalContextStore((s) => s.setFocusedWorkMode);
 
   // Pending action awaiting safe-switch confirmation
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+  const [confirmExitFocused, setConfirmExitFocused] = useState(false);
 
   const providerActivated = user?.providerActivated ?? false;
 
@@ -128,6 +133,25 @@ export function WorkspaceSwitcher({ open, onClose }: WorkspaceSwitcherProps) {
 
   function handleEndSession() {
     clearEntry();
+    router.push("/home");
+    onClose();
+  }
+
+  function handleEnterFocusedWorkMode() {
+    guardedSwitch(() => {
+      setFocusedWorkMode(true);
+      router.push("/home");
+      onClose();
+    });
+  }
+
+  function handleRequestExitFocusedWorkMode() {
+    setConfirmExitFocused(true);
+  }
+
+  function handleConfirmExitFocusedWorkMode() {
+    setFocusedWorkMode(false);
+    setConfirmExitFocused(false);
     router.push("/home");
     onClose();
   }
@@ -239,6 +263,74 @@ export function WorkspaceSwitcher({ open, onClose }: WorkspaceSwitcherProps) {
                 </div>
               </div>
             </button>
+          )}
+
+          {/* Focused work mode — professional execution without personal/pro tabs */}
+          {providerActivated && (
+            <div className="mt-2">
+              {focusedWorkMode ? (
+                <div className="rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/20">
+                      <Focus className="h-5 w-5 text-amber-300" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-white">Focused work mode</p>
+                      <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                        Personal and professional tabs are hidden to reduce accidental context switches.
+                      </p>
+                    </div>
+                  </div>
+                  {confirmExitFocused ? (
+                    <div className="mt-4 space-y-2">
+                      <p className="text-xs text-amber-100">Exit focused work mode and show all tabs?</p>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={handleConfirmExitFocusedWorkMode}
+                          className="flex-1 rounded-xl bg-amber-500/90 px-3 py-2.5 text-sm font-semibold text-slate-900"
+                        >
+                          Yes, exit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmExitFocused(false)}
+                          className="flex-1 rounded-xl border border-white/20 px-3 py-2.5 text-sm font-medium text-white"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleRequestExitFocusedWorkMode}
+                      className="mt-4 w-full rounded-xl border border-amber-400/40 bg-amber-500/10 px-4 py-2.5 text-sm font-medium text-amber-100 transition hover:bg-amber-500/20"
+                    >
+                      Exit focused work mode
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleEnterFocusedWorkMode}
+                  className="group w-full rounded-2xl border border-white/10 bg-card/5 p-4 text-left transition hover:border-amber-400/30 hover:bg-amber-400/10"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/20">
+                      <Focus className="h-5 w-5 text-amber-300" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-white">Enter focused work mode</p>
+                      <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                        Hide personal tabs and non-work zones for uninterrupted clinical work
+                      </p>
+                    </div>
+                  </div>
+                </button>
+              )}
+            </div>
           )}
 
           {/* Active Session — only if currently in a work session */}

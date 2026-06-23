@@ -246,4 +246,5 @@ export const OPERATIONAL_CONTEXT_SESSION_KEYS = [
   "exp:facility_work_subcontext",
   "exp:registry_admin_subtype",
   "exp:organization_admin_surface",
+  "exp:focused_work_mode",
 ] as const;

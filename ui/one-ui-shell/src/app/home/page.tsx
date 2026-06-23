@@ -495,6 +495,7 @@ export default function HomePage() {
     useExperienceEntry();
   const pathname = usePathname();
   const homeContextSyncPass = useRef(false);
+  const focusedWorkMode = useOperationalContextStore((s) => s.focusedWorkMode);
 
   useEffect(() => {
     if (pathname !== "/home" && pathname !== "/") {
@@ -503,6 +504,13 @@ export default function HomePage() {
   }, [pathname]);
   const hasProfessionalRoles = isClinical || isAdmin || isFinance || isDispenser;
   const [activeTab, setActiveTab] = useState<HomeTab>("personal");
+
+  useEffect(() => {
+    if (focusedWorkMode) {
+      setActiveTab("work");
+      sessionStorage.setItem("exp:home-tab", "work");
+    }
+  }, [focusedWorkMode]);
 
   // Citizens always land on personal; activated providers default to work.
   useEffect(() => {
@@ -798,6 +806,7 @@ export default function HomePage() {
           </div>
 
           {/* Tab Switcher (Lovable 3-tab: Work / Professional / Personal) */}
+          {!focusedWorkMode ? (
           <div className="flex gap-1 bg-neutral-100 p-1 rounded-lg">
             {identity.hasWorkAccess && (
             <button onClick={() => switchTab("work")}
@@ -816,9 +825,16 @@ export default function HomePage() {
               <Heart className="w-4 h-4" /> {identity.hasWorkAccess ? "My Life" : "My Life / My Health"}
             </button>
           </div>
+          ) : (
+            <div className="flex items-center gap-2 rounded-lg border border-primary/25 bg-primary-soft px-3 py-2 text-sm text-primary">
+              <Briefcase className="h-4 w-4 shrink-0" />
+              <span className="font-medium">Focused work mode</span>
+              <span className="hidden text-xs text-primary-hover sm:inline">Personal and professional tabs hidden</span>
+            </div>
+          )}
 
           {/* ═══ WORK TAB ═══ */}
-          {activeTab === "work" && (<>
+          {(focusedWorkMode || activeTab === "work") && (<>
           <div className="grid gap-4 lg:grid-cols-3">
             <div className="space-y-3 lg:col-span-2">
               <HomeSearchCommandPrompt />
@@ -1201,7 +1217,7 @@ export default function HomePage() {
           </>)}
 
           {/* ═══ PROFESSIONAL TAB ═══ */}
-          {activeTab === "professional" && (
+          {activeTab === "professional" && !focusedWorkMode && (
             <div className="space-y-6">
               {(availableOperationalModes.includes("registry_admin") ||
                 availableOperationalModes.includes("organization_admin")) && (
@@ -1435,128 +1451,9 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* ═══ PERSONAL TAB ═══ */}
-          {activeTab === "personal" && (
-            <div className="space-y-6">
-              {/* My Health Quick Actions */}
-              <div className="bg-card rounded-lg border border-border p-6">
-                <h3 className="text-base font-semibold text-foreground flex items-center gap-2 mb-4">
-                  <Heart className="w-5 h-5 text-pink-600" /> My Health
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <Link href="/scheduling" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-primary-soft border border-primary/25 hover:border-impilo-400 transition-colors text-center">
-                    <Calendar className="w-6 h-6 text-primary" />
-                    <span className="text-xs font-medium text-foreground">Book Visit</span>
-                  </Link>
-                  <Link href="/telemedicine" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-green-50 border border-green-200 hover:border-green-400 transition-colors text-center">
-                    <Video className="w-6 h-6 text-green-600" />
-                    <span className="text-xs font-medium text-foreground">Video Call</span>
-                  </Link>
-                  <Link href="/home/medications" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-warning-soft border border-warning/35 hover:border-amber-400 transition-colors text-center">
-                    <Pill className="w-6 h-6 text-amber-600" />
-                    <span className="text-xs font-medium text-foreground">My Medications</span>
-                  </Link>
-                  <Link href="/home/notifications" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-warning-soft border border-warning/35 hover:border-purple-400 transition-colors text-center">
-                    <FileText className="w-6 h-6 text-purple-600" />
-                    <span className="text-xs font-medium text-foreground">Messages</span>
-                  </Link>
-                </div>
-              </div>
-
-              {/* Blood donation — My Life */}
-              <div className="bg-card rounded-lg border border-border p-6">
-                <h3 className="text-base font-semibold text-foreground flex items-center gap-2 mb-4">
-                  <Droplet className="w-5 h-5 text-rose-600" /> Give blood
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <Link href="/madi/donor/drives" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-danger-soft border border-danger/28 hover:border-rose-400 transition-colors text-center">
-                    <Droplet className="w-6 h-6 text-rose-600" />
-                    <span className="text-xs font-medium text-foreground">Donate blood</span>
-                    <span className="text-[11px] text-muted-foreground">Find a drive near you</span>
-                  </Link>
-                  <Link href="/madi/donor/register" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-card border border-danger/28 hover:border-rose-400 transition-colors text-center">
-                    <Heart className="w-6 h-6 text-rose-500" />
-                    <span className="text-xs font-medium text-foreground">Become a blood donor</span>
-                    <span className="text-[11px] text-muted-foreground">Voluntary registration</span>
-                  </Link>
-                  <Link href="/madi/donor" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-card border border-border hover:border-rose-300 transition-colors text-center">
-                    <User className="w-6 h-6 text-muted-foreground" />
-                    <span className="text-xs font-medium text-foreground">My donor hub</span>
-                    <span className="text-[11px] text-muted-foreground">History & preferences</span>
-                  </Link>
-                </div>
-              </div>
-
-              {/* Personal Links */}
-              <div className="bg-card rounded-lg border border-border p-6">
-                <h3 className="text-base font-semibold text-foreground flex items-center gap-2 mb-4">
-                  <User className="w-5 h-5 text-muted-foreground" /> Account & Settings
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <Link href="/home/profile" className="flex items-center gap-3 p-3 rounded-lg bg-background border border-border hover:border-primary/25 transition-colors">
-                    <User className="w-5 h-5 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm font-medium text-foreground">Profile</p>
-                      <p className="text-xs text-muted-foreground">View and edit your profile</p>
-                    </div>
-                  </Link>
-                  <Link href="/home/preferences" className="flex items-center gap-3 p-3 rounded-lg bg-background border border-border hover:border-primary/25 transition-colors">
-                    <Settings className="w-5 h-5 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm font-medium text-foreground">Preferences</p>
-                      <p className="text-xs text-muted-foreground">Language, notifications, display</p>
-                    </div>
-                  </Link>
-                  <Link href="/settings/security" className="flex items-center gap-3 p-3 rounded-lg bg-background border border-border hover:border-primary/25 transition-colors">
-                    <Shield className="w-5 h-5 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm font-medium text-foreground">Security & Privacy</p>
-                      <p className="text-xs text-muted-foreground">Password, MFA, sessions</p>
-                    </div>
-                  </Link>
-                  <Link href="/marketplace" className="flex items-center gap-3 p-3 rounded-lg bg-background border border-border hover:border-primary/25 transition-colors">
-                    <ShoppingCart className="w-5 h-5 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm font-medium text-foreground">Health Marketplace</p>
-                      <p className="text-xs text-muted-foreground">Browse products & services</p>
-                    </div>
-                  </Link>
-                </div>
-              </div>
-
-              {/* Community Groups */}
-              <div className="bg-card rounded-lg border border-border p-6">
-                <h3 className="text-base font-semibold text-foreground flex items-center gap-2 mb-4">
-                  <Users className="w-5 h-5 text-purple-600" /> Communities
-                </h3>
-                {communityGroups.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No community groups available yet.</p>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {communityGroups.slice(0, 4).map((group) => (
-                      <div key={group.id} className="flex items-center justify-between bg-background rounded-lg border border-border p-3">
-                        <div>
-                          <p className="text-sm font-medium text-foreground">{group.attributes.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {group.attributes.groupType} · {group.attributes.memberCount} members
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => joinGroup.mutate({ groupId: group.id, memberId: user?.id ?? "" })}
-                          disabled={joinGroup.isPending}
-                          className="text-xs text-primary hover:text-primary-hover font-medium"
-                        >
-                          Join
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Community Feed */}
-              <FeedSection />
-            </div>
+          {/* ═══ PERSONAL TAB — same CitizenHome surface as citizen-only users ═══ */}
+          {activeTab === "personal" && !focusedWorkMode && (
+            <CitizenHome user={user} greeting={greeting} />
           )}
 
         </div>
