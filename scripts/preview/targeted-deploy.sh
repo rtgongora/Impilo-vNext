@@ -227,9 +227,14 @@ preview_resolve_targeted_provenance "$PREVIEW_DEPLOY_COMMIT" "$IMAGES_CSV"
 DIGESTS_JSON="$(preview_digest_json_for_images "$IMAGES_CSV" "$DIGESTS_VALUES")"
 HELM_REV="$(preview_helm_current_revision)"
 NEXT_REV=$((HELM_REV + 1))
+PREVIEW_DIGESTS_TMP="$(mktemp "${TMPDIR:-/tmp}/impilo-preview-digests.XXXXXX")"
+printf '%s' "$DIGESTS_JSON" >"$PREVIEW_DIGESTS_TMP"
+export PREVIEW_DIGESTS_JSON_FILE="$PREVIEW_DIGESTS_TMP"
 preview_write_provenance_values "targeted" \
   "$PREVIEW_PROV_SHELL_COMMIT" "$PREVIEW_PROV_BFF_COMMIT" "$PREVIEW_PROV_ESTATE_COMMIT" \
-  "$PREVIEW_PROV_CERTIFIED_COMMIT" "$NEXT_REV" "$DIGESTS_JSON"
+  "$PREVIEW_PROV_CERTIFIED_COMMIT" "$NEXT_REV" "{}"
+rm -f "$PREVIEW_DIGESTS_TMP"
+unset PREVIEW_DIGESTS_JSON_FILE
 
 HELM_ARGS=(-f "$VALUES_FILE")
 [[ -f "$RUNTIME_VALUES" ]] && HELM_ARGS+=(-f "$RUNTIME_VALUES")

@@ -408,9 +408,14 @@ RUNTIME_IDS="$(bash scripts/full-boot/list-runtime-service-ids.sh)"
 DIGESTS_JSON="$(preview_digest_json_for_images "experience-bff,one-ui-shell,$RUNTIME_IDS" "$DIGESTS_VALUES")"
 HELM_REV="$(preview_helm_current_revision)"
 NEXT_REV=$((HELM_REV + 1))
+PREVIEW_DIGESTS_TMP="$(mktemp "${TMPDIR:-/tmp}/impilo-preview-digests.XXXXXX")"
+printf '%s' "$DIGESTS_JSON" >"$PREVIEW_DIGESTS_TMP"
+export PREVIEW_DIGESTS_JSON_FILE="$PREVIEW_DIGESTS_TMP"
 preview_write_provenance_values "full-boot" \
   "$PREVIEW_PROV_SHELL_COMMIT" "$PREVIEW_PROV_BFF_COMMIT" "$PREVIEW_PROV_ESTATE_COMMIT" \
-  "$PREVIEW_PROV_CERTIFIED_COMMIT" "$NEXT_REV" "$DIGESTS_JSON"
+  "$PREVIEW_PROV_CERTIFIED_COMMIT" "$NEXT_REV" "{}"
+rm -f "$PREVIEW_DIGESTS_TMP"
+unset PREVIEW_DIGESTS_JSON_FILE
 
 HELM_DIGEST_PIN_SETS=()
 if [[ -f "$DIGESTS_VALUES" ]] && [[ "${IMPILO_DEPLOY_NO_DIGEST_PIN:-}" != "1" ]]; then
