@@ -9,6 +9,9 @@ public record MedicationLine(
         Double doseMg,
         String route,
         Integer daysOnTherapy,
-        boolean broadSpectrumAntibiotic
+        boolean broadSpectrumAntibiotic,
+        // National-formulary specialist-only designation, supplied by the calling
+        // system (e.g. from MedicineGuidance) — used by level-of-care gating.
+        boolean specialistOnly
 ) {
 }

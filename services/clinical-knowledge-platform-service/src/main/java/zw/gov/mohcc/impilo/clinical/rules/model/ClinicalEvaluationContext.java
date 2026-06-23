@@ -52,7 +52,8 @@ public record ClinicalEvaluationContext(
                             toDouble(m.get("doseMg")),
                             str(m.get("route")),
                             toInt(m.get("daysOnTherapy")),
-                            isBroadSpectrum(gen)
+                            isBroadSpectrum(gen),
+                            m.get("specialistOnly") instanceof Boolean b && b
                     ));
                 }
             }

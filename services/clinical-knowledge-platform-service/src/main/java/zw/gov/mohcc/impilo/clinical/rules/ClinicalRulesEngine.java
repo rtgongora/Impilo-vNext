@@ -136,8 +136,24 @@ public class ClinicalRulesEngine {
         }
         String fac = ctx.facilityLevel().toUpperCase(Locale.ROOT);
         int facRank = rank(fac);
-        for (MedicationLine m : ctx.activeMedications()) {
-            // Placeholder: map not loaded here; specialist-only gating uses diagnosis + gentamicin neonatal rule instead.
+        // Specialist-only medicines (per national-formulary facility-level tables,
+        // supplied on the medication context) may not be routinely initiated below a
+        // specialist (S) facility — flag for referral / specialist authorisation.
+        if (facRank < rank("S")) {
+            for (MedicationLine m : ctx.activeMedications()) {
+                if (m.specialistOnly()) {
+                    String med = (m.displayName() != null && !m.displayName().isBlank())
+                            ? m.displayName() : m.genericName();
+                    out.add(new RuleAlert(
+                            "LEVEL_OF_CARE_SPECIALIST_ONLY_MEDICINE",
+                            "HIGH",
+                            med + " is designated specialist-only and may exceed this facility's level-of-care scope — confirm referral or specialist authorisation.",
+                            "National formulary facility-level tables restrict specialist-only medicines to specialist (S) centres.",
+                            true,
+                            true
+                    ));
+                }
+            }
         }
         if (facRank < rank("S")) {
             for (MedicationLine m : ctx.activeMedications()) {
