@@ -84,6 +84,12 @@ function specialEnv(serviceId) {
       DISPATCH_SECURITY_OAUTH2_ENABLED: "false",
     };
   }
+  if (serviceId === "data-access-governance-service") {
+    // Permit-token signing key is now fail-closed (no insecure default); supply a
+    // preview-only secret so the service boots. Production must set a real secret
+    // via approved secret governance.
+    return { DAGS_ENFORCEMENT_SIGNING_KEY: "preview-dags-permit-signing-key-change-me-0123456789" };
+  }
   if (serviceId === "product-registry-service") {
     return {
       KEYCLOAK_ISSUER: "",
