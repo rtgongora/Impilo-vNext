@@ -6,17 +6,26 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
 import zw.gov.mohcc.impilo.companion.context.RequestContext;
 import zw.gov.mohcc.impilo.companion.context.RequestContextHolder;
+import zw.gov.mohcc.impilo.hrpayroll.core.AttendanceService;
+import zw.gov.mohcc.impilo.hrpayroll.core.LeaveService;
 import zw.gov.mohcc.impilo.hrpayroll.core.PayrollService;
 import zw.gov.mohcc.impilo.hrpayroll.persistence.entity.EmployeeEntity;
 import zw.gov.mohcc.impilo.hrpayroll.persistence.repository.*;
+import zw.gov.mohcc.impilo.shared.auth.AccessMode;
+import zw.gov.mohcc.impilo.shared.auth.TrustContext;
+import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
 import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,6 +43,8 @@ class InternalHrApiContractSurfaceTest {
     @Mock private PayslipRepository payslipRepository;
     @Mock private DeductionTypeRepository deductionTypeRepository;
     @Mock private PayrollService payrollService;
+    @Mock private LeaveService leaveService;
+    @Mock private AttendanceService attendanceService;
 
     private InternalHrApi api;
 
@@ -49,7 +60,9 @@ class InternalHrApiContractSurfaceTest {
                 payrollRunRepository,
                 payslipRepository,
                 deductionTypeRepository,
-                payrollService);
+                payrollService,
+                leaveService,
+                attendanceService);
         RequestContextHolder.set(RequestContext.of(
                 TENANT.toString(), "national", "req-hr", "corr-hr", null, null, null));
     }
@@ -57,6 +70,13 @@ class InternalHrApiContractSurfaceTest {
     @AfterEach
     void tearDown() {
         RequestContextHolder.clear();
+        TrustContextHolder.clear();
+    }
+
+    private void trustAs(String actorType, AccessMode mode) {
+        TrustContextHolder.set(new TrustContext(
+                TENANT, "actor-1", actorType, "OPERATIONS", null, UUID.randomUUID(),
+                null, null, null, mode));
     }
 
     @Test
@@ -68,5 +88,41 @@ class InternalHrApiContractSurfaceTest {
 
         assertThat(result).containsExactly(employee);
         verify(employeeRepository).findByTenantIdOrderByStaffNumberAsc(TENANT);
+    }
+
+    // ── G021: method-level authz on mutating routes ──
+
+    @Test
+    void createEmployeeAllowedForOperator() {
+        trustAs("OPERATOR", AccessMode.INTERNAL);
+        EmployeeEntity e = new EmployeeEntity();
+        when(employeeRepository.save(any())).thenReturn(e);
+
+        assertThat(api.createEmployee(e)).isSameAs(e);
+        verify(employeeRepository).save(e);
+    }
+
+    @Test
+    void createEmployeeDeniedForCitizen() {
+        trustAs("CITIZEN", AccessMode.INTERNAL);
+        assertThatThrownBy(() -> api.createEmployee(new EmployeeEntity()))
+                .isInstanceOf(AccessDeniedException.class);
+        verifyNoInteractions(employeeRepository);
+    }
+
+    @Test
+    void createEmployeeDeniedForExternalMode() {
+        trustAs("OPERATOR", AccessMode.EXTERNAL);
+        assertThatThrownBy(() -> api.createEmployee(new EmployeeEntity()))
+                .isInstanceOf(AccessDeniedException.class);
+        verifyNoInteractions(employeeRepository);
+    }
+
+    @Test
+    void createLeaveRequestDeniedForProvider() {
+        trustAs("PROVIDER", AccessMode.INTERNAL);
+        assertThatThrownBy(() -> api.createLeaveRequest(new zw.gov.mohcc.impilo.hrpayroll.persistence.entity.LeaveRequestEntity()))
+                .isInstanceOf(AccessDeniedException.class);
+        verifyNoInteractions(leaveService);
     }
 }
