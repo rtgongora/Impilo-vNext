@@ -172,6 +172,8 @@
         <module>../libs/ops-instrumentation</module>
         <!-- Offline SDK (entitlement verifier + local queue format) -->
         <module>../libs/offline-sdk</module>
+        <!-- TSHEPO trust-crypto primitive (B4): JWS verification + canonical trust error model -->
+        <module>../libs/tshepo-trust-crypto</module>
         <!-- New approved libraries -->
         <module>../libs/supply-planning</module>
         <module>../libs/vault-kms</module>
