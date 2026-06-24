@@ -1,6 +1,5 @@
 package zw.gov.mohcc.impilo.clinical.assistant;
 
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.clinical.audit.TraceService;
@@ -10,7 +9,7 @@ import zw.gov.mohcc.impilo.clinical.persistence.entity.SourceDocumentEntity;
 import zw.gov.mohcc.impilo.clinical.persistence.entity.SourceSectionEntity;
 import zw.gov.mohcc.impilo.clinical.persistence.repository.MedicineGuidanceRepository;
 import zw.gov.mohcc.impilo.clinical.persistence.repository.SourceDocumentRepository;
-import zw.gov.mohcc.impilo.clinical.persistence.repository.SourceSectionRepository;
+import zw.gov.mohcc.impilo.clinical.assistant.retrieval.GuidanceRetriever;
 import zw.gov.mohcc.impilo.clinical.reasoning.ReasoningRequest;
 import zw.gov.mohcc.impilo.clinical.reasoning.ReasoningResult;
 import zw.gov.mohcc.impilo.clinical.rules.ClinicalRulesEngine;
@@ -22,7 +21,7 @@ import java.util.*;
 @Service
 public class ClinicalAssistantService {
 
-    private final SourceSectionRepository sectionRepository;
+    private final GuidanceRetriever guidanceRetriever;
     private final MedicineGuidanceRepository medicineRepository;
     private final SourceDocumentRepository documentRepository;
     private final ClinicalRulesEngine rulesEngine;
@@ -30,13 +29,13 @@ public class ClinicalAssistantService {
     private final zw.gov.mohcc.impilo.clinical.reasoning.ClinicalReasoner clinicalReasoner;
 
     public ClinicalAssistantService(
-            SourceSectionRepository sectionRepository,
+            GuidanceRetriever guidanceRetriever,
             MedicineGuidanceRepository medicineRepository,
             SourceDocumentRepository documentRepository,
             ClinicalRulesEngine rulesEngine,
             TraceService traceService,
             zw.gov.mohcc.impilo.clinical.reasoning.ClinicalReasoner clinicalReasoner) {
-        this.sectionRepository = sectionRepository;
+        this.guidanceRetriever = guidanceRetriever;
         this.medicineRepository = medicineRepository;
         this.documentRepository = documentRepository;
         this.rulesEngine = rulesEngine;
@@ -67,7 +66,7 @@ public class ClinicalAssistantService {
             search = "neonatal sepsis " + search;
         }
 
-        List<SourceSectionEntity> sections = sectionRepository.searchActive(search, PageRequest.of(0, 5));
+        List<SourceSectionEntity> sections = guidanceRetriever.retrieve(search, 5);
         String medSearch = search.length() >= 3 ? search : (String.join(" ", topics) + " " + search).trim();
         if (medSearch.length() < 3) {
             medSearch = "treatment";

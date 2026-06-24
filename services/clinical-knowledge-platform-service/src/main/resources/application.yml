@@ -66,9 +66,14 @@ impilo:
       min-grounding-ratio: ${CLINICAL_LLM_MIN_GROUNDING:0.5}
       connect-timeout-ms: ${CLINICAL_LLM_CONNECT_TIMEOUT_MS:3000}
       read-timeout-ms: ${CLINICAL_LLM_READ_TIMEOUT_MS:12000}
-    # Retrieval mode for grounding evidence: like | semantic | hybrid (see Workstream 1).
+    # Retrieval mode for grounding evidence: like | semantic | hybrid.
+    # Default 'like' because semantic/hybrid require EDLIZ sections to be indexed into search-service
+    # (with an embeddings provider) first. The semantic retriever fail-closes to lexical, so flipping
+    # to 'hybrid' is safe at any time but only adds value once that back-fill has run.
     retrieval:
-      mode: ${CLINICAL_RETRIEVAL_MODE:hybrid}
+      mode: ${CLINICAL_RETRIEVAL_MODE:like}
+    search:
+      base-url: ${SEARCH_SERVICE_BASE_URL:http://localhost:8230}
     edliz:
       # Repo-relative path to national reference PDF (same bundle as docs/reference/edliz-2025/)
       reference-pdf-path: ${EDLIZ_REFERENCE_PDF_PATH:docs/reference/edliz-2025/EDLIZ-2025-final-for-circulation.pdf}
