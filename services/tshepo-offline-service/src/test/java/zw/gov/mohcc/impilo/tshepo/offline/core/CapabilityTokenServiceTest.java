@@ -1,6 +1,7 @@
 package zw.gov.mohcc.impilo.tshepo.offline.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.jwt.JWTClaimsSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -63,6 +64,9 @@ class CapabilityTokenServiceTest {
     @Mock
     private KeysServiceClient keysClient;
 
+    @Mock
+    private CapabilityTokenJwsVerifier jwsVerifier;
+
     @Captor
     private ArgumentCaptor<CapabilityTokenEntity> tokenCaptor;
 
@@ -78,7 +82,14 @@ class CapabilityTokenServiceTest {
         objectMapper = new ObjectMapper();
         offlineProperties = buildOfflineProperties();
         tokenService = new CapabilityTokenService(
-                tokenRepo, outboxRepo, authzClient, keysClient, offlineProperties, objectMapper);
+                tokenRepo, outboxRepo, authzClient, keysClient, offlineProperties, objectMapper, jwsVerifier);
+        lenient().when(outboxRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
+    }
+
+    /** Stub the JWS verifier to accept a token carrying the given token id (crypto proven separately). */
+    private void stubJwsValid(UUID jti) {
+        when(jwsVerifier.verify(anyString())).thenReturn(new CapabilityTokenJwsVerifier.Result(
+                true, null, new JWTClaimsSet.Builder().jwtID(jti.toString()).build()));
     }
 
     // ------------------------------------------------------------------
@@ -252,121 +263,80 @@ class CapabilityTokenServiceTest {
     // ------------------------------------------------------------------
 
     @Test
-    @DisplayName("validateToken with a valid active token returns capabilities")
-    void validateToken_valid_returnsCapabilities() throws Exception {
-        // Arrange: build a JWS-like token with claims
+    @DisplayName("verifyToken: valid signature + ACTIVE token returns capabilities")
+    void verifyToken_valid_returnsCapabilities() {
         UUID tokenId = UUID.randomUUID();
         CapabilityTokenEntity entity = buildActiveTokenEntity(tokenId);
-
-        String claims = objectMapper.writeValueAsString(
-                java.util.Map.of("jti", tokenId.toString(), "sub", ACTOR_ID));
-        String fakeJws = "eyJhbGciOiJFZERTQSJ9."
-                + Base64.getUrlEncoder().withoutPadding().encodeToString(claims.getBytes())
-                + ".fakesignature";
-
+        stubJwsValid(tokenId);
         when(tokenRepo.findByIdAndTenantId(tokenId, TENANT_ID)).thenReturn(Optional.of(entity));
 
-        CapabilityVerifyRequest request = new CapabilityVerifyRequest(fakeJws, TENANT_ID);
+        CapabilityVerifyResponse response = tokenService.verifyToken(
+                new CapabilityVerifyRequest("signed.token.value", TENANT_ID));
 
-        // Act
-        CapabilityVerifyResponse response = tokenService.verifyToken(request);
-
-        // Assert
         assertThat(response.valid()).isTrue();
         assertThat(response.tokenId()).isEqualTo(tokenId);
         assertThat(response.actorId()).isEqualTo(ACTOR_ID);
-        assertThat(response.facilityId()).isEqualTo(FACILITY_ID);
         assertThat(response.capabilities()).containsExactlyInAnyOrder("READ_PATIENT", "CREATE_PROVISIONAL_ENCOUNTER");
     }
 
     @Test
-    @DisplayName("validateToken with an expired token returns invalid response")
-    void validateToken_expired_throws() throws Exception {
-        // Arrange: expired token entity
+    @DisplayName("verifyToken: invalid signature fails closed (no DB lookup, no any-sig bypass)")
+    void verifyToken_invalidSignature_failsClosed() {
+        when(jwsVerifier.verify(anyString())).thenReturn(
+                new CapabilityTokenJwsVerifier.Result(false, "INVALID_SIGNATURE", null));
+
+        CapabilityVerifyResponse response = tokenService.verifyToken(
+                new CapabilityVerifyRequest("tampered.token.value", TENANT_ID));
+
+        assertThat(response.valid()).isFalse();
+        assertThat(response.reason()).contains("INVALID_SIGNATURE");
+        verify(tokenRepo, never()).findByIdAndTenantId(any(), any());
+    }
+
+    @Test
+    @DisplayName("verifyToken: valid signature but expired registry token -> invalid")
+    void verifyToken_expired_invalid() {
         UUID tokenId = UUID.randomUUID();
         CapabilityTokenEntity entity = buildActiveTokenEntity(tokenId);
-        entity.setExpiresAt(Instant.now().minus(1, ChronoUnit.HOURS)); // expired 1 hour ago
-
-        String claims = objectMapper.writeValueAsString(
-                java.util.Map.of("jti", tokenId.toString()));
-        String fakeJws = "eyJhbGciOiJFZERTQSJ9."
-                + Base64.getUrlEncoder().withoutPadding().encodeToString(claims.getBytes())
-                + ".fakesignature";
-
+        entity.setExpiresAt(Instant.now().minus(1, ChronoUnit.HOURS));
+        stubJwsValid(tokenId);
         when(tokenRepo.findByIdAndTenantId(tokenId, TENANT_ID)).thenReturn(Optional.of(entity));
 
-        CapabilityVerifyRequest request = new CapabilityVerifyRequest(fakeJws, TENANT_ID);
+        CapabilityVerifyResponse response = tokenService.verifyToken(
+                new CapabilityVerifyRequest("signed.token.value", TENANT_ID));
 
-        // Act
-        CapabilityVerifyResponse response = tokenService.verifyToken(request);
-
-        // Assert
         assertThat(response.valid()).isFalse();
         assertThat(response.reason()).contains("expired");
     }
 
     @Test
-    @DisplayName("validateToken with a revoked token returns invalid response")
-    void validateToken_revokedDevice_throws() throws Exception {
-        // Arrange: revoked token entity
+    @DisplayName("verifyToken: valid signature but revoked token -> invalid")
+    void verifyToken_revoked_invalid() {
         UUID tokenId = UUID.randomUUID();
         CapabilityTokenEntity entity = buildActiveTokenEntity(tokenId);
         entity.setStatus("REVOKED");
-        entity.setRevokedAt(Instant.now().minus(30, ChronoUnit.MINUTES));
-
-        String claims = objectMapper.writeValueAsString(
-                java.util.Map.of("jti", tokenId.toString()));
-        String fakeJws = "eyJhbGciOiJFZERTQSJ9."
-                + Base64.getUrlEncoder().withoutPadding().encodeToString(claims.getBytes())
-                + ".fakesignature";
-
+        stubJwsValid(tokenId);
         when(tokenRepo.findByIdAndTenantId(tokenId, TENANT_ID)).thenReturn(Optional.of(entity));
 
-        CapabilityVerifyRequest request = new CapabilityVerifyRequest(fakeJws, TENANT_ID);
+        CapabilityVerifyResponse response = tokenService.verifyToken(
+                new CapabilityVerifyRequest("signed.token.value", TENANT_ID));
 
-        // Act
-        CapabilityVerifyResponse response = tokenService.verifyToken(request);
-
-        // Assert
         assertThat(response.valid()).isFalse();
         assertThat(response.reason()).contains("revoked");
     }
 
     @Test
-    @DisplayName("validateToken with token not found returns invalid response")
-    void validateToken_notFound_returnsInvalid() throws Exception {
-        // Arrange
+    @DisplayName("verifyToken: valid signature but token not in registry -> invalid")
+    void verifyToken_notFound_invalid() {
         UUID tokenId = UUID.randomUUID();
-        String claims = objectMapper.writeValueAsString(
-                java.util.Map.of("jti", tokenId.toString()));
-        String fakeJws = "eyJhbGciOiJFZERTQSJ9."
-                + Base64.getUrlEncoder().withoutPadding().encodeToString(claims.getBytes())
-                + ".fakesignature";
-
+        stubJwsValid(tokenId);
         when(tokenRepo.findByIdAndTenantId(tokenId, TENANT_ID)).thenReturn(Optional.empty());
 
-        CapabilityVerifyRequest request = new CapabilityVerifyRequest(fakeJws, TENANT_ID);
+        CapabilityVerifyResponse response = tokenService.verifyToken(
+                new CapabilityVerifyRequest("signed.token.value", TENANT_ID));
 
-        // Act
-        CapabilityVerifyResponse response = tokenService.verifyToken(request);
-
-        // Assert
         assertThat(response.valid()).isFalse();
         assertThat(response.reason()).contains("not found");
-    }
-
-    @Test
-    @DisplayName("validateToken with malformed JWS returns invalid response")
-    void validateToken_malformedJws_returnsInvalid() {
-        // Arrange: JWS with only 2 parts
-        CapabilityVerifyRequest request = new CapabilityVerifyRequest("only.twoparts", TENANT_ID);
-
-        // Act
-        CapabilityVerifyResponse response = tokenService.verifyToken(request);
-
-        // Assert
-        assertThat(response.valid()).isFalse();
-        assertThat(response.reason()).contains("Invalid JWS format");
     }
 
     // ------------------------------------------------------------------

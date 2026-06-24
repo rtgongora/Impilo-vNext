@@ -77,6 +77,14 @@
             <version>${nimbus-jose.version}</version>
         </dependency>
 
+        <!-- Tink — Nimbus Ed25519Signer / Ed25519Verifier load Tink's subtle Ed25519 at runtime
+             (required for local offline capability-token JWS signature verification). -->
+        <dependency>
+            <groupId>com.google.crypto.tink</groupId>
+            <artifactId>tink</artifactId>
+            <version>1.14.1</version>
+        </dependency>
+
         <!-- Validation -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
