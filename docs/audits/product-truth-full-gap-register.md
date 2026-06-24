@@ -60,7 +60,7 @@
 
 | ID | Finding | file:line | Cat | Decision | Block |
 |----|---------|-----------|-----|----------|-------|
-| G030 | Wallet card crypto key = **SHA-256 of a key-reference string** (deterministic), not tshepo-keys | `mushe-wallet-service/.../CardHealthDataService.java:251` | crypto | fix | E3 |
+| G030 | ~~Wallet card crypto key = **SHA-256 of a key-reference string** (deterministic)~~ **FIXED + PROVEN (E3).** The per-record AES-256 key is now `HMAC-SHA256(masterKey, keyRef)` where `masterKey` is a configured secret (`wallet.card.encryption-master-key`, env, fail-closed on blank/<32-char) — so the key is NOT recoverable from the stored `encryption_key_ref` alone. NB: tshepo-keys is signing-only and `vault-kms` is a stub, so there is no platform data-key API to "fetch from" today; the configured KEK is the honest fix and a future KMS/tshepo-keys data-key API can replace it. Proven by `CardHealthDataCryptoTest` (4): the old SHA-256(keyRef) key fails to decrypt, HMAC-derived round-trip works, constructor fails closed. | `mushe-wallet-service/.../card/CardHealthDataService.java` | crypto | fixed; proven | E3 |
 | G031 | Wallet encounter event summary written as literal `"{}"` | `mushe-wallet-service/.../WalletEventConsumer.java:241` | placeholder | fix | I |
 | G032 | SMART card public key stored as `"DEV-PLACEHOLDER-"+uuid` | `vito-service/.../CardLifecycleService.java:80` | placeholder/crypto | fix | I |
 | G033 | SMS/EMAIL default to log-only stub providers — notifications silently dropped out-of-box | `notification-service/.../ProviderRegistry.java:40`, `SmsStubProvider.java:15` | placeholder | fix (config default) | I |
