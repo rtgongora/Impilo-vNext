@@ -56,6 +56,19 @@ impilo:
       relay-poll-ms: ${CLINICAL_KAFKA_RELAY_POLL_MS:2000}
     steward:
       broad-spectrum-days-threshold: ${STEWARDSHIP_BROAD_SPECTRUM_DAYS:3}
+    # Grounded LLM clinical reasoning (via governed llm-orchestration-service). Default-on but
+    # fail-closed: degrades to the deterministic grounded path whenever no real model answers.
+    llm:
+      enabled: ${CLINICAL_LLM_ENABLED:true}
+      base-url: ${LLM_ORCHESTRATION_BASE_URL:http://localhost:8265}
+      preferred-provider: ${CLINICAL_LLM_PROVIDER:anthropic}
+      max-output-tokens: ${CLINICAL_LLM_MAX_TOKENS:1200}
+      min-grounding-ratio: ${CLINICAL_LLM_MIN_GROUNDING:0.5}
+      connect-timeout-ms: ${CLINICAL_LLM_CONNECT_TIMEOUT_MS:3000}
+      read-timeout-ms: ${CLINICAL_LLM_READ_TIMEOUT_MS:12000}
+    # Retrieval mode for grounding evidence: like | semantic | hybrid (see Workstream 1).
+    retrieval:
+      mode: ${CLINICAL_RETRIEVAL_MODE:hybrid}
     edliz:
       # Repo-relative path to national reference PDF (same bundle as docs/reference/edliz-2025/)
       reference-pdf-path: ${EDLIZ_REFERENCE_PDF_PATH:docs/reference/edliz-2025/EDLIZ-2025-final-for-circulation.pdf}
