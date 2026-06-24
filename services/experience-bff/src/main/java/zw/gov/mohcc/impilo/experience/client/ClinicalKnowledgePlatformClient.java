@@ -36,6 +36,28 @@ public class ClinicalKnowledgePlatformClient {
         return extractData(response);
     }
 
+    /** Deterministic clinical-rule evaluation over a supplied patient context (CDS alerts). */
+    public JsonNode rulesEvaluate(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/clinical/rules/evaluate";
+        log.debug("Clinical platform: rules evaluate");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Record a clinician override of a recommendation against its audit trace. */
+    public JsonNode recordOverride(Map<String, Object> body, String actorId) {
+        String url = baseUrl + "/internal/v1/clinical/audit/overrides";
+        log.debug("Clinical platform: record override");
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+        if (actorId != null && !actorId.isBlank()) {
+            headers.set("x-actor-id", actorId);
+        }
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                url, new org.springframework.http.HttpEntity<>(body, headers), JsonNode.class);
+        return extractData(response);
+    }
+
     public JsonNode getTrace(String traceId) {
         String url = baseUrl + "/internal/v1/clinical/assistant/traces/" + traceId;
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);

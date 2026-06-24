@@ -23,9 +23,10 @@
  */
 
 import { useState } from "react";
-import { Sparkles, AlertTriangle, FileText, Loader2, ShieldCheck, Info, Stethoscope } from "lucide-react";
+import { Sparkles, AlertTriangle, FileText, Loader2, ShieldCheck, Info, Stethoscope, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/accessibility";
 import { useAskEdlizClinical, type ClinicalAskResponse } from "@/hooks/queries/useGuidance";
+import { useRecordClinicalOverride } from "@/hooks/queries/useClinicalCds";
 
 interface Citation {
   section_id?: string;
@@ -71,8 +72,10 @@ export function AIDiagnosticAssistant({ encounterId, clinicianMode = true }: AID
   const [diagnoses, setDiagnoses] = useState("");
   const [result, setResult] = useState<ClinicalAskResponse | null>(null);
   const [errored, setErrored] = useState(false);
+  const [overrideReason, setOverrideReason] = useState("");
 
   const ask = useAskEdlizClinical();
+  const override = useRecordClinicalOverride();
 
   const csv = (s: string) =>
     s
@@ -85,6 +88,8 @@ export function AIDiagnosticAssistant({ encounterId, clinicianMode = true }: AID
     if (!question || ask.isPending) return;
     setErrored(false);
     setResult(null);
+    setOverrideReason("");
+    override.reset();
 
     const patientContext: Record<string, unknown> = {};
     const meds = csv(activeMeds);
@@ -278,6 +283,49 @@ export function AIDiagnosticAssistant({ encounterId, clinicianMode = true }: AID
               )}
             </p>
           </div>
+
+          {/* Auditable override — the clinician remains the decision-maker. */}
+          {result.trace_id && (
+            <div className="border-t border-border/40 pt-2" data-testid="cds-override">
+              {override.isSuccess ? (
+                <p className="flex items-center gap-1.5 text-[11px] text-emerald-700" data-testid="cds-override-done">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Override recorded against this recommendation (audited).
+                </p>
+              ) : (
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-medium text-muted-foreground" htmlFor="cds-override-reason">
+                    Not following this guidance? Record why (audited against the trace):
+                  </label>
+                  <textarea
+                    id="cds-override-reason"
+                    value={overrideReason}
+                    onChange={(e) => setOverrideReason(e.target.value)}
+                    rows={2}
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs"
+                    placeholder="Clinical reason for overriding this recommendation"
+                    data-testid="cds-override-reason"
+                  />
+                  <button
+                    onClick={() =>
+                      override.mutate({
+                        recommendation_trace_id: String(result.trace_id),
+                        override_reason: overrideReason.trim(),
+                      })
+                    }
+                    disabled={!overrideReason.trim() || override.isPending}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium disabled:opacity-50"
+                    data-testid="cds-override-submit"
+                  >
+                    {override.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                    Record override
+                  </button>
+                  {override.isError && (
+                    <p className="text-[10px] text-orange-700">Override could not be recorded — try again.</p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

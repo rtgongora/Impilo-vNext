@@ -32,7 +32,7 @@ class ClinicalContextEnricherTest {
 
     private ClinicalEvaluationContext ctx(MedicationLine... meds) {
         return new ClinicalEvaluationContext(
-                null, null, null, "C", List.of(), List.of(meds), null, null, null);
+                null, null, null, "C", List.of(), List.of(meds), null, null, null, null, List.of());
     }
 
     private MedicineGuidanceEntity guidance(boolean specialistOnly) {

@@ -76,6 +76,34 @@ public class ClinicalKnowledgeController {
         }
     }
 
+    @PostMapping("/rules/evaluate")
+    public ResponseEntity<Map<String, Object>> rulesEvaluate(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            JsonNode data = clinicalClient.rulesEvaluate(body);
+            return ResponseEntity.ok(Map.of("data", data != null ? data : Map.of("alerts", java.util.List.of())));
+        } catch (Exception e) {
+            log.error("Clinical rules evaluate failed: {}", e.getMessage());
+            // Fail honest: no alerts rather than fabricated ones.
+            return ResponseEntity.ok(Map.of("data", Map.of("alerts", java.util.List.of())));
+        }
+    }
+
+    @PostMapping("/audit/overrides")
+    public ResponseEntity<Map<String, Object>> recordOverride(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            JsonNode data = clinicalClient.recordOverride(body, actorId);
+            return ResponseEntity.ok(Map.of("data", data != null ? data : Map.of()));
+        } catch (Exception e) {
+            log.error("Clinical override record failed: {}", e.getMessage());
+            return ResponseEntity.status(502).body(Map.of("error", "override_not_recorded"));
+        }
+    }
+
     @GetMapping("/pathways")
     public ResponseEntity<Map<String, Object>> pathways(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId) {

@@ -21,6 +21,8 @@ import { EncounterMenu } from "./EncounterMenu";
 import { PanelLeft, PanelRight } from "lucide-react";
 import { ClinicalGuidanceProvider } from "@/components/clinical/ClinicalGuidanceContext";
 import { ClinicalToolbar } from "@/components/clinical/ClinicalToolbar";
+import type { CDSGuidanceItem } from "@/components/clinical/ActiveCDSBanner";
+import { useClinicalCdsAlerts, type CdsAlert } from "@/hooks/queries/useClinicalCds";
 import { ClinicalKnowledgeDock } from "@/components/clinical/ClinicalKnowledgeDock";
 import { ClinicalWizardHeader } from "@/components/clinical/ClinicalWizardHeader";
 import { ClinicalWorkflowProvider, type ClinicalWorkflowConfig } from "@/components/clinical/ClinicalWorkflowContext";
@@ -54,6 +56,29 @@ function parseSessionWorkflow(raw: string | null): ClinicalWorkflowConfig | null
   }
 }
 
+/** Map a deterministic rules-engine alert to the toolbar banner's display item. No fabrication. */
+function mapCdsAlert(a: CdsAlert): CDSGuidanceItem {
+  const sev = (a.severity ?? "").toUpperCase();
+  const severity: CDSGuidanceItem["severity"] =
+    sev === "CRITICAL" ? "critical" : sev === "HIGH" ? "high" : sev === "MEDIUM" ? "moderate" : "info";
+  const type: CDSGuidanceItem["type"] =
+    severity === "critical" || (severity === "high" && a.interruptive) ? "alert" : severity === "info" ? "reminder" : "recommendation";
+  const title = (a.code ?? "Clinical alert")
+    .toLowerCase()
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+  return {
+    id: a.code,
+    type,
+    severity,
+    title,
+    message: a.message,
+    source: "Clinical rules engine",
+    timestamp: new Date(),
+    dismissed: false,
+  };
+}
+
 export function EHRLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname() ?? "";
   const params = useParams();
@@ -71,6 +96,10 @@ export function EHRLayout({ children }: { children: ReactNode }) {
   );
   const encounterId = encounterFromRoute ?? activeEncounter?.id ?? null;
   const showEncounterWizard = isEhrShell && !!patientId;
+
+  // Real, patient-specific CDS alerts from the governed rules engine (empty when nothing triggers).
+  const { alerts: cdsRawAlerts } = useClinicalCdsAlerts(isEhrShell ? patientId : undefined);
+  const cdsAlerts = useMemo(() => cdsRawAlerts.map(mapCdsAlert), [cdsRawAlerts]);
 
   const [programmeWorkflow, setProgrammeWorkflow] = useState<ClinicalWorkflowConfig | null>(null);
   useEffect(() => {
@@ -110,7 +139,7 @@ export function EHRLayout({ children }: { children: ReactNode }) {
         <div className="flex flex-col h-screen bg-background">
           <TopBar />
           <PatientBanner />
-          {isEhrShell && <ClinicalToolbar hasActivePatient />}
+          {isEhrShell && <ClinicalToolbar hasActivePatient cdsAlerts={cdsAlerts} />}
           {showEncounterWizard && (
             <ClinicalWizardHeader patientId={patientId} encounterId={encounterId} pathname={pathname} />
           )}

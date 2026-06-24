@@ -1248,7 +1248,7 @@ function CdsTab() {
           <tbody>
             {([
               ["Hypertensive Crisis","Vitals","Systolic BP \u2265 180 mmHg","critical"],
-              ["Hypoxemia","Vitals","SpO\u2082 < 92%","critical"],
+              ["Hypoxemia (pending SpO\u2082 capture)","Vitals","SpO\u2082 < 92% \u2014 rule implemented; dormant until SpO\u2082 is recorded","critical"],
               ["Drug-Allergy Interaction","Allergies","Active allergy + matching medication","critical"],
               ["Tachycardia","Vitals","Heart rate > 120 bpm","warning"],
               ["Bradycardia","Vitals","Heart rate < 50 bpm","warning"],
@@ -1270,9 +1270,10 @@ function CdsTab() {
       </div>
 
       <div className="bg-primary-soft rounded-lg border border-primary/20 p-4 text-sm text-foreground">
-        <strong>How alerts surface:</strong> the rule catalogue above is evaluated by the clinical rules engine. When a
-        governed per-patient alert feed is wired into the encounter view, matching alerts appear as dismissable banners
-        above the encounter content. Until then, use the decision-support tool above for guideline-grounded answers.
+        <strong>How alerts surface:</strong> in the patient EHR, the clinical toolbar evaluates this rule catalogue against
+        the patient&apos;s own records (active conditions, prescriptions, latest vitals, documented allergies) via the
+        governed rules engine, and any matching alerts appear as dismissable banners above the encounter content. Use the
+        decision-support tool above for guideline-grounded answers to specific questions.
       </div>
     </div>
   );

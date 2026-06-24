@@ -84,6 +84,29 @@ describe("AIDiagnosticAssistant", () => {
     expect(screen.queryByTestId("cds-recommendation")).not.toBeInTheDocument();
   });
 
+  it("records an auditable override against the recommendation trace", async () => {
+    post.mockImplementation((url: string) => {
+      if (url === "/internal/v1/clinical/audit/overrides") {
+        return Promise.resolve({ data: { status: "recorded", override_id: "ovr-1" } });
+      }
+      return Promise.resolve({
+        data: { answer_summary: "Use amoxicillin.", support_mode: "SOURCE_GROUNDED", trace_id: "trace-9", source_citations: [], warnings: [] },
+      });
+    });
+
+    const user = await ask("cough");
+    await waitFor(() => expect(screen.getByTestId("cds-override")).toBeInTheDocument());
+
+    await user.type(screen.getByTestId("cds-override-reason"), "Patient already on alternative therapy");
+    await user.click(screen.getByTestId("cds-override-submit"));
+
+    await waitFor(() => expect(screen.getByTestId("cds-override-done")).toBeInTheDocument());
+    expect(post).toHaveBeenCalledWith(
+      "/internal/v1/clinical/audit/overrides",
+      expect.objectContaining({ recommendation_trace_id: "trace-9", override_reason: "Patient already on alternative therapy" }),
+    );
+  });
+
   it("fails honest on backend error — surfaces unavailability, no local fabrication", async () => {
     post.mockRejectedValue(new Error("service down"));
 
