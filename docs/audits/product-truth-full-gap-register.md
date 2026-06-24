@@ -106,7 +106,13 @@ operational). Honest scope: a Tshepo primitive, **not** a claim of GDHCN conform
   kid resolution (Ed25519/RSA/EC) + algorithm allowlist + canonical `TrustError` model;
   pass/fail proven (11 cases, real Ed25519). Consumers (`OfflineEntitlementVerifier`,
   `CapabilityTokenJwsVerifier`) may later refactor onto it — not done in B4.
-- **B5 — Tshepo Trust Authority registry** (in tshepo-authz): pending.
+- **B5 — Tshepo Trust Authority registry (landed).** tshepo-authz V014: `trust_authority` +
+  authorised `trust_issuer_system` + `trust_document_signer_cert` (metadata only, no private
+  keys) with honest readiness enums (NOT_STARTED … PRODUCTION_NOT_READY) and a status
+  lifecycle (DRAFT/PENDING/ACTIVE/SUSPENDED/RETIRED) with enforced transitions. Admin API
+  `/v1/trust-authorities`; every mutation gated by a **dual gate** (admin role + recent
+  step-up) and audited. Unit-proven (`TrustAuthorityServiceTest`, 6) + runtime-proven
+  (`TrustAuthorityRegistryRuntimeProofIT`, real Postgres + V014).
 - **B6 — GDHCN readiness cockpit** (backend→BFF→UI) + design note: pending.
 
 ## Committed deferred feature blocks (will be built, not dropped)
