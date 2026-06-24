@@ -5,8 +5,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.RequestContextHolder;
-import zw.gov.mohcc.impilo.hrpayroll.core.AttendanceService;
-import zw.gov.mohcc.impilo.hrpayroll.core.LeaveService;
 import zw.gov.mohcc.impilo.hrpayroll.core.PayrollService;
 import zw.gov.mohcc.impilo.hrpayroll.persistence.entity.*;
 import zw.gov.mohcc.impilo.hrpayroll.persistence.repository.*;
@@ -31,40 +29,25 @@ public class InternalHrApi {
     private final EmployeeRepository employeeRepository;
     private final ContractRepository contractRepository;
     private final LeaveTypeRepository leaveTypeRepository;
-    private final LeaveRequestRepository leaveRequestRepository;
-    private final LeaveBalanceRepository leaveBalanceRepository;
-    private final AttendanceRepository attendanceRepository;
     private final PayrollRunRepository payrollRunRepository;
     private final PayslipRepository payslipRepository;
     private final DeductionTypeRepository deductionTypeRepository;
     private final PayrollService payrollService;
-    private final LeaveService leaveService;
-    private final AttendanceService attendanceService;
 
     public InternalHrApi(EmployeeRepository employeeRepository,
                          ContractRepository contractRepository,
                          LeaveTypeRepository leaveTypeRepository,
-                         LeaveRequestRepository leaveRequestRepository,
-                         LeaveBalanceRepository leaveBalanceRepository,
-                         AttendanceRepository attendanceRepository,
                          PayrollRunRepository payrollRunRepository,
                          PayslipRepository payslipRepository,
                          DeductionTypeRepository deductionTypeRepository,
-                         PayrollService payrollService,
-                         LeaveService leaveService,
-                         AttendanceService attendanceService) {
+                         PayrollService payrollService) {
         this.employeeRepository = employeeRepository;
         this.contractRepository = contractRepository;
         this.leaveTypeRepository = leaveTypeRepository;
-        this.leaveRequestRepository = leaveRequestRepository;
-        this.leaveBalanceRepository = leaveBalanceRepository;
-        this.attendanceRepository = attendanceRepository;
         this.payrollRunRepository = payrollRunRepository;
         this.payslipRepository = payslipRepository;
         this.deductionTypeRepository = deductionTypeRepository;
         this.payrollService = payrollService;
-        this.leaveService = leaveService;
-        this.attendanceService = attendanceService;
     }
 
     private UUID tenant() {
@@ -129,39 +112,9 @@ public class InternalHrApi {
         return leaveTypeRepository.save(t);
     }
 
-    @GetMapping("/internal/v1/hr/leave/requests")
-    public List<LeaveRequestEntity> leaveRequests(@RequestParam("employee_id") UUID employeeId) {
-        return leaveRequestRepository.findByEmployeeIdOrderByStartDateDesc(employeeId);
-    }
-
-    @PostMapping("/internal/v1/hr/leave/requests")
-    public LeaveRequestEntity createLeaveRequest(@RequestBody LeaveRequestEntity r) throws Exception {
-        requireHrWriteAuthority();
-        return leaveService.requestLeave(tenant(), r);
-    }
-
-    @GetMapping("/internal/v1/hr/leave/balances")
-    public List<LeaveBalanceEntity> leaveBalances(@RequestParam("employee_id") UUID employeeId,
-                                                  @RequestParam int fiscalYear) {
-        return leaveBalanceRepository.findByEmployeeIdAndFiscalYear(employeeId, fiscalYear);
-    }
-
-    @PostMapping("/internal/v1/hr/leave/balances")
-    public LeaveBalanceEntity upsertBalance(@RequestBody LeaveBalanceEntity b) {
-        requireHrWriteAuthority();
-        return leaveBalanceRepository.save(b);
-    }
-
-    @GetMapping("/internal/v1/hr/attendance")
-    public List<AttendanceRecordEntity> attendance(@RequestParam("employee_id") UUID employeeId) {
-        return attendanceRepository.findByEmployeeIdOrderByShiftDateDesc(employeeId);
-    }
-
-    @PostMapping("/internal/v1/hr/attendance")
-    public AttendanceRecordEntity createAttendance(@RequestBody AttendanceRecordEntity a) {
-        requireHrWriteAuthority();
-        return attendanceService.record(a);
-    }
+    // Workforce leave + attendance are owned by Vashandi (P3.1/P3.3) — the ERP-HR UI reads
+    // them from Vashandi via the BFF. hr-payroll keeps only leave *types* (reference config)
+    // and the payroll-financial surface below.
 
     @GetMapping("/internal/v1/hr/payroll/runs")
     public List<PayrollRunEntity> payrollRuns() {

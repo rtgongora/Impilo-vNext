@@ -9,8 +9,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 import zw.gov.mohcc.impilo.companion.context.RequestContext;
 import zw.gov.mohcc.impilo.companion.context.RequestContextHolder;
-import zw.gov.mohcc.impilo.hrpayroll.core.AttendanceService;
-import zw.gov.mohcc.impilo.hrpayroll.core.LeaveService;
 import zw.gov.mohcc.impilo.hrpayroll.core.PayrollService;
 import zw.gov.mohcc.impilo.hrpayroll.persistence.entity.EmployeeEntity;
 import zw.gov.mohcc.impilo.hrpayroll.persistence.repository.*;
@@ -36,15 +34,10 @@ class InternalHrApiContractSurfaceTest {
     @Mock private EmployeeRepository employeeRepository;
     @Mock private ContractRepository contractRepository;
     @Mock private LeaveTypeRepository leaveTypeRepository;
-    @Mock private LeaveRequestRepository leaveRequestRepository;
-    @Mock private LeaveBalanceRepository leaveBalanceRepository;
-    @Mock private AttendanceRepository attendanceRepository;
     @Mock private PayrollRunRepository payrollRunRepository;
     @Mock private PayslipRepository payslipRepository;
     @Mock private DeductionTypeRepository deductionTypeRepository;
     @Mock private PayrollService payrollService;
-    @Mock private LeaveService leaveService;
-    @Mock private AttendanceService attendanceService;
 
     private InternalHrApi api;
 
@@ -54,15 +47,10 @@ class InternalHrApiContractSurfaceTest {
                 employeeRepository,
                 contractRepository,
                 leaveTypeRepository,
-                leaveRequestRepository,
-                leaveBalanceRepository,
-                attendanceRepository,
                 payrollRunRepository,
                 payslipRepository,
                 deductionTypeRepository,
-                payrollService,
-                leaveService,
-                attendanceService);
+                payrollService);
         RequestContextHolder.set(RequestContext.of(
                 TENANT.toString(), "national", "req-hr", "corr-hr", null, null, null));
     }
@@ -119,10 +107,10 @@ class InternalHrApiContractSurfaceTest {
     }
 
     @Test
-    void createLeaveRequestDeniedForProvider() {
+    void createContractDeniedForProvider() {
         trustAs("PROVIDER", AccessMode.INTERNAL);
-        assertThatThrownBy(() -> api.createLeaveRequest(new zw.gov.mohcc.impilo.hrpayroll.persistence.entity.LeaveRequestEntity()))
+        assertThatThrownBy(() -> api.createContract(new zw.gov.mohcc.impilo.hrpayroll.persistence.entity.ContractEntity()))
                 .isInstanceOf(AccessDeniedException.class);
-        verifyNoInteractions(leaveService);
+        verifyNoInteractions(contractRepository);
     }
 }
