@@ -21,6 +21,11 @@
 
     <properties>
         <nimbus-jose-jwt.version>9.40</nimbus-jose-jwt.version>
+        <!-- Runtime-proof datasource (SigningRuntimeProofIT). Empty by default ⇒ the IT
+             self-skips; override with -Dit.pg.url=... -Dit.pg.user=... -Dit.pg.pass=... -->
+        <it.pg.url/>
+        <it.pg.user/>
+        <it.pg.pass/>
     </properties>
 
     <dependencies>
@@ -132,6 +137,12 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- spring-security-test: jwt() request post-processor for the /v1/sign runtime proof. -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
 
         <!-- Tech Companion — v1.1 auto-configuration -->
         <dependency>
@@ -154,6 +165,20 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <!-- Forward the runtime-proof datasource into the Surefire fork. SigningRuntimeProofIT
+                 runs against a real Postgres provided by the harness; with it.pg.url empty it
+                 self-skips via @EnabledIfSystemProperty, leaving the mocked unit suite unaffected. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <systemPropertyVariables>
+                        <it.pg.url>${it.pg.url}</it.pg.url>
+                        <it.pg.user>${it.pg.user}</it.pg.user>
+                        <it.pg.pass>${it.pg.pass}</it.pg.pass>
+                    </systemPropertyVariables>
+                </configuration>
             </plugin>
         </plugins>
     </build>
