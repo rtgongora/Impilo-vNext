@@ -132,6 +132,32 @@ public class Ed25519SigningService {
     }
 
     /**
+     * Purpose-scoped, fail-closed active-key lookup. A key may only be used for the
+     * purpose it was issued for. GENERAL may be auto-provisioned (backward compatible);
+     * any sensitive purpose (step-up, offline-capability, permit, document-signer, VDHC)
+     * MUST be explicitly provisioned and fails closed if absent — keys for trust-bearing
+     * operations are never silently minted.
+     */
+    public SigningKeyEntity getActiveKeyForPurpose(UUID tenantId, KeyPurpose purpose) {
+        KeyPurpose p = purpose == null ? KeyPurpose.GENERAL : purpose;
+        List<SigningKeyEntity> keys = signingKeyRepository.findActiveKeysByTenantAndPurpose(tenantId, p.name());
+        if (!keys.isEmpty()) {
+            return keys.get(0);
+        }
+        if (p == KeyPurpose.GENERAL) {
+            log.info("No active GENERAL key for tenant {}, generating one", tenantId);
+            SigningKeyEntity key = generateKeyPair(tenantId);
+            key.setPurpose(KeyPurpose.GENERAL.name());
+            return signingKeyRepository.save(key);
+        }
+        writeOutboxEvent("SigningKey", tenantId.toString(), "KEY_LOOKUP_FAILED_CLOSED",
+                "{\"tenantId\":\"" + tenantId + "\",\"purpose\":\"" + p.name() + "\"}");
+        throw new IllegalStateException(
+                "No active signing key for tenant " + tenantId + " purpose " + p.name()
+                + " — purpose-scoped keys must be explicitly provisioned (fail-closed).");
+    }
+
+    /**
      * Sign an arbitrary byte payload with the current active Ed25519 key (raw signature).
      *
      * @return Base64url-encoded Ed25519 signature
