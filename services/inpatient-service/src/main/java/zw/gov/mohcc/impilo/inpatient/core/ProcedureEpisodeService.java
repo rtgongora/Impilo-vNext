@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.inpatient.persistence.entity.*;
 import zw.gov.mohcc.impilo.inpatient.persistence.repository.*;
+import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -15,7 +16,10 @@ import java.util.*;
 @Service
 public class ProcedureEpisodeService {
 
-    public static final UUID DEFAULT_TENANT = InpatientClinicalService.DEFAULT_TENANT;
+    /** Tenant for the current request from the trust context (was a hardcoded shared default). */
+    private UUID currentTenant() {
+        return TrustContextHolder.require().tenantId();
+    }
 
     private static final Map<String, List<String[]>> WHO_CHECKLIST = Map.of(
             "SIGN_IN", List.of(
@@ -71,14 +75,14 @@ public class ProcedureEpisodeService {
         String bookingId = ClinicalPayloadMapper.str(body, "bookingId", "booking_id");
         if (bookingId != null && !bookingId.isBlank()) {
             Optional<ProcedureEpisodeEntity> existing =
-                    episodeRepository.findByTenantIdAndBookingId(DEFAULT_TENANT, bookingId);
+                    episodeRepository.findByTenantIdAndBookingId(currentTenant(), bookingId);
             if (existing.isPresent()) {
                 return episodeDetail(existing.get().getEpisodeId());
             }
         }
         String name = Objects.requireNonNullElse(ClinicalPayloadMapper.str(body, "procedureName", "procedure_name"), "Procedure");
         ProcedureEpisodeEntity e = new ProcedureEpisodeEntity();
-        e.setTenantId(DEFAULT_TENANT);
+        e.setTenantId(currentTenant());
         e.setSubjectCpid(cpid);
         e.setEncounterId(ClinicalPayloadMapper.uuid(body, "encounterId", "encounter_id"));
         e.setAdmissionRef(ClinicalPayloadMapper.uuid(body, "admissionRef", "admission_ref"));
@@ -99,12 +103,12 @@ public class ProcedureEpisodeService {
     }
 
     public List<Map<String, Object>> listEpisodes(String patientId) {
-        return episodeRepository.findByTenantIdAndSubjectCpidOrderByScheduledAtDesc(DEFAULT_TENANT, patientId)
+        return episodeRepository.findByTenantIdAndSubjectCpidOrderByScheduledAtDesc(currentTenant(), patientId)
                 .stream().map(this::episodeSummary).toList();
     }
 
     public List<Map<String, Object>> listEpisodesForHistory(String patientId) {
-        return episodeRepository.findByTenantIdAndSubjectCpidOrderByScheduledAtDesc(DEFAULT_TENANT, patientId)
+        return episodeRepository.findByTenantIdAndSubjectCpidOrderByScheduledAtDesc(currentTenant(), patientId)
                 .stream().map(this::historyRow).toList();
     }
 

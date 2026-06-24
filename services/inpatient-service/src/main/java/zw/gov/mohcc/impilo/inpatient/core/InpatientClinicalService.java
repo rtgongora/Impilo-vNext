@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.inpatient.persistence.entity.*;
 import zw.gov.mohcc.impilo.inpatient.persistence.repository.*;
+import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -22,8 +23,19 @@ import java.util.UUID;
 @Service
 public class InpatientClinicalService {
 
-    public static final UUID DEFAULT_TENANT = UUID.fromString("00000000-0000-4000-8000-000000000001");
-    public static final UUID DEFAULT_FACILITY = UUID.fromString("f1000000-0000-0000-0000-000000000001");
+    /**
+     * The tenant/facility for the current request, taken from the trust context populated by
+     * the TrustContextFilter (x-tenant-id / x-facility-id). Replaces the previous hardcoded
+     * currentTenant()/currentFacility() that put every tenant's inpatient data in one bucket
+     * (a multi-tenant data leak). Fails closed if no trust context is present.
+     */
+    private UUID currentTenant() {
+        return TrustContextHolder.require().tenantId();
+    }
+
+    private UUID currentFacility() {
+        return TrustContextHolder.require().facilityId();
+    }
 
     private final CarePlanRepository carePlanRepository;
     private final CarePlanGoalRepository goalRepository;
@@ -101,7 +113,7 @@ public class InpatientClinicalService {
     // ── Care plans ──────────────────────────────────────────────────
 
     public List<Map<String, Object>> listCarePlans(String patientId) {
-        return carePlanRepository.findByTenantIdAndSubjectCpidOrderByCreatedAtDesc(DEFAULT_TENANT, patientId)
+        return carePlanRepository.findByTenantIdAndSubjectCpidOrderByCreatedAtDesc(currentTenant(), patientId)
                 .stream().map(this::toCarePlanMap).toList();
     }
 
@@ -109,7 +121,7 @@ public class InpatientClinicalService {
     public Map<String, Object> createCarePlan(Map<String, Object> body) {
         String cpid = patientCpid(body);
         CarePlanEntity plan = new CarePlanEntity();
-        plan.setTenantId(DEFAULT_TENANT);
+        plan.setTenantId(currentTenant());
         plan.setSubjectCpid(cpid);
         plan.setAdmissionRef(ClinicalPayloadMapper.uuid(body, "admissionRef", "admission_ref"));
         plan.setEncounterId(ClinicalPayloadMapper.uuid(body, "encounterId", "encounter_id"));
@@ -225,7 +237,7 @@ public class InpatientClinicalService {
     public Map<String, Object> getFluidBalance(String patientId, String date) {
         LocalDate d = date != null && !date.isBlank() ? LocalDate.parse(date) : LocalDate.now();
         List<FluidBalanceEntity> records = fluidBalanceRepository
-                .findByTenantIdAndSubjectCpidAndRecordDateOrderByRecordedAtAsc(DEFAULT_TENANT, patientId, d);
+                .findByTenantIdAndSubjectCpidAndRecordDateOrderByRecordedAtAsc(currentTenant(), patientId, d);
         int intake = 0, output = 0;
         List<Map<String, Object>> rows = new ArrayList<>();
         for (FluidBalanceEntity r : records) {
@@ -242,7 +254,7 @@ public class InpatientClinicalService {
     public Map<String, Object> recordFluid(Map<String, Object> body) {
         String cpid = patientCpid(body);
         FluidBalanceEntity r = new FluidBalanceEntity();
-        r.setTenantId(DEFAULT_TENANT);
+        r.setTenantId(currentTenant());
         r.setSubjectCpid(cpid);
         r.setAdmissionRef(ClinicalPayloadMapper.uuid(body, "admissionRef", "admission_ref"));
         r.setEncounterId(ClinicalPayloadMapper.uuid(body, "encounterId", "encounter_id"));
@@ -281,7 +293,7 @@ public class InpatientClinicalService {
     public Map<String, Object> recordChartEntry(Map<String, Object> body, String chartType) {
         String cpid = patientCpid(body);
         ClinicalChartEntryEntity e = new ClinicalChartEntryEntity();
-        e.setTenantId(DEFAULT_TENANT);
+        e.setTenantId(currentTenant());
         e.setSubjectCpid(cpid);
         e.setAdmissionRef(ClinicalPayloadMapper.uuid(body, "admissionRef", "admission_ref"));
         e.setEncounterId(ClinicalPayloadMapper.uuid(body, "encounterId", "encounter_id"));
@@ -300,13 +312,13 @@ public class InpatientClinicalService {
     }
 
     public List<Map<String, Object>> getObservations(String patientId) {
-        return chartEntryRepository.findByTenantIdAndSubjectCpidOrderByRecordedAtDesc(DEFAULT_TENANT, patientId)
+        return chartEntryRepository.findByTenantIdAndSubjectCpidOrderByRecordedAtDesc(currentTenant(), patientId)
                 .stream().map(this::chartRow).toList();
     }
 
     public List<Map<String, Object>> getChartEntries(String patientId, String chartType) {
         return chartEntryRepository.findByTenantIdAndSubjectCpidAndChartTypeOrderByRecordedAtDesc(
-                        DEFAULT_TENANT, patientId, chartType)
+                        currentTenant(), patientId, chartType)
                 .stream().map(this::chartRow).toList();
     }
 
@@ -314,7 +326,7 @@ public class InpatientClinicalService {
         Map<String, Object> activity = new LinkedHashMap<>();
         for (String type : List.of("obs-chart", "fluid-balance", "drug-chart", "fit-chart", "diet-chart", "turn-chart")) {
             List<ClinicalChartEntryEntity> entries = chartEntryRepository
-                    .findByTenantIdAndSubjectCpidAndChartTypeOrderByRecordedAtDesc(DEFAULT_TENANT, patientId, type);
+                    .findByTenantIdAndSubjectCpidAndChartTypeOrderByRecordedAtDesc(currentTenant(), patientId, type);
             if (!entries.isEmpty()) {
                 activity.put(type, entries.get(0).getRecordedAt().toString());
             }
@@ -340,7 +352,7 @@ public class InpatientClinicalService {
     // ── MAR ─────────────────────────────────────────────────────────
 
     public List<Map<String, Object>> listMar(String patientId) {
-        return marEntryRepository.findByTenantIdAndSubjectCpidOrderByRecordedAtDesc(DEFAULT_TENANT, patientId)
+        return marEntryRepository.findByTenantIdAndSubjectCpidOrderByRecordedAtDesc(currentTenant(), patientId)
                 .stream().map(this::marRow).toList();
     }
 
@@ -356,12 +368,12 @@ public class InpatientClinicalService {
                 continue;
             }
             Optional<MarEntryEntity> existing = marEntryRepository.findByTenantIdAndSubjectCpidAndPrescriptionId(
-                    DEFAULT_TENANT, patientId, prescriptionId);
+                    currentTenant(), patientId, prescriptionId);
             if (existing.isPresent()) {
                 continue;
             }
             MarEntryEntity mar = new MarEntryEntity();
-            mar.setTenantId(DEFAULT_TENANT);
+            mar.setTenantId(currentTenant());
             mar.setSubjectCpid(patientId);
             mar.setPrescriptionId(prescriptionId);
             mar.setDrugName(Objects.requireNonNullElse(
@@ -383,12 +395,12 @@ public class InpatientClinicalService {
         String prescriptionId = ClinicalPayloadMapper.str(body, "prescriptionId", "prescription_id");
         MarEntryEntity existing = null;
         if (prescriptionId != null && cpid != null) {
-            existing = marEntryRepository.findByTenantIdAndSubjectCpidOrderByRecordedAtDesc(DEFAULT_TENANT, cpid)
+            existing = marEntryRepository.findByTenantIdAndSubjectCpidOrderByRecordedAtDesc(currentTenant(), cpid)
                     .stream().filter(m -> prescriptionId.equals(m.getPrescriptionId())).findFirst().orElse(null);
         }
         MarEntryEntity mar = existing != null ? existing : new MarEntryEntity();
         if (existing == null) {
-            mar.setTenantId(DEFAULT_TENANT);
+            mar.setTenantId(currentTenant());
             mar.setSubjectCpid(cpid != null ? cpid : "UNKNOWN");
             mar.setPrescriptionId(prescriptionId);
             mar.setDrugName(Objects.requireNonNullElse(ClinicalPayloadMapper.str(body, "drugName", "drug_name"), "Medication"));
@@ -425,7 +437,7 @@ public class InpatientClinicalService {
         Integer total = ClinicalPayloadMapper.integer(body, "totalScore", "total_score");
         if (total == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "totalScore is required");
         EarlyWarningScoreEntity e = new EarlyWarningScoreEntity();
-        e.setTenantId(DEFAULT_TENANT);
+        e.setTenantId(currentTenant());
         e.setSubjectCpid(cpid);
         e.setAdmissionRef(ClinicalPayloadMapper.uuid(body, "admissionRef", "admission_ref"));
         e.setEncounterId(ClinicalPayloadMapper.uuid(body, "encounterId", "encounter_id"));
@@ -441,7 +453,7 @@ public class InpatientClinicalService {
     }
 
     public List<Map<String, Object>> getEws(String patientId) {
-        return ewsRepository.findByTenantIdAndSubjectCpidOrderByRecordedAtDesc(DEFAULT_TENANT, patientId)
+        return ewsRepository.findByTenantIdAndSubjectCpidOrderByRecordedAtDesc(currentTenant(), patientId)
                 .stream().map(e -> {
                     Map<String, Object> m = new LinkedHashMap<>();
                     m.put("id", e.getScoreId().toString());
@@ -456,14 +468,14 @@ public class InpatientClinicalService {
     // ── Emergency ───────────────────────────────────────────────────
 
     public List<Map<String, Object>> listEmergencyActivations() {
-        return emergencyRepository.findByTenantIdOrderByActivationTimeDesc(DEFAULT_TENANT)
+        return emergencyRepository.findByTenantIdOrderByActivationTimeDesc(currentTenant())
                 .stream().map(this::emergencyRow).toList();
     }
 
     @Transactional
     public Map<String, Object> activateEmergency(Map<String, Object> body) {
         EmergencyActivationEntity a = new EmergencyActivationEntity();
-        a.setTenantId(DEFAULT_TENANT);
+        a.setTenantId(currentTenant());
         a.setSubjectCpid(ClinicalPayloadMapper.str(body, "patientId", "patient_id", "subjectCpid"));
         a.setAdmissionRef(ClinicalPayloadMapper.uuid(body, "admissionRef", "admission_ref"));
         a.setEncounterId(ClinicalPayloadMapper.uuid(body, "encounterId", "encounter_id"));
@@ -549,7 +561,7 @@ public class InpatientClinicalService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "minuteMark is required");
         }
         ApgarScoreEntity score = new ApgarScoreEntity();
-        score.setTenantId(DEFAULT_TENANT);
+        score.setTenantId(currentTenant());
         score.setSubjectCpid(cpid);
         score.setEncounterId(ClinicalPayloadMapper.uuid(body, "encounterId", "encounter_id"));
         score.setMinuteMark(minuteMark);
@@ -566,7 +578,7 @@ public class InpatientClinicalService {
     }
 
     public List<Map<String, Object>> listApgar(String patientId) {
-        return apgarScoreRepository.findByTenantIdAndSubjectCpidOrderByRecordedAtDesc(DEFAULT_TENANT, patientId)
+        return apgarScoreRepository.findByTenantIdAndSubjectCpidOrderByRecordedAtDesc(currentTenant(), patientId)
                 .stream().map(this::apgarRow).toList();
     }
 
@@ -637,9 +649,9 @@ public class InpatientClinicalService {
     @Transactional
     public Map<String, Object> submitHandover(Map<String, Object> body) {
         ShiftHandoverEntity h = new ShiftHandoverEntity();
-        h.setTenantId(DEFAULT_TENANT);
+        h.setTenantId(currentTenant());
         h.setFacilityId(ClinicalPayloadMapper.uuid(body, "facilityId", "facility_id") != null
-                ? ClinicalPayloadMapper.uuid(body, "facilityId", "facility_id") : DEFAULT_FACILITY);
+                ? ClinicalPayloadMapper.uuid(body, "facilityId", "facility_id") : currentFacility());
         h.setWardId(ClinicalPayloadMapper.uuid(body, "wardId", "ward_id"));
         h.setShiftId(ClinicalPayloadMapper.str(body, "shiftId", "shift_id"));
         h.setOutgoingStaff(Objects.requireNonNullElse(
@@ -683,7 +695,7 @@ public class InpatientClinicalService {
 
     public List<Map<String, Object>> listHandovers(UUID facilityId, String status) {
         return handoverRepository.findByTenantIdAndFacilityIdAndStatusOrderBySubmittedAtDesc(
-                        DEFAULT_TENANT, facilityId, status != null ? status : "PENDING")
+                        currentTenant(), facilityId, status != null ? status : "PENDING")
                 .stream().map(h -> Map.<String, Object>of(
                         "id", h.getHandoverId().toString(),
                         "status", h.getStatus(),
@@ -698,7 +710,7 @@ public class InpatientClinicalService {
     public Map<String, Object> createWardAlert(Map<String, Object> body) {
         String cpid = patientCpid(body);
         WardPatientAlertEntity alert = new WardPatientAlertEntity();
-        alert.setTenantId(DEFAULT_TENANT);
+        alert.setTenantId(currentTenant());
         alert.setSubjectCpid(cpid);
         alert.setAlertType(Objects.requireNonNullElse(ClinicalPayloadMapper.str(body, "alertType", "alert_type"), "CALL_NURSE"));
         alert.setMessage(ClinicalPayloadMapper.str(body, "message"));
@@ -723,7 +735,7 @@ public class InpatientClinicalService {
 
     public List<Map<String, Object>> listWardAlerts(UUID wardId, String status) {
         return wardAlertRepository.findByTenantIdAndWardIdAndStatusOrderByCreatedAtDesc(
-                        DEFAULT_TENANT, wardId, status != null ? status : "ACTIVE")
+                        currentTenant(), wardId, status != null ? status : "ACTIVE")
                 .stream().map(a -> {
                     Map<String, Object> m = new LinkedHashMap<>();
                     m.put("id", a.getAlertId().toString());
@@ -826,14 +838,14 @@ public class InpatientClinicalService {
         String cpid = ClinicalPayloadMapper.str(body, "patientId", "patient_id", "subjectCpid", "subject_cpid");
         UUID admissionRef = ClinicalPayloadMapper.uuid(body, "admissionRef", "admission_ref");
         List<DischargeClearanceEntity> existing = dischargeClearanceRepository
-                .findByTenantIdAndEncounterIdOrderByClearanceTypeAsc(DEFAULT_TENANT, encounterId);
+                .findByTenantIdAndEncounterIdOrderByClearanceTypeAsc(currentTenant(), encounterId);
         if (!existing.isEmpty()) {
             return existing.stream().map(this::clearanceRow).toList();
         }
         List<Map<String, Object>> created = new ArrayList<>();
         for (String type : CLEARANCE_TYPES) {
             DischargeClearanceEntity row = new DischargeClearanceEntity();
-            row.setTenantId(DEFAULT_TENANT);
+            row.setTenantId(currentTenant());
             row.setEncounterId(encounterId);
             row.setSubjectCpid(cpid);
             row.setAdmissionRef(admissionRef);
@@ -846,7 +858,7 @@ public class InpatientClinicalService {
 
     public Map<String, Object> getDischargeClearances(UUID encounterId) {
         List<Map<String, Object>> rows = dischargeClearanceRepository
-                .findByTenantIdAndEncounterIdOrderByClearanceTypeAsc(DEFAULT_TENANT, encounterId)
+                .findByTenantIdAndEncounterIdOrderByClearanceTypeAsc(currentTenant(), encounterId)
                 .stream().map(this::clearanceRow).toList();
         int total = rows.size();
         long cleared = rows.stream()

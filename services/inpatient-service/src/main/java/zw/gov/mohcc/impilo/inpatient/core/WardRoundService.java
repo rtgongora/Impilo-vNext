@@ -11,6 +11,7 @@ import zw.gov.mohcc.impilo.inpatient.persistence.entity.WardRoundEntryEntity;
 import zw.gov.mohcc.impilo.inpatient.persistence.repository.AdmissionRepository;
 import zw.gov.mohcc.impilo.inpatient.persistence.repository.WardRoundEntryRepository;
 import zw.gov.mohcc.impilo.inpatient.persistence.repository.WardRoundRepository;
+import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
 import java.util.List;
 import java.util.UUID;
@@ -18,7 +19,10 @@ import java.util.UUID;
 @Service
 public class WardRoundService {
 
-    private static final UUID DEFAULT_TENANT = UUID.fromString("00000000-0000-4000-8000-000000000001");
+    /** Tenant for the current request from the trust context (was a hardcoded shared default). */
+    private UUID currentTenant() {
+        return TrustContextHolder.require().tenantId();
+    }
 
     private final WardRoundRepository wardRoundRepository;
     private final WardRoundEntryRepository wardRoundEntryRepository;
@@ -42,7 +46,7 @@ public class WardRoundService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Admission not found"));
 
         WardRoundEntity round = new WardRoundEntity();
-        round.setTenantId(DEFAULT_TENANT);
+        round.setTenantId(currentTenant());
         round.setAdmissionRef(admissionRef);
         round.setWardId(request.wardId());
         round.setRoundType(request.roundType() != null ? request.roundType() : "MORNING");
