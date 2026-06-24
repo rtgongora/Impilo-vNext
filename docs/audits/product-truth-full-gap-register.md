@@ -97,6 +97,18 @@
 | G060 | ~~**B1 migration version collision** — `V002__step_up_verification.sql` shared version `2` with `V002__add_10_dimension_access_control_fields.sql`; Flyway throws *"Found more than one migration with version 002"* at startup → **tshepo-authz cannot boot**~~ **DEFECT FIXED + RUNTIME-PROVEN (fix-d):** renamed to `V010`; `StepUpVerificationIT` boots the full context and applies all 13 migrations against a real Postgres. Was invisible to the mocked unit suite (no Flyway). Found *by* standing up the runtime proof. | `tshepo-authz-service/.../db/migration/V010__step_up_verification.sql` | migration/boot-failure | fixed; runtime-proven | d / B1 |
 | G061 | ~~**Step-up lockout & reject-audit silently defeated** — `verifyChallenge` is `@Transactional` and signals failure by throwing `SecurityException`, so Spring rolls back the `attemptCount++` **and** the `STEP_UP_REJECTED` outbox audit on every failed attempt → attempt-count lockout never fires (**unlimited guesses**) and rejections are never audited~~ **DEFECT FIXED + RUNTIME-PROVEN (fix-d):** `@Transactional(noRollbackFor=…)` so the counter + reject audit commit on throw; `StepUpVerificationIT.failedAttempts_persistAndLockOut` exhausts the cap and asserts lockout (`FAILED`) against a real Postgres. Mocks hid it (no real rollback). Found *by* the runtime proof. | `tshepo-authz-service/.../service/StepUpService.java:90` | auth-bypass/audit-gap | fixed; runtime-proven | d / B1 |
 
+## Wave B-foundations — GDHCN-ready primitives (landed progress)
+
+Not gap closures — foundations that make Tshepo GDHCN-*ready* (later waves make GDHCN
+operational). Honest scope: a Tshepo primitive, **not** a claim of GDHCN conformance.
+
+- **B4 — `libs/tshepo-trust-crypto` (landed, `7dfd490a`).** JWS signature verification with
+  kid resolution (Ed25519/RSA/EC) + algorithm allowlist + canonical `TrustError` model;
+  pass/fail proven (11 cases, real Ed25519). Consumers (`OfflineEntitlementVerifier`,
+  `CapabilityTokenJwsVerifier`) may later refactor onto it — not done in B4.
+- **B5 — Tshepo Trust Authority registry** (in tshepo-authz): pending.
+- **B6 — GDHCN readiness cockpit** (backend→BFF→UI) + design note: pending.
+
 ## Committed deferred feature blocks (will be built, not dropped)
 
 These are not "deferred indefinitely" — they are scheduled blocks that close a
