@@ -30,13 +30,16 @@ public class LicenseService {
     private final LicenseRepository licenseRepository;
     private final ProviderRepository providerRepository;
     private final EventOutboxRepository outboxRepository;
+    private final LicenseCertificatePdfGenerator certificatePdfGenerator;
 
     public LicenseService(LicenseRepository licenseRepository,
                           ProviderRepository providerRepository,
-                          EventOutboxRepository outboxRepository) {
+                          EventOutboxRepository outboxRepository,
+                          LicenseCertificatePdfGenerator certificatePdfGenerator) {
         this.licenseRepository = licenseRepository;
         this.providerRepository = providerRepository;
         this.outboxRepository = outboxRepository;
+        this.certificatePdfGenerator = certificatePdfGenerator;
     }
 
     @Transactional
@@ -183,11 +186,7 @@ public class LicenseService {
             throw new IllegalArgumentException("License does not belong to provider: " + providerPublicId);
         }
 
-        throw new UnsupportedOperationException(
-                "Certificate PDF generation requires integration with reporting-service. " +
-                "Please implement PDF generation using a template engine with providerId=" +
-                license.getProvider().getId() + ", licenseType=" + license.getLicenseType() +
-                ", validFrom=" + license.getValidFrom() + ", validTo=" + license.getValidTo());
+        return certificatePdfGenerator.generate(license);
     }
 
     private void publishEvent(String aggregateType, String aggregateId,

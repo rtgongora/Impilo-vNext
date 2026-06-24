@@ -38,6 +38,7 @@ public class ProviderBiometricService {
     private final ProviderBiometricVerificationEventRepository verificationEventRepository;
     private final EventOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
+    private final BiometricMatcher biometricMatcher;
 
     public ProviderBiometricService(
             ProviderRepository providerRepository,
@@ -46,7 +47,8 @@ public class ProviderBiometricService {
             ProviderBiometricPolicyClient policyClient,
             ProviderBiometricVerificationEventRepository verificationEventRepository,
             EventOutboxRepository outboxRepository,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            BiometricMatcher biometricMatcher) {
         this.providerRepository = providerRepository;
         this.profileRepository = profileRepository;
         this.templateRepository = templateRepository;
@@ -54,6 +56,7 @@ public class ProviderBiometricService {
         this.verificationEventRepository = verificationEventRepository;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
+        this.biometricMatcher = biometricMatcher;
     }
 
     @Transactional
@@ -185,16 +188,12 @@ public class ProviderBiometricService {
             throw new IllegalStateException("No active provider biometric templates");
         }
 
-        String probeHash = sha256Hex(probe);
-        String result = "NO_MATCH";
-        double confidence = 0.0;
-        for (ProviderBiometricTemplateEntity t : templates) {
-            if (probeHash.equals(t.getTemplateHash())) {
-                result = "MATCH";
-                confidence = 1.0;
-                break;
-            }
-        }
+        // Real matching is delegated to the BiometricMatcher seam. The default
+        // implementation fails closed (UNAVAILABLE / 0 confidence) rather than
+        // fabricating a MATCH from template-hash equality (G017).
+        BiometricMatcher.MatchOutcome outcome = biometricMatcher.match(probe, templates);
+        String result = outcome.result();
+        double confidence = outcome.confidence();
 
         Optional<ProviderBiometricProfileEntity> profileOpt =
                 profileRepository.findByTenantIdAndProviderId(ctx.tenantId(), provider.getId());
@@ -208,7 +207,7 @@ public class ProviderBiometricService {
         ev.setResult(result);
         ev.setConfidenceScore(confidence);
         ev.setLivenessOutcome("NOT_REPORTED");
-        ev.setDecisionSummary("Template-hash equality (placeholder matcher)");
+        ev.setDecisionSummary(outcome.summary());
         ev.setPolicyRuleId(policy.matchedRuleId());
         ev.setPolicyOutcome(policy.policyOutcome());
         ProviderBiometricVerificationEventEntity saved = verificationEventRepository.save(ev);
