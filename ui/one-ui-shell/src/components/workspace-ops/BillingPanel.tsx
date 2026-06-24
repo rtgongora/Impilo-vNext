@@ -8,6 +8,16 @@ import {
 import { LiveDataSourceBadge } from '@/components/common/LiveDataSourceBadge';
 import { NotLiveNotice } from '@/components/common/NotLiveNotice';
 import { useCoverageClaimsList, useCoverageRemittances } from '@/hooks/queries/useCoverage';
+import { useFinanceRevenueSummary } from '@/hooks/queries/useFinanceBillingWorkspace';
+
+const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function pickArray(node: unknown, key: string): Record<string, unknown>[] {
+  const obj = node as Record<string, unknown> | undefined;
+  const data = (obj?.data as Record<string, unknown> | undefined) ?? obj;
+  const arr = data?.[key];
+  return Array.isArray(arr) ? (arr as Record<string, unknown>[]) : [];
+}
 
 // ─── Types ───
 
@@ -91,6 +101,26 @@ export function BillingPanel({ facilityId }: BillingPanelProps) {
   const liveClaims = liveClaimsQ.data ?? [];
   const hasLiveClaims = liveClaims.length > 0;
   const dataSource = preferLive && hasLiveClaims ? 'live' : preferLive && liveClaimsQ.isLoading ? 'mixed' : 'demo';
+
+  // Overview revenue trend + payer mix — real COSTA aggregation (revenue-summary).
+  const now = new Date();
+  const revenueQ = useFinanceRevenueSummary(facilityId, now.getFullYear(), now.getMonth() + 1);
+  const livePayerMix = useMemo(() => {
+    const rows = pickArray(revenueQ.data, 'byPayerType')
+      .map(r => ({ name: String(r.bucket ?? 'UNSPECIFIED'), total: Number(r.total ?? 0) }))
+      .filter(r => r.total > 0);
+    const sum = rows.reduce((s, r) => s + r.total, 0);
+    return sum > 0 ? rows.map(r => ({ name: r.name, pct: Math.round((r.total / sum) * 100) })) : [];
+  }, [revenueQ.data]);
+  const liveRevenueTrend = useMemo(
+    () => pickArray(revenueQ.data, 'monthlyTrend')
+      .map(r => ({ label: MONTH_LABELS[(Number(r.month ?? 0) - 1) % 12] ?? String(r.month), val: Number(r.total ?? 0) }))
+      .filter(r => r.val > 0),
+    [revenueQ.data],
+  );
+  const overviewLive = preferLive && (livePayerMix.length > 0 || liveRevenueTrend.length > 0);
+  const trendMax = Math.max(1, ...liveRevenueTrend.map(d => d.val));
+  const PAYER_BAR_COLORS = ['bg-primary', 'bg-amber-500', 'bg-green-500', 'bg-purple-500', 'bg-sky-500'];
 
   const totalUnbilled = UNBILLED_CHARGES.reduce((s, c) => s + c.amount, 0);
   const totalOutstanding = INVOICES.filter(i => ['sent', 'overdue', 'partial'].includes(i.status)).reduce((s, i) => s + i.amount - i.paidAmount, 0);
@@ -195,31 +225,46 @@ export function BillingPanel({ facilityId }: BillingPanelProps) {
       {/* Overview Tab */}
       {activeTab === 'overview' && (
         <div className="space-y-3">
-        <NotLiveNotice>
-          <span className="font-semibold">Not live yet.</span> Revenue and payer-mix
-          analytics are illustrative — no reporting/analytics endpoint supplies them.
-        </NotLiveNotice>
+        {!overviewLive && (
+          <NotLiveNotice>
+            <span className="font-semibold">Not live yet.</span> No COSTA revenue recorded for
+            this facility/period — showing illustrative figures.
+          </NotLiveNotice>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Revenue This Week */}
+          {/* Revenue trend */}
           <div className="bg-card border border-border rounded-lg">
-            <div className="px-4 pt-4 pb-2"><h4 className="text-sm font-semibold">Revenue This Week</h4></div>
+            <div className="px-4 pt-4 pb-2"><h4 className="text-sm font-semibold">{overviewLive ? 'Revenue Trend (monthly)' : 'Revenue This Week'}</h4></div>
             <div className="px-4 pb-4 space-y-3">
-              {REVENUE_WEEK.map(d => (
-                <div key={d.day} className="flex items-center gap-3">
-                  <span className="text-xs w-8 text-muted-foreground">{d.day}</span>
-                  <div className="flex-1 bg-neutral-100 rounded-full h-2">
-                    <div className="h-2 rounded-full bg-primary" style={{ width: `${(d.val / 60) * 100}%` }} />
-                  </div>
-                  <span className="text-xs font-medium w-12 text-right">R{d.val}k</span>
-                </div>
-              ))}
+              {overviewLive
+                ? liveRevenueTrend.map(d => (
+                    <div key={d.label} className="flex items-center gap-3">
+                      <span className="text-xs w-8 text-muted-foreground">{d.label}</span>
+                      <div className="flex-1 bg-neutral-100 rounded-full h-2">
+                        <div className="h-2 rounded-full bg-primary" style={{ width: `${(d.val / trendMax) * 100}%` }} />
+                      </div>
+                      <span className="text-xs font-medium w-16 text-right">R{Math.round(d.val).toLocaleString()}</span>
+                    </div>
+                  ))
+                : REVENUE_WEEK.map(d => (
+                    <div key={d.day} className="flex items-center gap-3">
+                      <span className="text-xs w-8 text-muted-foreground">{d.day}</span>
+                      <div className="flex-1 bg-neutral-100 rounded-full h-2">
+                        <div className="h-2 rounded-full bg-primary" style={{ width: `${(d.val / 60) * 100}%` }} />
+                      </div>
+                      <span className="text-xs font-medium w-12 text-right">R{d.val}k</span>
+                    </div>
+                  ))}
             </div>
           </div>
           {/* Payer Mix */}
           <div className="bg-card border border-border rounded-lg">
             <div className="px-4 pt-4 pb-2"><h4 className="text-sm font-semibold">Payer Mix</h4></div>
             <div className="px-4 pb-4 space-y-3">
-              {PAYER_MIX.map(p => (
+              {(overviewLive && livePayerMix.length > 0
+                ? livePayerMix.map((p, i) => ({ name: p.name, pct: p.pct, barColor: PAYER_BAR_COLORS[i % PAYER_BAR_COLORS.length] }))
+                : PAYER_MIX
+              ).map(p => (
                 <div key={p.name} className="space-y-1">
                   <div className="flex justify-between text-xs">
                     <span>{p.name}</span><span className="text-muted-foreground">{p.pct}%</span>

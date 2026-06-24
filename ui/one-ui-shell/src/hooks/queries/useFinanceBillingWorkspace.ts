@@ -7,6 +7,28 @@ import { apiClient } from "@/lib/api-client";
 
 export type FinanceWorkspaceJson = unknown;
 
+/**
+ * COSTA revenue summary for a facility/period — returns totalRevenue, encounterCount,
+ * byPayerType (payer mix), byDepartment, monthlyTrend. Real aggregation, already
+ * proxied by FinancialReportsBffController.
+ */
+export function useFinanceRevenueSummary(
+  facilityId: string | null | undefined,
+  year: number,
+  month: number,
+) {
+  const q = new URLSearchParams();
+  if (facilityId) q.set("facility_id", facilityId);
+  q.set("year", String(year));
+  q.set("month", String(month));
+  return useQuery<FinanceWorkspaceJson>({
+    queryKey: ["finance", "revenue-summary", facilityId ?? null, year, month],
+    queryFn: () =>
+      apiClient.get<FinanceWorkspaceJson>(`/internal/v1/finance/reports/revenue-summary?${q.toString()}`),
+    enabled: !!facilityId,
+  });
+}
+
 export function useFinanceBillingInvoice(invoiceId: string, enabled: boolean) {
   return useQuery<FinanceWorkspaceJson>({
     queryKey: ["finance", "billing-workspace", "invoice", invoiceId],
