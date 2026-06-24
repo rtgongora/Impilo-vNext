@@ -113,7 +113,17 @@ operational). Honest scope: a Tshepo primitive, **not** a claim of GDHCN conform
   `/v1/trust-authorities`; every mutation gated by a **dual gate** (admin role + recent
   step-up) and audited. Unit-proven (`TrustAuthorityServiceTest`, 6) + runtime-proven
   (`TrustAuthorityRegistryRuntimeProofIT`, real Postgres + V014).
-- **B6 — GDHCN readiness cockpit** (backend→BFF→UI) + design note: pending.
+- **B6 — GDHCN readiness cockpit (landed).** Full vertical slice: tshepo-authz readiness
+  domain (V015, 10-domain code catalogue merged per-tenant, dual-gated updates, audit) →
+  experience-bff proxy (`/internal/v1/admin-governance/gdhcn-readiness`) → one-ui-shell route
+  (`/work/administration-governance/gdhcn-readiness`, real-data board with the honesty
+  contract stated inline). Backend unit (5) + runtime (2, real Postgres + V015); BFF unit (2);
+  UI `tsc --noEmit` clean. UI domain-editing deferred (backend ready, admin+step-up gated).
+- **Design note** `docs/architecture/tshepo-gdhcn-trust-and-certification.md`: landed.
+
+**Wave B (B-core + B-foundations) is complete.** The three trust-plane criticals (G001/G002/
+G003) plus G056/G057/G059/G060/G061 are closed; B4/B5/B6 + design note make Tshepo
+GDHCN-*ready* (not operational — see the deferred list in the design note).
 
 ## Committed deferred feature blocks (will be built, not dropped)
 
