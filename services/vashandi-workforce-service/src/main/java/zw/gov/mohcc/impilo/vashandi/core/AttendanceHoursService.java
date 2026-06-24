@@ -108,4 +108,23 @@ public class AttendanceHoursService {
         LocalDate end = start.plusMonths(1).minusDays(1);
         return summarize(tenantId, profile.getId(), start, end);
     }
+
+    /**
+     * Raw attendance events for the worker (by provider-worker-id) within a calendar month —
+     * for the ERP-HR admin attendance view. Empty when the worker is not mapped to a profile.
+     */
+    @Transactional(readOnly = true)
+    public List<zw.gov.mohcc.impilo.vashandi.persistence.entity.AttendanceEventEntity> eventsByProviderWorkerId(
+            UUID tenantId, String providerWorkerId, int year, int month) {
+        return profileRepository.findByTenantIdAndProviderWorkerId(tenantId, providerWorkerId)
+                .map(p -> {
+                    LocalDate start = LocalDate.of(year, month, 1);
+                    OffsetDateTime from = start.atStartOfDay().atOffset(ZoneOffset.UTC);
+                    OffsetDateTime to = start.plusMonths(1).atStartOfDay().atOffset(ZoneOffset.UTC);
+                    return attendanceRepository
+                            .findByTenantIdAndWorkforceProfileIdAndEventTimeBetweenOrderByEventTimeAsc(
+                                    tenantId, p.getId(), from, to);
+                })
+                .orElseGet(List::of);
+    }
 }

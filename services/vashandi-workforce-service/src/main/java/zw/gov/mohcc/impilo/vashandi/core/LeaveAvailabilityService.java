@@ -7,6 +7,7 @@ import zw.gov.mohcc.impilo.vashandi.persistence.entity.LeaveAvailabilityEntity;
 import zw.gov.mohcc.impilo.vashandi.persistence.entity.LeaveBalanceEntity;
 import zw.gov.mohcc.impilo.vashandi.persistence.repository.LeaveAvailabilityRepository;
 import zw.gov.mohcc.impilo.vashandi.persistence.repository.LeaveBalanceRepository;
+import zw.gov.mohcc.impilo.vashandi.persistence.repository.WorkforceProfileRepository;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
 import java.time.temporal.ChronoUnit;
@@ -21,14 +22,24 @@ public class LeaveAvailabilityService {
 
     private final LeaveAvailabilityRepository leaveRepository;
     private final LeaveBalanceRepository balanceRepository;
+    private final WorkforceProfileRepository profileRepository;
     private final VashandiOutboxWriter outboxWriter;
 
     public LeaveAvailabilityService(LeaveAvailabilityRepository leaveRepository,
                                     LeaveBalanceRepository balanceRepository,
+                                    WorkforceProfileRepository profileRepository,
                                     VashandiOutboxWriter outboxWriter) {
         this.leaveRepository = leaveRepository;
         this.balanceRepository = balanceRepository;
+        this.profileRepository = profileRepository;
         this.outboxWriter = outboxWriter;
+    }
+
+    /** Leave windows for the worker identified by provider-worker-id (the ERP-HR bridge). */
+    public List<LeaveAvailabilityEntity> listByProviderWorkerId(UUID tenantId, String providerWorkerId) {
+        return profileRepository.findByTenantIdAndProviderWorkerId(tenantId, providerWorkerId)
+                .map(p -> leaveRepository.findByTenantIdAndWorkforceProfileIdOrderByStartDateDesc(tenantId, p.getId()))
+                .orElseGet(List::of);
     }
 
     public List<LeaveBalanceEntity> balances(UUID tenantId, UUID workforceProfileId, int fiscalYear) {

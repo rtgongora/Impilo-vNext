@@ -26,6 +26,13 @@ public class VashandiLeaveController {
         return leaveService.list(tenantId(), workforceProfileId);
     }
 
+    /** Leave windows for a worker by provider-worker-id (the ERP-HR bridge). */
+    @GetMapping("/v1/internal/vashandi/availability/by-provider")
+    public List<LeaveAvailabilityEntity> listByProvider(
+            @RequestParam(value = "provider_worker_id") String providerWorkerId) {
+        return leaveService.listByProviderWorkerId(tenantId(), providerWorkerId);
+    }
+
     @PostMapping("/v1/internal/vashandi/leave")
     public LeaveAvailabilityEntity createLeave(@RequestBody VashandiDtos.CreateLeaveRequest request) throws Exception {
         return leaveService.create(tenantId(), request);

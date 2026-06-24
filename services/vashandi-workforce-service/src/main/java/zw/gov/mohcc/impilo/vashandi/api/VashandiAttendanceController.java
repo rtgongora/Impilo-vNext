@@ -54,6 +54,15 @@ public class VashandiAttendanceController {
         return attendanceService.list(tenantId(), workforceProfileId);
     }
 
+    /** Attendance events for a worker (by provider-worker-id) in a calendar month — ERP-HR view. */
+    @GetMapping("/events")
+    public List<AttendanceEventEntity> eventsByProvider(
+            @RequestParam(value = "provider_worker_id") String providerWorkerId,
+            @RequestParam int year,
+            @RequestParam int month) {
+        return hoursService.eventsByProviderWorkerId(tenantId(), providerWorkerId, year, month);
+    }
+
     @PostMapping("/check-in")
     public VashandiDtos.AttendanceActionResponse checkIn(@RequestBody VashandiDtos.CheckInRequest request) throws Exception {
         return attendanceService.checkIn(tenantId(), request);
