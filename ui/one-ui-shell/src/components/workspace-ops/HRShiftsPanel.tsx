@@ -5,6 +5,7 @@ import { Loader2 } from 'lucide-react';
 import { LiveDataSourceBadge } from '@/components/common/LiveDataSourceBadge';
 import { NotLiveNotice } from '@/components/common/NotLiveNotice';
 import { useStaffingRosterWeek } from '@/hooks/queries/useStaffing';
+import { useShiftHandovers } from '@/hooks/queries/useInpatient';
 import {
   Users, Clock, Calendar, UserCheck, Coffee,
   AlertTriangle, ArrowRightLeft, FileText, Shield, Sun, Moon,
@@ -154,6 +155,23 @@ export function HRShiftsPanel({ facilityId }: HRShiftsPanelProps) {
   }, [rosterQ.data]);
   const activeShiftsLive = preferLive && liveActiveShifts.length > 0;
   const displayActiveShifts: ActiveShiftRow[] = activeShiftsLive ? liveActiveShifts : ACTIVE_SHIFTS;
+
+  // Pending SBAR shift handovers — real inpatient-service handover feed.
+  const handoverQ = useShiftHandovers(facilityId ?? undefined, 'PENDING');
+  const liveHandovers = useMemo(() => {
+    const raw = handoverQ.data?.data;
+    const arr = Array.isArray(raw) ? raw : [];
+    return arr.map((row, index) => {
+      const r = row as Record<string, unknown>;
+      return {
+        id: String(r.id ?? index),
+        status: String(r.status ?? 'PENDING'),
+        outgoingStaff: r.outgoing_staff ? String(r.outgoing_staff) : '—',
+        submittedAt: r.submitted_at ? String(r.submitted_at) : null,
+      };
+    });
+  }, [handoverQ.data]);
+  const handoversLive = preferLive && liveHandovers.length > 0;
 
   const tabs: { key: HRTab; label: string; icon: React.ComponentType<{ className?: string }>; badge?: number }[] = [
     { key: 'roster', label: 'Staff Roster', icon: Users },
@@ -323,11 +341,35 @@ export function HRShiftsPanel({ facilityId }: HRShiftsPanelProps) {
       )}
 
       {/* Handover Tab */}
-      {activeTab === 'handover' && (
+      {activeTab === 'handover' && handoversLive && (
+        <div className="space-y-3">
+          {liveHandovers.map(ho => (
+            <div key={ho.id} className="bg-card border border-border border-l-4 border-l-amber-500 rounded-lg py-4 px-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold">Shift handover</p>
+                  <p className="text-xs text-muted-foreground">Outgoing: {ho.outgoingStaff}</p>
+                  {ho.submittedAt && (
+                    <p className="text-xs text-muted-foreground">Submitted {ho.submittedAt.slice(0, 16).replace('T', ' ')}</p>
+                  )}
+                </div>
+                <span className="px-2 py-0.5 rounded border border-border text-xs">{ho.status}</span>
+              </div>
+              <div className="flex gap-2 mt-3">
+                <button className="inline-flex items-center gap-1 px-3 py-1.5 text-xs border border-border rounded hover:bg-background">
+                  <Shield className="h-3 w-3" />Accept Takeover
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {activeTab === 'handover' && !handoversLive && (
         <div className="space-y-3">
           <NotLiveNotice>
-            <span className="font-semibold">Not live yet.</span> Pending handovers are
-            demo data — no handover-tracking endpoint exists.
+            <span className="font-semibold">No pending handovers.</span> Showing demo data —
+            none are currently pending for this facility.
           </NotLiveNotice>
           {PENDING_HANDOVERS.map(ho => (
             <div key={ho.id} className="bg-card border border-border border-l-4 border-l-amber-500 rounded-lg py-4 px-4">

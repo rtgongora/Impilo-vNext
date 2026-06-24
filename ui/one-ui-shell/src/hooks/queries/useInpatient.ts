@@ -22,6 +22,20 @@ export function useAdmissions(patientCpid?: string) {
   });
 }
 
+/** Pending SBAR shift handovers for a facility (inpatient-service ShiftHandoverEntity). */
+export function useShiftHandovers(facilityId?: string | null, status: string = "PENDING") {
+  return useQuery<ApiResponse<unknown>>({
+    queryKey: ["inpatient-handovers", facilityId ?? null, status],
+    queryFn: () => {
+      const sp = new URLSearchParams();
+      sp.set("facility_id", facilityId!);
+      if (status) sp.set("status", status);
+      return apiClient.get<ApiResponse<unknown>>(`/internal/v1/inpatient/handovers?${sp.toString()}`);
+    },
+    enabled: !!facilityId,
+  });
+}
+
 export function useActiveAdmission(subjectCpid?: string, facilityId?: string) {
   return useQuery<AdmissionDetailResponse>({
     queryKey: ["inpatient-active-admission", subjectCpid ?? null, facilityId ?? null],

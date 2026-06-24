@@ -77,6 +77,30 @@ public class InpatientController {
         }
     }
 
+    @GetMapping("/handovers")
+    public ResponseEntity<Map<String, Object>> listHandovers(
+            @RequestParam(name = "facility_id") String facilityId,
+            @RequestParam(required = false) String status,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        if (facilityId == null || facilityId.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", Map.of("code", "MISSING_FACILITY_ID", "message", "facility_id is required"),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+        try {
+            JsonNode data = inpatientClient.listHandovers(
+                    facilityId.trim(), status != null && !status.isBlank() ? status : "PENDING");
+            return ResponseEntity.ok(Map.of(
+                    "data", data != null ? data : java.util.List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient listHandovers", e);
+        }
+    }
+
     @GetMapping("/admissions/active")
     public ResponseEntity<Map<String, Object>> getActiveAdmissions(
             @RequestParam(name = "subject_cpid") String subjectCpid,

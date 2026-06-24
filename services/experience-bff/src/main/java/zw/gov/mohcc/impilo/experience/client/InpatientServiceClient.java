@@ -330,6 +330,13 @@ public class InpatientServiceClient {
         return response.getBody();
     }
 
+    public JsonNode listHandovers(String facilityId, String status) {
+        String url = baseUrl + "/internal/v1/handover?facilityId=" + facilityId
+                + (status != null && !status.isBlank() ? "&status=" + status : "");
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
     public JsonNode submitHandover(Map<String, Object> body) {
         String url = baseUrl + "/internal/v1/handover";
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
