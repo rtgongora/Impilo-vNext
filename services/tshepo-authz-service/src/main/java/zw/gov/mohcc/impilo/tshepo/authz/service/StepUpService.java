@@ -10,8 +10,12 @@ import zw.gov.mohcc.impilo.tshepo.authz.dto.StepUpChallengeResponse;
 import zw.gov.mohcc.impilo.tshepo.authz.dto.StepUpVerifyRequest;
 import zw.gov.mohcc.impilo.tshepo.authz.persistence.entity.StepUpChallengeEntity;
 import zw.gov.mohcc.impilo.tshepo.authz.persistence.repository.StepUpChallengeRepository;
+import zw.gov.mohcc.impilo.tshepo.authz.stepup.StepUpMode;
+import zw.gov.mohcc.impilo.tshepo.authz.stepup.StepUpUnavailableException;
+import zw.gov.mohcc.impilo.tshepo.authz.stepup.StepUpVerificationDispatcher;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -31,11 +35,17 @@ public class StepUpService {
 
     private final StepUpChallengeRepository challengeRepository;
     private final AuthzProperties properties;
+    private final StepUpVerificationDispatcher dispatcher;
+    private final AuditPublisher auditPublisher;
 
     public StepUpService(StepUpChallengeRepository challengeRepository,
-                         AuthzProperties properties) {
+                         AuthzProperties properties,
+                         StepUpVerificationDispatcher dispatcher,
+                         AuditPublisher auditPublisher) {
         this.challengeRepository = challengeRepository;
         this.properties = properties;
+        this.dispatcher = dispatcher;
+        this.auditPublisher = auditPublisher;
     }
 
     /**
@@ -43,25 +53,39 @@ public class StepUpService {
      */
     @Transactional
     public StepUpChallengeResponse issueChallenge(StepUpChallengeRequest request) {
+        StepUpMode mode = StepUpMode.resolve(request.challengeType());
         StepUpChallengeEntity entity = new StepUpChallengeEntity();
         entity.setTenantId(request.tenantId());
         entity.setActorId(request.actorId());
         entity.setChallengeType(request.challengeType());
+        entity.setMode(mode.name());
         entity.setStatus("PENDING");
+        entity.setAttemptCount(0);
         entity.setIssuedAt(Instant.now());
         entity.setExpiresAt(Instant.now().plusSeconds(properties.getStepUpWindowSeconds()));
 
+        // Mode-specific issue preparation. SMS_OTP generates + stores (hashed) + delivers
+        // the OTP here; if its provider is unconfigured this throws and the challenge is
+        // NOT issued (fail closed) — never an undeliverable/unverifiable challenge.
+        dispatcher.require(mode).onIssue(entity);
+
         entity = challengeRepository.save(entity);
 
-        log.info("Step-up challenge issued: id={}, type={}, actor={}",
-                entity.getId(), entity.getChallengeType(), entity.getActorId());
+        auditPublisher.queueGovernanceEvent("STEP_UP_ISSUED", entity.getId().toString(), Map.of(
+                "tenantId", entity.getTenantId().toString(),
+                "actorId", entity.getActorId(),
+                "mode", mode.name()));
+        log.info("Step-up challenge issued: id={}, mode={}, actor={}",
+                entity.getId(), mode, entity.getActorId());
 
         return toResponse(entity);
     }
 
     /**
-     * Verify (complete) a step-up challenge.
-     * In a production system, this would validate the actual MFA/biometric response.
+     * Verify (complete) a step-up challenge. Verification is delegated to the
+     * mode-specific {@link StepUpVerifier}; there is no "any code passes" path.
+     * Replays (non-pending challenges) are rejected by the pending-only lookup,
+     * attempts are counted and capped, and every outcome is audited.
      */
     @Transactional
     public StepUpChallengeResponse verifyChallenge(StepUpVerifyRequest request) {
@@ -69,35 +93,85 @@ public class StepUpService {
                 request.challengeId(), request.tenantId(), Instant.now());
 
         if (opt.isEmpty()) {
+            // Not found, expired, or already completed/failed (replay) — fail closed.
+            auditPublisher.queueGovernanceEvent("STEP_UP_REJECTED", request.challengeId().toString(),
+                    Map.of("reason", "NOT_PENDING_OR_EXPIRED", "actorId", request.actorId()));
             throw new IllegalArgumentException(
                     "Challenge not found, expired, or already completed: " + request.challengeId());
         }
 
         StepUpChallengeEntity entity = opt.get();
 
-        // Verify the actor matches
         if (!entity.getActorId().equals(request.actorId())) {
+            auditReject(entity, "ACTOR_MISMATCH");
             throw new SecurityException("Actor mismatch for challenge " + request.challengeId());
         }
 
-        // In production, validate the verification code against the challenge type:
-        // - MFA: validate TOTP/SMS code
-        // - BIOMETRIC: validate biometric assertion
-        // - SUPERVISOR_APPROVAL: validate supervisor's approval token
-        // For now, any non-blank code completes the challenge.
-        if (request.verificationCode() == null || request.verificationCode().isBlank()) {
+        entity.setAttemptCount(entity.getAttemptCount() + 1);
+        if (entity.getAttemptCount() > properties.getMaxStepUpAttempts()) {
             entity.setStatus("FAILED");
             challengeRepository.save(entity);
-            throw new IllegalArgumentException("Verification code is required");
+            auditReject(entity, "ATTEMPTS_EXCEEDED");
+            throw new SecurityException("Step-up attempt limit exceeded for challenge " + request.challengeId());
+        }
+
+        StepUpMode mode = StepUpMode.resolve(
+                entity.getMode() != null ? entity.getMode() : entity.getChallengeType());
+        boolean verified;
+        try {
+            verified = dispatcher.require(mode).verify(entity, request.verificationCode());
+        } catch (StepUpUnavailableException e) {
+            challengeRepository.save(entity); // persist the attempt
+            auditReject(entity, "PROVIDER_UNAVAILABLE");
+            throw e; // fail closed — provider not configured
+        }
+
+        if (!verified) {
+            challengeRepository.save(entity); // persist the attempt
+            auditReject(entity, "INVALID_CREDENTIAL");
+            throw new SecurityException("Step-up verification failed for challenge " + request.challengeId());
         }
 
         entity.setStatus("COMPLETED");
         entity.setCompletedAt(Instant.now());
         challengeRepository.save(entity);
-
-        log.info("Step-up challenge completed: id={}, actor={}", entity.getId(), entity.getActorId());
+        auditPublisher.queueGovernanceEvent("STEP_UP_COMPLETED", entity.getId().toString(),
+                Map.of("actorId", entity.getActorId(), "mode", mode.name()));
+        log.info("Step-up challenge completed: id={}, mode={}, actor={}", entity.getId(), mode, entity.getActorId());
 
         return toResponse(entity);
+    }
+
+    /**
+     * Record a supervisor's approval of a SUPERVISOR_APPROVAL challenge (dual control).
+     * The supervisor must be an authorised supervisor principal (verified server-side by
+     * the caller from trust context, not a client-supplied name) and must not be the
+     * challenge actor. After approval, the actor completes the challenge via verify.
+     */
+    @Transactional
+    public void recordSupervisorApproval(UUID challengeId, UUID tenantId,
+                                         String supervisorActorId, boolean authorisedSupervisor) {
+        StepUpChallengeEntity entity = challengeRepository.findPendingById(challengeId, tenantId, Instant.now())
+                .orElseThrow(() -> new IllegalArgumentException("Challenge not pending: " + challengeId));
+        if (!authorisedSupervisor) {
+            throw new SecurityException("Supervisor approval requires an authorised supervisor principal");
+        }
+        if (supervisorActorId == null || supervisorActorId.isBlank()) {
+            throw new SecurityException("Supervisor principal required");
+        }
+        if (supervisorActorId.equals(entity.getActorId())) {
+            throw new SecurityException("Dual control: a supervisor cannot approve their own step-up");
+        }
+        entity.setApprovedBy(supervisorActorId);
+        challengeRepository.save(entity);
+        auditPublisher.queueGovernanceEvent("STEP_UP_SUPERVISOR_APPROVED", challengeId.toString(),
+                Map.of("supervisor", supervisorActorId, "actorId", entity.getActorId()));
+    }
+
+    private void auditReject(StepUpChallengeEntity entity, String reason) {
+        auditPublisher.queueGovernanceEvent("STEP_UP_REJECTED", entity.getId().toString(),
+                Map.of("reason", reason, "actorId", entity.getActorId(),
+                        "attemptCount", entity.getAttemptCount()));
     }
 
     /**

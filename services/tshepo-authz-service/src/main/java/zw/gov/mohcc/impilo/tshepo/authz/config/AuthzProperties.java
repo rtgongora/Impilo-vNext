@@ -13,6 +13,7 @@ public class AuthzProperties {
 
     private RateLimit rateLimit = new RateLimit();
     private int stepUpWindowSeconds = 300;
+    private int maxStepUpAttempts = 5;
     private List<String> stepUpMethods = List.of("MFA", "BIOMETRIC", "SUPERVISOR_APPROVAL");
     private int breakGlassTtlMinutes = 60;
     private int breakGlassReviewSlaHours = 24;
@@ -98,6 +99,9 @@ public class AuthzProperties {
     public void setRateLimit(RateLimit rateLimit) { this.rateLimit = rateLimit; }
     public int getStepUpWindowSeconds() { return stepUpWindowSeconds; }
     public void setStepUpWindowSeconds(int stepUpWindowSeconds) { this.stepUpWindowSeconds = stepUpWindowSeconds; }
+
+    public int getMaxStepUpAttempts() { return maxStepUpAttempts; }
+    public void setMaxStepUpAttempts(int maxStepUpAttempts) { this.maxStepUpAttempts = maxStepUpAttempts; }
     public List<String> getStepUpMethods() { return stepUpMethods; }
     public void setStepUpMethods(List<String> stepUpMethods) { this.stepUpMethods = stepUpMethods; }
     public int getBreakGlassTtlMinutes() { return breakGlassTtlMinutes; }
