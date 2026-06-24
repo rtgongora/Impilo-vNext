@@ -29,6 +29,8 @@ public class AuthzProperties {
     private int visibilityEscalationGrantTtlHours = 4;
     private List<String> visibilityEscalationApproverRoles = List.of(
             "SYSTEM_ADMIN", "DEVELOPER", "REGULATORY_REVIEWER");
+    private List<String> trustAuthorityAdminRoles = List.of(
+            "SYSTEM_ADMIN", "TRUST_ADMIN");
 
     // ── Inner configuration classes ────────────────────────────────────
 
@@ -141,5 +143,13 @@ public class AuthzProperties {
 
     public void setVisibilityEscalationApproverRoles(List<String> visibilityEscalationApproverRoles) {
         this.visibilityEscalationApproverRoles = visibilityEscalationApproverRoles;
+    }
+
+    public List<String> getTrustAuthorityAdminRoles() {
+        return trustAuthorityAdminRoles;
+    }
+
+    public void setTrustAuthorityAdminRoles(List<String> trustAuthorityAdminRoles) {
+        this.trustAuthorityAdminRoles = trustAuthorityAdminRoles;
     }
 }
