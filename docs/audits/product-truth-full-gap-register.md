@@ -22,7 +22,7 @@
 |----|---------|-----------|-----|----------|-------|
 | G001 | Step-up MFA accepts **any non-blank code** (no TOTP/SMS/biometric); persists COMPLETED | `tshepo-authz-service/.../StepUpService.java:87` | unimpl/crypto | fix | B1 |
 | G002 | Offline capability token **JWS signature never verified** — forgeable | `tshepo-offline-service/.../CapabilityTokenService.java:197` | crypto | fix | B2 |
-| G003 | DAGS permit-token HMAC key defaults to literal **"change-me-in-prod"** — forgeable if env unset | `data-access-governance-service/.../EnforcementService.java:21` | hardcoded/crypto | fix (fail-closed) | B3 |
+| G003 | ~~DAGS permit-token HMAC key defaults to literal **"change-me-in-prod"** — forgeable if env unset~~ **✅ FIXED (B3):** fail-closed (no default), full SHA-256 requester binding, full-length HMAC | `data-access-governance-service/.../EnforcementService.java` | hardcoded/crypto | done | B3 ✅ |
 | G004 | Identity-assurance **risk assessment is a client-trusted pass-through** | `identity-assurance-service/.../RiskAssessmentController.java:27`, `RiskAssessmentService.java:25` | unimpl | fix | C1 |
 | G005 | Null defaults fabricate a verdict: omitted fields → score 0 / LOW / **ALLOW** | `identity-assurance-service/.../RiskAssessmentService.java:35` | hardcoded | fix | C1 |
 | G006 | Identity-assurance **attestation client-trusted** — caller self-asserts `VERIFIED, confidence=1.0` | `identity-assurance-service/.../AttestationController.java:29`, `AttestationService.java:25` | unimpl | fix | C1 |
@@ -54,6 +54,7 @@
 | G027 | HRShiftsPanel `ACTIVE_SHIFTS/LEAVE_REQUESTS/PENDING_HANDOVERS` fixtures, no live path | `ui/.../workspace-ops/HRShiftsPanel.tsx:29,35,41` | component-fixture | fix or NOT_LIVE | H1 |
 | G028 | StockManagementPanel `PURCHASE_ORDERS/PENDING_RECEIPTS/TRANSFERS` fixtures drive a KPI | `ui/.../workspace-ops/StockManagementPanel.tsx:43,51,56` | component-fixture | fix or NOT_LIVE | H1 |
 | G029 | AIDiagnosticAssistant **silently falls back to fabricated** differentials (orphaned/unmounted today) | `ui/.../ehr/AIDiagnosticAssistant.tsx:37,83` | component-fixture | fix or reject(delete) | F3/I |
+| G056 | DAGS permit token is **issued/stored/emitted but its signature is never verified** by any consumer — enforcement does not check the permit it signs (discovered during B3) | `data-access-governance-service/.../AccessRequestService.java:70` (issue); no verifier anywhere | dead/unwired | fix (add verification at the enforcement point) | B3-followup |
 
 ## MEDIUM
 
