@@ -135,12 +135,13 @@ class HrPayrollDomainLogicTest {
     @Mock private EmployeeRepository employeeRepository;
     @Mock private ContractRepository contractRepository;
     @Mock private DeductionTypeRepository deductionTypeRepository;
+    @Mock private VashandiAttendanceClient vashandiAttendanceClient;
 
     @Test
     void payrollGrossIncludesAllowancesAndOvertime() throws Exception {
         PayrollService svc = new PayrollService(payrollRunRepository, payslipRepository,
                 employeeRepository, contractRepository, deductionTypeRepository,
-                attendanceRepository, new ObjectMapper(), outbox);
+                vashandiAttendanceClient, new ObjectMapper(), outbox);
 
         UUID runId = UUID.randomUUID();
         UUID empId = UUID.randomUUID();
@@ -158,6 +159,7 @@ class HrPayrollDomainLogicTest {
         emp.setEmployeeId(empId);
         emp.setTenantId(TENANT);
         emp.setEmploymentStatus("ACTIVE");
+        emp.setProviderId("PRV-7");
         when(employeeRepository.findByTenantIdOrderByStaffNumberAsc(TENANT)).thenReturn(List.of(emp));
 
         ContractEntity contract = new ContractEntity();
@@ -168,12 +170,9 @@ class HrPayrollDomainLogicTest {
 
         when(deductionTypeRepository.findByTenantIdOrderByNameAsc(TENANT)).thenReturn(List.of());
 
-        // 10 overtime hours in the period → hourlyRate 1760/176 = 10 → OT pay 10*10*1.5 = 150
-        AttendanceRecordEntity att = new AttendanceRecordEntity();
-        att.setOvertimeHours(new BigDecimal("10"));
-        when(attendanceRepository.findByEmployeeIdAndShiftDateBetween(
-                empId, LocalDate.of(2026, 3, 1), LocalDate.of(2026, 3, 31)))
-                .thenReturn(List.of(att));
+        // 10 overtime hours from Vashandi → hourlyRate 1760/176 = 10 → OT pay 10*10*1.5 = 150
+        when(vashandiAttendanceClient.overtimeHours(TENANT, "PRV-7", 2026, 3))
+                .thenReturn(Optional.of(new BigDecimal("10")));
 
         // Assign id on persist so the outbox can reference it (PrePersist not triggered under mock).
         when(payslipRepository.save(any())).thenAnswer(i -> {
