@@ -139,6 +139,35 @@ public class InpatientController {
         }
     }
 
+    /**
+     * Resolved current inpatient location for a patient — the active admission's ward + bed
+     * with human-readable labels, or {@code data: null} when the patient is not admitted.
+     * Backs the experience-shell patient-location badge (G053). {@code facility_id} is optional.
+     */
+    @GetMapping("/admissions/current-location")
+    public ResponseEntity<Map<String, Object>> getCurrentLocation(
+            @RequestParam(name = "subject_cpid") String subjectCpid,
+            @RequestParam(name = "facility_id", required = false) String facilityId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        if (subjectCpid == null || subjectCpid.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", Map.of("code", "MISSING_SUBJECT_CPID", "message", "subject_cpid is required"),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+        Map<String, Object> meta = Map.of("request_id", requestId, "correlation_id", correlationId);
+        try {
+            JsonNode data = inpatientClient.getCurrentLocation(
+                    subjectCpid.trim(), facilityId != null ? facilityId.trim() : null);
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("data", data == null || data.isNull() ? null : data);
+            body.put("meta", meta);
+            return ResponseEntity.ok(body);
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient getCurrentLocation", e);
+        }
+    }
+
     @GetMapping("/admissions/{admissionRef}")
     public ResponseEntity<Map<String, Object>> getAdmission(
             @PathVariable String admissionRef,
