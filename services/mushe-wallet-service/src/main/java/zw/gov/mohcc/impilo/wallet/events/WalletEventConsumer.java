@@ -238,7 +238,10 @@ public class WalletEventConsumer {
                 cardHealthDataService.updateCriticalSummary(
                         card.getCardId(),
                         patientCpid,
-                        "{}",  // Placeholder — actual summary fetched from BUTANO at sync time
+                        // Explicit PENDING_SYNC — the real critical summary is fetched from BUTANO
+                        // at card-sync time. NOT "{}", which a reader could mistake for "no critical
+                        // health data" (no allergies/conditions) on a health card.
+                        "{\"status\":\"PENDING_SYNC\"}",
                         encryptionKeyRef,
                         tenantId != null ? tenantId : wallet.getTenantId()
                 );
