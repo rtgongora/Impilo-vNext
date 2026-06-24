@@ -59,9 +59,9 @@ public class ErpHrBffController {
     public ResponseEntity<?> leaveTypes(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
                                         @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
-            return ResponseEntity.ok(client.getLeaveTypes());
+            return ResponseEntity.ok(vashandiClient.getLeaveTypes());
         } catch (Exception e) {
-            return failClose("HR_PAYROLL_UNAVAILABLE", "Unable to fetch leave types", requestId, correlationId);
+            return failClose("VASHANDI_UNAVAILABLE", "Unable to fetch leave types from Vashandi", requestId, correlationId);
         }
     }
 

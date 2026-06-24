@@ -81,6 +81,11 @@ public class VashandiServiceClient {
         return unwrap(get("/availability/by-provider", Map.of("provider_worker_id", providerWorkerId)));
     }
 
+    /** Leave-type catalog (tenant-scoped) — owned by Vashandi. */
+    public JsonNode getLeaveTypes() {
+        return unwrap(get("/leave/types", Map.of()));
+    }
+
     public JsonNode reconcileWorkforceProfile(Object body) {
         return unwrap(post("/workforce-profiles/reconcile", body));
     }

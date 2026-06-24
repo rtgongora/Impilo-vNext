@@ -59,6 +59,17 @@ class ErpHrBffControllerTest {
     }
 
     @Test
+    void leaveTypesReadVashandi() {
+        ErpHrBffController controller = new ErpHrBffController(new StubHrPayrollClient(), new StubVashandiClient());
+
+        ResponseEntity<?> response = controller.leaveTypes("req-1", "corr-1");
+
+        assertEquals(200, response.getStatusCode().value());
+        JsonNode body = (JsonNode) response.getBody();
+        assertEquals("ANNUAL", body.get(0).get("name").asText());
+    }
+
+    @Test
     void attendanceFailClosesWhenVashandiUnavailable() {
         ErpHrBffController controller = new ErpHrBffController(new StubHrPayrollClient(), new FailingVashandiClient());
 
@@ -88,6 +99,10 @@ class ErpHrBffControllerTest {
         }
         @Override public JsonNode getLeaveByProvider(String p) {
             try { return MAPPER.readTree("[{\"leaveType\":\"ANNUAL\",\"startDate\":\"2026-03-01\",\"endDate\":\"2026-03-03\",\"status\":\"pending\"}]"); }
+            catch (Exception e) { throw new RuntimeException(e); }
+        }
+        @Override public JsonNode getLeaveTypes() {
+            try { return MAPPER.readTree("[{\"name\":\"ANNUAL\",\"annualEntitlement\":21}]"); }
             catch (Exception e) { throw new RuntimeException(e); }
         }
     }

@@ -33,7 +33,6 @@ class InternalHrApiContractSurfaceTest {
 
     @Mock private EmployeeRepository employeeRepository;
     @Mock private ContractRepository contractRepository;
-    @Mock private LeaveTypeRepository leaveTypeRepository;
     @Mock private PayrollRunRepository payrollRunRepository;
     @Mock private PayslipRepository payslipRepository;
     @Mock private DeductionTypeRepository deductionTypeRepository;
@@ -46,7 +45,6 @@ class InternalHrApiContractSurfaceTest {
         api = new InternalHrApi(
                 employeeRepository,
                 contractRepository,
-                leaveTypeRepository,
                 payrollRunRepository,
                 payslipRepository,
                 deductionTypeRepository,

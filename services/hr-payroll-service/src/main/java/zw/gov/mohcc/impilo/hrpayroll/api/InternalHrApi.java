@@ -28,7 +28,6 @@ public class InternalHrApi {
 
     private final EmployeeRepository employeeRepository;
     private final ContractRepository contractRepository;
-    private final LeaveTypeRepository leaveTypeRepository;
     private final PayrollRunRepository payrollRunRepository;
     private final PayslipRepository payslipRepository;
     private final DeductionTypeRepository deductionTypeRepository;
@@ -36,14 +35,12 @@ public class InternalHrApi {
 
     public InternalHrApi(EmployeeRepository employeeRepository,
                          ContractRepository contractRepository,
-                         LeaveTypeRepository leaveTypeRepository,
                          PayrollRunRepository payrollRunRepository,
                          PayslipRepository payslipRepository,
                          DeductionTypeRepository deductionTypeRepository,
                          PayrollService payrollService) {
         this.employeeRepository = employeeRepository;
         this.contractRepository = contractRepository;
-        this.leaveTypeRepository = leaveTypeRepository;
         this.payrollRunRepository = payrollRunRepository;
         this.payslipRepository = payslipRepository;
         this.deductionTypeRepository = deductionTypeRepository;
@@ -100,21 +97,8 @@ public class InternalHrApi {
         return contractRepository.save(c);
     }
 
-    @GetMapping("/internal/v1/hr/leave/types")
-    public List<LeaveTypeEntity> leaveTypes() {
-        return leaveTypeRepository.findByTenantIdOrderByNameAsc(tenant());
-    }
-
-    @PostMapping("/internal/v1/hr/leave/types")
-    public LeaveTypeEntity createLeaveType(@RequestBody LeaveTypeEntity t) {
-        requireHrWriteAuthority();
-        t.setTenantId(tenant());
-        return leaveTypeRepository.save(t);
-    }
-
-    // Workforce leave + attendance are owned by Vashandi (P3.1/P3.3) — the ERP-HR UI reads
-    // them from Vashandi via the BFF. hr-payroll keeps only leave *types* (reference config)
-    // and the payroll-financial surface below.
+    // Workforce leave + attendance (incl. leave *types*) are owned by Vashandi — the ERP-HR
+    // UI reads them from Vashandi via the BFF. hr-payroll keeps the payroll-financial surface.
 
     @GetMapping("/internal/v1/hr/payroll/runs")
     public List<PayrollRunEntity> payrollRuns() {
