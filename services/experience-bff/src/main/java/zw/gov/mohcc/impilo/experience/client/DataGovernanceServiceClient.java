@@ -151,6 +151,31 @@ public class DataGovernanceServiceClient {
         }
     }
 
+    // ── Privacy display preferences — Privacy-by-Architecture §6 ──
+
+    /** The user's persisted privacy display preference, or {@code null} when none is set (404). */
+    public JsonNode getPrivacyPreference(String userId) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl)
+                .path("/internal/v1/governance/privacy-preferences")
+                .queryParam("userId", userId)
+                .toUriString();
+        log.info("Data governance: get privacy preference [user={}]", userId);
+        try {
+            return restTemplate.getForEntity(url, JsonNode.class).getBody();
+        } catch (HttpClientErrorException.NotFound e) {
+            return null;
+        }
+    }
+
+    /** Upsert the user's privacy display preference. Returns the persisted body. */
+    public JsonNode updatePrivacyPreference(Map<String, Object> request, String idempotencyKey) {
+        String url = baseUrl + "/internal/v1/governance/privacy-preferences";
+        log.info("Data governance: update privacy preference [user={}]", request.get("userId"));
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                url, HttpMethod.PUT, withIdempotencyKey(request, idempotencyKey), JsonNode.class);
+        return response.getBody();
+    }
+
     /**
      * Wrap the body with a fallback Idempotency-Key so writes to {@code /internal/v1/**}
      * always satisfy the command-idempotency filter. The trust-header interceptor overrides
