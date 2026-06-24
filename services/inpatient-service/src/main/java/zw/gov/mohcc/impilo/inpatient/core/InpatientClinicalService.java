@@ -37,6 +37,16 @@ public class InpatientClinicalService {
         return TrustContextHolder.require().facilityId();
     }
 
+    /** Real actor for clinical-audit provenance — never a fabricated name (G038). */
+    private String currentActor() {
+        try {
+            String actor = TrustContextHolder.require().actorId();
+            return actor != null && !actor.isBlank() ? actor : "system";
+        } catch (IllegalStateException e) {
+            return "system";
+        }
+    }
+
     private final CarePlanRepository carePlanRepository;
     private final CarePlanGoalRepository goalRepository;
     private final CarePlanInterventionRepository interventionRepository;
@@ -655,7 +665,7 @@ public class InpatientClinicalService {
         h.setWardId(ClinicalPayloadMapper.uuid(body, "wardId", "ward_id"));
         h.setShiftId(ClinicalPayloadMapper.str(body, "shiftId", "shift_id"));
         h.setOutgoingStaff(Objects.requireNonNullElse(
-                ClinicalPayloadMapper.str(body, "outgoingStaff", "outgoing_staff"), "outgoing-nurse"));
+                ClinicalPayloadMapper.str(body, "outgoingStaff", "outgoing_staff"), currentActor()));
         h.setSituation(ClinicalPayloadMapper.str(body, "situation"));
         h.setBackground(ClinicalPayloadMapper.str(body, "background"));
         h.setAssessment(ClinicalPayloadMapper.str(body, "assessment"));

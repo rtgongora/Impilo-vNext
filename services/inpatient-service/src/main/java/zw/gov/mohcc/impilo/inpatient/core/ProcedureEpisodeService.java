@@ -21,6 +21,25 @@ public class ProcedureEpisodeService {
         return TrustContextHolder.require().tenantId();
     }
 
+    /** Real actor for clinical-audit provenance — never a fabricated name (G037). */
+    private String currentActor() {
+        try {
+            String actor = TrustContextHolder.require().actorId();
+            return actor != null && !actor.isBlank() ? actor : "system";
+        } catch (IllegalStateException e) {
+            return "system";
+        }
+    }
+
+    /** Real facility id from the trust context (was the literal "Impilo Facility" — G038). */
+    private UUID currentFacility() {
+        try {
+            return TrustContextHolder.require().facilityId();
+        } catch (IllegalStateException e) {
+            return null;
+        }
+    }
+
     private static final Map<String, List<String[]>> WHO_CHECKLIST = Map.of(
             "SIGN_IN", List.of(
                     new String[]{"ID_CONFIRM", "Patient identity confirmed"},
@@ -539,21 +558,21 @@ public class ProcedureEpisodeService {
                     "scoreType", "ASA",
                     "phase", "PREOP",
                     "components", Map.of("asaClass", a.getAsaClass()),
-                    "recordedBy", a.getAssessedBy() != null ? a.getAssessedBy() : "preop-submit"));
+                    "recordedBy", a.getAssessedBy() != null ? a.getAssessedBy() : currentActor()));
         }
         if (a.getMallampatiClass() != null) {
             recordAnaesthesiaScore(episodeId, Map.of(
                     "scoreType", "MALLAMPATI",
                     "phase", "PREOP",
                     "components", Map.of("mallampatiClass", a.getMallampatiClass()),
-                    "recordedBy", a.getAssessedBy() != null ? a.getAssessedBy() : "preop-submit"));
+                    "recordedBy", a.getAssessedBy() != null ? a.getAssessedBy() : currentActor()));
         }
         if (a.getCormackLehaneGrade() != null) {
             recordAnaesthesiaScore(episodeId, Map.of(
                     "scoreType", "CORMACK_LEHANE",
                     "phase", "PREOP",
                     "components", Map.of("cormackLehaneGrade", a.getCormackLehaneGrade()),
-                    "recordedBy", a.getAssessedBy() != null ? a.getAssessedBy() : "preop-submit"));
+                    "recordedBy", a.getAssessedBy() != null ? a.getAssessedBy() : currentActor()));
         }
         Object extraScores = body.get("scores");
         if (extraScores instanceof List<?> list) {
@@ -604,7 +623,7 @@ public class ProcedureEpisodeService {
                 .filter(item -> "ANAESTHESIA_CHECK".equals(item.getItemCode()) && !item.isCompleted())
                 .forEach(item -> {
                     item.setCompleted(true);
-                    item.setCompletedBy("anaesthesia-preop");
+                    item.setCompletedBy(currentActor());
                     item.setCompletedAt(OffsetDateTime.now());
                     checklistRepository.save(item);
                 });
@@ -629,7 +648,7 @@ public class ProcedureEpisodeService {
                 .filter(item -> "CONSENT".equals(item.getItemCode()) && !item.isCompleted())
                 .forEach(item -> {
                     item.setCompleted(true);
-                    item.setCompletedBy("mvumo");
+                    item.setCompletedBy(currentActor());
                     item.setCompletedAt(OffsetDateTime.now());
                     checklistRepository.save(item);
                 });
@@ -710,7 +729,7 @@ public class ProcedureEpisodeService {
         m.put("date", e.getScheduledAt() != null ? e.getScheduledAt().toLocalDate().toString()
                 : e.getCreatedAt().toLocalDate().toString());
         m.put("surgeon", e.getSurgeonId() != null ? e.getSurgeonId() : "—");
-        m.put("facility", "Impilo Facility");
+        m.put("facility", currentFacility() != null ? currentFacility().toString() : null);
         m.put("status", mapHistoryStatus(e.getStatus()));
         m.put("notes", "");
         return m;
