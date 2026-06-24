@@ -5,6 +5,7 @@ import { Loader2 } from 'lucide-react';
 import { LiveDataSourceBadge } from '@/components/common/LiveDataSourceBadge';
 import { NotLiveNotice } from '@/components/common/NotLiveNotice';
 import { useInventoryOnHand, useInventoryStockouts, useInventoryLedger } from '@/hooks/queries/useInventory';
+import { useProcPurchaseOrders } from '@/hooks/queries/useProcurement';
 import {
   Package, ShoppingCart, Truck, ClipboardCheck, AlertTriangle,
   Plus, Search, ArrowRightLeft, Calendar, TrendingDown,
@@ -76,6 +77,12 @@ function getStatusBadge(status: string) {
     arrived: { label: 'Arrived', classes: 'bg-green-100 text-green-700' },
     pending: { label: 'Pending', classes: 'bg-amber-100 text-warning-foreground' },
     completed: { label: 'Completed', classes: 'bg-green-100 text-green-700' },
+    // procurement-service PO statuses
+    sent: { label: 'Sent', classes: 'bg-primary-soft text-primary' },
+    acknowledged: { label: 'Acknowledged', classes: 'bg-primary-soft text-primary' },
+    partially_received: { label: 'Partially Received', classes: 'bg-amber-100 text-warning-foreground' },
+    received: { label: 'Received', classes: 'bg-green-100 text-green-700' },
+    cancelled: { label: 'Cancelled', classes: 'bg-red-100 text-danger' },
   };
   const cfg = map[status] || { label: status, classes: 'bg-neutral-100 text-muted-foreground' };
   return <span className={`px-2 py-0.5 rounded text-xs font-medium ${cfg.classes}`}>{cfg.label}</span>;
@@ -110,6 +117,34 @@ function extractArray(payload: unknown): unknown[] {
     }
   }
   return [];
+}
+
+interface PurchaseOrder {
+  id: string;
+  poNumber: string;
+  status: string;
+  total: number;
+  currency: string;
+  supplierRef: string | null;
+  createdAt: string | null;
+}
+
+function asPurchaseOrders(payload: unknown): PurchaseOrder[] {
+  return extractArray(payload).map((row, index) => {
+    const r = row as Record<string, unknown>;
+    const a = (r.attributes as Record<string, unknown> | undefined) ?? r;
+    const supplierId = a.supplierId ?? a.supplier_id;
+    return {
+      id: String(r.poId ?? r.id ?? index),
+      poNumber: String(a.poNumber ?? a.po_number ?? '—'),
+      status: String(a.status ?? 'DRAFT'),
+      total: Number(a.totalAmount ?? a.total_amount ?? 0),
+      currency: String(a.currency ?? 'ZWL'),
+      // No supplier name on the PO header (supplierId is a UUID) — show a short ref, don't invent one.
+      supplierRef: supplierId ? `Supplier ${String(supplierId).slice(0, 8)}` : null,
+      createdAt: a.createdAt ?? a.created_at ? String(a.createdAt ?? a.created_at) : null,
+    };
+  });
 }
 
 function asLedgerEvents(payload: unknown): LedgerEvent[] {
@@ -177,6 +212,7 @@ export function StockManagementPanel({ facilityId }: StockManagementPanelProps) 
   const onHandQ = useInventoryOnHand(facilityId, { size: 50 });
   const stockoutsQ = useInventoryStockouts(facilityId);
   const ledgerQ = useInventoryLedger(facilityId, { size: 50 });
+  const poQ = useProcPurchaseOrders();
   const liveItems = useMemo(() => asInventoryRows(onHandQ.data), [onHandQ.data]);
 
   // Receiving & transfers tabs are derived from the real stock ledger (movement
@@ -193,6 +229,11 @@ export function StockManagementPanel({ facilityId }: StockManagementPanelProps) 
   );
   const receiptsLive = preferLive && liveReceipts.length > 0;
   const transfersLive = preferLive && liveTransfers.length > 0;
+
+  // Purchase orders — real procurement-service POs (procurement-service is fully built;
+  // the earlier "not implemented" notice was wrong).
+  const livePOs = useMemo(() => asPurchaseOrders(poQ.data), [poQ.data]);
+  const ordersLive = preferLive && livePOs.length > 0;
   const displayInventory = preferLive && liveItems.length > 0 ? liveItems : INVENTORY_ITEMS;
   const dataSource =
     preferLive && liveItems.length > 0 ? 'live' : preferLive && onHandQ.isLoading ? 'mixed' : 'demo';
@@ -341,12 +382,16 @@ export function StockManagementPanel({ facilityId }: StockManagementPanelProps) 
       {/* Purchase Orders Tab */}
       {activeTab === 'orders' && (
         <div>
-          <NotLiveNotice className="mb-3">
-            <span className="font-semibold">Not live yet.</span> Purchase orders are demo
-            data — the procurement module is not yet implemented.
-          </NotLiveNotice>
+          {!ordersLive && (
+            <NotLiveNotice className="mb-3">
+              <span className="font-semibold">No purchase orders yet.</span> Showing demo
+              data — none have been raised in procurement for this facility.
+            </NotLiveNotice>
+          )}
           <div className="flex items-center justify-between mb-3">
-            <p className="text-sm text-muted-foreground">{PURCHASE_ORDERS.length} orders</p>
+            <p className="text-sm text-muted-foreground">
+              {ordersLive ? `${livePOs.length} orders (procurement)` : `${PURCHASE_ORDERS.length} orders`}
+            </p>
             <button
               onClick={() => setNewOrderOpen(true)}
               className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-primary text-white rounded-md hover:bg-primary-hover"
@@ -355,26 +400,41 @@ export function StockManagementPanel({ facilityId }: StockManagementPanelProps) 
             </button>
           </div>
           <div className="space-y-2 max-h-[400px] overflow-auto">
-            {PURCHASE_ORDERS.map(po => (
-              <div key={po.id} className="bg-card border border-border rounded-lg py-3 px-4 hover:bg-background cursor-pointer">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold">{po.id}</p>
-                      {po.priority === 'urgent' && <span className="px-2 py-0.5 rounded bg-red-100 text-danger text-[10px] font-medium">Urgent</span>}
+            {ordersLive
+              ? livePOs.map(po => (
+                  <div key={po.id} className="bg-card border border-border rounded-lg py-3 px-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold">{po.poNumber}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {po.supplierRef ?? 'Supplier —'} &middot; {po.currency} {po.total.toLocaleString()}
+                        </p>
+                        {po.createdAt && <p className="text-xs text-muted-foreground mt-0.5">{po.createdAt.slice(0, 10)}</p>}
+                      </div>
+                      {getStatusBadge(po.status.toLowerCase())}
                     </div>
-                    <p className="text-xs text-muted-foreground">{po.supplier} &middot; {po.items} items &middot; {po.total}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{po.date}</p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {getStatusBadge(po.status)}
-                    {po.status === 'pending_approval' && (
-                      <button className="px-2 py-1 text-xs border border-border rounded hover:bg-neutral-100">Approve</button>
-                    )}
+                ))
+              : PURCHASE_ORDERS.map(po => (
+                  <div key={po.id} className="bg-card border border-border rounded-lg py-3 px-4 hover:bg-background cursor-pointer">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-semibold">{po.id}</p>
+                          {po.priority === 'urgent' && <span className="px-2 py-0.5 rounded bg-red-100 text-danger text-[10px] font-medium">Urgent</span>}
+                        </div>
+                        <p className="text-xs text-muted-foreground">{po.supplier} &middot; {po.items} items &middot; {po.total}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{po.date}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {getStatusBadge(po.status)}
+                        {po.status === 'pending_approval' && (
+                          <button className="px-2 py-1 text-xs border border-border rounded hover:bg-neutral-100">Approve</button>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            ))}
+                ))}
           </div>
         </div>
       )}
