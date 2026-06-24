@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { LiveDataSourceBadge } from '@/components/common/LiveDataSourceBadge';
+import { NotLiveNotice } from '@/components/common/NotLiveNotice';
 import { useInventoryOnHand, useInventoryStockouts } from '@/hooks/queries/useInventory';
 import {
   Package, ShoppingCart, Truck, ClipboardCheck, AlertTriangle,
@@ -276,6 +277,10 @@ export function StockManagementPanel({ facilityId }: StockManagementPanelProps) 
       {/* Purchase Orders Tab */}
       {activeTab === 'orders' && (
         <div>
+          <NotLiveNotice className="mb-3">
+            <span className="font-semibold">Not live yet.</span> Purchase orders are demo
+            data — the procurement module is not yet implemented.
+          </NotLiveNotice>
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm text-muted-foreground">{PURCHASE_ORDERS.length} orders</p>
             <button
@@ -313,6 +318,10 @@ export function StockManagementPanel({ facilityId }: StockManagementPanelProps) 
       {/* Receiving Tab */}
       {activeTab === 'receiving' && (
         <div>
+          <NotLiveNotice className="mb-3">
+            <span className="font-semibold">Not live yet.</span> Pending receipts are demo
+            data — only a receipt mutation exists; no goods-received list endpoint is wired.
+          </NotLiveNotice>
           <p className="text-sm text-muted-foreground mb-3">{PENDING_RECEIPTS.length} pending deliveries</p>
           <div className="space-y-2">
             {PENDING_RECEIPTS.map(grn => (
@@ -344,6 +353,10 @@ export function StockManagementPanel({ facilityId }: StockManagementPanelProps) 
       {/* Transfers Tab */}
       {activeTab === 'transfers' && (
         <div>
+          <NotLiveNotice className="mb-3">
+            <span className="font-semibold">Not live yet.</span> Stock transfers are demo
+            data — only a transfer mutation exists; no transfer list endpoint is wired.
+          </NotLiveNotice>
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm text-muted-foreground">{TRANSFERS.length} transfers</p>
             <button className="inline-flex items-center gap-1 px-3 py-1.5 text-sm border border-border rounded-md hover:bg-background">

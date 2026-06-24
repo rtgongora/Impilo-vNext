@@ -6,6 +6,7 @@ import {
   Clock, Receipt, Send, BarChart3, Loader2,
 } from 'lucide-react';
 import { LiveDataSourceBadge } from '@/components/common/LiveDataSourceBadge';
+import { NotLiveNotice } from '@/components/common/NotLiveNotice';
 import { useCoverageClaimsList, useCoverageRemittances } from '@/hooks/queries/useCoverage';
 
 // ─── Types ───
@@ -193,6 +194,11 @@ export function BillingPanel({ facilityId }: BillingPanelProps) {
 
       {/* Overview Tab */}
       {activeTab === 'overview' && (
+        <div className="space-y-3">
+        <NotLiveNotice>
+          <span className="font-semibold">Not live yet.</span> Revenue and payer-mix
+          analytics are illustrative — no reporting/analytics endpoint supplies them.
+        </NotLiveNotice>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Revenue This Week */}
           <div className="bg-card border border-border rounded-lg">
@@ -226,11 +232,16 @@ export function BillingPanel({ facilityId }: BillingPanelProps) {
             </div>
           </div>
         </div>
+        </div>
       )}
 
       {/* Charges Tab */}
       {activeTab === 'charges' && (
         <div className="space-y-2 max-h-[400px] overflow-auto">
+          <NotLiveNotice>
+            <span className="font-semibold">Not live yet.</span> Unbilled charges are
+            demo data — no facility-scoped charges endpoint is wired.
+          </NotLiveNotice>
           {UNBILLED_CHARGES.map(ch => (
             <div key={ch.id} className="bg-card border border-border border-l-4 border-l-amber-400 rounded-lg py-3 px-4">
               <div className="flex items-center justify-between">
@@ -252,6 +263,10 @@ export function BillingPanel({ facilityId }: BillingPanelProps) {
       {/* Invoices Tab */}
       {activeTab === 'invoices' && (
         <div className="space-y-2 max-h-[400px] overflow-auto">
+          <NotLiveNotice>
+            <span className="font-semibold">Not live yet.</span> Invoices are demo data —
+            no facility-scoped invoices endpoint is wired.
+          </NotLiveNotice>
           {INVOICES.map(inv => (
             <div key={inv.id} className={`bg-card border border-border rounded-lg py-3 px-4 ${inv.status === 'overdue' ? 'border-l-4 border-l-red-500' : ''}`}>
               <div className="flex items-center justify-between">
@@ -304,6 +319,10 @@ export function BillingPanel({ facilityId }: BillingPanelProps) {
       {/* Payments Tab */}
       {activeTab === 'payments' && (
         <div className="space-y-2 max-h-[400px] overflow-auto">
+          <NotLiveNotice>
+            <span className="font-semibold">Not live yet.</span> Recent payments are demo
+            data — no facility-scoped payments endpoint is wired.
+          </NotLiveNotice>
           {RECENT_PAYMENTS.map(pmt => (
             <div key={pmt.id} className="flex items-center justify-between p-3 rounded-lg border border-border">
               <div className="flex items-center gap-3">

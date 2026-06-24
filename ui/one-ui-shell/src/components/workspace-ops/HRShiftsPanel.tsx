@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { LiveDataSourceBadge } from '@/components/common/LiveDataSourceBadge';
+import { NotLiveNotice } from '@/components/common/NotLiveNotice';
 import { useStaffingRosterWeek } from '@/hooks/queries/useStaffing';
 import {
   Users, Clock, Calendar, UserCheck, Coffee,
@@ -209,6 +210,10 @@ export function HRShiftsPanel({ facilityId }: HRShiftsPanelProps) {
       {/* Shifts Tab */}
       {activeTab === 'shifts' && (
         <div className="space-y-3">
+          <NotLiveNotice>
+            <span className="font-semibold">Not live yet.</span> Active-shift summaries
+            are demo data — no live shift-aggregation endpoint is wired.
+          </NotLiveNotice>
           {ACTIVE_SHIFTS.map(shift => {
             const ShiftIcon = shift.type.includes('Night') ? Moon : shift.type.includes('Admin') ? FileText : Sun;
             return (
@@ -242,6 +247,10 @@ export function HRShiftsPanel({ facilityId }: HRShiftsPanelProps) {
       {/* Leave Tab */}
       {activeTab === 'leave' && (
         <div className="space-y-2 max-h-[420px] overflow-auto">
+          <NotLiveNotice>
+            <span className="font-semibold">Not live yet.</span> Leave requests are demo
+            data — the hr-payroll leave API is employee-scoped, not facility-wide.
+          </NotLiveNotice>
           {LEAVE_REQUESTS.map(req => (
             <div key={req.id} className="bg-card border border-border rounded-lg py-3 px-4">
               <div className="flex items-center justify-between">
@@ -270,6 +279,10 @@ export function HRShiftsPanel({ facilityId }: HRShiftsPanelProps) {
       {/* Handover Tab */}
       {activeTab === 'handover' && (
         <div className="space-y-3">
+          <NotLiveNotice>
+            <span className="font-semibold">Not live yet.</span> Pending handovers are
+            demo data — no handover-tracking endpoint exists.
+          </NotLiveNotice>
           {PENDING_HANDOVERS.map(ho => (
             <div key={ho.id} className="bg-card border border-border border-l-4 border-l-amber-500 rounded-lg py-4 px-4">
               <div className="flex items-center justify-between mb-2">
