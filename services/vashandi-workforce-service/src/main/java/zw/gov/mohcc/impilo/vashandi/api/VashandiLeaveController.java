@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.vashandi.core.LeaveAvailabilityService;
 import zw.gov.mohcc.impilo.vashandi.persistence.entity.LeaveAvailabilityEntity;
+import zw.gov.mohcc.impilo.vashandi.persistence.entity.LeaveBalanceEntity;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
@@ -28,6 +29,18 @@ public class VashandiLeaveController {
     @PostMapping("/v1/internal/vashandi/leave")
     public LeaveAvailabilityEntity createLeave(@RequestBody VashandiDtos.CreateLeaveRequest request) throws Exception {
         return leaveService.create(tenantId(), request);
+    }
+
+    @GetMapping("/v1/internal/vashandi/leave/balances")
+    public List<LeaveBalanceEntity> listBalances(
+            @RequestParam(value = "workforce_profile_id") UUID workforceProfileId,
+            @RequestParam(value = "fiscal_year") int fiscalYear) {
+        return leaveService.balances(tenantId(), workforceProfileId, fiscalYear);
+    }
+
+    @PostMapping("/v1/internal/vashandi/leave/balances")
+    public LeaveBalanceEntity upsertBalance(@RequestBody VashandiDtos.UpsertLeaveBalanceRequest request) {
+        return leaveService.upsertBalance(tenantId(), request);
     }
 
     @PatchMapping("/v1/internal/vashandi/leave/{id}")
