@@ -33,6 +33,14 @@ public class InventoryController {
     private final InventoryServiceClient inventoryClient;
     private final ObjectMapper objectMapper;
 
+    /**
+     * Demo requisition rows are dev/preview-only and OFF by default (production-safe).
+     * Enable with IMPILO_BFF_INVENTORY_DEMO_FALLBACK=true for compose/preview without
+     * inventory-service. When false, an unavailable upstream returns an empty list, not fixtures.
+     */
+    @org.springframework.beans.factory.annotation.Value("${impilo.bff.inventory.demo-fallback:false}")
+    private boolean demoFallbackEnabled;
+
     public InventoryController(InventoryServiceClient inventoryClient, ObjectMapper objectMapper) {
         this.inventoryClient = inventoryClient;
         this.objectMapper = objectMapper;
@@ -138,9 +146,11 @@ public class InventoryController {
             }
         }
 
-        List<Map<String, Object>> demoRows = demoRequisitions(facilityUuid, tenantId);
-        if (!demoRows.isEmpty()) {
-            return ResponseEntity.ok(response(demoRows, requestId, correlationId));
+        if (demoFallbackEnabled) {
+            List<Map<String, Object>> demoRows = demoRequisitions(facilityUuid, tenantId);
+            if (!demoRows.isEmpty()) {
+                return ResponseEntity.ok(response(demoRows, requestId, correlationId));
+            }
         }
 
         return ResponseEntity.ok(response(List.of(), requestId, correlationId));

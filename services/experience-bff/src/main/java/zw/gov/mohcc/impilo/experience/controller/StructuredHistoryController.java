@@ -318,7 +318,7 @@ public class StructuredHistoryController {
                 "id", "func-demo-1",
                 "type", "ADL",
                 "date", "2026-01-15",
-                "assessor", "OT Stub",
+                "assessor", "Sample data (demo)",
                 "totalScore", 18,
                 "maxScore", 24,
                 "interpretation", "Independent with aids",
@@ -336,7 +336,7 @@ public class StructuredHistoryController {
                 "name", "Appendectomy",
                 "type", "Surgical",
                 "date", "2018-06-01",
-                "surgeon", "Dr. Stub",
+                "surgeon", "Sample data (demo)",
                 "facility", "Harare Central",
                 "status", "COMPLETED",
                 "notes", "Uncomplicated"));
