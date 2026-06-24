@@ -55,10 +55,14 @@ public class CardController {
     }
 
     @PostMapping("/{cardId}/print")
-    public ResponseEntity<ApiResponse<SmartCardEntity>> markPrinted(@PathVariable Long cardId) {
+    public ResponseEntity<ApiResponse<SmartCardEntity>> markPrinted(
+            @PathVariable Long cardId,
+            @RequestBody(required = false) CardPrintRequest request) {
         TrustContext ctx = TrustContextHolder.require();
         requireInternal(ctx);
-        SmartCardEntity card = cardService.markPrinted(ctx.tenantId(), cardId);
+        // G032: the secure-element public key is provisioned at print time.
+        String publicKey = request != null ? request.publicKey() : null;
+        SmartCardEntity card = cardService.markPrinted(ctx.tenantId(), cardId, publicKey);
         return ResponseEntity.ok(ApiResponse.ok(card, ctx.correlationId().toString()));
     }
 
@@ -124,5 +128,8 @@ public class CardController {
     }
 
     record CardRequest(String healthId, String publicKey) {}
+
+    /** Body for the print step; carries the secure-element public key provisioned at print (G032). */
+    record CardPrintRequest(String publicKey) {}
     record RevokeRequest(RevocationReason reason) {}
 }
