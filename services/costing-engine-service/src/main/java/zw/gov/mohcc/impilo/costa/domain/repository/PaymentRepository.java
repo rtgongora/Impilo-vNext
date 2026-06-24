@@ -19,4 +19,10 @@ public interface PaymentRepository extends JpaRepository<PaymentEntity, Long> {
 
     @Query("SELECT p FROM PaymentEntity p JOIN BillHeaderEntity b ON p.billId = b.billId WHERE b.tenantId = :tenantId ORDER BY p.createdAt DESC")
     Page<PaymentEntity> findByTenantId(UUID tenantId, Pageable pageable);
+
+    /** Facility-scoped recent payments (PaymentEntity has no facilityId — joined via the bill). */
+    @Query("SELECT p FROM PaymentEntity p JOIN BillHeaderEntity b ON p.billId = b.billId "
+            + "WHERE b.tenantId = :tenantId AND b.facilityId = :facilityId "
+            + "ORDER BY p.paidAt DESC NULLS LAST, p.createdAt DESC")
+    List<PaymentEntity> findRecentByFacility(UUID tenantId, UUID facilityId, Pageable pageable);
 }

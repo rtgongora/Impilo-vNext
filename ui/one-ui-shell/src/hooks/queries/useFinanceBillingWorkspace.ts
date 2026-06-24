@@ -12,6 +12,42 @@ export type FinanceWorkspaceJson = unknown;
  * byPayerType (payer mix), byDepartment, monthlyTrend. Real aggregation, already
  * proxied by FinancialReportsBffController.
  */
+/** Facility-scoped unbilled charges (non-final bills) from COSTA. */
+export function useFacilityUnbilledCharges(facilityId: string | null | undefined) {
+  return useQuery<FinanceWorkspaceJson>({
+    queryKey: ["finance", "facility", "unbilled-charges", facilityId ?? null],
+    queryFn: () =>
+      apiClient.get<FinanceWorkspaceJson>(
+        `/internal/v1/finance/facility/unbilled-charges?facility_id=${encodeURIComponent(facilityId!)}`,
+      ),
+    enabled: !!facilityId,
+  });
+}
+
+/** Facility-scoped invoices from COSTA. */
+export function useFacilityInvoices(facilityId: string | null | undefined) {
+  return useQuery<FinanceWorkspaceJson>({
+    queryKey: ["finance", "facility", "invoices", facilityId ?? null],
+    queryFn: () =>
+      apiClient.get<FinanceWorkspaceJson>(
+        `/internal/v1/finance/facility/invoices?facility_id=${encodeURIComponent(facilityId!)}`,
+      ),
+    enabled: !!facilityId,
+  });
+}
+
+/** Facility-scoped recent payments from COSTA. */
+export function useFacilityPayments(facilityId: string | null | undefined) {
+  return useQuery<FinanceWorkspaceJson>({
+    queryKey: ["finance", "facility", "payments", facilityId ?? null],
+    queryFn: () =>
+      apiClient.get<FinanceWorkspaceJson>(
+        `/internal/v1/finance/facility/payments?facility_id=${encodeURIComponent(facilityId!)}`,
+      ),
+    enabled: !!facilityId,
+  });
+}
+
 export function useFinanceRevenueSummary(
   facilityId: string | null | undefined,
   year: number,

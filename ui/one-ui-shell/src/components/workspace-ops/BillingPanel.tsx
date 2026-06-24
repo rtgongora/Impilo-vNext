@@ -8,7 +8,12 @@ import {
 import { LiveDataSourceBadge } from '@/components/common/LiveDataSourceBadge';
 import { NotLiveNotice } from '@/components/common/NotLiveNotice';
 import { useCoverageClaimsList, useCoverageRemittances } from '@/hooks/queries/useCoverage';
-import { useFinanceRevenueSummary } from '@/hooks/queries/useFinanceBillingWorkspace';
+import {
+  useFinanceRevenueSummary,
+  useFacilityUnbilledCharges,
+  useFacilityInvoices,
+  useFacilityPayments,
+} from '@/hooks/queries/useFinanceBillingWorkspace';
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -17,6 +22,17 @@ function pickArray(node: unknown, key: string): Record<string, unknown>[] {
   const data = (obj?.data as Record<string, unknown> | undefined) ?? obj;
   const arr = data?.[key];
   return Array.isArray(arr) ? (arr as Record<string, unknown>[]) : [];
+}
+
+/** Extract the list from a {data:[...]} envelope (or a bare array). */
+function dataArray(node: unknown): Record<string, unknown>[] {
+  if (Array.isArray(node)) return node as Record<string, unknown>[];
+  const obj = node as Record<string, unknown> | undefined;
+  return Array.isArray(obj?.data) ? (obj!.data as Record<string, unknown>[]) : [];
+}
+
+function num(v: unknown): number {
+  return Number(v ?? 0);
 }
 
 // ─── Types ───
@@ -121,6 +137,29 @@ export function BillingPanel({ facilityId }: BillingPanelProps) {
   const overviewLive = preferLive && (livePayerMix.length > 0 || liveRevenueTrend.length > 0);
   const trendMax = Math.max(1, ...liveRevenueTrend.map(d => d.val));
   const PAYER_BAR_COLORS = ['bg-primary', 'bg-amber-500', 'bg-green-500', 'bg-purple-500', 'bg-sky-500'];
+
+  // Facility-scoped charges / invoices / payments — real COSTA reads.
+  const chargesQ = useFacilityUnbilledCharges(facilityId);
+  const invoicesQ = useFacilityInvoices(facilityId);
+  const paymentsQ = useFacilityPayments(facilityId);
+  const liveCharges = useMemo(() => dataArray(chargesQ.data).map(r => ({
+    id: String(r.billId ?? ''), encounter: r.encounterId ? String(r.encounterId) : '—',
+    status: String(r.status ?? ''), amount: num(r.totalCharge), payable: num(r.patientPayable),
+    currency: String(r.currency ?? 'USD'),
+  })), [chargesQ.data]);
+  const liveInvoices = useMemo(() => dataArray(invoicesQ.data).map(r => ({
+    id: String(r.invoiceId ?? ''), number: String(r.invoiceNumber ?? '—'), status: String(r.status ?? ''),
+    total: num(r.total), outstanding: num(r.outstanding), currency: String(r.currency ?? 'USD'),
+    payer: r.payerRef ? String(r.payerRef) : '—', issuedAt: r.issuedAt ? String(r.issuedAt).slice(0, 10) : '—',
+  })), [invoicesQ.data]);
+  const livePayments = useMemo(() => dataArray(paymentsQ.data).map(r => ({
+    id: String(r.paymentId ?? ''), status: String(r.status ?? ''), type: String(r.paymentType ?? ''),
+    amount: num(r.paidAmount) || num(r.amount), currency: String(r.currency ?? 'USD'),
+    paidAt: r.paidAt ? String(r.paidAt).slice(0, 16).replace('T', ' ') : '—',
+  })), [paymentsQ.data]);
+  const chargesLive = preferLive && liveCharges.length > 0;
+  const invoicesLive = preferLive && liveInvoices.length > 0;
+  const paymentsLive = preferLive && livePayments.length > 0;
 
   const totalUnbilled = UNBILLED_CHARGES.reduce((s, c) => s + c.amount, 0);
   const totalOutstanding = INVOICES.filter(i => ['sent', 'overdue', 'partial'].includes(i.status)).reduce((s, i) => s + i.amount - i.paidAmount, 0);
@@ -281,11 +320,29 @@ export function BillingPanel({ facilityId }: BillingPanelProps) {
       )}
 
       {/* Charges Tab */}
-      {activeTab === 'charges' && (
+      {activeTab === 'charges' && chargesLive && (
+        <div className="space-y-2 max-h-[400px] overflow-auto">
+          {liveCharges.map(ch => (
+            <div key={ch.id} className="bg-card border border-border border-l-4 border-l-amber-400 rounded-lg py-3 px-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">{ch.id}</p>
+                  <p className="text-xs text-muted-foreground">Encounter {ch.encounter} &middot; patient payable {ch.currency} {ch.payable.toLocaleString()}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <p className="text-sm font-bold">{ch.currency} {ch.amount.toLocaleString()}</p>
+                  {getStatusBadge(ch.status.toLowerCase())}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {activeTab === 'charges' && !chargesLive && (
         <div className="space-y-2 max-h-[400px] overflow-auto">
           <NotLiveNotice>
-            <span className="font-semibold">Not live yet.</span> Unbilled charges are
-            demo data — no facility-scoped charges endpoint is wired.
+            <span className="font-semibold">No unbilled charges.</span> Showing demo data —
+            no open bills for this facility.
           </NotLiveNotice>
           {UNBILLED_CHARGES.map(ch => (
             <div key={ch.id} className="bg-card border border-border border-l-4 border-l-amber-400 rounded-lg py-3 px-4">
@@ -306,11 +363,34 @@ export function BillingPanel({ facilityId }: BillingPanelProps) {
       )}
 
       {/* Invoices Tab */}
-      {activeTab === 'invoices' && (
+      {activeTab === 'invoices' && invoicesLive && (
+        <div className="space-y-2 max-h-[400px] overflow-auto">
+          {liveInvoices.map(inv => (
+            <div key={inv.id} className="bg-card border border-border rounded-lg py-3 px-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold">{inv.number}</p>
+                    {getStatusBadge(inv.status.toLowerCase())}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{inv.payer} &middot; {inv.issuedAt}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-bold">{inv.currency} {inv.total.toLocaleString()}</p>
+                  {inv.outstanding > 0 && (
+                    <p className="text-[10px] text-amber-600">{inv.currency} {inv.outstanding.toLocaleString()} outstanding</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {activeTab === 'invoices' && !invoicesLive && (
         <div className="space-y-2 max-h-[400px] overflow-auto">
           <NotLiveNotice>
-            <span className="font-semibold">Not live yet.</span> Invoices are demo data —
-            no facility-scoped invoices endpoint is wired.
+            <span className="font-semibold">No invoices.</span> Showing demo data — none
+            issued for this facility.
           </NotLiveNotice>
           {INVOICES.map(inv => (
             <div key={inv.id} className={`bg-card border border-border rounded-lg py-3 px-4 ${inv.status === 'overdue' ? 'border-l-4 border-l-red-500' : ''}`}>
@@ -362,11 +442,29 @@ export function BillingPanel({ facilityId }: BillingPanelProps) {
       )}
 
       {/* Payments Tab */}
-      {activeTab === 'payments' && (
+      {activeTab === 'payments' && paymentsLive && (
+        <div className="space-y-2 max-h-[400px] overflow-auto">
+          {livePayments.map(pmt => (
+            <div key={pmt.id} className="flex items-center justify-between p-3 rounded-lg border border-border">
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-8 rounded-lg bg-green-100 flex items-center justify-center">
+                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">{pmt.type || 'Payment'}</p>
+                  <p className="text-xs text-muted-foreground">{pmt.status} &middot; {pmt.paidAt}</p>
+                </div>
+              </div>
+              <p className="text-sm font-bold text-green-600">+{pmt.currency} {pmt.amount.toLocaleString()}</p>
+            </div>
+          ))}
+        </div>
+      )}
+      {activeTab === 'payments' && !paymentsLive && (
         <div className="space-y-2 max-h-[400px] overflow-auto">
           <NotLiveNotice>
-            <span className="font-semibold">Not live yet.</span> Recent payments are demo
-            data — no facility-scoped payments endpoint is wired.
+            <span className="font-semibold">No payments.</span> Showing demo data — none
+            recorded for this facility.
           </NotLiveNotice>
           {RECENT_PAYMENTS.map(pmt => (
             <div key={pmt.id} className="flex items-center justify-between p-3 rounded-lg border border-border">
