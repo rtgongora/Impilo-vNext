@@ -41,7 +41,7 @@
 
 | ID | Finding | file:line | Cat | Decision | Block |
 |----|---------|-----------|-----|----------|-------|
-| G016 | Refund large-amount **step-up not enforced** (logs, proceeds to save + ledger) | `mushex-service/.../RefundService.java:108` | write-no-enforce | fix | E2 |
+| G016 | ~~Refund large-amount **step-up not enforced** (logs, proceeds to save + ledger)~~ **FIXED + PROVEN (E2).** A refund exceeding the configured threshold now **blocks** (throws `401 STEP_UP_REQUIRED`) BEFORE any refund record or ledger entry is written, unless a step-up token (`X-Step-Up-Token`) is present — mirroring VITO's `StepUpAspect`; INTERNAL service-to-service calls bypass. Proven by `RefundServiceTest` (4): large+no-token blocked and writes nothing, large+token proceeds, internal bypasses, small unaffected. | `mushex-service/.../service/RefundService.java` | write-no-enforce | fixed; proven | E2 |
 | G017 | Provider biometric match = exact SHA-256 equality; confidence hardcoded; "(placeholder matcher)" | `varapi-service/.../ProviderBiometricService.java:188` | crypto | fix | H3 |
 | G018 | License certificate download throws `UnsupportedOperationException` on a live route → 500 | `varapi-service/.../LicenseService.java:186`, `PortalController.java:120` | unimpl | fix | H3 |
 | G019 | Document signature provider defaults to **NOOP** — random sig, status SIGNED, no crypto | `document-service/.../NoopSignatureProvider.java:20`, `SignatureService.java:75`, `application.yml:64` | placeholder | fix (fail-closed default) | F2 |
