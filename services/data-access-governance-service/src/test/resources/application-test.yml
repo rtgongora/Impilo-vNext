@@ -28,5 +28,7 @@ impilo:
     enabled: true
 
 dags:
+  enforcement:
+    signing-key: test-only-dags-permit-signing-key
   outbox:
     poll-interval-ms: 60000
