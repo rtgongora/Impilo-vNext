@@ -12,7 +12,7 @@
 > (fix / honest-degrade / defer-with-marker / reject) and the **roadmap block**
 > that closes it (see the remediation roadmap plan).
 >
-> **Honest counts:** deterministic gate = **6**. Full register = **~58 findings**:
+> **Honest counts:** deterministic gate = **6**. Full register = **~59 findings (G001–G055)**:
 > ~15 blocker/critical, ~14 high, ~20 medium, ~9 low. The gap between 6 and ~58 is
 > the finding — the scanner is honest about its *method* but incomplete in *coverage*.
 
@@ -76,6 +76,7 @@
 | G044 | live-service media defaults to in-memory `local-dev` (`DEV-TOKEN-NOT-FOR-PRODUCTION`) | `live-service/.../MediaProviderConfig.java:13` | placeholder | fix (config default) | I |
 | G045 | External PACS connector throws on get* (config-gated EXTERNAL backend) | `pacs-adapter-service/.../ExternalPacsClient.java:66` | unimpl | defer-with-marker | I |
 | G046 | `oauth2-enabled=false → permitAll` off-switch disables all auth (defaults true) | `dispatch-service/.../SecurityConfig.java:48` (representative) | placeholder | fix (remove off-switch) | I |
+| G055 | Client demographics-**UPDATE** has no consumer above Vito — Vito `PUT /v1/clients/{healthId}` (fixed in 3A to preserve all 9 fields) is reachable by no BFF method, no BFF controller, and no UI edit-demographics flow. Backend-correct but consumer-less; completing the thread = building the edit feature (UI + BFF endpoint + `VitoServiceClient` PUT method). | `experience-bff/.../client/VitoServiceClient.java` (no PUT to `/v1/clients/{id}`); no UI edit flow | missing-surface | defer (feature block) | H/future |
 
 ## LOW
 
