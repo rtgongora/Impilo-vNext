@@ -86,8 +86,18 @@ public class StepUpService {
      * mode-specific {@link StepUpVerifier}; there is no "any code passes" path.
      * Replays (non-pending challenges) are rejected by the pending-only lookup,
      * attempts are counted and capped, and every outcome is audited.
+     *
+     * <p>Rejection is signalled by throwing. Those throws must NOT roll back the
+     * transaction, or the attempt-count increment (which drives lockout) and the
+     * {@code STEP_UP_REJECTED} audit would be reverted on every failed attempt —
+     * defeating the lockout entirely and losing the rejection audit trail. Hence the
+     * deliberate {@code noRollbackFor} on the exceptions this method throws on reject.</p>
      */
-    @Transactional
+    @Transactional(noRollbackFor = {
+            SecurityException.class,
+            IllegalArgumentException.class,
+            StepUpUnavailableException.class
+    })
     public StepUpChallengeResponse verifyChallenge(StepUpVerifyRequest request) {
         Optional<StepUpChallengeEntity> opt = challengeRepository.findPendingById(
                 request.challengeId(), request.tenantId(), Instant.now());
