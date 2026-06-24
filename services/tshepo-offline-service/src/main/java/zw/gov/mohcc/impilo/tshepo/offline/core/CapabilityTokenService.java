@@ -280,9 +280,9 @@ public class CapabilityTokenService {
     private Map<String, Object> buildTokenClaims(CapabilityTokenEntity entity, List<String> capabilities) {
         Map<String, Object> claims = new LinkedHashMap<>();
         claims.put("jti", entity.getId().toString());
-        claims.put("iss", "tshepo-offline-service");
+        claims.put("iss", offlineProperties.tokenIssuer());
         claims.put("sub", entity.getActorId());
-        claims.put("aud", "impilo-offline");
+        claims.put("aud", offlineProperties.tokenAudience());
         claims.put("iat", entity.getIssuedAt().getEpochSecond());
         claims.put("exp", entity.getExpiresAt().getEpochSecond());
         claims.put("tenant_id", entity.getTenantId().toString());

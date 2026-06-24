@@ -424,7 +424,10 @@ class CapabilityTokenServiceTest {
                         "DISPENSE_MEDICATION"
                 ),
                 24,  // offlinePackTtlHours
-                100  // reconciliationBatchSize
+                100, // reconciliationBatchSize
+                "tshepo-offline-service", // tokenIssuer
+                "impilo-offline",         // tokenAudience
+                3600 // jwksCacheTtlSeconds
         );
     }
 
