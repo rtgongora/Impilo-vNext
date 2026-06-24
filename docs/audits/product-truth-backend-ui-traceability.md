@@ -1,6 +1,6 @@
 # Product Truth — Backend-to-UI Traceability
 
-> Generated: 2026-06-23T21:07:40.752Z
+> Generated: 2026-06-24T02:16:05.801Z
 
 For each service: backend capabilities → API → BFF → UI → mobile → persistence.
 
@@ -623,7 +623,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/admin/integration-status/page.tsx`
 
 **Gaps:**
-- [F] experience-bff: mock/stub/fixture/in-memory patterns in product path (2 hits) (high)
+- [F] experience-bff: mock/stub/fixture/in-memory patterns in product path (10 hits) (high)
 - [S] experience-bff: security/crypto/authz placeholder in product path (2 hits) (high)
 
 ## fhir-gateway-service
@@ -1165,7 +1165,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 3 | Wired via BFF? | Yes (4 clients) |
 | 4 | Visible in UI? | Yes (7 refs) |
 | 5 | Visible on mobile? | Yes (7 refs) |
-| 6 | Fake/partial/disconnected? | No |
+| 6 | Fake/partial/disconnected? | Yes — review |
 | 7 | Backend without UI? | No |
 | 8 | UI without backend? | No |
 | 9 | Persists to DB? | Yes (2 migrations) |
@@ -1179,6 +1179,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/components/navigation/ExperienceSidebar.tsx`
 
 **Gaps:**
+- [F] mushe-wallet-service: mock/stub/fixture/in-memory patterns in product path (3 hits) (high)
 - [S] mushe-wallet-service: security/crypto/authz placeholder in product path (2 hits) (blocker)
 
 ## mushex-service

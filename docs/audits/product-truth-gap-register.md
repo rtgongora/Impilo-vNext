@@ -1,7 +1,7 @@
 # Product Truth — Gap Register
 
-> Generated: 2026-06-23T21:07:40.752Z
-> Total gaps: **5**
+> Generated: 2026-06-24T02:16:05.801Z
+> Total gaps: **6**
 
 ## Gap categories (A–R)
 
@@ -12,7 +12,7 @@
 | C | Backend exists, contract missing/stale | 0 |
 | D | Backend exists, frontend only partially wired | 0 |
 | E | UI exists, backend missing | 0 |
-| F | UI exists, uses mock/stub/fixture data | 3 |
+| F | UI exists, uses mock/stub/fixture data | 4 |
 | G | UI exists, form submits but does not persist | 0 |
 | H | UI exists, button/card is dead or decorative | 0 |
 | I | API exists, database persistence missing | 0 |
@@ -32,17 +32,18 @@
 | Severity | Count |
 |----------|------:|
 | blocker | 1 |
-| high | 4 |
+| high | 5 |
 
 ## Prioritized gaps (top 100)
 
 | Rank | Entity | Category | Severity | Description |
 |------|--------|----------|----------|-------------|
 | 1 | mushe-wallet-service | S | blocker | mushe-wallet-service: security/crypto/authz placeholder in product path (2 hits) |
-| 2 | experience-bff | F | high | experience-bff: mock/stub/fixture/in-memory patterns in product path (2 hits) |
+| 2 | experience-bff | F | high | experience-bff: mock/stub/fixture/in-memory patterns in product path (10 hits) |
 | 3 | experience-bff | S | high | experience-bff: security/crypto/authz placeholder in product path (2 hits) |
-| 4 | /wellness/commodities | F | high | /wellness/commodities: mock/stub data |
-| 5 | /operations/facility-operations | F | high | /operations/facility-operations: mock/stub data |
+| 4 | mushe-wallet-service | F | high | mushe-wallet-service: mock/stub/fixture/in-memory patterns in product path (3 hits) |
+| 5 | /wellness/commodities | F | high | /wellness/commodities: mock/stub data |
+| 6 | /operations/facility-operations | F | high | /operations/facility-operations: mock/stub data |
 
 ## Services requiring product-owner decision
 

@@ -4,13 +4,17 @@
   "establishedBy": "Wave 2 — product-truth scanner honesty (intake/product-truth-scanner-honesty)",
   "ratchetLog": [
     "2026-06-23 Wave 2: established gap=7 blocker=1 phase6Incomplete=4.",
-    "2026-06-23 Wave A1 (land 3A/3B/3C onto Product Truth): community-service + clinical-knowledge-platform-service S gaps cleared (resource-level pin authz + specialist-only level-of-care gating). Reconciled DOWN to gap=5 blocker=1 phase6Incomplete=2."
+    "2026-06-23 Wave A1 (land 3A/3B/3C onto Product Truth): community-service + clinical-knowledge-platform-service S gaps cleared (resource-level pin authz + specialist-only level-of-care gating). Reconciled DOWN to gap=5 blocker=1 phase6Incomplete=2.",
+    "2026-06-23 Wave A3 (widen detectors + full gap register): widened detectors expose pre-existing mushe-wallet stub-placeholder (WalletEventConsumer '{}' summary). gap 5->6. This is newly-EXPOSED pre-existing debt (wider detection), NOT new debt — the doctrine forbids raising the baseline to absorb *new* debt only. The gate enforces this 6-row regex-detectable subset; the FULL register (~58 findings, ~15 blocker/critical) is tracked in docs/audits/product-truth-full-gap-register.md."
   ],
-  "gapBaseline": 5,
+  "fullRegister": "docs/audits/product-truth-full-gap-register.md",
+  "fullRegisterCount": 58,
+  "gapBaseline": 6,
   "blockerBaseline": 1,
   "phase6IncompleteBaseline": 2,
   "knownDebt": [
     { "id": "mushe-wallet-service", "category": "S", "severity": "blocker", "issue": "placeholder crypto key derivation (CardHealthDataService) — must wire tshepo-keys", "ratchetWave": "E3" },
+    { "id": "mushe-wallet-service", "category": "F", "severity": "high", "issue": "stub-placeholder: WalletEventConsumer writes literal '{}' summary (exposed by widened detector)", "ratchetWave": "I" },
     { "id": "experience-bff", "category": "S", "severity": "high", "issue": "controller placeholders (IdentityAssurance / TempIdReview)", "ratchetWave": 3 },
     { "id": "experience-bff", "category": "F", "severity": "high", "issue": "in-memory history stores presented as persistence (Telemedicine/AppointmentComms)", "ratchetWave": 3 },
     { "path": "/operations/facility-operations", "category": "F", "severity": "high", "issue": "workspace-ops panels render hardcoded financial/stock data (Billing/Stock fixtures)", "ratchetWave": 4 },

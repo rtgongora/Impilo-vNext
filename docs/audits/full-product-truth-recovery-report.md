@@ -1,6 +1,6 @@
 # Full Product Truth Recovery Report
 
-> Generated: 2026-06-23T21:07:40.752Z
+> Generated: 2026-06-24T02:16:05.801Z
 > Branch: `claude/staging-ux-orchestration-remediation-Yypyl`
 
 ## Executive summary
@@ -22,10 +22,10 @@
 | Services partially complete | 0 |
 | Services backend-only (no UI) | 0 |
 | Services UI-only (no backend) | 0 |
-| Services with mock/stub hits | 1 |
-| Total classified gaps | 5 |
+| Services with mock/stub hits | 2 |
+| Total classified gaps | 6 |
 | Blocker gaps | 1 |
-| High severity gaps | 4 |
+| High severity gaps | 5 |
 | Cross-service cohesion | 14/14 pass |
 
 > **Honesty note:** `real` above is the file-existence axis (code present + wired),
@@ -62,7 +62,7 @@
 ## Remaining gaps by severity
 
 - **blocker:** 1
-- **high:** 4
+- **high:** 5
 
 ## Implementation status
 

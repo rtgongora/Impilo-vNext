@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-23T21:07:40.752Z",
+  "generatedAt": "2026-06-24T02:16:05.801Z",
   "branch": "claude/staging-ux-orchestration-remediation-Yypyl",
   "registryDrift": {
     "unregisteredModules": [],
@@ -25,13 +25,13 @@
     "gapCounts": {
       "byCategory": {
         "S": 2,
-        "F": 3
+        "F": 4
       },
       "bySeverity": {
         "blocker": 1,
-        "high": 4
+        "high": 5
       },
-      "total": 5
+      "total": 6
     },
     "crossServiceCohesion": {
       "total": 14,
@@ -2894,6 +2894,38 @@
       ],
       "mockStubHits": [
         {
+          "file": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CommunicationController.java",
+          "pattern": "in-memory-backing"
+        },
+        {
+          "file": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/IdentityAssuranceController.java",
+          "pattern": "stub-placeholder"
+        },
+        {
+          "file": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/OmnichannelController.java",
+          "pattern": "in-memory-backing"
+        },
+        {
+          "file": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PatientController.java",
+          "pattern": "in-memory-backing"
+        },
+        {
+          "file": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/QueueController.java",
+          "pattern": "in-memory-backing"
+        },
+        {
+          "file": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/TempIdReviewController.java",
+          "pattern": "stub-placeholder"
+        },
+        {
+          "file": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VitalsController.java",
+          "pattern": "todo-wire"
+        },
+        {
+          "file": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/WalletController.java",
+          "pattern": "in-memory-backing"
+        },
+        {
           "file": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/scheduling/AppointmentCommsHistoryStore.java",
           "pattern": "in-memory-store"
         },
@@ -2934,7 +2966,7 @@
         {
           "category": "F",
           "severity": "high",
-          "description": "experience-bff: mock/stub/fixture/in-memory patterns in product path (2 hits)",
+          "description": "experience-bff: mock/stub/fixture/in-memory patterns in product path (10 hits)",
           "impactScore": 3
         },
         {
@@ -5448,7 +5480,20 @@
         "citizen-app:apps/mobile/citizen-app/src/services/financeService.ts",
         "citizen-app:apps/mobile/citizen-app/src/services/walletService.ts"
       ],
-      "mockStubHits": [],
+      "mockStubHits": [
+        {
+          "file": "services/mushe-wallet-service/src/main/java/zw/gov/mohcc/impilo/wallet/card/CardController.java",
+          "pattern": "stub-placeholder"
+        },
+        {
+          "file": "services/mushe-wallet-service/src/main/java/zw/gov/mohcc/impilo/wallet/card/CardHealthDataService.java",
+          "pattern": "stub-placeholder"
+        },
+        {
+          "file": "services/mushe-wallet-service/src/main/java/zw/gov/mohcc/impilo/wallet/events/WalletEventConsumer.java",
+          "pattern": "stub-placeholder"
+        }
+      ],
       "securityPlaceholderHits": [
         {
           "file": "services/mushe-wallet-service/src/main/java/zw/gov/mohcc/impilo/wallet/card/CardHealthDataService.java",
@@ -5470,7 +5515,7 @@
         "q3_wiredViaBff": true,
         "q4_visibleInUi": true,
         "q5_visibleOnMobile": true,
-        "q6_fakePartialDisconnected": false,
+        "q6_fakePartialDisconnected": true,
         "q7_backendNoUi": false,
         "q8_uiNoBackend": false,
         "q9_persistsToDb": true,
@@ -5478,6 +5523,12 @@
       },
       "phase6Complete": false,
       "gaps": [
+        {
+          "category": "F",
+          "severity": "high",
+          "description": "mushe-wallet-service: mock/stub/fixture/in-memory patterns in product path (3 hits)",
+          "impactScore": 3
+        },
         {
           "category": "S",
           "severity": "blocker",
@@ -27771,6 +27822,10 @@
         },
         {
           "file": "ui/one-ui-shell/src/components/workspace-ops/StockManagementPanel.tsx",
+          "pattern": "mock-data-var"
+        },
+        {
+          "file": "ui/one-ui-shell/src/components/workspace-ops/StockManagementPanel.tsx",
           "pattern": "hardcoded-collection",
           "detail": "PURCHASE_ORDERS"
         },
@@ -29623,6 +29678,10 @@
         },
         {
           "file": "ui/one-ui-shell/src/components/workspace-ops/StockManagementPanel.tsx",
+          "pattern": "mock-data-var"
+        },
+        {
+          "file": "ui/one-ui-shell/src/components/workspace-ops/StockManagementPanel.tsx",
           "pattern": "hardcoded-collection",
           "detail": "PURCHASE_ORDERS"
         },
@@ -29630,6 +29689,14 @@
           "file": "ui/one-ui-shell/src/components/workspace-ops/StockManagementPanel.tsx",
           "pattern": "hardcoded-collection",
           "detail": "TRANSFERS"
+        },
+        {
+          "file": "ui/one-ui-shell/src/components/workspace-ops/HRShiftsPanel.tsx",
+          "pattern": "mock-data-var"
+        },
+        {
+          "file": "ui/one-ui-shell/src/components/workspace-ops/BillingPanel.tsx",
+          "pattern": "mock-data-var"
         },
         {
           "file": "ui/one-ui-shell/src/components/workspace-ops/BillingPanel.tsx",
