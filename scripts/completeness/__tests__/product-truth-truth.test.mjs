@@ -24,6 +24,7 @@ import {
   scanHardcodedCollections,
   scanInMemoryStore,
   scanSecurityPlaceholders,
+  scanStubMarkers,
 } from '../generate-product-truth.mjs';
 
 const realDims = {
@@ -125,6 +126,30 @@ test('security placeholder detector catches crypto/authz TODOs', () => {
   assert.equal(scanSecurityPlaceholders('// not a security issue', '/x/Plain.java').length, 0);
 });
 
+// ---- widened detectors (gap-discovery pass) ----------------------------------
+
+test('stub-marker detector flags a future-work Placeholder but not a domain placeholder', () => {
+  const promise = scanStubMarkers('"{}",  // Placeholder — actual summary fetched from BUTANO at sync time', '/x/WalletEventConsumer.java');
+  assert.ok(promise.some((h) => h.pattern === 'stub-placeholder'), 'future-work Placeholder should flag');
+  // domain uses of the word are NOT stubs
+  assert.equal(scanStubMarkers('/** Placeholder row created from an OROS order before DICOM UID is known. */', '/x/StudyStatus.java').length, 0);
+  assert.equal(scanStubMarkers('/** Placeholder document id when no Landela document is attached yet. */', '/x/ShareSlipEventConsumer.java').length, 0);
+  // actionable TODO: wire
+  assert.ok(scanStubMarkers('// TODO: wire to PctServiceClient', '/x/VitalsController.java').some((h) => h.pattern === 'todo-wire'));
+});
+
+test('in-memory detector Rule 2 flags a static seeded collection in a controller (nested generics ok)', () => {
+  const ctrl = `class PatientController {
+    private static final List<Map<String, Object>> PATIENTS = new CopyOnWriteArrayList<>(buildSeeded());
+    @GetMapping List<X> list(){ return null; }
+    void add(X x){ PATIENTS.add(x); }
+  }`;
+  assert.equal(scanInMemoryStore(ctrl, '/x/PatientController.java')[0].pattern, 'in-memory-backing');
+  // a repository-backed controller with a local map is fine
+  const backed = `class FooController { @Autowired FooRepository repo; Map<String,X> local = new HashMap<>(); }`;
+  assert.equal(scanInMemoryStore(backed, '/x/FooController.java').length, 0);
+});
+
 // ---- generated-artifact invariants (locks the real output) -------------------
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -142,8 +167,12 @@ test('generated product-truth.json reflects honest maturity + baseline (no regre
   const flagged = new Set(
     d.services.filter((s) => (s.gaps || []).some((g) => g.category === 'S' || g.category === 'F')).map((s) => s.id),
   );
-  for (const id of ['mushe-wallet-service', 'community-service', 'experience-bff']) {
+  for (const id of ['mushe-wallet-service', 'experience-bff']) {
     assert.ok(flagged.has(id), `expected ${id} to be flagged`);
+  }
+  // Landed fixes must STAY fixed (3B community pin authz, 3C clinical level-of-care).
+  for (const id of ['community-service', 'clinical-knowledge-platform-service']) {
+    assert.ok(!flagged.has(id), `${id} was fixed and must not be flagged again`);
   }
 
   // No regression beyond the recorded baseline.
