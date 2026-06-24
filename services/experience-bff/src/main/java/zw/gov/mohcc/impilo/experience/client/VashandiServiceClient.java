@@ -68,6 +68,19 @@ public class VashandiServiceClient {
         return unwrap(get("/workforce-profiles/" + id, Map.of()));
     }
 
+    /** Workforce attendance events for a worker (by provider-worker-id) in a month — ERP-HR view. */
+    public JsonNode getAttendanceEventsByProvider(String providerWorkerId, int year, int month) {
+        return unwrap(get("/attendance/events", Map.of(
+                "provider_worker_id", providerWorkerId,
+                "year", String.valueOf(year),
+                "month", String.valueOf(month))));
+    }
+
+    /** Workforce leave windows for a worker (by provider-worker-id) — ERP-HR view. */
+    public JsonNode getLeaveByProvider(String providerWorkerId) {
+        return unwrap(get("/availability/by-provider", Map.of("provider_worker_id", providerWorkerId)));
+    }
+
     public JsonNode reconcileWorkforceProfile(Object body) {
         return unwrap(post("/workforce-profiles/reconcile", body));
     }
