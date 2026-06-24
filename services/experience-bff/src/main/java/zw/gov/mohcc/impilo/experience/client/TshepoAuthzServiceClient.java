@@ -242,6 +242,28 @@ public class TshepoAuthzServiceClient {
         }
     }
 
+    /**
+     * List the GDHCN readiness assessment (full domain catalogue) for the caller's tenant.
+     * Trust headers (tenant/actor/JWT) are forwarded by the shared interceptor.
+     */
+    public JsonNode listGdhcnReadiness() {
+        String url = baseUrl + "/v1/gdhcn-readiness";
+        log.info("TSHEPO-AUTHZ: Listing GDHCN readiness");
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Update one GDHCN readiness domain. The authz service enforces admin role + step-up.
+     */
+    public JsonNode updateGdhcnReadiness(String domainKey, Map<String, Object> request) {
+        String url = baseUrl + "/v1/gdhcn-readiness/" + domainKey;
+        log.info("TSHEPO-AUTHZ: Updating GDHCN readiness domain {}", domainKey);
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(request), JsonNode.class);
+        return extractData(response);
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");
