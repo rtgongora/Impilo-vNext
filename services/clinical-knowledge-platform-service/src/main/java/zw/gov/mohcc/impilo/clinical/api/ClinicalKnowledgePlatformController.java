@@ -12,6 +12,7 @@ import zw.gov.mohcc.impilo.clinical.persistence.entity.OverrideRecordEntity;
 import zw.gov.mohcc.impilo.clinical.persistence.entity.PathwaySessionEntity;
 import zw.gov.mohcc.impilo.clinical.persistence.repository.OverrideRecordRepository;
 import zw.gov.mohcc.impilo.clinical.prescribing.PrescribingEvaluationService;
+import zw.gov.mohcc.impilo.clinical.rules.ClinicalContextEnricher;
 import zw.gov.mohcc.impilo.clinical.rules.ClinicalRulesEngine;
 import zw.gov.mohcc.impilo.clinical.rules.model.ClinicalEvaluationContext;
 import zw.gov.mohcc.impilo.clinical.rules.model.RuleAlert;
@@ -34,6 +35,7 @@ public class ClinicalKnowledgePlatformController {
     private final TraceService traceService;
     private final OverrideRecordRepository overrideRecordRepository;
     private final ClinicalRulesEngine clinicalRulesEngine;
+    private final ClinicalContextEnricher clinicalContextEnricher;
     private final ClinicalOutboxWriter clinicalOutboxWriter;
 
     public ClinicalKnowledgePlatformController(
@@ -44,6 +46,7 @@ public class ClinicalKnowledgePlatformController {
             TraceService traceService,
             OverrideRecordRepository overrideRecordRepository,
             ClinicalRulesEngine clinicalRulesEngine,
+            ClinicalContextEnricher clinicalContextEnricher,
             ClinicalOutboxWriter clinicalOutboxWriter) {
         this.assistantService = assistantService;
         this.prescribingEvaluationService = prescribingEvaluationService;
@@ -52,6 +55,7 @@ public class ClinicalKnowledgePlatformController {
         this.traceService = traceService;
         this.overrideRecordRepository = overrideRecordRepository;
         this.clinicalRulesEngine = clinicalRulesEngine;
+        this.clinicalContextEnricher = clinicalContextEnricher;
         this.clinicalOutboxWriter = clinicalOutboxWriter;
     }
 
@@ -90,7 +94,7 @@ public class ClinicalKnowledgePlatformController {
 
     @PostMapping("/rules/evaluate")
     public ResponseEntity<Map<String, Object>> rules(@RequestBody Map<String, Object> body) {
-        var ctx = ClinicalEvaluationContext.fromMap(body);
+        var ctx = clinicalContextEnricher.enrich(ClinicalEvaluationContext.fromMap(body));
         var alerts = clinicalRulesEngine.evaluate(ctx).stream().map(RuleAlert::toMap).toList();
         return ResponseEntity.ok(Map.of("data", Map.of("alerts", alerts)));
     }
