@@ -35,6 +35,16 @@ public class PrivacyDisplayPreferenceEntity {
     @Column(name = "screen_share_mode", nullable = false)
     private boolean screenShareMode = true;
 
+    // Display settings (G048) — the same per-user display-preference row also carries UI ergonomics.
+    @Column(name = "theme", nullable = false, length = 10)
+    private String theme = "system";
+
+    @Column(name = "font_size", nullable = false, length = 10)
+    private String fontSize = "medium";
+
+    @Column(name = "density", nullable = false, length = 16)
+    private String density = "comfortable";
+
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt = OffsetDateTime.now();
 
@@ -61,8 +71,15 @@ public class PrivacyDisplayPreferenceEntity {
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
 
+    public String getTheme() { return theme; }
+    public String getFontSize() { return fontSize; }
+    public String getDensity() { return density; }
+
     public void setDefaultLevel(String defaultLevel) { this.defaultLevel = defaultLevel; }
     public void setAutoLockMinutes(int autoLockMinutes) { this.autoLockMinutes = autoLockMinutes; }
     public void setScreenShareMode(boolean screenShareMode) { this.screenShareMode = screenShareMode; }
+    public void setTheme(String theme) { this.theme = theme; }
+    public void setFontSize(String fontSize) { this.fontSize = fontSize; }
+    public void setDensity(String density) { this.density = density; }
     public void setUpdatedAt(OffsetDateTime updatedAt) { this.updatedAt = updatedAt; }
 }

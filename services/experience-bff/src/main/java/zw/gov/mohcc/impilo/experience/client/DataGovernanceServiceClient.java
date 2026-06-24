@@ -176,6 +176,29 @@ public class DataGovernanceServiceClient {
         return response.getBody();
     }
 
+    /** The user's persisted display settings (theme/font/density), or null when none (404). */
+    public JsonNode getDisplaySettings(String userId) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl)
+                .path("/internal/v1/governance/display-settings")
+                .queryParam("userId", userId)
+                .toUriString();
+        log.info("Data governance: get display settings [user={}]", userId);
+        try {
+            return restTemplate.getForEntity(url, JsonNode.class).getBody();
+        } catch (HttpClientErrorException.NotFound e) {
+            return null;
+        }
+    }
+
+    /** Upsert the user's display settings. Returns the persisted body. */
+    public JsonNode updateDisplaySettings(Map<String, Object> request, String idempotencyKey) {
+        String url = baseUrl + "/internal/v1/governance/display-settings";
+        log.info("Data governance: update display settings [user={}]", request.get("userId"));
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                url, HttpMethod.PUT, withIdempotencyKey(request, idempotencyKey), JsonNode.class);
+        return response.getBody();
+    }
+
     /**
      * Wrap the body with a fallback Idempotency-Key so writes to {@code /internal/v1/**}
      * always satisfy the command-idempotency filter. The trust-header interceptor overrides

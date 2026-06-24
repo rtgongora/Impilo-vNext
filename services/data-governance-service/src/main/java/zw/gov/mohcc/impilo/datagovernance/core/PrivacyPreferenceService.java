@@ -54,9 +54,36 @@ public class PrivacyPreferenceService {
     }
 
     /** The persisted preference for the user, or empty when the user has never set one. */
+    private static final Set<String> THEMES = Set.of("light", "dark", "system");
+    private static final Set<String> FONT_SIZES = Set.of("small", "medium", "large");
+    private static final Set<String> DENSITIES = Set.of("comfortable", "compact");
+
     @Transactional(readOnly = true)
     public Optional<PrivacyDisplayPreferenceEntity> find(String userId, UUID tenantId) {
         return repository.findByTenantIdAndUserId(tenantId, userId);
+    }
+
+    private static String clampIn(String v, Set<String> allowed, String fallback) {
+        if (v == null) return fallback;
+        String lower = v.trim().toLowerCase();
+        return allowed.contains(lower) ? lower : fallback;
+    }
+
+    /** Insert or update the user's display settings (theme/font/density) — G048. */
+    @Transactional
+    public PrivacyDisplayPreferenceEntity upsertDisplaySettings(String userId, String theme, String fontSize,
+                                                                String density, UUID tenantId) {
+        String safeTheme = clampIn(theme, THEMES, "system");
+        String safeFont = clampIn(fontSize, FONT_SIZES, "medium");
+        String safeDensity = clampIn(density, DENSITIES, "comfortable");
+        PrivacyDisplayPreferenceEntity pref = repository
+                .findByTenantIdAndUserId(tenantId, userId)
+                .orElseGet(() -> new PrivacyDisplayPreferenceEntity(tenantId, userId, "PARTIAL", 5, true));
+        pref.setTheme(safeTheme);
+        pref.setFontSize(safeFont);
+        pref.setDensity(safeDensity);
+        pref.setUpdatedAt(OffsetDateTime.now());
+        return repository.save(pref);
     }
 
     /** Insert or update the user's preference and emit an updated event. */

@@ -26,6 +26,7 @@ import zw.gov.mohcc.impilo.datagovernance.domain.DataSubjectRequestEntity;
 import zw.gov.mohcc.impilo.datagovernance.domain.PrivacyDisplayPreferenceEntity;
 
 import java.util.Optional;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -135,4 +136,30 @@ public class PrivacyRightsController {
 
         return ResponseEntity.ok(PrivacyPreferenceResponse.from(pref));
     }
+
+    // ── Display settings (theme/font/density) — G048; same per-user row ──
+
+    @GetMapping("/internal/v1/governance/display-settings")
+    public ResponseEntity<?> getDisplaySettings(@RequestParam String userId) {
+        RequestContext ctx = RequestContextHolder.require();
+        return preferenceService.find(userId, UUID.fromString(ctx.tenantId()))
+                .<ResponseEntity<?>>map(p -> ResponseEntity.ok(displaySettingsBody(p)))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/internal/v1/governance/display-settings")
+    public ResponseEntity<?> updateDisplaySettings(@RequestBody UpdateDisplaySettingsRequest request) {
+        RequestContext ctx = RequestContextHolder.require();
+        PrivacyDisplayPreferenceEntity p = preferenceService.upsertDisplaySettings(
+                request.userId(), request.theme(), request.fontSize(), request.density(),
+                UUID.fromString(ctx.tenantId()));
+        return ResponseEntity.ok(displaySettingsBody(p));
+    }
+
+    private static Map<String, Object> displaySettingsBody(PrivacyDisplayPreferenceEntity p) {
+        return Map.of("userId", p.getUserId(), "theme", p.getTheme(),
+                "fontSize", p.getFontSize(), "density", p.getDensity(), "persisted", true);
+    }
+
+    public record UpdateDisplaySettingsRequest(String userId, String theme, String fontSize, String density) {}
 }

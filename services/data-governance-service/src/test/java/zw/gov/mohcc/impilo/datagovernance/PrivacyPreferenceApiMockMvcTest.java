@@ -86,6 +86,34 @@ class PrivacyPreferenceApiMockMvcTest {
     }
 
     @Test
+    @DisplayName("Display settings: PUT persists theme/font/density, GET reads back; invalid clamp")
+    void displaySettingsPersist() throws Exception {
+        String dp = "/internal/v1/governance/display-settings";
+        // 404 until set
+        mockMvc.perform(get(dp).param("userId", userId)
+                        .header("X-Tenant-ID", tenantId).header("X-Pod-ID", "national")
+                        .header("X-Request-ID", "req-d").header("X-Correlation-ID", UUID.randomUUID().toString()))
+                .andExpect(status().isNotFound());
+        // PUT dark/large/compact (+ invalid theme clamps to system)
+        mockMvc.perform(put(dp)
+                        .header("X-Tenant-ID", tenantId).header("X-Pod-ID", "national")
+                        .header("X-Request-ID", "req-d2").header("X-Correlation-ID", UUID.randomUUID().toString())
+                        .header("Idempotency-Key", "idem-disp-" + userId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"userId\":\"" + userId + "\",\"theme\":\"dark\",\"fontSize\":\"large\",\"density\":\"compact\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.theme").value("dark"))
+                .andExpect(jsonPath("$.fontSize").value("large"))
+                .andExpect(jsonPath("$.density").value("compact"));
+        // read back
+        mockMvc.perform(get(dp).param("userId", userId)
+                        .header("X-Tenant-ID", tenantId).header("X-Pod-ID", "national")
+                        .header("X-Request-ID", "req-d3").header("X-Correlation-ID", UUID.randomUUID().toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.theme").value("dark"));
+    }
+
+    @Test
     @DisplayName("PUT upserts: a second update overwrites the first; invalid values clamp to safe defaults")
     void upsertAndClamp() throws Exception {
         putPref("{\"userId\":\"" + userId + "\",\"defaultLevel\":\"FULL\",\"autoLockMinutes\":2}", "idem-u1")
