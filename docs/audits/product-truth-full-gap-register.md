@@ -50,11 +50,11 @@
 | G022 | Leave-request write doesn't decrement balance | `hr-payroll-service/.../InternalHrApi.java:97` | write-no-persist | fix | H2 |
 | G023 | inventory-elmis-adapter is a **CRUD shell** — no eLMIS client/scheduler ever completes | `inventory-elmis-adapter/.../SyncStateService.java:42` | unimpl | fix or mark | H4 |
 | G024 | BFF privacy-prefs PUT **echoes body, no persistence** (claims `privacy_display_preference` V39) | `experience-bff/.../PrivacyPreferencesController.java:40` | echo | fix | G2 |
-| G025 | Clinical drug-interaction checker is a **hardcoded finite set** — can return false "no interactions" | `ui/one-ui-shell/.../MedscapeTools.tsx:35,251,262` | component-fixture | fix (real terminology) | F3 |
+| G025 | ~~Clinical drug-interaction checker is a **hardcoded finite set** — can return false "no interactions"~~ **FIXED (F3, honesty).** The empty-result render no longer shows a reassuring green "No known interactions found" (which implied clinical safety from a 7-pair local set). It now shows an amber caution: "No match in this quick-reference set — a limited local reference, NOT a complete interaction check; an absent result does not mean safe; verify against a full service before prescribing." (A real terminology/knowledge-backed checker is a larger follow-on; this removes the dangerous false-negative.) `tsc` clean. | `ui/one-ui-shell/.../clinical/MedscapeTools.tsx` | component-fixture | fixed (no false negative) | F3 |
 | G026 | BillingPanel financial fixtures; only Claims tab live, charges/invoices/payments/revenue have no live path | `ui/.../workspace-ops/BillingPanel.tsx:17,24,39,45,54` | component-fixture | fix or NOT_LIVE | H1 |
 | G027 | HRShiftsPanel `ACTIVE_SHIFTS/LEAVE_REQUESTS/PENDING_HANDOVERS` fixtures, no live path | `ui/.../workspace-ops/HRShiftsPanel.tsx:29,35,41` | component-fixture | fix or NOT_LIVE | H1 |
 | G028 | StockManagementPanel `PURCHASE_ORDERS/PENDING_RECEIPTS/TRANSFERS` fixtures drive a KPI | `ui/.../workspace-ops/StockManagementPanel.tsx:43,51,56` | component-fixture | fix or NOT_LIVE | H1 |
-| G029 | AIDiagnosticAssistant **silently falls back to fabricated** differentials (orphaned/unmounted today) | `ui/.../ehr/AIDiagnosticAssistant.tsx:37,83` | component-fixture | fix or reject(delete) | F3/I |
+| G029 | ~~AIDiagnosticAssistant **silently falls back to fabricated** differentials (orphaned/unmounted today)~~ **RESOLVED — DELETED (F3).** Confirmed orphaned (no source import — only the file itself + build caches referenced it), so the fabricated-differentials component was removed rather than wired (it silently invented diagnoses). `tsc` clean. | `ui/.../ehr/AIDiagnosticAssistant.tsx` (removed) | component-fixture | resolved (removed) | F3 |
 
 ## MEDIUM
 
