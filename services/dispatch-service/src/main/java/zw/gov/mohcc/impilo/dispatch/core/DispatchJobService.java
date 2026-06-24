@@ -142,8 +142,8 @@ public class DispatchJobService {
     }
 
     @Transactional(readOnly = true)
-    public Page<DispatchJobEntity> getSnapshot(OffsetDateTime asOf, int page, int size) {
-        return jobRepository.findSnapshotAsOf(asOf, PageRequest.of(page, size));
+    public Page<DispatchJobEntity> getSnapshot(UUID tenantId, OffsetDateTime asOf, int page, int size) {
+        return jobRepository.findSnapshotAsOf(tenantId, asOf, PageRequest.of(page, size));
     }
 
     private void validateTransition(String currentStatus, String requestedStatus) {

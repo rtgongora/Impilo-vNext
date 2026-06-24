@@ -20,7 +20,8 @@ public interface DispatchJobRepository extends JpaRepository<DispatchJobEntity, 
                                          @Param("status") String status,
                                          Pageable pageable);
 
-    @Query("SELECT j FROM DispatchJobEntity j WHERE j.createdAt <= :asOf")
-    Page<DispatchJobEntity> findSnapshotAsOf(@Param("asOf") OffsetDateTime asOf,
+    @Query("SELECT j FROM DispatchJobEntity j WHERE j.tenantId = :tenantId AND j.createdAt <= :asOf")
+    Page<DispatchJobEntity> findSnapshotAsOf(@Param("tenantId") UUID tenantId,
+                                             @Param("asOf") OffsetDateTime asOf,
                                              Pageable pageable);
 }
