@@ -22,7 +22,7 @@ import { PanelLeft, PanelRight } from "lucide-react";
 import { ClinicalGuidanceProvider } from "@/components/clinical/ClinicalGuidanceContext";
 import { ClinicalToolbar } from "@/components/clinical/ClinicalToolbar";
 import type { CDSGuidanceItem } from "@/components/clinical/ActiveCDSBanner";
-import { useClinicalCdsAlerts, type CdsAlert } from "@/hooks/queries/useClinicalCds";
+import { useClinicalCdsAlerts, useCdsInsight, type CdsAlert } from "@/hooks/queries/useClinicalCds";
 import { ClinicalKnowledgeDock } from "@/components/clinical/ClinicalKnowledgeDock";
 import { ClinicalWizardHeader } from "@/components/clinical/ClinicalWizardHeader";
 import { ClinicalWorkflowProvider, type ClinicalWorkflowConfig } from "@/components/clinical/ClinicalWorkflowContext";
@@ -99,7 +99,25 @@ export function EHRLayout({ children }: { children: ReactNode }) {
 
   // Real, patient-specific CDS alerts from the governed rules engine (empty when nothing triggers).
   const { alerts: cdsRawAlerts } = useClinicalCdsAlerts(isEhrShell ? patientId : undefined);
-  const cdsAlerts = useMemo(() => cdsRawAlerts.map(mapCdsAlert), [cdsRawAlerts]);
+  // Grounded, fail-closed AI insight over those deterministic alerts (absent when LLM unavailable).
+  const { insight: cdsInsight } = useCdsInsight(isEhrShell ? patientId : undefined, cdsRawAlerts, encounterId ?? undefined);
+  const cdsAlerts = useMemo(() => {
+    const items = cdsRawAlerts.map(mapCdsAlert);
+    if (cdsInsight?.summary) {
+      // Advisory only (info) — never outranks a deterministic alert; clearly AI-attributed.
+      items.push({
+        id: "ai-insight",
+        type: "ai-insight",
+        severity: "info",
+        title: "AI summary",
+        message: cdsInsight.summary,
+        source: "AI advisory · governed reasoner",
+        timestamp: new Date(),
+        dismissed: false,
+      });
+    }
+    return items;
+  }, [cdsRawAlerts, cdsInsight]);
 
   const [programmeWorkflow, setProgrammeWorkflow] = useState<ClinicalWorkflowConfig | null>(null);
   useEffect(() => {

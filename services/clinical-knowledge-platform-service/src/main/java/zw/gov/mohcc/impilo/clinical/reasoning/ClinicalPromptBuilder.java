@@ -76,6 +76,44 @@ public class ClinicalPromptBuilder {
                 Map.of("role", "user", "content", sb.toString()));
     }
 
+    private static final String CDS_SYSTEM = """
+            You are a clinical decision-support summariser. You are given a patient context and a list
+            of DETERMINISTIC safety alerts already computed by a rules engine. Your ONLY job is to
+            summarise and prioritise THESE alerts for a busy clinician.
+
+            HARD RULES:
+            - Do NOT introduce any alert, diagnosis, drug, or finding that is not in ALERTS.
+            - prioritised_alert_codes MUST be a subset of the supplied alert codes (most clinically
+              urgent first). Never invent a code.
+            - The advisory must be a brief, actionable, non-alarmist note that does not contradict any
+              alert and never overrides clinical judgement.
+            - Keep summary ≤ 240 characters. Set references_only_supplied_alerts=true only if you
+              referenced no codes outside ALERTS (you must).
+            """;
+
+    public List<Map<String, String>> cdsMessages(Map<String, Object> patientContext, List<Map<String, Object>> alerts) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("PATIENT_CONTEXT:\n").append(patientContext == null ? "{}" : patientContext).append("\n\n");
+        sb.append("ALERTS (deterministic; authoritative; the ONLY codes you may reference):\n");
+        for (Map<String, Object> a : alerts) {
+            sb.append("- code=").append(a.get("code"))
+                    .append(" | severity=").append(a.get("severity"))
+                    .append(" | ").append(a.get("message")).append("\n");
+        }
+        return List.of(
+                Map.of("role", "system", "content", CDS_SYSTEM),
+                Map.of("role", "user", "content", sb.toString()));
+    }
+
+    public Map<String, Object> cdsSchema() {
+        Map<String, Object> props = new LinkedHashMap<>();
+        props.put("summary", prop("string"));
+        props.put("prioritised_alert_codes", arr("string"));
+        props.put("advisory", prop("string"));
+        props.put("references_only_supplied_alerts", prop("boolean"));
+        return obj(props, List.of("summary", "prioritised_alert_codes", "advisory", "references_only_supplied_alerts"));
+    }
+
     /** Structured-output JSON schema for grounded clinical reasoning. */
     public Map<String, Object> assistantSchema() {
         Map<String, Object> diffItem = obj(

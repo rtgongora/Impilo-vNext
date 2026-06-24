@@ -90,6 +90,22 @@ public class ClinicalKnowledgeController {
         }
     }
 
+    @PostMapping("/cds/summary")
+    public ResponseEntity<Map<String, Object>> cdsSummary(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            JsonNode data = clinicalClient.cdsSummary(body);
+            return ResponseEntity.ok(Map.of("data", data != null ? data : java.util.Map.of("insight", "")));
+        } catch (Exception e) {
+            log.error("Clinical CDS summary failed: {}", e.getMessage());
+            // Fail honest: no AI insight rather than a fabricated one.
+            Map<String, Object> nullInsight = new LinkedHashMap<>();
+            nullInsight.put("insight", null);
+            return ResponseEntity.ok(Map.of("data", nullInsight));
+        }
+    }
+
     @PostMapping("/audit/overrides")
     public ResponseEntity<Map<String, Object>> recordOverride(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,

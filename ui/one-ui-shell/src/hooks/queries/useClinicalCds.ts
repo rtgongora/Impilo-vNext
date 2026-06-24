@@ -105,6 +105,40 @@ export function useClinicalCdsAlerts(patientId: string | undefined) {
   };
 }
 
+export interface CdsInsight {
+  summary: string;
+  advisory?: string;
+  prioritised_alert_codes?: string[];
+  generated_by?: string;
+  model?: string;
+  trace_id?: string;
+}
+
+/**
+ * Real, grounded, fail-closed AI insight summarising the patient's DETERMINISTIC CDS alerts.
+ * Only fires when there are deterministic alerts (never invents). Returns null when the LLM is
+ * unavailable or the output is rejected — the banner then shows only the deterministic alerts.
+ * Cached per patient+encounter+alert-set so it costs at most one LLM call per patient open.
+ */
+export function useCdsInsight(patientId: string | undefined, alerts: CdsAlert[], encounterId?: string) {
+  const codesHash = alerts
+    .map((a) => a.code)
+    .sort()
+    .join(",");
+  const query = useQuery({
+    queryKey: ["clinical", "cds-insight", patientId, encounterId ?? null, codesHash],
+    queryFn: () =>
+      apiClient.post<ApiResponse<{ insight: CdsInsight | null }>>("/internal/v1/clinical/cds/summary", {
+        patient_context: { patient_id: patientId },
+        alerts: alerts.map((a) => ({ code: a.code, severity: a.severity, message: a.message })),
+        encounter_id: encounterId,
+      }),
+    enabled: !!patientId && alerts.length > 0,
+    staleTime: 1000 * 60 * 30,
+  });
+  return { insight: query.data?.data?.insight ?? null, isLoading: query.isLoading };
+}
+
 /** Record a clinician override of a recommendation against its audit trace. */
 export function useRecordClinicalOverride() {
   return useMutation({

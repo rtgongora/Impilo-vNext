@@ -44,6 +44,14 @@ public class ClinicalKnowledgePlatformClient {
         return extractData(response);
     }
 
+    /** Grounded, fail-closed AI summary of the supplied deterministic CDS alerts (insight or null). */
+    public JsonNode cdsSummary(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/clinical/cds/summary";
+        log.debug("Clinical platform: cds summary");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
     /** Record a clinician override of a recommendation against its audit trace. */
     public JsonNode recordOverride(Map<String, Object> body, String actorId) {
         String url = baseUrl + "/internal/v1/clinical/audit/overrides";
