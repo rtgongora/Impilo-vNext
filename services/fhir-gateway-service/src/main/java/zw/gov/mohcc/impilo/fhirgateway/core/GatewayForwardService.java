@@ -22,15 +22,18 @@ public class GatewayForwardService {
     private final FhirAuditLogRepository auditLogRepository;
     private final EventOutboxRepository outboxRepository;
     private final ConsentEnforcementService consentEnforcementService;
+    private final FhirForwarder fhirForwarder;
 
     public GatewayForwardService(FhirRouteRepository routeRepository,
                                  FhirAuditLogRepository auditLogRepository,
                                  EventOutboxRepository outboxRepository,
-                                 ConsentEnforcementService consentEnforcementService) {
+                                 ConsentEnforcementService consentEnforcementService,
+                                 FhirForwarder fhirForwarder) {
         this.routeRepository = routeRepository;
         this.auditLogRepository = auditLogRepository;
         this.outboxRepository = outboxRepository;
         this.consentEnforcementService = consentEnforcementService;
+        this.fhirForwarder = fhirForwarder;
     }
 
     @Transactional
@@ -73,9 +76,13 @@ public class GatewayForwardService {
         } else {
             FhirRouteEntity route = routes.get(0);
             targetEndpoint = route.getTargetEndpoint();
-            outcome = "SUCCESS";
             log.info("Forwarding {} {} to {} for tenant={}", operation, resourceType,
                     targetEndpoint, tenantId);
+            // Actually deliver the resource downstream and record the REAL outcome — previously
+            // SUCCESS was recorded without any HTTP call (the resource was never forwarded).
+            FhirForwarder.ForwardAttempt attempt =
+                    fhirForwarder.send(targetEndpoint, resourceType, operation, payload);
+            outcome = attempt.delivered() ? "SUCCESS" : "FORWARD_FAILED";
         }
 
         FhirAuditLogEntity auditLog = buildAuditLog(tenantId, resourceType, operation,
