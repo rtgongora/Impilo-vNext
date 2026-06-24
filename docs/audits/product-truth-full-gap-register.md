@@ -20,7 +20,7 @@
 
 | ID | Finding | file:line | Cat | Decision | Block |
 |----|---------|-----------|-----|----------|-------|
-| G001 | Step-up MFA accepts **any non-blank code** (no TOTP/SMS/biometric); persists COMPLETED | `tshepo-authz-service/.../StepUpService.java:87` | unimpl/crypto | fix | B1 |
+| G001 | ~~Step-up accepts **any non-blank code**~~ **✅ FIXED (B1, `276da9db`):** mode-dispatched verification — TOTP (RFC-6238) + supervisor dual-control real; SMS-OTP/biometric full logic behind fail-closed adapters (`NOT_LIVE_CAPABLE` until provider configured); attempt cap + replay reject + audit. `StepUpServiceTest` 14/14 (REAL_PROVEN). Made-ready seams: TOTP-enrolment store, SMS provider (G033), biometric matcher, supervisor-approval controller endpoint. | `tshepo-authz-service/.../stepup/*`, `StepUpService.java` | unimpl/crypto | done | B1 ✅ |
 | G002 | Offline capability token **JWS signature never verified** — forgeable | `tshepo-offline-service/.../CapabilityTokenService.java:197` | crypto | fix | B2 |
 | G003 | DAGS permit-token HMAC key defaults to literal **"change-me-in-prod"** — forgeable if env unset | `data-access-governance-service/.../EnforcementService.java:21` | hardcoded/crypto | fix (fail-closed) | B3 |
 | G004 | Identity-assurance **risk assessment is a client-trusted pass-through** | `identity-assurance-service/.../RiskAssessmentController.java:27`, `RiskAssessmentService.java:25` | unimpl | fix | C1 |
