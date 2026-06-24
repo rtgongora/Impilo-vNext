@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { ClientIntakeStatusBadges } from "@/components/registry/ClientIntakeStatusBadges";
+import { EditDemographicsForm } from "@/components/registry/EditDemographicsForm";
 import { PageShell } from "@/components/PageShell";
 import {
   useAddAuthorizationLink,
@@ -317,6 +318,35 @@ export default function ClientDetailPage() {
                       Record correction
                     </button>
                   </form>
+                </div>
+
+                <div className="rounded-2xl border border-border bg-card p-5 lg:col-span-2">
+                  <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Edit demographics (direct SoR update)
+                  </h3>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Applies the change directly to VITO, the identity system-of-record. Use the correction
+                    workflow above when the change must route through stewardship review first.
+                  </p>
+                  <div className="mt-4">
+                    <EditDemographicsForm
+                      healthId={master.healthId}
+                      initial={{
+                        givenName: master.firstName ?? undefined,
+                        middleName: master.middleName ?? undefined,
+                        familyName: master.lastName ?? undefined,
+                        dateOfBirth: master.dateOfBirth ?? undefined,
+                        sex: master.sex ?? undefined,
+                        phone: master.contacts.phone ? String(master.contacts.phone) : undefined,
+                        email: master.contacts.email ? String(master.contacts.email) : undefined,
+                        addressLine1: master.address.addressLine1 ? String(master.address.addressLine1) : undefined,
+                        city: master.address.city ? String(master.address.city) : undefined,
+                        district: master.address.district ? String(master.address.district) : undefined,
+                        province: master.address.province ? String(master.address.province) : undefined,
+                      }}
+                      onSaved={() => profileQuery.refetch()}
+                    />
+                  </div>
                 </div>
               </div>
             ) : null}

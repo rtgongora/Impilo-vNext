@@ -386,6 +386,33 @@ export function useClientProfile(healthId: string | undefined) {
   });
 }
 
+/** Editable demographic fields (subset of VITO's ClientDemographicsUpdateRequest). */
+export interface DemographicsUpdate {
+  givenName?: string;
+  middleName?: string;
+  familyName?: string;
+  dateOfBirth?: string | null;
+  sex?: string;
+  phone?: string;
+  email?: string;
+  addressLine1?: string;
+  city?: string;
+  district?: string;
+  province?: string;
+}
+
+/** Update a client's demographics — proxies VITO's canonical PUT /v1/clients/{healthId} (G055). */
+export function useUpdateClientDemographics(healthId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: DemographicsUpdate) =>
+      apiClient.put<ApiResponse<ClientProfile>>(`${BASE}/clients/${healthId}/demographics`, body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: [...QUERY_KEY_PREFIX, "clients", healthId] });
+    },
+  });
+}
+
 export function useClientIdentitySummary(healthId: string | undefined) {
   return useQuery({
     queryKey: [...QUERY_KEY_PREFIX, "clients", healthId, "identity-summary"],
