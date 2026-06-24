@@ -76,7 +76,7 @@
 | G044 | live-service media defaults to in-memory `local-dev` (`DEV-TOKEN-NOT-FOR-PRODUCTION`) | `live-service/.../MediaProviderConfig.java:13` | placeholder | fix (config default) | I |
 | G045 | External PACS connector throws on get* (config-gated EXTERNAL backend) | `pacs-adapter-service/.../ExternalPacsClient.java:66` | unimpl | defer-with-marker | I |
 | G046 | `oauth2-enabled=false → permitAll` off-switch disables all auth (defaults true) | `dispatch-service/.../SecurityConfig.java:48` (representative) | placeholder | fix (remove off-switch) | I |
-| G055 | Client demographics-**UPDATE** has no consumer above Vito — Vito `PUT /v1/clients/{healthId}` (fixed in 3A to preserve all 9 fields) is reachable by no BFF method, no BFF controller, and no UI edit-demographics flow. Backend-correct but consumer-less; completing the thread = building the edit feature (UI + BFF endpoint + `VitoServiceClient` PUT method). | `experience-bff/.../client/VitoServiceClient.java` (no PUT to `/v1/clients/{id}`); no UI edit flow | missing-surface | defer (feature block) | H/future |
+| G055 | Client demographics-**UPDATE** has no consumer above Vito — Vito `PUT /v1/clients/{healthId}` (fixed in 3A to preserve all 9 fields) is reachable by no BFF method, no BFF controller, and no UI edit-demographics flow. Backend-correct but consumer-less; completing the thread = building the edit feature (UI + BFF endpoint + `VitoServiceClient` PUT method). | `experience-bff/.../client/VitoServiceClient.java` (no PUT to `/v1/clients/{id}`); no UI edit flow | missing-surface | **build (committed feature block H5)** | **H5** |
 
 ## LOW
 
@@ -90,6 +90,16 @@
 | G052 | PortalHealthReporting fixtures + fake submit — **orphaned/unmounted** | `ui/.../portal/PortalHealthReporting.tsx:28,110` | component-fixture | reject(delete) or wire | I |
 | G053 | PatientLocationBadge "Uses mock data" — **orphaned** | `ui/.../layout/PatientLocationBadge.tsx:7` | mock-comment | reject(delete) or wire | I |
 | G054 | Mobile Immunizations/CarePlans/Referrals unwired (`TODO`; honest empty no-op) | `apps/mobile/citizen-app/.../{Immunizations,CarePlans,Referrals}Section.tsx` | todo | fix | I |
+
+## Committed deferred feature blocks (will be built, not dropped)
+
+These are not "deferred indefinitely" — they are scheduled blocks that close a
+register row by building a missing surface/feature:
+
+- **H5 — Client demographics-edit flow (closes G055).** Build the UI edit-demographics
+  screen + experience-bff update endpoint + `VitoServiceClient` PUT to
+  `/v1/clients/{healthId}`, completing the UI→BFF→Vito→read-back thread for the
+  already-correct Vito backend (3A). Hard commitment for Wave H.
 
 ## ACCEPTABLE / NOT GAPS (verified — do not re-flag)
 
