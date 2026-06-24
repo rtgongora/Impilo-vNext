@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import zw.gov.mohcc.impilo.mushex.service.UlidGenerator;
+import zw.gov.mohcc.impilo.mushex.service.WebhookSecurityService;
 
 import java.math.BigDecimal;
 import java.util.Map;
@@ -17,6 +18,12 @@ import java.util.Map;
 public class BankTransferAdapter implements PaymentRailAdapter {
 
     private static final Logger log = LoggerFactory.getLogger(BankTransferAdapter.class);
+
+    private final WebhookSecurityService webhookSecurityService;
+
+    public BankTransferAdapter(WebhookSecurityService webhookSecurityService) {
+        this.webhookSecurityService = webhookSecurityService;
+    }
 
     @Override
     public String adapterType() {
@@ -61,10 +68,8 @@ public class BankTransferAdapter implements PaymentRailAdapter {
 
     @Override
     public boolean verifyWebhook(String signature, String payload, Map<String, String> config) {
-        log.info("Verifying bank transfer webhook signature");
-
-        // In production: verify signature using bank's webhook signing key
-        return signature != null && !signature.isBlank();
+        // Real HMAC-SHA256 verification against the configured webhook secret (constant-time).
+        return webhookSecurityService.verifyWebhook(payload, signature);
     }
 
     @Override

@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import zw.gov.mohcc.impilo.mushex.service.UlidGenerator;
+import zw.gov.mohcc.impilo.mushex.service.WebhookSecurityService;
 
 import java.math.BigDecimal;
 import java.util.Map;
@@ -17,6 +18,12 @@ import java.util.Map;
 public class MobileMoneyAdapter implements PaymentRailAdapter {
 
     private static final Logger log = LoggerFactory.getLogger(MobileMoneyAdapter.class);
+
+    private final WebhookSecurityService webhookSecurityService;
+
+    public MobileMoneyAdapter(WebhookSecurityService webhookSecurityService) {
+        this.webhookSecurityService = webhookSecurityService;
+    }
 
     @Override
     public String adapterType() {
@@ -61,14 +68,9 @@ public class MobileMoneyAdapter implements PaymentRailAdapter {
 
     @Override
     public boolean verifyWebhook(String signature, String payload, Map<String, String> config) {
-        log.info("Verifying mobile money webhook signature");
-
-        // In production: verify HMAC signature using provider's webhook secret
-        // String secret = config.get("webhook_secret");
-        // String computed = HmacUtils.computeHmacSha256(secret, payload);
-        // return constantTimeEquals(computed, signature);
-
-        return signature != null && !signature.isBlank();
+        // Real HMAC-SHA256 verification against the configured webhook secret (constant-time).
+        // Previously any non-blank signature passed — a forged webhook could fake a payment.
+        return webhookSecurityService.verifyWebhook(payload, signature);
     }
 
     @Override
