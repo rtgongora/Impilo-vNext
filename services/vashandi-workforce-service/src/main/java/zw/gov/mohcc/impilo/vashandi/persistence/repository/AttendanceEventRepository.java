@@ -17,5 +17,9 @@ public interface AttendanceEventRepository extends JpaRepository<AttendanceEvent
     List<AttendanceEventEntity> findByTenantIdAndEventTimeBetweenOrderByEventTimeDesc(
             UUID tenantId, OffsetDateTime start, OffsetDateTime end);
 
+    /** A worker's attendance events within a window, chronological — for hours/overtime derivation. */
+    List<AttendanceEventEntity> findByTenantIdAndWorkforceProfileIdAndEventTimeBetweenOrderByEventTimeAsc(
+            UUID tenantId, UUID workforceProfileId, OffsetDateTime start, OffsetDateTime end);
+
     long countByTenantIdAndEventType(UUID tenantId, String eventType);
 }
