@@ -36,7 +36,8 @@ import java.util.*;
 public class CapabilityTokenService {
 
     private static final Logger log = LoggerFactory.getLogger(CapabilityTokenService.class);
-    private static final String SIGNING_KEY_ID = "offline-capability-signing-key";
+    /** Purpose-scoped key the keys-service signs capability tokens with (fail-closed). */
+    private static final String SIGNING_PURPOSE = "OFFLINE_CAPABILITY";
 
     private final CapabilityTokenRepository tokenRepo;
     private final EventOutboxRepository outboxRepo;
@@ -105,7 +106,7 @@ public class CapabilityTokenService {
         // Step 5: Build JWT claims and sign with keys-service
         Map<String, Object> claims = buildTokenClaims(entity, capabilities);
         String claimsJson = toJson(claims);
-        String signedToken = keysClient.signPayload(claimsJson, SIGNING_KEY_ID);
+        String signedToken = keysClient.signPayload(entity.getTenantId(), claimsJson, SIGNING_PURPOSE);
 
         // Step 6: Write outbox event
         writeOutboxEvent("CapabilityToken", entity.getId().toString(),

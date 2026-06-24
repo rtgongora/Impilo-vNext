@@ -106,7 +106,7 @@ class CapabilityTokenServiceTest {
             e.setId(UUID.randomUUID());
             return e;
         });
-        when(keysClient.signPayload(anyString(), anyString())).thenReturn("eyJhbGciOiJFZERTQSJ9.payload.signature");
+        when(keysClient.signPayload(any(UUID.class), anyString(), anyString())).thenReturn("eyJhbGciOiJFZERTQSJ9.payload.signature");
         when(outboxRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         int requestedTtlHours = 12;
@@ -134,7 +134,7 @@ class CapabilityTokenServiceTest {
             e.setId(UUID.randomUUID());
             return e;
         });
-        when(keysClient.signPayload(anyString(), anyString())).thenReturn("eyJhbGciOiJFZERTQSJ9.payload.signature");
+        when(keysClient.signPayload(any(UUID.class), anyString(), anyString())).thenReturn("eyJhbGciOiJFZERTQSJ9.payload.signature");
         when(outboxRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         CapabilityTokenRequest request = buildTokenRequest(List.of("READ_PATIENT"), null);
@@ -159,7 +159,7 @@ class CapabilityTokenServiceTest {
             e.setId(UUID.randomUUID());
             return e;
         });
-        when(keysClient.signPayload(anyString(), anyString())).thenReturn("eyJhbGciOiJFZERTQSJ9.payload.signature");
+        when(keysClient.signPayload(any(UUID.class), anyString(), anyString())).thenReturn("eyJhbGciOiJFZERTQSJ9.payload.signature");
         when(outboxRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         // Request 200 hours but max is 72
@@ -184,7 +184,7 @@ class CapabilityTokenServiceTest {
             e.setId(UUID.randomUUID());
             return e;
         });
-        when(keysClient.signPayload(anyString(), anyString())).thenReturn("eyJhbGciOiJFZERTQSJ9.payload.signature");
+        when(keysClient.signPayload(any(UUID.class), anyString(), anyString())).thenReturn("eyJhbGciOiJFZERTQSJ9.payload.signature");
         when(outboxRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         // Request includes one valid and one invalid capability
@@ -210,7 +210,7 @@ class CapabilityTokenServiceTest {
             e.setId(UUID.randomUUID());
             return e;
         });
-        when(keysClient.signPayload(anyString(), anyString())).thenReturn("eyJhbGciOiJFZERTQSJ9.payload.signature");
+        when(keysClient.signPayload(any(UUID.class), anyString(), anyString())).thenReturn("eyJhbGciOiJFZERTQSJ9.payload.signature");
         when(outboxRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         CapabilityTokenRequest request = buildTokenRequest(null, 8);

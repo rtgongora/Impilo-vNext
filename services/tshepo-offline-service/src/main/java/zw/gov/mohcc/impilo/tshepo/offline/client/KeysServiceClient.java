@@ -9,6 +9,8 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.util.UUID;
+
 /**
  * Client for the TSHEPO Keys Service.
  * Used to sign capability tokens and offline packs with Ed25519 keys,
@@ -26,27 +28,35 @@ public class KeysServiceClient {
     }
 
     /**
-     * Sign the given payload using Ed25519 via the keys-service.
+     * Sign the given payload as an Ed25519 JWS via the keys-service, using the tenant's
+     * active key for the given {@link zw.gov.mohcc.impilo.tshepo.keys.core.KeyPurpose}.
      *
+     * <p>Calls the real {@code POST /v1/sign} endpoint with {@code jwsCompact=true}. The
+     * keys-service resolves the purpose-scoped key (fail-closed if none is provisioned),
+     * so capability tokens / offline packs are bound to their own keys rather than a
+     * shared general key.</p>
+     *
+     * @param tenantId the tenant whose purpose-scoped key signs the payload
      * @param payload  the JSON string payload to sign
-     * @param keyId    the key identifier to use for signing
+     * @param purpose  the {@code KeyPurpose} name (e.g. OFFLINE_CAPABILITY, OFFLINE_PACK)
      * @return JWS compact serialization string
      */
-    public String signPayload(String payload, String keyId) {
-        log.debug("Requesting JWS signature from keys-service for keyId={}", keyId);
+    public String signPayload(UUID tenantId, String payload, String purpose) {
+        log.debug("Requesting JWS signature from keys-service for tenant={}, purpose={}", tenantId, purpose);
 
-        SignRequest request = new SignRequest(payload, keyId, "EdDSA");
+        SignRequest request = new SignRequest(tenantId, payload, true, purpose);
         SignResponse response = keysRestClient.post()
-                .uri("/v1/sign/jws")
+                .uri("/v1/sign")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .retrieve()
                 .body(SignResponse.class);
 
-        if (response == null || response.jws() == null) {
-            throw new RuntimeException("Keys service returned null JWS for keyId=" + keyId);
+        if (response == null || response.signature() == null) {
+            throw new RuntimeException(
+                    "Keys service returned null signature for tenant=" + tenantId + ", purpose=" + purpose);
         }
-        return response.jws();
+        return response.signature();
     }
 
     /**
@@ -63,9 +73,11 @@ public class KeysServiceClient {
                 .body(String.class);
     }
 
+    /** Mirrors keys-service {@code SignPayloadRequest}. */
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public record SignRequest(String payload, String keyId, String algorithm) {}
+    public record SignRequest(UUID tenantId, String payload, boolean jwsCompact, String purpose) {}
 
+    /** Mirrors keys-service {@code SignPayloadResponse}. */
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public record SignResponse(String jws, String keyId, String algorithm) {}
+    public record SignResponse(String keyId, String algorithm, String signature) {}
 }

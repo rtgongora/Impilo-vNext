@@ -16,6 +16,8 @@ public enum KeyPurpose {
     STEP_UP,
     /** Offline capability tokens (tshepo-offline). */
     OFFLINE_CAPABILITY,
+    /** Offline data packs — signed offline bundles (tshepo-offline). */
+    OFFLINE_PACK,
     /** Data-access governance permit tokens. */
     PERMIT,
     /** GDHCN document signer certificates. */
