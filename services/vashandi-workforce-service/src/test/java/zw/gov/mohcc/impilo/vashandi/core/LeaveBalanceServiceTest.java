@@ -29,6 +29,7 @@ class LeaveBalanceServiceTest {
 
     @Mock LeaveAvailabilityRepository leaveRepository;
     @Mock LeaveBalanceRepository balanceRepository;
+    @Mock zw.gov.mohcc.impilo.vashandi.persistence.repository.LeaveTypeRepository leaveTypeRepository;
     @Mock zw.gov.mohcc.impilo.vashandi.persistence.repository.WorkforceProfileRepository profileRepository;
     @Mock VashandiOutboxWriter outboxWriter;
 
@@ -38,7 +39,7 @@ class LeaveBalanceServiceTest {
 
     @Test
     void reservesBalanceWhenConfigured() throws Exception {
-        LeaveAvailabilityService svc = new LeaveAvailabilityService(leaveRepository, balanceRepository, profileRepository, outboxWriter);
+        LeaveAvailabilityService svc = new LeaveAvailabilityService(leaveRepository, balanceRepository, leaveTypeRepository, profileRepository, outboxWriter);
         UUID profile = UUID.randomUUID();
         LeaveBalanceEntity bal = new LeaveBalanceEntity();
         bal.setTenantId(TENANT);
@@ -65,7 +66,7 @@ class LeaveBalanceServiceTest {
 
     @Test
     void rejectsWhenInsufficient() {
-        LeaveAvailabilityService svc = new LeaveAvailabilityService(leaveRepository, balanceRepository, profileRepository, outboxWriter);
+        LeaveAvailabilityService svc = new LeaveAvailabilityService(leaveRepository, balanceRepository, leaveTypeRepository, profileRepository, outboxWriter);
         UUID profile = UUID.randomUUID();
         LeaveBalanceEntity bal = new LeaveBalanceEntity();
         bal.setAvailable(2);
@@ -81,7 +82,7 @@ class LeaveBalanceServiceTest {
 
     @Test
     void allowsWhenNoBalanceConfigured() throws Exception {
-        LeaveAvailabilityService svc = new LeaveAvailabilityService(leaveRepository, balanceRepository, profileRepository, outboxWriter);
+        LeaveAvailabilityService svc = new LeaveAvailabilityService(leaveRepository, balanceRepository, leaveTypeRepository, profileRepository, outboxWriter);
         UUID profile = UUID.randomUUID();
         when(balanceRepository.findByTenantIdAndWorkforceProfileIdAndLeaveTypeAndFiscalYear(
                 any(), any(), any(), org.mockito.ArgumentMatchers.anyInt())).thenReturn(Optional.empty());

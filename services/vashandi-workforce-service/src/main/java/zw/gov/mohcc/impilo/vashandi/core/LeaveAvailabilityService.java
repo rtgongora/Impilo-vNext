@@ -5,8 +5,10 @@ import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.vashandi.api.VashandiDtos;
 import zw.gov.mohcc.impilo.vashandi.persistence.entity.LeaveAvailabilityEntity;
 import zw.gov.mohcc.impilo.vashandi.persistence.entity.LeaveBalanceEntity;
+import zw.gov.mohcc.impilo.vashandi.persistence.entity.LeaveTypeEntity;
 import zw.gov.mohcc.impilo.vashandi.persistence.repository.LeaveAvailabilityRepository;
 import zw.gov.mohcc.impilo.vashandi.persistence.repository.LeaveBalanceRepository;
+import zw.gov.mohcc.impilo.vashandi.persistence.repository.LeaveTypeRepository;
 import zw.gov.mohcc.impilo.vashandi.persistence.repository.WorkforceProfileRepository;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
@@ -22,17 +24,30 @@ public class LeaveAvailabilityService {
 
     private final LeaveAvailabilityRepository leaveRepository;
     private final LeaveBalanceRepository balanceRepository;
+    private final LeaveTypeRepository leaveTypeRepository;
     private final WorkforceProfileRepository profileRepository;
     private final VashandiOutboxWriter outboxWriter;
 
     public LeaveAvailabilityService(LeaveAvailabilityRepository leaveRepository,
                                     LeaveBalanceRepository balanceRepository,
+                                    LeaveTypeRepository leaveTypeRepository,
                                     WorkforceProfileRepository profileRepository,
                                     VashandiOutboxWriter outboxWriter) {
         this.leaveRepository = leaveRepository;
         this.balanceRepository = balanceRepository;
+        this.leaveTypeRepository = leaveTypeRepository;
         this.profileRepository = profileRepository;
         this.outboxWriter = outboxWriter;
+    }
+
+    public List<LeaveTypeEntity> leaveTypes(UUID tenantId) {
+        return leaveTypeRepository.findByTenantIdOrderByNameAsc(tenantId);
+    }
+
+    @Transactional
+    public LeaveTypeEntity createLeaveType(UUID tenantId, LeaveTypeEntity type) {
+        type.setTenantId(tenantId);
+        return leaveTypeRepository.save(type);
     }
 
     /** Leave windows for the worker identified by provider-worker-id (the ERP-HR bridge). */
