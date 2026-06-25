@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-25T08:41:44.226Z",
+  "generatedAt": "2026-06-25T08:44:52.547Z",
   "branch": "intake/oros-diagnostics-journey",
   "registryDrift": {
     "unregisteredModules": [],
@@ -9,7 +9,7 @@
     "totalServices": 92,
     "totalLibraries": 12,
     "totalUiWorkspaces": 24,
-    "bffRouteCount": 2173,
+    "bffRouteCount": 2174,
     "contractCount": 102,
     "byProductStatus": {
       "internal-only": 24,
@@ -2835,12 +2835,12 @@
         "repositories": 2,
         "serviceLayer": 41,
         "controllers": 258,
-        "routes": 2173,
+        "routes": 2174,
         "stubRoutes": 0,
         "contractOperations": 1537,
         "contractViolations": 0,
         "bffClients": 0,
-        "uiReferences": 169,
+        "uiReferences": 170,
         "mobileReferences": 54,
         "tests": 164
       },
@@ -2877,9 +2877,9 @@
         "ui/one-ui-shell/src/app/diagnostics/critical-queue/page.tsx",
         "ui/one-ui-shell/src/app/diagnostics/orders/page.tsx",
         "ui/one-ui-shell/src/app/diagnostics/results-inbox/page.tsx",
+        "ui/one-ui-shell/src/app/diagnostics/worklist/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/growth-chart/page.tsx",
-        "ui/one-ui-shell/src/app/ehr/[patientId]/ips/page.test.tsx",
-        "ui/one-ui-shell/src/app/ehr/[patientId]/ips/page.tsx"
+        "ui/one-ui-shell/src/app/ehr/[patientId]/ips/page.test.tsx"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/walletService.test.ts",
@@ -6696,7 +6696,7 @@
         "contractOperations": 58,
         "contractViolations": 0,
         "bffClients": 13,
-        "uiReferences": 61,
+        "uiReferences": 62,
         "mobileReferences": 13,
         "tests": 18
       },
@@ -6740,6 +6740,7 @@
         "ui/one-ui-shell/src/app/diagnostics/orders/page.tsx",
         "ui/one-ui-shell/src/app/diagnostics/orders/route/page.tsx",
         "ui/one-ui-shell/src/app/diagnostics/results-inbox/page.tsx",
+        "ui/one-ui-shell/src/app/diagnostics/worklist/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/encounter/[encounterId]/page.test.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/encounter/[encounterId]/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/orders/page.test.tsx",
@@ -6748,8 +6749,7 @@
         "ui/one-ui-shell/src/app/ehr/[patientId]/results/page.tsx",
         "ui/one-ui-shell/src/app/enterprise/oversight/page.tsx",
         "ui/one-ui-shell/src/app/imaging/facility/page.tsx",
-        "ui/one-ui-shell/src/app/imaging/worklist/page.tsx",
-        "ui/one-ui-shell/src/app/lab/catalog/page.tsx"
+        "ui/one-ui-shell/src/app/imaging/worklist/page.tsx"
       ],
       "mobilePaths": [
         "provider-app:apps/mobile/provider-app/src/__tests__/integration/ClinicalWriteJourneyContracts.test.ts",
@@ -10583,8 +10583,8 @@
         "stubRoutes": 0,
         "contractOperations": 11,
         "contractViolations": 0,
-        "bffClients": 28,
-        "uiReferences": 171,
+        "bffClients": 29,
+        "uiReferences": 172,
         "mobileReferences": 26,
         "tests": 2
       },
@@ -10611,6 +10611,7 @@
         "ClinicalWorklistController→inline",
         "CommunicationController→inline",
         "DataAccessGovernanceController→inline",
+        "DiagnosticsExperienceController→inline",
         "EdWorkflowController→inline",
         "EncounterController→inline",
         "FacilityController→inline",
@@ -10641,6 +10642,7 @@
         "ui/one-ui-shell/src/app/clinical/page.tsx",
         "ui/one-ui-shell/src/app/communication/page.tsx",
         "ui/one-ui-shell/src/app/coverage/page.tsx",
+        "ui/one-ui-shell/src/app/diagnostics/worklist/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/advance-directives/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/consults/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/discharge/page.tsx",
@@ -10651,8 +10653,7 @@
         "ui/one-ui-shell/src/app/ehr/[patientId]/maternity/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/notes/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/orders/page.test.tsx",
-        "ui/one-ui-shell/src/app/ehr/[patientId]/orders/page.tsx",
-        "ui/one-ui-shell/src/app/ehr/[patientId]/page.tsx"
+        "ui/one-ui-shell/src/app/ehr/[patientId]/orders/page.tsx"
       ],
       "mobilePaths": [
         "provider-app:apps/mobile/provider-app/src/__tests__/provider/EncounterWorkflow.test.tsx",
@@ -29564,6 +29565,64 @@
       "pageTitle": "Critical Results",
       "zone": "lab",
       "pageFile": "ui/one-ui-shell/src/app/diagnostics/critical-queue/page.tsx",
+      "bffPaths": [
+        "/internal/v1/diagnostics/orders/draft",
+        "/internal/v1/diagnostics/reconcile-summary",
+        "/internal/v1/diagnostics/critical-unacknowledged",
+        "/internal/v1/diagnostics/turnaround",
+        "/internal/v1/diagnostics/integration-status",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/diagnostics/worklist",
+      "pageTitle": "Imaging Worklist",
+      "zone": "lab",
+      "pageFile": "ui/one-ui-shell/src/app/diagnostics/worklist/page.tsx",
       "bffPaths": [
         "/internal/v1/diagnostics/orders/draft",
         "/internal/v1/diagnostics/reconcile-summary",

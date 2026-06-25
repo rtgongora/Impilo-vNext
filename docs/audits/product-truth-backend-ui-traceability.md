@@ -1,6 +1,6 @@
 # Product Truth — Backend-to-UI Traceability
 
-> Generated: 2026-06-25T08:41:44.226Z
+> Generated: 2026-06-25T08:44:52.547Z
 
 For each service: backend capabilities → API → BFF → UI → mobile → persistence.
 
@@ -604,10 +604,10 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 
 | # | Question | Answer |
 |---|----------|--------|
-| 1 | Real backend capabilities? | Yes (258 controllers, 2173 routes) |
+| 1 | Real backend capabilities? | Yes (258 controllers, 2174 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: experience-bff.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (0 clients) |
-| 4 | Visible in UI? | Yes (169 refs) |
+| 4 | Visible in UI? | Yes (170 refs) |
 | 5 | Visible on mobile? | Yes (54 refs) |
 | 6 | Fake/partial/disconnected? | Yes — review |
 | 7 | Backend without UI? | No |
@@ -1438,7 +1438,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (14 controllers, 80 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: oros.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (13 clients) |
-| 4 | Visible in UI? | Yes (61 refs) |
+| 4 | Visible in UI? | Yes (62 refs) |
 | 5 | Visible on mobile? | Yes (13 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
@@ -2231,8 +2231,8 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 |---|----------|--------|
 | 1 | Real backend capabilities? | Yes (3 controllers, 11 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: workflow.openapi.yaml) |
-| 3 | Wired via BFF? | Yes (28 clients) |
-| 4 | Visible in UI? | Yes (171 refs) |
+| 3 | Wired via BFF? | Yes (29 clients) |
+| 4 | Visible in UI? | Yes (172 refs) |
 | 5 | Visible on mobile? | Yes (26 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |

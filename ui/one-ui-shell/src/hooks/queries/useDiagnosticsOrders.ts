@@ -212,6 +212,32 @@ export function useCriticalUnacknowledged() {
   });
 }
 
+/** Imaging-team worklist filtered by fine-grained imaging state. */
+export function useImagingWorklist(states?: string) {
+  return useQuery<OrdersResponse>({
+    queryKey: ["diagnostics-imaging-worklist", states ?? null],
+    queryFn: () => {
+      const qs = states ? `?states=${encodeURIComponent(states)}` : "";
+      return apiClient.get<OrdersResponse>(`/internal/v1/diagnostics/imaging-worklist${qs}`);
+    },
+    staleTime: 10_000,
+  });
+}
+
+/** Drive a guarded imaging-workflow transition (accept/start/complete/...). */
+export function useImagingTransition() {
+  const queryClient = useQueryClient();
+  return useMutation<unknown, unknown, { orderId: string; target: string; reason?: string }>({
+    mutationFn: ({ orderId, target, reason }) =>
+      apiClient.post(`/internal/v1/diagnostics/orders/${encodeURIComponent(orderId)}/imaging-transition`,
+        reason ? { target, reason } : { target }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["diagnostics-imaging-worklist"] });
+      queryClient.invalidateQueries({ queryKey: ["diagnostics-orders"] });
+    },
+  });
+}
+
 export interface TurnaroundMetrics {
   totalImaging: number;
   byState: Record<string, number>;

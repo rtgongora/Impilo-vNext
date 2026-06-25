@@ -282,6 +282,19 @@ public class OrosServiceClient {
     }
 
     /**
+     * Drive a guarded imaging-workflow transition on an order.
+     */
+    public JsonNode imagingTransition(String orderId, String target, String reason) {
+        String url = baseUrl + "/v1/orders/" + orderId + "/imaging/transition";
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("target", target);
+        if (reason != null) body.put("reason", reason);
+        log.info("OROS: Imaging transition order={} -> {}", orderId, target);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * Imaging-team worklist filtered by fine-grained imaging state.
      */
     public JsonNode imagingWorklist(String states) {

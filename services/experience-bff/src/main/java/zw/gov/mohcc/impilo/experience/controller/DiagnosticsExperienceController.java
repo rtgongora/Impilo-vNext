@@ -71,6 +71,18 @@ public class DiagnosticsExperienceController {
         return proxy(requestId, correlationId, () -> orosClient.listOrders(client, requester, status, type));
     }
 
+    /** Drive a guarded imaging-workflow transition (accept/start/complete/...). */
+    @PostMapping("/orders/{orderId}/imaging-transition")
+    public ResponseEntity<Map<String, Object>> imagingTransition(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String orderId,
+            @RequestBody Map<String, Object> body) {
+        String target = body.get("target") != null ? body.get("target").toString() : null;
+        String reason = body.get("reason") != null ? body.get("reason").toString() : null;
+        return proxy(requestId, correlationId, () -> orosClient.imagingTransition(orderId, target, reason));
+    }
+
     /** Imaging-team worklist. */
     @GetMapping("/imaging-worklist")
     public ResponseEntity<Map<String, Object>> imagingWorklist(

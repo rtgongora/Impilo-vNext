@@ -12,6 +12,8 @@ import {
   useAcknowledgeCritical,
   useDiagnosticsTurnaround,
   useIntegrationStatus,
+  useImagingWorklist,
+  useImagingTransition,
 } from "../useDiagnosticsOrders";
 
 const { get, post } = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }));
@@ -154,5 +156,24 @@ describe("useDiagnosticsOrders", () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data?.data[0].configured).toBe(false);
     expect(get).toHaveBeenCalledWith("/internal/v1/diagnostics/integration-status");
+  });
+
+  it("imaging worklist hits the worklist endpoint", async () => {
+    get.mockResolvedValue({ data: [{ orderId: "ORD-1", imagingState: "RECEIVED" }] });
+
+    const { result } = renderHook(() => useImagingWorklist(), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(get).toHaveBeenCalledWith("/internal/v1/diagnostics/imaging-worklist");
+  });
+
+  it("imaging transition posts the target state", async () => {
+    post.mockResolvedValue({ data: { orderId: "ORD-1", imagingState: "ACCEPTED" } });
+
+    const { result } = renderHook(() => useImagingTransition(), { wrapper });
+    result.current.mutate({ orderId: "ORD-1", target: "ACCEPTED" });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(post).toHaveBeenCalledWith("/internal/v1/diagnostics/orders/ORD-1/imaging-transition", { target: "ACCEPTED" });
   });
 });
