@@ -65,6 +65,7 @@ public interface OrderRepository extends JpaRepository<OrderEntity, String> {
               AND (:patientCpid IS NULL OR o.patientCpid = :patientCpid)
               AND (:status IS NULL OR o.status = :status)
               AND (:orderType IS NULL OR o.orderType = :orderType)
+              AND (:encounterRef IS NULL OR o.encounterRef = :encounterRef)
               AND (:requester IS NULL OR o.placedBy = :requester OR o.referringProviderId = :requester)
             ORDER BY o.placedAt DESC, o.createdAt DESC
             """)
@@ -72,7 +73,8 @@ public interface OrderRepository extends JpaRepository<OrderEntity, String> {
                              @Param("patientCpid") String patientCpid,
                              @Param("requester") String requester,
                              @Param("status") OrderStatus status,
-                             @Param("orderType") OrderType orderType);
+                             @Param("orderType") OrderType orderType,
+                             @Param("encounterRef") String encounterRef);
 
     /**
      * Imaging-team worklist: IMAGING orders at the facility whose fine-grained imaging state is in

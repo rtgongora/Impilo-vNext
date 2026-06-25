@@ -43,13 +43,13 @@ class OrderQueryServiceTest {
         try (MockedStatic<TrustContextHolder> holder = mockStatic(TrustContextHolder.class)) {
             holder.when(TrustContextHolder::require).thenReturn(ctx());
             OrderQueryService service = new OrderQueryService(orderRepository);
-            when(orderRepository.search(TENANT_ID, "CPID-1", null, OrderStatus.PLACED, OrderType.IMAGING))
+            when(orderRepository.search(TENANT_ID, "CPID-1", null, OrderStatus.PLACED, OrderType.IMAGING, null))
                     .thenReturn(List.of(new OrderEntity()));
 
             List<OrderEntity> result = service.search("CPID-1", "  ", OrderStatus.PLACED, OrderType.IMAGING);
 
             assertThat(result).hasSize(1);
-            verify(orderRepository).search(TENANT_ID, "CPID-1", null, OrderStatus.PLACED, OrderType.IMAGING);
+            verify(orderRepository).search(TENANT_ID, "CPID-1", null, OrderStatus.PLACED, OrderType.IMAGING, null);
         }
     }
 

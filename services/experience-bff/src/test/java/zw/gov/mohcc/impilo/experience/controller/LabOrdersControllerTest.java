@@ -111,6 +111,40 @@ class LabOrdersControllerTest {
     }
 
     @Test
+    void createLabOrder_returnsOrosOrderIdAsCanonicalId() {
+        OrosServiceClient orosClient = mock(OrosServiceClient.class);
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode orosResponse = mapper.createObjectNode();
+        orosResponse.put("orderId", "01ARZ3NDEKTSV4RRFFQ69G5FAV");
+        when(orosClient.placeOrder(any(), any(), any(), any(), any(), anyList())).thenReturn(orosResponse);
+
+        LabOrdersController controller = new LabOrdersController(orosClient);
+        var response = controller.createLabOrder("t", "p", "r", "c", "i",
+                new LabOrdersController.CreateLabOrderRequest("patient-1", "enc-1", "FBC", "FBC",
+                        "LABORATORY", "ROUTINE", null, "user-1", "Dr X", "fac-1", "CPID-1", "enc-1"));
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> data = (Map<String, Object>) response.getBody().get("data");
+        // The canonical id IS the sovereign OROS order id — so follow-on actions address the real order.
+        assertEquals("01ARZ3NDEKTSV4RRFFQ69G5FAV", data.get("id"));
+    }
+
+    @Test
+    void collectLabOrder_delegatesToOrosSpecimenLifecycle() {
+        OrosServiceClient orosClient = mock(OrosServiceClient.class);
+        LabOrdersController controller = new LabOrdersController(orosClient);
+
+        var response = controller.collectLabOrder("01ARZ3NDEKTSV4RRFFQ69G5FAV",
+                "t", "p", "r", "c", "i", Map.of("specimenType", "blood"));
+
+        assertEquals(200, response.getStatusCode().value());
+        @SuppressWarnings("unchecked")
+        Map<String, Object> data = (Map<String, Object>) response.getBody().get("data");
+        assertEquals("COLLECTED", data.get("status"));
+        verify(orosClient).collectSpecimen(eq("01ARZ3NDEKTSV4RRFFQ69G5FAV"), anyMap());
+    }
+
+    @Test
     void resolveOrosOrderType_mapsImagingAliases() {
         assertEquals("IMAGING", LabOrdersController.resolveOrosOrderType("IMAGING"));
         assertEquals("IMAGING", LabOrdersController.resolveOrosOrderType("radiology"));

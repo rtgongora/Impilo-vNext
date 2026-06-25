@@ -30,9 +30,16 @@ public class OrderQueryService {
 
     public List<OrderEntity> search(String patientCpid, String requester,
                                     OrderStatus status, OrderType orderType) {
+        return search(patientCpid, requester, status, orderType, null);
+    }
+
+    /** Order search with an additional encounter filter (backs the encounter Orders & Results panel). */
+    public List<OrderEntity> search(String patientCpid, String requester,
+                                    OrderStatus status, OrderType orderType, String encounterRef) {
         TrustContext ctx = TrustContextHolder.require();
         return orderRepository.search(ctx.tenantId(),
-                blankToNull(patientCpid), blankToNull(requester), status, orderType);
+                blankToNull(patientCpid), blankToNull(requester), status, orderType,
+                blankToNull(encounterRef));
     }
 
     /**

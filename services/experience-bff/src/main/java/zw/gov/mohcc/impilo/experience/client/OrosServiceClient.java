@@ -302,6 +302,26 @@ public class OrosServiceClient {
     }
 
     /**
+     * List orders linked to a specific encounter (backs the encounter Orders &amp; Results panel).
+     */
+    public JsonNode listOrdersByEncounter(String encounterId) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/orders")
+                .queryParam("encounter", encounterId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Record a specimen collected against a lab order (real specimen lifecycle, not a stub).
+     */
+    public JsonNode collectSpecimen(String orderId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/orders/" + orderId + "/specimens";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                url, body != null ? body : Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * Drive a guarded imaging-workflow transition on an order.
      */
     public JsonNode imagingTransition(String orderId, String target, String reason) {

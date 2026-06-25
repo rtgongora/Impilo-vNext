@@ -58,7 +58,22 @@ public class LabOrdersController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false, name = "patient_id") String patientId,
+            @RequestParam(required = false, name = "encounter_id") String encounterId,
             @RequestParam(required = false, name = "status") String status) {
+        // Encounter Orders & Results panel: orders linked to a specific encounter.
+        if (encounterId != null && !encounterId.isBlank()) {
+            try {
+                JsonNode orosData = orosClient.listOrdersByEncounter(encounterId);
+                if (orosData != null) {
+                    Map<String, Object> response = new LinkedHashMap<>();
+                    response.put("data", orosData);
+                    response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+                    return ResponseEntity.ok(response);
+                }
+            } catch (Exception e) {
+                log.warn("OROS listOrdersByEncounter failed: {}", e.getMessage());
+            }
+        }
         if (patientId != null) {
             try {
                 JsonNode orosData = orosClient.getPatientOrders(patientId);
@@ -87,12 +102,12 @@ public class LabOrdersController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Map<String, Object>> getLabOrder(
-            @PathVariable UUID id,
+            @PathVariable String id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
-        JsonNode orderData = orosClient.getOrder(id.toString());
+        JsonNode orderData = orosClient.getOrder(id);
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", orderData != null ? orderData : Map.of());
@@ -162,9 +177,14 @@ public class LabOrdersController {
             attributes.put("oros_order_id", orosOrderId);
         }
 
+        // The canonical id IS the OROS order id when placement succeeded, so every follow-on action
+        // (collect/result/acknowledge/cancel) addresses the sovereign order — not a BFF-local UUID
+        // that OROS never knew about. Falls back to the local id only if OROS placement failed.
+        String canonicalId = orosOrderId != null ? orosOrderId : orderId.toString();
+
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", Map.of(
-                "id", orderId.toString(),
+                "id", canonicalId,
                 "type", "LabOrder",
                 "attributes", attributes
         ));
@@ -178,15 +198,26 @@ public class LabOrdersController {
 
     @PostMapping("/{id}/collect")
     public ResponseEntity<Map<String, Object>> collectLabOrder(
-            @PathVariable UUID id,
+            @PathVariable String id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
-            @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey) {
+            @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
+            @RequestBody(required = false) Map<String, Object> body) {
+
+        // Real specimen collection on the sovereign order (OROS specimen lifecycle), not a stub.
+        String status = "COLLECTED";
+        try {
+            orosClient.collectSpecimen(id, body);
+            log.info("OROS specimen collected for order={}", id);
+        } catch (Exception e) {
+            log.warn("OROS specimen collect failed (non-blocking): {}", e.getMessage());
+            status = "COLLECT_PENDING";
+        }
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of("id", id.toString(), "status", "COLLECTED"));
+        response.put("data", Map.of("id", id, "status", status));
         response.put("meta", Map.of(
                 "request_id", requestId,
                 "correlation_id", correlationId
@@ -197,7 +228,7 @@ public class LabOrdersController {
 
     @PostMapping("/{id}/result")
     public ResponseEntity<Map<String, Object>> resultLabOrder(
-            @PathVariable UUID id,
+            @PathVariable String id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
@@ -212,7 +243,7 @@ public class LabOrdersController {
                     hasCritical = rdList.stream().anyMatch(item ->
                             item instanceof Map<?, ?> m && "CRITICAL".equals(m.get("interpretation")));
                 }
-                orosClient.postResult(id.toString(), "LAB", body.get("result_data"), hasCritical);
+                orosClient.postResult(id, "LAB", body.get("result_data"), hasCritical);
                 log.info("OROS result posted for order={}", id);
             } catch (Exception e) {
                 log.warn("OROS result delegation failed (non-blocking): {}", e.getMessage());
@@ -220,7 +251,7 @@ public class LabOrdersController {
         }
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of("id", id.toString(), "status", "RESULTED"));
+        response.put("data", Map.of("id", id, "status", "RESULTED"));
         response.put("meta", Map.of(
                 "request_id", requestId,
                 "correlation_id", correlationId
@@ -237,7 +268,7 @@ public class LabOrdersController {
      */
     @PostMapping("/{id}/acknowledge")
     public ResponseEntity<Map<String, Object>> acknowledgeLabOrder(
-            @PathVariable UUID id,
+            @PathVariable String id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
@@ -248,21 +279,21 @@ public class LabOrdersController {
         String notes = body != null && body.containsKey("notes") ? (String) body.get("notes") : null;
 
         try {
-            orosClient.acknowledgeOrder(id.toString(), "CLINICIAN", notes);
+            orosClient.acknowledgeOrder(id, "CLINICIAN", notes);
             log.info("OROS acknowledgement posted for order={}", id);
         } catch (Exception e) {
             log.warn("OROS acknowledgement failed (non-blocking): {}", e.getMessage());
         }
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of("id", id.toString(), "status", "REVIEWED"));
+        response.put("data", Map.of("id", id, "status", "REVIEWED"));
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{id}/cancel")
     public ResponseEntity<Map<String, Object>> cancelLabOrder(
-            @PathVariable UUID id,
+            @PathVariable String id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
@@ -273,7 +304,7 @@ public class LabOrdersController {
         String reason = body != null && body.containsKey("reason") ? (String) body.get("reason") : null;
 
         try {
-            orosClient.cancelOrder(id.toString(),
+            orosClient.cancelOrder(id,
                     reason != null ? reason : "Cancelled from experience UI");
             log.info("OROS order cancelled for lab order={}", id);
         } catch (Exception e) {
@@ -281,7 +312,7 @@ public class LabOrdersController {
         }
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of("id", id.toString(), "status", "CANCELLED"));
+        response.put("data", Map.of("id", id, "status", "CANCELLED"));
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
     }

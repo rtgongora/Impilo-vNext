@@ -268,10 +268,11 @@ public class OrderController {
             @RequestParam(name = "client", required = false) String client,
             @RequestParam(name = "requester", required = false) String requester,
             @RequestParam(name = "status", required = false) zw.gov.mohcc.impilo.oros.domain.OrderStatus status,
-            @RequestParam(name = "type", required = false) zw.gov.mohcc.impilo.oros.domain.OrderType type) {
+            @RequestParam(name = "type", required = false) zw.gov.mohcc.impilo.oros.domain.OrderType type,
+            @RequestParam(name = "encounter", required = false) String encounter) {
         String correlationId = TrustContextHolder.require().correlationId().toString();
 
-        List<OrderSummaryDto> orders = orderQueryService.search(client, requester, status, type).stream()
+        List<OrderSummaryDto> orders = orderQueryService.search(client, requester, status, type, encounter).stream()
                 .map(OrderSummaryDto::from)
                 .collect(Collectors.toList());
 
