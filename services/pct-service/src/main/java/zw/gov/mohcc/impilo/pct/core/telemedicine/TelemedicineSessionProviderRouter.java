@@ -35,7 +35,11 @@ public class TelemedicineSessionProviderRouter {
         String resolved = normalize(requestedProviderType);
         TelemedicineSessionProvider provider = providerByType.get(resolved);
         if (provider == null) {
-            provider = providerByType.get(DEFAULT_PROVIDER_TYPE);
+            // No provider named: use the configured default (e.g. RTC_GATEWAY), then the constant default.
+            provider = providerByType.get(normalize(providerProperties.getDefaultProviderType()));
+            if (provider == null) {
+                provider = providerByType.get(DEFAULT_PROVIDER_TYPE);
+            }
         }
         if (provider == null) {
             throw new IllegalStateException("No telemedicine session provider is configured");

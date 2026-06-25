@@ -10,9 +10,20 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "pct.telemedicine.provider")
 public class TelemedicineProviderProperties {
 
+    /** Provider used when a request does not name one — set to RTC_GATEWAY to default consults onto self-hosted LiveKit. */
+    private String defaultProviderType = "MANAGED_PRIMARY";
+
     private External external = new External();
     private Fallback fallback = new Fallback();
     private Governance governance = new Governance();
+
+    public String getDefaultProviderType() {
+        return defaultProviderType;
+    }
+
+    public void setDefaultProviderType(String defaultProviderType) {
+        this.defaultProviderType = defaultProviderType;
+    }
 
     public External getExternal() {
         return external;
