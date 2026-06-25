@@ -335,6 +335,10 @@ public class SecurityConfig {
                     .requestMatchers("/internal/v1/emergency/**")
                             .hasAnyRole(CLINICAL_ROLES)
 
+                    // ── Step-up challenge (citizen self-service completion loop) ──
+                    // Any authenticated actor may issue/verify a step-up for THEMSELVES;
+                    // identity is bound server-side from trust headers (CitizenStepUpController).
+                    .requestMatchers("/internal/v1/step-up/**").authenticated()
                     // ── Consent pipeline (Privacy Policy / Terms) ────────
                     // Self-service consent: any authenticated user
                     .requestMatchers("/internal/v1/consent/accept").authenticated()

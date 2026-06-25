@@ -264,6 +264,35 @@ public class TshepoAuthzServiceClient {
         return extractData(response);
     }
 
+    // ── Step-up challenge engine (citizen self-service completion loop, G-CZO-17) ──────
+    // The verified-challenge state is read by PolicyEngine.hasRecentStepUp at the gateway,
+    // so completing a challenge here unlocks the retried sensitive action — no token needed.
+
+    /** Issue a step-up challenge. Body carries the SERVER-RESOLVED tenant/actor (never client-supplied). */
+    public JsonNode issueStepUpChallenge(Map<String, Object> request) {
+        String url = baseUrl + "/v1/step-up/challenge";
+        log.info("TSHEPO-AUTHZ: issuing step-up challenge type={}", request.get("challengeType"));
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(request), JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Verify (complete) a step-up challenge. Body carries the SERVER-RESOLVED tenant/actor. */
+    public JsonNode verifyStepUpChallenge(Map<String, Object> request) {
+        String url = baseUrl + "/v1/step-up/verify";
+        log.info("TSHEPO-AUTHZ: verifying step-up challenge {}", request.get("challengeId"));
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(request), JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Read the status of a step-up challenge. */
+    public JsonNode getStepUpStatus(String challengeId) {
+        String url = baseUrl + "/v1/step-up/status/" + challengeId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

@@ -9,6 +9,8 @@ import {
   useShareContributions,
   type PatientShare,
 } from "@/hooks/queries/useVitoPatientShares";
+import { StepUpPrompt } from "@/components/citizen/StepUpPrompt";
+import { readStepUp } from "@/lib/stepUp";
 
 const STATUS_COLOURS: Record<string, string> = {
   ACTIVE: "bg-green-100 text-green-800",
@@ -130,6 +132,7 @@ export default function CitizenRecordSharingPage() {
   const [formError, setFormError] = useState("");
   const [createSuccess, setCreateSuccess] = useState<Record<string, unknown> | null>(null);
   const [revokingId, setRevokingId] = useState<string | null>(null);
+  const [stepUpMethods, setStepUpMethods] = useState<string[] | null>(null);
 
   const { data, isLoading, isError, refetch } = usePatientShares(healthId);
   const shares = data?.data ?? [];
@@ -145,8 +148,9 @@ export default function CitizenRecordSharingPage() {
     );
   }
 
-  async function handleCreate(e: React.FormEvent) {
-    e.preventDefault();
+  // Sharing a record is a sensitive action: the trust plane may return STEP_UP_REQUIRED.
+  // Instead of failing silently, surface the StepUpPrompt and retry once verification completes.
+  async function doCreate() {
     setFormError("");
     setCreateSuccess(null);
     try {
@@ -154,12 +158,23 @@ export default function CitizenRecordSharingPage() {
         healthId: healthId!,
         body: { purpose, recipientId, expiresAt: expiresAt || undefined },
       });
+      setStepUpMethods(null);
       setCreateSuccess((res.data as unknown as Record<string, unknown>) ?? {});
       setRecipientId("");
       setExpiresAt("");
     } catch (err) {
+      const stepUp = readStepUp(err);
+      if (stepUp.required) {
+        setStepUpMethods(stepUp.methods);
+        return;
+      }
       setFormError(err instanceof Error ? err.message : "Create failed");
     }
+  }
+
+  async function handleCreate(e: React.FormEvent) {
+    e.preventDefault();
+    await doCreate();
   }
 
   async function handleRevoke(shareId: string) {
@@ -182,6 +197,18 @@ export default function CitizenRecordSharingPage() {
           revocable and policy-controlled.
         </p>
       </div>
+
+      {stepUpMethods !== null && (
+        <StepUpPrompt
+          methods={stepUpMethods}
+          title="Verify your identity to share records"
+          description="Sharing your health record is a protected action. Confirm it's really you to continue."
+          onCompleted={() => {
+            void doCreate();
+          }}
+          onCancel={() => setStepUpMethods(null)}
+        />
+      )}
 
       {/* Create share form */}
       <form

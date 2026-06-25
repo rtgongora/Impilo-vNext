@@ -24,6 +24,7 @@
 
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { randomUUID } from "@/lib/uuid";
+import { isStepUpRequired } from "@/lib/stepUp";
 
 // Use NEXT_PUBLIC_BFF_URL when explicitly set (Docker, tests, SSR).
 // In the browser without an explicit URL, use relative paths so requests proxy
@@ -378,6 +379,13 @@ async function request<T>(
   });
 
   if (response.status === 401 && !path.includes("/auth/")) {
+    // A STEP_UP_REQUIRED challenge is also a 401, but it is NOT a session expiry — it must
+    // surface to the caller (which shows a verification prompt), not trigger refresh/redirect.
+    const unauthorizedBody = await response.json().catch(() => null);
+    if (isStepUpRequired(unauthorizedBody)) {
+      throw { status: 401, ...(unauthorizedBody || {}) };
+    }
+
     // Attempt token refresh
     const refreshed = await attemptRefresh();
     if (refreshed) {
@@ -400,12 +408,12 @@ async function request<T>(
         return retryResponse.json();
       }
 
-      if (retryResponse.status === 401) {
+      const retryBody = await retryResponse.json().catch(() => null);
+      if (retryResponse.status === 401 && !isStepUpRequired(retryBody)) {
         handleAuthFailure();
       }
 
-      const errorBody = await retryResponse.json().catch(() => null);
-      throw { status: retryResponse.status, ...(errorBody || {}) };
+      throw { status: retryResponse.status, ...(retryBody || {}) };
     }
 
     // Refresh failed — clear auth and redirect
