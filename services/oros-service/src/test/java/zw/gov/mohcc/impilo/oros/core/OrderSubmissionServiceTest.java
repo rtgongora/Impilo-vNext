@@ -54,7 +54,8 @@ class OrderSubmissionServiceTest {
         OrderStateMachine stateMachine = new OrderStateMachine(
                 orderRepository, orderItemRepository, outboxRepository, objectMapper);
         ImagingWorkflowService imagingWorkflowService = new ImagingWorkflowService(
-                orderRepository, outboxRepository, objectMapper);
+                orderRepository, outboxRepository, objectMapper,
+                org.mockito.Mockito.mock(zw.gov.mohcc.impilo.oros.integration.ButanoIntegration.class));
         service = new OrderSubmissionService(
                 stateMachine, accessionNumberService, varapiClient, imagingWorkflowService);
     }

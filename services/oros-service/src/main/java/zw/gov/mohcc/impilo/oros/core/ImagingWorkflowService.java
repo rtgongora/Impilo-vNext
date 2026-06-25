@@ -40,13 +40,16 @@ public class ImagingWorkflowService {
     private final OrderRepository orderRepository;
     private final EventOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
+    private final zw.gov.mohcc.impilo.oros.integration.ButanoIntegration butanoIntegration;
 
     public ImagingWorkflowService(OrderRepository orderRepository,
                                   EventOutboxRepository outboxRepository,
-                                  ObjectMapper objectMapper) {
+                                  ObjectMapper objectMapper,
+                                  zw.gov.mohcc.impilo.oros.integration.ButanoIntegration butanoIntegration) {
         this.orderRepository = orderRepository;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
+        this.butanoIntegration = butanoIntegration;
     }
 
     /**
@@ -111,7 +114,17 @@ public class ImagingWorkflowService {
         if (accessionNumber != null && !accessionNumber.isBlank() && order.getAccessionNumber() == null) {
             order.setAccessionNumber(accessionNumber);
         }
-        return doTransition(order, ImagingWorkflowState.IMAGES_LINKED, "study linked: " + studyUid);
+        OrderEntity linked = doTransition(order, ImagingWorkflowState.IMAGES_LINKED, "study linked: " + studyUid);
+        // Publish the linked study to the SHR as a FHIR ImagingStudy (flag-gated, best-effort).
+        butanoIntegration.createImagingStudy(linked, firstItemModality(linked));
+        return linked;
+    }
+
+    /** Best-effort modality hint from the order's first imaging item (null if unavailable). */
+    private String firstItemModality(OrderEntity order) {
+        // Modality lives on order items; not loaded here — return null so ImagingStudy omits it
+        // rather than guessing. (A future enhancement can join the item modality.)
+        return null;
     }
 
     private OrderEntity doTransition(OrderEntity order, ImagingWorkflowState target, String reason) {

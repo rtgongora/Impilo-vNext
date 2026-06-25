@@ -37,6 +37,7 @@ class ImagingWorkflowServiceTest {
 
     @Mock private OrderRepository orderRepository;
     @Mock private EventOutboxRepository outboxRepository;
+    @Mock private zw.gov.mohcc.impilo.oros.integration.ButanoIntegration butanoIntegration;
 
     private ImagingWorkflowService service;
 
@@ -47,7 +48,7 @@ class ImagingWorkflowServiceTest {
     @BeforeEach
     void setUp() {
         ObjectMapper objectMapper = OrosTestObjectMapper.create();
-        service = new ImagingWorkflowService(orderRepository, outboxRepository, objectMapper);
+        service = new ImagingWorkflowService(orderRepository, outboxRepository, objectMapper, butanoIntegration);
     }
 
     private TrustContext ctx() {
@@ -148,6 +149,8 @@ class ImagingWorkflowServiceTest {
             assertThat(result.getStudyUid()).isEqualTo("1.2.840.113619.2");
             assertThat(result.getStudyViewerUrl()).isEqualTo("https://viewer/launch?s=1");
             assertThat(result.getAccessionNumber()).isEqualTo("ACC-9");
+            // FHIR ImagingStudy writeback attempted on link (flag-gated inside the integration).
+            verify(butanoIntegration).createImagingStudy(any(OrderEntity.class), any());
         }
     }
 

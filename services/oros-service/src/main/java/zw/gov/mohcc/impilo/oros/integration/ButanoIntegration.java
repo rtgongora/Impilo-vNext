@@ -15,6 +15,7 @@ import zw.gov.mohcc.impilo.oros.persistence.entity.ResultEntity;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
+import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,11 +37,14 @@ public class ButanoIntegration {
 
     private final RestTemplate restTemplate;
     private final String baseUrl;
+    private final boolean imagingStudyOutboundEnabled;
 
     public ButanoIntegration(RestTemplate restTemplate,
-                             @Value("${oros.integration.butano.base-url:http://localhost:8090}") String baseUrl) {
+                             @Value("${oros.integration.butano.base-url:http://localhost:8090}") String baseUrl,
+                             @Value("${oros.integration.fhir.imagingstudy-outbound.enabled:false}") boolean imagingStudyOutboundEnabled) {
         this.restTemplate = restTemplate;
         this.baseUrl = baseUrl;
+        this.imagingStudyOutboundEnabled = imagingStudyOutboundEnabled;
     }
 
     /**
@@ -250,6 +254,73 @@ public class ButanoIntegration {
         } catch (RestClientException e) {
             log.warn("BUTANO unavailable for DocumentReference, orderId={}: {}",
                     orderId, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Publish a FHIR R4 {@code ImagingStudy} to BUTANO when a study is linked to an order.
+     *
+     * <p>Flag-gated by {@code oros.integration.fhir.imagingstudy-outbound.enabled} — a no-op (and
+     * reported NOT_LIVE at {@code /admin/integrations}) unless explicitly enabled. Degrades
+     * gracefully if BUTANO is unreachable; never blocks the imaging workflow.</p>
+     *
+     * @param order    imaging order with a linked study ({@code studyUid})
+     * @param modality optional DICOM modality code (XR, CT, MR, US, …)
+     * @return the BUTANO reference, or null if disabled / no study / unavailable
+     */
+    @SuppressWarnings("unchecked")
+    public String createImagingStudy(OrderEntity order, String modality) {
+        if (!imagingStudyOutboundEnabled || order.getStudyUid() == null || order.getStudyUid().isBlank()) {
+            return null;
+        }
+        try {
+            String url = baseUrl + "/fhir/ImagingStudy";
+
+            Map<String, Object> fhir = new HashMap<>();
+            fhir.put("resourceType", "ImagingStudy");
+            fhir.put("status", "available");
+
+            java.util.List<Map<String, Object>> identifiers = new java.util.ArrayList<>();
+            identifiers.add(Map.of("system", "urn:dicom:uid", "value", "urn:oid:" + order.getStudyUid()));
+            if (order.getAccessionNumber() != null) {
+                identifiers.add(Map.of(
+                        "type", Map.of("coding", java.util.List.of(Map.of(
+                                "system", "http://terminology.hl7.org/CodeSystem/v2-0203", "code", "ACSN"))),
+                        "value", order.getAccessionNumber()));
+            }
+            fhir.put("identifier", identifiers);
+
+            fhir.put("subject", Map.of(
+                    "reference", "Patient/" + order.getPatientCpid(), "display", order.getPatientCpid()));
+            fhir.put("started", (order.getScheduledAt() != null
+                    ? order.getScheduledAt() : OffsetDateTime.now()).toString());
+            fhir.put("basedOn", java.util.List.of(Map.of("reference", "ServiceRequest/" + order.getOrderId())));
+            if (modality != null && !modality.isBlank()) {
+                fhir.put("modality", java.util.List.of(Map.of(
+                        "system", "http://dicom.nema.org/resources/ontology/DCM", "code", modality)));
+            }
+            if (order.getStudyViewerUrl() != null) {
+                fhir.put("note", java.util.List.of(Map.of("text", "Viewer: " + order.getStudyViewerUrl())));
+            }
+
+            HttpHeaders headers = buildTrustHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            ResponseEntity<Map> response = restTemplate.postForEntity(
+                    url, new HttpEntity<>(fhir, headers), Map.class);
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                String ref = (String) response.getBody().get("id");
+                log.info("BUTANO ImagingStudy written: orderId={}, studyUid={}, ref={}",
+                        order.getOrderId(), order.getStudyUid(), ref);
+                return ref;
+            }
+            log.warn("BUTANO returned non-success {} for ImagingStudy, orderId={}",
+                    response.getStatusCode(), order.getOrderId());
+            return null;
+
+        } catch (RestClientException e) {
+            log.warn("BUTANO unavailable for ImagingStudy, orderId={}: {}", order.getOrderId(), e.getMessage());
             return null;
         }
     }
