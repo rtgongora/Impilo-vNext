@@ -10,6 +10,9 @@ import zw.gov.mohcc.impilo.khuluma.core.CallResult;
 import zw.gov.mohcc.impilo.khuluma.core.CallService;
 import zw.gov.mohcc.impilo.khuluma.core.ConversationService;
 import zw.gov.mohcc.impilo.khuluma.core.ConversationSummary;
+import zw.gov.mohcc.impilo.khuluma.core.MeetingJoin;
+import zw.gov.mohcc.impilo.khuluma.core.MeetingResult;
+import zw.gov.mohcc.impilo.khuluma.core.MeetingService;
 import zw.gov.mohcc.impilo.khuluma.core.MessageService;
 import zw.gov.mohcc.impilo.khuluma.core.PresenceService;
 import zw.gov.mohcc.impilo.khuluma.domain.CallEntity;
@@ -34,17 +37,20 @@ public class KhulumaController {
     private final MessageService messageService;
     private final PresenceService presenceService;
     private final CallService callService;
+    private final MeetingService meetingService;
 
     public KhulumaController(ActorContextResolver contextResolver,
                              ConversationService conversationService,
                              MessageService messageService,
                              PresenceService presenceService,
-                             CallService callService) {
+                             CallService callService,
+                             MeetingService meetingService) {
         this.contextResolver = contextResolver;
         this.conversationService = conversationService;
         this.messageService = messageService;
         this.presenceService = presenceService;
         this.callService = callService;
+        this.meetingService = meetingService;
     }
 
     // ── conversations ─────────────────────────────────────────────────────────
@@ -194,6 +200,35 @@ public class KhulumaController {
     public ResponseEntity<Void> signal(@PathVariable UUID id, @RequestBody SignalRequest req) {
         ActorContext ctx = contextResolver.resolve();
         callService.signal(ctx, id, req.signalType(), req.detail());
+        return ResponseEntity.accepted().build();
+    }
+
+    // ── meetings / live events (orchestrate live-service) ─────────────────────
+
+    @PostMapping("/meetings")
+    public ResponseEntity<MeetingResponse> createMeeting(@RequestBody CreateMeetingRequest req) {
+        ActorContext ctx = contextResolver.resolve();
+        List<ConversationService.NewParticipant> participants = req.participants() == null ? List.of()
+                : req.participants().stream()
+                    .map(p -> new ConversationService.NewParticipant(p.actorId(), p.actorType(), p.displayName(), p.role()))
+                    .toList();
+        MeetingResult result = meetingService.create(ctx, req.title(), participants);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new MeetingResponse(
+                result.conversationId(), result.eventId(), result.available(), null, null, null, result.error()));
+    }
+
+    @PostMapping("/conversations/{id}/meeting/join")
+    public ResponseEntity<MeetingResponse> joinMeeting(@PathVariable UUID id) {
+        ActorContext ctx = contextResolver.resolve();
+        MeetingJoin join = meetingService.join(ctx, id);
+        return ResponseEntity.ok(new MeetingResponse(join.conversationId(), join.eventId(),
+                join.mediaAvailable(), join.roomUrl(), join.accessToken(), join.provider(), join.error()));
+    }
+
+    @PostMapping("/conversations/{id}/meeting/end")
+    public ResponseEntity<Void> endMeeting(@PathVariable UUID id) {
+        ActorContext ctx = contextResolver.resolve();
+        meetingService.end(ctx, id);
         return ResponseEntity.accepted().build();
     }
 

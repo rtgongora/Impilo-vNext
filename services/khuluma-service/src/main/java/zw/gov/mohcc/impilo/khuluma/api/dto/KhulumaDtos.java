@@ -49,6 +49,8 @@ public final class KhulumaDtos {
 
     public record SignalRequest(String signalType, Map<String, Object> detail) {}
 
+    public record CreateMeetingRequest(String title, List<ParticipantInput> participants) {}
+
     // ── responses ─────────────────────────────────────────────────────────────
 
     public record ParticipantResponse(String participantId, String actorId, String actorType,
@@ -146,6 +148,9 @@ public final class KhulumaDtos {
                     participants.stream().map(CallParticipantResponse::of).toList());
         }
     }
+
+    public record MeetingResponse(String conversationId, String eventId, boolean mediaAvailable,
+                                  String roomUrl, String accessToken, String provider, String error) {}
 
     private static String str(Object o) {
         return o != null ? o.toString() : null;

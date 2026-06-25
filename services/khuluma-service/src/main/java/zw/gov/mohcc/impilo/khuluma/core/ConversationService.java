@@ -241,7 +241,7 @@ public class ConversationService {
         if (type == null || type.isBlank()) return "DIRECT";
         String upper = type.trim().toUpperCase();
         return switch (upper) {
-            case "DIRECT", "GROUP", "CHANNEL", "BROADCAST" -> upper;
+            case "DIRECT", "GROUP", "CHANNEL", "BROADCAST", "MEETING" -> upper;
             default -> "DIRECT";
         };
     }

@@ -105,6 +105,25 @@ public class KhulumaBffController {
         return relay(khuluma.post("/conversations/" + id + "/messages/read", body));
     }
 
+    // ── meetings / live events ────────────────────────────────────────────────
+
+    @PostMapping("/meetings")
+    public ResponseEntity<JsonNode> createMeeting(@RequestBody JsonNode body) {
+        policy.requireCallActor();
+        return relay(khuluma.post("/meetings", body));
+    }
+
+    @PostMapping("/conversations/{id}/meeting/join")
+    public ResponseEntity<JsonNode> joinMeeting(@PathVariable String id) {
+        policy.requireCallActor();
+        return relay(khuluma.post("/conversations/" + id + "/meeting/join", objectMapper.createObjectNode()));
+    }
+
+    @PostMapping("/conversations/{id}/meeting/end")
+    public ResponseEntity<JsonNode> endMeeting(@PathVariable String id) {
+        return relay(khuluma.post("/conversations/" + id + "/meeting/end", objectMapper.createObjectNode()));
+    }
+
     // ── notifications (delegate to notification-service) ───────────────────────
 
     @GetMapping("/notifications")

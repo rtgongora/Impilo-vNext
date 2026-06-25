@@ -88,6 +88,20 @@ class KhulumaBffControllerTest {
     }
 
     @Test
+    void createMeeting_authenticated_relaysMediaToken() throws Exception {
+        authenticateAs("ROLE_CLINICIAN");
+        khuluma.next = new KhulumaServiceClient.Result(201,
+                MAPPER.readTree("{\"conversationId\":\"c-9\",\"eventId\":\"ev-9\",\"mediaAvailable\":true}"));
+
+        ResponseEntity<JsonNode> response =
+                controller.createMeeting(MAPPER.readTree("{\"title\":\"Huddle\",\"participants\":[]}"));
+
+        assertThat(response.getStatusCode().value()).isEqualTo(201);
+        assertThat(response.getBody().get("eventId").asText()).isEqualTo("ev-9");
+        assertThat(response.getBody().get("mediaAvailable").asBoolean()).isTrue();
+    }
+
+    @Test
     void notifications_delegateToNotificationService() {
         ResponseEntity<JsonNode> response = controller.notifications("user-1");
         assertThat(response.getStatusCode().value()).isEqualTo(200);
