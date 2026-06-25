@@ -9,12 +9,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.oros.api.dto.AmendRequest;
 import zw.gov.mohcc.impilo.oros.api.dto.CriticalFlagRequest;
+import zw.gov.mohcc.impilo.oros.api.dto.ExternalLinkRequest;
 import zw.gov.mohcc.impilo.oros.api.dto.NoteRequest;
 import zw.gov.mohcc.impilo.oros.api.dto.OrderSummaryDto;
 import zw.gov.mohcc.impilo.oros.api.dto.ReportDto;
 import zw.gov.mohcc.impilo.oros.api.dto.ReportRequest;
+import zw.gov.mohcc.impilo.oros.core.ExternalResultLinkService;
 import zw.gov.mohcc.impilo.oros.core.OrderQueryService;
 import zw.gov.mohcc.impilo.oros.core.ReportService;
+import zw.gov.mohcc.impilo.oros.integration.ShareSlipClient;
 import zw.gov.mohcc.impilo.oros.persistence.entity.ResultEntity;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
@@ -38,13 +41,16 @@ public class ReportController {
     private static final Logger log = LoggerFactory.getLogger(ReportController.class);
 
     private final ReportService reportService;
+    private final ExternalResultLinkService externalResultLinkService;
     private final OrderQueryService orderQueryService;
     private final ObjectMapper objectMapper;
 
     public ReportController(ReportService reportService,
+                            ExternalResultLinkService externalResultLinkService,
                             OrderQueryService orderQueryService,
                             ObjectMapper objectMapper) {
         this.reportService = reportService;
+        this.externalResultLinkService = externalResultLinkService;
         this.orderQueryService = orderQueryService;
         this.objectMapper = objectMapper;
     }
@@ -109,6 +115,17 @@ public class ReportController {
             @PathVariable UUID resultId, @RequestBody(required = false) NoteRequest request) {
         ResultEntity r = reportService.acknowledge(resultId, note(request));
         return ok(r);
+    }
+
+    /** Issue a secure, OTP-protected, time-limited external link to a result (criterion E). */
+    @PostMapping("/{resultId}/external-link")
+    public ResponseEntity<ApiResponse<ShareSlipClient.ShareLinkRef>> externalLink(
+            @PathVariable UUID resultId, @RequestBody(required = false) ExternalLinkRequest request) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        int expiryHours = request != null && request.expiryHours() != null ? request.expiryHours() : 72;
+        int maxClaims = request != null && request.maxClaims() != null ? request.maxClaims() : 3;
+        ShareSlipClient.ShareLinkRef ref = externalResultLinkService.issue(resultId, expiryHours, maxClaims);
+        return ResponseEntity.ok(ApiResponse.ok(ref, correlationId));
     }
 
     /** Requester results inbox: orders with results ready for review. */
