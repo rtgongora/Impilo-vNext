@@ -221,8 +221,11 @@ export function useMeetingActions() {
     end: (conversationId: string) =>
       apiClient.post<unknown>(`${BASE}/conversations/${conversationId}/meeting/end`, {}),
     // Compose with Impilo Live: attach (idempotently) a Khuluma discussion to an existing live event.
-    fromEvent: (eventId: string, participants: Array<{ actorId: string; actorType?: string; displayName?: string }> = []) =>
-      apiClient.post<MeetingResponse>(`${BASE}/meetings/from-event`, { eventId, participants }),
+    fromEvent: (
+      eventId: string,
+      participants: Array<{ actorId: string; actorType?: string; displayName?: string }> = [],
+      title?: string,
+    ) => apiClient.post<MeetingResponse>(`${BASE}/meetings/from-event`, { eventId, title, participants }),
     eventConversation: (eventId: string) =>
       apiClient.get<MeetingResponse>(`${BASE}/events/${eventId}/conversation`),
   };

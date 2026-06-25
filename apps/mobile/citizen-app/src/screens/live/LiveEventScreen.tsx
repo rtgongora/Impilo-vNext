@@ -21,6 +21,7 @@ import {
   isDonorMobilisationEvent,
 } from "../../services/impiloLiveService";
 import { appStore } from "../../stores/appStore";
+import { EventDiscussionSection } from "./EventDiscussionSection";
 
 interface Props {
   eventId: string;
@@ -208,6 +209,8 @@ export function LiveEventScreen({ eventId, onBack }: Props) {
             />
           </View>
         ) : null}
+
+        <EventDiscussionSection eventId={eventId} title={eventQuery.data?.title} />
       </ScrollView>
     </Screen>
   );

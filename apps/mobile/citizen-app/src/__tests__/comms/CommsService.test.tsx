@@ -13,6 +13,8 @@ import {
   acceptCall,
   createMeeting,
   joinMeeting,
+  meetingFromEvent,
+  eventConversation,
 } from "../../services/khulumaCommsService";
 
 describe("khulumaCommsService", () => {
@@ -79,5 +81,23 @@ describe("khulumaCommsService", () => {
     const joined = await joinMeeting("m-1");
     expect(api.post).toHaveBeenCalledWith("/internal/v1/mobile/khuluma/conversations/m-1/meeting/join", {});
     expect(joined.accessToken).toBe("jwt2");
+  });
+
+  it("composes with Impilo Live — attach + lookup the event's discussion", async () => {
+    api.post.mockResolvedValueOnce({ data: { conversationId: "c-9", eventId: "ev-1", mediaAvailable: false } });
+    const attached = await meetingFromEvent("ev-1", [{ actorId: "prov-b" }]);
+    expect(api.post).toHaveBeenCalledWith("/internal/v1/mobile/khuluma/meetings/from-event", {
+      eventId: "ev-1",
+      participants: [{ actorId: "prov-b" }],
+    });
+    expect(attached.conversationId).toBe("c-9");
+
+    api.get.mockResolvedValueOnce({ data: { conversationId: "c-9", eventId: "ev-1" } });
+    const found = await eventConversation("ev-1");
+    expect(api.get).toHaveBeenCalledWith("/internal/v1/mobile/khuluma/events/ev-1/conversation");
+    expect(found?.conversationId).toBe("c-9");
+
+    api.get.mockRejectedValueOnce(new Error("404"));
+    expect(await eventConversation("none")).toBeNull();
   });
 });
