@@ -9,8 +9,17 @@
 >
 > **Already landed (pushed):** W1–W3 (grounded LLM clinical reasoning on AIDiagnosticAssistant +
 > ActiveCDSBanner, fail-closed, auditable) and **Phase 0 part 1** — `UcumUnitConverter` (real
-> `org.fhir:ucum`, commit `63f87e3c`). **Next:** Phase 0 part 2 (Zibo `OBSERVATION_DEFINITION`) →
-> Phase 1 keystone.
+> `org.fhir:ucum`, commit `63f87e3c`).
+>
+> **✅ Phase 0 part 2 + Phase 1 KEYSTONE COMPLETE (pushed, branch
+> `intake/wave-b-tshepo-gdhcn-trust-primitives`).** Context-aware interpretation of vitals + labs is live
+> end-to-end and auditable. Commits: Zibo `OBSERVATION_DEFINITION` + effective window `d29e62e07`; CKP
+> interpretation core (RangeResolver + InterpretationEngine + models) `53000fa75`; context extension +
+> AKI/hyperK/critical-lab/pregnancy rules `56b542ef1`; `POST /interpretation/evaluate` + BFF proxy
+> `30c521422`; Zibo-backed ObservationDefinition provider + reference-range fetch `55127bdbf`; cited DRAFT
+> vitals seed + single-source generator + drift guard + loader `ace36bbd0`; both UI surfaces render
+> interpreted flags `82873fe15`. Completion note: [`cds-engine-phase1-completion.md`](cds-engine-phase1-completion.md).
+> **Next:** Phase 2 (unified patient-context bundle + backend calculators + exhaustive surfaces).
 
 ## Context
 
