@@ -25,6 +25,12 @@ per-category extensions. No parallel order engine was created.
 | O7 | `3549218aa` | BFF exposes structured observations, specimens & order results for the patient file |
 | O8 | `98a5fafdd` | Consolidated Investigations UI: generalised lifecycle + expandable structured lab observations |
 | O9 | `fd650cc30` | Service Catalogue & Fulfilment Directory (admin + clinician read) |
+| O11 | (lab UI) | Lab worklist + specimen collect/dispatch/receive/reject screens; BFF fulfilment-worklist / workflow-transition / specimen proxies |
+| O12 | (proc UI) | Procedure worklist screen; lab order-form specimen-type + fasting fields |
+| O13 | (admin UI) | `/admin/diagnostics-catalogue` editor (service catalogue / orderables / specimen config) + BFF catalogue proxies |
+| O14 | (mobile) | Provider-app lab/procedure/specimen parity (worklist, collect [offline-queued], dispatch/receive/reject, transition, critical-ack) |
+| O15 | (fhir) | FHIR Observation writeback for structured lab results (value/unit/refRange/interpretation) |
+| O16 | (ops) | MADI local DB seed; donor-deferral pre-flight at donation collection |
 
 ## Services changed
 oros-service (spine, lab, procedure, blood callbacks, catalogue), madi-service (bidirectional
@@ -65,18 +71,26 @@ proxies), one-ui-shell (investigations tab + hooks). Registry: `madi-service` po
 - OROS ↔ MADI: **live, bidirectional** (REST callbacks both directions; best-effort, non-blocking).
 - MADI → BUTANO (transfusion verify) and MADI → NHUME (adverse-event): pre-existing, intact.
 
+## UI / mobile / ops residuals — now CLOSED (waves O11–O16)
+- Lab worklist + specimen collect/dispatch/receive/reject screens (O11); procedure worklist +
+  lab order-form specimen/fasting fields (O12); admin catalogue editor (O13); provider-mobile
+  lab/procedure/specimen parity (O14) — all with BFF proxies, hooks, routes, and tests.
+- FHIR Observation writeback for structured lab results (O15).
+- MADI local DB seed + donor-deferral pre-flight at donation collection (O16).
+
 ## Remaining gaps / next hardening (honest)
-1. **UI surfaces not yet built** beyond the investigations consolidation: dedicated lab worklist +
-   specimen collection/dispatch/receipt screens, procedure worklist screen, lab order form with
-   specimen/panel/fasting fields, admin catalogue editor pages, and provider-mobile parity for the
-   new lab/procedure/specimen flows. Backends + BFF + hooks exist; screens are the residual.
-2. **HL7/FHIR interop mappers** still imaging/lab-shaped; generalising the FHIR Observation/Specimen/
-   Task mappers for the full lab payload is deferred (adapters remain OFF/honest).
-3. **MADI ops maturity**: not yet in `docker-compose.yml`; blood-order SLA timers and donor-deferral
-   preflight not added (data model supports them).
-4. **Event-driven path**: OROS↔MADI uses REST callbacks; a Kafka consumer path (madi.* → OROS) is a
-   resilience upgrade over the current best-effort REST.
-5. Ratchet the product-truth baseline down (currently 6; actual 4) once UI residuals land.
+1. **HL7 v2 ORU per-observation OBX**: the ORU-outbound adapter (flag-gated OFF) still emits a
+   summary OBX; expanding to one OBX per structured observation needs the observations threaded
+   through the report lifecycle. Low priority (adapter off by default). FHIR Observation writeback
+   (O15) already carries the structured payload to the SHR.
+2. **MADI blood-order SLA timers**: a dedicated SLA table + scheduler for "crossmatch within N
+   hours / issue within N hours" is not built (the dashboard computes turnaround ad-hoc). MADI is
+   intentionally **not** in `docker-compose.yml` — that file is infrastructure-only (no Spring
+   service runs in compose; services are bare-metal per `port-allocation.md`). Local provisioning
+   is covered by the `madi` DB seed (O16).
+3. **Event-driven OROS↔MADI**: the loop uses best-effort REST callbacks both ways; a Kafka consumer
+   path (madi.* → OROS) is a resilience upgrade.
+4. Ratchet the product-truth baseline down (currently 6; actual 4).
 
 ## Doctrine compliance
 One OROS order spine; coarse `OrderStatus` untouched; per-category guards on a single

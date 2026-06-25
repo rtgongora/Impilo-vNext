@@ -153,6 +153,17 @@ public class DonorService {
         return feedbackRepository.save(feedback);
     }
 
+    /**
+     * Whether the donor currently has a blocking deferral — an ACTIVE deferral that is either
+     * indefinite ({@code deferredUntil} null) or whose end date has not yet passed. Used as a
+     * pre-flight safety check before collecting blood from the donor.
+     */
+    @Transactional(readOnly = true)
+    public boolean hasActiveDeferral(UUID tenantId, UUID donorId) {
+        return deferralRepository.findByDonorIdAndTenantIdAndStatus(donorId, tenantId, "ACTIVE").stream()
+                .anyMatch(d -> d.getDeferredUntil() == null || !LocalDate.now().isAfter(d.getDeferredUntil()));
+    }
+
     @Transactional(readOnly = true)
     public Map<String, Object> donorHistory(UUID tenantId, UUID donorId) {
         requireDonor(tenantId, donorId);
