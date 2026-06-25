@@ -6,12 +6,13 @@ import {
   useDiagnosticsOrders,
   useResultsInbox,
   useDiagnosticsReconcileSummary,
+  useCreateDiagnosticOrder,
 } from "../useDiagnosticsOrders";
 
-const { get } = vi.hoisted(() => ({ get: vi.fn() }));
+const { get, post } = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }));
 
 vi.mock("@/lib/api-client", () => ({
-  apiClient: { get },
+  apiClient: { get, post },
 }));
 
 function wrapper({ children }: { children: ReactNode }) {
@@ -20,7 +21,10 @@ function wrapper({ children }: { children: ReactNode }) {
 }
 
 describe("useDiagnosticsOrders", () => {
-  beforeEach(() => get.mockReset());
+  beforeEach(() => {
+    get.mockReset();
+    post.mockReset();
+  });
 
   it("calls the BFF diagnostics orders endpoint with the type filter", async () => {
     get.mockResolvedValue({
@@ -60,5 +64,27 @@ describe("useDiagnosticsOrders", () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data?.data.CRITICAL_UNACKNOWLEDGED).toBe(1);
     expect(get).toHaveBeenCalledWith("/internal/v1/diagnostics/reconcile-summary");
+  });
+
+  it("create order posts a draft then submits it", async () => {
+    post
+      .mockResolvedValueOnce({ data: { orderId: "ORD-NEW", status: "DRAFT" } })
+      .mockResolvedValueOnce({ data: { orderId: "ORD-NEW", status: "PLACED", accessionNumber: "ACC-1" } });
+
+    const { result } = renderHook(() => useCreateDiagnosticOrder(), { wrapper });
+    result.current.mutate({
+      patientCpid: "CPID-1",
+      orderType: "IMAGING",
+      items: [{ code: "CHEST-XR", modality: "XR" }],
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.accessionNumber).toBe("ACC-1");
+    expect(post).toHaveBeenNthCalledWith(1, "/internal/v1/diagnostics/orders/draft", expect.objectContaining({
+      orderType: "IMAGING",
+      patientCpid: "CPID-1",
+      requestSource: "INTERNAL",
+    }));
+    expect(post).toHaveBeenNthCalledWith(2, "/internal/v1/diagnostics/orders/ORD-NEW/submit");
   });
 });

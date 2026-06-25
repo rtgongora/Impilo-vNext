@@ -5,7 +5,7 @@
  * forwards to OROS. No mock data: every hook calls a real BFF endpoint.
  */
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 
 /** Mirrors the OROS OrderSummaryDto surfaced through the BFF. */
@@ -74,6 +74,73 @@ export function useResultsInbox(requester?: string) {
       return apiClient.get<OrdersResponse>(`/internal/v1/diagnostics/results-inbox${qs}`);
     },
     staleTime: 15_000,
+  });
+}
+
+export interface CreateDiagnosticOrderItem {
+  code: string;
+  displayName?: string;
+  quantity?: number;
+  modality?: string;
+  laterality?: string;
+  contrast?: string;
+  procedureCode?: string;
+  bodySite?: string;
+}
+
+export interface CreateDiagnosticOrderInput {
+  patientCpid: string;
+  orderType: string;
+  priority?: string;
+  clinicalNotes?: string;
+  referringProviderId?: string;
+  referringProviderName?: string;
+  items: CreateDiagnosticOrderItem[];
+}
+
+function toDraftBody(input: CreateDiagnosticOrderInput): Record<string, unknown> {
+  return {
+    orderType: input.orderType,
+    priority: input.priority ?? "ROUTINE",
+    patientCpid: input.patientCpid,
+    clinicalNotes: input.clinicalNotes,
+    requestSource: "INTERNAL",
+    referringProviderId: input.referringProviderId,
+    referringProviderName: input.referringProviderName,
+    items: input.items.map((it) => ({
+      code: it.code,
+      displayName: it.displayName ?? it.code,
+      quantity: it.quantity ?? 1,
+      modality: it.modality,
+      laterality: it.laterality,
+      contrast: it.contrast,
+      procedureCode: it.procedureCode,
+      bodySite: it.bodySite,
+    })),
+  };
+}
+
+/**
+ * Create a diagnostic order: create a draft then submit it (reserving an accession and
+ * initializing the imaging workflow on the OROS side). Returns the submitted order.
+ */
+export function useCreateDiagnosticOrder() {
+  const queryClient = useQueryClient();
+  return useMutation<DiagnosticOrder, unknown, CreateDiagnosticOrderInput>({
+    mutationFn: async (input) => {
+      const draft = await apiClient.post<ApiResponse<DiagnosticOrder>>(
+        "/internal/v1/diagnostics/orders/draft",
+        toDraftBody(input),
+      );
+      const orderId = draft.data.orderId;
+      const submitted = await apiClient.post<ApiResponse<DiagnosticOrder>>(
+        `/internal/v1/diagnostics/orders/${encodeURIComponent(orderId)}/submit`,
+      );
+      return submitted.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["diagnostics-orders"] });
+    },
   });
 }
 
