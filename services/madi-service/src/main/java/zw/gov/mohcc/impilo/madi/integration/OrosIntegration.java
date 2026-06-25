@@ -43,6 +43,22 @@ public class OrosIntegration {
                 "source", "madi-service"));
     }
 
+    /** Return the crossmatch compatibility result to OROS (records a result; incompatible = critical). */
+    public void notifyCrossmatchResult(String orosOrderRef, String resultStatus, String notes) {
+        post("/internal/v1/orders/blood/crossmatch-result", Map.of(
+                "orosOrderRef", orosOrderRef,
+                "resultStatus", resultStatus != null ? resultStatus : "UNKNOWN",
+                "notes", notes != null ? notes : ""));
+    }
+
+    /** Return the transfusion outcome to OROS (records a result; adverse/stopped = critical). */
+    public void notifyTransfusionOutcome(String orosOrderRef, String outcome, String notes) {
+        post("/internal/v1/orders/blood/transfusion-outcome", Map.of(
+                "orosOrderRef", orosOrderRef,
+                "outcome", outcome != null ? outcome : "UNKNOWN",
+                "notes", notes != null ? notes : ""));
+    }
+
     private void post(String path, Map<String, Object> payload) {
         try {
             HttpHeaders headers = buildTrustHeaders();

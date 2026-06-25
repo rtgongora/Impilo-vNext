@@ -134,6 +134,11 @@ public class BloodOrderService {
         orderRepository.save(order);
         eventEmitter.emit("BLOOD_ORDER", orderId.toString(), "CROSSMATCH_COMPLETED", "BLOOD_ORDER",
                 orderId.toString(), Map.of("result", result.name()), tenantId);
+        // Return the compatibility result to OROS so it surfaces in the requester's inbox /
+        // patient file (incompatible -> critical). Best-effort; OROS unavailability is non-blocking.
+        if (order.getOrosOrderRef() != null) {
+            orosIntegration.notifyCrossmatchResult(order.getOrosOrderRef(), result.name(), null);
+        }
         return saved;
     }
 

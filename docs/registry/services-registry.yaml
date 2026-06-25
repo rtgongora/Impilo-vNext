@@ -1324,7 +1324,7 @@ services:
     sovereign: false
     sovereign_group: null
     primary_protocol: rest
-    default_http_port: null
+    default_http_port: 8300
     product_names:
       - Madi
     owner_team: TBD

@@ -77,4 +77,28 @@ class BloodOrderServiceTest {
         assertThat(result.getStatus()).isEqualTo(BloodOrderStatus.SUBMITTED.name());
         verify(orosIntegration).notifyOrderSubmitted("OROS-1", orderId.toString());
     }
+
+    @Test
+    void crossmatch_returnsResultToOros() {
+        UUID orderId = UUID.randomUUID();
+        BloodOrderEntity order = new BloodOrderEntity();
+        order.setOrderId(orderId);
+        order.setTenantId(TENANT_ID);
+        order.setStatus(BloodOrderStatus.SAMPLE_COLLECTED.name());
+        order.setOrosOrderRef("OROS-7");
+        when(orderRepository.findByOrderIdAndTenantId(orderId, TENANT_ID)).thenReturn(Optional.of(order));
+        when(crossmatchRequestRepository.save(any())).thenAnswer(inv -> {
+            var r = (zw.gov.mohcc.impilo.madi.persistence.entity.CrossmatchRequestEntity) inv.getArgument(0);
+            r.setRequestId(UUID.randomUUID());
+            return r;
+        });
+        when(crossmatchResultRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(orderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        bloodOrderService.crossmatch(TENANT_ID, orderId, UUID.randomUUID(), UUID.randomUUID(),
+                zw.gov.mohcc.impilo.madi.domain.CrossmatchResultStatus.INCOMPATIBLE, "tech-1", UUID.randomUUID());
+
+        // The incompatible result is returned to OROS (which flags it critical for the requester).
+        verify(orosIntegration).notifyCrossmatchResult("OROS-7", "INCOMPATIBLE", null);
+    }
 }
