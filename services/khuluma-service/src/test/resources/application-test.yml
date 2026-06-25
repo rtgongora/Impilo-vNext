@@ -21,3 +21,7 @@ impilo:
   khuluma:
     # Best-effort downstream; tests assert lifecycle works even when media is unreachable.
     rtc-gateway-base-url: http://localhost:8195
+    # No Redis in tests — the realtime gateway delivers locally (single instance), which is
+    # exactly what the SSE/WS round-trip tests exercise.
+    realtime:
+      redis-enabled: false
