@@ -28,17 +28,23 @@ public class TransfusionService {
     private final TransfusionOutcomeRepository outcomeRepository;
     private final ButanoIntegration butanoIntegration;
     private final MadiEventEmitter eventEmitter;
+    private final zw.gov.mohcc.impilo.madi.persistence.repository.BloodOrderRepository orderRepository;
+    private final zw.gov.mohcc.impilo.madi.integration.OrosIntegration orosIntegration;
 
     public TransfusionService(TransfusionEpisodeRepository episodeRepository,
                               TransfusionObservationRepository observationRepository,
                               TransfusionOutcomeRepository outcomeRepository,
                               ButanoIntegration butanoIntegration,
-                              MadiEventEmitter eventEmitter) {
+                              MadiEventEmitter eventEmitter,
+                              zw.gov.mohcc.impilo.madi.persistence.repository.BloodOrderRepository orderRepository,
+                              zw.gov.mohcc.impilo.madi.integration.OrosIntegration orosIntegration) {
         this.episodeRepository = episodeRepository;
         this.observationRepository = observationRepository;
         this.outcomeRepository = outcomeRepository;
         this.butanoIntegration = butanoIntegration;
         this.eventEmitter = eventEmitter;
+        this.orderRepository = orderRepository;
+        this.orosIntegration = orosIntegration;
     }
 
     @Transactional
@@ -104,6 +110,14 @@ public class TransfusionService {
         TransfusionEpisodeEntity saved = episodeRepository.save(episode);
         eventEmitter.emit("TRANSFUSION", episodeId.toString(), "TRANSFUSION_COMPLETED", "TRANSFUSION",
                 episodeId.toString(), Map.of("outcome", outcomeStatus), tenantId);
+        // Return the transfusion outcome to OROS so it closes the loop on the requesting order /
+        // patient file (adverse/stopped -> critical). Best-effort; OROS unavailability is non-blocking.
+        if (episode.getOrderId() != null) {
+            orderRepository.findByOrderIdAndTenantId(episode.getOrderId(), tenantId)
+                    .map(zw.gov.mohcc.impilo.madi.persistence.entity.BloodOrderEntity::getOrosOrderRef)
+                    .filter(ref -> ref != null && !ref.isBlank())
+                    .ifPresent(ref -> orosIntegration.notifyTransfusionOutcome(ref, outcomeStatus, outcomeNotes));
+        }
         return saved;
     }
 
