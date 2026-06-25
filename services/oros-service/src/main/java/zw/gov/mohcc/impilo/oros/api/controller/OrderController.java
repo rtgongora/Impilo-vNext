@@ -13,6 +13,7 @@ import zw.gov.mohcc.impilo.oros.api.dto.NoteRequest;
 import zw.gov.mohcc.impilo.oros.api.dto.OrderItemDto;
 import zw.gov.mohcc.impilo.oros.api.dto.OrderSummaryDto;
 import zw.gov.mohcc.impilo.oros.api.dto.PlaceOrderRequest;
+import zw.gov.mohcc.impilo.oros.api.dto.PrintableRequest;
 import zw.gov.mohcc.impilo.oros.api.dto.RouteDto;
 import zw.gov.mohcc.impilo.oros.api.dto.RouteRequest;
 import zw.gov.mohcc.impilo.oros.api.dto.ScheduleRequest;
@@ -56,6 +57,7 @@ public class OrderController {
     private final OrderSubmissionService submissionService;
     private final ImagingWorkflowService imagingWorkflowService;
     private final OrderQueryService orderQueryService;
+    private final DiagnosticShareService diagnosticShareService;
     private final RoutingEngine routingEngine;
     private final WorkstepEngine workstepEngine;
     private final SlaService slaService;
@@ -64,6 +66,7 @@ public class OrderController {
                            OrderSubmissionService submissionService,
                            ImagingWorkflowService imagingWorkflowService,
                            OrderQueryService orderQueryService,
+                           DiagnosticShareService diagnosticShareService,
                            RoutingEngine routingEngine,
                            WorkstepEngine workstepEngine,
                            SlaService slaService) {
@@ -71,6 +74,7 @@ public class OrderController {
         this.submissionService = submissionService;
         this.imagingWorkflowService = imagingWorkflowService;
         this.orderQueryService = orderQueryService;
+        this.diagnosticShareService = diagnosticShareService;
         this.routingEngine = routingEngine;
         this.workstepEngine = workstepEngine;
         this.slaService = slaService;
@@ -320,6 +324,17 @@ public class OrderController {
     public ResponseEntity<ApiResponse<OrderSummaryDto>> completeOrder(
             @PathVariable String orderId, @RequestBody(required = false) NoteRequest request) {
         return imagingActionResponse(orderId, ImagingWorkflowState.PERFORMED, request);
+    }
+
+    /** Issue a printable, OTP-protected QR for a patient-carried order (criterion D). */
+    @PostMapping("/{orderId}/printable")
+    public ResponseEntity<ApiResponse<zw.gov.mohcc.impilo.oros.integration.ShareSlipClient.ShareLinkRef>> printable(
+            @PathVariable String orderId, @RequestBody(required = false) PrintableRequest request) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        int expiryHours = request != null && request.expiryHours() != null ? request.expiryHours() : 168;
+        int maxClaims = request != null && request.maxClaims() != null ? request.maxClaims() : 1;
+        var ref = diagnosticShareService.printable(orderId, expiryHours, maxClaims);
+        return ResponseEntity.ok(ApiResponse.ok(ref, correlationId));
     }
 
     /** Link a PACS/DICOM study to the order (imaging state -> IMAGES_LINKED). */

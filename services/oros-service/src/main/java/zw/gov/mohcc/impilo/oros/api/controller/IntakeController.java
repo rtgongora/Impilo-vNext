@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.oros.api.dto.OrderItemDto;
 import zw.gov.mohcc.impilo.oros.api.dto.OrderSummaryDto;
 import zw.gov.mohcc.impilo.oros.api.dto.PlaceOrderRequest;
+import zw.gov.mohcc.impilo.oros.api.dto.QrClaimRequest;
+import zw.gov.mohcc.impilo.oros.core.DiagnosticShareService;
 import zw.gov.mohcc.impilo.oros.core.OrderStateMachine;
 import zw.gov.mohcc.impilo.oros.core.OrderSubmissionService;
 import zw.gov.mohcc.impilo.oros.core.RoutingEngine;
@@ -38,20 +40,33 @@ public class IntakeController {
 
     private final OrderStateMachine stateMachine;
     private final OrderSubmissionService submissionService;
+    private final DiagnosticShareService diagnosticShareService;
     private final RoutingEngine routingEngine;
     private final WorkstepEngine workstepEngine;
     private final SlaService slaService;
 
     public IntakeController(OrderStateMachine stateMachine,
                             OrderSubmissionService submissionService,
+                            DiagnosticShareService diagnosticShareService,
                             RoutingEngine routingEngine,
                             WorkstepEngine workstepEngine,
                             SlaService slaService) {
         this.stateMachine = stateMachine;
         this.submissionService = submissionService;
+        this.diagnosticShareService = diagnosticShareService;
         this.routingEngine = routingEngine;
         this.workstepEngine = workstepEngine;
         this.slaService = slaService;
+    }
+
+    /** Claim a patient-carried order QR at a fulfilling facility (criterion D). */
+    @PostMapping("/v1/intake/qr/claim")
+    public ResponseEntity<ApiResponse<OrderSummaryDto>> qrClaim(
+            @Valid @RequestBody QrClaimRequest request) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        OrderEntity order = diagnosticShareService.claim(
+                request.shareToken(), request.otp(), request.deviceFingerprint());
+        return ResponseEntity.ok(ApiResponse.ok(OrderSummaryDto.from(order), correlationId));
     }
 
     /** Capture a scanned paper request as an order (source=PAPER). */
