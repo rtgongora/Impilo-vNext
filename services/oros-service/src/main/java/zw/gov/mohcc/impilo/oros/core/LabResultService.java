@@ -55,14 +55,21 @@ public class LabResultService {
         List<ObservationInput> obs = observations != null ? observations : List.of();
         String summaryJson = buildSummary(obs);
 
+        // Build the observation rows up-front so the outbound ORU^R01 can carry one OBX per analyte;
+        // they are persisted with the result id once the result exists.
+        List<ResultObservationEntity> entities = buildObservations(orderId, obs);
+
         ResultEntity result = isFinal
-                ? reportService.createFinal(orderId, summaryJson, impression, recommendations, null, ziboResultCodes)
+                ? reportService.createFinal(orderId, summaryJson, impression, recommendations, null, ziboResultCodes, entities)
                 : reportService.createPreliminary(orderId, summaryJson, impression, recommendations, null, ziboResultCodes);
 
-        var savedObservations = persistObservations(orderId, result.getResultId(), obs);
+        for (ResultObservationEntity e : entities) {
+            e.setResultId(result.getResultId());
+            observationRepository.save(e);
+        }
 
         // Write the structured observations to the SHR as FHIR Observation resources (best-effort).
-        butanoIntegration.createObservations(orderId, result, savedObservations);
+        butanoIntegration.createObservations(orderId, result, entities);
 
         // Per-analyte critical flag → raise the result-level critical workflow once.
         List<String> criticalAnalytes = obs.stream()
@@ -86,12 +93,12 @@ public class LabResultService {
         return observationRepository.findByResultIdOrderBySequenceAsc(resultId);
     }
 
-    private List<ResultObservationEntity> persistObservations(String orderId, UUID resultId, List<ObservationInput> obs) {
-        List<ResultObservationEntity> saved = new ArrayList<>();
+    /** Build (but do not persist) the observation rows from the inbound inputs, in sequence order. */
+    private List<ResultObservationEntity> buildObservations(String orderId, List<ObservationInput> obs) {
+        List<ResultObservationEntity> built = new ArrayList<>();
         int seq = 0;
         for (ObservationInput in : obs) {
             ResultObservationEntity e = new ResultObservationEntity();
-            e.setResultId(resultId);
             e.setOrderId(orderId);
             e.setSequence(seq++);
             e.setAnalyteCode(in.analyteCode());
@@ -107,9 +114,9 @@ public class LabResultService {
             e.setAbnormalFlag(in.abnormalFlag());
             e.setCriticalFlag(Boolean.TRUE.equals(in.criticalFlag()));
             e.setComment(in.comment());
-            saved.add(observationRepository.save(e));
+            built.add(e);
         }
-        return saved;
+        return built;
     }
 
     /** Compact JSON snapshot of the observations, stored on the result for SHR writeback/back-compat. */

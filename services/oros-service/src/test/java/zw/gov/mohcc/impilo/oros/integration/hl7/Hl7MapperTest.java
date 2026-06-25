@@ -68,4 +68,40 @@ class Hl7MapperTest {
         assertThat(encoded).contains("No acute intracranial abnormality.");
         assertThat(encoded).contains("OBX|");
     }
+
+    @Test
+    @DisplayName("ORU^R01 emits one OBX per structured observation with value/unit/range/flag")
+    void buildsOruWithObservations() {
+        OrderEntity order = new OrderEntity();
+        order.setOrderId("ORD-2");
+        order.setPatientCpid("CPID-9");
+        order.setAccessionNumber("ACC-2026-AB-2");
+        ResultEntity result = new ResultEntity();
+        result.setZiboResultCodes("FBC");
+
+        var hb = new zw.gov.mohcc.impilo.oros.persistence.entity.ResultObservationEntity();
+        hb.setAnalyteCode("718-7");
+        hb.setAnalyteName("Haemoglobin");
+        hb.setValueNumeric(new java.math.BigDecimal("8.1"));
+        hb.setUnit("g/dL");
+        hb.setRefRangeText("12-16");
+        hb.setAbnormalFlag("L");
+
+        var k = new zw.gov.mohcc.impilo.oros.persistence.entity.ResultObservationEntity();
+        k.setAnalyteCode("2823-3");
+        k.setAnalyteName("Potassium");
+        k.setValueNumeric(new java.math.BigDecimal("7.1"));
+        k.setUnit("mmol/L");
+        k.setRefRangeText("3.5-5.1");
+        k.setCriticalFlag(true);
+
+        String encoded = new Hl7OruMapper(ctx).buildOru(order, result, java.util.List.of(hb, k));
+
+        assertThat(encoded).contains("ORU^R01");
+        // Two distinct OBX segments, one per analyte, with numeric value type and units.
+        assertThat(encoded).contains("OBX|1|NM|718-7^Haemoglobin").contains("8.1").contains("g/dL").contains("12-16");
+        assertThat(encoded).contains("OBX|2|NM|2823-3^Potassium").contains("7.1").contains("mmol/L");
+        // Critical potassium maps to an abnormal flag (AA when none supplied).
+        assertThat(encoded).contains("AA");
+    }
 }

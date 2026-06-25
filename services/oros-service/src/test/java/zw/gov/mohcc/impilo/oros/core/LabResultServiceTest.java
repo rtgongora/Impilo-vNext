@@ -55,8 +55,8 @@ class LabResultServiceTest {
     @DisplayName("final result authors a FINAL report, persists observations, flags critical when present")
     void finalWithCritical() {
         ResultEntity result = resultWithId();
-        when(reportService.createFinal(eq(ORDER_ID), anyString(), any(), any(), any(), any()))
-                .thenReturn(result);
+        when(reportService.createFinal(eq(ORDER_ID), anyString(), any(), any(), any(), any(),
+                org.mockito.ArgumentMatchers.anyList())).thenReturn(result);
 
         List<ObservationInput> obs = List.of(
                 new ObservationInput("718-7", "http://loinc.org", "Haemoglobin", null,
@@ -71,7 +71,7 @@ class LabResultServiceTest {
 
         assertThat(returned).isSameAs(result);
         verify(reportService).createFinal(eq(ORDER_ID), anyString(), eq("anaemia + hyperkalaemia"),
-                any(), any(), eq("Z1"));
+                any(), any(), eq("Z1"), org.mockito.ArgumentMatchers.anyList());
         verify(observationRepository, times(2)).save(any(ResultObservationEntity.class));
         // The structured observations are written to the SHR as FHIR Observations.
         verify(butanoIntegration).createObservations(eq(ORDER_ID), eq(result),

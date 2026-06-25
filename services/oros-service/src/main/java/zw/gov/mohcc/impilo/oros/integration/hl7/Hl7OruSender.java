@@ -38,14 +38,23 @@ public class Hl7OruSender {
         this.port = port;
     }
 
-    /** Send the order's final report as ORU^R01. No-op when disabled. */
+    /** Send the order's final report as ORU^R01 (summary OBX). No-op when disabled. */
     public void sendFinalReport(OrderEntity order, ResultEntity result) {
+        sendFinalReport(order, result, java.util.List.of());
+    }
+
+    /**
+     * Send the order's final report as ORU^R01 with one OBX per structured observation (or a single
+     * summary OBX when none are supplied). No-op when disabled; best-effort.
+     */
+    public void sendFinalReport(OrderEntity order, ResultEntity result,
+                                java.util.List<zw.gov.mohcc.impilo.oros.persistence.entity.ResultObservationEntity> observations) {
         if (!enabled) {
             return;
         }
         Connection connection = null;
         try {
-            Message message = hapiContext.getPipeParser().parse(mapper.buildOru(order, result));
+            Message message = hapiContext.getPipeParser().parse(mapper.buildOru(order, result, observations));
             connection = hapiContext.newClient(host, port, false);
             Initiator initiator = connection.getInitiator();
             Message ack = initiator.sendAndReceive(message);

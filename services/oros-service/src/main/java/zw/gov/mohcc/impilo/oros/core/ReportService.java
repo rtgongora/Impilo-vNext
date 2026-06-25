@@ -84,10 +84,21 @@ public class ReportService {
         return r;
     }
 
-    /** Author a final report. */
+    /** Author a final report (summary ORU OBX). */
     @Transactional
     public ResultEntity createFinal(String orderId, String summaryJson, String impression,
                                     String recommendations, String docIds, String ziboCodes) {
+        return createFinal(orderId, summaryJson, impression, recommendations, docIds, ziboCodes, java.util.List.of());
+    }
+
+    /**
+     * Author a final report; when structured {@code observations} are supplied the outbound ORU^R01
+     * carries one OBX per observation (otherwise a single summary OBX).
+     */
+    @Transactional
+    public ResultEntity createFinal(String orderId, String summaryJson, String impression,
+                                    String recommendations, String docIds, String ziboCodes,
+                                    java.util.List<zw.gov.mohcc.impilo.oros.persistence.entity.ResultObservationEntity> observations) {
         TrustContext ctx = TrustContextHolder.require();
         OrderEntity order = stateMachine.getOrder(orderId);
         ResultEntity r = newResult(order, summaryJson, impression, recommendations, docIds, ziboCodes,
@@ -97,8 +108,9 @@ public class ReportService {
         publishEvent(r, "RESULT_FINAL");
         syncWorkflow(order, ReportStep.FINAL);
         butanoIntegration.createDiagnosticReport(orderId, r);
-        hl7OruSender.sendFinalReport(order, r);
-        log.info("Final report authored: orderId={}, resultId={}", orderId, r.getResultId());
+        hl7OruSender.sendFinalReport(order, r, observations);
+        log.info("Final report authored: orderId={}, resultId={}, observations={}",
+                orderId, r.getResultId(), observations != null ? observations.size() : 0);
         return r;
     }
 
