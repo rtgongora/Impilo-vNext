@@ -2,7 +2,6 @@ package zw.gov.mohcc.impilo.shareslip.dto;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
 
 import java.util.List;
@@ -29,7 +28,8 @@ public record CreateShareLinkRequest(
 
         String subjectName,
 
-        @NotEmpty(message = "At least one documentId is required")
+        // Optional: a link may reference documents (e.g. a result PDF) or be document-less
+        // (e.g. a DIAGNOSTIC_ORDER QR that points to the order itself for claim).
         List<UUID> documentIds,
 
         String purpose,

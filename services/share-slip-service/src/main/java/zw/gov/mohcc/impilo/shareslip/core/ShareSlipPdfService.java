@@ -136,7 +136,8 @@ public class ShareSlipPdfService {
                 cs.beginText();
                 cs.setFont(fontRegular, 10);
                 cs.newLineAtOffset(margin, y);
-                cs.showText("Documents: " + entity.getDocumentIds().size() + " document(s) attached");
+                int docCount = entity.getDocumentIds() != null ? entity.getDocumentIds().size() : 0;
+                cs.showText("Documents: " + docCount + " document(s) attached");
                 cs.endText();
                 y -= 25;
 
