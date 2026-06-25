@@ -269,6 +269,59 @@ public class OrderController {
     }
 
     /**
+     * Imaging-team worklist for the current facility, filtered by fine-grained imaging state.
+     *
+     * <p>e.g. {@code GET /v1/orders/imaging-worklist?states=RECEIVED,ACCEPTED}. Defaults to the
+     * active pre-report states when none are supplied.</p>
+     */
+    @GetMapping("/imaging-worklist")
+    public ResponseEntity<ApiResponse<List<OrderSummaryDto>>> imagingWorklist(
+            @RequestParam(name = "states", required = false) List<ImagingWorkflowState> states) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+
+        List<OrderSummaryDto> orders = orderQueryService.imagingWorklist(states).stream()
+                .map(OrderSummaryDto::from)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(ApiResponse.ok(orders, correlationId));
+    }
+
+    /** Accept an imaging order (imaging state -> ACCEPTED). */
+    @PostMapping("/{orderId}/accept")
+    public ResponseEntity<ApiResponse<OrderSummaryDto>> acceptOrder(
+            @PathVariable String orderId, @RequestBody(required = false) NoteRequest request) {
+        return imagingActionResponse(orderId, ImagingWorkflowState.ACCEPTED, request);
+    }
+
+    /** Reject an imaging order with a reason (imaging state -> REJECTED). */
+    @PostMapping("/{orderId}/reject")
+    public ResponseEntity<ApiResponse<OrderSummaryDto>> rejectOrder(
+            @PathVariable String orderId, @RequestBody(required = false) NoteRequest request) {
+        return imagingActionResponse(orderId, ImagingWorkflowState.REJECTED, request);
+    }
+
+    /** Return an imaging order for clarification with a reason. */
+    @PostMapping("/{orderId}/clarify")
+    public ResponseEntity<ApiResponse<OrderSummaryDto>> clarifyOrder(
+            @PathVariable String orderId, @RequestBody(required = false) NoteRequest request) {
+        return imagingActionResponse(orderId, ImagingWorkflowState.RETURNED_FOR_CLARIFICATION, request);
+    }
+
+    /** Start the imaging examination (imaging state -> IN_PROGRESS). */
+    @PostMapping("/{orderId}/start")
+    public ResponseEntity<ApiResponse<OrderSummaryDto>> startOrder(
+            @PathVariable String orderId, @RequestBody(required = false) NoteRequest request) {
+        return imagingActionResponse(orderId, ImagingWorkflowState.IN_PROGRESS, request);
+    }
+
+    /** Complete the imaging examination (imaging state -> PERFORMED). */
+    @PostMapping("/{orderId}/complete")
+    public ResponseEntity<ApiResponse<OrderSummaryDto>> completeOrder(
+            @PathVariable String orderId, @RequestBody(required = false) NoteRequest request) {
+        return imagingActionResponse(orderId, ImagingWorkflowState.PERFORMED, request);
+    }
+
+    /**
      * Get a single order by its ID.
      */
     @GetMapping("/{orderId}")
@@ -333,5 +386,13 @@ public class OrderController {
 
     private static String note(NoteRequest request) {
         return request != null ? request.note() : null;
+    }
+
+    /** Drive a guarded imaging transition from a convenience endpoint and wrap the response. */
+    private ResponseEntity<ApiResponse<OrderSummaryDto>> imagingActionResponse(
+            String orderId, ImagingWorkflowState target, NoteRequest request) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        OrderEntity order = imagingWorkflowService.transition(orderId, target, note(request));
+        return ResponseEntity.ok(ApiResponse.ok(OrderSummaryDto.from(order), correlationId));
     }
 }

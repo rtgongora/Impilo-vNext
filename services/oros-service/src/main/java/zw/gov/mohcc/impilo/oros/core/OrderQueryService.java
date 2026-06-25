@@ -1,6 +1,7 @@
 package zw.gov.mohcc.impilo.oros.core;
 
 import org.springframework.stereotype.Service;
+import zw.gov.mohcc.impilo.oros.domain.ImagingWorkflowState;
 import zw.gov.mohcc.impilo.oros.domain.OrderStatus;
 import zw.gov.mohcc.impilo.oros.domain.OrderType;
 import zw.gov.mohcc.impilo.oros.persistence.entity.OrderEntity;
@@ -8,6 +9,8 @@ import zw.gov.mohcc.impilo.oros.persistence.repository.OrderRepository;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
+import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 
 /**
@@ -30,6 +33,21 @@ public class OrderQueryService {
         TrustContext ctx = TrustContextHolder.require();
         return orderRepository.search(ctx.tenantId(),
                 blankToNull(patientCpid), blankToNull(requester), status, orderType);
+    }
+
+    /**
+     * Imaging-team worklist for the current facility, filtered by fine-grained imaging state.
+     * When no states are supplied, defaults to the active pre-report intake/acquisition states.
+     */
+    public List<OrderEntity> imagingWorklist(Collection<ImagingWorkflowState> states) {
+        TrustContext ctx = TrustContextHolder.require();
+        Collection<ImagingWorkflowState> filter = (states == null || states.isEmpty())
+                ? EnumSet.of(ImagingWorkflowState.RECEIVED, ImagingWorkflowState.ACCEPTED,
+                ImagingWorkflowState.SCHEDULED, ImagingWorkflowState.ARRIVED,
+                ImagingWorkflowState.IN_PROGRESS)
+                : states;
+        return orderRepository.findByTenantIdAndFacilityIdAndOrderTypeAndImagingStateInOrderByUpdatedAtDesc(
+                ctx.tenantId(), ctx.facilityId(), OrderType.IMAGING, filter);
     }
 
     private static String blankToNull(String s) {

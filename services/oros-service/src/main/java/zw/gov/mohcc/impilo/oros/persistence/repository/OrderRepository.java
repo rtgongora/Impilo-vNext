@@ -6,11 +6,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import zw.gov.mohcc.impilo.oros.domain.ImagingWorkflowState;
 import zw.gov.mohcc.impilo.oros.domain.OrderPriority;
 import zw.gov.mohcc.impilo.oros.domain.OrderStatus;
 import zw.gov.mohcc.impilo.oros.domain.OrderType;
 import zw.gov.mohcc.impilo.oros.persistence.entity.OrderEntity;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -68,4 +70,11 @@ public interface OrderRepository extends JpaRepository<OrderEntity, String> {
                              @Param("requester") String requester,
                              @Param("status") OrderStatus status,
                              @Param("orderType") OrderType orderType);
+
+    /**
+     * Imaging-team worklist: IMAGING orders at the facility whose fine-grained imaging state is in
+     * the requested set, most-recently-updated first.
+     */
+    List<OrderEntity> findByTenantIdAndFacilityIdAndOrderTypeAndImagingStateInOrderByUpdatedAtDesc(
+            UUID tenantId, UUID facilityId, OrderType orderType, Collection<ImagingWorkflowState> states);
 }
