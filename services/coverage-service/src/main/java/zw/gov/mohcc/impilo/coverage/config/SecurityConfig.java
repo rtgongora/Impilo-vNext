@@ -40,11 +40,11 @@ public class SecurityConfig {
     public SecurityFilterChain productionSecurityFilterChain(
             HttpSecurity http,
             TrustContextFilter trustContextFilter,
-            @Value("${coverage.security.oauth2-enabled:true}") boolean oauth2Enabled) throws Exception {
+            @Value("${impilo.security.disable-oauth-for-tests:false}") boolean disableOauthForTests ) throws Exception {
         http.csrf(csrf -> csrf.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(trustContextFilter, UsernamePasswordAuthenticationFilter.class);
-        if (oauth2Enabled) {
+        if (!disableOauthForTests) {
             http.authorizeHttpRequests(auth -> auth
                             .requestMatchers(
                                     "/actuator/health",

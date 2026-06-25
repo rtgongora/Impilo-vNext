@@ -33,7 +33,6 @@ spring:
 
 live:
   security:
-    oauth2-enabled: false
   media:
     provider: local-dev
   outbox:

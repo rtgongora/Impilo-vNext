@@ -16,10 +16,8 @@ spring:
   flyway:
     enabled: false
 
-vashandi:
-  security:
-    oauth2-enabled: false
-
 impilo:
+  security:
+    disable-oauth-for-tests: true
   vashandi:
     kafka-events-enabled: false

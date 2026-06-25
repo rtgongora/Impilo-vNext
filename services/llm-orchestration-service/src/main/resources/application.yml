@@ -30,7 +30,6 @@ spring:
 
 llm:
   security:
-    oauth2-enabled: true
   enabled: ${LLM_ENABLED:true}
   default-provider: ${LLM_DEFAULT_PROVIDER:gemini}
   allowed-providers: ${LLM_ALLOWED_PROVIDERS:gemini,openai,anthropic,deepseek,deterministic,mock}

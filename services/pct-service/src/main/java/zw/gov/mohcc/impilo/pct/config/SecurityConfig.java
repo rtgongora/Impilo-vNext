@@ -40,14 +40,14 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, TrustContextFilter trustContextFilter,
             @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri:}") String issuerUri,
-            @Value("${impilo.security.oauth2-enabled:true}") boolean oauth2Enabled) throws Exception {
+            @Value("${impilo.security.disable-oauth-for-tests:false}") boolean disableOauthForTests ) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(trustContextFilter, UsernamePasswordAuthenticationFilter.class);
 
-        if (oauth2Enabled && issuerUri != null && !issuerUri.isBlank()) {
+        if (!disableOauthForTests) {
             http.authorizeHttpRequests(auth -> auth
                 .requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll()
                 .requestMatchers("/swagger-ui/**").permitAll()

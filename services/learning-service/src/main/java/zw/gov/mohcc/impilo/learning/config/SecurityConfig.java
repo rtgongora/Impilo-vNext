@@ -29,11 +29,11 @@ public class SecurityConfig {
     @Order(2)
     public SecurityFilterChain defaultChain(
             HttpSecurity http,
-            @Value("${learning.security.oauth2-enabled:true}") boolean oauth2Enabled) throws Exception {
+            @Value("${impilo.security.disable-oauth-for-tests:false}") boolean disableOauthForTests ) throws Exception {
         http.securityMatcher("/**")
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-        if (oauth2Enabled) {
+        if (!disableOauthForTests) {
             http.authorizeHttpRequests(auth -> auth
                             .requestMatchers(
                                     "/actuator/health",

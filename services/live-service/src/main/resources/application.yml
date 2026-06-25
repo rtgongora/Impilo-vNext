@@ -42,7 +42,6 @@ spring:
 
 live:
   security:
-    oauth2-enabled: true
   media:
     provider: ${LIVE_MEDIA_PROVIDER:local-dev}
   outbox:

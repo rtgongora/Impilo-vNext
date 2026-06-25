@@ -28,4 +28,3 @@ impilo:
 
 search:
   security:
-    oauth2-enabled: false

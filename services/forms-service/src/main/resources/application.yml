@@ -41,7 +41,6 @@ management:
 
 forms:
   security:
-    oauth2-enabled: true
 
 impilo:
   companion:

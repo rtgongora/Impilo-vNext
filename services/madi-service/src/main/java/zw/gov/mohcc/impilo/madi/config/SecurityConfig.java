@@ -24,7 +24,6 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http, TrustContextFilter trustContextFilter,
-            @Value("${madi.security.oauth2-enabled:true}") boolean oauth2Enabled,
             @Value("${impilo.security.disable-oauth-for-tests:false}") boolean disableOauthForTests) throws Exception {
 
         http.csrf(csrf -> csrf.disable())
@@ -33,7 +32,7 @@ public class SecurityConfig {
 
         // Honour the estate-wide preview/test flag so internal trust-plane calls (e.g. BFF) are
         // permitted in the sandbox, consistent with pharmacy/campaigns. Production keeps oauth2.
-        if (oauth2Enabled && !disableOauthForTests) {
+        if (!disableOauthForTests) {
             http.authorizeHttpRequests(auth -> auth
                             .requestMatchers(
                                     "/actuator/health",

@@ -25,13 +25,13 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http, TrustContextFilter trustContextFilter,
-            @Value("${simba.security.oauth2-enabled:true}") boolean oauth2Enabled) throws Exception {
+            @Value("${impilo.security.disable-oauth-for-tests:false}") boolean disableOauthForTests ) throws Exception {
 
         http.csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(trustContextFilter, UsernamePasswordAuthenticationFilter.class);
 
-        if (oauth2Enabled) {
+        if (!disableOauthForTests) {
             http.authorizeHttpRequests(auth -> auth
                             .requestMatchers(
                                     "/actuator/health",

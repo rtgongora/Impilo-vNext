@@ -47,7 +47,6 @@ impilo:
   companion:
     enabled: true
   security:
-    oauth2-enabled: ${ASSET_REGISTRY_OAUTH2_ENABLED:true}
 
 asset-registry:
   supply:

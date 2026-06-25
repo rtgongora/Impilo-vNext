@@ -20,7 +20,6 @@ impilo:
     enabled: true
   security:
     disable-oauth-for-tests: true
-    oauth2-enabled: false
 
 asset-registry:
   supply:

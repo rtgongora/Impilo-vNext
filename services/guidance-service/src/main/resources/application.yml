@@ -56,7 +56,6 @@ management:
 
 guidance:
   security:
-    oauth2-enabled: true
   outbox:
     poll-interval-ms: 2000
   v11:
