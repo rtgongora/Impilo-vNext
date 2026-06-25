@@ -311,6 +311,26 @@ public class OrosServiceClient {
     }
 
     /**
+     * Acknowledge a critical result (closes the critical loop).
+     */
+    public JsonNode acknowledgeCriticalResult(String resultId, String note) {
+        String url = baseUrl + "/v1/results/" + resultId + "/critical/ack";
+        Map<String, Object> body = note != null ? Map.of("note", note) : Map.of();
+        log.info("OROS: Acknowledging critical result={}", resultId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Unacknowledged critical results requiring follow-up/escalation.
+     */
+    public JsonNode criticalUnacknowledged() {
+        String url = baseUrl + "/v1/reconcile/diagnostics/critical-unacknowledged";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * Honest external-integration status for diagnostics adapters.
      */
     public JsonNode integrationStatus() {

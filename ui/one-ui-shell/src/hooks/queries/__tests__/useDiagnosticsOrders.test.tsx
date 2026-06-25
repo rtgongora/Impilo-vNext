@@ -8,6 +8,8 @@ import {
   useDiagnosticsReconcileSummary,
   useCreateDiagnosticOrder,
   useRouteDiagnosticOrder,
+  useCriticalUnacknowledged,
+  useAcknowledgeCritical,
 } from "../useDiagnosticsOrders";
 
 const { get, post } = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }));
@@ -110,5 +112,25 @@ describe("useDiagnosticsOrders", () => {
         expectedReturnMethod: "SECURE_LINK",
       }),
     );
+  });
+
+  it("critical-unacknowledged hits the dashboard endpoint", async () => {
+    get.mockResolvedValue({ data: [{ resultId: "r-1", orderId: "ORD-1", critical: true }] });
+
+    const { result } = renderHook(() => useCriticalUnacknowledged(), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.data).toHaveLength(1);
+    expect(get).toHaveBeenCalledWith("/internal/v1/diagnostics/critical-unacknowledged");
+  });
+
+  it("acknowledge critical posts to the critical-ack endpoint", async () => {
+    post.mockResolvedValue({ data: { resultId: "r-1" } });
+
+    const { result } = renderHook(() => useAcknowledgeCritical(), { wrapper });
+    result.current.mutate({ resultId: "r-1" });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(post).toHaveBeenCalledWith("/internal/v1/diagnostics/results/r-1/critical/ack", {});
   });
 });

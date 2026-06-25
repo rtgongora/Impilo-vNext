@@ -1,6 +1,6 @@
 # Product Truth — Backend-to-UI Traceability
 
-> Generated: 2026-06-25T08:32:41.653Z
+> Generated: 2026-06-25T08:37:56.292Z
 
 For each service: backend capabilities → API → BFF → UI → mobile → persistence.
 
@@ -604,10 +604,10 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 
 | # | Question | Answer |
 |---|----------|--------|
-| 1 | Real backend capabilities? | Yes (258 controllers, 2170 routes) |
+| 1 | Real backend capabilities? | Yes (258 controllers, 2172 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: experience-bff.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (0 clients) |
-| 4 | Visible in UI? | Yes (165 refs) |
+| 4 | Visible in UI? | Yes (167 refs) |
 | 5 | Visible on mobile? | Yes (54 refs) |
 | 6 | Fake/partial/disconnected? | Yes — review |
 | 7 | Backend without UI? | No |
@@ -1438,7 +1438,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (14 controllers, 80 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: oros.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (13 clients) |
-| 4 | Visible in UI? | Yes (57 refs) |
+| 4 | Visible in UI? | Yes (59 refs) |
 | 5 | Visible on mobile? | Yes (13 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
@@ -1451,7 +1451,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/clinical/inpatient/rounds/page.tsx`
 - `ui/one-ui-shell/src/app/developer/api-catalog/page.tsx`
 - `ui/one-ui-shell/src/app/developer/sandbox/page.tsx`
-- `ui/one-ui-shell/src/app/diagnostics/orders/new/page.tsx`
+- `ui/one-ui-shell/src/app/diagnostics/critical-queue/page.tsx`
 
 ## pacs-adapter-service
 
@@ -1490,7 +1490,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (17 controllers, 115 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: pct.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (40 clients) |
-| 4 | Visible in UI? | Yes (418 refs) |
+| 4 | Visible in UI? | Yes (419 refs) |
 | 5 | Visible on mobile? | Yes (97 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |

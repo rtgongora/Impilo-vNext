@@ -89,6 +89,25 @@ public class DiagnosticsExperienceController {
         return proxy(requestId, correlationId, () -> orosClient.resultsInbox(requester));
     }
 
+    /** Acknowledge a critical result. */
+    @PostMapping("/results/{resultId}/critical/ack")
+    public ResponseEntity<Map<String, Object>> acknowledgeCritical(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String resultId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        String note = body != null && body.get("note") != null ? body.get("note").toString() : null;
+        return proxy(requestId, correlationId, () -> orosClient.acknowledgeCriticalResult(resultId, note));
+    }
+
+    /** Unacknowledged critical results (critical-results dashboard). */
+    @GetMapping("/critical-unacknowledged")
+    public ResponseEntity<Map<String, Object>> criticalUnacknowledged(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(requestId, correlationId, orosClient::criticalUnacknowledged);
+    }
+
     /** Operational reconciliation summary (stuck-order buckets + unacked critical). */
     @GetMapping("/reconcile-summary")
     public ResponseEntity<Map<String, Object>> reconcileSummary(

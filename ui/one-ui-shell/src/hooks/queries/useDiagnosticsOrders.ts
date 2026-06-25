@@ -186,3 +186,41 @@ export function useDiagnosticsReconcileSummary() {
     staleTime: 30_000,
   });
 }
+
+/** A versioned diagnostic result/report (mirrors the OROS ReportDto). */
+export interface DiagnosticResult {
+  resultId: string;
+  orderId: string;
+  reportStatus: string | null;
+  version: number;
+  critical: boolean;
+  criticalReason: string | null;
+  reportedBy: string | null;
+  acknowledgedAt: string | null;
+  createdAt: string | null;
+}
+
+type CriticalResultsResponse = ApiResponse<DiagnosticResult[]>;
+
+/** Unacknowledged critical results (critical-results dashboard). */
+export function useCriticalUnacknowledged() {
+  return useQuery<CriticalResultsResponse>({
+    queryKey: ["diagnostics-critical-unacknowledged"],
+    queryFn: () =>
+      apiClient.get<CriticalResultsResponse>("/internal/v1/diagnostics/critical-unacknowledged"),
+    staleTime: 10_000,
+  });
+}
+
+/** Acknowledge a critical result, closing the critical loop. */
+export function useAcknowledgeCritical() {
+  const queryClient = useQueryClient();
+  return useMutation<unknown, unknown, { resultId: string; note?: string }>({
+    mutationFn: ({ resultId, note }) =>
+      apiClient.post(`/internal/v1/diagnostics/results/${encodeURIComponent(resultId)}/critical/ack`,
+        note ? { note } : {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["diagnostics-critical-unacknowledged"] });
+    },
+  });
+}

@@ -1,7 +1,7 @@
 # Product Truth — Frontend-to-Backend Traceability
 
-> Generated: 2026-06-25T08:32:41.653Z
-> Web surfaces: **618** | Mobile screens: **174**
+> Generated: 2026-06-25T08:37:56.292Z
+> Web surfaces: **620** | Mobile screens: **174**
 
 ## Web routes (one-ui-shell)
 
@@ -336,6 +336,8 @@
 | /diagnostics/orders | Diagnostics Orders | lab | yes | no | yes | yes | yes | — |
 | /diagnostics/orders/new | Create Diagnostic Order | lab | yes | no | yes | yes | yes | — |
 | /diagnostics/orders/route | Route Order | lab | yes | no | yes | yes | yes | — |
+| /diagnostics/results-inbox | Results Inbox | lab | yes | no | yes | yes | yes | — |
+| /diagnostics/critical-queue | Critical Results | lab | yes | no | yes | yes | yes | — |
 | /imaging/facility | Facility Imaging Dashboard | lab | yes | no | yes | yes | yes | — |
 | /lab/results | Results Review | lab | yes | no | yes | yes | yes | — |
 | /lab/catalog | Test Catalog | lab | yes | no | yes | no | yes | — |
@@ -505,8 +507,6 @@
 | /work/administration-governance/audit | Audit | operations | yes | no | yes | yes | yes | — |
 | /work/administration-governance/gdhcn-readiness | GDHCN Readiness | operations | yes | no | yes | yes | yes | — |
 | /work/administration-governance/municipal | Municipal | operations | yes | no | yes | yes | yes | — |
-| /work/administration-governance/onboard | Onboard New Actor | operations | yes | no | yes | no | yes | — |
-| /work/administration-governance/onboard/citizen | Onboard Citizen | operations | yes | no | yes | yes | yes | — |
 
 ## Mobile screens
 

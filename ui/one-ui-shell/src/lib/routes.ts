@@ -457,6 +457,8 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/diagnostics/orders", zone: "lab", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Diagnostics Orders", navLabel: "Diagnostics Orders", navZone: "work" },
   { path: "/diagnostics/orders/new", zone: "lab", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Create Diagnostic Order", navLabel: "New Order", navZone: "work" },
   { path: "/diagnostics/orders/route", zone: "lab", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Route Order", navLabel: "Route Order", navZone: "work" },
+  { path: "/diagnostics/results-inbox", zone: "lab", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Results Inbox", navLabel: "Results Inbox", navZone: "work" },
+  { path: "/diagnostics/critical-queue", zone: "lab", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Critical Results", navLabel: "Critical Results", navZone: "work" },
   { path: "/imaging/facility", zone: "lab", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Facility Imaging Dashboard", navLabel: "Imaging Ops", navZone: "work" },
   { path: "/lab/results", zone: "lab", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Results Review", navLabel: "Results", navZone: "work" },
   { path: "/lab/catalog", zone: "lab", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Test Catalog", navLabel: "Catalog", navZone: "work" },
