@@ -52,6 +52,7 @@ public class OrderController {
     private final OrderStateMachine stateMachine;
     private final OrderSubmissionService submissionService;
     private final ImagingWorkflowService imagingWorkflowService;
+    private final OrderQueryService orderQueryService;
     private final RoutingEngine routingEngine;
     private final WorkstepEngine workstepEngine;
     private final SlaService slaService;
@@ -59,12 +60,14 @@ public class OrderController {
     public OrderController(OrderStateMachine stateMachine,
                            OrderSubmissionService submissionService,
                            ImagingWorkflowService imagingWorkflowService,
+                           OrderQueryService orderQueryService,
                            RoutingEngine routingEngine,
                            WorkstepEngine workstepEngine,
                            SlaService slaService) {
         this.stateMachine = stateMachine;
         this.submissionService = submissionService;
         this.imagingWorkflowService = imagingWorkflowService;
+        this.orderQueryService = orderQueryService;
         this.routingEngine = routingEngine;
         this.workstepEngine = workstepEngine;
         this.slaService = slaService;
@@ -217,6 +220,27 @@ public class OrderController {
 
         OrderEntity order = imagingWorkflowService.transition(orderId, request.target(), request.reason());
         return ResponseEntity.ok(ApiResponse.ok(OrderSummaryDto.from(order), correlationId));
+    }
+
+    /**
+     * List/search orders within the tenant, filtered by client, requester, status, and type.
+     *
+     * <p>Backs order tracking and requester views — e.g. {@code GET
+     * /v1/orders?client=CPID-1&status=PLACED&type=IMAGING}.</p>
+     */
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<OrderSummaryDto>>> listOrders(
+            @RequestParam(name = "client", required = false) String client,
+            @RequestParam(name = "requester", required = false) String requester,
+            @RequestParam(name = "status", required = false) zw.gov.mohcc.impilo.oros.domain.OrderStatus status,
+            @RequestParam(name = "type", required = false) zw.gov.mohcc.impilo.oros.domain.OrderType type) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+
+        List<OrderSummaryDto> orders = orderQueryService.search(client, requester, status, type).stream()
+                .map(OrderSummaryDto::from)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(ApiResponse.ok(orders, correlationId));
     }
 
     /**
