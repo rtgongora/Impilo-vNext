@@ -29,7 +29,11 @@
 | 4b | `d3c3b247` | PACS study linkage `POST /v1/orders/{id}/link-study` (criterion F) — V008 |
 | BFF | `4977fc8d` | BFF write proxies (create draft / submit / route) |
 | UI | `a0d9b1b6` | `/diagnostics/orders/new` create-order flow (criterion A) |
-| chore | `b2937ec8`, `b3eb5562` | Regenerated product-truth + parity datasets |
+| BFF+UI | `4977fc8d`, `a0d9b1b6`, `6a4f92e8` | Create-order + routing/referral UI (criterion A) + study surfacing |
+| UI | `ea4a08e6` | Results inbox + critical-results dashboard (criterion B, with acknowledge) |
+| UI | `ef6f5b72` | Reconciliation/turnaround ops + integration-status admin (W8/W7) |
+| UI | `7a2ae1e3` | Imaging worklist with fulfilment actions (W4) |
+| chore | `b2937ec8`, `b3eb5562`, `b25f0256` | Regenerated datasets; cleared scanner false-positives |
 
 ## 3. Inventory — what changed
 
@@ -134,10 +138,14 @@ CLI-Postgres/Mockito, RTL/vitest, tsc). No runtime/preview boot was performed.
    (destination assignment) is.
 5. **Admin config (W8)** — routing-rule and critical-escalation-rule admin endpoints not built
    (escalation runs off `oros.escalation.ack-timeout-minutes`).
-6. **UI surface (W3–W9)** — `/diagnostics/orders` (tracking) and `/diagnostics/orders/new`
-   (create→submit, criterion A) are live. Remaining: routing/referral, reporting authoring,
-   results inbox, critical-results dashboard, reconciliation/turnaround, patient-file
-   investigations tab, admin, and **mobile parity (W9)** screens.
+6. **UI surface (W3–W9)** — LIVE (all real, UI→BFF→OROS→DB, tested): `/diagnostics/orders`
+   (tracking + study surfacing), `/diagnostics/orders/new` (create→submit, criterion A),
+   `/diagnostics/orders/route` (referral, criterion A), `/diagnostics/results-inbox`,
+   `/diagnostics/critical-queue` (with acknowledge, criterion B), `/diagnostics/worklist`
+   (fulfilment actions, W4), `/operations/diagnostics-reconciliation` (buckets + turnaround, H),
+   `/admin/integrations` (honest status, §27 #11). REMAINING: reporting-authoring page,
+   patient-file investigations tab, QR-claim screen, DICOM viewer deep-launch, and **mobile
+   parity (W9)**.
 7. **channels-service** external notify-only adapters not touched (in-platform alert path is live).
 8. **Offline/low-connectivity** queueing (§15) — not designed.
 
