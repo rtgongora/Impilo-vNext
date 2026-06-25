@@ -29,6 +29,7 @@ public class BloodOrderService {
     private final BloodUnitService bloodUnitService;
     private final OrosIntegration orosIntegration;
     private final MadiEventEmitter eventEmitter;
+    private final BloodOrderSlaService slaService;
 
     public BloodOrderService(BloodOrderRepository orderRepository,
                              BloodOrderItemRepository itemRepository,
@@ -39,7 +40,8 @@ public class BloodOrderService {
                              BloodIssueRepository issueRepository,
                              BloodUnitService bloodUnitService,
                              OrosIntegration orosIntegration,
-                             MadiEventEmitter eventEmitter) {
+                             MadiEventEmitter eventEmitter,
+                             BloodOrderSlaService slaService) {
         this.orderRepository = orderRepository;
         this.itemRepository = itemRepository;
         this.sampleRepository = sampleRepository;
@@ -50,6 +52,7 @@ public class BloodOrderService {
         this.bloodUnitService = bloodUnitService;
         this.orosIntegration = orosIntegration;
         this.eventEmitter = eventEmitter;
+        this.slaService = slaService;
     }
 
     @Transactional
@@ -79,6 +82,8 @@ public class BloodOrderService {
         if (saved.getOrosOrderRef() != null) {
             orosIntegration.notifyOrderSubmitted(saved.getOrosOrderRef(), saved.getOrderId().toString());
         }
+        // Start the crossmatch SLA timer at submit.
+        slaService.start(tenantId, orderId, BloodOrderSlaService.STAGE_CROSSMATCH);
         eventEmitter.emit("BLOOD_ORDER", orderId.toString(), "ORDER_SUBMITTED", "BLOOD_ORDER",
                 orderId.toString(), Map.of(), tenantId);
         return saved;
@@ -134,6 +139,9 @@ public class BloodOrderService {
         orderRepository.save(order);
         eventEmitter.emit("BLOOD_ORDER", orderId.toString(), "CROSSMATCH_COMPLETED", "BLOOD_ORDER",
                 orderId.toString(), Map.of("result", result.name()), tenantId);
+        // SLA: crossmatch stage done; open the issue-stage timer.
+        slaService.complete(orderId, BloodOrderSlaService.STAGE_CROSSMATCH);
+        slaService.start(tenantId, orderId, BloodOrderSlaService.STAGE_ISSUE);
         // Return the compatibility result to OROS so it surfaces in the requester's inbox /
         // patient file (incompatible -> critical). Best-effort; OROS unavailability is non-blocking.
         if (order.getOrosOrderRef() != null) {
@@ -184,6 +192,8 @@ public class BloodOrderService {
         if (order.getOrosOrderRef() != null) {
             orosIntegration.notifyBloodIssued(order.getOrosOrderRef(), unitId.toString());
         }
+        // SLA: issue stage met.
+        slaService.complete(orderId, BloodOrderSlaService.STAGE_ISSUE);
         eventEmitter.emit("BLOOD_ORDER", orderId.toString(), "BLOOD_ISSUED", "BLOOD_ORDER",
                 orderId.toString(), Map.of("unitId", unitId.toString()), tenantId);
         return saved;

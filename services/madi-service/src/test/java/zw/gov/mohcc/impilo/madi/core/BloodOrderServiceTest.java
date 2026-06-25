@@ -32,6 +32,7 @@ class BloodOrderServiceTest {
     @Mock private BloodUnitService bloodUnitService;
     @Mock private OrosIntegration orosIntegration;
     @Mock private MadiEventEmitter eventEmitter;
+    @Mock private BloodOrderSlaService slaService;
 
     private BloodOrderService bloodOrderService;
     private static final UUID TENANT_ID = UUID.randomUUID();
@@ -40,7 +41,7 @@ class BloodOrderServiceTest {
     void setUp() {
         bloodOrderService = new BloodOrderService(orderRepository, itemRepository, sampleRepository,
                 crossmatchRequestRepository, crossmatchResultRepository, reservationRepository,
-                issueRepository, bloodUnitService, orosIntegration, eventEmitter);
+                issueRepository, bloodUnitService, orosIntegration, eventEmitter, slaService);
     }
 
     @Test
@@ -76,6 +77,8 @@ class BloodOrderServiceTest {
 
         assertThat(result.getStatus()).isEqualTo(BloodOrderStatus.SUBMITTED.name());
         verify(orosIntegration).notifyOrderSubmitted("OROS-1", orderId.toString());
+        // Submit starts the crossmatch SLA timer.
+        verify(slaService).start(TENANT_ID, orderId, BloodOrderSlaService.STAGE_CROSSMATCH);
     }
 
     @Test
