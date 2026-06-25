@@ -35,15 +35,18 @@ public class OrderSubmissionService {
     private final AccessionNumberService accessionNumberService;
     private final VarapiClient varapiClient;
     private final ImagingWorkflowService imagingWorkflowService;
+    private final FulfilmentWorkflowService fulfilmentWorkflowService;
 
     public OrderSubmissionService(OrderStateMachine stateMachine,
                                   AccessionNumberService accessionNumberService,
                                   VarapiClient varapiClient,
-                                  ImagingWorkflowService imagingWorkflowService) {
+                                  ImagingWorkflowService imagingWorkflowService,
+                                  FulfilmentWorkflowService fulfilmentWorkflowService) {
         this.stateMachine = stateMachine;
         this.accessionNumberService = accessionNumberService;
         this.varapiClient = varapiClient;
         this.imagingWorkflowService = imagingWorkflowService;
+        this.fulfilmentWorkflowService = fulfilmentWorkflowService;
     }
 
     /**
@@ -60,21 +63,32 @@ public class OrderSubmissionService {
                     "Order " + orderId + " cannot be submitted from status " + order.getStatus());
         }
 
+        // Reserve a RIS/LIS-style accession (lab) number at submit for the categories that use one
+        // (idempotent — never re-reserved). Procedures are tracked by order id, not an accession.
+        if ((order.getOrderType() == OrderType.IMAGING || order.getOrderType() == OrderType.LAB)
+                && order.getAccessionNumber() == null) {
+            String accession = accessionNumberService.reserve(order.getTenantId(), order.getFacilityId());
+            order.setAccessionNumber(accession);
+            log.info("Accession reserved at submit: orderId={}, type={}, accession={}",
+                    orderId, order.getOrderType(), accession);
+        }
+
+        // Resolve the referring provider's display name from VARAPI when supplied (honest fallback:
+        // keep any client-supplied name if VARAPI is not configured/unreachable). Applies to all
+        // categories, not just imaging.
+        String providerId = order.getReferringProviderId();
+        if (providerId != null && !providerId.isBlank()) {
+            varapiClient.lookupProviderName(providerId).ifPresent(order::setReferringProviderName);
+        }
+
         if (order.getOrderType() == OrderType.IMAGING) {
-            if (order.getAccessionNumber() == null) {
-                String accession = accessionNumberService.reserve(order.getTenantId(), order.getFacilityId());
-                order.setAccessionNumber(accession);
-                log.info("Accession reserved at submit: orderId={}, accession={}", orderId, accession);
-            }
-
-            String providerId = order.getReferringProviderId();
-            if (providerId != null && !providerId.isBlank()) {
-                varapiClient.lookupProviderName(providerId)
-                        .ifPresent(order::setReferringProviderName);
-            }
-
-            // Entry-point imaging state; mutates entity + writes IMAGING_STATE_RECEIVED event.
+            // Imaging carries dedicated side-effects (PACS study linkage), so it keeps its own
+            // service; this also writes the shared workflow_state in lockstep.
             imagingWorkflowService.initializeReceived(order, "submitted");
+        } else {
+            // Lab/procedure (and any other guarded category) enter their fine-grained journey at
+            // the category entry state; no-op for categories without a guard (e.g. pharmacy).
+            fulfilmentWorkflowService.initialize(order, "submitted");
         }
 
         // Coarse DRAFT -> PLACED; saves the entity (carrying accession/name/imagingState) and

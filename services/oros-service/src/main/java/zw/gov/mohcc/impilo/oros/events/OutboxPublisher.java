@@ -182,6 +182,9 @@ public class OutboxPublisher {
                 if (eventType.startsWith("IMAGING_STATE_")) {
                     yield "oros.imaging.state_changed";
                 }
+                if (eventType.startsWith("WORKFLOW_STATE_")) {
+                    yield "oros.workflow.state_changed";
+                }
                 yield "oros.events";
             }
         };

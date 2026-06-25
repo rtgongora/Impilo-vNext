@@ -56,8 +56,16 @@ class OrderSubmissionServiceTest {
         ImagingWorkflowService imagingWorkflowService = new ImagingWorkflowService(
                 orderRepository, outboxRepository, objectMapper,
                 org.mockito.Mockito.mock(zw.gov.mohcc.impilo.oros.integration.ButanoIntegration.class));
+        zw.gov.mohcc.impilo.oros.core.workflow.WorkflowGuardRegistry guards =
+                new zw.gov.mohcc.impilo.oros.core.workflow.WorkflowGuardRegistry(java.util.List.of(
+                        new zw.gov.mohcc.impilo.oros.core.workflow.ImagingFulfilmentWorkflow(),
+                        new zw.gov.mohcc.impilo.oros.core.workflow.LabWorkflow(),
+                        new zw.gov.mohcc.impilo.oros.core.workflow.ProcedureWorkflow()));
+        FulfilmentWorkflowService fulfilmentWorkflowService = new FulfilmentWorkflowService(
+                orderRepository, outboxRepository, objectMapper, guards);
         service = new OrderSubmissionService(
-                stateMachine, accessionNumberService, varapiClient, imagingWorkflowService);
+                stateMachine, accessionNumberService, varapiClient,
+                imagingWorkflowService, fulfilmentWorkflowService);
     }
 
     private TrustContext ctx() {
@@ -96,6 +104,7 @@ class OrderSubmissionServiceTest {
             assertThat(result.getAccessionNumber()).isEqualTo("ACC-2026-AB12CD34-000001");
             assertThat(result.getReferringProviderName()).isEqualTo("Dr Jane Doe");
             assertThat(result.getImagingState()).isEqualTo(ImagingWorkflowState.RECEIVED);
+            assertThat(result.getWorkflowState()).isEqualTo("RECEIVED");
             verify(accessionNumberService, times(1)).reserve(TENANT_ID, FACILITY_ID);
         }
     }
@@ -139,7 +148,7 @@ class OrderSubmissionServiceTest {
     }
 
     @Test
-    @DisplayName("submit of a lab draft skips accession/imaging and reaches PLACED")
+    @DisplayName("submit of a lab draft reserves a lab number, inits the lab workflow at RECEIVED, PLACED")
     void submitLab() {
         try (MockedStatic<TrustContextHolder> holder = mockStatic(TrustContextHolder.class)) {
             holder.when(TrustContextHolder::require).thenReturn(ctx());
@@ -147,14 +156,36 @@ class OrderSubmissionServiceTest {
             OrderEntity order = draft(OrderType.LAB);
             when(orderRepository.findByOrderId(ORDER_ID)).thenReturn(Optional.of(order));
             when(orderRepository.save(any(OrderEntity.class))).thenAnswer(i -> i.getArgument(0));
+            when(accessionNumberService.reserve(TENANT_ID, FACILITY_ID)).thenReturn("ACC-2026-AB12CD34-000007");
 
             OrderEntity result = service.submit(ORDER_ID);
 
             assertThat(result.getStatus()).isEqualTo(OrderStatus.PLACED);
+            // No imaging projection for a lab order, but the unified workflow state is set.
             assertThat(result.getImagingState()).isNull();
-            assertThat(result.getAccessionNumber()).isNull();
-            verify(accessionNumberService, never()).reserve(any(), any());
+            assertThat(result.getWorkflowState()).isEqualTo("RECEIVED");
+            assertThat(result.getAccessionNumber()).isEqualTo("ACC-2026-AB12CD34-000007");
+            verify(accessionNumberService, times(1)).reserve(TENANT_ID, FACILITY_ID);
             verify(varapiClient, never()).lookupProviderName(any());
+        }
+    }
+
+    @Test
+    @DisplayName("submit of a procedure draft inits the procedure workflow at RECEIVED without an accession")
+    void submitProcedure() {
+        try (MockedStatic<TrustContextHolder> holder = mockStatic(TrustContextHolder.class)) {
+            holder.when(TrustContextHolder::require).thenReturn(ctx());
+
+            OrderEntity order = draft(OrderType.PROCEDURE);
+            when(orderRepository.findByOrderId(ORDER_ID)).thenReturn(Optional.of(order));
+            when(orderRepository.save(any(OrderEntity.class))).thenAnswer(i -> i.getArgument(0));
+
+            OrderEntity result = service.submit(ORDER_ID);
+
+            assertThat(result.getStatus()).isEqualTo(OrderStatus.PLACED);
+            assertThat(result.getWorkflowState()).isEqualTo("RECEIVED");
+            assertThat(result.getImagingState()).isNull();
+            verify(accessionNumberService, never()).reserve(any(), any());
         }
     }
 

@@ -38,6 +38,7 @@ public record OrderSummaryDto(
         String referringProviderName,
         OffsetDateTime scheduledAt,
         ImagingWorkflowState imagingState,
+        String workflowState,
         String studyUid,
         String studyViewerUrl
 ) {
@@ -64,6 +65,7 @@ public record OrderSummaryDto(
                 entity.getReferringProviderName(),
                 entity.getScheduledAt(),
                 entity.getImagingState(),
+                entity.getWorkflowState(),
                 entity.getStudyUid(),
                 entity.getStudyViewerUrl()
         );

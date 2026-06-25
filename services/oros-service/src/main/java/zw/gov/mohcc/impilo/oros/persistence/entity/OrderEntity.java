@@ -99,6 +99,12 @@ public class OrderEntity {
     @Column(name = "imaging_state", length = 32)
     private ImagingWorkflowState imagingState;
 
+    // ── Generalised fulfilment workflow state (V011) ─────────────────────
+    // Category-agnostic fine-grained lifecycle state (imaging/lab/procedure), enforced per
+    // category by the WorkflowGuardRegistry guards. For IMAGING orders this mirrors imaging_state.
+    @Column(name = "workflow_state", length = 48)
+    private String workflowState;
+
     // ── Linked PACS/DICOM study (V008) ───────────────────────────────────
     @Column(name = "study_uid", length = 128)
     private String studyUid;
@@ -200,6 +206,9 @@ public class OrderEntity {
 
     public ImagingWorkflowState getImagingState() { return imagingState; }
     public void setImagingState(ImagingWorkflowState imagingState) { this.imagingState = imagingState; }
+
+    public String getWorkflowState() { return workflowState; }
+    public void setWorkflowState(String workflowState) { this.workflowState = workflowState; }
 
     public String getStudyUid() { return studyUid; }
     public void setStudyUid(String studyUid) { this.studyUid = studyUid; }

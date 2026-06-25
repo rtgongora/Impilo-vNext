@@ -66,6 +66,7 @@ public class ImagingWorkflowService {
         }
         ImagingWorkflow.require(null, ImagingWorkflowState.RECEIVED);
         order.setImagingState(ImagingWorkflowState.RECEIVED);
+        order.setWorkflowState(ImagingWorkflowState.RECEIVED.name());
         writeEvent(order, null, ImagingWorkflowState.RECEIVED, reason);
         log.info("Imaging workflow initialized: orderId={}, state=RECEIVED", order.getOrderId());
     }
@@ -133,6 +134,7 @@ public class ImagingWorkflowService {
         ImagingWorkflow.require(from, target);
 
         order.setImagingState(target);
+        order.setWorkflowState(target.name());
         order = orderRepository.save(order);
         writeEvent(order, from, target, reason);
 
