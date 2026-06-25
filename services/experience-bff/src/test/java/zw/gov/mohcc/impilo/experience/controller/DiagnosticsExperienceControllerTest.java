@@ -104,6 +104,22 @@ class DiagnosticsExperienceControllerTest {
     }
 
     @Test
+    void catalogue_readsAndSaves() {
+        when(orosClient.catalogueRead("services"))
+                .thenReturn(objectMapper.createObjectNode().set("labs", objectMapper.createArrayNode()));
+        ResponseEntity<Map<String, Object>> read = controller.catalogue("req-1", "cor-1", "services");
+        assertThat(read.getStatusCode()).isEqualTo(HttpStatus.OK);
+        verify(orosClient).catalogueRead("services");
+
+        when(orosClient.catalogueWrite(eq("service-catalogue"), anyMap()))
+                .thenReturn(objectMapper.createObjectNode().put("saved", true));
+        ResponseEntity<Map<String, Object>> save =
+                controller.saveCatalogue("req-1", "cor-1", "service-catalogue", Map.of("labs", java.util.List.of()));
+        assertThat(save.getStatusCode()).isEqualTo(HttpStatus.OK);
+        verify(orosClient).catalogueWrite(eq("service-catalogue"), anyMap());
+    }
+
+    @Test
     void resultsInbox_degradesTo502OnUpstreamFailure() {
         when(orosClient.resultsInbox(any())).thenThrow(new RuntimeException("connection refused"));
 

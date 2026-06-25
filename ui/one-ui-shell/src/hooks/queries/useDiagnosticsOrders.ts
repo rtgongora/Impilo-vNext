@@ -532,3 +532,25 @@ export function useSpecimenAction() {
     },
   });
 }
+
+/** Read a service-catalogue segment (services / orderables / specimen-config). */
+export function useCatalogue(segment: string) {
+  return useQuery<ApiResponse<unknown>>({
+    queryKey: ["diagnostics-catalogue", segment],
+    queryFn: () =>
+      apiClient.get<ApiResponse<unknown>>(`/internal/v1/diagnostics/catalogue/${segment}`),
+    staleTime: 30_000,
+  });
+}
+
+/** Curate (upsert) an admin catalogue (service-catalogue / orderable-catalogue / specimen-config). */
+export function useSaveCatalogue() {
+  const queryClient = useQueryClient();
+  return useMutation<unknown, unknown, { adminPath: string; body: Record<string, unknown> }>({
+    mutationFn: ({ adminPath, body }) =>
+      apiClient.put(`/internal/v1/diagnostics/admin/catalogue/${adminPath}`, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["diagnostics-catalogue"] });
+    },
+  });
+}

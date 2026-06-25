@@ -210,6 +210,25 @@ public class DiagnosticsExperienceController {
         return proxy(requestId, correlationId, () -> orosClient.specimenAction(specimenId, action, body));
     }
 
+    /** Read a service-catalogue segment (services / orderables / specimen-config). */
+    @GetMapping("/catalogue/{segment}")
+    public ResponseEntity<Map<String, Object>> catalogue(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String segment) {
+        return proxy(requestId, correlationId, () -> orosClient.catalogueRead(segment));
+    }
+
+    /** Curate (upsert) an admin catalogue (service-catalogue / orderable-catalogue / specimen-config). */
+    @PutMapping("/admin/catalogue/{adminPath}")
+    public ResponseEntity<Map<String, Object>> saveCatalogue(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String adminPath,
+            @RequestBody(required = false) Map<String, Object> body) {
+        return proxy(requestId, correlationId, () -> orosClient.catalogueWrite(adminPath, body));
+    }
+
     /** Requester results inbox. */
     @GetMapping("/results-inbox")
     public ResponseEntity<Map<String, Object>> resultsInbox(

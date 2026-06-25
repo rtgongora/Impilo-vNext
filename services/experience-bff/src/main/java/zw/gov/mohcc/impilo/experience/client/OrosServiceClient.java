@@ -3,6 +3,8 @@ package zw.gov.mohcc.impilo.experience.client;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -360,6 +362,21 @@ public class OrosServiceClient {
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(
                 baseUrl + "/v1/specimens/" + specimenId + "/" + action,
                 body != null ? body : Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Read a catalogue segment (services / orderables / specimen-config) — clinician-facing read. */
+    public JsonNode catalogueRead(String segment) {
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(
+                baseUrl + "/v1/catalogue/" + segment, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Curate (upsert) an admin catalogue (service-catalogue / orderable-catalogue / specimen-config). */
+    public JsonNode catalogueWrite(String adminPath, Map<String, Object> body) {
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                baseUrl + "/v1/admin/" + adminPath, HttpMethod.PUT,
+                new HttpEntity<>(body != null ? body : Map.of()), JsonNode.class);
         return extractData(response);
     }
 
