@@ -9,6 +9,7 @@ import zw.gov.mohcc.impilo.oros.domain.OrderType;
 import zw.gov.mohcc.impilo.oros.domain.OrderPriority;
 import zw.gov.mohcc.impilo.oros.domain.OrderStatus;
 import zw.gov.mohcc.impilo.oros.domain.RequestSource;
+import zw.gov.mohcc.impilo.oros.domain.ImagingWorkflowState;
 
 /**
  * Represents a clinical order (lab, imaging, pharmacy, procedure, etc.).
@@ -93,6 +94,10 @@ public class OrderEntity {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "safety_json", columnDefinition = "jsonb")
     private String safetyJson;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "imaging_state", length = 32)
+    private ImagingWorkflowState imagingState;
 
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
@@ -181,4 +186,7 @@ public class OrderEntity {
 
     public String getSafetyJson() { return safetyJson; }
     public void setSafetyJson(String safetyJson) { this.safetyJson = safetyJson; }
+
+    public ImagingWorkflowState getImagingState() { return imagingState; }
+    public void setImagingState(ImagingWorkflowState imagingState) { this.imagingState = imagingState; }
 }
