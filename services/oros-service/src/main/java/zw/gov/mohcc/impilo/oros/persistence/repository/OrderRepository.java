@@ -22,6 +22,9 @@ public interface OrderRepository extends JpaRepository<OrderEntity, String> {
 
     Optional<OrderEntity> findByOrderId(String orderId);
 
+    /** Idempotency lookup for externally-originated orders (FHIR/HL7 inbound). */
+    Optional<OrderEntity> findByTenantIdAndExternalOrderRef(UUID tenantId, String externalOrderRef);
+
     List<OrderEntity> findByPatientCpidOrderByPlacedAtDesc(String patientCpid);
 
     /**

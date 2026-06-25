@@ -106,6 +106,10 @@ public class OrderEntity {
     @Column(name = "study_viewer_url", length = 512)
     private String studyViewerUrl;
 
+    // ── External-origin idempotency (V010) ───────────────────────────────
+    @Column(name = "external_order_ref", length = 128)
+    private String externalOrderRef;
+
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
 
@@ -202,4 +206,7 @@ public class OrderEntity {
 
     public String getStudyViewerUrl() { return studyViewerUrl; }
     public void setStudyViewerUrl(String studyViewerUrl) { this.studyViewerUrl = studyViewerUrl; }
+
+    public String getExternalOrderRef() { return externalOrderRef; }
+    public void setExternalOrderRef(String externalOrderRef) { this.externalOrderRef = externalOrderRef; }
 }
