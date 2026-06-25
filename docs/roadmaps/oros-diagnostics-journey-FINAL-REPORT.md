@@ -144,8 +144,10 @@ CLI-Postgres/Mockito, RTL/vitest, tsc). No runtime/preview boot was performed.
    `/diagnostics/critical-queue` (with acknowledge, criterion B), `/diagnostics/worklist`
    (fulfilment actions, W4), `/operations/diagnostics-reconciliation` (buckets + turnaround, H),
    `/admin/integrations` (honest status, §27 #11), `/diagnostics/reporting` (author/amend/
-   release + version history, criterion G). REMAINING: patient-file investigations tab,
-   QR-claim screen, DICOM viewer deep-launch, and **mobile parity (W9)**.
+   release + version history, criterion G), `/ehr/[patientId]/investigations` (patient-file
+   diagnostic history, criterion F continuity). REMAINING: QR-claim screen, DICOM viewer
+   deep-launch (governed viewer-session via the existing ImagingExperienceController), and
+   **mobile parity (W9)**.
 7. **channels-service** external notify-only adapters not touched (in-platform alert path is live).
 8. **Offline/low-connectivity** queueing (§15) — not designed.
 
