@@ -94,4 +94,38 @@ public interface OrderRepository extends JpaRepository<OrderEntity, String> {
                                    @Param("requester") String requester,
                                    @Param("coarse") Collection<OrderStatus> coarse,
                                    @Param("imaging") Collection<ImagingWorkflowState> imaging);
+
+    /**
+     * Operational reconciliation: IMAGING orders dwelling in the given imaging states, optionally
+     * only those untouched since {@code before} (SLA age threshold) and/or scoped to a facility.
+     * Oldest-first so the most-stuck surface at the top.
+     */
+    @Query("""
+            SELECT o FROM OrderEntity o
+            WHERE o.tenantId = :tenantId
+              AND o.orderType = zw.gov.mohcc.impilo.oros.domain.OrderType.IMAGING
+              AND o.imagingState IN :states
+              AND (:facilityId IS NULL OR o.facilityId = :facilityId)
+              AND (:before IS NULL OR o.updatedAt < :before)
+            ORDER BY o.updatedAt ASC
+            """)
+    List<OrderEntity> stuckImaging(@Param("tenantId") UUID tenantId,
+                                   @Param("facilityId") UUID facilityId,
+                                   @Param("states") Collection<ImagingWorkflowState> states,
+                                   @Param("before") java.time.OffsetDateTime before);
+
+    /**
+     * Workload distribution: count of IMAGING orders grouped by imaging state, tenant- (and
+     * optionally facility-) scoped. Returns rows of {@code [ImagingWorkflowState, Long]}.
+     */
+    @Query("""
+            SELECT o.imagingState, COUNT(o) FROM OrderEntity o
+            WHERE o.tenantId = :tenantId
+              AND o.orderType = zw.gov.mohcc.impilo.oros.domain.OrderType.IMAGING
+              AND o.imagingState IS NOT NULL
+              AND (:facilityId IS NULL OR o.facilityId = :facilityId)
+            GROUP BY o.imagingState
+            """)
+    List<Object[]> imagingStateCounts(@Param("tenantId") UUID tenantId,
+                                      @Param("facilityId") UUID facilityId);
 }
