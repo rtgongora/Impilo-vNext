@@ -66,6 +66,44 @@ class DiagnosticsExperienceControllerTest {
     }
 
     @Test
+    void fulfilmentWorklist_proxiesUpstreamWithTypeAndStates() {
+        ArrayNode upstream = objectMapper.createArrayNode();
+        upstream.add(objectMapper.createObjectNode().put("orderId", "ORD-LAB").put("orderType", "LAB"));
+        when(orosClient.fulfilmentWorklist("LAB", "COLLECTED")).thenReturn(upstream);
+
+        ResponseEntity<Map<String, Object>> resp =
+                controller.fulfilmentWorklist("req-1", "cor-1", "LAB", "COLLECTED");
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(resp.getBody().get("data")).isEqualTo(upstream);
+        verify(orosClient).fulfilmentWorklist("LAB", "COLLECTED");
+    }
+
+    @Test
+    void specimenAction_proxiesUpstream() {
+        when(orosClient.specimenAction(eq("SPC-1"), eq("receive"), anyMap()))
+                .thenReturn(objectMapper.createObjectNode().put("status", "RECEIVED"));
+
+        ResponseEntity<Map<String, Object>> resp =
+                controller.specimenAction("req-1", "cor-1", "SPC-1", "receive", Map.of("labNumber", "LAB-1"));
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        verify(orosClient).specimenAction(eq("SPC-1"), eq("receive"), anyMap());
+    }
+
+    @Test
+    void workflowTransition_proxiesTargetAndReason() {
+        when(orosClient.workflowTransition("ORD-1", "IN_PROGRESS", "analysing"))
+                .thenReturn(objectMapper.createObjectNode().put("workflowState", "IN_PROGRESS"));
+
+        ResponseEntity<Map<String, Object>> resp = controller.workflowTransition(
+                "req-1", "cor-1", "ORD-1", Map.of("target", "IN_PROGRESS", "reason", "analysing"));
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        verify(orosClient).workflowTransition("ORD-1", "IN_PROGRESS", "analysing");
+    }
+
+    @Test
     void resultsInbox_degradesTo502OnUpstreamFailure() {
         when(orosClient.resultsInbox(any())).thenThrow(new RuntimeException("connection refused"));
 

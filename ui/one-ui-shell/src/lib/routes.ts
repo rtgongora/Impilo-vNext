@@ -461,6 +461,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/diagnostics/results-inbox", zone: "lab", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Results Inbox", navLabel: "Results Inbox", navZone: "work" },
   { path: "/diagnostics/critical-queue", zone: "lab", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Critical Results", navLabel: "Critical Results", navZone: "work" },
   { path: "/diagnostics/worklist", zone: "lab", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Imaging Worklist", navLabel: "Imaging Worklist", navZone: "work" },
+  { path: "/diagnostics/lab-worklist", zone: "lab", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Lab Worklist", navLabel: "Lab Worklist", navZone: "work" },
   { path: "/diagnostics/reporting", zone: "lab", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Report Authoring", navLabel: "Reporting", navZone: "work" },
   { path: "/diagnostics/intake/qr", zone: "lab", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Claim Order QR", navLabel: "QR Claim", navZone: "work" },
   { path: "/operations/diagnostics-reconciliation", zone: "lab", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Diagnostics Reconciliation", navLabel: "Diagnostics Reconciliation", navZone: "work" },

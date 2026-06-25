@@ -157,6 +157,59 @@ public class DiagnosticsExperienceController {
         return proxy(requestId, correlationId, () -> orosClient.imagingWorklist(states));
     }
 
+    /** Category fulfilment worklist (lab/procedure/assessment). */
+    @GetMapping("/fulfilment-worklist")
+    public ResponseEntity<Map<String, Object>> fulfilmentWorklist(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestParam(name = "type") String type,
+            @RequestParam(name = "states", required = false) String states) {
+        return proxy(requestId, correlationId, () -> orosClient.fulfilmentWorklist(type, states));
+    }
+
+    /** Drive a guarded fine-grained workflow transition (lab/procedure). */
+    @PostMapping("/orders/{orderId}/workflow/transition")
+    public ResponseEntity<Map<String, Object>> workflowTransition(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String orderId,
+            @RequestBody Map<String, Object> body) {
+        String target = body.get("target") != null ? body.get("target").toString() : null;
+        String reason = body.get("reason") != null ? body.get("reason").toString() : null;
+        return proxy(requestId, correlationId, () -> orosClient.workflowTransition(orderId, target, reason));
+    }
+
+    /** Schedule a procedure/assessment appointment. */
+    @PostMapping("/orders/{orderId}/workflow/schedule")
+    public ResponseEntity<Map<String, Object>> workflowSchedule(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String orderId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        return proxy(requestId, correlationId, () -> orosClient.workflowSchedule(orderId, body));
+    }
+
+    /** Record a specimen collected against a lab order. */
+    @PostMapping("/orders/{orderId}/specimens")
+    public ResponseEntity<Map<String, Object>> collectSpecimen(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String orderId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        return proxy(requestId, correlationId, () -> orosClient.collectSpecimen(orderId, body));
+    }
+
+    /** Drive a specimen lifecycle action (label/dispatch/receive/reject/recollect). */
+    @PostMapping("/specimens/{specimenId}/{action}")
+    public ResponseEntity<Map<String, Object>> specimenAction(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String specimenId,
+            @PathVariable String action,
+            @RequestBody(required = false) Map<String, Object> body) {
+        return proxy(requestId, correlationId, () -> orosClient.specimenAction(specimenId, action, body));
+    }
+
     /** Requester results inbox. */
     @GetMapping("/results-inbox")
     public ResponseEntity<Map<String, Object>> resultsInbox(

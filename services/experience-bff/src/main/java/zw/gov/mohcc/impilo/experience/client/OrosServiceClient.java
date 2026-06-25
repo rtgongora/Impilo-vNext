@@ -328,6 +328,41 @@ public class OrosServiceClient {
         return extractData(response);
     }
 
+    /** Category-agnostic fulfilment worklist (lab/procedure/assessment). */
+    public JsonNode fulfilmentWorklist(String type, String states) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/fulfilment/worklist")
+                .queryParam("type", type);
+        if (states != null && !states.isBlank()) b.queryParam("states", states);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(b.toUriString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Drive a guarded fine-grained workflow transition (lab/procedure). */
+    public JsonNode workflowTransition(String orderId, String target, String reason) {
+        Map<String, Object> body = new java.util.HashMap<>();
+        body.put("target", target);
+        body.put("reason", reason);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                baseUrl + "/v1/orders/" + orderId + "/workflow/transition", body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Schedule a procedure/assessment appointment. */
+    public JsonNode workflowSchedule(String orderId, Map<String, Object> body) {
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                baseUrl + "/v1/orders/" + orderId + "/workflow/schedule",
+                body != null ? body : Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Drive a specimen lifecycle action (label/dispatch/receive/reject/recollect). */
+    public JsonNode specimenAction(String specimenId, String action, Map<String, Object> body) {
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                baseUrl + "/v1/specimens/" + specimenId + "/" + action,
+                body != null ? body : Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
     /** Structured laboratory observations for a result (value/unit/reference-range/flags). */
     public JsonNode resultObservations(String resultId) {
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(

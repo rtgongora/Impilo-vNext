@@ -448,3 +448,85 @@ export function useResultObservations(resultId: string | null | undefined) {
     staleTime: 15_000,
   });
 }
+
+/** A laboratory specimen (collection/dispatch/receipt lifecycle). */
+export interface Specimen {
+  specimenId: string;
+  orderId: string;
+  specimenType: string | null;
+  sampleId: string | null;
+  labNumber: string | null;
+  status: string;
+  collectedBy: string | null;
+  collectedAt: string | null;
+  rejectionReason: string | null;
+}
+
+/** Category fulfilment worklist (lab/procedure/assessment) filtered by workflow state. */
+export function useFulfilmentWorklist(type: string, states?: string) {
+  return useQuery<OrdersResponse>({
+    queryKey: ["diagnostics-fulfilment-worklist", type, states ?? null],
+    queryFn: () => {
+      const params = new URLSearchParams({ type });
+      if (states) params.set("states", states);
+      return apiClient.get<OrdersResponse>(
+        `/internal/v1/diagnostics/fulfilment-worklist?${params.toString()}`,
+      );
+    },
+    staleTime: 15_000,
+  });
+}
+
+/** Specimens for an order. */
+export function useOrderSpecimens(orderId: string | null | undefined) {
+  return useQuery<ApiResponse<Specimen[]>>({
+    queryKey: ["diagnostics-order-specimens", orderId ?? null],
+    queryFn: () =>
+      apiClient.get<ApiResponse<Specimen[]>>(
+        `/internal/v1/diagnostics/orders/${encodeURIComponent(orderId as string)}/specimens`,
+      ),
+    enabled: !!orderId,
+    staleTime: 10_000,
+  });
+}
+
+/** Drive a guarded fine-grained workflow transition (lab/procedure). */
+export function useWorkflowTransition() {
+  const queryClient = useQueryClient();
+  return useMutation<unknown, unknown, { orderId: string; target: string; reason?: string }>({
+    mutationFn: ({ orderId, target, reason }) =>
+      apiClient.post(`/internal/v1/diagnostics/orders/${encodeURIComponent(orderId)}/workflow/transition`, {
+        target,
+        reason,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["diagnostics-fulfilment-worklist"] });
+    },
+  });
+}
+
+/** Record a specimen collected against a lab order. */
+export function useCollectSpecimen() {
+  const queryClient = useQueryClient();
+  return useMutation<unknown, unknown, { orderId: string; specimenType?: string; specimenSource?: string }>({
+    mutationFn: ({ orderId, ...body }) =>
+      apiClient.post(`/internal/v1/diagnostics/orders/${encodeURIComponent(orderId)}/specimens`, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["diagnostics-fulfilment-worklist"] });
+      queryClient.invalidateQueries({ queryKey: ["diagnostics-order-specimens"] });
+    },
+  });
+}
+
+/** Drive a specimen lifecycle action (dispatch/receive/reject/recollect). */
+export function useSpecimenAction() {
+  const queryClient = useQueryClient();
+  return useMutation<unknown, unknown, { specimenId: string; action: string; labNumber?: string; reason?: string }>({
+    mutationFn: ({ specimenId, action, ...body }) =>
+      apiClient.post(`/internal/v1/diagnostics/specimens/${encodeURIComponent(specimenId)}/${action}`, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["diagnostics-order-specimens"] });
+      queryClient.invalidateQueries({ queryKey: ["diagnostics-fulfilment-worklist"] });
+    },
+  });
+}
