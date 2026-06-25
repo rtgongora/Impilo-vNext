@@ -7,6 +7,7 @@ import zw.gov.mohcc.impilo.clinical.audit.TraceService;
 import zw.gov.mohcc.impilo.clinical.assistant.ClinicalAssistantService;
 import zw.gov.mohcc.impilo.clinical.cds.CdsInsightService;
 import zw.gov.mohcc.impilo.clinical.events.ClinicalOutboxWriter;
+import zw.gov.mohcc.impilo.clinical.interpretation.InterpretationEvaluationService;
 import zw.gov.mohcc.impilo.clinical.nudge.NudgeEvaluationService;
 import zw.gov.mohcc.impilo.clinical.pathway.PathwaySessionService;
 import zw.gov.mohcc.impilo.clinical.persistence.entity.OverrideRecordEntity;
@@ -40,6 +41,7 @@ public class ClinicalKnowledgePlatformController {
     private final ClinicalContextEnricher clinicalContextEnricher;
     private final ClinicalOutboxWriter clinicalOutboxWriter;
     private final CdsInsightService cdsInsightService;
+    private final InterpretationEvaluationService interpretationEvaluationService;
 
     public ClinicalKnowledgePlatformController(
             ClinicalAssistantService assistantService,
@@ -51,7 +53,8 @@ public class ClinicalKnowledgePlatformController {
             ClinicalRulesEngine clinicalRulesEngine,
             ClinicalContextEnricher clinicalContextEnricher,
             ClinicalOutboxWriter clinicalOutboxWriter,
-            CdsInsightService cdsInsightService) {
+            CdsInsightService cdsInsightService,
+            InterpretationEvaluationService interpretationEvaluationService) {
         this.assistantService = assistantService;
         this.prescribingEvaluationService = prescribingEvaluationService;
         this.pathwaySessionService = pathwaySessionService;
@@ -62,6 +65,7 @@ public class ClinicalKnowledgePlatformController {
         this.clinicalContextEnricher = clinicalContextEnricher;
         this.clinicalOutboxWriter = clinicalOutboxWriter;
         this.cdsInsightService = cdsInsightService;
+        this.interpretationEvaluationService = interpretationEvaluationService;
     }
 
     @PostMapping("/assistant/ask")
@@ -102,6 +106,29 @@ public class ClinicalKnowledgePlatformController {
         var ctx = clinicalContextEnricher.enrich(ClinicalEvaluationContext.fromMap(body));
         var alerts = clinicalRulesEngine.evaluate(ctx).stream().map(RuleAlert::toMap).toList();
         return ResponseEntity.ok(Map.of("data", Map.of("alerts", alerts)));
+    }
+
+    /**
+     * Context-aware interpretation of vitals/labs against patient-appropriate reference intervals, plus
+     * the deterministic rules that fire on the interpreted picture. Auditable + advisory.
+     */
+    @PostMapping("/interpretation/evaluate")
+    public ResponseEntity<Map<String, Object>> interpretationEvaluate(
+            @RequestHeader(value = "x-actor-id", defaultValue = "anonymous") String actorId,
+            @RequestBody Map<String, Object> body) {
+        @SuppressWarnings("unchecked")
+        Map<String, Object> context = body.get("context") instanceof Map<?, ?> m
+                ? new LinkedHashMap<>((Map<String, Object>) m)
+                : Map.of();
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> observations = body.get("observations") instanceof List<?> l
+                ? (List<Map<String, Object>>) (List<?>) l
+                : List.of();
+        String patientId = body.get("patient_id") != null ? body.get("patient_id").toString() : null;
+        String encounterId = body.get("encounter_id") != null ? body.get("encounter_id").toString() : null;
+        Map<String, Object> data = interpretationEvaluationService.evaluate(
+                actorId, patientId, encounterId, context, observations);
+        return ResponseEntity.ok(Map.of("data", data));
     }
 
     @PostMapping("/cds/summary")
