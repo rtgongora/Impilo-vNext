@@ -48,6 +48,19 @@ class DiagnosticsExperienceControllerTest {
     }
 
     @Test
+    void createDraft_proxiesBodyAndWrapsResult() {
+        when(orosClient.createDraft(anyMap()))
+                .thenReturn(objectMapper.createObjectNode().put("orderId", "ORD-NEW").put("status", "DRAFT"));
+
+        ResponseEntity<Map<String, Object>> resp =
+                controller.createDraft("req-1", "cor-1", Map.of("orderType", "IMAGING", "patientCpid", "CPID-1"));
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(resp.getBody().get("data")).isNotNull();
+        verify(orosClient).createDraft(anyMap());
+    }
+
+    @Test
     void reconcileSummary_proxiesUpstream() {
         when(orosClient.reconcileDiagnosticsSummary())
                 .thenReturn(objectMapper.createObjectNode().put("RECEIVED_NOT_ACCEPTED", 2));

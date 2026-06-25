@@ -239,6 +239,36 @@ public class OrosServiceClient {
     }
 
     /**
+     * Create a diagnostic order draft.
+     */
+    public JsonNode createDraft(Map<String, Object> body) {
+        String url = baseUrl + "/v1/orders/draft";
+        log.info("OROS: Creating diagnostic draft type={}", body.get("orderType"));
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Submit a draft order (reserve accession, init imaging workflow, route).
+     */
+    public JsonNode submitOrder(String orderId) {
+        String url = baseUrl + "/v1/orders/" + orderId + "/submit";
+        log.info("OROS: Submitting order={}", orderId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Assign a routing destination to an order.
+     */
+    public JsonNode routeOrder(String orderId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/orders/" + orderId + "/route";
+        log.info("OROS: Routing order={} to type={}", orderId, body.get("destinationType"));
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * Search diagnostic orders (order tracking) by client/requester/status/type.
      */
     public JsonNode listOrders(String client, String requester, String status, String type) {

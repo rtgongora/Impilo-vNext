@@ -31,6 +31,34 @@ public class DiagnosticsExperienceController {
         this.orosClient = orosClient;
     }
 
+    /** Create a diagnostic order draft. */
+    @PostMapping("/orders/draft")
+    public ResponseEntity<Map<String, Object>> createDraft(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        return proxy(requestId, correlationId, () -> orosClient.createDraft(body));
+    }
+
+    /** Submit a draft order. */
+    @PostMapping("/orders/{orderId}/submit")
+    public ResponseEntity<Map<String, Object>> submit(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String orderId) {
+        return proxy(requestId, correlationId, () -> orosClient.submitOrder(orderId));
+    }
+
+    /** Assign a routing destination to an order (referral). */
+    @PostMapping("/orders/{orderId}/route")
+    public ResponseEntity<Map<String, Object>> route(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String orderId,
+            @RequestBody Map<String, Object> body) {
+        return proxy(requestId, correlationId, () -> orosClient.routeOrder(orderId, body));
+    }
+
     /** Diagnostic order tracking list. */
     @GetMapping("/orders")
     public ResponseEntity<Map<String, Object>> orders(
