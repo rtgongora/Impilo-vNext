@@ -211,7 +211,12 @@ public class ReportService {
         TrustContext ctx = TrustContextHolder.require();
         ResultEntity r = new ResultEntity();
         r.setOrderId(order.getOrderId());
-        r.setKind(order.getOrderType() == OrderType.IMAGING ? ResultKind.IMAGING : ResultKind.LAB);
+        r.setKind(switch (order.getOrderType()) {
+            case IMAGING -> ResultKind.IMAGING;
+            case LAB -> ResultKind.LAB;
+            case PROCEDURE -> ResultKind.DOCUMENT;
+            default -> ResultKind.LAB;
+        });
         r.setSummary(summaryJson != null ? summaryJson : "{}");
         r.setImpression(impression);
         r.setRecommendations(recommendations);

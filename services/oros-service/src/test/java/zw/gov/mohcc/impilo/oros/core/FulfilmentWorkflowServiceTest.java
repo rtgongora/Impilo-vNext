@@ -146,6 +146,32 @@ class FulfilmentWorkflowServiceTest {
     }
 
     @Test
+    @DisplayName("schedule sets the time and drives a procedure to SCHEDULED")
+    void scheduleProcedure() {
+        try (MockedStatic<TrustContextHolder> holder = mockStatic(TrustContextHolder.class)) {
+            holder.when(TrustContextHolder::require).thenReturn(ctx());
+            OrderEntity o = order(OrderType.PROCEDURE, "ACCEPTED");
+            when(orderRepository.findByOrderId(ORDER_ID)).thenReturn(Optional.of(o));
+            when(orderRepository.save(any(OrderEntity.class))).thenAnswer(i -> i.getArgument(0));
+            java.time.OffsetDateTime at = java.time.OffsetDateTime.now().plusDays(1);
+
+            OrderEntity result = service.schedule(ORDER_ID, at, "echo slot");
+
+            assertThat(result.getWorkflowState()).isEqualTo("SCHEDULED");
+            assertThat(result.getScheduledAt()).isEqualTo(at);
+        }
+    }
+
+    @Test
+    @DisplayName("schedule from an un-schedulable state is rejected")
+    void scheduleIllegal() {
+        OrderEntity o = order(OrderType.PROCEDURE, "RECEIVED");
+        when(orderRepository.findByOrderId(ORDER_ID)).thenReturn(Optional.of(o));
+        assertThatThrownBy(() -> service.schedule(ORDER_ID, null, "x"))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
     @DisplayName("transition on a category without a guard throws")
     void transitionNoGuard() {
         OrderEntity o = order(OrderType.PHARMACY, null);

@@ -51,6 +51,32 @@ public class OrderQueryService {
     }
 
     /**
+     * Category-agnostic fulfilment worklist for the current facility, filtered by the generalised
+     * {@code workflow_state}. When no states are supplied, defaults to the active (pre-release)
+     * states for the order type — lab specimen/analysis states, procedure scheduling/performance
+     * states, etc.
+     */
+    public List<OrderEntity> workflowWorklist(OrderType orderType, Collection<String> states) {
+        TrustContext ctx = TrustContextHolder.require();
+        Collection<String> filter = (states == null || states.isEmpty())
+                ? defaultActiveStates(orderType) : states;
+        return orderRepository.findByTenantIdAndFacilityIdAndOrderTypeAndWorkflowStateInOrderByUpdatedAtDesc(
+                ctx.tenantId(), ctx.facilityId(), orderType, filter);
+    }
+
+    private static Collection<String> defaultActiveStates(OrderType orderType) {
+        return switch (orderType) {
+            case LAB -> List.of("RECEIVED", "ACCEPTED", "AWAITING_COLLECTION", "COLLECTED",
+                    "DISPATCHED", "IN_TRANSIT", "RECEIVED_IN_LAB", "IN_PROGRESS");
+            case PROCEDURE -> List.of("RECEIVED", "ACCEPTED", "SCHEDULED", "ARRIVED",
+                    "IN_PROGRESS", "PERFORMED", "REPORT_PENDING");
+            case IMAGING -> List.of("RECEIVED", "ACCEPTED", "SCHEDULED", "ARRIVED",
+                    "IN_PROGRESS", "PERFORMED", "AWAITING_IMAGES", "IMAGES_LINKED", "AWAITING_REPORT");
+            default -> List.of("RECEIVED", "ACCEPTED", "IN_PROGRESS");
+        };
+    }
+
+    /**
      * Requester results-inbox: orders with results ready to review for the given requester
      * (defaults to the current actor when none supplied).
      */

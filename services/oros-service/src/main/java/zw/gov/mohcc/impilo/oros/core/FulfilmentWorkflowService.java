@@ -94,6 +94,27 @@ public class FulfilmentWorkflowService {
         return order;
     }
 
+    /**
+     * Schedule an appointment for a procedure/imaging order: set the scheduled time and drive the
+     * workflow to {@code SCHEDULED} in one step (the category guard validates the transition).
+     */
+    @Transactional
+    public OrderEntity schedule(String orderId, java.time.OffsetDateTime scheduledAt, String reason) {
+        OrderEntity order = orderRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
+        FulfilmentWorkflow guard = guards.require(order.getOrderType());
+        guard.require(order.getWorkflowState(), "SCHEDULED");
+        if (scheduledAt != null) {
+            order.setScheduledAt(scheduledAt);
+        }
+        applyState(order, "SCHEDULED");
+        order = orderRepository.save(order);
+        writeEvent(order, null, "SCHEDULED", reason);
+        log.info("Fulfilment order scheduled: orderId={}, type={}, at={}",
+                order.getOrderId(), order.getOrderType(), scheduledAt);
+        return order;
+    }
+
     /** Legal next states from the order's current workflow state. */
     @Transactional(readOnly = true)
     public java.util.Set<String> allowedNext(String orderId) {

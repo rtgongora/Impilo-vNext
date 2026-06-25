@@ -82,6 +82,14 @@ public interface OrderRepository extends JpaRepository<OrderEntity, String> {
             UUID tenantId, UUID facilityId, OrderType orderType, Collection<ImagingWorkflowState> states);
 
     /**
+     * Category-agnostic fulfilment worklist: orders of a given type at the facility whose
+     * generalised {@code workflow_state} (V011) is in the requested set, most-recently-updated
+     * first. Backs the lab / procedure / assessment worklists.
+     */
+    List<OrderEntity> findByTenantIdAndFacilityIdAndOrderTypeAndWorkflowStateInOrderByUpdatedAtDesc(
+            UUID tenantId, UUID facilityId, OrderType orderType, Collection<String> workflowStates);
+
+    /**
      * Requester results-inbox: orders for a requester (placing actor or referring provider) that
      * have results to review — either coarse lab status (RESULT_AVAILABLE/RELEASED/REVIEWED) or a
      * fine-grained imaging reporting state.
