@@ -15,6 +15,7 @@ import zw.gov.mohcc.impilo.shared.response.ApiResponse;
 import zw.gov.mohcc.impilo.shared.response.PagedResponse;
 import zw.gov.mohcc.impilo.zibo.api.dto.ArtifactSummaryDto;
 import zw.gov.mohcc.impilo.zibo.api.dto.CreateArtifactRequest;
+import zw.gov.mohcc.impilo.zibo.api.dto.ObservationDefinitionDto;
 import zw.gov.mohcc.impilo.zibo.api.dto.UpdateArtifactRequest;
 import zw.gov.mohcc.impilo.zibo.core.ArtifactService;
 import zw.gov.mohcc.impilo.zibo.domain.ArtifactStatus;
@@ -169,6 +170,20 @@ public class ArtifactController {
                 dtos, page, size, result.getTotalElements());
 
         return ResponseEntity.ok(ApiResponse.ok(paged, correlationId));
+    }
+
+    /**
+     * List all usable governed ObservationDefinitions (with full FHIR content) for the
+     * clinical-knowledge-platform reference-range resolver. Includes DRAFT (Phase 1 ships cited
+     * DRAFT/advisory ranges); excludes DEPRECATED/RETIRED.
+     */
+    @GetMapping("/observation-definitions")
+    public ResponseEntity<ApiResponse<List<ObservationDefinitionDto>>> listObservationDefinitions() {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        List<ObservationDefinitionDto> dtos = artifactService.listUsableObservationDefinitions().stream()
+                .map(e -> ObservationDefinitionDto.from(e, objectMapper))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.ok(dtos, correlationId));
     }
 
     /**

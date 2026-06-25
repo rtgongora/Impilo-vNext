@@ -357,6 +357,25 @@ public class ArtifactService {
     }
 
     /**
+     * List all usable governed {@code OBSERVATION_DEFINITION} artifacts for the current tenant —
+     * i.e. those in DRAFT, ACTIVE or PUBLISHED status (DEPRECATED/RETIRED excluded). Used by the
+     * clinical-knowledge-platform to resolve reference intervals; DRAFT is included because Phase 1
+     * ships cited DRAFT/advisory ranges.
+     *
+     * @return the matching artifact entities, with full content
+     */
+    @Transactional(readOnly = true)
+    public List<ArtifactEntity> listUsableObservationDefinitions() {
+        TrustContext ctx = TrustContextHolder.require();
+        return artifactRepository.findByTenantIdAndFhirType(ctx.tenantId(), ArtifactType.OBSERVATION_DEFINITION)
+                .stream()
+                .filter(a -> a.getStatus() == ArtifactStatus.DRAFT
+                        || a.getStatus() == ArtifactStatus.ACTIVE
+                        || a.getStatus() == ArtifactStatus.PUBLISHED)
+                .toList();
+    }
+
+    /**
      * List all versions of an artifact identified by its canonical URL.
      *
      * @param canonicalUrl the canonical URL
