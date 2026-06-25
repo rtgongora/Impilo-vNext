@@ -70,6 +70,7 @@ Service metadata (plane, sovereign, product names): [`docs/registry/services-reg
 | **8121** | `inpatient-service` | |
 | **8300** | `madi-service` | MADI — blood donation, blood bank, transfusion |
 | **8380** | `live-service` | Impilo Live — live events, webinars, broadcasts |
+| **8390** | `khuluma-service` | Khuluma — Comms Hub (conversations, presence, calls/meetings, escalation orchestration) |
 | **8122** | `community-service` | Community health / CHW / outreach (PCT care setting) |
 | 8093 | `document-service` | Document Store |
 | **8113** | `pacs-adapter-service` | |

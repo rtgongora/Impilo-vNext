@@ -1,0 +1,53 @@
+server:
+  port: ${SERVER_PORT:8390}
+
+spring:
+  application:
+    name: khuluma-service
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/impilo_khuluma
+    username: ${POSTGRES_USER:impilo}
+    password: ${POSTGRES_PASSWORD:impilo}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}/protocol/openid-connect/certs
+          issuer-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    tags:
+      application: khuluma-service
+
+impilo:
+  companion:
+    enabled: true
+  ops:
+    enabled: true
+    outbox-table: khuluma_event_outbox
+  # Downstream systems-of-record Khuluma orchestrates (reuse, do not duplicate).
+  khuluma:
+    channels-base-url: ${CHANNELS_BASE_URL:http://localhost:8130}
+    notification-base-url: ${NOTIFICATION_BASE_URL:http://localhost:8200}
+    live-base-url: ${LIVE_BASE_URL:http://localhost:8380}
+    rtc-gateway-base-url: ${RTC_GATEWAY_BASE_URL:http://localhost:8195}
