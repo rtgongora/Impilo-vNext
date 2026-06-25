@@ -24,6 +24,9 @@ public class AuthzProperties {
     private String auditServiceUrl = "http://localhost:8183";
     private String auditKafkaTopic = "tshepo.audit.events";
     private String keysServiceUrl = "http://localhost:8184";
+    private String notificationServiceUrl = "http://localhost:8200";
+    private String notificationNotifyPath = "/internal/v1/notify";
+    private OtpDelivery otpDelivery = new OtpDelivery();
     private ESignet esignet = new ESignet();
     private Cache cache = new Cache();
     private int visibilityEscalationGrantTtlHours = 4;
@@ -64,6 +67,27 @@ public class AuthzProperties {
         public void setUnknownDeviceScore(int unknownDeviceScore) { this.unknownDeviceScore = unknownDeviceScore; }
         public int getBlockedDeviceScore() { return blockedDeviceScore; }
         public void setBlockedDeviceScore(int blockedDeviceScore) { this.blockedDeviceScore = blockedDeviceScore; }
+    }
+
+    /**
+     * SMS-OTP step-up delivery via the notification service (the comms system-of-record).
+     * Opt-in: when {@code notificationEnabled=false} (default) the fail-closed default
+     * {@code OtpDeliveryAdapter} stays in effect, so SMS-OTP cannot complete. Enable only in
+     * environments where the notification service has a real delivery gateway configured —
+     * actual SMS delivery + recipient contact resolution remain the notification service's
+     * responsibility (and external dependency); authz only hands off the OTP.
+     */
+    public static class OtpDelivery {
+        private boolean notificationEnabled = false;
+        private String channel = "SMS";
+        private String templateKey = "STEP_UP_OTP";
+
+        public boolean isNotificationEnabled() { return notificationEnabled; }
+        public void setNotificationEnabled(boolean notificationEnabled) { this.notificationEnabled = notificationEnabled; }
+        public String getChannel() { return channel; }
+        public void setChannel(String channel) { this.channel = channel; }
+        public String getTemplateKey() { return templateKey; }
+        public void setTemplateKey(String templateKey) { this.templateKey = templateKey; }
     }
 
     public static class ESignet {
@@ -127,6 +151,12 @@ public class AuthzProperties {
     public void setAuditKafkaTopic(String auditKafkaTopic) { this.auditKafkaTopic = auditKafkaTopic; }
     public String getKeysServiceUrl() { return keysServiceUrl; }
     public void setKeysServiceUrl(String keysServiceUrl) { this.keysServiceUrl = keysServiceUrl; }
+    public String getNotificationServiceUrl() { return notificationServiceUrl; }
+    public void setNotificationServiceUrl(String notificationServiceUrl) { this.notificationServiceUrl = notificationServiceUrl; }
+    public String getNotificationNotifyPath() { return notificationNotifyPath; }
+    public void setNotificationNotifyPath(String notificationNotifyPath) { this.notificationNotifyPath = notificationNotifyPath; }
+    public OtpDelivery getOtpDelivery() { return otpDelivery; }
+    public void setOtpDelivery(OtpDelivery otpDelivery) { this.otpDelivery = otpDelivery; }
     public ESignet getEsignet() { return esignet; }
     public void setEsignet(ESignet esignet) { this.esignet = esignet; }
     public Cache getCache() { return cache; }
