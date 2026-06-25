@@ -239,6 +239,57 @@ public class OrosServiceClient {
     }
 
     /**
+     * Search diagnostic orders (order tracking) by client/requester/status/type.
+     */
+    public JsonNode listOrders(String client, String requester, String status, String type) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/orders");
+        if (client != null && !client.isBlank()) builder.queryParam("client", client);
+        if (requester != null && !requester.isBlank()) builder.queryParam("requester", requester);
+        if (status != null && !status.isBlank()) builder.queryParam("status", status);
+        if (type != null && !type.isBlank()) builder.queryParam("type", type);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Imaging-team worklist filtered by fine-grained imaging state.
+     */
+    public JsonNode imagingWorklist(String states) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/orders/imaging-worklist");
+        if (states != null && !states.isBlank()) builder.queryParam("states", states);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Requester results inbox: orders with results ready for review.
+     */
+    public JsonNode resultsInbox(String requester) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/results/inbox");
+        if (requester != null && !requester.isBlank()) builder.queryParam("requester", requester);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Diagnostic operational reconciliation summary (stuck-order bucket counts + unacked critical).
+     */
+    public JsonNode reconcileDiagnosticsSummary() {
+        String url = baseUrl + "/v1/reconcile/diagnostics/summary";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Honest external-integration status for diagnostics adapters.
+     */
+    public JsonNode integrationStatus() {
+        String url = baseUrl + "/v1/integrations/status";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * Get the orderable catalog, optionally filtered by order type.
      */
     public JsonNode getCatalog(String orderType, int page, int size) {
