@@ -19,6 +19,7 @@ import {
   useReleaseReport,
   useOrderPrintable,
   useQrClaim,
+  useLaunchOrderViewer,
 } from "../useDiagnosticsOrders";
 
 const { get, post } = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }));
@@ -236,5 +237,16 @@ describe("useDiagnosticsOrders", () => {
     expect(result.current.data?.orderId).toBe("ORD-9");
     expect(post).toHaveBeenCalledWith("/internal/v1/diagnostics/intake/qr/claim",
       { shareToken: "tok-1", otp: "123456" });
+  });
+
+  it("launch viewer posts to the viewer endpoint and returns the launch context", async () => {
+    post.mockResolvedValue({ data: { viewerUrl: "https://viewer/launch?s=1" } });
+
+    const { result } = renderHook(() => useLaunchOrderViewer(), { wrapper });
+    result.current.mutate({ orderId: "ORD-1" });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.viewerUrl).toBe("https://viewer/launch?s=1");
+    expect(post).toHaveBeenCalledWith("/internal/v1/diagnostics/orders/ORD-1/viewer");
   });
 });

@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.OrosServiceClient;
+import zw.gov.mohcc.impilo.experience.client.PacsServiceClient;
 
 import java.util.Map;
 
@@ -26,9 +27,54 @@ public class DiagnosticsExperienceController {
     private static final Logger log = LoggerFactory.getLogger(DiagnosticsExperienceController.class);
 
     private final OrosServiceClient orosClient;
+    private final PacsServiceClient pacsClient;
 
-    public DiagnosticsExperienceController(OrosServiceClient orosClient) {
+    public DiagnosticsExperienceController(OrosServiceClient orosClient, PacsServiceClient pacsClient) {
         this.orosClient = orosClient;
+        this.pacsClient = pacsClient;
+    }
+
+    /**
+     * Launch a governed DICOM viewer session for an order's linked study (criterion F).
+     *
+     * Resolves the order's study UID, finds the PACS study, and launches an audited viewer
+     * session via the imaging service — returning the launch context (viewer URL).
+     */
+    @PostMapping("/orders/{orderId}/viewer")
+    public ResponseEntity<Map<String, Object>> launchViewer(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String orderId) {
+        try {
+            JsonNode order = orosClient.getOrder(orderId);
+            String studyUid = order != null ? order.path("studyUid").asText(null) : null;
+            if (studyUid == null || studyUid.isBlank()) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                        "error", Map.of("code", "NO_LINKED_STUDY",
+                                "message", "Order has no linked imaging study yet"),
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            }
+            JsonNode studies = pacsClient.searchStudies(Map.of("studyUid", studyUid));
+            JsonNode study = (studies != null && studies.isArray() && studies.size() > 0) ? studies.get(0) : null;
+            if (study == null || study.path("id").isMissingNode()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                        "error", Map.of("code", "STUDY_NOT_FOUND",
+                                "message", "Linked study not found in PACS"),
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            }
+            String studyId = study.path("id").asText();
+            JsonNode session = pacsClient.launchViewerSession(studyId,
+                    Map.of("viewerType", "DICOMWEB_STACK", "contextRef", orderId));
+            return ResponseEntity.ok(Map.of(
+                    "data", session != null ? session : com.fasterxml.jackson.databind.node.NullNode.getInstance(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.warn("Viewer launch failed for order {}: {}", orderId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", Map.of("code", "VIEWER_LAUNCH_FAILED",
+                            "message", e.getMessage() != null ? e.getMessage() : "viewer launch failed"),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
     }
 
     /** Create a diagnostic order draft. */

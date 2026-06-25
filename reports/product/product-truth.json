@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-25T09:38:01.028Z",
+  "generatedAt": "2026-06-25T09:43:18.249Z",
   "branch": "intake/oros-diagnostics-journey",
   "registryDrift": {
     "unregisteredModules": [],
@@ -9,7 +9,7 @@
     "totalServices": 92,
     "totalLibraries": 12,
     "totalUiWorkspaces": 24,
-    "bffRouteCount": 2179,
+    "bffRouteCount": 2180,
     "contractCount": 102,
     "byProductStatus": {
       "internal-only": 24,
@@ -2835,7 +2835,7 @@
         "repositories": 2,
         "serviceLayer": 41,
         "controllers": 258,
-        "routes": 2179,
+        "routes": 2180,
         "stubRoutes": 0,
         "contractOperations": 1537,
         "contractViolations": 0,
@@ -8312,7 +8312,7 @@
         "stubRoutes": 0,
         "contractOperations": 7,
         "contractViolations": 0,
-        "bffClients": 34,
+        "bffClients": 35,
         "uiReferences": 402,
         "mobileReferences": 52,
         "tests": 6
@@ -8339,6 +8339,7 @@
         "BookingRoutingController→inline",
         "CredentialVaultController→inline",
         "DiagnosisSearchController→inline",
+        "DiagnosticsExperienceController→inline",
         "FacilityController→inline",
         "FacilityRegulatoryController→inline",
         "FhirInteropController→inline",

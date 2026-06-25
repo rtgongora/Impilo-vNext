@@ -301,6 +301,17 @@ export function useImagingTransition() {
   });
 }
 
+/** Launch a governed DICOM viewer session for an order's linked study; returns the launch context. */
+export function useLaunchOrderViewer() {
+  return useMutation<Record<string, unknown>, unknown, { orderId: string }>({
+    mutationFn: async ({ orderId }) => {
+      const res = await apiClient.post<ApiResponse<Record<string, unknown>>>(
+        `/internal/v1/diagnostics/orders/${encodeURIComponent(orderId)}/viewer`);
+      return res.data;
+    },
+  });
+}
+
 export interface ShareLinkRef {
   linkId: string | null;
   shareToken: string | null;

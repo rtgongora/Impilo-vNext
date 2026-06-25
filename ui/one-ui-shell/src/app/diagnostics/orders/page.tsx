@@ -15,6 +15,7 @@ import { PageShell } from "@/components/PageShell";
 import {
   useDiagnosticsOrders,
   useOrderPrintable,
+  useLaunchOrderViewer,
   type DiagnosticOrder,
 } from "@/hooks/queries/useDiagnosticsOrders";
 
@@ -31,7 +32,17 @@ export default function DiagnosticsOrdersPage() {
 
   const ordersQ = useDiagnosticsOrders({ type: type || undefined });
   const printableMut = useOrderPrintable();
+  const viewerMut = useLaunchOrderViewer();
   const [issuedToken, setIssuedToken] = useState<{ orderId: string; token: string } | null>(null);
+
+  function launchViewer(orderId: string) {
+    viewerMut.mutate({ orderId }, {
+      onSuccess: (ctx) => {
+        const url = (ctx.viewerUrl ?? ctx.url ?? ctx.launchUrl) as string | undefined;
+        if (url) window.open(url, "_blank", "noopener,noreferrer");
+      },
+    });
+  }
 
   const orders = useMemo(() => {
     const raw = ordersQ.data?.data ?? [];
@@ -139,11 +150,11 @@ export default function DiagnosticsOrdersPage() {
                           onClick={() => printableMut.mutate({ orderId: o.orderId },
                             { onSuccess: (ref) => setIssuedToken({ orderId: o.orderId, token: ref.shareToken ?? "" }) })}
                           className="text-primary hover:underline disabled:opacity-50">Print QR</button>
-                        {o.studyViewerUrl ? (
-                          <a href={o.studyViewerUrl} target="_blank" rel="noopener noreferrer"
-                            className="text-primary hover:underline">View study</a>
-                        ) : o.studyUid ? (
-                          <span className="text-muted-foreground" title={o.studyUid}>Linked</span>
+                        {o.studyUid ? (
+                          <button type="button"
+                            disabled={viewerMut.isPending && viewerMut.variables?.orderId === o.orderId}
+                            onClick={() => launchViewer(o.orderId)}
+                            className="text-primary hover:underline disabled:opacity-50">View images</button>
                         ) : null}
                       </div>
                     </td>
