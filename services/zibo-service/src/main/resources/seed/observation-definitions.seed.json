@@ -1,0 +1,2052 @@
+{
+  "version": "0.1.0-draft",
+  "generatedFrom": "ui/one-ui-shell/src/lib/clinical-forms/vitals-reference/metadata.ts",
+  "citation": "Provisional DRAFT seed derived from Impilo vitals-reference assets (adult acute approximations + paediatric/neonatal band overrides). NOT authoritative — supersede with cited national guideline / NEWS2 / WHO growth standards (Phase 7) and prefer lab-delivered intervals for labs.",
+  "definitions": [
+    {
+      "canonicalUrl": "http://impilo.health.zw/ObservationDefinition/vital-systolic-bp",
+      "version": "0.1.0-draft",
+      "name": "Vital_systolic_bp",
+      "title": "Systolic blood pressure reference intervals (DRAFT seed)",
+      "publisher": "MoHCC Impilo (provisional DRAFT seed)",
+      "content": {
+        "resourceType": "ObservationDefinition",
+        "status": "draft",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8480-6",
+              "display": "Systolic blood pressure"
+            }
+          ],
+          "text": "Systolic blood pressure"
+        },
+        "permittedDataType": [
+          "Quantity"
+        ],
+        "quantitativeDetails": {
+          "unit": {
+            "text": "mm[Hg]"
+          }
+        },
+        "qualifiedInterval": [
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 0,
+                "unit": "a"
+              },
+              "high": {
+                "value": 0.083333,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 90,
+                "unit": "mm[Hg]"
+              },
+              "high": {
+                "value": 140,
+                "unit": "mm[Hg]"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 0,
+                "unit": "a"
+              },
+              "high": {
+                "value": 0.083333,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 40,
+                "unit": "mm[Hg]"
+              },
+              "high": {
+                "value": 90,
+                "unit": "mm[Hg]"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 0.083333,
+                "unit": "a"
+              },
+              "high": {
+                "value": 2,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 90,
+                "unit": "mm[Hg]"
+              },
+              "high": {
+                "value": 140,
+                "unit": "mm[Hg]"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 0.083333,
+                "unit": "a"
+              },
+              "high": {
+                "value": 2,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 50,
+                "unit": "mm[Hg]"
+              },
+              "high": {
+                "value": 130,
+                "unit": "mm[Hg]"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 2,
+                "unit": "a"
+              },
+              "high": {
+                "value": 12,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 80,
+                "unit": "mm[Hg]"
+              },
+              "high": {
+                "value": 120,
+                "unit": "mm[Hg]"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 2,
+                "unit": "a"
+              },
+              "high": {
+                "value": 12,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 70,
+                "unit": "mm[Hg]"
+              },
+              "high": {
+                "value": 160,
+                "unit": "mm[Hg]"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 12,
+                "unit": "a"
+              },
+              "high": {
+                "value": 18,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 80,
+                "unit": "mm[Hg]"
+              },
+              "high": {
+                "value": 120,
+                "unit": "mm[Hg]"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 12,
+                "unit": "a"
+              },
+              "high": {
+                "value": 18,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 70,
+                "unit": "mm[Hg]"
+              },
+              "high": {
+                "value": 160,
+                "unit": "mm[Hg]"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 18,
+                "unit": "a"
+              },
+              "high": {
+                "value": 65,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 90,
+                "unit": "mm[Hg]"
+              },
+              "high": {
+                "value": 140,
+                "unit": "mm[Hg]"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 18,
+                "unit": "a"
+              },
+              "high": {
+                "value": 65,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 85,
+                "unit": "mm[Hg]"
+              },
+              "high": {
+                "value": 180,
+                "unit": "mm[Hg]"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 65,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 90,
+                "unit": "mm[Hg]"
+              },
+              "high": {
+                "value": 140,
+                "unit": "mm[Hg]"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 65,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 85,
+                "unit": "mm[Hg]"
+              },
+              "high": {
+                "value": 180,
+                "unit": "mm[Hg]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "canonicalUrl": "http://impilo.health.zw/ObservationDefinition/vital-diastolic-bp",
+      "version": "0.1.0-draft",
+      "name": "Vital_diastolic_bp",
+      "title": "Diastolic blood pressure reference intervals (DRAFT seed)",
+      "publisher": "MoHCC Impilo (provisional DRAFT seed)",
+      "content": {
+        "resourceType": "ObservationDefinition",
+        "status": "draft",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8462-4",
+              "display": "Diastolic blood pressure"
+            }
+          ],
+          "text": "Diastolic blood pressure"
+        },
+        "permittedDataType": [
+          "Quantity"
+        ],
+        "quantitativeDetails": {
+          "unit": {
+            "text": "mm[Hg]"
+          }
+        },
+        "qualifiedInterval": [
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 0,
+                "unit": "a"
+              },
+              "high": {
+                "value": 0.083333,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 60,
+                "unit": "mm[Hg]"
+              },
+              "high": {
+                "value": 90,
+                "unit": "mm[Hg]"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 0,
+                "unit": "a"
+              },
+              "high": {
+                "value": 0.083333,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 25,
+                "unit": "mm[Hg]"
+              },
+              "high": {
+                "value": 70,
+                "unit": "mm[Hg]"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 0.083333,
+                "unit": "a"
+              },
+              "high": {
+                "value": 2,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 60,
+                "unit": "mm[Hg]"
+              },
+              "high": {
+                "value": 90,
+                "unit": "mm[Hg]"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 0.083333,
+                "unit": "a"
+              },
+              "high": {
+                "value": 2,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 30,
+                "unit": "mm[Hg]"
+              },
+              "high": {
+                "value": 85,
+                "unit": "mm[Hg]"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 2,
+                "unit": "a"
+              },
+              "high": {
+                "value": 12,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 50,
+                "unit": "mm[Hg]"
+              },
+              "high": {
+                "value": 80,
+                "unit": "mm[Hg]"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 2,
+                "unit": "a"
+              },
+              "high": {
+                "value": 12,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 40,
+                "unit": "mm[Hg]"
+              },
+              "high": {
+                "value": 95,
+                "unit": "mm[Hg]"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 12,
+                "unit": "a"
+              },
+              "high": {
+                "value": 18,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 60,
+                "unit": "mm[Hg]"
+              },
+              "high": {
+                "value": 90,
+                "unit": "mm[Hg]"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 12,
+                "unit": "a"
+              },
+              "high": {
+                "value": 18,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 50,
+                "unit": "mm[Hg]"
+              },
+              "high": {
+                "value": 110,
+                "unit": "mm[Hg]"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 18,
+                "unit": "a"
+              },
+              "high": {
+                "value": 65,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 60,
+                "unit": "mm[Hg]"
+              },
+              "high": {
+                "value": 90,
+                "unit": "mm[Hg]"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 18,
+                "unit": "a"
+              },
+              "high": {
+                "value": 65,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 50,
+                "unit": "mm[Hg]"
+              },
+              "high": {
+                "value": 110,
+                "unit": "mm[Hg]"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 65,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 60,
+                "unit": "mm[Hg]"
+              },
+              "high": {
+                "value": 90,
+                "unit": "mm[Hg]"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 65,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 50,
+                "unit": "mm[Hg]"
+              },
+              "high": {
+                "value": 110,
+                "unit": "mm[Hg]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "canonicalUrl": "http://impilo.health.zw/ObservationDefinition/vital-heart-rate",
+      "version": "0.1.0-draft",
+      "name": "Vital_heart_rate",
+      "title": "Heart rate reference intervals (DRAFT seed)",
+      "publisher": "MoHCC Impilo (provisional DRAFT seed)",
+      "content": {
+        "resourceType": "ObservationDefinition",
+        "status": "draft",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8867-4",
+              "display": "Heart rate"
+            }
+          ],
+          "text": "Heart rate"
+        },
+        "permittedDataType": [
+          "Quantity"
+        ],
+        "quantitativeDetails": {
+          "unit": {
+            "text": "/min"
+          }
+        },
+        "qualifiedInterval": [
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 0,
+                "unit": "a"
+              },
+              "high": {
+                "value": 0.083333,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 100,
+                "unit": "/min"
+              },
+              "high": {
+                "value": 180,
+                "unit": "/min"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 0,
+                "unit": "a"
+              },
+              "high": {
+                "value": 0.083333,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 80,
+                "unit": "/min"
+              },
+              "high": {
+                "value": 200,
+                "unit": "/min"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 0.083333,
+                "unit": "a"
+              },
+              "high": {
+                "value": 2,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 100,
+                "unit": "/min"
+              },
+              "high": {
+                "value": 160,
+                "unit": "/min"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 0.083333,
+                "unit": "a"
+              },
+              "high": {
+                "value": 2,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 70,
+                "unit": "/min"
+              },
+              "high": {
+                "value": 190,
+                "unit": "/min"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 2,
+                "unit": "a"
+              },
+              "high": {
+                "value": 12,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 70,
+                "unit": "/min"
+              },
+              "high": {
+                "value": 120,
+                "unit": "/min"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 2,
+                "unit": "a"
+              },
+              "high": {
+                "value": 12,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 50,
+                "unit": "/min"
+              },
+              "high": {
+                "value": 150,
+                "unit": "/min"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 12,
+                "unit": "a"
+              },
+              "high": {
+                "value": 18,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 60,
+                "unit": "/min"
+              },
+              "high": {
+                "value": 100,
+                "unit": "/min"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 12,
+                "unit": "a"
+              },
+              "high": {
+                "value": 18,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 40,
+                "unit": "/min"
+              },
+              "high": {
+                "value": 140,
+                "unit": "/min"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 18,
+                "unit": "a"
+              },
+              "high": {
+                "value": 65,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 60,
+                "unit": "/min"
+              },
+              "high": {
+                "value": 100,
+                "unit": "/min"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 18,
+                "unit": "a"
+              },
+              "high": {
+                "value": 65,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 40,
+                "unit": "/min"
+              },
+              "high": {
+                "value": 140,
+                "unit": "/min"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 65,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 60,
+                "unit": "/min"
+              },
+              "high": {
+                "value": 100,
+                "unit": "/min"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 65,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 40,
+                "unit": "/min"
+              },
+              "high": {
+                "value": 140,
+                "unit": "/min"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "canonicalUrl": "http://impilo.health.zw/ObservationDefinition/vital-respiratory-rate",
+      "version": "0.1.0-draft",
+      "name": "Vital_respiratory_rate",
+      "title": "Respiratory rate reference intervals (DRAFT seed)",
+      "publisher": "MoHCC Impilo (provisional DRAFT seed)",
+      "content": {
+        "resourceType": "ObservationDefinition",
+        "status": "draft",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "9279-1",
+              "display": "Respiratory rate"
+            }
+          ],
+          "text": "Respiratory rate"
+        },
+        "permittedDataType": [
+          "Quantity"
+        ],
+        "quantitativeDetails": {
+          "unit": {
+            "text": "/min"
+          }
+        },
+        "qualifiedInterval": [
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 0,
+                "unit": "a"
+              },
+              "high": {
+                "value": 0.083333,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 30,
+                "unit": "/min"
+              },
+              "high": {
+                "value": 60,
+                "unit": "/min"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 0,
+                "unit": "a"
+              },
+              "high": {
+                "value": 0.083333,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 25,
+                "unit": "/min"
+              },
+              "high": {
+                "value": 70,
+                "unit": "/min"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 0.083333,
+                "unit": "a"
+              },
+              "high": {
+                "value": 2,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 24,
+                "unit": "/min"
+              },
+              "high": {
+                "value": 40,
+                "unit": "/min"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 0.083333,
+                "unit": "a"
+              },
+              "high": {
+                "value": 2,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 20,
+                "unit": "/min"
+              },
+              "high": {
+                "value": 55,
+                "unit": "/min"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 2,
+                "unit": "a"
+              },
+              "high": {
+                "value": 12,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 16,
+                "unit": "/min"
+              },
+              "high": {
+                "value": 28,
+                "unit": "/min"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 2,
+                "unit": "a"
+              },
+              "high": {
+                "value": 12,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 12,
+                "unit": "/min"
+              },
+              "high": {
+                "value": 36,
+                "unit": "/min"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 12,
+                "unit": "a"
+              },
+              "high": {
+                "value": 18,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 12,
+                "unit": "/min"
+              },
+              "high": {
+                "value": 20,
+                "unit": "/min"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 12,
+                "unit": "a"
+              },
+              "high": {
+                "value": 18,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 8,
+                "unit": "/min"
+              },
+              "high": {
+                "value": 30,
+                "unit": "/min"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 18,
+                "unit": "a"
+              },
+              "high": {
+                "value": 65,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 12,
+                "unit": "/min"
+              },
+              "high": {
+                "value": 20,
+                "unit": "/min"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 18,
+                "unit": "a"
+              },
+              "high": {
+                "value": 65,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 8,
+                "unit": "/min"
+              },
+              "high": {
+                "value": 30,
+                "unit": "/min"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 65,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 12,
+                "unit": "/min"
+              },
+              "high": {
+                "value": 20,
+                "unit": "/min"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 65,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 8,
+                "unit": "/min"
+              },
+              "high": {
+                "value": 30,
+                "unit": "/min"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "canonicalUrl": "http://impilo.health.zw/ObservationDefinition/vital-temperature-c",
+      "version": "0.1.0-draft",
+      "name": "Vital_temperature_c",
+      "title": "Body temperature reference intervals (DRAFT seed)",
+      "publisher": "MoHCC Impilo (provisional DRAFT seed)",
+      "content": {
+        "resourceType": "ObservationDefinition",
+        "status": "draft",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8310-5",
+              "display": "Body temperature"
+            }
+          ],
+          "text": "Body temperature"
+        },
+        "permittedDataType": [
+          "Quantity"
+        ],
+        "quantitativeDetails": {
+          "unit": {
+            "text": "Cel"
+          }
+        },
+        "qualifiedInterval": [
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 0,
+                "unit": "a"
+              },
+              "high": {
+                "value": 0.083333,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 36,
+                "unit": "Cel"
+              },
+              "high": {
+                "value": 37.5,
+                "unit": "Cel"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 0,
+                "unit": "a"
+              },
+              "high": {
+                "value": 0.083333,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 35,
+                "unit": "Cel"
+              },
+              "high": {
+                "value": 39.5,
+                "unit": "Cel"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 0.083333,
+                "unit": "a"
+              },
+              "high": {
+                "value": 2,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 36,
+                "unit": "Cel"
+              },
+              "high": {
+                "value": 37.5,
+                "unit": "Cel"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 0.083333,
+                "unit": "a"
+              },
+              "high": {
+                "value": 2,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 35,
+                "unit": "Cel"
+              },
+              "high": {
+                "value": 39.5,
+                "unit": "Cel"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 2,
+                "unit": "a"
+              },
+              "high": {
+                "value": 12,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 36,
+                "unit": "Cel"
+              },
+              "high": {
+                "value": 37.5,
+                "unit": "Cel"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 2,
+                "unit": "a"
+              },
+              "high": {
+                "value": 12,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 35,
+                "unit": "Cel"
+              },
+              "high": {
+                "value": 39.5,
+                "unit": "Cel"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 12,
+                "unit": "a"
+              },
+              "high": {
+                "value": 18,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 36,
+                "unit": "Cel"
+              },
+              "high": {
+                "value": 37.5,
+                "unit": "Cel"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 12,
+                "unit": "a"
+              },
+              "high": {
+                "value": 18,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 35,
+                "unit": "Cel"
+              },
+              "high": {
+                "value": 39.5,
+                "unit": "Cel"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 18,
+                "unit": "a"
+              },
+              "high": {
+                "value": 65,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 36,
+                "unit": "Cel"
+              },
+              "high": {
+                "value": 37.5,
+                "unit": "Cel"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 18,
+                "unit": "a"
+              },
+              "high": {
+                "value": 65,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 35,
+                "unit": "Cel"
+              },
+              "high": {
+                "value": 39.5,
+                "unit": "Cel"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 65,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 36,
+                "unit": "Cel"
+              },
+              "high": {
+                "value": 37.5,
+                "unit": "Cel"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 65,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 35,
+                "unit": "Cel"
+              },
+              "high": {
+                "value": 39.5,
+                "unit": "Cel"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "canonicalUrl": "http://impilo.health.zw/ObservationDefinition/vital-spo2",
+      "version": "0.1.0-draft",
+      "name": "Vital_spo2",
+      "title": "Oxygen saturation reference intervals (DRAFT seed)",
+      "publisher": "MoHCC Impilo (provisional DRAFT seed)",
+      "content": {
+        "resourceType": "ObservationDefinition",
+        "status": "draft",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "2708-6",
+              "display": "Oxygen saturation"
+            }
+          ],
+          "text": "Oxygen saturation"
+        },
+        "permittedDataType": [
+          "Quantity"
+        ],
+        "quantitativeDetails": {
+          "unit": {
+            "text": "%"
+          }
+        },
+        "qualifiedInterval": [
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 0,
+                "unit": "a"
+              },
+              "high": {
+                "value": 0.083333,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 95,
+                "unit": "%"
+              },
+              "high": {
+                "value": 100,
+                "unit": "%"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 0,
+                "unit": "a"
+              },
+              "high": {
+                "value": 0.083333,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 88,
+                "unit": "%"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 0.083333,
+                "unit": "a"
+              },
+              "high": {
+                "value": 2,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 95,
+                "unit": "%"
+              },
+              "high": {
+                "value": 100,
+                "unit": "%"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 0.083333,
+                "unit": "a"
+              },
+              "high": {
+                "value": 2,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 88,
+                "unit": "%"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 2,
+                "unit": "a"
+              },
+              "high": {
+                "value": 12,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 95,
+                "unit": "%"
+              },
+              "high": {
+                "value": 100,
+                "unit": "%"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 2,
+                "unit": "a"
+              },
+              "high": {
+                "value": 12,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 88,
+                "unit": "%"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 12,
+                "unit": "a"
+              },
+              "high": {
+                "value": 18,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 95,
+                "unit": "%"
+              },
+              "high": {
+                "value": 100,
+                "unit": "%"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 12,
+                "unit": "a"
+              },
+              "high": {
+                "value": 18,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 88,
+                "unit": "%"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 18,
+                "unit": "a"
+              },
+              "high": {
+                "value": 65,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 95,
+                "unit": "%"
+              },
+              "high": {
+                "value": 100,
+                "unit": "%"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 18,
+                "unit": "a"
+              },
+              "high": {
+                "value": 65,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 88,
+                "unit": "%"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 65,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 95,
+                "unit": "%"
+              },
+              "high": {
+                "value": 100,
+                "unit": "%"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 65,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 88,
+                "unit": "%"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "canonicalUrl": "http://impilo.health.zw/ObservationDefinition/vital-pain-score",
+      "version": "0.1.0-draft",
+      "name": "Vital_pain_score",
+      "title": "Pain score reference intervals (DRAFT seed)",
+      "publisher": "MoHCC Impilo (provisional DRAFT seed)",
+      "content": {
+        "resourceType": "ObservationDefinition",
+        "status": "draft",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "38208-5",
+              "display": "Pain score"
+            }
+          ],
+          "text": "Pain score"
+        },
+        "permittedDataType": [
+          "Quantity"
+        ],
+        "quantitativeDetails": {
+          "unit": {
+            "text": "{score}"
+          }
+        },
+        "qualifiedInterval": [
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 0,
+                "unit": "a"
+              },
+              "high": {
+                "value": 0.083333,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 0,
+                "unit": "{score}"
+              },
+              "high": {
+                "value": 3,
+                "unit": "{score}"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 0,
+                "unit": "a"
+              },
+              "high": {
+                "value": 0.083333,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "high": {
+                "value": 9,
+                "unit": "{score}"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 0.083333,
+                "unit": "a"
+              },
+              "high": {
+                "value": 2,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 0,
+                "unit": "{score}"
+              },
+              "high": {
+                "value": 3,
+                "unit": "{score}"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 0.083333,
+                "unit": "a"
+              },
+              "high": {
+                "value": 2,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "high": {
+                "value": 9,
+                "unit": "{score}"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 2,
+                "unit": "a"
+              },
+              "high": {
+                "value": 12,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 0,
+                "unit": "{score}"
+              },
+              "high": {
+                "value": 3,
+                "unit": "{score}"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 2,
+                "unit": "a"
+              },
+              "high": {
+                "value": 12,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "high": {
+                "value": 9,
+                "unit": "{score}"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 12,
+                "unit": "a"
+              },
+              "high": {
+                "value": 18,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 0,
+                "unit": "{score}"
+              },
+              "high": {
+                "value": 3,
+                "unit": "{score}"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 12,
+                "unit": "a"
+              },
+              "high": {
+                "value": 18,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "high": {
+                "value": 9,
+                "unit": "{score}"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 18,
+                "unit": "a"
+              },
+              "high": {
+                "value": 65,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 0,
+                "unit": "{score}"
+              },
+              "high": {
+                "value": 3,
+                "unit": "{score}"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 18,
+                "unit": "a"
+              },
+              "high": {
+                "value": 65,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "high": {
+                "value": 9,
+                "unit": "{score}"
+              }
+            }
+          },
+          {
+            "category": "reference",
+            "age": {
+              "low": {
+                "value": 65,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "low": {
+                "value": 0,
+                "unit": "{score}"
+              },
+              "high": {
+                "value": 3,
+                "unit": "{score}"
+              }
+            }
+          },
+          {
+            "category": "critical",
+            "age": {
+              "low": {
+                "value": 65,
+                "unit": "a"
+              }
+            },
+            "range": {
+              "high": {
+                "value": 9,
+                "unit": "{score}"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
