@@ -42,7 +42,10 @@ public class ClinicalContextEnricher {
                 ctx.ageYears(), ctx.ageDays(), ctx.weightKg(), ctx.facilityLevel(),
                 ctx.diagnoses(), enriched, ctx.empiricBroadSpectrumDays(),
                 ctx.cultureDocumented(), ctx.lastResortAntibioticWithoutAstJustification(),
-                ctx.vitals(), ctx.allergies());
+                ctx.vitals(), ctx.allergies(),
+                // Pass the interpretation fields through unchanged — enrichment must never drop them.
+                ctx.sex(), ctx.pregnancyStatus(), ctx.gestationalAgeWeeks(),
+                ctx.interpretedObservations(), ctx.derivedValues());
     }
 
     private boolean isSpecialistOnly(String genericName) {
