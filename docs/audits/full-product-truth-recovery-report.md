@@ -1,7 +1,7 @@
 # Full Product Truth Recovery Report
 
-> Generated: 2026-06-24T02:16:05.801Z
-> Branch: `claude/staging-ux-orchestration-remediation-Yypyl`
+> Generated: 2026-06-25T07:12:21.819Z
+> Branch: `intake/oros-diagnostics-journey`
 
 ## Executive summary
 
@@ -10,9 +10,9 @@
 | Total services audited | 92 |
 | Backend services | 92 |
 | Shared libraries | 12 |
-| Frontend surfaces (routes) | 614 |
+| Frontend surfaces (routes) | 616 |
 | Mobile screens | 174 |
-| BFF route handlers | 2152 |
+| BFF route handlers | 2167 |
 | OpenAPI contracts | 102 |
 | Services with DB persistence | 92 |
 | **Phase 6 complete (user-facing + documented internal)** | **90** |
@@ -22,9 +22,9 @@
 | Services partially complete | 0 |
 | Services backend-only (no UI) | 0 |
 | Services UI-only (no backend) | 0 |
-| Services with mock/stub hits | 2 |
-| Total classified gaps | 6 |
-| Blocker gaps | 1 |
+| Services with mock/stub hits | 3 |
+| Total classified gaps | 5 |
+| Blocker gaps | 0 |
 | High severity gaps | 5 |
 | Cross-service cohesion | 14/14 pass |
 
@@ -61,7 +61,6 @@
 
 ## Remaining gaps by severity
 
-- **blocker:** 1
 - **high:** 5
 
 ## Implementation status

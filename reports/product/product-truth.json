@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-06-24T02:16:05.801Z",
-  "branch": "claude/staging-ux-orchestration-remediation-Yypyl",
+  "generatedAt": "2026-06-25T07:12:21.819Z",
+  "branch": "intake/oros-diagnostics-journey",
   "registryDrift": {
     "unregisteredModules": [],
     "missingOnDiskModules": []
@@ -9,7 +9,7 @@
     "totalServices": 92,
     "totalLibraries": 12,
     "totalUiWorkspaces": 24,
-    "bffRouteCount": 2152,
+    "bffRouteCount": 2167,
     "contractCount": 102,
     "byProductStatus": {
       "internal-only": 24,
@@ -24,14 +24,12 @@
     },
     "gapCounts": {
       "byCategory": {
-        "S": 2,
-        "F": 4
+        "F": 5
       },
       "bySeverity": {
-        "blocker": 1,
         "high": 5
       },
-      "total": 6
+      "total": 5
     },
     "crossServiceCohesion": {
       "total": 14,
@@ -487,7 +485,7 @@
         "stubRoutes": 0,
         "contractOperations": 54,
         "contractViolations": 0,
-        "bffClients": 12,
+        "bffClients": 11,
         "uiReferences": 37,
         "mobileReferences": 21,
         "tests": 5
@@ -512,7 +510,6 @@
         "BookingMvumoController→inline",
         "BookingRequestsController→inline",
         "BookingRoutingController→inline",
-        "IdentityAssuranceController→inline",
         "MarketplaceController→inline",
         "ProcedureWorkflowController→inline",
         "SchedulingController→inline",
@@ -989,7 +986,7 @@
         "migrations": 1,
         "entities": 3,
         "repositories": 3,
-        "serviceLayer": 6,
+        "serviceLayer": 7,
         "controllers": 3,
         "routes": 12,
         "stubRoutes": 0,
@@ -998,7 +995,7 @@
         "bffClients": 0,
         "uiReferences": 1,
         "mobileReferences": 0,
-        "tests": 1
+        "tests": 3
       },
       "dimensions": {
         "database": "real",
@@ -1214,16 +1211,16 @@
         "migrations": 5,
         "entities": 12,
         "repositories": 11,
-        "serviceLayer": 7,
+        "serviceLayer": 8,
         "controllers": 3,
-        "routes": 18,
+        "routes": 19,
         "stubRoutes": 0,
         "contractOperations": 17,
         "contractViolations": 0,
         "bffClients": 6,
-        "uiReferences": 7,
+        "uiReferences": 10,
         "mobileReferences": 0,
-        "tests": 6
+        "tests": 13
       },
       "dimensions": {
         "database": "real",
@@ -1251,9 +1248,12 @@
         "ui/one-ui-shell/src/app/clinical-tools/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/encounter/[encounterId]/page.tsx",
         "ui/one-ui-shell/src/components/EHRLayout.tsx",
+        "ui/one-ui-shell/src/components/clinical/AIDiagnosticAssistant.tsx",
+        "ui/one-ui-shell/src/components/clinical/ActiveCDSBanner.tsx",
         "ui/one-ui-shell/src/components/clinical/ClinicalKnowledgeDock.tsx",
         "ui/one-ui-shell/src/components/clinical/EdlizPrescribingPanel.tsx",
         "ui/one-ui-shell/src/components/intelligent/SmartEncounterFlow.tsx",
+        "ui/one-ui-shell/src/hooks/queries/useClinicalCds.ts",
         "ui/one-ui-shell/src/lib/registry-service-module-refs.ts"
       ],
       "mobilePaths": [],
@@ -1326,8 +1326,8 @@
         "stubRoutes": 0,
         "contractOperations": 78,
         "contractViolations": 0,
-        "bffClients": 20,
-        "uiReferences": 59,
+        "bffClients": 19,
+        "uiReferences": 58,
         "mobileReferences": 35,
         "tests": 2
       },
@@ -1349,7 +1349,6 @@
         "CommunityServiceClient",
         "CommunityController→inline",
         "FacilityController→inline",
-        "IdentityAssuranceController→inline",
         "LiveComposerController→inline",
         "MobileCitizenController→inline",
         "MobileProviderExtendedController→inline",
@@ -1558,13 +1557,13 @@
         "entities": 114,
         "repositories": 48,
         "serviceLayer": 23,
-        "controllers": 20,
-        "routes": 115,
+        "controllers": 21,
+        "routes": 119,
         "stubRoutes": 0,
         "contractOperations": 101,
         "contractViolations": 0,
-        "bffClients": 16,
-        "uiReferences": 34,
+        "bffClients": 17,
+        "uiReferences": 35,
         "mobileReferences": 3,
         "tests": 12
       },
@@ -1588,6 +1587,7 @@
         "CoverageRegistrationPreviewController→CostaServiceClient",
         "FinanceBillingWorkspaceController→CostaServiceClient",
         "FinanceController→CostaServiceClient",
+        "FinanceFacilityBffController→CostaServiceClient",
         "FinancialBudgetsBffController→CostaServiceClient",
         "FinancialDocumentFinanceBffController→CostaServiceClient",
         "FinancialReportsBffController→CostaServiceClient",
@@ -1928,19 +1928,19 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 1,
-        "entities": 6,
-        "repositories": 6,
+        "migrations": 2,
+        "entities": 7,
+        "repositories": 7,
         "serviceLayer": 4,
-        "controllers": 3,
-        "routes": 9,
+        "controllers": 4,
+        "routes": 12,
         "stubRoutes": 0,
         "contractOperations": 11,
         "contractViolations": 0,
         "bffClients": 3,
         "uiReferences": 22,
         "mobileReferences": 0,
-        "tests": 7
+        "tests": 9
       },
       "dimensions": {
         "database": "real",
@@ -2044,19 +2044,19 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 4,
-        "entities": 6,
-        "repositories": 6,
-        "serviceLayer": 1,
-        "controllers": 4,
-        "routes": 15,
+        "migrations": 7,
+        "entities": 8,
+        "repositories": 8,
+        "serviceLayer": 3,
+        "controllers": 5,
+        "routes": 22,
         "stubRoutes": 0,
         "contractOperations": 14,
         "contractViolations": 0,
-        "bffClients": 5,
+        "bffClients": 8,
         "uiReferences": 9,
         "mobileReferences": 0,
-        "tests": 2
+        "tests": 4
       },
       "dimensions": {
         "database": "real",
@@ -2074,8 +2074,11 @@
       "contractFile": "data-governance.openapi.yaml",
       "bffClients": [
         "DataGovernanceServiceClient",
+        "AccountDeletionController→inline",
         "AiGovernanceController→inline",
+        "DisplaySettingsController→inline",
         "MobileGovernanceController→inline",
+        "PrivacyPreferencesController→inline",
         "PublicHealthController→inline",
         "data-governance→yml-base-url"
       ],
@@ -2558,7 +2561,7 @@
         "bffClients": 14,
         "uiReferences": 68,
         "mobileReferences": 20,
-        "tests": 2
+        "tests": 3
       },
       "dimensions": {
         "database": "real",
@@ -2693,10 +2696,10 @@
         "stubRoutes": 0,
         "contractOperations": 26,
         "contractViolations": 0,
-        "bffClients": 21,
-        "uiReferences": 150,
+        "bffClients": 19,
+        "uiReferences": 151,
         "mobileReferences": 118,
-        "tests": 2
+        "tests": 3
       },
       "dimensions": {
         "database": "real",
@@ -2721,7 +2724,6 @@
         "FacilityRegulatoryController→inline",
         "FinanceController→inline",
         "FinancialDocumentFinanceBffController→inline",
-        "IdentityAssuranceController→inline",
         "PolicyConsentController→inline",
         "ProcedureWorkflowController→inline",
         "PublicHealthController→inline",
@@ -2730,7 +2732,6 @@
         "StructuredHistoryController→inline",
         "SummaryProxyController→inline",
         "TeleconsultController→inline",
-        "TempIdReviewController→inline",
         "CitizenRecordsController→inline",
         "ProviderDeveloperHubController→inline",
         "RegistryIntakeController→inline"
@@ -2833,15 +2834,15 @@
         "entities": 0,
         "repositories": 2,
         "serviceLayer": 41,
-        "controllers": 256,
-        "routes": 2152,
+        "controllers": 258,
+        "routes": 2167,
         "stubRoutes": 0,
         "contractOperations": 1537,
         "contractViolations": 0,
         "bffClients": 0,
-        "uiReferences": 162,
+        "uiReferences": 165,
         "mobileReferences": 54,
-        "tests": 161
+        "tests": 164
       },
       "dimensions": {
         "database": "real",
@@ -2872,13 +2873,13 @@
         "ui/one-ui-shell/src/app/coverage/page.tsx",
         "ui/one-ui-shell/src/app/dags/policy/page.tsx",
         "ui/one-ui-shell/src/app/data-intelligence/pipelines/page.tsx",
+        "ui/one-ui-shell/src/app/diagnostics/orders/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/growth-chart/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/ips/page.test.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/ips/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/orders/page.test.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/orders/page.tsx",
-        "ui/one-ui-shell/src/app/ehr/[patientId]/preferences/communications/page.tsx",
-        "ui/one-ui-shell/src/app/erp/procurement/page.tsx"
+        "ui/one-ui-shell/src/app/ehr/[patientId]/preferences/communications/page.tsx"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/walletService.test.ts",
@@ -2898,10 +2899,6 @@
           "pattern": "in-memory-backing"
         },
         {
-          "file": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/IdentityAssuranceController.java",
-          "pattern": "stub-placeholder"
-        },
-        {
           "file": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/OmnichannelController.java",
           "pattern": "in-memory-backing"
         },
@@ -2912,14 +2909,6 @@
         {
           "file": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/QueueController.java",
           "pattern": "in-memory-backing"
-        },
-        {
-          "file": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/TempIdReviewController.java",
-          "pattern": "stub-placeholder"
-        },
-        {
-          "file": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VitalsController.java",
-          "pattern": "todo-wire"
         },
         {
           "file": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/WalletController.java",
@@ -2934,16 +2923,7 @@
           "pattern": "in-memory-store"
         }
       ],
-      "securityPlaceholderHits": [
-        {
-          "file": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/IdentityAssuranceController.java",
-          "pattern": "controller-placeholder"
-        },
-        {
-          "file": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/TempIdReviewController.java",
-          "pattern": "controller-placeholder"
-        }
-      ],
+      "securityPlaceholderHits": [],
       "stubRouteCount": 0,
       "bffOrphanRoutes": 0,
       "internalOnlyDocumented": false,
@@ -2966,13 +2946,7 @@
         {
           "category": "F",
           "severity": "high",
-          "description": "experience-bff: mock/stub/fixture/in-memory patterns in product path (10 hits)",
-          "impactScore": 3
-        },
-        {
-          "category": "S",
-          "severity": "high",
-          "description": "experience-bff: security/crypto/authz placeholder in product path (2 hits)",
+          "description": "experience-bff: mock/stub/fixture/in-memory patterns in product path (7 hits)",
           "impactScore": 3
         }
       ],
@@ -3027,7 +3001,7 @@
         "bffClients": 4,
         "uiReferences": 1,
         "mobileReferences": 0,
-        "tests": 1
+        "tests": 3
       },
       "dimensions": {
         "database": "real",
@@ -3346,9 +3320,9 @@
         "contractOperations": 7,
         "contractViolations": 0,
         "bffClients": 6,
-        "uiReferences": 84,
+        "uiReferences": 86,
         "mobileReferences": 5,
-        "tests": 1
+        "tests": 2
       },
       "dimensions": {
         "database": "real",
@@ -3461,19 +3435,19 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 1,
-        "entities": 10,
-        "repositories": 10,
+        "migrations": 2,
+        "entities": 6,
+        "repositories": 6,
         "serviceLayer": 1,
         "controllers": 1,
-        "routes": 21,
+        "routes": 13,
         "stubRoutes": 0,
         "contractOperations": 21,
         "contractViolations": 0,
         "bffClients": 3,
-        "uiReferences": 3,
+        "uiReferences": 4,
         "mobileReferences": 0,
-        "tests": 1
+        "tests": 2
       },
       "dimensions": {
         "database": "real",
@@ -3496,6 +3470,7 @@
       ],
       "uiPaths": [
         "ui/one-ui-shell/src/app/erp/hr/page.tsx",
+        "ui/one-ui-shell/src/components/workspace-ops/HRShiftsPanel.tsx",
         "ui/one-ui-shell/src/hooks/queries/useHrPayroll.ts",
         "ui/one-ui-shell/src/lib/__tests__/phase6-service-completion-golden-thread.test.ts"
       ],
@@ -3560,19 +3535,19 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 1,
-        "entities": 4,
-        "repositories": 4,
-        "serviceLayer": 2,
-        "controllers": 2,
-        "routes": 5,
+        "migrations": 2,
+        "entities": 6,
+        "repositories": 6,
+        "serviceLayer": 3,
+        "controllers": 3,
+        "routes": 11,
         "stubRoutes": 0,
         "contractOperations": 6,
         "contractViolations": 0,
-        "bffClients": 1,
+        "bffClients": 3,
         "uiReferences": 8,
         "mobileReferences": 0,
-        "tests": 6
+        "tests": 9
       },
       "dimensions": {
         "database": "real",
@@ -3589,6 +3564,8 @@
       "productStatus": "real",
       "contractFile": "identity-assurance.openapi.yaml",
       "bffClients": [
+        "IdentityAssuranceServiceClient",
+        "IdentityAssuranceController→IdentityAssuranceServiceClient",
         "IdentityAssuranceController→inline"
       ],
       "uiPaths": [
@@ -3788,14 +3765,14 @@
         "repositories": 31,
         "serviceLayer": 5,
         "controllers": 6,
-        "routes": 88,
+        "routes": 89,
         "stubRoutes": 0,
         "contractOperations": 14,
         "contractViolations": 0,
         "bffClients": 12,
-        "uiReferences": 46,
+        "uiReferences": 48,
         "mobileReferences": 10,
-        "tests": 6
+        "tests": 8
       },
       "dimensions": {
         "database": "real",
@@ -4037,7 +4014,7 @@
         "bffClients": 1,
         "uiReferences": 1,
         "mobileReferences": 0,
-        "tests": 1
+        "tests": 2
       },
       "dimensions": {
         "database": "real",
@@ -4060,7 +4037,12 @@
         "ui/one-ui-shell/src/lib/registry-service-module-refs.ts"
       ],
       "mobilePaths": [],
-      "mockStubHits": [],
+      "mockStubHits": [
+        {
+          "file": "services/inventory-elmis-adapter/src/main/java/zw/gov/mohcc/impilo/inventory/elmis/core/ElmisSyncConnector.java",
+          "pattern": "stub-placeholder"
+        }
+      ],
       "securityPlaceholderHits": [],
       "stubRouteCount": 0,
       "bffOrphanRoutes": 0,
@@ -4701,7 +4683,7 @@
         "contractOperations": 61,
         "contractViolations": 0,
         "bffClients": 2,
-        "uiReferences": 263,
+        "uiReferences": 266,
         "mobileReferences": 58,
         "tests": 5
       },
@@ -5169,7 +5151,7 @@
         "migrations": 3,
         "entities": 54,
         "repositories": 25,
-        "serviceLayer": 11,
+        "serviceLayer": 12,
         "controllers": 11,
         "routes": 69,
         "stubRoutes": 0,
@@ -5178,7 +5160,7 @@
         "bffClients": 8,
         "uiReferences": 28,
         "mobileReferences": 1,
-        "tests": 9
+        "tests": 10
       },
       "dimensions": {
         "database": "real",
@@ -5440,7 +5422,7 @@
         "bffClients": 4,
         "uiReferences": 7,
         "mobileReferences": 7,
-        "tests": 1
+        "tests": 2
       },
       "dimensions": {
         "database": "real",
@@ -5488,22 +5470,9 @@
         {
           "file": "services/mushe-wallet-service/src/main/java/zw/gov/mohcc/impilo/wallet/card/CardHealthDataService.java",
           "pattern": "stub-placeholder"
-        },
-        {
-          "file": "services/mushe-wallet-service/src/main/java/zw/gov/mohcc/impilo/wallet/events/WalletEventConsumer.java",
-          "pattern": "stub-placeholder"
         }
       ],
-      "securityPlaceholderHits": [
-        {
-          "file": "services/mushe-wallet-service/src/main/java/zw/gov/mohcc/impilo/wallet/card/CardHealthDataService.java",
-          "pattern": "crypto-key-placeholder"
-        },
-        {
-          "file": "services/mushe-wallet-service/src/main/java/zw/gov/mohcc/impilo/wallet/card/CardHealthDataService.java",
-          "pattern": "authz-placeholder"
-        }
-      ],
+      "securityPlaceholderHits": [],
       "stubRouteCount": 0,
       "bffOrphanRoutes": 0,
       "internalOnlyDocumented": false,
@@ -5526,14 +5495,8 @@
         {
           "category": "F",
           "severity": "high",
-          "description": "mushe-wallet-service: mock/stub/fixture/in-memory patterns in product path (3 hits)",
+          "description": "mushe-wallet-service: mock/stub/fixture/in-memory patterns in product path (2 hits)",
           "impactScore": 3
-        },
-        {
-          "category": "S",
-          "severity": "blocker",
-          "description": "mushe-wallet-service: security/crypto/authz placeholder in product path (2 hits)",
-          "impactScore": 4
         }
       ],
       "maturity": "FIXTURE_BACKED"
@@ -5587,7 +5550,7 @@
         "bffClients": 12,
         "uiReferences": 90,
         "mobileReferences": 18,
-        "tests": 17
+        "tests": 19
       },
       "dimensions": {
         "database": "real",
@@ -6301,7 +6264,7 @@
         "bffClients": 18,
         "uiReferences": 63,
         "mobileReferences": 20,
-        "tests": 4
+        "tests": 5
       },
       "dimensions": {
         "database": "real",
@@ -6723,19 +6686,19 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 2,
-        "entities": 23,
+        "migrations": 7,
+        "entities": 28,
         "repositories": 12,
-        "serviceLayer": 7,
-        "controllers": 10,
-        "routes": 45,
+        "serviceLayer": 16,
+        "controllers": 14,
+        "routes": 79,
         "stubRoutes": 0,
         "contractOperations": 58,
         "contractViolations": 0,
-        "bffClients": 12,
-        "uiReferences": 53,
+        "bffClients": 13,
+        "uiReferences": 55,
         "mobileReferences": 13,
-        "tests": 7
+        "tests": 18
       },
       "dimensions": {
         "database": "real",
@@ -6754,6 +6717,7 @@
       "bffClients": [
         "OrosServiceClient",
         "ClinicalWorklistController→OrosServiceClient",
+        "DiagnosticsExperienceController→OrosServiceClient",
         "LabCatalogController→OrosServiceClient",
         "LabOrdersController→OrosServiceClient",
         "LabReconciliationController→OrosServiceClient",
@@ -6770,6 +6734,7 @@
         "ui/one-ui-shell/src/app/clinical/inpatient/rounds/page.tsx",
         "ui/one-ui-shell/src/app/developer/api-catalog/page.tsx",
         "ui/one-ui-shell/src/app/developer/sandbox/page.tsx",
+        "ui/one-ui-shell/src/app/diagnostics/orders/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/encounter/[encounterId]/page.test.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/encounter/[encounterId]/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/orders/page.test.tsx",
@@ -6784,8 +6749,7 @@
         "ui/one-ui-shell/src/app/lab/page.tsx",
         "ui/one-ui-shell/src/app/lab/reconciliation/page.test.tsx",
         "ui/one-ui-shell/src/app/lab/reconciliation/page.tsx",
-        "ui/one-ui-shell/src/app/lab/results/page.tsx",
-        "ui/one-ui-shell/src/app/lab/worklist/page.tsx"
+        "ui/one-ui-shell/src/app/lab/results/page.tsx"
       ],
       "mobilePaths": [
         "provider-app:apps/mobile/provider-app/src/__tests__/integration/ClinicalWriteJourneyContracts.test.ts",
@@ -6871,7 +6835,7 @@
         "bffClients": 0,
         "uiReferences": 14,
         "mobileReferences": 7,
-        "tests": 4
+        "tests": 5
       },
       "dimensions": {
         "database": "real",
@@ -6983,7 +6947,7 @@
         "contractOperations": 120,
         "contractViolations": 0,
         "bffClients": 40,
-        "uiReferences": 413,
+        "uiReferences": 418,
         "mobileReferences": 97,
         "tests": 12
       },
@@ -7240,7 +7204,7 @@
         "contractOperations": 52,
         "contractViolations": 0,
         "bffClients": 12,
-        "uiReferences": 82,
+        "uiReferences": 83,
         "mobileReferences": 14,
         "tests": 9
       },
@@ -7376,7 +7340,7 @@
         "contractOperations": 21,
         "contractViolations": 0,
         "bffClients": 4,
-        "uiReferences": 23,
+        "uiReferences": 24,
         "mobileReferences": 0,
         "tests": 1
       },
@@ -7417,10 +7381,10 @@
         "ui/one-ui-shell/src/components/enterprise/EnterpriseResourceDashboard.tsx",
         "ui/one-ui-shell/src/components/navigation/ExperienceSidebar.test.tsx",
         "ui/one-ui-shell/src/components/navigation/ExperienceSidebar.tsx",
+        "ui/one-ui-shell/src/components/workspace-ops/StockManagementPanel.tsx",
         "ui/one-ui-shell/src/features/production-command-centre/tile-registry.ts",
         "ui/one-ui-shell/src/hooks/queries/useProcurement.ts",
-        "ui/one-ui-shell/src/lib/__tests__/marketplace-procurement-claims-golden-thread.test.ts",
-        "ui/one-ui-shell/src/lib/__tests__/phase6-service-completion-golden-thread.test.ts"
+        "ui/one-ui-shell/src/lib/__tests__/marketplace-procurement-claims-golden-thread.test.ts"
       ],
       "mobilePaths": [],
       "mockStubHits": [],
@@ -7742,7 +7706,7 @@
         "contractOperations": 5,
         "contractViolations": 0,
         "bffClients": 6,
-        "uiReferences": 38,
+        "uiReferences": 37,
         "mobileReferences": 3,
         "tests": 8
       },
@@ -7992,8 +7956,8 @@
         "stubRoutes": 0,
         "contractOperations": 10,
         "contractViolations": 0,
-        "bffClients": 11,
-        "uiReferences": 44,
+        "bffClients": 12,
+        "uiReferences": 48,
         "mobileReferences": 4,
         "tests": 4
       },
@@ -8015,6 +7979,7 @@
         "RulesServiceClient",
         "AiGovernanceController→inline",
         "AuthSessionController→inline",
+        "ClinicalKnowledgeController→inline",
         "ExtensionController→inline",
         "MobileGovernanceController→inline",
         "OmnichannelController→inline",
@@ -8042,9 +8007,9 @@
         "ui/one-ui-shell/src/app/omnichannel/page.tsx",
         "ui/one-ui-shell/src/app/scheduling/bookings/config/page.tsx",
         "ui/one-ui-shell/src/app/terms/page.tsx",
+        "ui/one-ui-shell/src/components/EHRLayout.tsx",
         "ui/one-ui-shell/src/components/billing/ServiceAccessPaymentPanel.tsx",
-        "ui/one-ui-shell/src/components/clinical/ActiveCDSBanner.tsx",
-        "ui/one-ui-shell/src/components/clinical/EdlizPrescribingPanel.tsx"
+        "ui/one-ui-shell/src/components/clinical/AIDiagnosticAssistant.tsx"
       ],
       "mobilePaths": [
         "provider-app:apps/mobile/provider-app/src/screens/provider/ClinicalToolsScreen.tsx",
@@ -8121,7 +8086,7 @@
         "stubRoutes": 0,
         "contractOperations": 9,
         "contractViolations": 0,
-        "bffClients": 9,
+        "bffClients": 8,
         "uiReferences": 57,
         "mobileReferences": 104,
         "tests": 1
@@ -8144,7 +8109,6 @@
         "SchedulingServiceClient",
         "AppointmentCommsController→inline",
         "BookingController→inline",
-        "IdentityAssuranceController→inline",
         "LiveController→inline",
         "SchedulingController→inline",
         "CitizenAppointmentController→inline",
@@ -8347,8 +8311,8 @@
         "stubRoutes": 0,
         "contractOperations": 7,
         "contractViolations": 0,
-        "bffClients": 35,
-        "uiReferences": 397,
+        "bffClients": 34,
+        "uiReferences": 400,
         "mobileReferences": 52,
         "tests": 6
       },
@@ -8379,7 +8343,6 @@
         "FhirInteropController→inline",
         "GuidanceController→inline",
         "HealthIntelligenceController→inline",
-        "IdentityAssuranceController→inline",
         "IdentityServicesController→inline",
         "ImagingExperienceController→inline",
         "MarketplaceController→inline",
@@ -8839,8 +8802,8 @@
         "stubRoutes": 0,
         "contractOperations": 19,
         "contractViolations": 0,
-        "bffClients": 26,
-        "uiReferences": 126,
+        "bffClients": 25,
+        "uiReferences": 128,
         "mobileReferences": 36,
         "tests": 3
       },
@@ -8878,7 +8841,6 @@
         "SocialComposerController→inline",
         "SupportController→inline",
         "TeleconsultController→inline",
-        "VitalsController→inline",
         "MobileDiagnosisController→inline",
         "MobileOfflineController→inline",
         "MobileSupportController→inline",
@@ -9222,19 +9184,19 @@
         "isTrustPlane": true
       },
       "counts": {
-        "migrations": 12,
-        "entities": 8,
-        "repositories": 8,
-        "serviceLayer": 9,
-        "controllers": 8,
-        "routes": 30,
+        "migrations": 16,
+        "entities": 13,
+        "repositories": 13,
+        "serviceLayer": 12,
+        "controllers": 11,
+        "routes": 48,
         "stubRoutes": 0,
         "contractOperations": 37,
         "contractViolations": 0,
-        "bffClients": 7,
-        "uiReferences": 11,
+        "bffClients": 8,
+        "uiReferences": 13,
         "mobileReferences": 2,
-        "tests": 7
+        "tests": 16
       },
       "dimensions": {
         "database": "real",
@@ -9254,6 +9216,7 @@
         "TshepoAuthzServiceClient",
         "AdminUserController→inline",
         "BiometricPolicyBffController→inline",
+        "GdhcnReadinessBffController→inline",
         "MobileProviderController→inline",
         "TrustAdminController→inline",
         "TrustProviderController→inline",
@@ -9264,11 +9227,13 @@
         "ui/one-ui-shell/src/app/admin/consent/page.tsx",
         "ui/one-ui-shell/src/app/admin/policies/page.tsx",
         "ui/one-ui-shell/src/app/registry/trust/page.tsx",
+        "ui/one-ui-shell/src/components/administration-governance/GdhcnReadinessBoard.tsx",
         "ui/one-ui-shell/src/components/trust/BreakGlassRequestPanel.tsx",
         "ui/one-ui-shell/src/components/trust/TrustGovernanceStrip.tsx",
         "ui/one-ui-shell/src/hooks/queries/useTrustAdmin.ts",
         "ui/one-ui-shell/src/hooks/useFrictionLevel.ts",
         "ui/one-ui-shell/src/lib/__tests__/admin-governance-onboarding-golden-thread.test.ts",
+        "ui/one-ui-shell/src/lib/admin-governance/api/gdhcnReadinessApi.ts",
         "ui/one-ui-shell/src/lib/api/index.ts",
         "ui/one-ui-shell/src/lib/registry-service-module-refs.ts"
       ],
@@ -9580,7 +9545,7 @@
         "isTrustPlane": true
       },
       "counts": {
-        "migrations": 1,
+        "migrations": 2,
         "entities": 4,
         "repositories": 4,
         "serviceLayer": 5,
@@ -9592,7 +9557,7 @@
         "bffClients": 2,
         "uiReferences": 8,
         "mobileReferences": 0,
-        "tests": 4
+        "tests": 5
       },
       "dimensions": {
         "database": "real",
@@ -9695,7 +9660,7 @@
         "bffClients": 4,
         "uiReferences": 5,
         "mobileReferences": 0,
-        "tests": 4
+        "tests": 7
       },
       "dimensions": {
         "database": "real",
@@ -9795,8 +9760,8 @@
         "stubRoutes": 0,
         "contractOperations": 16,
         "contractViolations": 0,
-        "bffClients": 24,
-        "uiReferences": 31,
+        "bffClients": 25,
+        "uiReferences": 33,
         "mobileReferences": 5,
         "tests": 9
       },
@@ -9822,6 +9787,7 @@
         "EhrPatientSummaryController→inline",
         "FinanceBillingWorkspaceController→inline",
         "FinanceMushexPlatformController→inline",
+        "GdhcnReadinessBffController→inline",
         "GuidanceController→inline",
         "HealthIntelligenceController→inline",
         "IdentityServicesController→inline",
@@ -9852,6 +9818,7 @@
         "ui/one-ui-shell/src/app/registry/mvumo/page.tsx",
         "ui/one-ui-shell/src/app/registry/page.tsx",
         "ui/one-ui-shell/src/app/registry/trust/page.tsx",
+        "ui/one-ui-shell/src/components/administration-governance/GdhcnReadinessBoard.tsx",
         "ui/one-ui-shell/src/components/branding/ServiceLogo.test.tsx",
         "ui/one-ui-shell/src/components/clinical/OfflineClinicalQueueOrchestrationPanel.test.tsx",
         "ui/one-ui-shell/src/components/clinical/OfflineClinicalQueueOrchestrationPanel.tsx",
@@ -9859,8 +9826,7 @@
         "ui/one-ui-shell/src/components/trust/BreakGlassRequestPanel.tsx",
         "ui/one-ui-shell/src/components/trust/TrustGovernanceStrip.tsx",
         "ui/one-ui-shell/src/config/serviceBranding.test.ts",
-        "ui/one-ui-shell/src/config/serviceBranding.ts",
-        "ui/one-ui-shell/src/features/production-command-centre/tile-registry.ts"
+        "ui/one-ui-shell/src/config/serviceBranding.ts"
       ],
       "mobilePaths": [
         "provider-app:apps/mobile/provider-app/src/navigation/ModeSwitcher.tsx",
@@ -10193,7 +10159,7 @@
         "bffClients": 22,
         "uiReferences": 28,
         "mobileReferences": 6,
-        "tests": 10
+        "tests": 12
       },
       "dimensions": {
         "database": "real",
@@ -10323,7 +10289,7 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 29,
+        "migrations": 30,
         "entities": 41,
         "repositories": 42,
         "serviceLayer": 21,
@@ -10333,9 +10299,9 @@
         "contractOperations": 160,
         "contractViolations": 0,
         "bffClients": 28,
-        "uiReferences": 77,
+        "uiReferences": 78,
         "mobileReferences": 6,
-        "tests": 32
+        "tests": 34
       },
       "dimensions": {
         "database": "real",
@@ -10484,7 +10450,7 @@
         "stubRoutes": 0,
         "contractOperations": 86,
         "contractViolations": 0,
-        "bffClients": 9,
+        "bffClients": 8,
         "uiReferences": 68,
         "mobileReferences": 31,
         "tests": 5
@@ -10507,7 +10473,6 @@
         "WellnessServiceClient",
         "AssistantNotificationsController→inline",
         "CitizenMonitoringDevicesController→inline",
-        "IdentityAssuranceController→inline",
         "MadiDonorAssistController→inline",
         "SocialComposerController→inline",
         "WellnessController→inline",
@@ -10649,6 +10614,7 @@
         "EncounterController→inline",
         "FacilityController→inline",
         "HealthOsMarketplaceController→inline",
+        "IdentityAssuranceController→inline",
         "LearningController→inline",
         "MobileProviderController→inline",
         "PatientController→inline",
@@ -10657,7 +10623,6 @@
         "SchedulingController→inline",
         "StaffingController→inline",
         "TeleconsultController→inline",
-        "TempIdReviewController→inline",
         "WorkflowController→inline",
         "MobileDischargeController→inline",
         "CitizenAppointmentController→inline",
@@ -10870,19 +10835,19 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 1,
-        "entities": 9,
-        "repositories": 9,
-        "serviceLayer": 9,
+        "migrations": 3,
+        "entities": 11,
+        "repositories": 11,
+        "serviceLayer": 10,
         "controllers": 7,
-        "routes": 42,
+        "routes": 49,
         "stubRoutes": 0,
         "contractOperations": 35,
         "contractViolations": 0,
-        "bffClients": 1,
-        "uiReferences": 36,
+        "bffClients": 2,
+        "uiReferences": 39,
         "mobileReferences": 8,
-        "tests": 4
+        "tests": 6
       },
       "dimensions": {
         "database": "real",
@@ -10899,10 +10864,13 @@
       "productStatus": "real",
       "contractFile": "vashandi-workforce.openapi.yaml",
       "bffClients": [
-        "VashandiServiceClient"
+        "VashandiServiceClient",
+        "ErpHrBffController→VashandiServiceClient"
       ],
       "uiPaths": [
         "ui/one-ui-shell/src/app/auth/login/page.tsx",
+        "ui/one-ui-shell/src/app/erp/hr/page.test.tsx",
+        "ui/one-ui-shell/src/app/erp/hr/page.tsx",
         "ui/one-ui-shell/src/app/work/vashandi/access-review/page.tsx",
         "ui/one-ui-shell/src/app/work/vashandi/analytics/page.tsx",
         "ui/one-ui-shell/src/app/work/vashandi/assignments/page.tsx",
@@ -10919,9 +10887,7 @@
         "ui/one-ui-shell/src/components/vashandi/EligibilityCheckPanel.tsx",
         "ui/one-ui-shell/src/components/vashandi/VashandiFriendlyBlockedState.tsx",
         "ui/one-ui-shell/src/components/vashandi/VashandiShell.tsx",
-        "ui/one-ui-shell/src/hooks/useVashandi.ts",
-        "ui/one-ui-shell/src/lib/__tests__/provider-workforce-context-golden-thread.test.ts",
-        "ui/one-ui-shell/src/lib/administration-governance/access.ts"
+        "ui/one-ui-shell/src/hooks/queries/useHrPayroll.ts"
       ],
       "mobilePaths": [
         "provider-app:apps/mobile/provider-app/src/screens/provider/ClinicalToolsScreen.tsx",
@@ -17243,9 +17209,9 @@
         "/internal/v1/clinical-notes",
         "/internal/v1/teleconsult/ops/rtc-health",
         "/internal/v1/teleconsult/ops/sla",
-        "/internal/v1/guidance/ask",
-        "/internal/v1/clinical/assistant/ask",
-        "/internal/v1/clinical/source/edliz-default-document-id"
+        "/internal/v1/clinical/rules/evaluate",
+        "/internal/v1/clinical/cds/summary",
+        "/internal/v1/clinical/audit/overrides"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -17296,14 +17262,14 @@
       "zone": "ehr",
       "pageFile": "ui/one-ui-shell/src/app/ehr/[patientId]/ips/page.tsx",
       "bffPaths": [
-        "/internal/v1/encounters",
-        "/internal/v1/guidance/ask",
-        "/internal/v1/clinical/assistant/ask",
-        "/internal/v1/clinical/source/edliz-default-document-id",
-        "/internal/v1/clinical/prescribing/evaluate",
-        "/internal/v1/clinical/pathways",
-        "/internal/v1/clinical/pathways/sessions",
-        "/internal/v1/guidance/reminders"
+        "/internal/v1/clinical/rules/evaluate",
+        "/internal/v1/clinical/cds/summary",
+        "/internal/v1/clinical/audit/overrides",
+        "/internal/v1/conditions",
+        "/internal/v1/pharmacy/dispense",
+        "/internal/v1/vitals",
+        "/internal/v1/allergies",
+        "/internal/v1/encounters"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -17416,13 +17382,13 @@
       "pageFile": "ui/one-ui-shell/src/app/ehr/[patientId]/maternity/page.tsx",
       "bffPaths": [
         "/internal/v1/encounters",
-        "/internal/v1/guidance/ask",
-        "/internal/v1/clinical/assistant/ask",
-        "/internal/v1/clinical/source/edliz-default-document-id",
-        "/internal/v1/clinical/prescribing/evaluate",
-        "/internal/v1/clinical/pathways",
-        "/internal/v1/clinical/pathways/sessions",
-        "/internal/v1/guidance/reminders"
+        "/internal/v1/clinical/rules/evaluate",
+        "/internal/v1/clinical/cds/summary",
+        "/internal/v1/clinical/audit/overrides",
+        "/internal/v1/conditions",
+        "/internal/v1/pharmacy/dispense",
+        "/internal/v1/vitals",
+        "/internal/v1/allergies"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -17474,12 +17440,12 @@
       "bffPaths": [
         "/internal/v1/clinical-notes",
         "/internal/v1/encounters",
-        "/internal/v1/guidance/ask",
-        "/internal/v1/clinical/assistant/ask",
-        "/internal/v1/clinical/source/edliz-default-document-id",
-        "/internal/v1/clinical/prescribing/evaluate",
-        "/internal/v1/clinical/pathways",
-        "/internal/v1/clinical/pathways/sessions"
+        "/internal/v1/clinical/rules/evaluate",
+        "/internal/v1/clinical/cds/summary",
+        "/internal/v1/clinical/audit/overrides",
+        "/internal/v1/conditions",
+        "/internal/v1/pharmacy/dispense",
+        "/internal/v1/vitals"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -17533,12 +17499,12 @@
       "bffPaths": [
         "/internal/v1/conditions",
         "/internal/v1/encounters",
-        "/internal/v1/guidance/ask",
-        "/internal/v1/clinical/assistant/ask",
-        "/internal/v1/clinical/source/edliz-default-document-id",
-        "/internal/v1/clinical/prescribing/evaluate",
-        "/internal/v1/clinical/pathways",
-        "/internal/v1/clinical/pathways/sessions"
+        "/internal/v1/clinical/rules/evaluate",
+        "/internal/v1/clinical/cds/summary",
+        "/internal/v1/clinical/audit/overrides",
+        "/internal/v1/pharmacy/dispense",
+        "/internal/v1/vitals",
+        "/internal/v1/allergies"
       ],
       "backingSignals": [
         "apiClient-dynamic"
@@ -17589,11 +17555,11 @@
         "/internal/v1/pharmacy/prescriptions",
         "/internal/v1/pharmacy/dispense",
         "/internal/v1/encounters",
-        "/internal/v1/guidance/ask",
-        "/internal/v1/clinical/assistant/ask",
-        "/internal/v1/clinical/source/edliz-default-document-id",
-        "/internal/v1/clinical/prescribing/evaluate",
-        "/internal/v1/clinical/pathways"
+        "/internal/v1/clinical/rules/evaluate",
+        "/internal/v1/clinical/cds/summary",
+        "/internal/v1/clinical/audit/overrides",
+        "/internal/v1/conditions",
+        "/internal/v1/vitals"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -17646,12 +17612,12 @@
       "bffPaths": [
         "/internal/v1/allergies",
         "/internal/v1/encounters",
-        "/internal/v1/guidance/ask",
-        "/internal/v1/clinical/assistant/ask",
-        "/internal/v1/clinical/source/edliz-default-document-id",
-        "/internal/v1/clinical/prescribing/evaluate",
-        "/internal/v1/clinical/pathways",
-        "/internal/v1/clinical/pathways/sessions"
+        "/internal/v1/clinical/rules/evaluate",
+        "/internal/v1/clinical/cds/summary",
+        "/internal/v1/clinical/audit/overrides",
+        "/internal/v1/conditions",
+        "/internal/v1/pharmacy/dispense",
+        "/internal/v1/vitals"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -17705,9 +17671,9 @@
         "/internal/v1/teleconsult/sessions",
         "/internal/v1/lab-orders",
         "/internal/v1/encounters",
-        "/internal/v1/guidance/ask",
-        "/internal/v1/clinical/assistant/ask",
-        "/internal/v1/clinical/source/edliz-default-document-id"
+        "/internal/v1/clinical/rules/evaluate",
+        "/internal/v1/clinical/cds/summary",
+        "/internal/v1/clinical/audit/overrides"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -17761,12 +17727,12 @@
       "bffPaths": [
         "/internal/v1/encounters",
         "/internal/v1/lab-orders",
-        "/internal/v1/guidance/ask",
-        "/internal/v1/clinical/assistant/ask",
-        "/internal/v1/clinical/source/edliz-default-document-id",
-        "/internal/v1/clinical/prescribing/evaluate",
-        "/internal/v1/clinical/pathways",
-        "/internal/v1/clinical/pathways/sessions"
+        "/internal/v1/clinical/rules/evaluate",
+        "/internal/v1/clinical/cds/summary",
+        "/internal/v1/clinical/audit/overrides",
+        "/internal/v1/conditions",
+        "/internal/v1/pharmacy/dispense",
+        "/internal/v1/vitals"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -17818,12 +17784,12 @@
       "bffPaths": [
         "/internal/v1/clinical-notes",
         "/internal/v1/encounters",
-        "/internal/v1/guidance/ask",
-        "/internal/v1/clinical/assistant/ask",
-        "/internal/v1/clinical/source/edliz-default-document-id",
-        "/internal/v1/clinical/prescribing/evaluate",
-        "/internal/v1/clinical/pathways",
-        "/internal/v1/clinical/pathways/sessions"
+        "/internal/v1/clinical/rules/evaluate",
+        "/internal/v1/clinical/cds/summary",
+        "/internal/v1/clinical/audit/overrides",
+        "/internal/v1/conditions",
+        "/internal/v1/pharmacy/dispense",
+        "/internal/v1/vitals"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -17876,11 +17842,11 @@
         "/internal/v1/clinical-documents",
         "/internal/v1/clinical-documents/upload",
         "/internal/v1/encounters",
-        "/internal/v1/guidance/ask",
-        "/internal/v1/clinical/assistant/ask",
-        "/internal/v1/clinical/source/edliz-default-document-id",
-        "/internal/v1/clinical/prescribing/evaluate",
-        "/internal/v1/clinical/pathways"
+        "/internal/v1/clinical/rules/evaluate",
+        "/internal/v1/clinical/cds/summary",
+        "/internal/v1/clinical/audit/overrides",
+        "/internal/v1/conditions",
+        "/internal/v1/pharmacy/dispense"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -17934,9 +17900,9 @@
         "/internal/v1/clinical-notes",
         "/internal/v1/teleconsult/ops/rtc-health",
         "/internal/v1/teleconsult/ops/sla",
-        "/internal/v1/guidance/ask",
-        "/internal/v1/clinical/assistant/ask",
-        "/internal/v1/clinical/source/edliz-default-document-id"
+        "/internal/v1/clinical/rules/evaluate",
+        "/internal/v1/clinical/cds/summary",
+        "/internal/v1/clinical/audit/overrides"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -17990,9 +17956,9 @@
         "/internal/v1/triage",
         "/internal/v1/encounters",
         "/internal/v1/referrals",
-        "/internal/v1/guidance/ask",
-        "/internal/v1/clinical/assistant/ask",
-        "/internal/v1/clinical/source/edliz-default-document-id"
+        "/internal/v1/clinical/rules/evaluate",
+        "/internal/v1/clinical/cds/summary",
+        "/internal/v1/clinical/audit/overrides"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -18050,12 +18016,12 @@
       "bffPaths": [
         "/internal/v1/immunizations",
         "/internal/v1/encounters",
-        "/internal/v1/guidance/ask",
-        "/internal/v1/clinical/assistant/ask",
-        "/internal/v1/clinical/source/edliz-default-document-id",
-        "/internal/v1/clinical/prescribing/evaluate",
-        "/internal/v1/clinical/pathways",
-        "/internal/v1/clinical/pathways/sessions"
+        "/internal/v1/clinical/rules/evaluate",
+        "/internal/v1/clinical/cds/summary",
+        "/internal/v1/clinical/audit/overrides",
+        "/internal/v1/conditions",
+        "/internal/v1/pharmacy/dispense",
+        "/internal/v1/vitals"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -18108,10 +18074,10 @@
         "/internal/v1/referrals",
         "/internal/v1/teleconsult/ops/rtc-health",
         "/internal/v1/teleconsult/ops/sla",
-        "/internal/v1/guidance/ask",
-        "/internal/v1/clinical/assistant/ask",
-        "/internal/v1/clinical/source/edliz-default-document-id",
-        "/internal/v1/clinical/prescribing/evaluate"
+        "/internal/v1/clinical/rules/evaluate",
+        "/internal/v1/clinical/cds/summary",
+        "/internal/v1/clinical/audit/overrides",
+        "/internal/v1/conditions"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -18211,10 +18177,10 @@
         "/internal/v1/clinical-notes",
         "/internal/v1/teleconsult/ops/rtc-health",
         "/internal/v1/teleconsult/ops/sla",
-        "/internal/v1/encounters",
-        "/internal/v1/guidance/ask",
-        "/internal/v1/clinical/assistant/ask",
-        "/internal/v1/clinical/source/edliz-default-document-id"
+        "/internal/v1/clinical/rules/evaluate",
+        "/internal/v1/clinical/cds/summary",
+        "/internal/v1/clinical/audit/overrides",
+        "/internal/v1/conditions"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -18264,13 +18230,13 @@
       "pageFile": "ui/one-ui-shell/src/app/ehr/[patientId]/discharge/page.tsx",
       "bffPaths": [
         "/internal/v1/encounters",
-        "/internal/v1/guidance/ask",
-        "/internal/v1/clinical/assistant/ask",
-        "/internal/v1/clinical/source/edliz-default-document-id",
-        "/internal/v1/clinical/prescribing/evaluate",
-        "/internal/v1/clinical/pathways",
-        "/internal/v1/clinical/pathways/sessions",
-        "/internal/v1/guidance/reminders"
+        "/internal/v1/clinical/rules/evaluate",
+        "/internal/v1/clinical/cds/summary",
+        "/internal/v1/clinical/audit/overrides",
+        "/internal/v1/conditions",
+        "/internal/v1/pharmacy/dispense",
+        "/internal/v1/vitals",
+        "/internal/v1/allergies"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -18324,10 +18290,10 @@
         "/internal/v1/care-team",
         "/internal/v1/goals",
         "/internal/v1/care-plans",
-        "/internal/v1/guidance/ask",
-        "/internal/v1/clinical/assistant/ask",
-        "/internal/v1/clinical/source/edliz-default-document-id",
-        "/internal/v1/clinical/prescribing/evaluate"
+        "/internal/v1/clinical/rules/evaluate",
+        "/internal/v1/clinical/cds/summary",
+        "/internal/v1/clinical/audit/overrides",
+        "/internal/v1/conditions"
       ],
       "backingSignals": [
         "apiClient-dynamic"
@@ -18377,12 +18343,12 @@
       "bffPaths": [
         "/internal/v1/encounters",
         "/internal/v1/procedures/episodes",
-        "/internal/v1/guidance/ask",
-        "/internal/v1/clinical/assistant/ask",
-        "/internal/v1/clinical/source/edliz-default-document-id",
-        "/internal/v1/clinical/prescribing/evaluate",
-        "/internal/v1/clinical/pathways",
-        "/internal/v1/clinical/pathways/sessions"
+        "/internal/v1/clinical/rules/evaluate",
+        "/internal/v1/clinical/cds/summary",
+        "/internal/v1/clinical/audit/overrides",
+        "/internal/v1/conditions",
+        "/internal/v1/pharmacy/dispense",
+        "/internal/v1/vitals"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -18434,11 +18400,11 @@
         "/internal/v1/encounters",
         "/internal/v1/growth",
         "/internal/v1/vitals",
-        "/internal/v1/guidance/ask",
-        "/internal/v1/clinical/assistant/ask",
-        "/internal/v1/clinical/source/edliz-default-document-id",
-        "/internal/v1/clinical/prescribing/evaluate",
-        "/internal/v1/clinical/pathways"
+        "/internal/v1/clinical/rules/evaluate",
+        "/internal/v1/clinical/cds/summary",
+        "/internal/v1/clinical/audit/overrides",
+        "/internal/v1/conditions",
+        "/internal/v1/pharmacy/dispense"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -18489,13 +18455,13 @@
       "pageFile": "ui/one-ui-shell/src/app/ehr/[patientId]/family-history/page.tsx",
       "bffPaths": [
         "/internal/v1/encounters",
-        "/internal/v1/guidance/ask",
-        "/internal/v1/clinical/assistant/ask",
-        "/internal/v1/clinical/source/edliz-default-document-id",
-        "/internal/v1/clinical/prescribing/evaluate",
-        "/internal/v1/clinical/pathways",
-        "/internal/v1/clinical/pathways/sessions",
-        "/internal/v1/guidance/reminders"
+        "/internal/v1/clinical/rules/evaluate",
+        "/internal/v1/clinical/cds/summary",
+        "/internal/v1/clinical/audit/overrides",
+        "/internal/v1/conditions",
+        "/internal/v1/pharmacy/dispense",
+        "/internal/v1/vitals",
+        "/internal/v1/allergies"
       ],
       "backingSignals": [
         "apiClient-dynamic"
@@ -18544,13 +18510,13 @@
       "pageFile": "ui/one-ui-shell/src/app/ehr/[patientId]/social-history/page.tsx",
       "bffPaths": [
         "/internal/v1/encounters",
-        "/internal/v1/guidance/ask",
-        "/internal/v1/clinical/assistant/ask",
-        "/internal/v1/clinical/source/edliz-default-document-id",
-        "/internal/v1/clinical/prescribing/evaluate",
-        "/internal/v1/clinical/pathways",
-        "/internal/v1/clinical/pathways/sessions",
-        "/internal/v1/guidance/reminders"
+        "/internal/v1/clinical/rules/evaluate",
+        "/internal/v1/clinical/cds/summary",
+        "/internal/v1/clinical/audit/overrides",
+        "/internal/v1/conditions",
+        "/internal/v1/pharmacy/dispense",
+        "/internal/v1/vitals",
+        "/internal/v1/allergies"
       ],
       "backingSignals": [
         "apiClient-dynamic"
@@ -18599,13 +18565,13 @@
       "pageFile": "ui/one-ui-shell/src/app/ehr/[patientId]/functional-status/page.tsx",
       "bffPaths": [
         "/internal/v1/encounters",
-        "/internal/v1/guidance/ask",
-        "/internal/v1/clinical/assistant/ask",
-        "/internal/v1/clinical/source/edliz-default-document-id",
-        "/internal/v1/clinical/prescribing/evaluate",
-        "/internal/v1/clinical/pathways",
-        "/internal/v1/clinical/pathways/sessions",
-        "/internal/v1/guidance/reminders"
+        "/internal/v1/clinical/rules/evaluate",
+        "/internal/v1/clinical/cds/summary",
+        "/internal/v1/clinical/audit/overrides",
+        "/internal/v1/conditions",
+        "/internal/v1/pharmacy/dispense",
+        "/internal/v1/vitals",
+        "/internal/v1/allergies"
       ],
       "backingSignals": [
         "apiClient-dynamic"
@@ -18654,13 +18620,13 @@
       "pageFile": "ui/one-ui-shell/src/app/ehr/[patientId]/advance-directives/page.tsx",
       "bffPaths": [
         "/internal/v1/encounters",
-        "/internal/v1/guidance/ask",
-        "/internal/v1/clinical/assistant/ask",
-        "/internal/v1/clinical/source/edliz-default-document-id",
-        "/internal/v1/clinical/prescribing/evaluate",
-        "/internal/v1/clinical/pathways",
-        "/internal/v1/clinical/pathways/sessions",
-        "/internal/v1/guidance/reminders"
+        "/internal/v1/clinical/rules/evaluate",
+        "/internal/v1/clinical/cds/summary",
+        "/internal/v1/clinical/audit/overrides",
+        "/internal/v1/conditions",
+        "/internal/v1/pharmacy/dispense",
+        "/internal/v1/vitals",
+        "/internal/v1/allergies"
       ],
       "backingSignals": [
         "apiClient-dynamic"
@@ -18712,10 +18678,10 @@
         "/internal/v1/care-team",
         "/internal/v1/goals",
         "/internal/v1/care-plans",
-        "/internal/v1/guidance/ask",
-        "/internal/v1/clinical/assistant/ask",
-        "/internal/v1/clinical/source/edliz-default-document-id",
-        "/internal/v1/clinical/prescribing/evaluate"
+        "/internal/v1/clinical/rules/evaluate",
+        "/internal/v1/clinical/cds/summary",
+        "/internal/v1/clinical/audit/overrides",
+        "/internal/v1/conditions"
       ],
       "backingSignals": [
         "apiClient-dynamic"
@@ -18816,10 +18782,10 @@
         "/internal/v1/care-team",
         "/internal/v1/goals",
         "/internal/v1/care-plans",
-        "/internal/v1/guidance/ask",
-        "/internal/v1/clinical/assistant/ask",
-        "/internal/v1/clinical/source/edliz-default-document-id",
-        "/internal/v1/clinical/prescribing/evaluate"
+        "/internal/v1/clinical/rules/evaluate",
+        "/internal/v1/clinical/cds/summary",
+        "/internal/v1/clinical/audit/overrides",
+        "/internal/v1/conditions"
       ],
       "backingSignals": [
         "apiClient-dynamic"
@@ -18868,13 +18834,13 @@
       "pageFile": "ui/one-ui-shell/src/app/ehr/[patientId]/assessments/page.tsx",
       "bffPaths": [
         "/internal/v1/encounters",
-        "/internal/v1/guidance/ask",
-        "/internal/v1/clinical/assistant/ask",
-        "/internal/v1/clinical/source/edliz-default-document-id",
-        "/internal/v1/clinical/prescribing/evaluate",
-        "/internal/v1/clinical/pathways",
-        "/internal/v1/clinical/pathways/sessions",
-        "/internal/v1/guidance/reminders"
+        "/internal/v1/clinical/rules/evaluate",
+        "/internal/v1/clinical/cds/summary",
+        "/internal/v1/clinical/audit/overrides",
+        "/internal/v1/conditions",
+        "/internal/v1/pharmacy/dispense",
+        "/internal/v1/vitals",
+        "/internal/v1/allergies"
       ],
       "backingSignals": [
         "apiClient-dynamic"
@@ -18922,14 +18888,14 @@
       "zone": "ehr",
       "pageFile": "ui/one-ui-shell/src/app/ehr/[patientId]/charts/page.tsx",
       "bffPaths": [
-        "/internal/v1/encounters",
-        "/internal/v1/guidance/ask",
-        "/internal/v1/clinical/assistant/ask",
-        "/internal/v1/clinical/source/edliz-default-document-id",
-        "/internal/v1/clinical/prescribing/evaluate",
-        "/internal/v1/clinical/pathways",
-        "/internal/v1/clinical/pathways/sessions",
-        "/internal/v1/guidance/reminders"
+        "/internal/v1/clinical/rules/evaluate",
+        "/internal/v1/clinical/cds/summary",
+        "/internal/v1/clinical/audit/overrides",
+        "/internal/v1/conditions",
+        "/internal/v1/pharmacy/dispense",
+        "/internal/v1/vitals",
+        "/internal/v1/allergies",
+        "/internal/v1/encounters"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -18985,7 +18951,7 @@
         "/internal/v1/imaging/ops/failed-correlations",
         "/internal/v1/imaging/ops/failed-writebacks",
         "/internal/v1/imaging/ops/failed-writebacks/retry-all",
-        "/internal/v1/guidance/ask"
+        "/internal/v1/clinical/rules/evaluate"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -19041,9 +19007,9 @@
         "/internal/v1/imaging/ops/failed-correlations",
         "/internal/v1/imaging/ops/failed-writebacks",
         "/internal/v1/imaging/ops/failed-writebacks/retry-all",
-        "/internal/v1/encounters",
-        "/internal/v1/guidance/ask",
-        "/internal/v1/clinical/assistant/ask"
+        "/internal/v1/clinical/rules/evaluate",
+        "/internal/v1/clinical/cds/summary",
+        "/internal/v1/clinical/audit/overrides"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -20956,7 +20922,8 @@
         "/internal/v1/client-registry/merge-cases",
         "/internal/v1/vito/issuance/submit",
         "/internal/v1/identity/linked-ids",
-        "/internal/v1/session/experience"
+        "/internal/v1/session/experience",
+        "/internal/v1/vito/client-registry"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -29355,6 +29322,75 @@
       "completeVsCosmetic": false,
       "allowlistedShell": false,
       "gaps": []
+    },
+    {
+      "path": "/diagnostics/orders",
+      "pageTitle": "Diagnostics Orders",
+      "zone": "lab",
+      "pageFile": "ui/one-ui-shell/src/app/diagnostics/orders/page.tsx",
+      "bffPaths": [
+        "/internal/v1/diagnostics/reconcile-summary",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/app/diagnostics/orders/page.tsx",
+          "pattern": "mock-data-var"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/queries/useDiagnosticsOrders.ts",
+          "pattern": "mock-data-var"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": false,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": [
+        {
+          "category": "F",
+          "severity": "high",
+          "description": "/diagnostics/orders: mock/stub data",
+          "impactScore": 3
+        }
+      ]
     },
     {
       "path": "/imaging/facility",
@@ -38678,6 +38714,61 @@
       "gaps": []
     },
     {
+      "path": "/work/administration-governance/gdhcn-readiness",
+      "pageTitle": "GDHCN Readiness",
+      "zone": "operations",
+      "pageFile": "ui/one-ui-shell/src/app/work/administration-governance/gdhcn-readiness/page.tsx",
+      "bffPaths": [
+        "/internal/v1/admin-governance",
+        "/internal/v1/session/experience",
+        "/internal/v1/identity/linked-ids"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "admin-governance-scaffold"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
       "path": "/work/administration-governance/municipal",
       "pageTitle": "Municipal",
       "zone": "operations",
@@ -45166,11 +45257,11 @@
       "zone": "unregistered",
       "pageFile": "ui/one-ui-shell/src/app/ehr/[patientId]/charts/[chartId]/page.tsx",
       "bffPaths": [
-        "/internal/v1/encounters",
-        "/internal/v1/guidance/ask",
-        "/internal/v1/clinical/assistant/ask",
-        "/internal/v1/clinical/source/edliz-default-document-id",
-        "/internal/v1/clinical/prescribing/evaluate"
+        "/internal/v1/clinical/rules/evaluate",
+        "/internal/v1/clinical/cds/summary",
+        "/internal/v1/clinical/audit/overrides",
+        "/internal/v1/conditions",
+        "/internal/v1/pharmacy/dispense"
       ],
       "backingSignals": [
         "apiClient-dynamic"
@@ -45190,10 +45281,10 @@
       "pageFile": "ui/one-ui-shell/src/app/ehr/[patientId]/emergency/page.tsx",
       "bffPaths": [
         "/internal/v1/encounters",
-        "/internal/v1/guidance/ask",
-        "/internal/v1/clinical/assistant/ask",
-        "/internal/v1/clinical/source/edliz-default-document-id",
-        "/internal/v1/clinical/prescribing/evaluate"
+        "/internal/v1/clinical/rules/evaluate",
+        "/internal/v1/clinical/cds/summary",
+        "/internal/v1/clinical/audit/overrides",
+        "/internal/v1/conditions"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -45216,10 +45307,10 @@
       "pageFile": "ui/one-ui-shell/src/app/ehr/[patientId]/procedures/[episodeId]/page.tsx",
       "bffPaths": [
         "/internal/v1/procedures/episodes",
-        "/internal/v1/encounters",
-        "/internal/v1/guidance/ask",
-        "/internal/v1/clinical/assistant/ask",
-        "/internal/v1/clinical/source/edliz-default-document-id"
+        "/internal/v1/clinical/rules/evaluate",
+        "/internal/v1/clinical/cds/summary",
+        "/internal/v1/clinical/audit/overrides",
+        "/internal/v1/conditions"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -45239,11 +45330,11 @@
       "zone": "unregistered",
       "pageFile": "ui/one-ui-shell/src/app/ehr/[patientId]/workspace/[specialty]/page.tsx",
       "bffPaths": [
-        "/internal/v1/encounters",
-        "/internal/v1/guidance/ask",
-        "/internal/v1/clinical/assistant/ask",
-        "/internal/v1/clinical/source/edliz-default-document-id",
-        "/internal/v1/clinical/prescribing/evaluate"
+        "/internal/v1/clinical/rules/evaluate",
+        "/internal/v1/clinical/cds/summary",
+        "/internal/v1/clinical/audit/overrides",
+        "/internal/v1/conditions",
+        "/internal/v1/pharmacy/dispense"
       ],
       "backingSignals": [
         "apiClient-dynamic"

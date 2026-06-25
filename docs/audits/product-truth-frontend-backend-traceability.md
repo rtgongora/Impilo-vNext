@@ -1,7 +1,7 @@
 # Product Truth — Frontend-to-Backend Traceability
 
-> Generated: 2026-06-24T02:16:05.801Z
-> Web surfaces: **614** | Mobile screens: **174**
+> Generated: 2026-06-25T07:12:21.819Z
+> Web surfaces: **616** | Mobile screens: **174**
 
 ## Web routes (one-ui-shell)
 
@@ -333,6 +333,7 @@
 | /lab | Laboratory | lab | yes | no | yes | yes | yes | — |
 | /lab/worklist | Lab Worklist | lab | yes | no | yes | yes | yes | — |
 | /imaging/worklist | Imaging Worklist | lab | yes | no | yes | yes | yes | — |
+| /diagnostics/orders | Diagnostics Orders | lab | yes | no | yes | no | yes | F |
 | /imaging/facility | Facility Imaging Dashboard | lab | yes | no | yes | yes | yes | — |
 | /lab/results | Results Review | lab | yes | no | yes | yes | yes | — |
 | /lab/catalog | Test Catalog | lab | yes | no | yes | no | yes | — |
@@ -500,13 +501,12 @@
 | /work/administration-governance/access-review | Access Review | operations | yes | no | yes | yes | yes | — |
 | /work/administration-governance/access-review/[subjectId] | Access Review | operations | yes | no | yes | yes | yes | — |
 | /work/administration-governance/audit | Audit | operations | yes | no | yes | yes | yes | — |
+| /work/administration-governance/gdhcn-readiness | GDHCN Readiness | operations | yes | no | yes | yes | yes | — |
 | /work/administration-governance/municipal | Municipal | operations | yes | no | yes | yes | yes | — |
 | /work/administration-governance/onboard | Onboard New Actor | operations | yes | no | yes | no | yes | — |
 | /work/administration-governance/onboard/citizen | Onboard Citizen | operations | yes | no | yes | yes | yes | — |
 | /work/administration-governance/onboard/external-partner-user | Onboard External Partner User | operations | yes | no | yes | yes | yes | — |
 | /work/administration-governance/onboard/hsc-user | Onboard Hsc User | operations | yes | no | yes | yes | yes | — |
-| /work/administration-governance/onboard/madi-user | Onboard Madi User | operations | yes | no | yes | yes | yes | — |
-| /work/administration-governance/onboard/marketplace-user | Onboard Marketplace User | operations | yes | no | yes | yes | yes | — |
 
 ## Mobile screens
 
