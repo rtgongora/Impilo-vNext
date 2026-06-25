@@ -52,6 +52,80 @@ describe("diagnosticsService reads", () => {
     expect(await fetchResultsInbox()).toEqual([]);
     expect(mockGet).toHaveBeenCalledWith("/internal/v1/diagnostics/results-inbox");
   });
+
+  it("fetchFulfilmentWorklist hits the category worklist endpoint", async () => {
+    mockGet.mockResolvedValue({ data: { data: [{ orderId: "ORD-LAB", orderType: "LAB" }] } });
+    const { fetchFulfilmentWorklist } = await import("../../services/diagnosticsService");
+
+    const orders = await fetchFulfilmentWorklist("LAB");
+    expect(orders).toHaveLength(1);
+    expect(mockGet).toHaveBeenCalledWith("/internal/v1/diagnostics/fulfilment-worklist?type=LAB");
+  });
+});
+
+describe("diagnosticsService lab/procedure actions (mobile parity)", () => {
+  beforeEach(() => {
+    mockPost.mockReset();
+    mockQueueOnRetryable.mockReset();
+  });
+
+  it("collectSpecimen posts to the order specimens endpoint", async () => {
+    mockPost.mockResolvedValue({ data: { data: {} } });
+    const { collectSpecimen } = await import("../../services/diagnosticsService");
+
+    const res = await collectSpecimen("ORD-LAB", { specimenType: "blood" });
+    expect(res.queuedOffline).toBe(false);
+    expect(mockPost).toHaveBeenCalledWith(
+      "/internal/v1/diagnostics/orders/ORD-LAB/specimens",
+      expect.objectContaining({ specimenType: "blood" }),
+    );
+  });
+
+  it("collectSpecimen offline-queues on retryable failure", async () => {
+    mockPost.mockRejectedValue(new Error("network"));
+    mockQueueOnRetryable.mockResolvedValue({ recordId: "local-9", queued: true });
+    const { collectSpecimen } = await import("../../services/diagnosticsService");
+
+    const res = await collectSpecimen("ORD-LAB");
+    expect(res.queuedOffline).toBe(true);
+    expect(mockQueueOnRetryable).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({ collection: "specimen_collections" }),
+    );
+  });
+
+  it("specimenAction posts the lifecycle action", async () => {
+    mockPost.mockResolvedValue({ data: {} });
+    const { specimenAction } = await import("../../services/diagnosticsService");
+
+    await specimenAction("SPC-1", "receive", { labNumber: "LAB-1" });
+    expect(mockPost).toHaveBeenCalledWith(
+      "/internal/v1/diagnostics/specimens/SPC-1/receive",
+      { labNumber: "LAB-1" },
+    );
+  });
+
+  it("transitionWorkflow drives the guarded transition", async () => {
+    mockPost.mockResolvedValue({ data: {} });
+    const { transitionWorkflow } = await import("../../services/diagnosticsService");
+
+    await transitionWorkflow("ORD-LAB", "IN_PROGRESS", "analysing");
+    expect(mockPost).toHaveBeenCalledWith(
+      "/internal/v1/diagnostics/orders/ORD-LAB/workflow/transition",
+      { target: "IN_PROGRESS", reason: "analysing" },
+    );
+  });
+
+  it("acknowledgeCritical closes the critical loop from the field", async () => {
+    mockPost.mockResolvedValue({ data: {} });
+    const { acknowledgeCritical } = await import("../../services/diagnosticsService");
+
+    await acknowledgeCritical("RES-1", "seen");
+    expect(mockPost).toHaveBeenCalledWith(
+      "/internal/v1/diagnostics/results/RES-1/critical/ack",
+      { note: "seen" },
+    );
+  });
 });
 
 describe("submitDiagnosticOrder (offline-capable)", () => {
