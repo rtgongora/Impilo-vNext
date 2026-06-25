@@ -136,13 +136,17 @@ CLI-Postgres/Mockito, RTL/vitest, tsc). No runtime/preview boot was performed.
    resolves the order's study UID → PACS study → governed `launchViewerSession`; UI "View images"
    action opens the returned viewer URL. (The OROS↔pacs-adapter reverse `order-links`/`report-links`
    correlation remains a nicety, not required for launch.)
-3. **Butano DiagnosticReport amendment lifecycle** — report versions are modelled in OROS but the
-   FHIR `DiagnosticReport.relatesTo` writeback for amend/addendum is not wired.
-4. **Provider/destinations directory (W3c/W8)** — `/v1/routing/destinations` and the admin provider
-   directory (TUSO internal + VARAPI external aggregation) are not built; the routing primitive
-   (destination assignment) is.
-5. **Admin config (W8)** — routing-rule and critical-escalation-rule admin endpoints not built
-   (escalation runs off `oros.escalation.ack-timeout-minutes`).
+3. **Butano DiagnosticReport amendment lifecycle** — DONE. ReportService writes the FHIR
+   DiagnosticReport on final/amend/addendum (best-effort); ButanoIntegration maps OROS report
+   status → FHIR status and adds `relatesTo` (replaces/appends) targeting the superseded report's
+   stable identifier — full version lineage in the SHR.
+4. **Provider/destinations directory (W3c/W8)** — DONE. `GET /v1/routing/destinations` (and
+   `GET /v1/admin/providers/directory`) aggregate TUSO facilities + VARAPI providers via
+   TusoClient/VarapiClient (honest empty fallback when a registry is not configured).
+5. **Admin config (W8)** — DONE. V009 `oros_admin_config`; `GET/PUT /v1/admin/routing/rules` and
+   `/v1/admin/critical-escalation/rules` persist tenant/facility-scoped JSON (facility→tenant
+   fallback). The global escalation sweep still defaults to `oros.escalation.ack-timeout-minutes`;
+   the stored rules are the source of truth for the admin UI and per-facility enforcement.
 6. **UI surface (W3–W9)** — LIVE (all real, UI→BFF→OROS→DB, tested): `/diagnostics/orders`
    (tracking + study surfacing), `/diagnostics/orders/new` (create→submit, criterion A),
    `/diagnostics/orders/route` (referral, criterion A), `/diagnostics/results-inbox`,
@@ -154,8 +158,18 @@ CLI-Postgres/Mockito, RTL/vitest, tsc). No runtime/preview boot was performed.
    plus "Print QR" + governed "View images" actions on order tracking. **Mobile (W9):**
    provider-app `DiagnosticsScreen` (order tracking + results inbox) as a provider tab. Every web
    acceptance criterion (A, B, D, F, G, H) now has a live UI surface.
-7. **channels-service** external notify-only adapters not touched (in-platform alert path is live).
-8. **Offline/low-connectivity** queueing (§15) — not designed.
+7. **channels-service external notify-only** — DONE. `POST /internal/v1/channels/notify-only`
+   emits a content-free prompt (the API carries no body by construction, so no clinical detail can
+   leak) as an outbox event for a downstream gateway; honest configured/not-configured status
+   (QUEUED vs DISPATCHED via `impilo.channels.external-notify.enabled`).
+8. **Offline/low-connectivity queueing (§15)** — DONE (provider mobile). `submitDiagnosticOrder`
+   posts online, else captures the write via the platform offline queue
+   (`queueClinicalCreateOnRetryableError`) for sync-engine replay on reconnect; DiagnosticsScreen
+   shows a pending-sync indicator. Reuses the existing offline primitives (no parallel infra).
+
+**Net:** every numbered gap above is now closed. The only intentionally-deferred items are the
+FHIR ServiceRequest-inbound / FHIR ImagingStudy-outbound / HL7 ORM-in / HL7 ORU-out / DICOM-MWL-out
+adapters, which remain honest NOT_LIVE contract seams surfaced at `/admin/integrations`.
 
 ## 9. Recommended next hardening steps
 
