@@ -139,9 +139,16 @@ class KhulumaServicesTest {
                 .isEqualTo("RINGING");
         assertThat(callService.eventsOf(call.getCallId())).anyMatch(e -> e.getEventType().equals("RING"));
 
+        // B is ringing → the secure incoming-call poll surfaces it for B but not for A.
+        assertThat(callService.incoming(b)).extracting(CallEntity::getCallId).contains(call.getCallId());
+        assertThat(callService.incoming(a)).isEmpty();
+
         CallResult accepted = callService.accept(b, call.getCallId(), "Dr B");
         assertThat(accepted.call().getStatus()).isEqualTo("ACTIVE");
         assertThat(accepted.call().getStartedAt()).isNotNull();
+
+        // Once accepted, B is no longer ringing.
+        assertThat(callService.incoming(b)).isEmpty();
 
         CallEntity ended = callService.end(a, call.getCallId(), "HANGUP");
         assertThat(ended.getStatus()).isEqualTo("ENDED");

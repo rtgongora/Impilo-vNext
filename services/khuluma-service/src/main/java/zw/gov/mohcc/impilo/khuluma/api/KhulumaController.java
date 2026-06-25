@@ -167,6 +167,15 @@ public class KhulumaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(callResponse(result));
     }
 
+    @GetMapping("/calls/incoming")
+    public ResponseEntity<List<CallResponse>> incomingCalls() {
+        ActorContext ctx = contextResolver.resolve();
+        List<CallResponse> rows = callService.incoming(ctx).stream()
+                .map(c -> CallResponse.of(c, false, null, null, null, callService.participantsOf(c.getCallId())))
+                .toList();
+        return ResponseEntity.ok(rows);
+    }
+
     @GetMapping("/calls/{id}")
     public ResponseEntity<CallResponse> getCall(@PathVariable UUID id) {
         ActorContext ctx = contextResolver.resolve();

@@ -119,6 +119,12 @@ export async function startCall(
   return response.data;
 }
 
+/** Secure poll for calls currently ringing the user (the incoming-call sheet source). */
+export async function fetchIncomingCalls(): Promise<CommsCall[]> {
+  const response = await apiClient.get<CommsCall[]>(`${V1}/calls/incoming`);
+  return response.data ?? [];
+}
+
 export async function acceptCall(callId: string): Promise<CommsCall> {
   const response = await apiClient.post<CommsCall>(`${V1}/calls/${encodeURIComponent(callId)}/accept`, {});
   return response.data;

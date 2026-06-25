@@ -157,6 +157,11 @@ public class KhulumaBffController {
         return relay(khuluma.post("/calls", body));
     }
 
+    @GetMapping("/calls/incoming")
+    public ResponseEntity<JsonNode> incomingCalls() {
+        return relay(khuluma.get("/calls/incoming", Map.of()));
+    }
+
     @GetMapping("/calls/{id}")
     public ResponseEntity<JsonNode> getCall(@PathVariable String id) {
         return relay(khuluma.get("/calls/" + id, Map.of()));

@@ -12,4 +12,6 @@ public interface CallParticipantRepository extends JpaRepository<CallParticipant
     List<CallParticipantEntity> findByCallId(UUID callId);
 
     Optional<CallParticipantEntity> findByCallIdAndActorId(UUID callId, String actorId);
+
+    List<CallParticipantEntity> findByTenantIdAndActorIdAndState(UUID tenantId, String actorId, String state);
 }

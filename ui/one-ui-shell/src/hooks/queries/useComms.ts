@@ -96,6 +96,20 @@ export function useCommsInbox() {
   return useQuery<ConversationSummary[]>({
     queryKey: commsKeys().inbox,
     queryFn: () => apiClient.get(`${BASE}/conversations`),
+    refetchInterval: 5000, // liveness without a realtime socket
+  });
+}
+
+/**
+ * Secure, BFF-authenticated poll for calls currently ringing the user. This is how the incoming-call
+ * prompt appears without exposing the realtime gateway directly to the browser.
+ */
+export function useIncomingCalls(enabled: boolean) {
+  return useQuery<CallResponse[]>({
+    queryKey: ["khuluma", "incoming-calls"],
+    queryFn: () => apiClient.get(`${BASE}/calls/incoming`),
+    refetchInterval: 4000,
+    enabled,
   });
 }
 
@@ -112,6 +126,7 @@ export function useMessages(conversationId: string | null) {
     queryKey: commsKeys().messages(conversationId ?? "none"),
     queryFn: () => apiClient.get(`${BASE}/conversations/${conversationId}/messages`),
     enabled: !!conversationId,
+    refetchInterval: conversationId ? 4000 : false, // live message delivery without a socket
   });
 }
 

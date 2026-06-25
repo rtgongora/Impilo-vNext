@@ -228,6 +228,19 @@ public class CallService {
         return requireCall(ctx, callId);
     }
 
+    /**
+     * Calls currently RINGING the acting actor (they are a RINGING participant). This is the secure,
+     * BFF-authenticated poll the UI uses to surface an incoming-call prompt without exposing the
+     * realtime gateway directly to the browser.
+     */
+    @Transactional(readOnly = true)
+    public List<CallEntity> incoming(ActorContext ctx) {
+        return callParticipants.findByTenantIdAndActorIdAndState(ctx.tenantId(), ctx.actorId(), "RINGING").stream()
+                .map(p -> calls.findByCallIdAndTenantId(p.getCallId(), ctx.tenantId()).orElse(null))
+                .filter(c -> c != null && "RINGING".equals(c.getStatus()))
+                .toList();
+    }
+
     @Transactional(readOnly = true)
     public List<CallParticipantEntity> participantsOf(UUID callId) {
         return callParticipants.findByCallId(callId);

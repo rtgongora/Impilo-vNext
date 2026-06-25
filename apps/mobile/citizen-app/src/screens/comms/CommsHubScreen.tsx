@@ -17,6 +17,7 @@ import {
   sendMessage,
   markConversationRead,
   startCall,
+  fetchIncomingCalls,
   acceptCall,
   declineCall,
   endCall,
@@ -58,6 +59,26 @@ export const CommsHubScreen: React.FC = () => {
   useEffect(() => {
     void loadInbox();
   }, [loadInbox]);
+
+  // Secure poll for ringing calls (incoming-call sheet) — works without a realtime socket.
+  useEffect(() => {
+    if (activeCall) return;
+    let stopped = false;
+    const tick = async () => {
+      try {
+        const ringing = await fetchIncomingCalls();
+        if (!stopped && ringing[0]) setIncoming(ringing[0]);
+      } catch {
+        /* ignore poll errors */
+      }
+    };
+    void tick();
+    const timer = setInterval(tick, 4000);
+    return () => {
+      stopped = true;
+      clearInterval(timer);
+    };
+  }, [activeCall]);
 
   const openConversation = useCallback(async (id: string) => {
     setSelectedId(id);

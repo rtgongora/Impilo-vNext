@@ -14,6 +14,7 @@ import {
   useCallActions,
   useMeetingActions,
   useCommsSummary,
+  useIncomingCalls,
   meetingToCall,
   type CallResponse,
 } from "@/hooks/queries/useComms";
@@ -49,6 +50,20 @@ export function CommsHub({ persona }: { persona: "work" | "life" }) {
   const meetingActions = useMeetingActions();
 
   useKhulumaRealtime({ enabled: !!user, onIncomingCall: setIncoming });
+
+  // Secure poll fallback for ringing (works without the realtime socket) — surfaces the prompt.
+  const incomingPoll = useIncomingCalls(!!user && !activeCall);
+  useEffect(() => {
+    const ringing = incomingPoll.data?.[0];
+    if (ringing && !activeCall && (!incoming || incoming.callId !== ringing.callId)) {
+      setIncoming({
+        callId: ringing.callId,
+        conversationId: ringing.conversationId,
+        initiatedBy: ringing.initiatedBy,
+        callType: ringing.callType,
+      });
+    }
+  }, [incomingPoll.data, activeCall, incoming]);
 
   // Mark the newest peer message read once a conversation's messages are visible.
   const lastMarkedRef = useRef<string | null>(null);
