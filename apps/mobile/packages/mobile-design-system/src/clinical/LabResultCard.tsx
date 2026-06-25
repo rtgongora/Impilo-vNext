@@ -4,6 +4,12 @@
 
 import React from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
+import {
+  interpretationFlag,
+  trendArrow,
+  type InterpretationCode,
+  type Trend,
+} from "./interpretation-flag";
 
 export type LabResultStatus = "NORMAL" | "ABNORMAL" | "CRITICAL" | "PENDING";
 
@@ -16,6 +22,10 @@ export interface LabResultCardProps {
   collectedDate?: string;
   reportedDate?: string;
   performedBy?: string;
+  /** Precise CDS interpretation (LOW/HIGH/CRITICAL_LOW/CRITICAL_HIGH/NO_REFERENCE_RANGE) — advisory flag. */
+  interpretation?: InterpretationCode;
+  /** Trend vs prior value, shown as an arrow next to the flag. */
+  trend?: Trend;
   onPress?: () => void;
   testID?: string;
 }
@@ -36,10 +46,13 @@ export function LabResultCard({
   collectedDate,
   reportedDate,
   performedBy,
+  interpretation,
+  trend,
   onPress,
   testID,
 }: LabResultCardProps) {
   const cfg = STATUS_CONFIG[status];
+  const flag = interpretation ? interpretationFlag(interpretation) : null;
 
   const content = (
     <View
@@ -50,6 +63,13 @@ export function LabResultCard({
         <Text style={styles.testName}>{testName}</Text>
         <Text style={[styles.statusText, { color: cfg.color }]}>{status}</Text>
       </View>
+      {flag ? (
+        <View style={[styles.flagBadge, { backgroundColor: flag.bg }]}>
+          <Text style={[styles.flagText, { color: flag.color }]}>
+            {`${flag.label}${trend ? " " + trendArrow(trend) : ""}`}
+          </Text>
+        </View>
+      ) : null}
       {value ? (
         <Text style={[styles.value, { color: cfg.color }]}>
           {`${value} `}
@@ -105,6 +125,17 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 11,
     fontWeight: "600",
+  },
+  flagBadge: {
+    alignSelf: "flex-start",
+    marginTop: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  flagText: {
+    fontSize: 11,
+    fontWeight: "700",
   },
   value: {
     fontSize: 20,
