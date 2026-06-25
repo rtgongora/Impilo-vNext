@@ -122,6 +122,72 @@ class ArtifactServiceTest {
     }
 
     @Test
+    @DisplayName("createDraft: OBSERVATION_DEFINITION with effective window persists bounds")
+    void test_createDraft_observationDefinition_withEffectiveWindow() {
+        try (MockedStatic<TrustContextHolder> holder = mockStatic(TrustContextHolder.class)) {
+            holder.when(TrustContextHolder::require).thenReturn(createTrustContext());
+
+            when(artifactRepository.existsByTenantIdAndCanonicalUrlAndVersion(
+                    any(UUID.class), anyString(), anyString())).thenReturn(false);
+            when(artifactRepository.save(any(ArtifactEntity.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
+            when(outboxRepository.save(any(EventOutboxEntity.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
+
+            OffsetDateTime start = OffsetDateTime.parse("2026-01-01T00:00:00Z");
+            OffsetDateTime end = OffsetDateTime.parse("2027-01-01T00:00:00Z");
+
+            ArtifactEntity result = artifactService.createDraft(
+                    ArtifactType.OBSERVATION_DEFINITION,
+                    "http://impilo.health.zw/ObservationDefinition/serum-potassium",
+                    "1.0.0",
+                    "SerumPotassiumInterval",
+                    "Serum Potassium Reference Interval",
+                    "Adult serum potassium qualified interval",
+                    "{\"resourceType\":\"ObservationDefinition\"}",
+                    "MoHCC",
+                    start,
+                    end);
+
+            assertThat(result.getFhirType()).isEqualTo(ArtifactType.OBSERVATION_DEFINITION);
+            assertThat(result.getStatus()).isEqualTo(ArtifactStatus.DRAFT);
+            assertThat(result.getEffectiveStart()).isEqualTo(start);
+            assertThat(result.getEffectiveEnd()).isEqualTo(end);
+            assertThat(result.getContentHash()).isNotBlank();
+
+            verify(artifactRepository).save(any(ArtifactEntity.class));
+            verify(outboxRepository).save(any(EventOutboxEntity.class));
+        }
+    }
+
+    @Test
+    @DisplayName("createDraft: legacy 8-arg overload leaves effective window null")
+    void test_createDraft_legacyOverload_nullEffectiveWindow() {
+        try (MockedStatic<TrustContextHolder> holder = mockStatic(TrustContextHolder.class)) {
+            holder.when(TrustContextHolder::require).thenReturn(createTrustContext());
+
+            when(artifactRepository.existsByTenantIdAndCanonicalUrlAndVersion(
+                    any(UUID.class), anyString(), anyString())).thenReturn(false);
+            when(artifactRepository.save(any(ArtifactEntity.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
+            when(outboxRepository.save(any(EventOutboxEntity.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
+
+            ArtifactEntity result = artifactService.createDraft(
+                    ArtifactType.CODE_SYSTEM,
+                    "http://example.org/CodeSystem/legacy",
+                    "1.0.0",
+                    "LegacyCS",
+                    null, null,
+                    "{\"resourceType\":\"CodeSystem\"}",
+                    null);
+
+            assertThat(result.getEffectiveStart()).isNull();
+            assertThat(result.getEffectiveEnd()).isNull();
+        }
+    }
+
+    @Test
     @DisplayName("createDraft: duplicate canonical URL + version throws IllegalArgumentException")
     void test_createDraft_duplicateCanonicalVersion_throws() {
         try (MockedStatic<TrustContextHolder> holder = mockStatic(TrustContextHolder.class)) {

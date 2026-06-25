@@ -89,6 +89,28 @@ public class ArtifactService {
     public ArtifactEntity createDraft(ArtifactType fhirType, String canonicalUrl, String version,
                                       String name, String title, String description,
                                       String contentJson, String publisher) {
+        return createDraft(fhirType, canonicalUrl, version, name, title, description,
+                contentJson, publisher, null, null);
+    }
+
+    /**
+     * Create a new terminology artifact in DRAFT status with an explicit
+     * clinical applicability window.
+     *
+     * <p>Identical to {@link #createDraft(ArtifactType, String, String, String,
+     * String, String, String, String)} but additionally records the
+     * {@code effectiveStart}/{@code effectiveEnd} window — used by governed
+     * {@code OBSERVATION_DEFINITION} artifacts to express when a reference
+     * interval is effective. Both bounds are nullable (open-ended).</p>
+     *
+     * @param effectiveStart inclusive start of applicability (nullable = no lower bound)
+     * @param effectiveEnd   exclusive end of applicability (nullable = no upper bound)
+     */
+    @Transactional
+    public ArtifactEntity createDraft(ArtifactType fhirType, String canonicalUrl, String version,
+                                      String name, String title, String description,
+                                      String contentJson, String publisher,
+                                      OffsetDateTime effectiveStart, OffsetDateTime effectiveEnd) {
         TrustContext ctx = TrustContextHolder.require();
         UUID tenantId = ctx.tenantId();
 
@@ -112,6 +134,8 @@ public class ArtifactService {
         artifact.setContentHash(computeHash(contentJson));
         artifact.setPublisher(publisher);
         artifact.setStatus(ArtifactStatus.DRAFT);
+        artifact.setEffectiveStart(effectiveStart);
+        artifact.setEffectiveEnd(effectiveEnd);
         artifact.setCreatedBy(ctx.actorId());
         artifact.setCreatedAt(OffsetDateTime.now());
         artifact.setUpdatedAt(OffsetDateTime.now());
