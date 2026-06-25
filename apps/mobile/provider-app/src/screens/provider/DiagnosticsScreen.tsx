@@ -17,6 +17,7 @@ import {
   EmptyState,
   ErrorState,
 } from "@impilo/mobile-design-system";
+import { useSyncEngine } from "@impilo/mobile-offline";
 import { fetchDiagnosticOrders, fetchResultsInbox, type DiagnosticOrder } from "../../services/diagnosticsService";
 
 type ViewMode = "ORDERS" | "INBOX";
@@ -26,6 +27,7 @@ export function DiagnosticsScreen() {
   const [orders, setOrders] = useState<DiagnosticOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { pendingCount } = useSyncEngine();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -49,6 +51,11 @@ export function DiagnosticsScreen() {
   return (
     <Screen>
       <Header title="Diagnostics" />
+      {pendingCount > 0 ? (
+        <Text testID="diag-pending-sync" style={styles.pending}>
+          {pendingCount} change(s) queued offline — will sync when back online
+        </Text>
+      ) : null}
       <View style={styles.tabRow}>
         {(["ORDERS", "INBOX"] as ViewMode[]).map((m) => (
           <Pressable key={m} testID={`diag-tab-${m}`}
@@ -108,4 +115,5 @@ const styles = StyleSheet.create({
   state: { fontSize: 12, color: "#1d4ed8", fontWeight: "600" },
   meta: { fontSize: 12, color: "#64748b" },
   refresh: { marginTop: 8, marginBottom: 24 },
+  pending: { fontSize: 12, color: "#92400e", backgroundColor: "#fef3c7", paddingHorizontal: 12, paddingVertical: 6 },
 });

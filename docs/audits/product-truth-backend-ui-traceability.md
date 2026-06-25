@@ -1,6 +1,6 @@
 # Product Truth — Backend-to-UI Traceability
 
-> Generated: 2026-06-25T09:51:10.501Z
+> Generated: 2026-06-25T11:38:25.442Z
 
 For each service: backend capabilities → API → BFF → UI → mobile → persistence.
 
@@ -227,7 +227,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 
 | # | Question | Answer |
 |---|----------|--------|
-| 1 | Real backend capabilities? | Yes (5 controllers, 13 routes) |
+| 1 | Real backend capabilities? | Yes (6 controllers, 15 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: channels.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (11 clients) |
 | 4 | Visible in UI? | Yes (24 refs) |
@@ -1435,7 +1435,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 
 | # | Question | Answer |
 |---|----------|--------|
-| 1 | Real backend capabilities? | Yes (14 controllers, 83 routes) |
+| 1 | Real backend capabilities? | Yes (16 controllers, 91 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: oros.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (13 clients) |
 | 4 | Visible in UI? | Yes (65 refs) |
@@ -1443,7 +1443,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
 | 8 | UI without backend? | No |
-| 9 | Persists to DB? | Yes (8 migrations) |
+| 9 | Persists to DB? | Yes (9 migrations) |
 | 10 | Fixture-only flows? | No |
 
 **UI references (sample):**
@@ -1491,7 +1491,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 2 | Exposed via API/contracts? | Yes (contract: pct.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (40 clients) |
 | 4 | Visible in UI? | Yes (419 refs) |
-| 5 | Visible on mobile? | Yes (97 refs) |
+| 5 | Visible on mobile? | Yes (100 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
 | 8 | UI without backend? | No |

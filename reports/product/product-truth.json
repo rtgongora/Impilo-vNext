@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-25T09:51:10.501Z",
+  "generatedAt": "2026-06-25T11:38:25.442Z",
   "branch": "intake/oros-diagnostics-journey",
   "registryDrift": {
     "unregisteredModules": [],
@@ -1079,16 +1079,16 @@
         "migrations": 1,
         "entities": 4,
         "repositories": 4,
-        "serviceLayer": 4,
-        "controllers": 5,
-        "routes": 13,
+        "serviceLayer": 5,
+        "controllers": 6,
+        "routes": 15,
         "stubRoutes": 0,
         "contractOperations": 12,
         "contractViolations": 0,
         "bffClients": 11,
         "uiReferences": 24,
         "mobileReferences": 7,
-        "tests": 2
+        "tests": 3
       },
       "dimensions": {
         "database": "real",
@@ -6686,19 +6686,19 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 8,
-        "entities": 28,
-        "repositories": 12,
-        "serviceLayer": 17,
-        "controllers": 14,
-        "routes": 83,
+        "migrations": 9,
+        "entities": 29,
+        "repositories": 13,
+        "serviceLayer": 19,
+        "controllers": 16,
+        "routes": 91,
         "stubRoutes": 0,
         "contractOperations": 58,
         "contractViolations": 0,
         "bffClients": 13,
         "uiReferences": 65,
         "mobileReferences": 15,
-        "tests": 19
+        "tests": 21
       },
       "dimensions": {
         "database": "real",
@@ -6948,7 +6948,7 @@
         "contractViolations": 0,
         "bffClients": 40,
         "uiReferences": 419,
-        "mobileReferences": 97,
+        "mobileReferences": 100,
         "tests": 12
       },
       "dimensions": {
