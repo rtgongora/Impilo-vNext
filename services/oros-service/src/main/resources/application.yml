@@ -102,3 +102,16 @@ oros:
         enabled: ${OROS_HL7_ORU_OUTBOUND_ENABLED:false}
         host: ${OROS_HL7_ORU_OUTBOUND_HOST:localhost}
         port: ${OROS_HL7_ORU_OUTBOUND_PORT:2576}
+    dicom:
+      mwl:
+        # OFF (NOT_LIVE) | REST (DICOMweb/UPS-RS to dcm4chee-arc or Orthanc) | DIMSE (UPS N-CREATE)
+        mode: ${OROS_DICOM_MWL_MODE:OFF}
+        scheduled-station-aet: ${OROS_DICOM_MWL_STATION_AET:IMPILO}
+        rest:
+          base-url: ${OROS_DICOM_MWL_REST_BASE_URL:http://localhost:8088}
+          path: ${OROS_DICOM_MWL_REST_PATH:/dcm4chee-arc/aets/DCM4CHEE/rs/mwlitems}
+        dimse:
+          calling-aet: ${OROS_DICOM_MWL_CALLING_AET:IMPILO_OROS}
+          called-aet: ${OROS_DICOM_MWL_CALLED_AET:DCM4CHEE}
+          host: ${OROS_DICOM_MWL_DIMSE_HOST:localhost}
+          port: ${OROS_DICOM_MWL_DIMSE_PORT:11112}

@@ -28,7 +28,7 @@ public class IntegrationStatusService {
     private final boolean fhirImagingStudyOutbound;
     private final boolean hl7OrmInbound;
     private final boolean hl7OruOutbound;
-    private final boolean dicomMwlOutbound;
+    private final String dicomMwlMode;
 
     public IntegrationStatusService(
             @Value("${oros.integration.butano.base-url:}") String butanoBaseUrl,
@@ -38,7 +38,7 @@ public class IntegrationStatusService {
             @Value("${oros.integration.fhir.imagingstudy-outbound.enabled:false}") boolean fhirImagingStudyOutbound,
             @Value("${oros.integration.hl7.orm-inbound.enabled:false}") boolean hl7OrmInbound,
             @Value("${oros.integration.hl7.oru-outbound.enabled:false}") boolean hl7OruOutbound,
-            @Value("${oros.integration.dicom.mwl-outbound.enabled:false}") boolean dicomMwlOutbound) {
+            @Value("${oros.integration.dicom.mwl.mode:OFF}") String dicomMwlMode) {
         this.butanoBaseUrl = trim(butanoBaseUrl);
         this.varapiBaseUrl = trim(varapiBaseUrl);
         this.pacsDicomwebBaseUrl = trim(pacsDicomwebBaseUrl);
@@ -46,7 +46,7 @@ public class IntegrationStatusService {
         this.fhirImagingStudyOutbound = fhirImagingStudyOutbound;
         this.hl7OrmInbound = hl7OrmInbound;
         this.hl7OruOutbound = hl7OruOutbound;
-        this.dicomMwlOutbound = dicomMwlOutbound;
+        this.dicomMwlMode = dicomMwlMode == null ? "OFF" : dicomMwlMode.trim().toUpperCase();
     }
 
     public List<IntegrationStatusDto> statuses() {
@@ -65,8 +65,15 @@ public class IntegrationStatusService {
                         "HL7 v2 ORM inbound adapter"),
                 flagAdapter("HL7_ORU_OUTBOUND", "HL7", "OUTBOUND", hl7OruOutbound,
                         "HL7 v2 ORU outbound adapter"),
-                flagAdapter("DICOM_MWL_OUTBOUND", "DICOM", "OUTBOUND", dicomMwlOutbound,
-                        "DICOM Modality Worklist outbound adapter"));
+                dicomMwlStatus());
+    }
+
+    private IntegrationStatusDto dicomMwlStatus() {
+        boolean configured = !"OFF".equals(dicomMwlMode);
+        String detail = configured
+                ? "DICOM Modality Worklist outbound adapter — mode " + dicomMwlMode
+                : "DICOM Modality Worklist outbound adapter — mode OFF (NOT_LIVE)";
+        return new IntegrationStatusDto("DICOM_MWL_OUTBOUND", "DICOM", "OUTBOUND", configured, detail);
     }
 
     private IntegrationStatusDto urlAdapter(String adapter, String category, String direction,

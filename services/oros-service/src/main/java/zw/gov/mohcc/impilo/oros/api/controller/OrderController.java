@@ -58,6 +58,7 @@ public class OrderController {
     private final ImagingWorkflowService imagingWorkflowService;
     private final OrderQueryService orderQueryService;
     private final DiagnosticShareService diagnosticShareService;
+    private final zw.gov.mohcc.impilo.oros.integration.dicom.MwlPublisherRouter mwlPublisherRouter;
     private final RoutingEngine routingEngine;
     private final WorkstepEngine workstepEngine;
     private final SlaService slaService;
@@ -67,6 +68,7 @@ public class OrderController {
                            ImagingWorkflowService imagingWorkflowService,
                            OrderQueryService orderQueryService,
                            DiagnosticShareService diagnosticShareService,
+                           zw.gov.mohcc.impilo.oros.integration.dicom.MwlPublisherRouter mwlPublisherRouter,
                            RoutingEngine routingEngine,
                            WorkstepEngine workstepEngine,
                            SlaService slaService) {
@@ -75,6 +77,7 @@ public class OrderController {
         this.imagingWorkflowService = imagingWorkflowService;
         this.orderQueryService = orderQueryService;
         this.diagnosticShareService = diagnosticShareService;
+        this.mwlPublisherRouter = mwlPublisherRouter;
         this.routingEngine = routingEngine;
         this.workstepEngine = workstepEngine;
         this.slaService = slaService;
@@ -207,6 +210,8 @@ public class OrderController {
         String correlationId = TrustContextHolder.require().correlationId().toString();
 
         OrderEntity order = imagingWorkflowService.schedule(orderId, request.scheduledAt(), request.note());
+        // Publish a DICOM MWL item for the scheduled procedure step (gated; OFF by default).
+        mwlPublisherRouter.publish(order, null);
         return ResponseEntity.ok(ApiResponse.ok(OrderSummaryDto.from(order), correlationId));
     }
 

@@ -19,6 +19,14 @@
         internal or external fulfillment systems (LIMS, PACS, pharmacy).
     </description>
 
+    <repositories>
+        <!-- dcm4che is not published to Maven Central; it ships from its own repository. -->
+        <repository>
+            <id>dcm4che</id>
+            <url>https://maven.dcm4che.org</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <!-- Web -->
         <dependency>
@@ -71,6 +79,18 @@
             <groupId>ca.uhn.hapi</groupId>
             <artifactId>hapi-structures-v25</artifactId>
             <version>2.5.1</version>
+        </dependency>
+
+        <!-- DICOM (MWL-outbound DIMSE strategy) -->
+        <dependency>
+            <groupId>org.dcm4che</groupId>
+            <artifactId>dcm4che-core</artifactId>
+            <version>5.34.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.dcm4che</groupId>
+            <artifactId>dcm4che-net</artifactId>
+            <version>5.34.3</version>
         </dependency>
 
         <!-- Kafka (event outbox publishing + consumption) -->

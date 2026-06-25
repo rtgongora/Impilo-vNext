@@ -27,14 +27,14 @@ class IntegrationStatusServiceTest {
     void urlAdaptersReflectEndpoint() {
         IntegrationStatusService configured = new IntegrationStatusService(
                 "http://localhost:8090", "http://localhost:8083", "http://pacs:8042",
-                false, false, false, false, false);
+                false, false, false, false, "OFF");
         Map<String, IntegrationStatusDto> map = byAdapter(configured);
         assertThat(map.get("FHIR_DIAGNOSTIC_REPORT_OUTBOUND").configured()).isTrue();
         assertThat(map.get("PROVIDER_DIRECTORY").configured()).isTrue();
         assertThat(map.get("PACS_DICOMWEB").configured()).isTrue();
 
         IntegrationStatusService blank = new IntegrationStatusService(
-                "  ", "", "", false, false, false, false, false);
+                "  ", "", "", false, false, false, false, "OFF");
         Map<String, IntegrationStatusDto> blankMap = byAdapter(blank);
         assertThat(blankMap.get("FHIR_DIAGNOSTIC_REPORT_OUTBOUND").configured()).isFalse();
         assertThat(blankMap.get("PACS_DICOMWEB").detail()).contains("NOT_LIVE");
@@ -44,7 +44,7 @@ class IntegrationStatusServiceTest {
     @DisplayName("flag-only adapters report not-configured by default (contract seams)")
     void flagAdaptersDefaultNotConfigured() {
         IntegrationStatusService service = new IntegrationStatusService(
-                "", "", "", false, false, false, false, false);
+                "", "", "", false, false, false, false, "OFF");
         Map<String, IntegrationStatusDto> map = byAdapter(service);
 
         List<String> seams = List.of("FHIR_SERVICE_REQUEST_INBOUND", "FHIR_IMAGING_STUDY_OUTBOUND",
@@ -59,7 +59,16 @@ class IntegrationStatusServiceTest {
     @DisplayName("an explicitly-enabled flag adapter reports configured")
     void flagAdapterEnabled() {
         IntegrationStatusService service = new IntegrationStatusService(
-                "", "", "", true, false, false, false, false);
+                "", "", "", true, false, false, false, "OFF");
         assertThat(byAdapter(service).get("FHIR_SERVICE_REQUEST_INBOUND").configured()).isTrue();
+    }
+
+    @Test
+    @DisplayName("DICOM MWL reports configured when the mode is not OFF")
+    void dicomMwlModeReflectsConfig() {
+        IntegrationStatusService rest = new IntegrationStatusService(
+                "", "", "", false, false, false, false, "REST");
+        assertThat(byAdapter(rest).get("DICOM_MWL_OUTBOUND").configured()).isTrue();
+        assertThat(byAdapter(rest).get("DICOM_MWL_OUTBOUND").detail()).contains("REST");
     }
 }
