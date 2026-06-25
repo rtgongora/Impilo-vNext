@@ -202,6 +202,17 @@ These match `ServiceClientConfig` / `impilo.services` in `experience-bff` (local
 
 ## Change log
 
+## OROS external interop adapter ports (opt-in, OFF by default)
+
+| Port | Use |
+|------|-----|
+| 2575 | OROS HL7 v2 ORM-inbound MLLP listener (`oros.integration.hl7.orm-inbound.port`) |
+| 2576 | HL7 v2 ORU-outbound MLLP receiver (external; `oros.integration.hl7.oru-outbound.port`) |
+| 8088 | `dcm4chee-arc` HTTP/REST (interop profile) — MWL UPS-RS target |
+| 11112 | `dcm4chee-arc` DICOM DIMSE (interop profile) — MWL UPS N-CREATE target |
+
+See `oros-interop-adapters.md`. These bind only when the corresponding adapter flag is enabled.
+
 | Date | Change |
 |------|--------|
 | 2026-06-19 | Added **8167** `vashandi-workforce-service` (operational workforce SoR); BFF `vashandi-base-url` default. |

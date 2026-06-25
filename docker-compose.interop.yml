@@ -1,0 +1,62 @@
+# =============================================================================
+# Interop counterparties for the OROS external adapters (opt-in).
+#
+#   docker compose -f docker-compose.yml -f docker-compose.interop.yml --profile interop up -d
+#
+# Provides a real DICOM archive (dcm4chee-arc-light = ldap + db + arc) so the DICOM
+# MWL-outbound adapter can be integration-tested end to end:
+#   - MWL REST/UPS-RS  → http://localhost:8088 (arc HTTP)   [oros.integration.dicom.mwl.mode=REST]
+#   - MWL DIMSE        → localhost:11112 (arc DICOM)         [oros.integration.dicom.mwl.mode=DIMSE]
+#
+# The other counterparties are already in docker-compose.yml:
+#   - FHIR (ServiceRequest-inbound / ImagingStudy-outbound) → hapi-fhir
+#   - Lightweight DICOMweb / worklist alternative           → orthanc (8042 / 4242)
+#
+# HL7 v2 (ORM-inbound / ORU-outbound) are MLLP; test with a HAPI HL7 MLLP sender/receiver
+# (see docs/runbooks/oros-interop-adapters.md). All adapters are flag-gated and OFF by default.
+# =============================================================================
+
+services:
+  interop-ldap:
+    image: dcm4che/slapd-dcm4chee:2.6.7-33.1
+    profiles: ["interop"]
+    volumes:
+      - interop_ldap:/var/lib/openldap/openldap-data
+      - interop_slapd:/etc/openldap/slapd.d
+    ports:
+      - "1389:389"
+
+  interop-arc-db:
+    image: dcm4che/postgres-dcm4chee:16.4-33.1
+    profiles: ["interop"]
+    environment:
+      POSTGRES_DB: pacsdb
+      POSTGRES_USER: pacs
+      POSTGRES_PASSWORD: pacs
+    volumes:
+      - interop_arc_db:/var/lib/postgresql/data
+
+  dcm4chee-arc:
+    image: dcm4che/dcm4chee-arc-psql:5.33.1
+    profiles: ["interop"]
+    depends_on:
+      - interop-ldap
+      - interop-arc-db
+    environment:
+      WILDFLY_CHOWN: /opt/wildfly/standalone
+      WILDFLY_WAIT_FOR: "interop-ldap:389 interop-arc-db:5432"
+      LDAP_URL: ldap://interop-ldap:389
+      POSTGRES_HOST: interop-arc-db
+      POSTGRES_DB: pacsdb
+      POSTGRES_USER: pacs
+      POSTGRES_PASSWORD: pacs
+    ports:
+      - "8088:8080"    # arc HTTP / REST (MWL UPS-RS) — matches oros.integration.dicom.mwl.rest.base-url
+      - "9990:9990"    # wildfly admin
+      - "11112:11112"  # DICOM DIMSE (MWL/UPS N-CREATE) — matches oros.integration.dicom.mwl.dimse.port
+      - "2762:2762"    # DICOM TLS
+
+volumes:
+  interop_ldap:
+  interop_slapd:
+  interop_arc_db:
