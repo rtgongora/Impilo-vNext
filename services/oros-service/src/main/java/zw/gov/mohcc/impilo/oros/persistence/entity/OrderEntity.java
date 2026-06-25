@@ -8,6 +8,7 @@ import java.util.UUID;
 import zw.gov.mohcc.impilo.oros.domain.OrderType;
 import zw.gov.mohcc.impilo.oros.domain.OrderPriority;
 import zw.gov.mohcc.impilo.oros.domain.OrderStatus;
+import zw.gov.mohcc.impilo.oros.domain.RequestSource;
 
 /**
  * Represents a clinical order (lab, imaging, pharmacy, procedure, etc.).
@@ -71,6 +72,27 @@ public class OrderEntity {
 
     @Column(name = "clinical_notes", columnDefinition = "TEXT")
     private String clinicalNotes;
+
+    // ── Diagnostic/imaging journey (V003) ────────────────────────────────
+    @Enumerated(EnumType.STRING)
+    @Column(name = "request_source", nullable = false)
+    private RequestSource requestSource = RequestSource.INTERNAL;
+
+    @Column(name = "accession_number", length = 64)
+    private String accessionNumber;
+
+    @Column(name = "referring_provider_id", length = 64)
+    private String referringProviderId;
+
+    @Column(name = "referring_provider_name", length = 255)
+    private String referringProviderName;
+
+    @Column(name = "scheduled_at")
+    private OffsetDateTime scheduledAt;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "safety_json", columnDefinition = "jsonb")
+    private String safetyJson;
 
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
@@ -141,4 +163,22 @@ public class OrderEntity {
 
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
+
+    public RequestSource getRequestSource() { return requestSource; }
+    public void setRequestSource(RequestSource requestSource) { this.requestSource = requestSource; }
+
+    public String getAccessionNumber() { return accessionNumber; }
+    public void setAccessionNumber(String accessionNumber) { this.accessionNumber = accessionNumber; }
+
+    public String getReferringProviderId() { return referringProviderId; }
+    public void setReferringProviderId(String referringProviderId) { this.referringProviderId = referringProviderId; }
+
+    public String getReferringProviderName() { return referringProviderName; }
+    public void setReferringProviderName(String referringProviderName) { this.referringProviderName = referringProviderName; }
+
+    public OffsetDateTime getScheduledAt() { return scheduledAt; }
+    public void setScheduledAt(OffsetDateTime scheduledAt) { this.scheduledAt = scheduledAt; }
+
+    public String getSafetyJson() { return safetyJson; }
+    public void setSafetyJson(String safetyJson) { this.safetyJson = safetyJson; }
 }
