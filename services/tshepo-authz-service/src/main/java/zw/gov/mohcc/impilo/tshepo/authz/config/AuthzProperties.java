@@ -31,6 +31,9 @@ public class AuthzProperties {
             "SYSTEM_ADMIN", "DEVELOPER", "REGULATORY_REVIEWER");
     private List<String> trustAuthorityAdminRoles = List.of(
             "SYSTEM_ADMIN", "TRUST_ADMIN");
+    // Roles whose holders may approve a SUPERVISOR_APPROVAL step-up challenge (dual control).
+    private List<String> stepUpSupervisorRoles = List.of(
+            "SUPERVISOR", "CLINICAL_SUPERVISOR", "DISTRICT_SUPERVISOR");
 
     // ── Inner configuration classes ────────────────────────────────────
 
@@ -151,5 +154,13 @@ public class AuthzProperties {
 
     public void setTrustAuthorityAdminRoles(List<String> trustAuthorityAdminRoles) {
         this.trustAuthorityAdminRoles = trustAuthorityAdminRoles;
+    }
+
+    public List<String> getStepUpSupervisorRoles() {
+        return stepUpSupervisorRoles;
+    }
+
+    public void setStepUpSupervisorRoles(List<String> stepUpSupervisorRoles) {
+        this.stepUpSupervisorRoles = stepUpSupervisorRoles;
     }
 }
