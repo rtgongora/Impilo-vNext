@@ -11,6 +11,8 @@ import {
   markConversationRead,
   startCall,
   acceptCall,
+  createMeeting,
+  joinMeeting,
 } from "../../services/khulumaCommsService";
 
 describe("khulumaCommsService", () => {
@@ -65,5 +67,17 @@ describe("khulumaCommsService", () => {
     const accepted = await acceptCall("call1");
     expect(api.post).toHaveBeenCalledWith("/internal/v1/mobile/khuluma/calls/call1/accept", {});
     expect(accepted.status).toBe("ACTIVE");
+  });
+
+  it("creates and joins a virtual meeting", async () => {
+    api.post.mockResolvedValueOnce({ data: { conversationId: "m-1", eventId: "ev-1", mediaAvailable: true, roomUrl: "ws://livekit:7880", accessToken: "jwt", provider: "RTC_GATEWAY", error: null } });
+    const meeting = await createMeeting("Huddle", [{ actorId: "prov-b" }]);
+    expect(api.post).toHaveBeenCalledWith("/internal/v1/mobile/khuluma/meetings", { title: "Huddle", participants: [{ actorId: "prov-b" }] });
+    expect(meeting.eventId).toBe("ev-1");
+
+    api.post.mockResolvedValueOnce({ data: { conversationId: "m-1", eventId: "ev-1", mediaAvailable: true, roomUrl: "ws://livekit:7880", accessToken: "jwt2", provider: "RTC_GATEWAY", error: null } });
+    const joined = await joinMeeting("m-1");
+    expect(api.post).toHaveBeenCalledWith("/internal/v1/mobile/khuluma/conversations/m-1/meeting/join", {});
+    expect(joined.accessToken).toBe("jwt2");
   });
 });

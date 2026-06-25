@@ -132,6 +132,53 @@ export async function endCall(callId: string): Promise<void> {
   await apiClient.post(`${V1}/calls/${encodeURIComponent(callId)}/end`, { reason: "HANGUP" });
 }
 
+export interface CommsMeeting {
+  conversationId: string;
+  eventId: string | null;
+  mediaAvailable: boolean;
+  roomUrl: string | null;
+  accessToken: string | null;
+  provider: string | null;
+  error: string | null;
+}
+
+export async function createMeeting(
+  title: string,
+  participants: Array<{ actorId: string; actorType?: string; displayName?: string }>,
+): Promise<CommsMeeting> {
+  const response = await apiClient.post<CommsMeeting>(`${V1}/meetings`, { title, participants });
+  return response.data;
+}
+
+export async function joinMeeting(conversationId: string): Promise<CommsMeeting> {
+  const response = await apiClient.post<CommsMeeting>(
+    `${V1}/conversations/${encodeURIComponent(conversationId)}/meeting/join`,
+    {},
+  );
+  return response.data;
+}
+
+export async function endMeeting(conversationId: string): Promise<void> {
+  await apiClient.post(`${V1}/conversations/${encodeURIComponent(conversationId)}/meeting/end`, {});
+}
+
+/** Adapt a meeting media join into the CommsCall shape the call surface renders. */
+export function meetingToCall(meeting: CommsMeeting): CommsCall {
+  return {
+    callId: meeting.eventId ?? meeting.conversationId,
+    conversationId: meeting.conversationId,
+    callType: "VIDEO",
+    status: "ACTIVE",
+    initiatedBy: "",
+    roomName: null,
+    roomUrl: meeting.roomUrl,
+    provider: meeting.provider,
+    mediaAvailable: meeting.mediaAvailable,
+    accessToken: meeting.accessToken,
+    mediaError: meeting.error,
+  };
+}
+
 function cryptoRandomId(): string {
   if (typeof globalThis.crypto?.randomUUID === "function") {
     return globalThis.crypto.randomUUID();

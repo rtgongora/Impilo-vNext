@@ -50,6 +50,22 @@ const svc = vi.hoisted(() => ({
   acceptCall: vi.fn(),
   declineCall: vi.fn(),
   endCall: vi.fn(),
+  createMeeting: vi.fn(),
+  joinMeeting: vi.fn(),
+  endMeeting: vi.fn(),
+  meetingToCall: vi.fn((m: { conversationId: string; eventId: string | null }) => ({
+    callId: m.eventId ?? m.conversationId,
+    conversationId: m.conversationId,
+    callType: "VIDEO",
+    status: "ACTIVE",
+    initiatedBy: "",
+    roomName: null,
+    roomUrl: "ws://livekit:7880",
+    provider: "RTC_GATEWAY",
+    mediaAvailable: true,
+    accessToken: "jwt",
+    mediaError: null,
+  })),
 }));
 
 vi.mock("../../services/khulumaCommsService", () => svc);
@@ -95,6 +111,10 @@ describe("CommsHubScreen", () => {
     ]);
     svc.markConversationRead.mockResolvedValue(undefined);
     svc.sendMessage.mockResolvedValue({ messageId: "m2", conversationId: "c1", senderId: "me", senderType: "CITIZEN", senderDisplayName: null, contentType: "TEXT", body: "On my way", status: "SENT", sentAt: null });
+    svc.startCall.mockResolvedValue({ callId: "call1", conversationId: "c1", callType: "VIDEO", status: "RINGING", initiatedBy: "me", roomName: null, roomUrl: null, provider: null, mediaAvailable: false, accessToken: null, mediaError: null });
+    const meeting = { conversationId: "m-1", eventId: "ev-1", mediaAvailable: true, roomUrl: "ws://livekit:7880", accessToken: "jwt", provider: "RTC_GATEWAY", error: null };
+    svc.createMeeting.mockResolvedValue(meeting);
+    svc.joinMeeting.mockResolvedValue(meeting);
   });
 
   afterEach(() => {
@@ -128,5 +148,30 @@ describe("CommsHubScreen", () => {
     act(() => byTestId(mounted!.container, "send-message").dispatchEvent(new MouseEvent("click", { bubbles: true })));
     await flush();
     expect(svc.sendMessage).toHaveBeenCalledWith("c1", "On my way");
+  });
+
+  it("starts a video call from a conversation", async () => {
+    mounted = renderScreen();
+    await flush();
+    act(() => byTestId(mounted!.container, "conversation-c1").dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    await flush();
+
+    act(() => byTestId(mounted!.container, "start-video").dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    await flush();
+    expect(svc.startCall).toHaveBeenCalledWith("c1", "VIDEO", expect.any(Array));
+  });
+
+  it("creates and joins a virtual meeting, opening the media room", async () => {
+    mounted = renderScreen();
+    await flush();
+    act(() => byTestId(mounted!.container, "conversation-c1").dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    await flush();
+
+    act(() => byTestId(mounted!.container, "start-meeting").dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    await flush();
+    expect(svc.createMeeting).toHaveBeenCalledWith("Dr B", expect.any(Array));
+    expect(svc.joinMeeting).toHaveBeenCalledWith("m-1");
+    // The active-call (meeting) surface renders.
+    expect(byTestId(mounted.container, "comms-call")).toBeTruthy();
   });
 });

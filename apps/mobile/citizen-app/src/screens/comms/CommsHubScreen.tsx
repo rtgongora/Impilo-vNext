@@ -20,6 +20,10 @@ import {
   acceptCall,
   declineCall,
   endCall,
+  createMeeting,
+  joinMeeting,
+  endMeeting,
+  meetingToCall,
   type CommsConversationSummary,
   type CommsConversationDetail,
   type CommsMessage,
@@ -34,7 +38,9 @@ export const CommsHubScreen: React.FC = () => {
   const [draft, setDraft] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeCall, setActiveCall] = useState<{ call: CommsCall; direction: "incoming" | "outgoing" } | null>(null);
+  const [activeCall, setActiveCall] = useState<
+    { call: CommsCall; direction: "incoming" | "outgoing"; kind: "call" | "meeting" } | null
+  >(null);
   const [incoming, setIncoming] = useState<CommsCall | null>(null);
 
   const loadInbox = useCallback(async () => {
@@ -72,19 +78,34 @@ export const CommsHubScreen: React.FC = () => {
     setMessages((prev) => [...prev, sent]);
   }, [draft, selectedId]);
 
-  const handleStartCall = useCallback(async () => {
+  const participantCallees = useCallback(
+    () =>
+      (detail?.participants ?? [])
+        .filter((p) => p.active)
+        .map((p) => ({ actorId: p.actorId, actorType: p.actorType, displayName: p.displayName ?? undefined })),
+    [detail],
+  );
+
+  const handleStartCall = useCallback(
+    async (callType: "AUDIO" | "VIDEO") => {
+      if (!selectedId || !detail) return;
+      const call = await startCall(selectedId, callType, participantCallees());
+      setActiveCall({ call, direction: "outgoing", kind: "call" });
+    },
+    [selectedId, detail, participantCallees],
+  );
+
+  const handleStartMeeting = useCallback(async () => {
     if (!selectedId || !detail) return;
-    const callees = detail.participants
-      .filter((p) => p.active)
-      .map((p) => ({ actorId: p.actorId, actorType: p.actorType, displayName: p.displayName ?? undefined }));
-    const call = await startCall(selectedId, "AUDIO", callees);
-    setActiveCall({ call, direction: "outgoing" });
-  }, [selectedId, detail]);
+    const meeting = await createMeeting(detail.title ?? "Meeting", participantCallees());
+    const joined = await joinMeeting(meeting.conversationId);
+    setActiveCall({ call: meetingToCall(joined), direction: "outgoing", kind: "meeting" });
+  }, [selectedId, detail, participantCallees]);
 
   const handleAccept = useCallback(async () => {
     if (!incoming) return;
     const call = await acceptCall(incoming.callId);
-    setActiveCall({ call, direction: "incoming" });
+    setActiveCall({ call, direction: "incoming", kind: "call" });
     setIncoming(null);
   }, [incoming]);
 
@@ -96,7 +117,10 @@ export const CommsHubScreen: React.FC = () => {
 
   const handleEndCall = useCallback(async () => {
     if (!activeCall) return;
-    await endCall(activeCall.call.callId).catch(() => undefined);
+    const ending = activeCall.kind === "meeting"
+      ? endMeeting(activeCall.call.conversationId ?? "")
+      : endCall(activeCall.call.callId);
+    await ending.catch(() => undefined);
     setActiveCall(null);
   }, [activeCall]);
 
@@ -179,9 +203,17 @@ export const CommsHubScreen: React.FC = () => {
               <Text style={styles.link}>‹ Inbox</Text>
             </TouchableOpacity>
             <Text style={styles.conversationTitle}>{detail?.title ?? detail?.type ?? "Conversation"}</Text>
-            <TouchableOpacity testID="start-call" onPress={handleStartCall}>
-              <Text style={styles.link}>Call</Text>
-            </TouchableOpacity>
+            <View style={styles.headerActions}>
+              <TouchableOpacity testID="start-call" onPress={() => handleStartCall("AUDIO")}>
+                <Text style={styles.link}>Call</Text>
+              </TouchableOpacity>
+              <TouchableOpacity testID="start-video" onPress={() => handleStartCall("VIDEO")}>
+                <Text style={styles.link}>Video</Text>
+              </TouchableOpacity>
+              <TouchableOpacity testID="start-meeting" onPress={handleStartMeeting}>
+                <Text style={styles.link}>Meet</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           <ScrollView testID="message-list" style={styles.flex}>
@@ -218,6 +250,7 @@ const styles = StyleSheet.create({
   conversationRow: { flexDirection: "row", alignItems: "center", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#E5E7EB" },
   conversationTitle: { fontWeight: "600" },
   conversationHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 8 },
+  headerActions: { flexDirection: "row", gap: 12 },
   messageRow: { paddingVertical: 4 },
   sender: { fontSize: 10, color: "#6B7280" },
   composer: { flexDirection: "row", alignItems: "center", gap: 8, paddingTop: 8 },

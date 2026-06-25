@@ -102,6 +102,11 @@ public class KhulumaMobileController {
         return relay(khuluma.post("/conversations/" + id + "/meeting/join", objectMapper.createObjectNode()));
     }
 
+    @PostMapping("/conversations/{id}/meeting/end")
+    public ResponseEntity<JsonNode> endMeeting(@PathVariable String id) {
+        return relay(khuluma.post("/conversations/" + id + "/meeting/end", objectMapper.createObjectNode()));
+    }
+
     @PostMapping("/calls")
     public ResponseEntity<JsonNode> startCall(@RequestBody JsonNode body) {
         policy.requireCallActor();
