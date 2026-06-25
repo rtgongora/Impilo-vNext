@@ -18,6 +18,8 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
 import java.time.OffsetDateTime;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -120,14 +122,20 @@ public class ReportService {
         return r;
     }
 
-    /** Flag a result as critical with a reason; emits the critical event for escalation. */
+    /**
+     * Flag a result as critical with a reason; emits an enriched {@code RESULT_CRITICAL} event
+     * (carrying the order's tenant, requester, patient, and accession) so downstream consumers
+     * (notifications/escalation) can alert the requester without a second lookup.
+     */
     @Transactional
     public ResultEntity flagCritical(UUID resultId, String reason) {
         ResultEntity r = load(resultId);
         r.setCritical(true);
         r.setCriticalReason(reason);
         r = resultRepository.save(r);
-        publishEvent(r, "RESULT_CRITICAL");
+
+        OrderEntity order = stateMachine.getOrder(r.getOrderId());
+        publishCriticalEvent(order, r, "RESULT_CRITICAL");
         log.info("Result flagged critical: resultId={}, orderId={}", resultId, r.getOrderId());
         return r;
     }
@@ -215,6 +223,42 @@ public class ReportService {
             return;
         }
         imagingWorkflowService.transition(order.getOrderId(), target, "report lifecycle");
+    }
+
+    /**
+     * Build the enriched critical-result event payload — order context (tenant/requester/patient/
+     * accession) plus the critical reason — shared by initial flagging and escalation so consumers
+     * see a consistent shape.
+     */
+    public static Map<String, Object> criticalPayload(OrderEntity order, ResultEntity r) {
+        Map<String, Object> p = new LinkedHashMap<>();
+        p.put("resultId", r.getResultId() != null ? r.getResultId().toString() : null);
+        p.put("orderId", order.getOrderId());
+        p.put("tenantId", order.getTenantId() != null ? order.getTenantId().toString() : null);
+        p.put("patientCpid", order.getPatientCpid());
+        p.put("requesterId", order.getReferringProviderId() != null
+                ? order.getReferringProviderId() : order.getPlacedBy());
+        p.put("placedBy", order.getPlacedBy());
+        p.put("referringProviderId", order.getReferringProviderId());
+        p.put("accessionNumber", order.getAccessionNumber());
+        p.put("criticalReason", r.getCriticalReason());
+        p.put("reportStatus", r.getReportStatus() != null ? r.getReportStatus().name() : null);
+        p.put("reportedBy", r.getReportedBy());
+        return p;
+    }
+
+    private void publishCriticalEvent(OrderEntity order, ResultEntity r, String eventType) {
+        try {
+            EventOutboxEntity event = new EventOutboxEntity();
+            event.setAggregateType("RESULT");
+            event.setAggregateId(r.getResultId() != null ? r.getResultId().toString() : r.getOrderId());
+            event.setEventType(eventType);
+            event.setPayload(objectMapper.writeValueAsString(criticalPayload(order, r)));
+            event.setTenantId(order.getTenantId());
+            outboxRepository.save(event);
+        } catch (Exception e) {
+            log.error("Failed to write critical outbox event {}: {}", eventType, e.getMessage(), e);
+        }
     }
 
     private void publishEvent(ResultEntity r, String eventType) {

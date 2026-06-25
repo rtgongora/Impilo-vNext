@@ -82,6 +82,9 @@ public class ResultEntity {
     @Column(name = "version", nullable = false)
     private int version = 1;
 
+    @Column(name = "escalated_at")
+    private OffsetDateTime escalatedAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -143,6 +146,9 @@ public class ResultEntity {
 
     public int getVersion() { return version; }
     public void setVersion(int version) { this.version = version; }
+
+    public OffsetDateTime getEscalatedAt() { return escalatedAt; }
+    public void setEscalatedAt(OffsetDateTime escalatedAt) { this.escalatedAt = escalatedAt; }
 
     public OffsetDateTime getCreatedAt() { return createdAt; }
 }

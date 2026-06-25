@@ -36,4 +36,11 @@ public interface ResultRepository extends JpaRepository<ResultEntity, UUID> {
             ORDER BY r.createdAt ASC
             """)
     List<ResultEntity> criticalUnacknowledged(@Param("tenantId") UUID tenantId);
+
+    /**
+     * Critical results across all tenants that remain unacknowledged and un-escalated past the ack
+     * threshold — drives the escalation scheduler (which marks {@code escalatedAt} to fire once).
+     */
+    List<ResultEntity> findByIsCriticalTrueAndAcknowledgedAtIsNullAndEscalatedAtIsNullAndCreatedAtBefore(
+            java.time.OffsetDateTime threshold);
 }

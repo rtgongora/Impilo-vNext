@@ -166,6 +166,7 @@ class ReportServiceTest {
             r.setResultId(UUID.randomUUID());
             r.setOrderId(ORDER_ID);
             when(resultRepository.findById(r.getResultId())).thenReturn(Optional.of(r));
+            when(stateMachine.getOrder(ORDER_ID)).thenReturn(order(OrderType.LAB, null));
             stubSaveReturnsWithId();
 
             ResultEntity flagged = service.flagCritical(r.getResultId(), "K+ 7.1");
