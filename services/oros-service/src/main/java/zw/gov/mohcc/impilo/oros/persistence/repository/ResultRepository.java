@@ -23,6 +23,9 @@ public interface ResultRepository extends JpaRepository<ResultEntity, UUID> {
     /** Highest-version result for an order, regardless of status (head of the version chain). */
     Optional<ResultEntity> findFirstByOrderIdOrderByVersionDesc(String orderId);
 
+    /** Full version chain for an order, newest version first (reporting history view). */
+    List<ResultEntity> findByOrderIdOrderByVersionDescCreatedAtDesc(String orderId);
+
     /**
      * Critical results in the tenant that have not yet been acknowledged (joined to their order for
      * tenant scoping, since results carry no tenant column).

@@ -101,6 +101,45 @@ public class DiagnosticsExperienceController {
         return proxy(requestId, correlationId, () -> orosClient.resultsInbox(requester));
     }
 
+    private static final java.util.Set<String> REPORT_ACTIONS =
+            java.util.Set.of("preliminary", "final", "amend", "addendum");
+
+    /** Author/amend a report for an order (action = preliminary|final|amend|addendum). */
+    @PostMapping("/results/{orderId}/report/{action}")
+    public ResponseEntity<Map<String, Object>> report(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String orderId,
+            @PathVariable String action,
+            @RequestBody Map<String, Object> body) {
+        if (!REPORT_ACTIONS.contains(action)) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", Map.of("code", "BAD_ACTION", "message", "unknown report action: " + action),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+        return proxy(requestId, correlationId, () -> orosClient.postReport(orderId, action, body));
+    }
+
+    /** Release a report version. */
+    @PostMapping("/results/{resultId}/release")
+    public ResponseEntity<Map<String, Object>> releaseReport(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String resultId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        String note = body != null && body.get("note") != null ? body.get("note").toString() : null;
+        return proxy(requestId, correlationId, () -> orosClient.releaseReport(resultId, note));
+    }
+
+    /** Full report version chain for an order. */
+    @GetMapping("/results/{orderId}/versions")
+    public ResponseEntity<Map<String, Object>> reportVersions(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String orderId) {
+        return proxy(requestId, correlationId, () -> orosClient.orderReportVersions(orderId));
+    }
+
     /** Acknowledge a critical result. */
     @PostMapping("/results/{resultId}/critical/ack")
     public ResponseEntity<Map<String, Object>> acknowledgeCritical(

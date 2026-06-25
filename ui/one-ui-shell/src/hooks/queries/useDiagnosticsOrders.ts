@@ -193,14 +193,77 @@ export interface DiagnosticResult {
   orderId: string;
   reportStatus: string | null;
   version: number;
+  supersedesResultId: string | null;
+  impression: string | null;
+  recommendations: string | null;
   critical: boolean;
   criticalReason: string | null;
   reportedBy: string | null;
+  validatedBy: string | null;
+  releasedAt: string | null;
   acknowledgedAt: string | null;
   createdAt: string | null;
 }
 
 type CriticalResultsResponse = ApiResponse<DiagnosticResult[]>;
+
+export type ReportAction = "preliminary" | "final" | "amend" | "addendum";
+
+export interface AuthorReportInput {
+  orderId: string;
+  action: ReportAction;
+  summary?: string;
+  impression?: string;
+  recommendations?: string;
+  reason?: string;
+}
+
+/** Full report version chain for an order (newest first). */
+export function useOrderReportVersions(orderId?: string) {
+  return useQuery<ApiResponse<DiagnosticResult[]>>({
+    queryKey: ["diagnostics-report-versions", orderId ?? null],
+    queryFn: () =>
+      apiClient.get<ApiResponse<DiagnosticResult[]>>(
+        `/internal/v1/diagnostics/results/${encodeURIComponent(orderId!)}/versions`,
+      ),
+    enabled: !!orderId,
+    staleTime: 5_000,
+  });
+}
+
+/** Author or amend a report (preliminary/final/amend/addendum). */
+export function useAuthorReport() {
+  const queryClient = useQueryClient();
+  return useMutation<DiagnosticResult, unknown, AuthorReportInput>({
+    mutationFn: async ({ orderId, action, summary, impression, recommendations, reason }) => {
+      const body: Record<string, unknown> = { impression, recommendations };
+      if (summary) body.summary = summary;
+      if (action === "amend" || action === "addendum") body.reason = reason;
+      const res = await apiClient.post<ApiResponse<DiagnosticResult>>(
+        `/internal/v1/diagnostics/results/${encodeURIComponent(orderId)}/report/${action}`,
+        body,
+      );
+      return res.data;
+    },
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["diagnostics-report-versions", vars.orderId] });
+      queryClient.invalidateQueries({ queryKey: ["diagnostics-orders"] });
+    },
+  });
+}
+
+/** Release a report version to requesters. */
+export function useReleaseReport() {
+  const queryClient = useQueryClient();
+  return useMutation<unknown, unknown, { resultId: string; orderId: string; note?: string }>({
+    mutationFn: ({ resultId, note }) =>
+      apiClient.post(`/internal/v1/diagnostics/results/${encodeURIComponent(resultId)}/release`,
+        note ? { note } : {}),
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["diagnostics-report-versions", vars.orderId] });
+    },
+  });
+}
 
 /** Unacknowledged critical results (critical-results dashboard). */
 export function useCriticalUnacknowledged() {

@@ -14,6 +14,9 @@ import {
   useIntegrationStatus,
   useImagingWorklist,
   useImagingTransition,
+  useOrderReportVersions,
+  useAuthorReport,
+  useReleaseReport,
 } from "../useDiagnosticsOrders";
 
 const { get, post } = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }));
@@ -175,5 +178,37 @@ describe("useDiagnosticsOrders", () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(post).toHaveBeenCalledWith("/internal/v1/diagnostics/orders/ORD-1/imaging-transition", { target: "ACCEPTED" });
+  });
+
+  it("report versions hits the versions endpoint when an order is set", async () => {
+    get.mockResolvedValue({ data: [{ resultId: "r-2", version: 2, reportStatus: "FINAL" }] });
+
+    const { result } = renderHook(() => useOrderReportVersions("ORD-1"), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(get).toHaveBeenCalledWith("/internal/v1/diagnostics/results/ORD-1/versions");
+  });
+
+  it("author report posts to the report action endpoint (amend carries a reason)", async () => {
+    post.mockResolvedValue({ data: { resultId: "r-3", reportStatus: "AMENDED", version: 3 } });
+
+    const { result } = renderHook(() => useAuthorReport(), { wrapper });
+    result.current.mutate({ orderId: "ORD-1", action: "amend", reason: "typo", impression: "revised" });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(post).toHaveBeenCalledWith(
+      "/internal/v1/diagnostics/results/ORD-1/report/amend",
+      expect.objectContaining({ reason: "typo", impression: "revised" }),
+    );
+  });
+
+  it("release report posts to the release endpoint", async () => {
+    post.mockResolvedValue({ data: { resultId: "r-2" } });
+
+    const { result } = renderHook(() => useReleaseReport(), { wrapper });
+    result.current.mutate({ resultId: "r-2", orderId: "ORD-1" });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(post).toHaveBeenCalledWith("/internal/v1/diagnostics/results/r-2/release", {});
   });
 });

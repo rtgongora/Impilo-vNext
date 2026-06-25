@@ -324,6 +324,36 @@ public class OrosServiceClient {
     }
 
     /**
+     * Author or amend a report for an order ({@code action} = preliminary|final|amend|addendum).
+     */
+    public JsonNode postReport(String orderId, String action, Map<String, Object> body) {
+        String url = baseUrl + "/v1/results/" + orderId + "/" + action;
+        log.info("OROS: Report {} for order={}", action, orderId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Release a report version to requesters.
+     */
+    public JsonNode releaseReport(String resultId, String note) {
+        String url = baseUrl + "/v1/results/" + resultId + "/release";
+        Map<String, Object> body = note != null ? Map.of("note", note) : Map.of();
+        log.info("OROS: Releasing report result={}", resultId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Full report version chain for an order (newest first).
+     */
+    public JsonNode orderReportVersions(String orderId) {
+        String url = baseUrl + "/v1/results/" + orderId + "/versions";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * Acknowledge a critical result (closes the critical loop).
      */
     public JsonNode acknowledgeCriticalResult(String resultId, String note) {

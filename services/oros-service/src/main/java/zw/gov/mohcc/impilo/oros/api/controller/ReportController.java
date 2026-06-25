@@ -128,6 +128,16 @@ public class ReportController {
         return ResponseEntity.ok(ApiResponse.ok(ref, correlationId));
     }
 
+    /** Full report version chain for an order (newest first). */
+    @GetMapping("/{orderId}/versions")
+    public ResponseEntity<ApiResponse<List<ReportDto>>> versions(@PathVariable String orderId) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        List<ReportDto> versions = reportService.versions(orderId).stream()
+                .map(ReportDto::from)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.ok(versions, correlationId));
+    }
+
     /** Requester results inbox: orders with results ready for review. */
     @GetMapping("/inbox")
     public ResponseEntity<ApiResponse<List<OrderSummaryDto>>> inbox(

@@ -140,6 +140,11 @@ public class ReportService {
         return r;
     }
 
+    /** Full version chain for an order (newest first) — the reporting history view. */
+    public java.util.List<ResultEntity> versions(String orderId) {
+        return resultRepository.findByOrderIdOrderByVersionDescCreatedAtDesc(orderId);
+    }
+
     /** Acknowledge a (normal or critical) result; closes the result loop. */
     @Transactional
     public ResultEntity acknowledge(UUID resultId, String note) {

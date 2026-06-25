@@ -203,6 +203,17 @@ class ReportServiceTest {
     }
 
     @Test
+    @DisplayName("versions returns the full chain newest-first")
+    void versionsReturnsChain() {
+        ResultEntity v2 = new ResultEntity(); v2.setVersion(2); v2.setOrderId(ORDER_ID);
+        ResultEntity v1 = new ResultEntity(); v1.setVersion(1); v1.setOrderId(ORDER_ID);
+        when(resultRepository.findByOrderIdOrderByVersionDescCreatedAtDesc(ORDER_ID))
+                .thenReturn(java.util.List.of(v2, v1));
+
+        assertThat(service.versions(ORDER_ID)).containsExactly(v2, v1);
+    }
+
+    @Test
     @DisplayName("imaging final report best-effort syncs imaging state when the guard permits")
     void imagingSyncOnFinal() {
         try (MockedStatic<TrustContextHolder> h = mockStatic(TrustContextHolder.class)) {

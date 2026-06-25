@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-25T08:44:52.547Z",
+  "generatedAt": "2026-06-25T09:11:49.321Z",
   "branch": "intake/oros-diagnostics-journey",
   "registryDrift": {
     "unregisteredModules": [],
@@ -9,7 +9,7 @@
     "totalServices": 92,
     "totalLibraries": 12,
     "totalUiWorkspaces": 24,
-    "bffRouteCount": 2174,
+    "bffRouteCount": 2177,
     "contractCount": 102,
     "byProductStatus": {
       "internal-only": 24,
@@ -2835,7 +2835,7 @@
         "repositories": 2,
         "serviceLayer": 41,
         "controllers": 258,
-        "routes": 2174,
+        "routes": 2177,
         "stubRoutes": 0,
         "contractOperations": 1537,
         "contractViolations": 0,
@@ -6691,12 +6691,12 @@
         "repositories": 12,
         "serviceLayer": 16,
         "controllers": 14,
-        "routes": 80,
+        "routes": 81,
         "stubRoutes": 0,
         "contractOperations": 58,
         "contractViolations": 0,
         "bffClients": 13,
-        "uiReferences": 62,
+        "uiReferences": 63,
         "mobileReferences": 13,
         "tests": 18
       },
@@ -6739,6 +6739,7 @@
         "ui/one-ui-shell/src/app/diagnostics/orders/new/page.tsx",
         "ui/one-ui-shell/src/app/diagnostics/orders/page.tsx",
         "ui/one-ui-shell/src/app/diagnostics/orders/route/page.tsx",
+        "ui/one-ui-shell/src/app/diagnostics/reporting/page.tsx",
         "ui/one-ui-shell/src/app/diagnostics/results-inbox/page.tsx",
         "ui/one-ui-shell/src/app/diagnostics/worklist/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/encounter/[encounterId]/page.test.tsx",
@@ -6748,8 +6749,7 @@
         "ui/one-ui-shell/src/app/ehr/[patientId]/results/page.test.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/results/page.tsx",
         "ui/one-ui-shell/src/app/enterprise/oversight/page.tsx",
-        "ui/one-ui-shell/src/app/imaging/facility/page.tsx",
-        "ui/one-ui-shell/src/app/imaging/worklist/page.tsx"
+        "ui/one-ui-shell/src/app/imaging/facility/page.tsx"
       ],
       "mobilePaths": [
         "provider-app:apps/mobile/provider-app/src/__tests__/integration/ClinicalWriteJourneyContracts.test.ts",
@@ -7707,7 +7707,7 @@
         "contractOperations": 5,
         "contractViolations": 0,
         "bffClients": 6,
-        "uiReferences": 37,
+        "uiReferences": 38,
         "mobileReferences": 3,
         "tests": 8
       },
@@ -7739,6 +7739,7 @@
         "ui/one-ui-shell/src/app/data-intelligence/page.tsx",
         "ui/one-ui-shell/src/app/data-intelligence/pipelines/page.tsx",
         "ui/one-ui-shell/src/app/data-intelligence/reports/page.tsx",
+        "ui/one-ui-shell/src/app/diagnostics/reporting/page.tsx",
         "ui/one-ui-shell/src/app/enterprise/oversight/page.tsx",
         "ui/one-ui-shell/src/app/finance/commerce-integrations/page.tsx",
         "ui/one-ui-shell/src/app/finance/reports/page.tsx",
@@ -7752,8 +7753,7 @@
         "ui/one-ui-shell/src/app/reports/page.tsx",
         "ui/one-ui-shell/src/app/workspace/aggregate/page.tsx",
         "ui/one-ui-shell/src/components/clinical/ClinicalReferences.tsx",
-        "ui/one-ui-shell/src/components/enterprise/EnterpriseResourceDashboard.tsx",
-        "ui/one-ui-shell/src/components/navigation/ExperienceSidebar.tsx"
+        "ui/one-ui-shell/src/components/enterprise/EnterpriseResourceDashboard.tsx"
       ],
       "mobilePaths": [
         "provider-app:apps/mobile/provider-app/src/screens/provider/OpsReportsHubScreen.tsx",
@@ -8313,7 +8313,7 @@
         "contractOperations": 7,
         "contractViolations": 0,
         "bffClients": 34,
-        "uiReferences": 401,
+        "uiReferences": 402,
         "mobileReferences": 52,
         "tests": 6
       },
@@ -29634,6 +29634,65 @@
       ],
       "backingSignals": [
         "apiClient-dynamic"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/diagnostics/reporting",
+      "pageTitle": "Report Authoring",
+      "zone": "lab",
+      "pageFile": "ui/one-ui-shell/src/app/diagnostics/reporting/page.tsx",
+      "bffPaths": [
+        "/internal/v1/diagnostics/orders/draft",
+        "/internal/v1/diagnostics/reconcile-summary",
+        "/internal/v1/diagnostics/critical-unacknowledged",
+        "/internal/v1/diagnostics/turnaround",
+        "/internal/v1/diagnostics/integration-status",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "inline-bff-reference"
       ],
       "gatewayPaths": [],
       "mockStubHits": [

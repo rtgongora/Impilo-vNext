@@ -1,7 +1,7 @@
 # Product Truth — Frontend-to-Backend Traceability
 
-> Generated: 2026-06-25T08:44:52.547Z
-> Web surfaces: **623** | Mobile screens: **174**
+> Generated: 2026-06-25T09:11:49.321Z
+> Web surfaces: **624** | Mobile screens: **174**
 
 ## Web routes (one-ui-shell)
 
@@ -339,6 +339,7 @@
 | /diagnostics/results-inbox | Results Inbox | lab | yes | no | yes | yes | yes | — |
 | /diagnostics/critical-queue | Critical Results | lab | yes | no | yes | yes | yes | — |
 | /diagnostics/worklist | Imaging Worklist | lab | yes | no | yes | yes | yes | — |
+| /diagnostics/reporting | Report Authoring | lab | yes | no | yes | yes | yes | — |
 | /operations/diagnostics-reconciliation | Diagnostics Reconciliation | lab | yes | no | yes | yes | yes | — |
 | /admin/integrations | Integration Status | admin | yes | no | yes | yes | yes | — |
 | /imaging/facility | Facility Imaging Dashboard | lab | yes | no | yes | yes | yes | — |
@@ -506,7 +507,6 @@
 | /work/administration-governance | Administration & Governance | operations | yes | no | yes | no | yes | — |
 | /work/administration-governance/access-requests | Access Requests | operations | yes | no | yes | yes | yes | — |
 | /work/administration-governance/access-review | Access Review | operations | yes | no | yes | yes | yes | — |
-| /work/administration-governance/access-review/[subjectId] | Access Review | operations | yes | no | yes | yes | yes | — |
 
 ## Mobile screens
 
