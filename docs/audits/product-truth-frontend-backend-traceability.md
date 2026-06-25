@@ -1,7 +1,7 @@
 # Product Truth — Frontend-to-Backend Traceability
 
-> Generated: 2026-06-25T08:37:56.292Z
-> Web surfaces: **620** | Mobile screens: **174**
+> Generated: 2026-06-25T08:41:44.226Z
+> Web surfaces: **622** | Mobile screens: **174**
 
 ## Web routes (one-ui-shell)
 
@@ -338,6 +338,8 @@
 | /diagnostics/orders/route | Route Order | lab | yes | no | yes | yes | yes | — |
 | /diagnostics/results-inbox | Results Inbox | lab | yes | no | yes | yes | yes | — |
 | /diagnostics/critical-queue | Critical Results | lab | yes | no | yes | yes | yes | — |
+| /operations/diagnostics-reconciliation | Diagnostics Reconciliation | lab | yes | no | yes | yes | yes | — |
+| /admin/integrations | Integration Status | admin | yes | no | yes | yes | yes | — |
 | /imaging/facility | Facility Imaging Dashboard | lab | yes | no | yes | yes | yes | — |
 | /lab/results | Results Review | lab | yes | no | yes | yes | yes | — |
 | /lab/catalog | Test Catalog | lab | yes | no | yes | no | yes | — |
@@ -505,8 +507,6 @@
 | /work/administration-governance/access-review | Access Review | operations | yes | no | yes | yes | yes | — |
 | /work/administration-governance/access-review/[subjectId] | Access Review | operations | yes | no | yes | yes | yes | — |
 | /work/administration-governance/audit | Audit | operations | yes | no | yes | yes | yes | — |
-| /work/administration-governance/gdhcn-readiness | GDHCN Readiness | operations | yes | no | yes | yes | yes | — |
-| /work/administration-governance/municipal | Municipal | operations | yes | no | yes | yes | yes | — |
 
 ## Mobile screens
 

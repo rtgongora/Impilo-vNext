@@ -116,6 +116,14 @@ public class DiagnosticsExperienceController {
         return proxy(requestId, correlationId, orosClient::reconcileDiagnosticsSummary);
     }
 
+    /** Imaging workload/turnaround distribution. */
+    @GetMapping("/turnaround")
+    public ResponseEntity<Map<String, Object>> turnaround(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(requestId, correlationId, orosClient::turnaround);
+    }
+
     /** Honest configured/not-configured integration status. */
     @GetMapping("/integration-status")
     public ResponseEntity<Map<String, Object>> integrationStatus(

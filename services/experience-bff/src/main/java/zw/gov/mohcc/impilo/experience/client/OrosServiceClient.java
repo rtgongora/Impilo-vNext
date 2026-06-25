@@ -331,6 +331,15 @@ public class OrosServiceClient {
     }
 
     /**
+     * Imaging workload/turnaround distribution by state.
+     */
+    public JsonNode turnaround() {
+        String url = baseUrl + "/v1/metrics/turnaround";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * Honest external-integration status for diagnostics adapters.
      */
     public JsonNode integrationStatus() {

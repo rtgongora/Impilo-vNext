@@ -10,6 +10,8 @@ import {
   useRouteDiagnosticOrder,
   useCriticalUnacknowledged,
   useAcknowledgeCritical,
+  useDiagnosticsTurnaround,
+  useIntegrationStatus,
 } from "../useDiagnosticsOrders";
 
 const { get, post } = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }));
@@ -132,5 +134,25 @@ describe("useDiagnosticsOrders", () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(post).toHaveBeenCalledWith("/internal/v1/diagnostics/results/r-1/critical/ack", {});
+  });
+
+  it("turnaround hits the metrics endpoint", async () => {
+    get.mockResolvedValue({ data: { totalImaging: 5, byState: { RECEIVED: 3, FINAL_REPORT: 2 } } });
+
+    const { result } = renderHook(() => useDiagnosticsTurnaround(), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.data.totalImaging).toBe(5);
+    expect(get).toHaveBeenCalledWith("/internal/v1/diagnostics/turnaround");
+  });
+
+  it("integration status hits the integration-status endpoint", async () => {
+    get.mockResolvedValue({ data: [{ adapter: "HL7_ORM_INBOUND", configured: false }] });
+
+    const { result } = renderHook(() => useIntegrationStatus(), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.data[0].configured).toBe(false);
+    expect(get).toHaveBeenCalledWith("/internal/v1/diagnostics/integration-status");
   });
 });

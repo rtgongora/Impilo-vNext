@@ -1,6 +1,6 @@
 # Product Truth — Backend-to-UI Traceability
 
-> Generated: 2026-06-25T08:37:56.292Z
+> Generated: 2026-06-25T08:41:44.226Z
 
 For each service: backend capabilities → API → BFF → UI → mobile → persistence.
 
@@ -604,10 +604,10 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 
 | # | Question | Answer |
 |---|----------|--------|
-| 1 | Real backend capabilities? | Yes (258 controllers, 2172 routes) |
+| 1 | Real backend capabilities? | Yes (258 controllers, 2173 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: experience-bff.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (0 clients) |
-| 4 | Visible in UI? | Yes (167 refs) |
+| 4 | Visible in UI? | Yes (169 refs) |
 | 5 | Visible on mobile? | Yes (54 refs) |
 | 6 | Fake/partial/disconnected? | Yes — review |
 | 7 | Backend without UI? | No |
@@ -1438,7 +1438,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (14 controllers, 80 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: oros.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (13 clients) |
-| 4 | Visible in UI? | Yes (59 refs) |
+| 4 | Visible in UI? | Yes (61 refs) |
 | 5 | Visible on mobile? | Yes (13 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
@@ -1447,11 +1447,11 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 10 | Fixture-only flows? | No |
 
 **UI references (sample):**
+- `ui/one-ui-shell/src/app/admin/integrations/page.tsx`
 - `ui/one-ui-shell/src/app/admin/system-monitor/page.tsx`
 - `ui/one-ui-shell/src/app/clinical/inpatient/rounds/page.tsx`
 - `ui/one-ui-shell/src/app/developer/api-catalog/page.tsx`
 - `ui/one-ui-shell/src/app/developer/sandbox/page.tsx`
-- `ui/one-ui-shell/src/app/diagnostics/critical-queue/page.tsx`
 
 ## pacs-adapter-service
 

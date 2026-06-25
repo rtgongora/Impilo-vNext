@@ -1,6 +1,6 @@
 # Full Product Truth Recovery Report
 
-> Generated: 2026-06-25T08:37:56.292Z
+> Generated: 2026-06-25T08:41:44.226Z
 > Branch: `intake/oros-diagnostics-journey`
 
 ## Executive summary
@@ -10,9 +10,9 @@
 | Total services audited | 92 |
 | Backend services | 92 |
 | Shared libraries | 12 |
-| Frontend surfaces (routes) | 620 |
+| Frontend surfaces (routes) | 622 |
 | Mobile screens | 174 |
-| BFF route handlers | 2172 |
+| BFF route handlers | 2173 |
 | OpenAPI contracts | 102 |
 | Services with DB persistence | 92 |
 | **Phase 6 complete (user-facing + documented internal)** | **90** |

@@ -212,6 +212,38 @@ export function useCriticalUnacknowledged() {
   });
 }
 
+export interface TurnaroundMetrics {
+  totalImaging: number;
+  byState: Record<string, number>;
+}
+
+/** Imaging workload/turnaround distribution by state. */
+export function useDiagnosticsTurnaround() {
+  return useQuery<ApiResponse<TurnaroundMetrics>>({
+    queryKey: ["diagnostics-turnaround"],
+    queryFn: () => apiClient.get<ApiResponse<TurnaroundMetrics>>("/internal/v1/diagnostics/turnaround"),
+    staleTime: 30_000,
+  });
+}
+
+export interface IntegrationStatusEntry {
+  adapter: string;
+  category: string;
+  direction: string;
+  configured: boolean;
+  detail: string;
+}
+
+/** Honest configured/not-configured integration-adapter status. */
+export function useIntegrationStatus() {
+  return useQuery<ApiResponse<IntegrationStatusEntry[]>>({
+    queryKey: ["diagnostics-integration-status"],
+    queryFn: () =>
+      apiClient.get<ApiResponse<IntegrationStatusEntry[]>>("/internal/v1/diagnostics/integration-status"),
+    staleTime: 60_000,
+  });
+}
+
 /** Acknowledge a critical result, closing the critical loop. */
 export function useAcknowledgeCritical() {
   const queryClient = useQueryClient();

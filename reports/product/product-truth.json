@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-25T08:37:56.292Z",
+  "generatedAt": "2026-06-25T08:41:44.226Z",
   "branch": "intake/oros-diagnostics-journey",
   "registryDrift": {
     "unregisteredModules": [],
@@ -9,7 +9,7 @@
     "totalServices": 92,
     "totalLibraries": 12,
     "totalUiWorkspaces": 24,
-    "bffRouteCount": 2172,
+    "bffRouteCount": 2173,
     "contractCount": 102,
     "byProductStatus": {
       "internal-only": 24,
@@ -2835,12 +2835,12 @@
         "repositories": 2,
         "serviceLayer": 41,
         "controllers": 258,
-        "routes": 2172,
+        "routes": 2173,
         "stubRoutes": 0,
         "contractOperations": 1537,
         "contractViolations": 0,
         "bffClients": 0,
-        "uiReferences": 167,
+        "uiReferences": 169,
         "mobileReferences": 54,
         "tests": 164
       },
@@ -2865,6 +2865,7 @@
         "ui/one-ui-shell/src/app/admin/data-export/page.tsx",
         "ui/one-ui-shell/src/app/admin/federation/page.tsx",
         "ui/one-ui-shell/src/app/admin/integration-status/page.tsx",
+        "ui/one-ui-shell/src/app/admin/integrations/page.tsx",
         "ui/one-ui-shell/src/app/admin/keys/page.tsx",
         "ui/one-ui-shell/src/app/admin/sidecar-retirement/page.tsx",
         "ui/one-ui-shell/src/app/admin/system-monitor/page.tsx",
@@ -2878,8 +2879,7 @@
         "ui/one-ui-shell/src/app/diagnostics/results-inbox/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/growth-chart/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/ips/page.test.tsx",
-        "ui/one-ui-shell/src/app/ehr/[patientId]/ips/page.tsx",
-        "ui/one-ui-shell/src/app/ehr/[patientId]/orders/page.test.tsx"
+        "ui/one-ui-shell/src/app/ehr/[patientId]/ips/page.tsx"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/walletService.test.ts",
@@ -6696,7 +6696,7 @@
         "contractOperations": 58,
         "contractViolations": 0,
         "bffClients": 13,
-        "uiReferences": 59,
+        "uiReferences": 61,
         "mobileReferences": 13,
         "tests": 18
       },
@@ -6730,6 +6730,7 @@
         "oros→yml-base-url"
       ],
       "uiPaths": [
+        "ui/one-ui-shell/src/app/admin/integrations/page.tsx",
         "ui/one-ui-shell/src/app/admin/system-monitor/page.tsx",
         "ui/one-ui-shell/src/app/clinical/inpatient/rounds/page.tsx",
         "ui/one-ui-shell/src/app/developer/api-catalog/page.tsx",
@@ -6748,8 +6749,7 @@
         "ui/one-ui-shell/src/app/enterprise/oversight/page.tsx",
         "ui/one-ui-shell/src/app/imaging/facility/page.tsx",
         "ui/one-ui-shell/src/app/imaging/worklist/page.tsx",
-        "ui/one-ui-shell/src/app/lab/catalog/page.tsx",
-        "ui/one-ui-shell/src/app/lab/page.test.tsx"
+        "ui/one-ui-shell/src/app/lab/catalog/page.tsx"
       ],
       "mobilePaths": [
         "provider-app:apps/mobile/provider-app/src/__tests__/integration/ClinicalWriteJourneyContracts.test.ts",
@@ -29333,6 +29333,8 @@
         "/internal/v1/diagnostics/orders/draft",
         "/internal/v1/diagnostics/reconcile-summary",
         "/internal/v1/diagnostics/critical-unacknowledged",
+        "/internal/v1/diagnostics/turnaround",
+        "/internal/v1/diagnostics/integration-status",
         "/internal/v1/identity/linked-ids",
         "/internal/v1/session/experience"
       ],
@@ -29390,6 +29392,8 @@
         "/internal/v1/diagnostics/orders/draft",
         "/internal/v1/diagnostics/reconcile-summary",
         "/internal/v1/diagnostics/critical-unacknowledged",
+        "/internal/v1/diagnostics/turnaround",
+        "/internal/v1/diagnostics/integration-status",
         "/internal/v1/identity/linked-ids",
         "/internal/v1/session/experience"
       ],
@@ -29447,6 +29451,8 @@
         "/internal/v1/diagnostics/orders/draft",
         "/internal/v1/diagnostics/reconcile-summary",
         "/internal/v1/diagnostics/critical-unacknowledged",
+        "/internal/v1/diagnostics/turnaround",
+        "/internal/v1/diagnostics/integration-status",
         "/internal/v1/identity/linked-ids",
         "/internal/v1/session/experience"
       ],
@@ -29504,6 +29510,8 @@
         "/internal/v1/diagnostics/orders/draft",
         "/internal/v1/diagnostics/reconcile-summary",
         "/internal/v1/diagnostics/critical-unacknowledged",
+        "/internal/v1/diagnostics/turnaround",
+        "/internal/v1/diagnostics/integration-status",
         "/internal/v1/identity/linked-ids",
         "/internal/v1/session/experience"
       ],
@@ -29560,6 +29568,124 @@
         "/internal/v1/diagnostics/orders/draft",
         "/internal/v1/diagnostics/reconcile-summary",
         "/internal/v1/diagnostics/critical-unacknowledged",
+        "/internal/v1/diagnostics/turnaround",
+        "/internal/v1/diagnostics/integration-status",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/operations/diagnostics-reconciliation",
+      "pageTitle": "Diagnostics Reconciliation",
+      "zone": "lab",
+      "pageFile": "ui/one-ui-shell/src/app/operations/diagnostics-reconciliation/page.tsx",
+      "bffPaths": [
+        "/internal/v1/diagnostics/orders/draft",
+        "/internal/v1/diagnostics/reconcile-summary",
+        "/internal/v1/diagnostics/critical-unacknowledged",
+        "/internal/v1/diagnostics/turnaround",
+        "/internal/v1/diagnostics/integration-status",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/admin/integrations",
+      "pageTitle": "Integration Status",
+      "zone": "admin",
+      "pageFile": "ui/one-ui-shell/src/app/admin/integrations/page.tsx",
+      "bffPaths": [
+        "/internal/v1/diagnostics/orders/draft",
+        "/internal/v1/diagnostics/reconcile-summary",
+        "/internal/v1/diagnostics/critical-unacknowledged",
+        "/internal/v1/diagnostics/turnaround",
+        "/internal/v1/diagnostics/integration-status",
         "/internal/v1/identity/linked-ids",
         "/internal/v1/session/experience"
       ],
