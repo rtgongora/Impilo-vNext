@@ -65,6 +65,23 @@ class AdminConfigServiceTest {
     }
 
     @Test
+    @DisplayName("service catalogue round-trips through the generic config store")
+    void serviceCatalogueRoundTrips() {
+        try (MockedStatic<TrustContextHolder> h = mockStatic(TrustContextHolder.class)) {
+            h.when(TrustContextHolder::require).thenReturn(ctx());
+            when(repository.findByTenantIdAndFacilityIdIsNullAndConfigType(TENANT_ID, AdminConfigService.SERVICE_CATALOGUE))
+                    .thenReturn(Optional.empty());
+            when(repository.save(any(AdminConfigEntity.class))).thenAnswer(i -> i.getArgument(0));
+
+            AdminConfigService service = new AdminConfigService(repository);
+            String stored = service.put(AdminConfigService.SERVICE_CATALOGUE, null,
+                    "{\"labs\":[{\"id\":\"lab-1\",\"specimenTypes\":[\"blood\"],\"onboarded\":true}]}");
+
+            assertThat(stored).contains("specimenTypes");
+        }
+    }
+
+    @Test
     @DisplayName("get falls back to tenant default and returns {} when nothing configured")
     void getFallsBackToEmpty() {
         try (MockedStatic<TrustContextHolder> h = mockStatic(TrustContextHolder.class)) {

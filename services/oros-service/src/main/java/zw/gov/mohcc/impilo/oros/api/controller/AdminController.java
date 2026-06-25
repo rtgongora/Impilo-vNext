@@ -71,6 +71,48 @@ public class AdminController {
         return write(AdminConfigService.CRITICAL_ESCALATION_RULES, facility, rules);
     }
 
+    /** Service catalogue & fulfilment directory (read). */
+    @GetMapping("/service-catalogue")
+    public ResponseEntity<ApiResponse<Object>> getServiceCatalogue(
+            @RequestParam(name = "facility", required = false) UUID facility) {
+        return read(AdminConfigService.SERVICE_CATALOGUE, facility);
+    }
+
+    @PutMapping("/service-catalogue")
+    public ResponseEntity<ApiResponse<Object>> putServiceCatalogue(
+            @RequestParam(name = "facility", required = false) UUID facility,
+            @RequestBody Map<String, Object> catalogue) {
+        return write(AdminConfigService.SERVICE_CATALOGUE, facility, catalogue);
+    }
+
+    /** Orderable test/procedure/service catalogue (read/write). */
+    @GetMapping("/orderable-catalogue")
+    public ResponseEntity<ApiResponse<Object>> getOrderableCatalogue(
+            @RequestParam(name = "facility", required = false) UUID facility) {
+        return read(AdminConfigService.ORDERABLE_CATALOGUE, facility);
+    }
+
+    @PutMapping("/orderable-catalogue")
+    public ResponseEntity<ApiResponse<Object>> putOrderableCatalogue(
+            @RequestParam(name = "facility", required = false) UUID facility,
+            @RequestBody Map<String, Object> catalogue) {
+        return write(AdminConfigService.ORDERABLE_CATALOGUE, facility, catalogue);
+    }
+
+    /** Specimen-type configuration (read/write). */
+    @GetMapping("/specimen-config")
+    public ResponseEntity<ApiResponse<Object>> getSpecimenConfig(
+            @RequestParam(name = "facility", required = false) UUID facility) {
+        return read(AdminConfigService.SPECIMEN_CONFIG, facility);
+    }
+
+    @PutMapping("/specimen-config")
+    public ResponseEntity<ApiResponse<Object>> putSpecimenConfig(
+            @RequestParam(name = "facility", required = false) UUID facility,
+            @RequestBody Map<String, Object> config) {
+        return write(AdminConfigService.SPECIMEN_CONFIG, facility, config);
+    }
+
     // ── helpers ──
 
     private ResponseEntity<ApiResponse<Object>> read(String type, UUID facility) {

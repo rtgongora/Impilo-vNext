@@ -21,6 +21,14 @@ public class AdminConfigService {
 
     public static final String ROUTING_RULES = "ROUTING_RULES";
     public static final String CRITICAL_ESCALATION_RULES = "CRITICAL_ESCALATION_RULES";
+    /** Service catalogue & fulfilment directory: imaging providers, labs, procedure units,
+     *  specialist/allied teams, blood bank — with capabilities, tests/procedures, specimen types,
+     *  modalities, hours, return method, onboarded + integration status, restrictions (spec §9). */
+    public static final String SERVICE_CATALOGUE = "SERVICE_CATALOGUE";
+    /** Test / procedure / service orderable catalogue (codes the order forms pick from). */
+    public static final String ORDERABLE_CATALOGUE = "ORDERABLE_CATALOGUE";
+    /** Specimen-type configuration (accepted specimen types, containers, handling). */
+    public static final String SPECIMEN_CONFIG = "SPECIMEN_CONFIG";
 
     private static final Logger log = LoggerFactory.getLogger(AdminConfigService.class);
 
