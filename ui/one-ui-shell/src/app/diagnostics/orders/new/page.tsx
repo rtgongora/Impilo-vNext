@@ -19,6 +19,8 @@ import {
 const ORDER_TYPES = ["IMAGING", "LAB", "PROCEDURE"] as const;
 const MODALITIES = ["XR", "US", "CT", "MRI", "MG", "FL", "DEXA", "ECG", "ECHO", "ENDO", "OTHER"] as const;
 const PRIORITIES = ["ROUTINE", "URGENT", "STAT", "ASAP"] as const;
+const SPECIMEN_TYPES = ["blood", "serum", "plasma", "urine", "CSF", "sputum", "swab", "stool", "tissue"] as const;
+const FASTING = ["UNKNOWN", "FASTING", "NON_FASTING"] as const;
 
 export default function CreateDiagnosticOrderPage() {
   const [patientCpid, setPatientCpid] = useState("");
@@ -27,12 +29,15 @@ export default function CreateDiagnosticOrderPage() {
   const [code, setCode] = useState("");
   const [modality, setModality] = useState<string>("XR");
   const [procedureCode, setProcedureCode] = useState("");
+  const [specimenType, setSpecimenType] = useState<string>("blood");
+  const [fasting, setFasting] = useState<string>("UNKNOWN");
   const [clinicalNotes, setClinicalNotes] = useState("");
   const [referringProviderId, setReferringProviderId] = useState("");
   const [created, setCreated] = useState<DiagnosticOrder | null>(null);
 
   const createMut = useCreateDiagnosticOrder();
   const isImaging = orderType === "IMAGING";
+  const isLab = orderType === "LAB";
   const canSubmit = patientCpid.trim().length > 0 && code.trim().length > 0 && !createMut.isPending;
 
   function submit(e: React.FormEvent) {
@@ -43,13 +48,16 @@ export default function CreateDiagnosticOrderPage() {
         patientCpid: patientCpid.trim(),
         orderType,
         priority,
-        clinicalNotes: clinicalNotes.trim() || undefined,
+        clinicalNotes:
+          (isLab && fasting !== "UNKNOWN" ? `Fasting: ${fasting}. ` : "") +
+            (clinicalNotes.trim() || "") || undefined,
         referringProviderId: referringProviderId.trim() || undefined,
         items: [
           {
             code: code.trim(),
             modality: isImaging ? modality : undefined,
             procedureCode: isImaging && procedureCode.trim() ? procedureCode.trim() : undefined,
+            specimenType: isLab ? specimenType : undefined,
           },
         ],
       },
@@ -93,6 +101,21 @@ export default function CreateDiagnosticOrderPage() {
               </Field>
               <Field label="Procedure code (optional)">
                 <input value={procedureCode} onChange={(e) => setProcedureCode(e.target.value)} className="impilo-pill-input w-full" aria-label="Procedure code" />
+              </Field>
+            </div>
+          )}
+
+          {isLab && (
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Specimen type">
+                <select value={specimenType} onChange={(e) => setSpecimenType(e.target.value)} className="impilo-pill-input w-full" aria-label="Specimen type">
+                  {SPECIMEN_TYPES.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </Field>
+              <Field label="Fasting status">
+                <select value={fasting} onChange={(e) => setFasting(e.target.value)} className="impilo-pill-input w-full" aria-label="Fasting status">
+                  {FASTING.map((f) => <option key={f} value={f}>{f}</option>)}
+                </select>
               </Field>
             </div>
           )}

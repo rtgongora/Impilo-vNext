@@ -121,6 +121,7 @@ export interface CreateDiagnosticOrderItem {
   contrast?: string;
   procedureCode?: string;
   bodySite?: string;
+  specimenType?: string;
 }
 
 export interface CreateDiagnosticOrderInput {
@@ -151,6 +152,7 @@ function toDraftBody(input: CreateDiagnosticOrderInput): Record<string, unknown>
       contrast: it.contrast,
       procedureCode: it.procedureCode,
       bodySite: it.bodySite,
+      specimenType: it.specimenType,
     })),
   };
 }
