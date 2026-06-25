@@ -184,3 +184,44 @@ export function useCallActions() {
     end: (callId: string) => apiClient.post<CallResponse>(`${BASE}/calls/${callId}/end`, { reason: "HANGUP" }),
   };
 }
+
+export interface MeetingResponse {
+  conversationId: string;
+  eventId: string | null;
+  mediaAvailable: boolean;
+  roomUrl: string | null;
+  accessToken: string | null;
+  provider: string | null;
+  error: string | null;
+}
+
+export function useMeetingActions() {
+  return {
+    create: (body: {
+      title: string;
+      participants: Array<{ actorId: string; actorType?: string; displayName?: string }>;
+    }) => apiClient.post<MeetingResponse>(`${BASE}/meetings`, body),
+    join: (conversationId: string) =>
+      apiClient.post<MeetingResponse>(`${BASE}/conversations/${conversationId}/meeting/join`, {}),
+    end: (conversationId: string) =>
+      apiClient.post<unknown>(`${BASE}/conversations/${conversationId}/meeting/end`, {}),
+  };
+}
+
+/** Adapt a meeting media join into the CallResponse shape the call modal consumes. */
+export function meetingToCall(meeting: MeetingResponse): CallResponse {
+  return {
+    callId: meeting.eventId ?? meeting.conversationId,
+    conversationId: meeting.conversationId,
+    callType: "VIDEO",
+    status: "ACTIVE",
+    initiatedBy: "",
+    roomName: null,
+    roomUrl: meeting.roomUrl,
+    provider: meeting.provider,
+    mediaAvailable: meeting.mediaAvailable,
+    accessToken: meeting.accessToken,
+    mediaError: meeting.error,
+    participants: [],
+  };
+}

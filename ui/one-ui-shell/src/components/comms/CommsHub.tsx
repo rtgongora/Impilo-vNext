@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { MessageSquare, Send, Phone, PhoneIncoming } from "lucide-react";
+import { MessageSquare, Send, Phone, Video, Users, PhoneIncoming } from "lucide-react";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import {
   useCommsInbox,
@@ -12,7 +12,9 @@ import {
   useUpdatePresence,
   useStartCall,
   useCallActions,
+  useMeetingActions,
   useCommsSummary,
+  meetingToCall,
   type CallResponse,
 } from "@/hooks/queries/useComms";
 import { useKhulumaRealtime, type IncomingCall } from "@/hooks/useKhulumaRealtime";
@@ -44,6 +46,7 @@ export function CommsHub({ persona }: { persona: "work" | "life" }) {
   const updatePresence = useUpdatePresence();
   const startCall = useStartCall();
   const callActions = useCallActions();
+  const meetingActions = useMeetingActions();
 
   useKhulumaRealtime({ enabled: !!user, onIncomingCall: setIncoming });
 
@@ -75,6 +78,17 @@ export function CommsHub({ persona }: { persona: "work" | "life" }) {
       { conversationId: selectedId, callType, displayName: user?.healthId ?? undefined, callees },
       { onSuccess: (call) => setActiveCall({ call, direction: "outgoing" }) },
     );
+  };
+
+  const handleStartMeeting = () => {
+    if (!selectedId || !detail.data) return;
+    const participants = detail.data.participants
+      .filter((p) => p.active && p.actorId !== currentActorId)
+      .map((p) => ({ actorId: p.actorId, actorType: p.actorType, displayName: p.displayName ?? undefined }));
+    meetingActions
+      .create({ title: detail.data.title ?? "Meeting", participants })
+      .then((meeting) => meetingActions.join(meeting.conversationId))
+      .then((joined) => setActiveCall({ call: meetingToCall(joined), direction: "outgoing" }));
   };
 
   const acceptIncoming = async () => {
@@ -184,6 +198,22 @@ export function CommsHub({ persona }: { persona: "work" | "life" }) {
                     className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs hover:bg-accent"
                   >
                     <Phone className="h-3.5 w-3.5" /> Call
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Start video call"
+                    onClick={() => handleStartCall("VIDEO")}
+                    className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs hover:bg-accent"
+                  >
+                    <Video className="h-3.5 w-3.5" /> Video
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Start meeting"
+                    onClick={handleStartMeeting}
+                    className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs hover:bg-accent"
+                  >
+                    <Users className="h-3.5 w-3.5" /> Meet
                   </button>
                 </div>
               </div>

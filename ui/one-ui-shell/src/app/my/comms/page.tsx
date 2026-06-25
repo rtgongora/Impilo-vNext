@@ -13,8 +13,8 @@ export default function MyCommsPage() {
   return (
     <AppLayout>
       <PageShell
-        title="My Messages"
-        subtitle="Your conversations, presence and calls"
+        title="Khuluma — Messages"
+        subtitle="Your conversations, presence, calls and meetings"
         icon={<MessageSquare className="h-5 w-5" />}
       >
         <CommsHub persona="life" />

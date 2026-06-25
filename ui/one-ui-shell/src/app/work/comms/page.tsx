@@ -13,8 +13,8 @@ export default function WorkCommsPage() {
   return (
     <AppLayout>
       <PageShell
-        title="Work Comms Hub"
-        subtitle="Conversations, presence and calls for care coordination"
+        title="Khuluma — Comms Hub"
+        subtitle="Conversations, presence, calls and meetings for care coordination"
         icon={<MessageSquare className="h-5 w-5" />}
       >
         <CommsHub persona="work" />

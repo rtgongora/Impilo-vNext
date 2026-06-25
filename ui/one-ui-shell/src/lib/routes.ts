@@ -183,11 +183,11 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/scheduling/bookings/config", zone: "queue", layout: "app", sidebar: "queue", guard: "workspace", pageTitle: "Booking Configuration", navLabel: "Booking Config", navZone: "work" },
 
   // â”€â”€ Zone: Communication â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  { path: "/communication", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Communication Hub", navLabel: "Communication", navZone: "work" },
-  { path: "/communication/secure-messaging", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Secure Messaging", navLabel: "Messaging", navZone: "work" },
-  // Khuluma — Impilo Comms Hub (W1.6): unified conversations, presence, calls.
-  { path: "/work/comms", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Work Comms Hub", navLabel: "Work Comms", navZone: "work" },
-  { path: "/my/comms", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Messages", navLabel: "My Messages", navZone: "life" },
+  { path: "/communication", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Khuluma — Communication Hub", navLabel: "Communication", navZone: "work" },
+  { path: "/communication/secure-messaging", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Khuluma — Secure Messaging", navLabel: "Messaging", navZone: "work" },
+  // Khuluma — Impilo Comms Hub (the comms orchestration umbrella): unified conversations, presence, calls, meetings.
+  { path: "/work/comms", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Khuluma — Comms Hub", navLabel: "Khuluma", navZone: "work" },
+  { path: "/my/comms", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Khuluma — Messages", navLabel: "Khuluma", navZone: "life" },
 
   // â”€â”€ Zone: Queue (Clinical) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/queue", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Patient Queue", navLabel: "Queue", navZone: "work" },

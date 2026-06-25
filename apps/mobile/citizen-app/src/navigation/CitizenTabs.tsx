@@ -71,7 +71,7 @@ export function CitizenTabs() {
     },
     {
       id: "comms",
-      label: "Comms",
+      label: "Khuluma",
       icon: tabIcon(activeTab === "comms" ? "chatbox-ellipses" : "chatbox-ellipses-outline", activeTab === "comms"),
     },
     {

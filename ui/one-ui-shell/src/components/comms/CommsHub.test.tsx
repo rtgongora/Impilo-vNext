@@ -103,6 +103,23 @@ describe("CommsHub", () => {
     });
   });
 
+  it("starts a video call and a virtual meeting from a conversation", async () => {
+    renderHub();
+    fireEvent.click(await screen.findByRole("button", { name: /Dr B/ }));
+    await screen.findByText("Hello there");
+
+    fireEvent.click(screen.getByRole("button", { name: /Start video call/ }));
+    await waitFor(() => {
+      const videoCall = post.mock.calls.find((c) => c[0] === "/internal/v1/khuluma/calls");
+      expect(videoCall?.[1]).toMatchObject({ callType: "VIDEO" });
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /Start meeting/ }));
+    await waitFor(() => {
+      expect(post.mock.calls.some((c) => c[0] === "/internal/v1/khuluma/meetings")).toBe(true);
+    });
+  });
+
   it("updates presence when the status control changes", async () => {
     put.mockResolvedValue({ actorId: "me", status: "BUSY", statusMessage: null, lastSeenAt: null });
     renderHub();
