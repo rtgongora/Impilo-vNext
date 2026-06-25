@@ -8,6 +8,7 @@
  */
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { Activity, Loader2, Search } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
@@ -96,6 +97,7 @@ export default function DiagnosticsOrdersPage() {
                   <th className="px-4 py-2">Lifecycle</th>
                   <th className="px-4 py-2">Requester</th>
                   <th className="px-4 py-2">Placed</th>
+                  <th className="px-4 py-2">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -112,6 +114,18 @@ export default function DiagnosticsOrdersPage() {
                     <td className="px-4 py-3">{o.referringProviderName ?? o.placedBy ?? "—"}</td>
                     <td className="px-4 py-3 text-xs text-muted-foreground">
                       {o.placedAt ? new Date(o.placedAt).toLocaleString() : "—"}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3 text-xs">
+                        <Link href={`/diagnostics/orders/route?orderId=${encodeURIComponent(o.orderId)}`}
+                          className="text-primary hover:underline">Route</Link>
+                        {o.studyViewerUrl ? (
+                          <a href={o.studyViewerUrl} target="_blank" rel="noopener noreferrer"
+                            className="text-primary hover:underline">View study</a>
+                        ) : o.studyUid ? (
+                          <span className="text-muted-foreground" title={o.studyUid}>Linked</span>
+                        ) : null}
+                      </div>
                     </td>
                   </tr>
                 ))}

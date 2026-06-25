@@ -27,6 +27,8 @@ export interface DiagnosticOrder {
   referringProviderName: string | null;
   scheduledAt: string | null;
   imagingState: string | null;
+  studyUid: string | null;
+  studyViewerUrl: string | null;
 }
 
 export interface DiagnosticOrderFilters {
@@ -138,6 +140,37 @@ export function useCreateDiagnosticOrder() {
       );
       return submitted.data;
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["diagnostics-orders"] });
+    },
+  });
+}
+
+export interface RouteDiagnosticOrderInput {
+  orderId: string;
+  destinationType: string;
+  destinationName?: string;
+  destinationFacilityId?: string;
+  destinationDepartmentId?: string;
+  destinationServicePointId?: string;
+  destinationProviderId?: string;
+  expectedReturnMethod?: string;
+}
+
+/** Assign a routing destination to an order (referral). */
+export function useRouteDiagnosticOrder() {
+  const queryClient = useQueryClient();
+  return useMutation<unknown, unknown, RouteDiagnosticOrderInput>({
+    mutationFn: ({ orderId, ...body }) =>
+      apiClient.post(`/internal/v1/diagnostics/orders/${encodeURIComponent(orderId)}/route`, {
+        destinationType: body.destinationType,
+        destinationName: body.destinationName,
+        destinationFacilityId: body.destinationFacilityId || undefined,
+        destinationDepartmentId: body.destinationDepartmentId || undefined,
+        destinationServicePointId: body.destinationServicePointId || undefined,
+        destinationProviderId: body.destinationProviderId || undefined,
+        expectedReturnMethod: body.expectedReturnMethod || undefined,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["diagnostics-orders"] });
     },

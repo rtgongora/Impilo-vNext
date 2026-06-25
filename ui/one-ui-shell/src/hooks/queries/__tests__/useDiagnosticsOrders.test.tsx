@@ -7,6 +7,7 @@ import {
   useResultsInbox,
   useDiagnosticsReconcileSummary,
   useCreateDiagnosticOrder,
+  useRouteDiagnosticOrder,
 } from "../useDiagnosticsOrders";
 
 const { get, post } = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }));
@@ -86,5 +87,28 @@ describe("useDiagnosticsOrders", () => {
       requestSource: "INTERNAL",
     }));
     expect(post).toHaveBeenNthCalledWith(2, "/internal/v1/diagnostics/orders/ORD-NEW/submit");
+  });
+
+  it("route order posts the destination to the route endpoint", async () => {
+    post.mockResolvedValue({ data: { orderId: "ORD-1" } });
+
+    const { result } = renderHook(() => useRouteDiagnosticOrder(), { wrapper });
+    result.current.mutate({
+      orderId: "ORD-1",
+      destinationType: "EXTERNAL_PROVIDER",
+      destinationProviderId: "prov-9",
+      destinationName: "City Radiology",
+      expectedReturnMethod: "SECURE_LINK",
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(post).toHaveBeenCalledWith(
+      "/internal/v1/diagnostics/orders/ORD-1/route",
+      expect.objectContaining({
+        destinationType: "EXTERNAL_PROVIDER",
+        destinationProviderId: "prov-9",
+        expectedReturnMethod: "SECURE_LINK",
+      }),
+    );
   });
 });
