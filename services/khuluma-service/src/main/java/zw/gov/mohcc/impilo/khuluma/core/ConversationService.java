@@ -77,14 +77,6 @@ public class ConversationService {
                 }
             }
         }
-        if (seedLinks != null) {
-            for (NewLink l : seedLinks) {
-                if (l.objectType() != null && l.objectId() != null) {
-                    persistLink(conv, ctx, l.objectType(), l.objectId(), l.linkRole(), l.note());
-                }
-            }
-        }
-
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("conversation_id", conv.getConversationId().toString());
         payload.put("conversation_type", conv.getConversationType());
@@ -93,6 +85,16 @@ public class ConversationService {
                 conv.getConversationId().toString(), ctx.tenantId(), ctx.podId(), ctx.correlationId(),
                 "conv-created-" + conv.getConversationId(), payload,
                 conv.getConversationId().toString(), conv.getConversationId().toString(), AGGREGATE);
+
+        // Object links seeded at creation are governed actions too — audit each.
+        if (seedLinks != null) {
+            for (NewLink l : seedLinks) {
+                if (l.objectType() != null && l.objectId() != null) {
+                    persistLink(conv, ctx, l.objectType(), l.objectId(), l.linkRole(), l.note());
+                    emitLinkedEvent(ctx, conv.getConversationId(), l.objectType(), l.objectId());
+                }
+            }
+        }
 
         log.info("Created conversation [id={}, type={}, by={}]",
                 conv.getConversationId(), conv.getConversationType(), ctx.actorId());
@@ -182,7 +184,11 @@ public class ConversationService {
                                              String objectType, String objectId, String linkRole, String note) {
         ConversationEntity conv = get(ctx, conversationId);
         ConversationLinkEntity link = persistLink(conv, ctx, objectType, objectId, linkRole, note);
+        emitLinkedEvent(ctx, conversationId, objectType, objectId);
+        return link;
+    }
 
+    private void emitLinkedEvent(ActorContext ctx, UUID conversationId, String objectType, String objectId) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("conversation_id", conversationId.toString());
         payload.put("object_type", objectType);
@@ -191,7 +197,6 @@ public class ConversationService {
                 conversationId.toString(), ctx.tenantId(), ctx.podId(), ctx.correlationId(),
                 "conv-link-" + conversationId + "-" + objectType + "-" + objectId, payload,
                 conversationId.toString(), conversationId.toString(), AGGREGATE);
-        return link;
     }
 
     // ── internals ───────────────────────────────────────────────────────────

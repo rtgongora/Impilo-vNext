@@ -40,6 +40,7 @@
 | `inventory-service` | clinical | Inventory canonical records |
 | `iot-ingestion-service` | integration | Iot Ingestion canonical records |
 | `jobs-service` | integration | Jobs canonical records |
+| `khuluma-service` | experience | Khuluma Comms Hub: unified conversation index, participants, messages + read receipts, presence, conversation↔canonical-object links, escalation/SLA, and the realtime push gateway (SSE + WebSocket). **Reuses** channels-service (channel sessions/messages), notification-service (notification inbox/templates/delivery/providers), live-service (meetings/webinars), rtc-gateway-service + LiveKit (call/meeting media), pct-service (teleconsult) — must not duplicate any of these. |
 | `landela-adapter-service` | integration | Landela Adapter canonical records |
 | `learning-service` | experience | Learning canonical records |
 | `live-service` | experience | live events and webinars, live event registrations, live event attendance, live event interactions, live event certificates, live event analytics snapshots |
