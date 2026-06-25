@@ -27,8 +27,41 @@ export interface DiagnosticOrder {
   referringProviderName: string | null;
   scheduledAt: string | null;
   imagingState: string | null;
+  /** Generalised fine-grained lifecycle state for all categories (imaging/lab/procedure). */
+  workflowState: string | null;
   studyUid: string | null;
   studyViewerUrl: string | null;
+}
+
+/** A structured laboratory observation (value/unit/reference-range/flags). */
+export interface ResultObservation {
+  observationId: string;
+  resultId: string;
+  orderId: string;
+  sequence: number;
+  analyteCode: string | null;
+  analyteName: string;
+  valueText: string | null;
+  valueNumeric: number | null;
+  unit: string | null;
+  refRangeLow: number | null;
+  refRangeHigh: number | null;
+  refRangeText: string | null;
+  abnormalFlag: string | null;
+  criticalFlag: boolean;
+  comment: string | null;
+}
+
+/** A result captured against an order. */
+export interface OrderResult {
+  resultId: string;
+  orderId: string;
+  kind: string;
+  reportStatus: string | null;
+  isCritical: boolean;
+  impression: string | null;
+  version: number;
+  createdAt: string | null;
 }
 
 export interface DiagnosticOrderFilters {
@@ -387,5 +420,31 @@ export function useAcknowledgeCritical() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["diagnostics-critical-unacknowledged"] });
     },
+  });
+}
+
+/** All results for an order (patient-file investigations view). */
+export function useOrderResults(orderId: string | null | undefined) {
+  return useQuery<ApiResponse<OrderResult[]>>({
+    queryKey: ["diagnostics-order-results", orderId ?? null],
+    queryFn: () =>
+      apiClient.get<ApiResponse<OrderResult[]>>(
+        `/internal/v1/diagnostics/orders/${encodeURIComponent(orderId as string)}/results`,
+      ),
+    enabled: !!orderId,
+    staleTime: 15_000,
+  });
+}
+
+/** Structured laboratory observations for a result (value/unit/reference-range/flags). */
+export function useResultObservations(resultId: string | null | undefined) {
+  return useQuery<ApiResponse<ResultObservation[]>>({
+    queryKey: ["diagnostics-result-observations", resultId ?? null],
+    queryFn: () =>
+      apiClient.get<ApiResponse<ResultObservation[]>>(
+        `/internal/v1/diagnostics/results/${encodeURIComponent(resultId as string)}/observations`,
+      ),
+    enabled: !!resultId,
+    staleTime: 15_000,
   });
 }
