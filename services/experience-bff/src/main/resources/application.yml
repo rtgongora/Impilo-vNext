@@ -194,6 +194,7 @@ impilo:
     booking-base-url: ${BOOKING_BASE_URL:http://localhost:8265}
     workforce-governance-base-url: ${WORKFORCE_GOVERNANCE_BASE_URL:http://localhost:8165}
     vashandi-base-url: ${VASHANDI_BASE_URL:http://localhost:8167}
+    khuluma-base-url: ${KHULUMA_BASE_URL:http://localhost:8390}
 
     # PCW-2 orchestration backlog — preview env mapped; dedicated BFF clients not yet implemented.
     orchestration-backlog:
