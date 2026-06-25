@@ -12,6 +12,8 @@ import zw.gov.mohcc.impilo.oros.api.dto.NoteRequest;
 import zw.gov.mohcc.impilo.oros.api.dto.OrderItemDto;
 import zw.gov.mohcc.impilo.oros.api.dto.OrderSummaryDto;
 import zw.gov.mohcc.impilo.oros.api.dto.PlaceOrderRequest;
+import zw.gov.mohcc.impilo.oros.api.dto.RouteDto;
+import zw.gov.mohcc.impilo.oros.api.dto.RouteRequest;
 import zw.gov.mohcc.impilo.oros.api.dto.ScheduleRequest;
 import zw.gov.mohcc.impilo.oros.core.*;
 import zw.gov.mohcc.impilo.oros.domain.ImagingWorkflowState;
@@ -165,6 +167,29 @@ public class OrderController {
         orchestratePlacement(order);
 
         return ResponseEntity.ok(ApiResponse.ok(OrderSummaryDto.from(order), correlationId));
+    }
+
+    /**
+     * Assign a routing destination to an order (requester referral/routing action).
+     */
+    @PostMapping("/{orderId}/route")
+    public ResponseEntity<ApiResponse<RouteDto>> routeOrder(
+            @PathVariable String orderId,
+            @Valid @RequestBody RouteRequest request) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+
+        RoutingEntity route = routingEngine.assignDestination(orderId,
+                new RoutingEngine.RouteDestination(
+                        request.destinationType(),
+                        request.destinationFacilityId(),
+                        request.destinationDepartmentId(),
+                        request.destinationServicePointId(),
+                        request.destinationProviderId(),
+                        request.destinationName(),
+                        request.expectedReturnMethod(),
+                        request.routeExpiry()));
+
+        return ResponseEntity.ok(ApiResponse.ok(RouteDto.from(route), correlationId));
     }
 
     /**

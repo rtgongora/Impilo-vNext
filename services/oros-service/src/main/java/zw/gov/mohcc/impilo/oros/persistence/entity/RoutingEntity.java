@@ -5,6 +5,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 import zw.gov.mohcc.impilo.oros.domain.RouteTarget;
 import zw.gov.mohcc.impilo.oros.domain.AdapterMode;
+import zw.gov.mohcc.impilo.oros.domain.RouteDestinationType;
 import zw.gov.mohcc.impilo.oros.domain.RouteStatus;
 
 /**
@@ -42,6 +43,32 @@ public class RoutingEntity {
 
     @Column(name = "external_ref")
     private String externalRef;
+
+    // ── Routing destination (V005) ───────────────────────────────────────
+    @Enumerated(EnumType.STRING)
+    @Column(name = "destination_type", length = 32)
+    private RouteDestinationType destinationType;
+
+    @Column(name = "destination_facility_id")
+    private UUID destinationFacilityId;
+
+    @Column(name = "destination_department_id", length = 64)
+    private String destinationDepartmentId;
+
+    @Column(name = "destination_service_point_id", length = 64)
+    private String destinationServicePointId;
+
+    @Column(name = "destination_provider_id", length = 64)
+    private String destinationProviderId;
+
+    @Column(name = "destination_name", length = 255)
+    private String destinationName;
+
+    @Column(name = "expected_return_method", length = 32)
+    private String expectedReturnMethod;
+
+    @Column(name = "route_expiry")
+    private OffsetDateTime routeExpiry;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
@@ -88,6 +115,30 @@ public class RoutingEntity {
 
     public String getExternalRef() { return externalRef; }
     public void setExternalRef(String externalRef) { this.externalRef = externalRef; }
+
+    public RouteDestinationType getDestinationType() { return destinationType; }
+    public void setDestinationType(RouteDestinationType destinationType) { this.destinationType = destinationType; }
+
+    public UUID getDestinationFacilityId() { return destinationFacilityId; }
+    public void setDestinationFacilityId(UUID destinationFacilityId) { this.destinationFacilityId = destinationFacilityId; }
+
+    public String getDestinationDepartmentId() { return destinationDepartmentId; }
+    public void setDestinationDepartmentId(String destinationDepartmentId) { this.destinationDepartmentId = destinationDepartmentId; }
+
+    public String getDestinationServicePointId() { return destinationServicePointId; }
+    public void setDestinationServicePointId(String destinationServicePointId) { this.destinationServicePointId = destinationServicePointId; }
+
+    public String getDestinationProviderId() { return destinationProviderId; }
+    public void setDestinationProviderId(String destinationProviderId) { this.destinationProviderId = destinationProviderId; }
+
+    public String getDestinationName() { return destinationName; }
+    public void setDestinationName(String destinationName) { this.destinationName = destinationName; }
+
+    public String getExpectedReturnMethod() { return expectedReturnMethod; }
+    public void setExpectedReturnMethod(String expectedReturnMethod) { this.expectedReturnMethod = expectedReturnMethod; }
+
+    public OffsetDateTime getRouteExpiry() { return routeExpiry; }
+    public void setRouteExpiry(OffsetDateTime routeExpiry) { this.routeExpiry = routeExpiry; }
 
     public OffsetDateTime getCreatedAt() { return createdAt; }
 
