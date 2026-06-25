@@ -273,6 +273,14 @@ public class ServiceClientConfig {
                 forwardHeader(inbound, request, CompanionHeaders.PURPOSE_OF_USE);
                 forwardHeader(inbound, request, CompanionHeaders.DEVICE_FINGERPRINT);
                 forwardHeader(inbound, request, CompanionHeaders.ASSURANCE_LEVEL);
+                // Authoritatively override X-Assurance-Level with the caller's CURRENT identity-assurance
+                // level resolved this request (AssuranceLevelResolutionInterceptor), so a self-service
+                // verification upgrade reaches the trust plane and a client cannot forge it (G-CZO-01).
+                Object resolvedAssurance = inbound.getAttribute(
+                        AssuranceLevelResolutionInterceptor.RESOLVED_ASSURANCE_LEVEL_ATTR);
+                if (resolvedAssurance instanceof String level && !level.isBlank()) {
+                    request.getHeaders().set(CompanionHeaders.ASSURANCE_LEVEL, level);
+                }
                 forwardHeader(inbound, request, CompanionHeaders.FACILITY_ID);
                 forwardHeader(inbound, request, CompanionHeaders.TUSO_FACILITY_ID);
                 forwardHeader(inbound, request, CompanionHeaders.WORKSPACE_ID);

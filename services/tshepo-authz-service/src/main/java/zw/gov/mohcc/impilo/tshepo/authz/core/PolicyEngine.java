@@ -376,12 +376,16 @@ public class PolicyEngine {
             Map<String, Object> conditions = objectMapper.readValue(conditionsJson,
                     new TypeReference<>() {});
 
-            // min_loa check
+            // min_loa check — keyed on the EFFECTIVE LoA (the stronger of the session's
+            // ACR-derived login level and the actor's current identity-assurance level
+            // propagated via X-Assurance-Level). This is what makes a self-service
+            // verification upgrade actually change what policy sees (closes G-CZO-01).
             if (conditions.containsKey("min_loa")) {
                 int minLoa = ((Number) conditions.get("min_loa")).intValue();
-                if (request.loaLevel() < minLoa) {
-                    log.debug("Condition failed: min_loa={} but request.loaLevel={}",
-                            minLoa, request.loaLevel());
+                int effLoa = effectiveLoa(request);
+                if (effLoa < minLoa) {
+                    log.debug("Condition failed: min_loa={} but effectiveLoa={} (acr={}, assuranceHeader={})",
+                            minLoa, effLoa, request.loaLevel(), request.assuranceLevel());
                     return false;
                 }
             }
@@ -432,11 +436,11 @@ public class PolicyEngine {
                 }
             }
 
-            // account assurance state check
+            // account assurance state check — a "verified" account means the actor's current
+            // identity-assurance level is at least LOA3 (in-person verified, per AssurancePolicy).
+            // Legacy verification-state strings ("VERIFIED"/"REGISTRY") still pass for back-compat.
             if (Boolean.TRUE.equals(conditions.get("account_assurance_required"))) {
-                String assuranceLevel = request.assuranceLevel() == null ? "" : request.assuranceLevel().toUpperCase(Locale.ROOT);
-                boolean verified = assuranceLevel.contains("VERIFIED") || assuranceLevel.contains("REGISTRY");
-                if (!verified) {
+                if (!accountVerified(request)) {
                     log.debug("Condition failed: account assurance required but got {}", request.assuranceLevel());
                     return false;
                 }
@@ -445,8 +449,7 @@ public class PolicyEngine {
             // verification grace period check
             if (conditions.containsKey("verification_grace_expiry_epoch_ms")) {
                 long expiryEpochMs = ((Number) conditions.get("verification_grace_expiry_epoch_ms")).longValue();
-                String assuranceLevel = request.assuranceLevel() == null ? "" : request.assuranceLevel().toUpperCase(Locale.ROOT);
-                boolean verified = assuranceLevel.contains("VERIFIED") || assuranceLevel.contains("REGISTRY");
+                boolean verified = accountVerified(request);
                 if (!verified && Instant.now().toEpochMilli() > expiryEpochMs) {
                     log.debug("Condition failed: verification grace expired for actor {}", request.actorId());
                     return false;
@@ -459,6 +462,51 @@ public class PolicyEngine {
             log.warn("Failed to parse policy rule conditions JSON: {}", e.getMessage());
             return false; // Fail-closed: invalid conditions = no match
         }
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // Assurance-level helpers (G-CZO-01: identity-assurance → policy)
+    // ════════════════════════════════════════════════════════════════════
+
+    /**
+     * Effective Level of Assurance for policy: the stronger of the session's ACR-derived
+     * login LoA (frozen at token validation) and the actor's current identity-assurance
+     * level propagated via {@code X-Assurance-Level} (populated authoritatively by the BFF
+     * from identity-assurance-service, the canonical owner). Taking the max is monotonic —
+     * it never reduces access below the prior ACR-only behaviour, and lifts it the moment a
+     * verification upgrade is recorded.
+     */
+    private int effectiveLoa(AuthzInternalRequest request) {
+        return Math.max(request.loaLevel(), parseAssuranceLoa(request.assuranceLevel()));
+    }
+
+    /**
+     * Parse an {@code X-Assurance-Level} header value ("LOA3" or bare "3") to its numeric
+     * rank 1..4. Returns 0 when absent or unparseable (fail-safe: contributes nothing to the
+     * effective LoA, leaving the ACR level in force).
+     */
+    private static int parseAssuranceLoa(String raw) {
+        if (raw == null || raw.isBlank()) return 0;
+        String v = raw.trim().toUpperCase(Locale.ROOT);
+        if (v.startsWith("LOA")) v = v.substring(3).trim();
+        try {
+            int n = Integer.parseInt(v);
+            return (n >= 1 && n <= 4) ? n : 0;
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    /**
+     * Whether the actor holds a "verified" account for {@code account_assurance_required} rules:
+     * identity-assurance level LOA3+ (in-person verified), or a legacy verification-state string.
+     * Note this is keyed on the propagated assurance level only (not the ACR login level), so a
+     * strong login alone does not satisfy an account-verification requirement.
+     */
+    private static boolean accountVerified(AuthzInternalRequest request) {
+        if (parseAssuranceLoa(request.assuranceLevel()) >= 3) return true;
+        String v = request.assuranceLevel() == null ? "" : request.assuranceLevel().toUpperCase(Locale.ROOT);
+        return v.contains("VERIFIED") || v.contains("REGISTRY");
     }
 
     // ════════════════════════════════════════════════════════════════════

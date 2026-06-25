@@ -439,6 +439,81 @@ class PolicyEngineTest {
     }
 
     // ════════════════════════════════════════════════════════════════════
+    // G-CZO-01: identity-assurance level (X-Assurance-Level) reaches policy
+    // Keystone proof — a self-service verification upgrade changes what policy
+    // sees even when the Keycloak ACR login level is unchanged.
+    // ════════════════════════════════════════════════════════════════════
+
+    /** Build a clinical-resource request with an explicit ACR loaLevel and propagated assurance level. */
+    private static AuthzInternalRequest requestWithAssurance(int acrLoaLevel, String assuranceLevel) {
+        return new AuthzInternalRequest(
+                TENANT_ID, ACTOR_ID, "CITIZEN", List.of("CITIZEN"), "TREATMENT",
+                DEVICE_FP, CORRELATION_ID, FACILITY_ID, WORKSPACE_ID,
+                null, "GET", "/v1/patients/cpid-12345", "GET:/v1/patients/cpid-12345",
+                "patients", "cpid-12345",
+                acrLoaLevel, "session-abc", null,
+                null, null, null, null, null, assuranceLevel,
+                null, null
+        );
+    }
+
+    private PolicyRuleEntity buildMinLoaAllowRule(int minLoa) {
+        PolicyRuleEntity rule = buildAllowRule("patients", null, null, null, null);
+        rule.setConditions("{\"min_loa\":" + minLoa + "}");
+        return rule;
+    }
+
+    @Test
+    @DisplayName("G-CZO-01: ACR LOA1 + no assurance header + rule min_loa=3 -> DENY (temporary cannot read clinical)")
+    void evaluate_lowLoa_noAssuranceHeader_belowMinLoa_denies() {
+        AuthzInternalRequest request = requestWithAssurance(1, null);
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(buildMinLoaAllowRule(3)));
+
+        AuthzResponse response = policyEngine.evaluate(request);
+
+        assertEquals(Verdict.DENY, response.verdict(),
+                "Below the min_loa rule the conditioned ALLOW must not match -> DENY");
+    }
+
+    @Test
+    @DisplayName("G-CZO-01: ACR LOA1 but assurance upgraded to LOA3 (header) + rule min_loa=3 -> ALLOW")
+    void evaluate_assuranceUpgradeReachesPolicy_allows() {
+        // ACR login level is still 1 (token unchanged); identity-assurance upgrade is propagated
+        // via X-Assurance-Level=LOA3. effectiveLoa = max(1,3) = 3 satisfies min_loa=3.
+        AuthzInternalRequest request = requestWithAssurance(1, "LOA3");
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(buildMinLoaAllowRule(3)));
+        when(consentClient.evaluateConsent(
+                eq(TENANT_ID), eq("patients"), eq("cpid-12345"), eq(ACTOR_ID), eq("TREATMENT")))
+                .thenReturn(ConsentDecision.permit("consent-1", List.of("read")));
+
+        AuthzResponse response = policyEngine.evaluate(request);
+
+        assertEquals(Verdict.ALLOW, response.verdict(),
+                "Propagated assurance LOA3 must satisfy min_loa=3 even with ACR loaLevel=1 (closes G-CZO-01)");
+    }
+
+    @Test
+    @DisplayName("G-CZO-01: bare numeric assurance header '3' is parsed and satisfies min_loa=3 -> ALLOW")
+    void evaluate_bareNumericAssuranceHeader_allows() {
+        AuthzInternalRequest request = requestWithAssurance(0, "3");
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(buildMinLoaAllowRule(3)));
+        when(consentClient.evaluateConsent(
+                eq(TENANT_ID), eq("patients"), eq("cpid-12345"), eq(ACTOR_ID), eq("TREATMENT")))
+                .thenReturn(ConsentDecision.permit("consent-1", List.of("read")));
+
+        AuthzResponse response = policyEngine.evaluate(request);
+
+        assertEquals(Verdict.ALLOW, response.verdict(),
+                "Bare numeric X-Assurance-Level must parse to LOA rank and satisfy min_loa");
+    }
+
+    // ════════════════════════════════════════════════════════════════════
     // Step 6: Risk-based step-up
     // ════════════════════════════════════════════════════════════════════
 
