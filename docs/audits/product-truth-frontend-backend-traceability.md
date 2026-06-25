@@ -1,7 +1,7 @@
 # Product Truth — Frontend-to-Backend Traceability
 
-> Generated: 2026-06-25T09:11:49.321Z
-> Web surfaces: **624** | Mobile screens: **174**
+> Generated: 2026-06-25T09:17:33.552Z
+> Web surfaces: **625** | Mobile screens: **174**
 
 ## Web routes (one-ui-shell)
 
@@ -154,6 +154,7 @@
 | /ehr/[patientId]/assessments | Assessments | ehr | yes | no | yes | yes | yes | — |
 | /ehr/[patientId]/charts | Ward Charts | ehr | yes | no | yes | yes | yes | — |
 | /ehr/[patientId]/imaging | Imaging | ehr | yes | no | yes | yes | yes | — |
+| /ehr/[patientId]/investigations | Investigations | ehr | yes | no | yes | yes | yes | — |
 | /ehr/[patientId]/imaging/viewer | DICOM Viewer | ehr | yes | no | yes | yes | yes | — |
 | /admin | Administration | admin | yes | no | yes | no | yes | — |
 | /admin/users | Worker & Provider Access | admin | yes | no | yes | yes | yes | — |
@@ -506,7 +507,6 @@
 | /live/event/[eventId]/analytics | Live Analytics | operations | yes | no | yes | yes | yes | — |
 | /work/administration-governance | Administration & Governance | operations | yes | no | yes | no | yes | — |
 | /work/administration-governance/access-requests | Access Requests | operations | yes | no | yes | yes | yes | — |
-| /work/administration-governance/access-review | Access Review | operations | yes | no | yes | yes | yes | — |
 
 ## Mobile screens
 
