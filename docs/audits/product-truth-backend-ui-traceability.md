@@ -1,6 +1,6 @@
 # Product Truth — Backend-to-UI Traceability
 
-> Generated: 2026-06-25T09:43:18.249Z
+> Generated: 2026-06-25T09:51:10.501Z
 
 For each service: backend capabilities → API → BFF → UI → mobile → persistence.
 
@@ -608,7 +608,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 2 | Exposed via API/contracts? | Yes (contract: experience-bff.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (0 clients) |
 | 4 | Visible in UI? | Yes (171 refs) |
-| 5 | Visible on mobile? | Yes (54 refs) |
+| 5 | Visible on mobile? | Yes (56 refs) |
 | 6 | Fake/partial/disconnected? | Yes — review |
 | 7 | Backend without UI? | No |
 | 8 | UI without backend? | No |
@@ -1439,7 +1439,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 2 | Exposed via API/contracts? | Yes (contract: oros.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (13 clients) |
 | 4 | Visible in UI? | Yes (65 refs) |
-| 5 | Visible on mobile? | Yes (13 refs) |
+| 5 | Visible on mobile? | Yes (15 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
 | 8 | UI without backend? | No |
@@ -1769,7 +1769,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 2 | Exposed via API/contracts? | Yes (contract: search.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (35 clients) |
 | 4 | Visible in UI? | Yes (402 refs) |
-| 5 | Visible on mobile? | Yes (52 refs) |
+| 5 | Visible on mobile? | Yes (53 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
 | 8 | UI without backend? | No |

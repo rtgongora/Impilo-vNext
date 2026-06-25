@@ -1,7 +1,7 @@
 # Product Truth — Frontend-to-Backend Traceability
 
-> Generated: 2026-06-25T09:43:18.249Z
-> Web surfaces: **626** | Mobile screens: **174**
+> Generated: 2026-06-25T09:51:10.501Z
+> Web surfaces: **626** | Mobile screens: **175**
 
 ## Web routes (one-ui-shell)
 
@@ -629,6 +629,7 @@
 | provider-app | apps/mobile/provider-app/src/screens/provider/CriticalEventScreen.tsx | 1 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/DeveloperHubScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/DiagnosisPanel.tsx | 0 | no |
+| provider-app | apps/mobile/provider-app/src/screens/provider/DiagnosticsScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/DischargeClearanceScreen.tsx | 1 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/EdVisitScreen.tsx | 0 | no |

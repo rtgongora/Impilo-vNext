@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-25T09:43:18.249Z",
+  "generatedAt": "2026-06-25T09:51:10.501Z",
   "branch": "intake/oros-diagnostics-journey",
   "registryDrift": {
     "unregisteredModules": [],
@@ -2841,7 +2841,7 @@
         "contractViolations": 0,
         "bffClients": 0,
         "uiReferences": 171,
-        "mobileReferences": 54,
+        "mobileReferences": 56,
         "tests": 164
       },
       "dimensions": {
@@ -6697,7 +6697,7 @@
         "contractViolations": 0,
         "bffClients": 13,
         "uiReferences": 65,
-        "mobileReferences": 13,
+        "mobileReferences": 15,
         "tests": 19
       },
       "dimensions": {
@@ -6755,13 +6755,13 @@
         "provider-app:apps/mobile/provider-app/src/__tests__/integration/ClinicalWriteJourneyContracts.test.ts",
         "provider-app:apps/mobile/provider-app/src/__tests__/provider/EncounterWorkflow.test.tsx",
         "provider-app:apps/mobile/provider-app/src/navigation/providerServiceNavigation.ts",
+        "provider-app:apps/mobile/provider-app/src/screens/provider/DiagnosticsScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/LabOrderPanel.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
+        "provider-app:apps/mobile/provider-app/src/services/diagnosticsService.ts",
         "provider-app:apps/mobile/provider-app/src/services/labService.ts",
-        "provider-app:apps/mobile/provider-app/src/services/madiService.ts",
-        "provider-app:apps/mobile/provider-app/src/stores/encounterStore.ts",
-        "provider-app:apps/mobile/provider-app/src/types/index.ts"
+        "provider-app:apps/mobile/provider-app/src/services/madiService.ts"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -8314,7 +8314,7 @@
         "contractViolations": 0,
         "bffClients": 35,
         "uiReferences": 402,
-        "mobileReferences": 52,
+        "mobileReferences": 53,
         "tests": 6
       },
       "dimensions": {
@@ -47212,6 +47212,13 @@
     {
       "app": "provider-app",
       "screen": "apps/mobile/provider-app/src/screens/provider/DiagnosisPanel.tsx",
+      "bffPaths": [],
+      "mockStubHits": [],
+      "readsRealData": false
+    },
+    {
+      "app": "provider-app",
+      "screen": "apps/mobile/provider-app/src/screens/provider/DiagnosticsScreen.tsx",
       "bffPaths": [],
       "mockStubHits": [],
       "readsRealData": false
