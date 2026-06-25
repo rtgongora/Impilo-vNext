@@ -13,13 +13,18 @@ class OutboxPublisherRoutingConventionTest {
     void producedEventTypes_routeToDedicatedTopics_notDefaultCatchAll() {
         Set<String> producedTypes = Set.of(
                 "ORDER_PLACED",
+                "ORDER_DRAFT_CREATED",
+                "ORDER_DRAFT_UPDATED",
                 "ORDER_STATUS_CHANGED",
                 "ORDER_ACCEPTED",
                 "ORDER_COMPLETED",
                 "ORDER_CANCELLED",
                 "RESULT_AVAILABLE",
                 "RESULT_POSTED",
-                "RESULT_CRITICAL"
+                "RESULT_CRITICAL",
+                "IMAGING_STATE_RECEIVED",
+                "IMAGING_STATE_SCHEDULED",
+                "IMAGING_STATE_RELEASED"
         );
 
         for (String eventType : producedTypes) {

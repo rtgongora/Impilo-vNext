@@ -7,10 +7,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.oros.api.dto.CancelRequest;
+import zw.gov.mohcc.impilo.oros.api.dto.ImagingTransitionRequest;
+import zw.gov.mohcc.impilo.oros.api.dto.NoteRequest;
 import zw.gov.mohcc.impilo.oros.api.dto.OrderItemDto;
 import zw.gov.mohcc.impilo.oros.api.dto.OrderSummaryDto;
 import zw.gov.mohcc.impilo.oros.api.dto.PlaceOrderRequest;
+import zw.gov.mohcc.impilo.oros.api.dto.ScheduleRequest;
 import zw.gov.mohcc.impilo.oros.core.*;
+import zw.gov.mohcc.impilo.oros.domain.ImagingWorkflowState;
 import zw.gov.mohcc.impilo.oros.persistence.entity.OrderEntity;
 import zw.gov.mohcc.impilo.oros.persistence.entity.RoutingEntity;
 import zw.gov.mohcc.impilo.oros.persistence.entity.SlaTimerEntity;
@@ -25,9 +29,19 @@ import java.util.stream.Collectors;
 /**
  * REST controller for clinical order management.
  *
- * <p>Provides endpoints for placing, retrieving, and cancelling orders.
- * Order placement orchestrates the full initial workflow: order creation,
- * routing, workstep generation, and SLA timer start.</p>
+ * <p>Two creation paths are supported:</p>
+ * <ul>
+ *   <li><b>Immediate place</b> ({@code POST /v1/orders}) — legacy/quick path that creates and
+ *       routes a {@code PLACED} order in one call (lab/pharmacy style).</li>
+ *   <li><b>Draft → submit</b> ({@code POST /v1/orders/draft} then {@code POST
+ *       /v1/orders/{id}/submit}) — the diagnostic/imaging journey: a draft is composed, then
+ *       submitted, which reserves an accession (imaging), resolves the referring provider, and
+ *       initializes the imaging workflow before routing.</li>
+ * </ul>
+ *
+ * <p>The fine-grained imaging lifecycle (schedule/arrive/release and the generic transition) is
+ * driven through {@link ImagingWorkflowService}; the coarse canonical status machine is left
+ * untouched.</p>
  */
 @RestController
 @RequestMapping("/v1/orders")
@@ -36,30 +50,30 @@ public class OrderController {
     private static final Logger log = LoggerFactory.getLogger(OrderController.class);
 
     private final OrderStateMachine stateMachine;
+    private final OrderSubmissionService submissionService;
+    private final ImagingWorkflowService imagingWorkflowService;
     private final RoutingEngine routingEngine;
     private final WorkstepEngine workstepEngine;
     private final SlaService slaService;
 
     public OrderController(OrderStateMachine stateMachine,
+                           OrderSubmissionService submissionService,
+                           ImagingWorkflowService imagingWorkflowService,
                            RoutingEngine routingEngine,
                            WorkstepEngine workstepEngine,
                            SlaService slaService) {
         this.stateMachine = stateMachine;
+        this.submissionService = submissionService;
+        this.imagingWorkflowService = imagingWorkflowService;
         this.routingEngine = routingEngine;
         this.workstepEngine = workstepEngine;
         this.slaService = slaService;
     }
 
     /**
-     * Place a new clinical order.
+     * Place a new clinical order immediately (legacy/quick path).
      *
-     * <p>Orchestrates the full placement flow:</p>
-     * <ol>
-     *   <li>Create the order via the state machine</li>
-     *   <li>Route the order based on facility capabilities</li>
-     *   <li>Create worksteps from the order type template</li>
-     *   <li>Start the SLA timer</li>
-     * </ol>
+     * <p>Orchestrates the full placement flow: create (PLACED) → route → worksteps → SLA timer.</p>
      */
     @PostMapping
     public ResponseEntity<ApiResponse<OrderSummaryDto>> placeOrder(
@@ -67,16 +81,6 @@ public class OrderController {
         TrustContext ctx = TrustContextHolder.require();
         String correlationId = ctx.correlationId().toString();
 
-        List<OrderStateMachine.OrderItemData> items = null;
-        if (request.items() != null) {
-            items = request.items().stream()
-                    .map(dto -> new OrderStateMachine.OrderItemData(
-                            dto.code(), dto.displayName(), dto.quantity(),
-                            dto.instructions(), dto.specimenType(), dto.bodySite()))
-                    .collect(Collectors.toList());
-        }
-
-        // Step 1: Place the order
         OrderEntity order = stateMachine.placeOrder(
                 ctx.facilityId(),
                 request.patientCpid(),
@@ -85,22 +89,134 @@ public class OrderController {
                 request.ziboOrderCode(),
                 request.encounterRef(),
                 request.clinicalNotes(),
-                items);
+                toItemData(request.items()));
 
-        // Step 2: Route the order
-        RoutingEntity route = routingEngine.routeOrder(order);
-
-        // Step 3: Create worksteps
-        List<WorkstepEntity> worksteps = workstepEngine.createWorkstepsForOrder(order);
-
-        // Step 4: Start SLA timer (OVERALL stage, 0 = use default TAT from config)
-        SlaTimerEntity timer = slaService.startTimer(order.getOrderId(), "OVERALL", 0);
-
-        log.info("Order placed and routed: orderId={}, route={}, worksteps={}, slaTarget={}",
-                order.getOrderId(), route.getRouteTarget(), worksteps.size(), timer.getTargetAt());
+        orchestratePlacement(order);
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(OrderSummaryDto.from(order), correlationId));
+    }
+
+    /**
+     * Create a diagnostic/imaging order in {@code DRAFT} state (not yet routed).
+     */
+    @PostMapping("/draft")
+    public ResponseEntity<ApiResponse<OrderSummaryDto>> createDraft(
+            @Valid @RequestBody PlaceOrderRequest request) {
+        TrustContext ctx = TrustContextHolder.require();
+        String correlationId = ctx.correlationId().toString();
+
+        OrderEntity order = stateMachine.createDraft(
+                ctx.facilityId(),
+                request.patientCpid(),
+                request.orderType(),
+                request.priority(),
+                request.requestSource(),
+                request.ziboOrderCode(),
+                request.encounterRef(),
+                request.clinicalNotes(),
+                request.referringProviderId(),
+                request.referringProviderName(),
+                request.scheduledAt(),
+                request.safetyJson(),
+                toItemData(request.items()));
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.ok(OrderSummaryDto.from(order), correlationId));
+    }
+
+    /**
+     * Update a {@code DRAFT} order (fields + items replaced wholesale).
+     */
+    @PutMapping("/{orderId}")
+    public ResponseEntity<ApiResponse<OrderSummaryDto>> updateDraft(
+            @PathVariable String orderId,
+            @Valid @RequestBody PlaceOrderRequest request) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+
+        OrderEntity order = stateMachine.updateDraft(
+                orderId,
+                request.priority(),
+                request.requestSource(),
+                request.ziboOrderCode(),
+                request.encounterRef(),
+                request.clinicalNotes(),
+                request.referringProviderId(),
+                request.referringProviderName(),
+                request.scheduledAt(),
+                request.safetyJson(),
+                toItemData(request.items()));
+
+        return ResponseEntity.ok(ApiResponse.ok(OrderSummaryDto.from(order), correlationId));
+    }
+
+    /**
+     * Submit a draft order: reserve accession (imaging), resolve referring provider, initialize
+     * the imaging workflow, transition {@code DRAFT → PLACED}, then route + worksteps + SLA.
+     */
+    @PostMapping("/{orderId}/submit")
+    public ResponseEntity<ApiResponse<OrderSummaryDto>> submitOrder(@PathVariable String orderId) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+
+        OrderEntity order = submissionService.submit(orderId);
+        orchestratePlacement(order);
+
+        return ResponseEntity.ok(ApiResponse.ok(OrderSummaryDto.from(order), correlationId));
+    }
+
+    /**
+     * Schedule an imaging order's acquisition/appointment (drives imaging state to SCHEDULED).
+     */
+    @PostMapping("/{orderId}/schedule")
+    public ResponseEntity<ApiResponse<OrderSummaryDto>> scheduleOrder(
+            @PathVariable String orderId,
+            @Valid @RequestBody ScheduleRequest request) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+
+        OrderEntity order = imagingWorkflowService.schedule(orderId, request.scheduledAt(), request.note());
+        return ResponseEntity.ok(ApiResponse.ok(OrderSummaryDto.from(order), correlationId));
+    }
+
+    /**
+     * Mark a scheduled imaging patient as arrived (drives imaging state to ARRIVED).
+     */
+    @PostMapping("/{orderId}/arrive")
+    public ResponseEntity<ApiResponse<OrderSummaryDto>> arriveOrder(
+            @PathVariable String orderId,
+            @RequestBody(required = false) NoteRequest request) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+
+        OrderEntity order = imagingWorkflowService.transition(
+                orderId, ImagingWorkflowState.ARRIVED, note(request));
+        return ResponseEntity.ok(ApiResponse.ok(OrderSummaryDto.from(order), correlationId));
+    }
+
+    /**
+     * Release an imaging result to requesters (drives imaging state to RELEASED).
+     */
+    @PostMapping("/{orderId}/release")
+    public ResponseEntity<ApiResponse<OrderSummaryDto>> releaseOrder(
+            @PathVariable String orderId,
+            @RequestBody(required = false) NoteRequest request) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+
+        OrderEntity order = imagingWorkflowService.transition(
+                orderId, ImagingWorkflowState.RELEASED, note(request));
+        return ResponseEntity.ok(ApiResponse.ok(OrderSummaryDto.from(order), correlationId));
+    }
+
+    /**
+     * Generic guarded imaging-workflow transition (used by fulfilment/reporting waves for
+     * receive/accept/reject/start/complete/etc.).
+     */
+    @PostMapping("/{orderId}/imaging/transition")
+    public ResponseEntity<ApiResponse<OrderSummaryDto>> transitionImaging(
+            @PathVariable String orderId,
+            @Valid @RequestBody ImagingTransitionRequest request) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+
+        OrderEntity order = imagingWorkflowService.transition(orderId, request.target(), request.reason());
+        return ResponseEntity.ok(ApiResponse.ok(OrderSummaryDto.from(order), correlationId));
     }
 
     /**
@@ -140,5 +256,33 @@ public class OrderController {
 
         OrderEntity order = stateMachine.cancelOrder(orderId, request.reason());
         return ResponseEntity.ok(ApiResponse.ok(OrderSummaryDto.from(order), correlationId));
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────────
+
+    /** Route the order, generate worksteps, and start the overall SLA timer. */
+    private void orchestratePlacement(OrderEntity order) {
+        RoutingEntity route = routingEngine.routeOrder(order);
+        List<WorkstepEntity> worksteps = workstepEngine.createWorkstepsForOrder(order);
+        SlaTimerEntity timer = slaService.startTimer(order.getOrderId(), "OVERALL", 0);
+
+        log.info("Order placed and routed: orderId={}, route={}, worksteps={}, slaTarget={}",
+                order.getOrderId(), route.getRouteTarget(), worksteps.size(), timer.getTargetAt());
+    }
+
+    private static List<OrderStateMachine.OrderItemData> toItemData(List<OrderItemDto> items) {
+        if (items == null) {
+            return null;
+        }
+        return items.stream()
+                .map(dto -> new OrderStateMachine.OrderItemData(
+                        dto.code(), dto.displayName(), dto.quantity(),
+                        dto.instructions(), dto.specimenType(), dto.bodySite(),
+                        dto.modality(), dto.laterality(), dto.contrast(), dto.procedureCode()))
+                .collect(Collectors.toList());
+    }
+
+    private static String note(NoteRequest request) {
+        return request != null ? request.note() : null;
     }
 }

@@ -142,6 +142,8 @@ public class OutboxPublisher {
         return switch (eventType) {
             case "ORDER_PLACED" -> "oros.order.placed";
 
+            case "ORDER_DRAFT_CREATED", "ORDER_DRAFT_UPDATED" -> "oros.order.draft";
+
             case "ORDER_STATUS_CHANGED",
                  "ORDER_ACCEPTED", "ORDER_SCHEDULED", "ORDER_IN_PROGRESS",
                  "ORDER_PARTIAL_RESULT", "ORDER_RESULT_AVAILABLE",
@@ -171,6 +173,9 @@ public class OutboxPublisher {
             default -> {
                 if (eventType.startsWith("ORDER_ACKNOWLEDGED_")) {
                     yield "oros.ack.received";
+                }
+                if (eventType.startsWith("IMAGING_STATE_")) {
+                    yield "oros.imaging.state_changed";
                 }
                 yield "oros.events";
             }
