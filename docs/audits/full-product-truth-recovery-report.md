@@ -1,6 +1,6 @@
 # Full Product Truth Recovery Report
 
-> Generated: 2026-06-25T08:03:11.952Z
+> Generated: 2026-06-25T08:32:41.653Z
 > Branch: `intake/oros-diagnostics-journey`
 
 ## Executive summary
@@ -10,7 +10,7 @@
 | Total services audited | 92 |
 | Backend services | 92 |
 | Shared libraries | 12 |
-| Frontend surfaces (routes) | 617 |
+| Frontend surfaces (routes) | 618 |
 | Mobile screens | 174 |
 | BFF route handlers | 2170 |
 | OpenAPI contracts | 102 |
@@ -23,9 +23,9 @@
 | Services backend-only (no UI) | 0 |
 | Services UI-only (no backend) | 0 |
 | Services with mock/stub hits | 3 |
-| Total classified gaps | 6 |
+| Total classified gaps | 4 |
 | Blocker gaps | 0 |
-| High severity gaps | 6 |
+| High severity gaps | 4 |
 | Cross-service cohesion | 14/14 pass |
 
 > **Honesty note:** `real` above is the file-existence axis (code present + wired),
@@ -61,7 +61,7 @@
 
 ## Remaining gaps by severity
 
-- **high:** 6
+- **high:** 4
 
 ## Implementation status
 

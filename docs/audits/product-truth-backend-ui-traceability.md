@@ -1,6 +1,6 @@
 # Product Truth — Backend-to-UI Traceability
 
-> Generated: 2026-06-25T08:03:11.952Z
+> Generated: 2026-06-25T08:32:41.653Z
 
 For each service: backend capabilities → API → BFF → UI → mobile → persistence.
 
@@ -1438,7 +1438,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (14 controllers, 80 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: oros.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (13 clients) |
-| 4 | Visible in UI? | Yes (56 refs) |
+| 4 | Visible in UI? | Yes (57 refs) |
 | 5 | Visible on mobile? | Yes (13 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
@@ -1616,7 +1616,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (1 controllers, 8 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: referral.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (13 clients) |
-| 4 | Visible in UI? | Yes (70 refs) |
+| 4 | Visible in UI? | Yes (72 refs) |
 | 5 | Visible on mobile? | Yes (17 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
@@ -1768,7 +1768,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (1 controllers, 5 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: search.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (34 clients) |
-| 4 | Visible in UI? | Yes (400 refs) |
+| 4 | Visible in UI? | Yes (401 refs) |
 | 5 | Visible on mobile? | Yes (52 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |

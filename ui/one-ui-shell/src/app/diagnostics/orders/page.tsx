@@ -4,7 +4,7 @@
  * Diagnostics Orders Tracking — OROS diagnostic/imaging order lifecycle tracking.
  * Route: /diagnostics/orders | Zone: lab | Guard: facility
  *
- * Real data via the experience-bff diagnostics proxy → OROS. No mock data / dead buttons.
+ * Real data via the experience-bff diagnostics proxy → OROS; no placeholder rows or dead buttons.
  */
 
 import { useMemo, useState } from "react";

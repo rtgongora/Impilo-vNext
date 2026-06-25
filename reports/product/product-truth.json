@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-25T08:03:11.952Z",
+  "generatedAt": "2026-06-25T08:32:41.653Z",
   "branch": "intake/oros-diagnostics-journey",
   "registryDrift": {
     "unregisteredModules": [],
@@ -24,12 +24,12 @@
     },
     "gapCounts": {
       "byCategory": {
-        "F": 6
+        "F": 4
       },
       "bySeverity": {
-        "high": 6
+        "high": 4
       },
-      "total": 6
+      "total": 4
     },
     "crossServiceCohesion": {
       "total": 14,
@@ -6696,7 +6696,7 @@
         "contractOperations": 58,
         "contractViolations": 0,
         "bffClients": 13,
-        "uiReferences": 56,
+        "uiReferences": 57,
         "mobileReferences": 13,
         "tests": 18
       },
@@ -6736,6 +6736,7 @@
         "ui/one-ui-shell/src/app/developer/sandbox/page.tsx",
         "ui/one-ui-shell/src/app/diagnostics/orders/new/page.tsx",
         "ui/one-ui-shell/src/app/diagnostics/orders/page.tsx",
+        "ui/one-ui-shell/src/app/diagnostics/orders/route/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/encounter/[encounterId]/page.test.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/encounter/[encounterId]/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/orders/page.test.tsx",
@@ -6748,8 +6749,7 @@
         "ui/one-ui-shell/src/app/lab/catalog/page.tsx",
         "ui/one-ui-shell/src/app/lab/page.test.tsx",
         "ui/one-ui-shell/src/app/lab/page.tsx",
-        "ui/one-ui-shell/src/app/lab/reconciliation/page.test.tsx",
-        "ui/one-ui-shell/src/app/lab/reconciliation/page.tsx"
+        "ui/one-ui-shell/src/app/lab/reconciliation/page.test.tsx"
       ],
       "mobilePaths": [
         "provider-app:apps/mobile/provider-app/src/__tests__/integration/ClinicalWriteJourneyContracts.test.ts",
@@ -7570,7 +7570,7 @@
         "contractOperations": 11,
         "contractViolations": 0,
         "bffClients": 13,
-        "uiReferences": 70,
+        "uiReferences": 72,
         "mobileReferences": 17,
         "tests": 1
       },
@@ -7609,6 +7609,7 @@
         "ui/one-ui-shell/src/app/clinical/control-tower/page.tsx",
         "ui/one-ui-shell/src/app/clinical/inpatient/discharge/[admissionId]/page.tsx",
         "ui/one-ui-shell/src/app/clinical-tools/page.tsx",
+        "ui/one-ui-shell/src/app/diagnostics/orders/route/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/__tests__/coordination-journey.test.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/care-plans/page.test.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/consults/page.tsx",
@@ -7622,8 +7623,7 @@
         "ui/one-ui-shell/src/app/ehr/[patientId]/notes/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/orders/page.test.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/orders/page.tsx",
-        "ui/one-ui-shell/src/app/ehr/[patientId]/page.test.tsx",
-        "ui/one-ui-shell/src/app/ehr/[patientId]/page.tsx"
+        "ui/one-ui-shell/src/app/ehr/[patientId]/page.test.tsx"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/PersonalFlow.test.tsx",
@@ -8313,7 +8313,7 @@
         "contractOperations": 7,
         "contractViolations": 0,
         "bffClients": 34,
-        "uiReferences": 400,
+        "uiReferences": 401,
         "mobileReferences": 52,
         "tests": 6
       },
@@ -29336,18 +29336,11 @@
         "/internal/v1/session/experience"
       ],
       "backingSignals": [
-        "apiClient-dynamic"
+        "apiClient-dynamic",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [
-        {
-          "file": "ui/one-ui-shell/src/app/diagnostics/orders/page.tsx",
-          "pattern": "mock-data-var"
-        },
-        {
-          "file": "ui/one-ui-shell/src/hooks/queries/useDiagnosticsOrders.ts",
-          "pattern": "mock-data-var"
-        },
         {
           "file": "ui/one-ui-shell/src/lib/api-client.ts",
           "pattern": "json-stringify-render"
@@ -29385,14 +29378,7 @@
       "writesRealData": true,
       "completeVsCosmetic": false,
       "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "F",
-          "severity": "high",
-          "description": "/diagnostics/orders: mock/stub data",
-          "impactScore": 3
-        }
-      ]
+      "gaps": []
     },
     {
       "path": "/diagnostics/orders/new",
@@ -29412,9 +29398,61 @@
       "gatewayPaths": [],
       "mockStubHits": [
         {
-          "file": "ui/one-ui-shell/src/hooks/queries/useDiagnosticsOrders.ts",
-          "pattern": "mock-data-var"
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
         },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/diagnostics/orders/route",
+      "pageTitle": "Route Order",
+      "zone": "lab",
+      "pageFile": "ui/one-ui-shell/src/app/diagnostics/orders/route/page.tsx",
+      "bffPaths": [
+        "/internal/v1/diagnostics/orders/draft",
+        "/internal/v1/diagnostics/reconcile-summary",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "inline-bff-reference"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
         {
           "file": "ui/one-ui-shell/src/lib/api-client.ts",
           "pattern": "json-stringify-render"
@@ -29452,14 +29490,7 @@
       "writesRealData": true,
       "completeVsCosmetic": false,
       "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "F",
-          "severity": "high",
-          "description": "/diagnostics/orders/new: mock/stub data",
-          "impactScore": 3
-        }
-      ]
+      "gaps": []
     },
     {
       "path": "/imaging/facility",

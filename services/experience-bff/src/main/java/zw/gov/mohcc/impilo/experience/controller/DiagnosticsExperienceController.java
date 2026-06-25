@@ -17,7 +17,7 @@ import java.util.Map;
  *
  * <p>Thin proxy over {@link OrosServiceClient}; trust headers are forwarded to OROS by the shared
  * RestTemplate interceptor. Responses use the standard {@code {data, meta}} envelope; upstream
- * failures degrade to 502 with an error envelope (never a fake-success).</p>
+ * failures degrade to 502 with an error envelope rather than being masked as success.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/diagnostics")

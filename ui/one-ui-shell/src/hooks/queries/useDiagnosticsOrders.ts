@@ -2,7 +2,7 @@
  * Experience UI — OROS Diagnostics Journey query hooks.
  *
  * Backed by the experience-bff diagnostics proxy (`/internal/v1/diagnostics/*`), which governs and
- * forwards to OROS. No mock data: every hook calls a real BFF endpoint.
+ * forwards to OROS. Every hook calls a real BFF endpoint backed by OROS.
  */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
