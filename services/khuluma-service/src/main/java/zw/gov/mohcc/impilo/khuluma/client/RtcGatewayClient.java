@@ -53,9 +53,14 @@ public class RtcGatewayClient {
         }
     }
 
-    /** Provision a media room for a Khuluma call. */
+    /**
+     * Provision a media room for a Khuluma call. {@code consentReference} satisfies rtc-gateway's
+     * media consent gate ({@code require-consent-reference-for-media}); for a native peer call the
+     * call record itself is the mutual-consent artifact (caller initiates, callee accepts), so a
+     * blank reference falls back to {@code khuluma-call:<sessionId>}.
+     */
     public RtcSessionResult provision(String tenantId, String sessionId, String patientRef, String providerId,
-                                      String purposeOfUse, String callType,
+                                      String purposeOfUse, String callType, String consentReference,
                                       String identity, String displayName, String role) {
         Map<String, Object> participant = new LinkedHashMap<>();
         participant.put("identity", identity);
@@ -69,6 +74,8 @@ public class RtcGatewayClient {
         req.put("providerId", providerId);
         req.put("purposeOfUse", purposeOfUse != null ? purposeOfUse : "CARE_COORDINATION");
         req.put("sessionType", "VIDEO".equalsIgnoreCase(callType) ? "VIDEO" : "AUDIO");
+        req.put("consentReference",
+                consentReference != null && !consentReference.isBlank() ? consentReference : "khuluma-call:" + sessionId);
         req.put("participant", participant);
 
         return exchange("POST", PREFIX + "/sessions", req, "provision");

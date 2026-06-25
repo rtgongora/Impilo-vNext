@@ -297,7 +297,7 @@ services:
       KEYCLOAK_REALM: ${KEYCLOAK_REALM:-impilo}
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: ""
       SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
-      RTC_GATEWAY_BASE_URL: http://rtc-gateway-service:8195
+      RTC_GATEWAY_BASE_URL: http://rtc-gateway:8195
       NOTIFICATION_BASE_URL: http://notification-service:8200
       CHANNELS_BASE_URL: http://channels-service:8130
       LIVE_BASE_URL: http://live-service:8380

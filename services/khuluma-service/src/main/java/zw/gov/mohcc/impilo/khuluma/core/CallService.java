@@ -90,7 +90,7 @@ public class CallService {
         RtcGatewayClient.RtcSessionResult media = rtcGateway.provision(
                 ctx.tenantId().toString(), call.getCallId().toString(), patientRef(conversationId, call),
                 "PROVIDER".equalsIgnoreCase(ctx.actorType()) ? ctx.actorId() : null,
-                "CARE_COORDINATION", call.getCallType(),
+                "CARE_COORDINATION", call.getCallType(), "khuluma-call:" + call.getCallId(),
                 ctx.actorId(), displayName, "HOST");
         if (media.available()) {
             call.setRtcSessionId(media.sessionId());
