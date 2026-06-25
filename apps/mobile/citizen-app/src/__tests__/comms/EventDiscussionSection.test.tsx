@@ -39,11 +39,29 @@ function render() {
   return { container, root };
 }
 
+// Advance REAL timers inside act() — TanStack v5 batches query notifications via timer ticks,
+// so a microtask-only flush never renders a resolved query (the raw createRoot harness has no
+// @testing-library waitFor). One real tick drains pending promises + the notify batch.
 async function flush() {
-  for (let i = 0; i < 6; i++) {
-    await act(async () => {
-      await Promise.resolve();
-    });
+  await act(async () => {
+    await new Promise((r) => setTimeout(r, 0));
+  });
+}
+
+// Poll (advancing real timers) until the predicate holds, then return; otherwise let it throw.
+async function waitFor(predicate: () => void, timeout = 2000) {
+  const start = Date.now();
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    try {
+      predicate();
+      return;
+    } catch (err) {
+      if (Date.now() - start >= timeout) throw err;
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 15));
+      });
+    }
   }
 }
 
@@ -76,14 +94,17 @@ describe("EventDiscussionSection", () => {
     expect(mounted.container.querySelector('[data-testid="event-discussion-messages"]')).toBeTruthy();
   });
 
-  it("renders the discussion composer when a conversation is already anchored", async () => {
+  it("renders the anchored conversation's messages and composer", async () => {
     svc.eventConversation.mockResolvedValue({ conversationId: "c-1", eventId: "ev-1" });
+    svc.fetchMessages.mockResolvedValue([
+      { messageId: "m1", conversationId: "c-1", senderId: "prov-b", senderDisplayName: "Dr B", contentType: "TEXT", body: "Hi event", status: "SENT", sentAt: null },
+    ]);
     mounted = render();
-    await flush();
 
-    // Anchored → no "start" prompt; the composer (input + send) is shown.
+    // The dependent TanStack messages query resolves + renders the real message.
+    await waitFor(() => expect(mounted!.container.textContent).toContain("Hi event"));
     expect(mounted.container.querySelector('[data-testid="start-discussion"]')).toBeNull();
-    expect(mounted.container.querySelector('[data-testid="discussion-input"]')).toBeTruthy();
     expect(mounted.container.querySelector('[data-testid="discussion-send"]')).toBeTruthy();
+    expect(svc.fetchMessages).toHaveBeenCalledWith("c-1");
   });
 });
