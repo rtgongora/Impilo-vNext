@@ -13,6 +13,7 @@ import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -44,6 +45,38 @@ public class VarapiClient {
     /** Whether a VARAPI endpoint is configured (base URL present). */
     public boolean isConfigured() {
         return !baseUrl.isBlank();
+    }
+
+    /**
+     * Search providers for the diagnostic provider directory. Returns raw summary maps
+     * ({@code providerPublicId}, {@code givenName}, {@code familyName}, {@code profession}).
+     * Honest degradation: empty list when not configured / unreachable.
+     */
+    @SuppressWarnings("unchecked")
+    public List<Map<String, Object>> searchProviders() {
+        if (!isConfigured()) {
+            return List.of();
+        }
+        try {
+            String url = baseUrl + "/v1/internal/providers/search";
+            HttpEntity<Map<String, Object>> request =
+                    new HttpEntity<>(Map.of("page", 0, "size", 100), buildTrustHeaders());
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                Object data = response.getBody().get("data");
+                if (data instanceof Map<?, ?> paged) {
+                    Object items = ((Map<String, Object>) paged).get("items");
+                    if (items instanceof List<?> list) {
+                        return (List<Map<String, Object>>) list;
+                    }
+                }
+            }
+            return List.of();
+        } catch (RestClientException e) {
+            log.warn("VARAPI unavailable for provider directory: {}", e.getMessage());
+            return List.of();
+        }
     }
 
     /**
