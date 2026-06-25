@@ -27,6 +27,7 @@ public class AuthzProperties {
     private String notificationServiceUrl = "http://localhost:8200";
     private String notificationNotifyPath = "/internal/v1/notify";
     private OtpDelivery otpDelivery = new OtpDelivery();
+    private Totp totp = new Totp();
     private ESignet esignet = new ESignet();
     private Cache cache = new Cache();
     private int visibilityEscalationGrantTtlHours = 4;
@@ -88,6 +89,31 @@ public class AuthzProperties {
         public void setChannel(String channel) { this.channel = channel; }
         public String getTemplateKey() { return templateKey; }
         public void setTemplateKey(String templateKey) { this.templateKey = templateKey; }
+    }
+
+    /**
+     * Authenticator-app TOTP enrolment (RFC 6238). Opt-in: when {@code enrolmentEnabled=false}
+     * (default) the fail-closed default {@code TotpSecretProvider} stays in effect. When enabled,
+     * {@code encryptionKey} (a strong deployment secret, ≥32 chars) is required to encrypt enrolled
+     * secrets at rest — the service refuses to provide a real provider without it.
+     */
+    public static class Totp {
+        private boolean enrolmentEnabled = false;
+        private String encryptionKey = "";
+        private String issuer = "Impilo";
+        private int digits = 6;
+        private int period = 30;
+
+        public boolean isEnrolmentEnabled() { return enrolmentEnabled; }
+        public void setEnrolmentEnabled(boolean enrolmentEnabled) { this.enrolmentEnabled = enrolmentEnabled; }
+        public String getEncryptionKey() { return encryptionKey; }
+        public void setEncryptionKey(String encryptionKey) { this.encryptionKey = encryptionKey; }
+        public String getIssuer() { return issuer; }
+        public void setIssuer(String issuer) { this.issuer = issuer; }
+        public int getDigits() { return digits; }
+        public void setDigits(int digits) { this.digits = digits; }
+        public int getPeriod() { return period; }
+        public void setPeriod(int period) { this.period = period; }
     }
 
     public static class ESignet {
@@ -157,6 +183,8 @@ public class AuthzProperties {
     public void setNotificationNotifyPath(String notificationNotifyPath) { this.notificationNotifyPath = notificationNotifyPath; }
     public OtpDelivery getOtpDelivery() { return otpDelivery; }
     public void setOtpDelivery(OtpDelivery otpDelivery) { this.otpDelivery = otpDelivery; }
+    public Totp getTotp() { return totp; }
+    public void setTotp(Totp totp) { this.totp = totp; }
     public ESignet getEsignet() { return esignet; }
     public void setEsignet(ESignet esignet) { this.esignet = esignet; }
     public Cache getCache() { return cache; }

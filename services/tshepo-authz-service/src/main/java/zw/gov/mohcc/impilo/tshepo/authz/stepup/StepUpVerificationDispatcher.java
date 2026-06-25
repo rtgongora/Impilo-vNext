@@ -3,11 +3,7 @@ package zw.gov.mohcc.impilo.tshepo.authz.stepup;
 import org.springframework.stereotype.Component;
 import zw.gov.mohcc.impilo.tshepo.authz.persistence.entity.StepUpChallengeEntity;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import java.nio.ByteBuffer;
 import java.security.SecureRandom;
-import java.time.Instant;
 import java.util.EnumMap;
 import java.util.Map;
 
@@ -58,33 +54,8 @@ public class StepUpVerificationDispatcher {
             byte[] secret = secretProvider.secretFor(challenge.getTenantId(), challenge.getActorId())
                     .orElseThrow(() -> new StepUpUnavailableException(
                             "No enrolled TOTP secret for actor " + challenge.getActorId()));
-            if (code == null || !code.matches("\\d{6}")) {
-                return false;
-            }
-            long step = Instant.now().getEpochSecond() / STEP_SECONDS;
-            for (long w = -1; w <= 1; w++) {
-                if (StepUpVerifier.constantTimeEquals(generate(secret, step + w), code)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        private static String generate(byte[] secret, long counter) {
-            try {
-                byte[] msg = ByteBuffer.allocate(8).putLong(counter).array();
-                Mac mac = Mac.getInstance("HmacSHA1");
-                mac.init(new SecretKeySpec(secret, "HmacSHA1"));
-                byte[] h = mac.doFinal(msg);
-                int offset = h[h.length - 1] & 0xF;
-                int binary = ((h[offset] & 0x7f) << 24)
-                        | ((h[offset + 1] & 0xff) << 16)
-                        | ((h[offset + 2] & 0xff) << 8)
-                        | (h[offset + 3] & 0xff);
-                return String.format("%06d", binary % 1_000_000);
-            } catch (Exception e) {
-                throw new IllegalStateException("TOTP generation failed", e);
-            }
+            // RFC 6238, 6-digit, ±1 step window — shared with the enrolment flow (TotpCodes).
+            return TotpCodes.verify(secret, code, 6, STEP_SECONDS);
         }
     }
 
