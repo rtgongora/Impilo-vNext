@@ -13,7 +13,7 @@ until pg_isready -h "$HOST" -U "$USER" -q; do
   sleep 1
 done
 
-for db in experience_bff tshepo vito varapi tuso zibo pct oros pharmacy impilo_learning; do
+for db in experience_bff tshepo vito varapi tuso zibo pct oros pharmacy impilo_learning impilo_khuluma live; do
   exists=$(psql -h "$HOST" -U "$USER" -d postgres -Atqc "SELECT 1 FROM pg_database WHERE datname='$db'" || true)
   if [ "$exists" = "1" ]; then
     echo "ensure-databases: $db exists"

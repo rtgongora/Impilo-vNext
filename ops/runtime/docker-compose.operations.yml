@@ -53,6 +53,9 @@ services:
     container_name: impilo-pct
     environment:
       <<: *java-env
+      # Run provider↔patient consults on self-hosted LiveKit via rtc-gateway (same media path as Khuluma).
+      PCT_TELEMED_DEFAULT_PROVIDER: ${PCT_TELEMED_DEFAULT_PROVIDER:-RTC_GATEWAY}
+      RTC_GATEWAY_BASE_URL: ${RTC_GATEWAY_BASE_URL:-http://rtc-gateway:8195}
       PCT_TELEMED_EXTERNAL_ENABLED: ${PCT_TELEMED_EXTERNAL_ENABLED:-true}
       PCT_TELEMED_EXTERNAL_BASE_URL: ${PCT_TELEMED_EXTERNAL_BASE_URL:-http://rtc-gateway:8195}
       PCT_TELEMED_EXTERNAL_SESSION_PATH: ${PCT_TELEMED_EXTERNAL_SESSION_PATH:-/internal/v1/rtc/sessions}
@@ -115,6 +118,51 @@ services:
     healthcheck:
       <<: *java-healthcheck
       test: ["CMD-SHELL", "wget -qO- http://localhost:8195/actuator/health || exit 1"]
+
+  # Khuluma — Comms Hub. Orchestrates calls (rtc-gateway/LiveKit) + meetings (live-service).
+  khuluma-service:
+    <<: *service-defaults
+    build:
+      context: ../../services/khuluma-service
+      dockerfile: Dockerfile
+    container_name: impilo-khuluma
+    environment:
+      <<: *java-env
+      SERVER_PORT: 8390
+      RTC_GATEWAY_BASE_URL: http://rtc-gateway:8195
+      LIVE_BASE_URL: http://live-service:8380
+      NOTIFICATION_BASE_URL: ${NOTIFICATION_BASE_URL:-http://notification-service:8200}
+      CHANNELS_BASE_URL: ${CHANNELS_BASE_URL:-http://channels-service:8130}
+    ports:
+      - "8390:8390"
+    depends_on:
+      <<: *java-depends
+      rtc-gateway:
+        condition: service_healthy
+    healthcheck:
+      <<: *java-healthcheck
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8390/actuator/health || exit 1"]
+
+  # Live events / virtual meetings SoR — minted on self-hosted LiveKit via rtc-gateway.
+  live-service:
+    <<: *service-defaults
+    build:
+      context: ../../services/live-service
+      dockerfile: Dockerfile
+    container_name: impilo-live
+    environment:
+      <<: *java-env
+      LIVE_MEDIA_PROVIDER: ${LIVE_MEDIA_PROVIDER:-rtc-gateway}
+      RTC_GATEWAY_BASE_URL: http://rtc-gateway:8195
+    ports:
+      - "8380:8380"
+    depends_on:
+      <<: *java-depends
+      rtc-gateway:
+        condition: service_healthy
+    healthcheck:
+      <<: *java-healthcheck
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8380/actuator/health || exit 1"]
 
   oros:
     <<: *service-defaults
@@ -387,6 +435,8 @@ services:
       KEYCLOAK_REALM: ${KEYCLOAK_REALM:-impilo}
       # Sovereign service URLs (compose networking)
       PCT_BASE_URL: http://pct:8088
+      KHULUMA_BASE_URL: http://khuluma-service:8390
+      LIVE_BASE_URL: http://live-service:8380
       # Aggregated patient summary (PCT + Mvumo consent) — run mvumo on host or add service to this compose
       MVUMO_BASE_URL: ${MVUMO_BASE_URL:-http://host.docker.internal:8195}
       OROS_BASE_URL: http://oros:8089
