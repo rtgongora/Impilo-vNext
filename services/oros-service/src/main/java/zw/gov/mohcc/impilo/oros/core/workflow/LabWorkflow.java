@@ -23,7 +23,7 @@ public class LabWorkflow extends EnumFulfilmentWorkflow<LabWorkflowState> {
             EnumSet.of(CANCELLED, REJECTED, RETURNED_FOR_CLARIFICATION, DEFERRED, REASSIGNED);
 
     private static final Map<LabWorkflowState, Set<LabWorkflowState>> TRANSITIONS = Map.ofEntries(
-            Map.entry(RECEIVED, plus(EnumSet.of(ACCEPTED, AWAITING_COLLECTION), OPEN_EXCEPTIONS)),
+            Map.entry(RECEIVED, plus(EnumSet.of(ACCEPTED, AWAITING_COLLECTION, COLLECTED), OPEN_EXCEPTIONS)),
             Map.entry(ACCEPTED, plus(EnumSet.of(AWAITING_COLLECTION, COLLECTED), OPEN_EXCEPTIONS)),
             Map.entry(AWAITING_COLLECTION, plus(EnumSet.of(COLLECTED), OPEN_EXCEPTIONS)),
             Map.entry(COLLECTED, EnumSet.of(DISPATCHED, RECEIVED_IN_LAB, SPECIMEN_REJECTED,

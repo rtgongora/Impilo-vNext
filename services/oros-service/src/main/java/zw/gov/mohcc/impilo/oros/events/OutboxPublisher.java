@@ -185,6 +185,9 @@ public class OutboxPublisher {
                 if (eventType.startsWith("WORKFLOW_STATE_")) {
                     yield "oros.workflow.state_changed";
                 }
+                if (eventType.startsWith("SPECIMEN_")) {
+                    yield "oros.specimen.changed";
+                }
                 yield "oros.events";
             }
         };

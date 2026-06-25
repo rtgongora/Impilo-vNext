@@ -50,11 +50,19 @@ class ReportServiceTest {
     private static final UUID TENANT_ID = UUID.randomUUID();
     private static final String ORDER_ID = "01ARZ3NDEKTSV4RRFFQ69G5FAV";
 
+    @Mock private FulfilmentWorkflowService fulfilmentWorkflowService;
+
     @BeforeEach
     void setUp() {
         ObjectMapper om = OrosTestObjectMapper.create();
+        // Real guard registry (cheap, pure) so lab/procedure sync uses the actual transition graph;
+        // the generalised transition itself is mocked.
+        var guards = new zw.gov.mohcc.impilo.oros.core.workflow.WorkflowGuardRegistry(java.util.List.of(
+                new zw.gov.mohcc.impilo.oros.core.workflow.ImagingFulfilmentWorkflow(),
+                new zw.gov.mohcc.impilo.oros.core.workflow.LabWorkflow(),
+                new zw.gov.mohcc.impilo.oros.core.workflow.ProcedureWorkflow()));
         service = new ReportService(resultRepository, stateMachine, imagingWorkflowService,
-                butanoIntegration, hl7OruSender, outboxRepository, om);
+                butanoIntegration, hl7OruSender, outboxRepository, om, guards, fulfilmentWorkflowService);
     }
 
     private TrustContext ctx() {

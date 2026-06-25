@@ -37,6 +37,9 @@ public class ReportService {
 
     private static final Logger log = LoggerFactory.getLogger(ReportService.class);
 
+    /** Logical step in the report lifecycle, mapped to a category-specific workflow state. */
+    public enum ReportStep { PRELIMINARY, FINAL, RELEASED, ACKNOWLEDGED, AMENDED }
+
     private final ResultRepository resultRepository;
     private final OrderStateMachine stateMachine;
     private final ImagingWorkflowService imagingWorkflowService;
@@ -44,6 +47,8 @@ public class ReportService {
     private final zw.gov.mohcc.impilo.oros.integration.hl7.Hl7OruSender hl7OruSender;
     private final EventOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
+    private final zw.gov.mohcc.impilo.oros.core.workflow.WorkflowGuardRegistry guards;
+    private final FulfilmentWorkflowService fulfilmentWorkflowService;
 
     public ReportService(ResultRepository resultRepository,
                          OrderStateMachine stateMachine,
@@ -51,7 +56,9 @@ public class ReportService {
                          zw.gov.mohcc.impilo.oros.integration.ButanoIntegration butanoIntegration,
                          zw.gov.mohcc.impilo.oros.integration.hl7.Hl7OruSender hl7OruSender,
                          EventOutboxRepository outboxRepository,
-                         ObjectMapper objectMapper) {
+                         ObjectMapper objectMapper,
+                         zw.gov.mohcc.impilo.oros.core.workflow.WorkflowGuardRegistry guards,
+                         FulfilmentWorkflowService fulfilmentWorkflowService) {
         this.resultRepository = resultRepository;
         this.stateMachine = stateMachine;
         this.imagingWorkflowService = imagingWorkflowService;
@@ -59,6 +66,8 @@ public class ReportService {
         this.hl7OruSender = hl7OruSender;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
+        this.guards = guards;
+        this.fulfilmentWorkflowService = fulfilmentWorkflowService;
     }
 
     /** Author a preliminary report (version 1 of the chain if none exists). */
@@ -70,7 +79,7 @@ public class ReportService {
                 ResultStatus.PRELIMINARY, nextVersion(orderId), null);
         r = resultRepository.save(r);
         publishEvent(r, "RESULT_PRELIMINARY");
-        syncImaging(order, ImagingWorkflowState.PRELIMINARY_REPORT);
+        syncWorkflow(order, ReportStep.PRELIMINARY);
         log.info("Preliminary report authored: orderId={}, resultId={}", orderId, r.getResultId());
         return r;
     }
@@ -86,7 +95,7 @@ public class ReportService {
         r.setValidatedBy(ctx.actorId());
         r = resultRepository.save(r);
         publishEvent(r, "RESULT_FINAL");
-        syncImaging(order, ImagingWorkflowState.FINAL_REPORT);
+        syncWorkflow(order, ReportStep.FINAL);
         butanoIntegration.createDiagnosticReport(orderId, r);
         hl7OruSender.sendFinalReport(order, r);
         log.info("Final report authored: orderId={}, resultId={}", orderId, r.getResultId());
@@ -103,7 +112,7 @@ public class ReportService {
     public ResultEntity amend(String orderId, String reason, String summaryJson,
                               String impression, String recommendations) {
         return supersede(orderId, ResultStatus.AMENDED, "RESULT_AMENDED", reason,
-                summaryJson, impression, recommendations, ImagingWorkflowState.AMENDED);
+                summaryJson, impression, recommendations);
     }
 
     /**
@@ -115,7 +124,7 @@ public class ReportService {
     public ResultEntity addendum(String orderId, String reason, String summaryJson,
                                  String impression, String recommendations) {
         return supersede(orderId, ResultStatus.ADDENDUM, "RESULT_ADDENDUM", reason,
-                summaryJson, impression, recommendations, ImagingWorkflowState.AMENDED);
+                summaryJson, impression, recommendations);
     }
 
     /** Release the current head report to requesters/workspace/patient. */
@@ -125,7 +134,7 @@ public class ReportService {
         r.setReleasedAt(OffsetDateTime.now());
         r = resultRepository.save(r);
         publishEvent(r, "RESULT_RELEASED");
-        syncImaging(stateMachine.getOrder(r.getOrderId()), ImagingWorkflowState.RELEASED);
+        syncWorkflow(stateMachine.getOrder(r.getOrderId()), ReportStep.RELEASED);
         log.info("Report released: resultId={}, orderId={}, note={}", resultId, r.getOrderId(), note);
         return r;
     }
@@ -162,7 +171,7 @@ public class ReportService {
         r.setAcknowledgedBy(ctx.actorId());
         r = resultRepository.save(r);
         publishEvent(r, r.isCritical() ? "RESULT_CRITICAL_ACKNOWLEDGED" : "RESULT_ACKNOWLEDGED");
-        syncImaging(stateMachine.getOrder(r.getOrderId()), ImagingWorkflowState.ACKNOWLEDGED);
+        syncWorkflow(stateMachine.getOrder(r.getOrderId()), ReportStep.ACKNOWLEDGED);
         log.info("Result acknowledged: resultId={}, orderId={}, critical={}, note={}",
                 resultId, r.getOrderId(), r.isCritical(), note);
         return r;
@@ -171,8 +180,7 @@ public class ReportService {
     // ── internals ────────────────────────────────────────────────────────
 
     private ResultEntity supersede(String orderId, ResultStatus status, String eventType, String reason,
-                                   String summaryJson, String impression, String recommendations,
-                                   ImagingWorkflowState imagingTarget) {
+                                   String summaryJson, String impression, String recommendations) {
         OrderEntity order = stateMachine.getOrder(orderId);
         ResultEntity head = resultRepository.findFirstByOrderIdAndReportStatusOrderByVersionDesc(
                         orderId, ResultStatus.FINAL)
@@ -189,7 +197,7 @@ public class ReportService {
         r.setCriticalReason(reason);
         r = resultRepository.save(r);
         publishEvent(r, eventType);
-        syncImaging(order, imagingTarget);
+        syncWorkflow(order, ReportStep.AMENDED);
         // SHR writeback with relatesTo lineage to the superseded report (§10).
         butanoIntegration.createDiagnosticReport(orderId, r);
         log.info("Report {}: orderId={}, newResultId={}, supersedes={}, version={}",
@@ -227,17 +235,53 @@ public class ReportService {
                 .orElseThrow(() -> new IllegalArgumentException("Result not found: " + resultId));
     }
 
-    /** Best-effort imaging-state sync: only transitions when the guard permits it. */
-    private void syncImaging(OrderEntity order, ImagingWorkflowState target) {
-        if (order.getOrderType() != OrderType.IMAGING) {
+    /**
+     * Best-effort fine-grained workflow sync for a report-lifecycle step. Maps the logical step to
+     * the category's workflow state and only transitions when the category guard permits it.
+     * Imaging keeps its dedicated service (carrying PACS side-effects); lab/procedure go through
+     * the generalised {@link FulfilmentWorkflowService}.
+     */
+    private void syncWorkflow(OrderEntity order, ReportStep step) {
+        if (order.getOrderType() == OrderType.IMAGING) {
+            ImagingWorkflowState target = imagingTarget(step);
+            if (target != null && ImagingWorkflow.canTransition(order.getImagingState(), target)) {
+                imagingWorkflowService.transition(order.getOrderId(), target, "report lifecycle");
+            }
             return;
         }
-        if (!ImagingWorkflow.canTransition(order.getImagingState(), target)) {
-            log.debug("Skipping imaging sync for order {}: {} -> {} not permitted",
-                    order.getOrderId(), order.getImagingState(), target);
+        var guard = guards.forType(order.getOrderType());
+        if (guard == null || guard.isEmpty()) {
             return;
         }
-        imagingWorkflowService.transition(order.getOrderId(), target, "report lifecycle");
+        String target = genericTarget(order.getOrderType(), step);
+        if (target == null || !guard.get().canTransition(order.getWorkflowState(), target)) {
+            log.debug("Skipping workflow sync for order {} ({}): {} -> {} not permitted",
+                    order.getOrderId(), order.getOrderType(), order.getWorkflowState(), target);
+            return;
+        }
+        fulfilmentWorkflowService.transition(order.getOrderId(), target, "report lifecycle");
+    }
+
+    private static ImagingWorkflowState imagingTarget(ReportStep step) {
+        return switch (step) {
+            case PRELIMINARY -> ImagingWorkflowState.PRELIMINARY_REPORT;
+            case FINAL -> ImagingWorkflowState.FINAL_REPORT;
+            case RELEASED -> ImagingWorkflowState.RELEASED;
+            case ACKNOWLEDGED -> ImagingWorkflowState.ACKNOWLEDGED;
+            case AMENDED -> ImagingWorkflowState.AMENDED;
+        };
+    }
+
+    /** State-name mapping for the report lifecycle of non-imaging categories. */
+    private static String genericTarget(OrderType type, ReportStep step) {
+        boolean lab = type == OrderType.LAB;
+        return switch (step) {
+            case PRELIMINARY -> lab ? "PRELIMINARY_RESULT" : "PRELIMINARY_REPORT";
+            case FINAL -> lab ? "FINAL_RESULT" : "FINAL_REPORT";
+            case RELEASED -> "RELEASED";
+            case ACKNOWLEDGED -> "ACKNOWLEDGED";
+            case AMENDED -> "AMENDED";
+        };
     }
 
     /**
