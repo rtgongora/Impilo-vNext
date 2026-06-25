@@ -84,6 +84,29 @@ class ExternalOrderIntakeServiceTest {
     }
 
     @Test
+    @DisplayName("external intake generalises to non-imaging categories (LAB paper/external order)")
+    void createsLabExternalOrder() {
+        try (MockedStatic<TrustContextHolder> h = mockStatic(TrustContextHolder.class)) {
+            h.when(TrustContextHolder::require).thenReturn(ctx());
+            ExternalOrderIntake labInput = new ExternalOrderIntake("CPID-2", OrderType.LAB,
+                    OrderPriority.ROUTINE, "FBC", "Full Blood Count", "anaemia", "urn:ext|LAB-9");
+            when(orderRepository.findByTenantIdAndExternalOrderRef(TENANT, "urn:ext|LAB-9")).thenReturn(Optional.empty());
+            OrderEntity draft = order("ORD-LAB", OrderStatus.DRAFT);
+            when(stateMachine.createDraft(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+                    .thenReturn(draft);
+            when(orderRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+            when(submissionService.submit("ORD-LAB")).thenReturn(order("ORD-LAB", OrderStatus.PLACED));
+
+            OrderEntity result = service().create(labInput);
+
+            assertThat(result.getStatus()).isEqualTo(OrderStatus.PLACED);
+            verify(stateMachine).createDraft(eq(FACILITY), eq("CPID-2"), eq(OrderType.LAB),
+                    eq(OrderPriority.ROUTINE), eq(RequestSource.EXTERNAL), any(), any(), eq("anaemia"),
+                    any(), any(), any(), any(), any());
+        }
+    }
+
+    @Test
     @DisplayName("create is idempotent on the external ref")
     void idempotent() {
         try (MockedStatic<TrustContextHolder> h = mockStatic(TrustContextHolder.class)) {
