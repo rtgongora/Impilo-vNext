@@ -61,6 +61,18 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
+        <!-- HL7 v2 (ORM-inbound / ORU-outbound external adapters) -->
+        <dependency>
+            <groupId>ca.uhn.hapi</groupId>
+            <artifactId>hapi-base</artifactId>
+            <version>2.5.1</version>
+        </dependency>
+        <dependency>
+            <groupId>ca.uhn.hapi</groupId>
+            <artifactId>hapi-structures-v25</artifactId>
+            <version>2.5.1</version>
+        </dependency>
+
         <!-- Kafka (event outbox publishing + consumption) -->
         <dependency>
             <groupId>org.springframework.kafka</groupId>

@@ -77,3 +77,28 @@ oros:
     ack-timeout-minutes: 30
   routing:
     default-mode: INTERNAL
+  integration:
+    # External interoperability adapters — honest configured/not-configured at /admin/integrations.
+    butano:
+      base-url: ${OROS_BUTANO_BASE_URL:http://localhost:8090}
+    varapi:
+      base-url: ${OROS_VARAPI_BASE_URL:http://localhost:8083}
+    tuso:
+      base-url: ${OROS_TUSO_BASE_URL:http://localhost:8084}
+    share-slip:
+      base-url: ${OROS_SHARE_SLIP_BASE_URL:http://localhost:8104}
+    fhir:
+      imagingstudy-outbound:
+        enabled: ${OROS_FHIR_IMAGINGSTUDY_OUTBOUND_ENABLED:false}
+      servicerequest-inbound:
+        enabled: ${OROS_FHIR_SERVICEREQUEST_INBOUND_ENABLED:false}
+    hl7:
+      orm-inbound:
+        enabled: ${OROS_HL7_ORM_INBOUND_ENABLED:false}
+        port: ${OROS_HL7_ORM_INBOUND_PORT:2575}
+        tenant-id: ${OROS_HL7_ORM_INBOUND_TENANT_ID:}
+        facility-id: ${OROS_HL7_ORM_INBOUND_FACILITY_ID:}
+      oru-outbound:
+        enabled: ${OROS_HL7_ORU_OUTBOUND_ENABLED:false}
+        host: ${OROS_HL7_ORU_OUTBOUND_HOST:localhost}
+        port: ${OROS_HL7_ORU_OUTBOUND_PORT:2576}

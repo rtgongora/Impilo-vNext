@@ -42,6 +42,7 @@ class ReportServiceTest {
     @Mock private OrderStateMachine stateMachine;
     @Mock private ImagingWorkflowService imagingWorkflowService;
     @Mock private zw.gov.mohcc.impilo.oros.integration.ButanoIntegration butanoIntegration;
+    @Mock private zw.gov.mohcc.impilo.oros.integration.hl7.Hl7OruSender hl7OruSender;
     @Mock private EventOutboxRepository outboxRepository;
 
     private ReportService service;
@@ -53,7 +54,7 @@ class ReportServiceTest {
     void setUp() {
         ObjectMapper om = OrosTestObjectMapper.create();
         service = new ReportService(resultRepository, stateMachine, imagingWorkflowService,
-                butanoIntegration, outboxRepository, om);
+                butanoIntegration, hl7OruSender, outboxRepository, om);
     }
 
     private TrustContext ctx() {

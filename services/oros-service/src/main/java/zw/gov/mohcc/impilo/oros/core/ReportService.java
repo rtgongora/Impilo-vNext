@@ -41,6 +41,7 @@ public class ReportService {
     private final OrderStateMachine stateMachine;
     private final ImagingWorkflowService imagingWorkflowService;
     private final zw.gov.mohcc.impilo.oros.integration.ButanoIntegration butanoIntegration;
+    private final zw.gov.mohcc.impilo.oros.integration.hl7.Hl7OruSender hl7OruSender;
     private final EventOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
 
@@ -48,12 +49,14 @@ public class ReportService {
                          OrderStateMachine stateMachine,
                          ImagingWorkflowService imagingWorkflowService,
                          zw.gov.mohcc.impilo.oros.integration.ButanoIntegration butanoIntegration,
+                         zw.gov.mohcc.impilo.oros.integration.hl7.Hl7OruSender hl7OruSender,
                          EventOutboxRepository outboxRepository,
                          ObjectMapper objectMapper) {
         this.resultRepository = resultRepository;
         this.stateMachine = stateMachine;
         this.imagingWorkflowService = imagingWorkflowService;
         this.butanoIntegration = butanoIntegration;
+        this.hl7OruSender = hl7OruSender;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
     }
@@ -85,6 +88,7 @@ public class ReportService {
         publishEvent(r, "RESULT_FINAL");
         syncImaging(order, ImagingWorkflowState.FINAL_REPORT);
         butanoIntegration.createDiagnosticReport(orderId, r);
+        hl7OruSender.sendFinalReport(order, r);
         log.info("Final report authored: orderId={}, resultId={}", orderId, r.getResultId());
         return r;
     }

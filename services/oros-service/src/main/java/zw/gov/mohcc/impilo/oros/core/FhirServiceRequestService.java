@@ -7,88 +7,34 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.oros.domain.OrderPriority;
 import zw.gov.mohcc.impilo.oros.domain.OrderType;
-import zw.gov.mohcc.impilo.oros.domain.RequestSource;
 import zw.gov.mohcc.impilo.oros.persistence.entity.OrderEntity;
-import zw.gov.mohcc.impilo.oros.persistence.repository.OrderRepository;
-import zw.gov.mohcc.impilo.shared.auth.TrustContext;
-import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
-
-import java.util.List;
 
 /**
- * FHIR ServiceRequest-inbound adapter: map an external FHIR R4 {@code ServiceRequest} into an OROS
- * order ({@code requestSource=EXTERNAL}), then submit + route it like any other intake.
- *
- * <p>Idempotent on the ServiceRequest's external identifier (re-sends resolve to the same order).
- * Patient identity is taken from {@code subject} (Patient/CPID or an identifier value); production
- * deployments should cross-walk an external MRN → Impilo CPID via VITO before this point.</p>
+ * FHIR ServiceRequest-inbound adapter: parse an external FHIR R4 {@code ServiceRequest} and hand it
+ * to the shared {@link ExternalOrderIntakeService}. Patient identity comes from {@code subject}
+ * (Patient/CPID or identifier value); production should cross-walk an external MRN → CPID via VITO
+ * before this point.
  */
 @Service
 public class FhirServiceRequestService {
 
     private static final Logger log = LoggerFactory.getLogger(FhirServiceRequestService.class);
 
-    private final OrderStateMachine stateMachine;
-    private final OrderRepository orderRepository;
-    private final OrderSubmissionService submissionService;
-    private final RoutingEngine routingEngine;
-    private final WorkstepEngine workstepEngine;
-    private final SlaService slaService;
+    private final ExternalOrderIntakeService intakeService;
 
-    public FhirServiceRequestService(OrderStateMachine stateMachine,
-                                     OrderRepository orderRepository,
-                                     OrderSubmissionService submissionService,
-                                     RoutingEngine routingEngine,
-                                     WorkstepEngine workstepEngine,
-                                     SlaService slaService) {
-        this.stateMachine = stateMachine;
-        this.orderRepository = orderRepository;
-        this.submissionService = submissionService;
-        this.routingEngine = routingEngine;
-        this.workstepEngine = workstepEngine;
-        this.slaService = slaService;
+    public FhirServiceRequestService(ExternalOrderIntakeService intakeService) {
+        this.intakeService = intakeService;
     }
 
     @Transactional
     public OrderEntity ingest(JsonNode sr) {
-        TrustContext ctx = TrustContextHolder.require();
-
-        String externalRef = extractExternalRef(sr);
-        if (externalRef != null) {
-            var existing = orderRepository.findByTenantIdAndExternalOrderRef(ctx.tenantId(), externalRef);
-            if (existing.isPresent()) {
-                log.info("FHIR ServiceRequest already ingested (idempotent): externalRef={}, orderId={}",
-                        externalRef, existing.get().getOrderId());
-                return existing.get();
-            }
-        }
-
-        String cpid = extractCpid(sr);
-        if (cpid == null || cpid.isBlank()) {
-            throw new IllegalArgumentException("ServiceRequest.subject is missing a patient reference/identifier");
-        }
-        OrderType type = mapOrderType(sr);
-        OrderPriority priority = mapPriority(sr);
         String code = extractCode(sr);
-        String notes = text(sr.path("note").path(0), "text");
-
-        List<OrderStateMachine.OrderItemData> items =
-                List.of(OrderStateMachine.OrderItemData.lab(code, code, 1, null, null, null));
-
-        OrderEntity draft = stateMachine.createDraft(
-                ctx.facilityId(), cpid, type, priority, RequestSource.EXTERNAL,
-                null, null, notes, null, null, null, null, items);
-        draft.setExternalOrderRef(externalRef);
-        orderRepository.save(draft);
-
-        OrderEntity order = submissionService.submit(draft.getOrderId());
-        routingEngine.routeOrder(order);
-        workstepEngine.createWorkstepsForOrder(order);
-        slaService.startTimer(order.getOrderId(), "OVERALL", 0);
-
-        log.info("FHIR ServiceRequest ingested: externalRef={}, orderId={}, type={}, cpid={}",
-                externalRef, order.getOrderId(), type, cpid);
-        return order;
+        ExternalOrderIntake input = new ExternalOrderIntake(
+                extractCpid(sr), mapOrderType(sr), mapPriority(sr),
+                code, extractCodeDisplay(sr, code), text(sr.path("note").path(0), "text"),
+                extractExternalRef(sr));
+        log.info("FHIR ServiceRequest parsed: externalRef={}, type={}", input.externalRef(), input.orderType());
+        return intakeService.create(input);
     }
 
     // ── parsing helpers ──
@@ -141,9 +87,13 @@ public class FhirServiceRequestService {
     }
 
     private String extractCode(JsonNode sr) {
-        JsonNode coding = sr.path("code").path("coding").path(0);
-        String code = text(coding, "code");
+        String code = text(sr.path("code").path("coding").path(0), "code");
         return code != null ? code : "UNSPECIFIED";
+    }
+
+    private String extractCodeDisplay(JsonNode sr, String fallback) {
+        String d = text(sr.path("code").path("coding").path(0), "display");
+        return d != null ? d : fallback;
     }
 
     private static String text(JsonNode node, String field) {
