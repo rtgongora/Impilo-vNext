@@ -77,4 +77,21 @@ public interface OrderRepository extends JpaRepository<OrderEntity, String> {
      */
     List<OrderEntity> findByTenantIdAndFacilityIdAndOrderTypeAndImagingStateInOrderByUpdatedAtDesc(
             UUID tenantId, UUID facilityId, OrderType orderType, Collection<ImagingWorkflowState> states);
+
+    /**
+     * Requester results-inbox: orders for a requester (placing actor or referring provider) that
+     * have results to review — either coarse lab status (RESULT_AVAILABLE/RELEASED/REVIEWED) or a
+     * fine-grained imaging reporting state.
+     */
+    @Query("""
+            SELECT o FROM OrderEntity o
+            WHERE o.tenantId = :tenantId
+              AND (:requester IS NULL OR o.placedBy = :requester OR o.referringProviderId = :requester)
+              AND (o.status IN :coarse OR o.imagingState IN :imaging)
+            ORDER BY o.updatedAt DESC
+            """)
+    List<OrderEntity> resultsInbox(@Param("tenantId") UUID tenantId,
+                                   @Param("requester") String requester,
+                                   @Param("coarse") Collection<OrderStatus> coarse,
+                                   @Param("imaging") Collection<ImagingWorkflowState> imaging);
 }

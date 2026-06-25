@@ -157,12 +157,17 @@ public class OutboxPublisher {
             case "WORKSTEP_CHANGED", "WORKSTEP_STARTED", "WORKSTEP_COMPLETED" ->
                     "oros.workstep.changed";
 
-            case "RESULT_AVAILABLE", "RESULT_POSTED" -> "oros.result.available";
+            case "RESULT_AVAILABLE", "RESULT_POSTED",
+                 "RESULT_PRELIMINARY", "RESULT_FINAL", "RESULT_AMENDED", "RESULT_ADDENDUM" ->
+                    "oros.result.available";
+
+            case "RESULT_RELEASED" -> "oros.result.released";
 
             case "RESULT_CRITICAL", "CRITICAL_RESULT_POSTED", "RESULT_MARKED_CRITICAL" ->
                     "oros.result.critical";
 
-            case "ACK_RECEIVED" -> "oros.ack.received";
+            case "ACK_RECEIVED", "RESULT_ACKNOWLEDGED", "RESULT_CRITICAL_ACKNOWLEDGED" ->
+                    "oros.ack.received";
 
             case "ACK_ESCALATION" -> "oros.ack.escalation";
 

@@ -50,6 +50,20 @@ public class OrderQueryService {
                 ctx.tenantId(), ctx.facilityId(), OrderType.IMAGING, filter);
     }
 
+    /**
+     * Requester results-inbox: orders with results ready to review for the given requester
+     * (defaults to the current actor when none supplied).
+     */
+    public List<OrderEntity> resultsInbox(String requester) {
+        TrustContext ctx = TrustContextHolder.require();
+        String who = blankToNull(requester) != null ? requester : ctx.actorId();
+        return orderRepository.resultsInbox(ctx.tenantId(), who,
+                EnumSet.of(OrderStatus.RESULT_AVAILABLE, OrderStatus.RELEASED, OrderStatus.REVIEWED),
+                EnumSet.of(ImagingWorkflowState.PRELIMINARY_REPORT, ImagingWorkflowState.FINAL_REPORT,
+                        ImagingWorkflowState.RELEASED, ImagingWorkflowState.AMENDED,
+                        ImagingWorkflowState.ACKNOWLEDGED));
+    }
+
     private static String blankToNull(String s) {
         return (s == null || s.isBlank()) ? null : s;
     }
