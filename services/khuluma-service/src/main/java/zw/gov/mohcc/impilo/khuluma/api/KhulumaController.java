@@ -226,6 +226,28 @@ public class KhulumaController {
                 result.conversationId(), result.eventId(), result.available(), null, null, null, result.error()));
     }
 
+    /** Attach a Khuluma conversation to an existing Impilo Live event (compose, don't duplicate). */
+    @PostMapping("/meetings/from-event")
+    public ResponseEntity<MeetingResponse> meetingFromEvent(@RequestBody MeetingFromEventRequest req) {
+        ActorContext ctx = contextResolver.resolve();
+        List<ConversationService.NewParticipant> participants = req.participants() == null ? List.of()
+                : req.participants().stream()
+                    .map(p -> new ConversationService.NewParticipant(p.actorId(), p.actorType(), p.displayName(), p.role()))
+                    .toList();
+        MeetingResult result = meetingService.fromEvent(ctx, req.eventId(), req.title(), participants);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new MeetingResponse(
+                result.conversationId(), result.eventId(), result.available(), null, null, null, result.error()));
+    }
+
+    /** The Khuluma conversation anchored to an Impilo Live event, for the Impilo Live experience. */
+    @GetMapping("/events/{eventId}/conversation")
+    public ResponseEntity<MeetingResponse> eventConversation(@PathVariable String eventId) {
+        ActorContext ctx = contextResolver.resolve();
+        return meetingService.conversationForEvent(ctx, eventId)
+                .map(convId -> ResponseEntity.ok(new MeetingResponse(convId, eventId, false, null, null, null, null)))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
     @PostMapping("/conversations/{id}/meeting/join")
     public ResponseEntity<MeetingResponse> joinMeeting(@PathVariable UUID id) {
         ActorContext ctx = contextResolver.resolve();

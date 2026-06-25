@@ -119,6 +119,18 @@ public class KhulumaBffController {
         return relay(khuluma.post("/conversations/" + id + "/meeting/join", objectMapper.createObjectNode()));
     }
 
+    /** Compose with Impilo Live: attach a Khuluma conversation to an existing live event. */
+    @PostMapping("/meetings/from-event")
+    public ResponseEntity<JsonNode> meetingFromEvent(@RequestBody JsonNode body) {
+        policy.requireCommsActor();
+        return relay(khuluma.post("/meetings/from-event", body));
+    }
+
+    @GetMapping("/events/{eventId}/conversation")
+    public ResponseEntity<JsonNode> eventConversation(@PathVariable String eventId) {
+        return relay(khuluma.get("/events/" + eventId + "/conversation", Map.of()));
+    }
+
     @PostMapping("/conversations/{id}/meeting/end")
     public ResponseEntity<JsonNode> endMeeting(@PathVariable String id) {
         return relay(khuluma.post("/conversations/" + id + "/meeting/end", objectMapper.createObjectNode()));

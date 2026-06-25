@@ -17,7 +17,7 @@ over the shared media path.
 |-----------|------------------|---------------------|
 | Channel sessions + messages | `channels-service` (8130) | omnichannel adapter routing (later wave) |
 | Notification inbox, templates, delivery, providers | `notification-service` (8200) | delegated — Khuluma never re-implements notifications |
-| Live events / webinars / meetings | `live-service` (8380) | `MeetingService` orchestrates create/join/token for virtual meetings |
+| Live events / webinars / meetings | **Impilo Live** (`live-service`, 8380) | `MeetingService` orchestrates create/join/token; a Khuluma meeting **is** an Impilo Live event |
 | Call / meeting media (rooms + tokens) | `rtc-gateway-service` (8195) + self-hosted **LiveKit** (7880–7882) | `RtcGatewayClient` provisions rooms + mints real LiveKit tokens; no custom WebRTC |
 | Teleconsultation (provider↔patient) | `pct-service` | `PctRtcGatewaySessionProvider` runs consults on the same LiveKit media path |
 | Communities | `community-service` | facility/programme channels + moderated communities (later wave) |
@@ -38,6 +38,25 @@ reason media degrades to "unavailable" is the ops stack being down. To run real 
 - khuluma-service: `RTC_GATEWAY_BASE_URL=http://rtc-gateway:8195`.
 - live-service: `LIVE_MEDIA_PROVIDER=rtc-gateway`, `RTC_GATEWAY_BASE_URL=http://rtc-gateway:8195`.
 - pct-service: `PCT_TELEMED_DEFAULT_PROVIDER=RTC_GATEWAY`, `RTC_GATEWAY_BASE_URL=http://rtc-gateway:8195`.
+
+## Khuluma ↔ Impilo Live composition (one product family, not parallel surfaces)
+Khuluma meetings and **Impilo Live** events are the **same object**, reachable from either experience —
+Khuluma never builds a parallel meeting/event surface:
+- **Khuluma → Impilo Live:** `MeetingService.create` makes a private Impilo Live event (`owningService=
+  khuluma-service`, default visibility `PRIVATE`, status `DRAFT` → it does **not** appear in the public
+  Impilo Live discover feed, which lists `SCHEDULED` events by context). The Khuluma "Meet" affordance is
+  just the quick-entry; the conversation carries the chat thread + membership. The web Comms Hub shows
+  **Open in Impilo Live** (`/live/event/{eventId}`) for any meeting conversation, so the rich Impilo Live
+  experience (registration, attendance, Q&A, polls, CPD, certificates, replay) is one click away.
+- **Impilo Live → Khuluma:** any existing Impilo Live event can gain a Khuluma discussion thread +
+  quick-join, idempotently, via `POST /internal/v1/khuluma/meetings/from-event {eventId}` and
+  `GET /internal/v1/khuluma/events/{eventId}/conversation`. The Impilo Live screens
+  (`LiveEventScreen`, web `/live/event/[eventId]`) anchor the Khuluma chat through these (web
+  `useMeetingActions().fromEvent/eventConversation`, mobile `khulumaCommsService.meetingFromEvent/eventConversation`).
+
+Impilo Live remains the system-of-record for the live-event registry, scheduling, discovery, registration,
+attendance, Q&A/polls, CPD and certificates; Khuluma owns only the conversation, presence, and the
+conversation↔event link.
 
 ## Boundary (anti-duplication)
 Khuluma must not become a second notification inbox, channel-message store, live registry, or media

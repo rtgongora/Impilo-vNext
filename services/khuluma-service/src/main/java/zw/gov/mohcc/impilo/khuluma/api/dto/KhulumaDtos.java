@@ -51,6 +51,8 @@ public final class KhulumaDtos {
 
     public record CreateMeetingRequest(String title, List<ParticipantInput> participants) {}
 
+    public record MeetingFromEventRequest(String eventId, String title, List<ParticipantInput> participants) {}
+
     // ── responses ─────────────────────────────────────────────────────────────
 
     public record ParticipantResponse(String participantId, String actorId, String actorType,

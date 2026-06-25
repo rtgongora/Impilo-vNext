@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { MessageSquare, Send, Phone, Video, Users, PhoneIncoming } from "lucide-react";
+import { MessageSquare, Send, Phone, Video, Users, Radio, PhoneIncoming } from "lucide-react";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import {
   useCommsInbox,
@@ -127,6 +127,8 @@ export function CommsHub({ persona }: { persona: "work" | "life" }) {
   };
 
   const unread = summary.data?.messages?.unreadCount ?? 0;
+  // A meeting conversation is an Impilo Live event — offer to open the rich Live experience.
+  const liveEventId = detail.data?.links?.find((l) => l.objectType === "LIVE_EVENT")?.objectId;
 
   return (
     <div className="flex flex-col gap-3" data-testid="comms-hub" data-persona={persona}>
@@ -206,6 +208,14 @@ export function CommsHub({ persona }: { persona: "work" | "life" }) {
               <div className="flex items-center justify-between border-b border-border px-3 py-2">
                 <span className="text-sm font-medium">{detail.data?.title ?? detail.data?.type ?? "Conversation"}</span>
                 <div className="flex items-center gap-2">
+                  {liveEventId && (
+                    <a
+                      href={`/live/event/${liveEventId}`}
+                      className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs hover:bg-accent"
+                    >
+                      <Radio className="h-3.5 w-3.5" /> Open in Impilo Live
+                    </a>
+                  )}
                   <button
                     type="button"
                     aria-label="Start audio call"

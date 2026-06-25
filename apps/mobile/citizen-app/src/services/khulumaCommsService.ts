@@ -168,6 +168,25 @@ export async function endMeeting(conversationId: string): Promise<void> {
   await apiClient.post(`${V1}/conversations/${encodeURIComponent(conversationId)}/meeting/end`, {});
 }
 
+/** Compose with Impilo Live: attach (idempotently) a Khuluma discussion to an existing live event. */
+export async function meetingFromEvent(
+  eventId: string,
+  participants: Array<{ actorId: string; actorType?: string; displayName?: string }> = [],
+): Promise<CommsMeeting> {
+  const response = await apiClient.post<CommsMeeting>(`${V1}/meetings/from-event`, { eventId, participants });
+  return response.data;
+}
+
+/** The Khuluma conversation anchored to an Impilo Live event (404 → none). */
+export async function eventConversation(eventId: string): Promise<CommsMeeting | null> {
+  try {
+    const response = await apiClient.get<CommsMeeting>(`${V1}/events/${encodeURIComponent(eventId)}/conversation`);
+    return response.data;
+  } catch {
+    return null;
+  }
+}
+
 /** Adapt a meeting media join into the CommsCall shape the call surface renders. */
 export function meetingToCall(meeting: CommsMeeting): CommsCall {
   return {

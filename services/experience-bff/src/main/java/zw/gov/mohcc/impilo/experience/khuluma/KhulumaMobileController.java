@@ -107,6 +107,17 @@ public class KhulumaMobileController {
         return relay(khuluma.post("/conversations/" + id + "/meeting/end", objectMapper.createObjectNode()));
     }
 
+    @PostMapping("/meetings/from-event")
+    public ResponseEntity<JsonNode> meetingFromEvent(@RequestBody JsonNode body) {
+        policy.requireCommsActor();
+        return relay(khuluma.post("/meetings/from-event", body));
+    }
+
+    @GetMapping("/events/{eventId}/conversation")
+    public ResponseEntity<JsonNode> eventConversation(@PathVariable String eventId) {
+        return relay(khuluma.get("/events/" + eventId + "/conversation", Map.of()));
+    }
+
     @GetMapping("/calls/incoming")
     public ResponseEntity<JsonNode> incomingCalls() {
         return relay(khuluma.get("/calls/incoming", Map.of()));

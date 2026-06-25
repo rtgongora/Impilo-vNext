@@ -16,11 +16,18 @@ import java.util.NoSuchElementException;
 import java.util.UUID;
 
 /**
- * Orchestrates multi-party virtual meetings / live events. A meeting is a {@code MEETING} Khuluma
- * conversation (its chat thread + membership) linked to a live-service event (objectType
- * {@code LIVE_EVENT}); the media room + per-participant LiveKit token come from live-service's
- * rtc-gateway provider. Khuluma owns the coordination + the conversation↔event link; it never owns
- * the meeting media or the live registry.
+ * Orchestrates multi-party virtual meetings / live events over <b>Impilo Live</b> (the
+ * {@code live-service} live-events/webinars SoR). A meeting is a {@code MEETING} Khuluma
+ * conversation (its chat thread + membership) linked to an Impilo Live event (objectType
+ * {@code LIVE_EVENT}); the media room + per-participant LiveKit token come from Impilo Live's
+ * rtc-gateway provider. Composition is bidirectional and Khuluma owns no live-event truth:
+ * <ul>
+ *   <li>{@link #create} — a Khuluma meeting IS a (private) Impilo Live event;</li>
+ *   <li>{@link #fromEvent} — any existing Impilo Live event gains a Khuluma conversation
+ *       (discussion thread + quick-join), idempotently.</li>
+ * </ul>
+ * These are not parallel surfaces: a Khuluma "Meet" and an Impilo Live event are the same object,
+ * reachable from either experience.
  */
 @Service
 public class MeetingService {
@@ -69,6 +76,43 @@ public class MeetingService {
                 conv.getConversationId(), event.eventId(), event.available());
         return new MeetingResult(conv.getConversationId().toString(), event.eventId(),
                 event.available(), event.error());
+    }
+
+    /**
+     * Attach a Khuluma conversation to an EXISTING Impilo Live event, so the event gains a discussion
+     * thread + quick-join. Idempotent: if a conversation is already linked to the event, it is reused.
+     */
+    @Transactional
+    public MeetingResult fromEvent(ActorContext ctx, String eventId, String title,
+                                   List<ConversationService.NewParticipant> participants) {
+        var existing = links.findByTenantIdAndObjectTypeAndObjectId(ctx.tenantId(), LINK_TYPE, eventId)
+                .stream().findFirst();
+        if (existing.isPresent()) {
+            return new MeetingResult(existing.get().getConversationId().toString(), eventId, true, null);
+        }
+        ConversationEntity conv = conversations.create(ctx, "MEETING",
+                title != null ? title : "Live event discussion", null, participants, null);
+        conversations.linkObject(ctx, conv.getConversationId(), LINK_TYPE, eventId, "MEETING", null);
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("conversation_id", conv.getConversationId().toString());
+        payload.put("event_id", eventId);
+        payload.put("created_by", ctx.actorId());
+        outbox.append("impilo.khuluma.meeting.from-event.v1", AGGREGATE, conv.getConversationId().toString(),
+                ctx.tenantId(), ctx.podId(), ctx.correlationId(),
+                "meeting-from-event-" + conv.getConversationId(), payload,
+                conv.getConversationId().toString(), conv.getConversationId().toString(), AGGREGATE);
+
+        log.info("Khuluma conversation attached to Impilo Live event [conversation={}, event={}]",
+                conv.getConversationId(), eventId);
+        return new MeetingResult(conv.getConversationId().toString(), eventId, true, null);
+    }
+
+    /** The Khuluma conversation (if any) anchored to an Impilo Live event — for the Impilo Live experience. */
+    @Transactional(readOnly = true)
+    public java.util.Optional<String> conversationForEvent(ActorContext ctx, String eventId) {
+        return links.findByTenantIdAndObjectTypeAndObjectId(ctx.tenantId(), LINK_TYPE, eventId)
+                .stream().map(l -> l.getConversationId().toString()).findFirst();
     }
 
     @Transactional

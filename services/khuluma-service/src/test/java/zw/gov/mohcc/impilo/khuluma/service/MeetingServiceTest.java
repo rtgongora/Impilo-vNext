@@ -65,6 +65,29 @@ class MeetingServiceTest {
     }
 
     @Test
+    void fromEvent_attachesConversationToImpiloLiveEvent_idempotently() {
+        UUID tenant = UUID.randomUUID();
+        ActorContext a = ctx(tenant, "provider-a");
+
+        MeetingResult first = meetingService.fromEvent(a, "live-event-42", "Webinar chat",
+                List.of(new ConversationService.NewParticipant("provider-b", "PROVIDER", "Dr B", "MEMBER")));
+        assertThat(first.available()).isTrue();
+        assertThat(first.eventId()).isEqualTo("live-event-42");
+        UUID convId = UUID.fromString(first.conversationId());
+        assertThat(conversationService.linksOf(convId))
+                .anyMatch(l -> l.getObjectType().equals("LIVE_EVENT") && l.getObjectId().equals("live-event-42"));
+
+        // Idempotent: a second attach reuses the same conversation.
+        MeetingResult second = meetingService.fromEvent(a, "live-event-42", "Webinar chat", List.of());
+        assertThat(second.conversationId()).isEqualTo(first.conversationId());
+
+        // Impilo Live can look up the anchored conversation.
+        assertThat(meetingService.conversationForEvent(a, "live-event-42")).contains(first.conversationId());
+        assertThat(meetingService.conversationForEvent(a, "no-such-event")).isEmpty();
+        assertThat(outbox.findAll()).anyMatch(e -> e.getEventType().equals("impilo.khuluma.meeting.from-event.v1"));
+    }
+
+    @Test
     void join_mintsMediaToken_forParticipant() {
         UUID tenant = UUID.randomUUID();
         ActorContext a = ctx(tenant, "provider-a");
