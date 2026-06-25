@@ -205,6 +205,33 @@ public class DiagnosticsExperienceController {
         return proxy(requestId, correlationId, () -> orosClient.orderReportVersions(orderId));
     }
 
+    /** All results for an order (patient-file investigations view). */
+    @GetMapping("/orders/{orderId}/results")
+    public ResponseEntity<Map<String, Object>> orderResults(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String orderId) {
+        return proxy(requestId, correlationId, () -> orosClient.orderResults(orderId));
+    }
+
+    /** Structured lab observations for a result (value/unit/reference-range/abnormal+critical flags). */
+    @GetMapping("/results/{resultId}/observations")
+    public ResponseEntity<Map<String, Object>> resultObservations(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String resultId) {
+        return proxy(requestId, correlationId, () -> orosClient.resultObservations(resultId));
+    }
+
+    /** Specimens for a lab order (collection/dispatch/receipt/chain-of-custody). */
+    @GetMapping("/orders/{orderId}/specimens")
+    public ResponseEntity<Map<String, Object>> orderSpecimens(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String orderId) {
+        return proxy(requestId, correlationId, () -> orosClient.orderSpecimens(orderId));
+    }
+
     /** Acknowledge a critical result. */
     @PostMapping("/results/{resultId}/critical/ack")
     public ResponseEntity<Map<String, Object>> acknowledgeCritical(

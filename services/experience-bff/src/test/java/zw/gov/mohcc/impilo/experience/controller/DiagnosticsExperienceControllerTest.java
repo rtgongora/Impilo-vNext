@@ -40,6 +40,32 @@ class DiagnosticsExperienceControllerTest {
     }
 
     @Test
+    void resultObservations_proxiesUpstream() {
+        ArrayNode upstream = objectMapper.createArrayNode();
+        upstream.add(objectMapper.createObjectNode().put("analyteName", "Haemoglobin").put("unit", "g/dL"));
+        when(orosClient.resultObservations("RES-1")).thenReturn(upstream);
+
+        ResponseEntity<Map<String, Object>> resp = controller.resultObservations("req-1", "cor-1", "RES-1");
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(resp.getBody().get("data")).isEqualTo(upstream);
+        verify(orosClient).resultObservations("RES-1");
+    }
+
+    @Test
+    void orderSpecimens_proxiesUpstream() {
+        ArrayNode upstream = objectMapper.createArrayNode();
+        upstream.add(objectMapper.createObjectNode().put("sampleId", "SPC-1").put("status", "RECEIVED"));
+        when(orosClient.orderSpecimens("ORD-1")).thenReturn(upstream);
+
+        ResponseEntity<Map<String, Object>> resp = controller.orderSpecimens("req-1", "cor-1", "ORD-1");
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(resp.getBody().get("data")).isEqualTo(upstream);
+        verify(orosClient).orderSpecimens("ORD-1");
+    }
+
+    @Test
     void resultsInbox_degradesTo502OnUpstreamFailure() {
         when(orosClient.resultsInbox(any())).thenThrow(new RuntimeException("connection refused"));
 

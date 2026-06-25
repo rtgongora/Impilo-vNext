@@ -321,6 +321,27 @@ public class OrosServiceClient {
         return extractData(response);
     }
 
+    /** Specimens for an order (lab specimen lifecycle view). */
+    public JsonNode orderSpecimens(String orderId) {
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(
+                baseUrl + "/v1/orders/" + orderId + "/specimens", JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Structured laboratory observations for a result (value/unit/reference-range/flags). */
+    public JsonNode resultObservations(String resultId) {
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(
+                baseUrl + "/v1/results/" + resultId + "/observations", JsonNode.class);
+        return extractData(response);
+    }
+
+    /** All results for an order (patient-file investigations view). */
+    public JsonNode orderResults(String orderId) {
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(
+                baseUrl + "/v1/orders/" + orderId + "/results", JsonNode.class);
+        return extractData(response);
+    }
+
     /**
      * Drive a guarded imaging-workflow transition on an order.
      */
