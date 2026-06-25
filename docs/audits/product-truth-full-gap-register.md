@@ -158,3 +158,28 @@ register row by building a missing surface/feature:
 - **Reachability matters:** G052 is orphaned/unmounted today (no live impact) — flagged so it is not wired up as-is. (G053 is mounted via `UtilityStrip` and has since been **wired to the inpatient SoR**; G029 was orphaned but has since been **rebuilt real** and mounted; G029b was a *live* fabrication and has been de-fabricated.)
 - **REAL_PROVEN — first artifact landed (fix-d):** the tshepo-authz step-up **supervisor-approval path** is now runtime-proven by `StepUpVerificationIT` (full Spring context + all Flyway migrations + fail-closed/lockout/replay invariants against a real Postgres). Everything else remains `REAL_CODE_NOT_PROBED` until its own runtime/test probe exists. The proof is harness-driven against a CLI-/CI-provided Postgres (`-Dit.pg.url=…`); Testcontainers is intentionally unused here because this environment's docker-java client cannot negotiate the engine's minimum API version.
 - Not line-re-verified by the sweep: `analytics-pipeline`, `booking` (no markers surfaced).
+
+## CITIZEN ZERO-TO-ONE TRUST JOURNEY (audit 2026-06-25, branch `intake/citizen-zero-to-one`)
+
+Semantic gaps in the ordinary-person path (discover → signup-without-Health-ID → request → temporary →
+verified → high-assurance). Full detail + cross-walks: `docs/audits/citizen-zero-to-one/`. None of these
+are gate-detectable (absent surfaces / unenforced trust boundaries that compile and return success).
+
+| ID | Finding | file:line | Cat | Decision | Block |
+|----|---------|-----------|-----|----------|-------|
+| G-CZO-01 | **LOA upgrade never reaches policy.** PolicyEngine `min_loa` reads `loaLevel` frozen from the Keycloak ACR claim; `X-Assurance-Level` is forwarded by the BFF but **never populated from identity-assurance `current_level`** → a self-service verification upgrade changes nothing policy sees; temporary-vs-verified is unenforced at the gate. | `tshepo-authz/.../session/KeycloakAdapter.java:182-197`, `core/PolicyEngine.java:380-387,436-443`, `experience-bff/.../config/ServiceClientConfig.java:273-275` | trust/unenforced | **fix (keystone)** | CZO-1 |
+| G-CZO-02 | **No public L0 entry.** Root `/`→`/home` (auth-gated); public set is only `/auth /kiosk /verify /share /privacy /terms /consent /account-deletion`. No guest landing, service finder, or emergency/public-health info. | `one-ui-shell/src/app/page.tsx:4`, `src/middleware.ts:12-24` | missing-surface | fix | CZO-2 |
+| G-CZO-03 | **L5 delegated/caregiver access not built** — role constants + non-persisting `stubDelegatedPickup` only (no act-on-behalf authz/audit/scope/expiry/banner). | `experience-bff/.../service/citizen/CitizenLongtailService.java` | missing-capability | **design + SoR ruling → STOP for PO** | CZO-3 |
+| G-CZO-04 | **No step-up UI on citizen sensitive actions.** Backend returns 401+`stepUpMethods`; citizen routes show plain token inputs / silent fail. Reuse template exists (`usePolicyDecision` + `/share/claim`). | `tshepo-authz/.../api/AuthorizeController.java:186-190`; `one-ui-shell` `app/citizen/{id-recovery,delegated-pickup}` | missing-ux | fix (reuse) | CZO-4 |
+| G-CZO-05 | **Mobile dashboard has no assurance banner**; session never reads `assuranceLevel`. (Clinical sections are already fully wired — not stubs.) | `apps/mobile/citizen-app/src/screens/HomeScreen.tsx`, `mobile-auth/.../authStore.ts:115-132` | missing-ux | fix | CZO-5 |
+| G-CZO-06 | **Policy-consent capture not persisted** (BFF has no datasource; accept/revoke/sms/ussd/operator are log-only; `/status`,`/history`=`[]`). Clinical consent itself **is** gating. | `experience-bff/.../controller/PolicyConsentController.java` | write-no-persist | fix in sovereign service | CZO-7 |
+| G-CZO-07 | No real citizen consent history/revoke feedback (`/settings/privacy` revoke wired but status/history stub). | `one-ui-shell/src/app/settings/privacy/page.tsx`, `hooks/queries/usePolicyConsent.ts` | stub-backed-ux | fix (after G-CZO-06) | CZO-7 |
+| G-CZO-08 | High-contrast/text-scale/language a11y exist in code/data layer but are **not user-exposed**. | `one-ui-shell` CSS tokens; `data-governance/.../PrivacyRightsController.java:142-148` | a11y-not-exposed | fix | CZO-6 |
+| G-CZO-09 | No resumable/offline Health-ID request continuation. | `one-ui-shell/src/app/citizen/health-id/request` | resilience | fix | CZO-6 |
+| G-CZO-10 | No low-data mode. | one-ui-shell (absent) | a11y/inclusion | fix | CZO-6 |
+| G-CZO-11 | No SMS fallback for **primary** auth (SMS-OTP is step-up only). | `tshepo-authz/.../stepup/NotificationOtpDeliveryAdapter.java` | inclusion | defer (documented) | CZO-6 |
+| G-CZO-13 | TEMPORARY assurance tier collects DOB + national-ID with **no verification/step-up**. | `one-ui-shell/src/app/auth/register/assurance/page.tsx:172-208` | privacy/proofing | fix | CZO-4 |
+| G-CZO-14 | Web biometric login is **simulated** (hardcoded creds). | `one-ui-shell/src/app/auth/login/biometric/page.tsx:42-81` | mock-in-path | fix or hide | CZO-4 |
+| G-CZO-12 | No LOA4/high-assurance banner state (tops out at `FULLY_VERIFIED`→null). | `one-ui-shell/src/components/citizen/IdentityAssuranceBanner.tsx:17-24` | cosmetic | low | CZO-5 |
+| G-CZO-15 | Vito↔identity-assurance level not synced (Vito int vs canonical `AssuranceLevel`; no raise-hook). | `vito-service ClientEntity`, `identity-assurance AssuranceService` | consistency | future | — |
+| G-CZO-16 | Citizen routes untested (6 `/citizen/*` + `/home`); no LOA-propagation e2e. | `one-ui-shell` (absent tests) | test-gap | fix per slice | CZO-* |
