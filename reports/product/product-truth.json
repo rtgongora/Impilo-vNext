@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-25T07:12:21.819Z",
+  "generatedAt": "2026-06-25T08:03:11.952Z",
   "branch": "intake/oros-diagnostics-journey",
   "registryDrift": {
     "unregisteredModules": [],
@@ -9,7 +9,7 @@
     "totalServices": 92,
     "totalLibraries": 12,
     "totalUiWorkspaces": 24,
-    "bffRouteCount": 2167,
+    "bffRouteCount": 2170,
     "contractCount": 102,
     "byProductStatus": {
       "internal-only": 24,
@@ -24,12 +24,12 @@
     },
     "gapCounts": {
       "byCategory": {
-        "F": 5
+        "F": 6
       },
       "bySeverity": {
-        "high": 5
+        "high": 6
       },
-      "total": 5
+      "total": 6
     },
     "crossServiceCohesion": {
       "total": 14,
@@ -2835,7 +2835,7 @@
         "repositories": 2,
         "serviceLayer": 41,
         "controllers": 258,
-        "routes": 2167,
+        "routes": 2170,
         "stubRoutes": 0,
         "contractOperations": 1537,
         "contractViolations": 0,
@@ -6686,17 +6686,17 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 7,
+        "migrations": 8,
         "entities": 28,
         "repositories": 12,
         "serviceLayer": 16,
         "controllers": 14,
-        "routes": 79,
+        "routes": 80,
         "stubRoutes": 0,
         "contractOperations": 58,
         "contractViolations": 0,
         "bffClients": 13,
-        "uiReferences": 55,
+        "uiReferences": 56,
         "mobileReferences": 13,
         "tests": 18
       },
@@ -6734,6 +6734,7 @@
         "ui/one-ui-shell/src/app/clinical/inpatient/rounds/page.tsx",
         "ui/one-ui-shell/src/app/developer/api-catalog/page.tsx",
         "ui/one-ui-shell/src/app/developer/sandbox/page.tsx",
+        "ui/one-ui-shell/src/app/diagnostics/orders/new/page.tsx",
         "ui/one-ui-shell/src/app/diagnostics/orders/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/encounter/[encounterId]/page.test.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/encounter/[encounterId]/page.tsx",
@@ -6748,8 +6749,7 @@
         "ui/one-ui-shell/src/app/lab/page.test.tsx",
         "ui/one-ui-shell/src/app/lab/page.tsx",
         "ui/one-ui-shell/src/app/lab/reconciliation/page.test.tsx",
-        "ui/one-ui-shell/src/app/lab/reconciliation/page.tsx",
-        "ui/one-ui-shell/src/app/lab/results/page.tsx"
+        "ui/one-ui-shell/src/app/lab/reconciliation/page.tsx"
       ],
       "mobilePaths": [
         "provider-app:apps/mobile/provider-app/src/__tests__/integration/ClinicalWriteJourneyContracts.test.ts",
@@ -7569,7 +7569,7 @@
         "stubRoutes": 0,
         "contractOperations": 11,
         "contractViolations": 0,
-        "bffClients": 12,
+        "bffClients": 13,
         "uiReferences": 70,
         "mobileReferences": 17,
         "tests": 1
@@ -7592,6 +7592,7 @@
         "ClinicalShrArtifactController→inline",
         "ClinicalWorklistController→inline",
         "CommunicationController→inline",
+        "DiagnosticsExperienceController→inline",
         "FacilityController→inline",
         "MobileProviderExtendedController→inline",
         "QueueController→inline",
@@ -9184,19 +9185,19 @@
         "isTrustPlane": true
       },
       "counts": {
-        "migrations": 16,
-        "entities": 13,
-        "repositories": 13,
-        "serviceLayer": 12,
-        "controllers": 11,
-        "routes": 48,
+        "migrations": 15,
+        "entities": 12,
+        "repositories": 12,
+        "serviceLayer": 11,
+        "controllers": 10,
+        "routes": 44,
         "stubRoutes": 0,
         "contractOperations": 37,
         "contractViolations": 0,
         "bffClients": 8,
         "uiReferences": 13,
         "mobileReferences": 2,
-        "tests": 16
+        "tests": 14
       },
       "dimensions": {
         "database": "real",
@@ -10583,7 +10584,7 @@
         "contractOperations": 11,
         "contractViolations": 0,
         "bffClients": 28,
-        "uiReferences": 170,
+        "uiReferences": 171,
         "mobileReferences": 26,
         "tests": 2
       },
@@ -29329,6 +29330,7 @@
       "zone": "lab",
       "pageFile": "ui/one-ui-shell/src/app/diagnostics/orders/page.tsx",
       "bffPaths": [
+        "/internal/v1/diagnostics/orders/draft",
         "/internal/v1/diagnostics/reconcile-summary",
         "/internal/v1/identity/linked-ids",
         "/internal/v1/session/experience"
@@ -29375,12 +29377,12 @@
           "pattern": "json-stringify-render"
         }
       ],
-      "hasMutation": false,
+      "hasMutation": true,
       "hasPersistHint": true,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
       "readsRealData": true,
-      "writesRealData": false,
+      "writesRealData": true,
       "completeVsCosmetic": false,
       "allowlistedShell": false,
       "gaps": [
@@ -29388,6 +29390,73 @@
           "category": "F",
           "severity": "high",
           "description": "/diagnostics/orders: mock/stub data",
+          "impactScore": 3
+        }
+      ]
+    },
+    {
+      "path": "/diagnostics/orders/new",
+      "pageTitle": "Create Diagnostic Order",
+      "zone": "lab",
+      "pageFile": "ui/one-ui-shell/src/app/diagnostics/orders/new/page.tsx",
+      "bffPaths": [
+        "/internal/v1/diagnostics/orders/draft",
+        "/internal/v1/diagnostics/reconcile-summary",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "inline-bff-reference"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/hooks/queries/useDiagnosticsOrders.ts",
+          "pattern": "mock-data-var"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": [
+        {
+          "category": "F",
+          "severity": "high",
+          "description": "/diagnostics/orders/new: mock/stub data",
           "impactScore": 3
         }
       ]

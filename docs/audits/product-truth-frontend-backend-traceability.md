@@ -1,7 +1,7 @@
 # Product Truth — Frontend-to-Backend Traceability
 
-> Generated: 2026-06-25T07:12:21.819Z
-> Web surfaces: **616** | Mobile screens: **174**
+> Generated: 2026-06-25T08:03:11.952Z
+> Web surfaces: **617** | Mobile screens: **174**
 
 ## Web routes (one-ui-shell)
 
@@ -333,7 +333,8 @@
 | /lab | Laboratory | lab | yes | no | yes | yes | yes | — |
 | /lab/worklist | Lab Worklist | lab | yes | no | yes | yes | yes | — |
 | /imaging/worklist | Imaging Worklist | lab | yes | no | yes | yes | yes | — |
-| /diagnostics/orders | Diagnostics Orders | lab | yes | no | yes | no | yes | F |
+| /diagnostics/orders | Diagnostics Orders | lab | yes | no | yes | yes | yes | F |
+| /diagnostics/orders/new | Create Diagnostic Order | lab | yes | no | yes | yes | yes | F |
 | /imaging/facility | Facility Imaging Dashboard | lab | yes | no | yes | yes | yes | — |
 | /lab/results | Results Review | lab | yes | no | yes | yes | yes | — |
 | /lab/catalog | Test Catalog | lab | yes | no | yes | no | yes | — |
@@ -506,7 +507,6 @@
 | /work/administration-governance/onboard | Onboard New Actor | operations | yes | no | yes | no | yes | — |
 | /work/administration-governance/onboard/citizen | Onboard Citizen | operations | yes | no | yes | yes | yes | — |
 | /work/administration-governance/onboard/external-partner-user | Onboard External Partner User | operations | yes | no | yes | yes | yes | — |
-| /work/administration-governance/onboard/hsc-user | Onboard Hsc User | operations | yes | no | yes | yes | yes | — |
 
 ## Mobile screens
 

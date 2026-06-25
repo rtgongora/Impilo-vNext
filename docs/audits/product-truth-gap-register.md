@@ -1,7 +1,7 @@
 # Product Truth — Gap Register
 
-> Generated: 2026-06-25T07:12:21.819Z
-> Total gaps: **5**
+> Generated: 2026-06-25T08:03:11.952Z
+> Total gaps: **6**
 
 ## Gap categories (A–R)
 
@@ -12,7 +12,7 @@
 | C | Backend exists, contract missing/stale | 0 |
 | D | Backend exists, frontend only partially wired | 0 |
 | E | UI exists, backend missing | 0 |
-| F | UI exists, uses mock/stub/fixture data | 5 |
+| F | UI exists, uses mock/stub/fixture data | 6 |
 | G | UI exists, form submits but does not persist | 0 |
 | H | UI exists, button/card is dead or decorative | 0 |
 | I | API exists, database persistence missing | 0 |
@@ -31,7 +31,7 @@
 
 | Severity | Count |
 |----------|------:|
-| high | 5 |
+| high | 6 |
 
 ## Prioritized gaps (top 100)
 
@@ -41,7 +41,8 @@
 | 2 | mushe-wallet-service | F | high | mushe-wallet-service: mock/stub/fixture/in-memory patterns in product path (2 hits) |
 | 3 | /wellness/commodities | F | high | /wellness/commodities: mock/stub data |
 | 4 | /diagnostics/orders | F | high | /diagnostics/orders: mock/stub data |
-| 5 | /operations/facility-operations | F | high | /operations/facility-operations: mock/stub data |
+| 5 | /diagnostics/orders/new | F | high | /diagnostics/orders/new: mock/stub data |
+| 6 | /operations/facility-operations | F | high | /operations/facility-operations: mock/stub data |
 
 ## Services requiring product-owner decision
 
