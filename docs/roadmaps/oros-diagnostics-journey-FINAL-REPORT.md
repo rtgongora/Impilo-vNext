@@ -24,9 +24,12 @@
 | 5b-2 | `2efe665d` | notification-service critical-result listener → urgent in-platform alert |
 | 7a | `48dda25f` | Honest integration-status surface |
 | 6 | `3038d1b4` | External secure result link (share-slip) + paper/external intake |
-| BFF | `88332298` | experience-bff diagnostics proxy controller |
+| BFF | `88332298` | experience-bff diagnostics proxy controller (reads) |
 | UI | `51d10c41` | `/diagnostics/orders` tracking page (real BFF→OROS→DB) |
-| chore | `b2937ec8` | Regenerated product-truth + parity datasets |
+| 4b | `d3c3b247` | PACS study linkage `POST /v1/orders/{id}/link-study` (criterion F) — V008 |
+| BFF | `4977fc8d` | BFF write proxies (create draft / submit / route) |
+| UI | `a0d9b1b6` | `/diagnostics/orders/new` create-order flow (criterion A) |
+| chore | `b2937ec8`, `b3eb5562` | Regenerated product-truth + parity datasets |
 
 ## 3. Inventory — what changed
 
@@ -120,9 +123,10 @@ CLI-Postgres/Mockito, RTL/vitest, tsc). No runtime/preview boot was performed.
 1. **Printable order QR (W3d / criterion D)** — deferred. share-slip's `CreateShareLinkRequest`
    requires non-empty `documentIds`; a document-less order QR needs a share-slip enhancement.
    The QR *claim* flow (`/v1/intake/qr/claim` with auth + identity confirmation) is not yet built.
-2. **PACS study linkage (W4 link-study) / DICOM viewer surfacing (W7)** — the OROS↔pacs-adapter
-   `order-links`/`report-links` correlation and accession/study-UID/viewer-launch surfacing through
-   the BFF were not wired this session (pacs-adapter + ImagingExperienceController already exist).
+2. **DICOM viewer surfacing (W7)** — `POST /v1/orders/{id}/link-study` now records study UID +
+   viewer URL and drives `IMAGES_LINKED` (criterion F backend done); the remaining piece is
+   surfacing the viewer launch through the BFF/`ImagingExperienceController` (which exists) and
+   the OROS↔pacs-adapter `order-links`/`report-links` reverse correlation.
 3. **Butano DiagnosticReport amendment lifecycle** — report versions are modelled in OROS but the
    FHIR `DiagnosticReport.relatesTo` writeback for amend/addendum is not wired.
 4. **Provider/destinations directory (W3c/W8)** — `/v1/routing/destinations` and the admin provider
@@ -130,9 +134,10 @@ CLI-Postgres/Mockito, RTL/vitest, tsc). No runtime/preview boot was performed.
    (destination assignment) is.
 5. **Admin config (W8)** — routing-rule and critical-escalation-rule admin endpoints not built
    (escalation runs off `oros.escalation.ack-timeout-minutes`).
-6. **UI surface (W3–W9)** — only `/diagnostics/orders` is live. Create-order, routing/referral,
-   reporting authoring, results inbox, critical-results dashboard, reconciliation/turnaround,
-   patient-file investigations tab, admin, and **mobile parity (W9)** screens remain.
+6. **UI surface (W3–W9)** — `/diagnostics/orders` (tracking) and `/diagnostics/orders/new`
+   (create→submit, criterion A) are live. Remaining: routing/referral, reporting authoring,
+   results inbox, critical-results dashboard, reconciliation/turnaround, patient-file
+   investigations tab, admin, and **mobile parity (W9)** screens.
 7. **channels-service** external notify-only adapters not touched (in-platform alert path is live).
 8. **Offline/low-connectivity** queueing (§15) — not designed.
 
