@@ -136,11 +136,26 @@ public class ButanoIntegration {
 
             Map<String, Object> fhirResource = new HashMap<>();
             fhirResource.put("resourceType", "DiagnosticReport");
-            fhirResource.put("status", "final");
+            fhirResource.put("status", fhirStatus(result));
+            // Stable identifier so amendments can relatesTo prior versions across the SHR.
+            fhirResource.put("identifier", java.util.List.of(Map.of(
+                    "system", "https://impilo.gov.zw/oros/result-id",
+                    "value", result.getResultId() != null ? result.getResultId().toString() : orderId
+            )));
 
             fhirResource.put("basedOn", java.util.List.of(
                     Map.of("reference", "ServiceRequest/" + orderId)
             ));
+
+            // Amendment/addendum lineage: link this version to the report it supersedes (§10).
+            if (result.getSupersedesResultId() != null) {
+                fhirResource.put("relatesTo", java.util.List.of(Map.of(
+                        "code", relatesToCode(result),
+                        "target", Map.of("identifier", Map.of(
+                                "system", "https://impilo.gov.zw/oros/result-id",
+                                "value", result.getSupersedesResultId().toString()))
+                )));
+            }
 
             // Result category from kind
             fhirResource.put("category", java.util.List.of(Map.of(
@@ -159,7 +174,8 @@ public class ButanoIntegration {
                 ));
             }
 
-            fhirResource.put("conclusion", result.getSummary());
+            fhirResource.put("conclusion",
+                    result.getImpression() != null ? result.getImpression() : result.getSummary());
 
             HttpHeaders headers = buildTrustHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -169,8 +185,8 @@ public class ButanoIntegration {
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 String butanoRef = (String) response.getBody().get("id");
-                log.info("BUTANO DiagnosticReport created: orderId={}, resultId={}, butanoRef={}",
-                        orderId, result.getResultId(), butanoRef);
+                log.info("BUTANO DiagnosticReport written: orderId={}, resultId={}, status={}, butanoRef={}",
+                        orderId, result.getResultId(), fhirStatus(result), butanoRef);
                 return butanoRef;
             }
 
@@ -236,6 +252,27 @@ public class ButanoIntegration {
                     orderId, e.getMessage());
             return null;
         }
+    }
+
+    /** Map the OROS report lifecycle status onto a FHIR DiagnosticReport.status code. */
+    private static String fhirStatus(ResultEntity result) {
+        if (result.getReportStatus() == null) {
+            return "final";
+        }
+        return switch (result.getReportStatus()) {
+            case PRELIMINARY -> "preliminary";
+            case FINAL -> "final";
+            case AMENDED -> "amended";
+            case CORRECTED -> "corrected";
+            case ADDENDUM -> "appended";
+        };
+    }
+
+    /** FHIR DiagnosticReport.relatesTo code for the supersession relationship. */
+    private static String relatesToCode(ResultEntity result) {
+        // An addendum appends to the prior report; an amendment/correction replaces it.
+        return result.getReportStatus() == zw.gov.mohcc.impilo.oros.domain.ResultStatus.ADDENDUM
+                ? "appends" : "replaces";
     }
 
     /**

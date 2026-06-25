@@ -41,6 +41,7 @@ class ReportServiceTest {
     @Mock private ResultRepository resultRepository;
     @Mock private OrderStateMachine stateMachine;
     @Mock private ImagingWorkflowService imagingWorkflowService;
+    @Mock private zw.gov.mohcc.impilo.oros.integration.ButanoIntegration butanoIntegration;
     @Mock private EventOutboxRepository outboxRepository;
 
     private ReportService service;
@@ -51,7 +52,8 @@ class ReportServiceTest {
     @BeforeEach
     void setUp() {
         ObjectMapper om = OrosTestObjectMapper.create();
-        service = new ReportService(resultRepository, stateMachine, imagingWorkflowService, outboxRepository, om);
+        service = new ReportService(resultRepository, stateMachine, imagingWorkflowService,
+                butanoIntegration, outboxRepository, om);
     }
 
     private TrustContext ctx() {
@@ -138,6 +140,8 @@ class ReportServiceTest {
             ArgumentCaptor<ResultEntity> captor = ArgumentCaptor.forClass(ResultEntity.class);
             verify(resultRepository).save(captor.capture());
             assertThat(captor.getValue()).isNotSameAs(head);
+            // Amendment is written back to the SHR (relatesTo lineage handled in ButanoIntegration).
+            verify(butanoIntegration).createDiagnosticReport(eq(ORDER_ID), any(ResultEntity.class));
         }
     }
 

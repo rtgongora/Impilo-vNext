@@ -40,17 +40,20 @@ public class ReportService {
     private final ResultRepository resultRepository;
     private final OrderStateMachine stateMachine;
     private final ImagingWorkflowService imagingWorkflowService;
+    private final zw.gov.mohcc.impilo.oros.integration.ButanoIntegration butanoIntegration;
     private final EventOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
 
     public ReportService(ResultRepository resultRepository,
                          OrderStateMachine stateMachine,
                          ImagingWorkflowService imagingWorkflowService,
+                         zw.gov.mohcc.impilo.oros.integration.ButanoIntegration butanoIntegration,
                          EventOutboxRepository outboxRepository,
                          ObjectMapper objectMapper) {
         this.resultRepository = resultRepository;
         this.stateMachine = stateMachine;
         this.imagingWorkflowService = imagingWorkflowService;
+        this.butanoIntegration = butanoIntegration;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
     }
@@ -81,6 +84,7 @@ public class ReportService {
         r = resultRepository.save(r);
         publishEvent(r, "RESULT_FINAL");
         syncImaging(order, ImagingWorkflowState.FINAL_REPORT);
+        butanoIntegration.createDiagnosticReport(orderId, r);
         log.info("Final report authored: orderId={}, resultId={}", orderId, r.getResultId());
         return r;
     }
@@ -182,6 +186,8 @@ public class ReportService {
         r = resultRepository.save(r);
         publishEvent(r, eventType);
         syncImaging(order, imagingTarget);
+        // SHR writeback with relatesTo lineage to the superseded report (§10).
+        butanoIntegration.createDiagnosticReport(orderId, r);
         log.info("Report {}: orderId={}, newResultId={}, supersedes={}, version={}",
                 status, orderId, r.getResultId(), head.getResultId(), r.getVersion());
         return r;
