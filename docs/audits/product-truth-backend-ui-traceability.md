@@ -1,6 +1,6 @@
 # Product Truth — Backend-to-UI Traceability
 
-> Generated: 2026-06-25T09:17:33.552Z
+> Generated: 2026-06-25T09:38:01.028Z
 
 For each service: backend capabilities → API → BFF → UI → mobile → persistence.
 
@@ -604,7 +604,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 
 | # | Question | Answer |
 |---|----------|--------|
-| 1 | Real backend capabilities? | Yes (258 controllers, 2177 routes) |
+| 1 | Real backend capabilities? | Yes (258 controllers, 2179 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: experience-bff.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (0 clients) |
 | 4 | Visible in UI? | Yes (171 refs) |
@@ -1435,10 +1435,10 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 
 | # | Question | Answer |
 |---|----------|--------|
-| 1 | Real backend capabilities? | Yes (14 controllers, 81 routes) |
+| 1 | Real backend capabilities? | Yes (14 controllers, 83 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: oros.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (13 clients) |
-| 4 | Visible in UI? | Yes (64 refs) |
+| 4 | Visible in UI? | Yes (65 refs) |
 | 5 | Visible on mobile? | Yes (13 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
@@ -1816,7 +1816,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (3 controllers, 13 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: share-slip.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (1 clients) |
-| 4 | Visible in UI? | Yes (6 refs) |
+| 4 | Visible in UI? | Yes (7 refs) |
 | 5 | Visible on mobile? | Yes (104 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
@@ -1825,11 +1825,11 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 10 | Fixture-only flows? | No |
 
 **UI references (sample):**
+- `ui/one-ui-shell/src/app/diagnostics/intake/qr/page.tsx`
 - `ui/one-ui-shell/src/lib/__tests__/phase6-service-completion-golden-thread.test.ts`
 - `ui/one-ui-shell/src/lib/registry-service-module-refs.ts`
 - `ui/one-ui-shell/src/lib/shareSlipPublic.test.ts`
 - `ui/one-ui-shell/src/lib/shareSlipPublic.ts`
-- `ui/one-ui-shell/src/lib/sidecar-retirement-ledger-v2.ts`
 
 ## simba-service
 

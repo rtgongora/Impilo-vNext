@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-25T09:17:33.552Z",
+  "generatedAt": "2026-06-25T09:38:01.028Z",
   "branch": "intake/oros-diagnostics-journey",
   "registryDrift": {
     "unregisteredModules": [],
@@ -9,7 +9,7 @@
     "totalServices": 92,
     "totalLibraries": 12,
     "totalUiWorkspaces": 24,
-    "bffRouteCount": 2177,
+    "bffRouteCount": 2179,
     "contractCount": 102,
     "byProductStatus": {
       "internal-only": 24,
@@ -2835,7 +2835,7 @@
         "repositories": 2,
         "serviceLayer": 41,
         "controllers": 258,
-        "routes": 2177,
+        "routes": 2179,
         "stubRoutes": 0,
         "contractOperations": 1537,
         "contractViolations": 0,
@@ -6689,16 +6689,16 @@
         "migrations": 8,
         "entities": 28,
         "repositories": 12,
-        "serviceLayer": 16,
+        "serviceLayer": 17,
         "controllers": 14,
-        "routes": 81,
+        "routes": 83,
         "stubRoutes": 0,
         "contractOperations": 58,
         "contractViolations": 0,
         "bffClients": 13,
-        "uiReferences": 64,
+        "uiReferences": 65,
         "mobileReferences": 13,
-        "tests": 18
+        "tests": 19
       },
       "dimensions": {
         "database": "real",
@@ -6736,6 +6736,7 @@
         "ui/one-ui-shell/src/app/developer/api-catalog/page.tsx",
         "ui/one-ui-shell/src/app/developer/sandbox/page.tsx",
         "ui/one-ui-shell/src/app/diagnostics/critical-queue/page.tsx",
+        "ui/one-ui-shell/src/app/diagnostics/intake/qr/page.tsx",
         "ui/one-ui-shell/src/app/diagnostics/orders/new/page.tsx",
         "ui/one-ui-shell/src/app/diagnostics/orders/page.tsx",
         "ui/one-ui-shell/src/app/diagnostics/orders/route/page.tsx",
@@ -6748,8 +6749,7 @@
         "ui/one-ui-shell/src/app/ehr/[patientId]/orders/page.test.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/orders/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/results/page.test.tsx",
-        "ui/one-ui-shell/src/app/ehr/[patientId]/results/page.tsx",
-        "ui/one-ui-shell/src/app/enterprise/oversight/page.tsx"
+        "ui/one-ui-shell/src/app/ehr/[patientId]/results/page.tsx"
       ],
       "mobilePaths": [
         "provider-app:apps/mobile/provider-app/src/__tests__/integration/ClinicalWriteJourneyContracts.test.ts",
@@ -8564,9 +8564,9 @@
         "contractOperations": 16,
         "contractViolations": 0,
         "bffClients": 1,
-        "uiReferences": 6,
+        "uiReferences": 7,
         "mobileReferences": 104,
-        "tests": 1
+        "tests": 2
       },
       "dimensions": {
         "database": "real",
@@ -8586,6 +8586,7 @@
         "direct-public-or-fhir"
       ],
       "uiPaths": [
+        "ui/one-ui-shell/src/app/diagnostics/intake/qr/page.tsx",
         "ui/one-ui-shell/src/lib/__tests__/phase6-service-completion-golden-thread.test.ts",
         "ui/one-ui-shell/src/lib/registry-service-module-refs.ts",
         "ui/one-ui-shell/src/lib/shareSlipPublic.test.ts",
@@ -19007,11 +19008,11 @@
         "/internal/v1/diagnostics/orders/draft",
         "/internal/v1/diagnostics/reconcile-summary",
         "/internal/v1/diagnostics/critical-unacknowledged",
+        "/internal/v1/diagnostics/intake/qr/claim",
         "/internal/v1/diagnostics/turnaround",
         "/internal/v1/diagnostics/integration-status",
         "/internal/v1/clinical/rules/evaluate",
-        "/internal/v1/clinical/cds/summary",
-        "/internal/v1/clinical/audit/overrides"
+        "/internal/v1/clinical/cds/summary"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -29390,6 +29391,7 @@
         "/internal/v1/diagnostics/orders/draft",
         "/internal/v1/diagnostics/reconcile-summary",
         "/internal/v1/diagnostics/critical-unacknowledged",
+        "/internal/v1/diagnostics/intake/qr/claim",
         "/internal/v1/diagnostics/turnaround",
         "/internal/v1/diagnostics/integration-status",
         "/internal/v1/identity/linked-ids",
@@ -29449,6 +29451,7 @@
         "/internal/v1/diagnostics/orders/draft",
         "/internal/v1/diagnostics/reconcile-summary",
         "/internal/v1/diagnostics/critical-unacknowledged",
+        "/internal/v1/diagnostics/intake/qr/claim",
         "/internal/v1/diagnostics/turnaround",
         "/internal/v1/diagnostics/integration-status",
         "/internal/v1/identity/linked-ids",
@@ -29508,6 +29511,7 @@
         "/internal/v1/diagnostics/orders/draft",
         "/internal/v1/diagnostics/reconcile-summary",
         "/internal/v1/diagnostics/critical-unacknowledged",
+        "/internal/v1/diagnostics/intake/qr/claim",
         "/internal/v1/diagnostics/turnaround",
         "/internal/v1/diagnostics/integration-status",
         "/internal/v1/identity/linked-ids",
@@ -29567,6 +29571,7 @@
         "/internal/v1/diagnostics/orders/draft",
         "/internal/v1/diagnostics/reconcile-summary",
         "/internal/v1/diagnostics/critical-unacknowledged",
+        "/internal/v1/diagnostics/intake/qr/claim",
         "/internal/v1/diagnostics/turnaround",
         "/internal/v1/diagnostics/integration-status",
         "/internal/v1/identity/linked-ids",
@@ -29625,6 +29630,7 @@
         "/internal/v1/diagnostics/orders/draft",
         "/internal/v1/diagnostics/reconcile-summary",
         "/internal/v1/diagnostics/critical-unacknowledged",
+        "/internal/v1/diagnostics/intake/qr/claim",
         "/internal/v1/diagnostics/turnaround",
         "/internal/v1/diagnostics/integration-status",
         "/internal/v1/identity/linked-ids",
@@ -29683,6 +29689,7 @@
         "/internal/v1/diagnostics/orders/draft",
         "/internal/v1/diagnostics/reconcile-summary",
         "/internal/v1/diagnostics/critical-unacknowledged",
+        "/internal/v1/diagnostics/intake/qr/claim",
         "/internal/v1/diagnostics/turnaround",
         "/internal/v1/diagnostics/integration-status",
         "/internal/v1/identity/linked-ids",
@@ -29741,6 +29748,67 @@
         "/internal/v1/diagnostics/orders/draft",
         "/internal/v1/diagnostics/reconcile-summary",
         "/internal/v1/diagnostics/critical-unacknowledged",
+        "/internal/v1/diagnostics/intake/qr/claim",
+        "/internal/v1/diagnostics/turnaround",
+        "/internal/v1/diagnostics/integration-status",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "inline-bff-reference"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/diagnostics/intake/qr",
+      "pageTitle": "Claim Order QR",
+      "zone": "lab",
+      "pageFile": "ui/one-ui-shell/src/app/diagnostics/intake/qr/page.tsx",
+      "bffPaths": [
+        "/internal/v1/diagnostics/orders/draft",
+        "/internal/v1/diagnostics/reconcile-summary",
+        "/internal/v1/diagnostics/critical-unacknowledged",
+        "/internal/v1/diagnostics/intake/qr/claim",
         "/internal/v1/diagnostics/turnaround",
         "/internal/v1/diagnostics/integration-status",
         "/internal/v1/identity/linked-ids",
@@ -29800,6 +29868,7 @@
         "/internal/v1/diagnostics/orders/draft",
         "/internal/v1/diagnostics/reconcile-summary",
         "/internal/v1/diagnostics/critical-unacknowledged",
+        "/internal/v1/diagnostics/intake/qr/claim",
         "/internal/v1/diagnostics/turnaround",
         "/internal/v1/diagnostics/integration-status",
         "/internal/v1/identity/linked-ids",
@@ -29858,6 +29927,7 @@
         "/internal/v1/diagnostics/orders/draft",
         "/internal/v1/diagnostics/reconcile-summary",
         "/internal/v1/diagnostics/critical-unacknowledged",
+        "/internal/v1/diagnostics/intake/qr/claim",
         "/internal/v1/diagnostics/turnaround",
         "/internal/v1/diagnostics/integration-status",
         "/internal/v1/identity/linked-ids",

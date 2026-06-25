@@ -49,6 +49,25 @@ public class DiagnosticsExperienceController {
         return proxy(requestId, correlationId, () -> orosClient.submitOrder(orderId));
     }
 
+    /** Issue a printable order QR (patient-carried). */
+    @PostMapping("/orders/{orderId}/printable")
+    public ResponseEntity<Map<String, Object>> printable(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String orderId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        return proxy(requestId, correlationId, () -> orosClient.printableOrder(orderId, body));
+    }
+
+    /** Claim a patient-carried order QR. */
+    @PostMapping("/intake/qr/claim")
+    public ResponseEntity<Map<String, Object>> qrClaim(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        return proxy(requestId, correlationId, () -> orosClient.qrClaim(body));
+    }
+
     /** Assign a routing destination to an order (referral). */
     @PostMapping("/orders/{orderId}/route")
     public ResponseEntity<Map<String, Object>> route(

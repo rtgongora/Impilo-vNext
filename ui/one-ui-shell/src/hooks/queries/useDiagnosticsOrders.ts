@@ -301,6 +301,39 @@ export function useImagingTransition() {
   });
 }
 
+export interface ShareLinkRef {
+  linkId: string | null;
+  shareToken: string | null;
+  status: string | null;
+  expiresAt: string | null;
+}
+
+/** Issue a printable, OTP-protected QR for a patient-carried order. */
+export function useOrderPrintable() {
+  return useMutation<ShareLinkRef, unknown, { orderId: string; expiryHours?: number; maxClaims?: number }>({
+    mutationFn: async ({ orderId, expiryHours, maxClaims }) => {
+      const res = await apiClient.post<ApiResponse<ShareLinkRef>>(
+        `/internal/v1/diagnostics/orders/${encodeURIComponent(orderId)}/printable`,
+        { expiryHours, maxClaims },
+      );
+      return res.data;
+    },
+  });
+}
+
+/** Claim a patient-carried order QR at a fulfilling facility. */
+export function useQrClaim() {
+  const queryClient = useQueryClient();
+  return useMutation<DiagnosticOrder, unknown, { shareToken: string; otp?: string; deviceFingerprint?: string }>({
+    mutationFn: async (body) => {
+      const res = await apiClient.post<ApiResponse<DiagnosticOrder>>(
+        "/internal/v1/diagnostics/intake/qr/claim", body);
+      return res.data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["diagnostics-orders"] }),
+  });
+}
+
 export interface TurnaroundMetrics {
   totalImaging: number;
   byState: Record<string, number>;

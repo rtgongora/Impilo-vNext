@@ -12,7 +12,11 @@ import Link from "next/link";
 import { Activity, Loader2, Search } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { useDiagnosticsOrders, type DiagnosticOrder } from "@/hooks/queries/useDiagnosticsOrders";
+import {
+  useDiagnosticsOrders,
+  useOrderPrintable,
+  type DiagnosticOrder,
+} from "@/hooks/queries/useDiagnosticsOrders";
 
 const TYPE_OPTIONS = ["", "IMAGING", "LAB", "PHARMACY", "PROCEDURE"] as const;
 
@@ -26,6 +30,8 @@ export default function DiagnosticsOrdersPage() {
   const [type, setType] = useState<string>("IMAGING");
 
   const ordersQ = useDiagnosticsOrders({ type: type || undefined });
+  const printableMut = useOrderPrintable();
+  const [issuedToken, setIssuedToken] = useState<{ orderId: string; token: string } | null>(null);
 
   const orders = useMemo(() => {
     const raw = ordersQ.data?.data ?? [];
@@ -71,6 +77,15 @@ export default function DiagnosticsOrdersPage() {
             ))}
           </select>
         </div>
+
+        {issuedToken && (
+          <div className="mb-4 rounded-lg border border-success/40 bg-success-soft p-3 text-sm" role="status">
+            QR issued for <span className="font-mono">{issuedToken.orderId}</span> — share token{" "}
+            <span className="font-mono">{issuedToken.token}</span>. Print the slip from the order's secure link.
+            <button type="button" className="ml-3 text-xs text-primary hover:underline"
+              onClick={() => setIssuedToken(null)}>dismiss</button>
+          </div>
+        )}
 
         {ordersQ.isLoading ? (
           <div className="flex items-center justify-center gap-2 p-12 text-sm text-muted-foreground">
@@ -119,6 +134,11 @@ export default function DiagnosticsOrdersPage() {
                       <div className="flex items-center gap-3 text-xs">
                         <Link href={`/diagnostics/orders/route?orderId=${encodeURIComponent(o.orderId)}`}
                           className="text-primary hover:underline">Route</Link>
+                        <button type="button"
+                          disabled={printableMut.isPending && printableMut.variables?.orderId === o.orderId}
+                          onClick={() => printableMut.mutate({ orderId: o.orderId },
+                            { onSuccess: (ref) => setIssuedToken({ orderId: o.orderId, token: ref.shareToken ?? "" }) })}
+                          className="text-primary hover:underline disabled:opacity-50">Print QR</button>
                         {o.studyViewerUrl ? (
                           <a href={o.studyViewerUrl} target="_blank" rel="noopener noreferrer"
                             className="text-primary hover:underline">View study</a>

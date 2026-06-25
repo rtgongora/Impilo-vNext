@@ -1,7 +1,7 @@
 # Product Truth — Frontend-to-Backend Traceability
 
-> Generated: 2026-06-25T09:17:33.552Z
-> Web surfaces: **625** | Mobile screens: **174**
+> Generated: 2026-06-25T09:38:01.028Z
+> Web surfaces: **626** | Mobile screens: **174**
 
 ## Web routes (one-ui-shell)
 
@@ -341,6 +341,7 @@
 | /diagnostics/critical-queue | Critical Results | lab | yes | no | yes | yes | yes | — |
 | /diagnostics/worklist | Imaging Worklist | lab | yes | no | yes | yes | yes | — |
 | /diagnostics/reporting | Report Authoring | lab | yes | no | yes | yes | yes | — |
+| /diagnostics/intake/qr | Claim Order QR | lab | yes | no | yes | yes | yes | — |
 | /operations/diagnostics-reconciliation | Diagnostics Reconciliation | lab | yes | no | yes | yes | yes | — |
 | /admin/integrations | Integration Status | admin | yes | no | yes | yes | yes | — |
 | /imaging/facility | Facility Imaging Dashboard | lab | yes | no | yes | yes | yes | — |
@@ -506,7 +507,6 @@
 | /live/event/[eventId]/replay | Event Replay | home | yes | no | yes | yes | yes | — |
 | /live/event/[eventId]/analytics | Live Analytics | operations | yes | no | yes | yes | yes | — |
 | /work/administration-governance | Administration & Governance | operations | yes | no | yes | no | yes | — |
-| /work/administration-governance/access-requests | Access Requests | operations | yes | no | yes | yes | yes | — |
 
 ## Mobile screens
 

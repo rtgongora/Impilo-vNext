@@ -17,6 +17,8 @@ import {
   useOrderReportVersions,
   useAuthorReport,
   useReleaseReport,
+  useOrderPrintable,
+  useQrClaim,
 } from "../useDiagnosticsOrders";
 
 const { get, post } = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }));
@@ -210,5 +212,29 @@ describe("useDiagnosticsOrders", () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(post).toHaveBeenCalledWith("/internal/v1/diagnostics/results/r-2/release", {});
+  });
+
+  it("printable posts to the printable endpoint and returns a share token", async () => {
+    post.mockResolvedValue({ data: { linkId: "l-1", shareToken: "tok-1", status: "ACTIVE" } });
+
+    const { result } = renderHook(() => useOrderPrintable(), { wrapper });
+    result.current.mutate({ orderId: "ORD-1" });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.shareToken).toBe("tok-1");
+    expect(post).toHaveBeenCalledWith("/internal/v1/diagnostics/orders/ORD-1/printable",
+      expect.objectContaining({}));
+  });
+
+  it("qr claim posts the token to the claim endpoint", async () => {
+    post.mockResolvedValue({ data: { orderId: "ORD-9", patientCpid: "CPID-1" } });
+
+    const { result } = renderHook(() => useQrClaim(), { wrapper });
+    result.current.mutate({ shareToken: "tok-1", otp: "123456" });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.orderId).toBe("ORD-9");
+    expect(post).toHaveBeenCalledWith("/internal/v1/diagnostics/intake/qr/claim",
+      { shareToken: "tok-1", otp: "123456" });
   });
 });

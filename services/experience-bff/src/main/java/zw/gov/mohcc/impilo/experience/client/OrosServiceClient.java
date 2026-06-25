@@ -259,6 +259,26 @@ public class OrosServiceClient {
     }
 
     /**
+     * Issue a printable, OTP-protected QR for a patient-carried order.
+     */
+    public JsonNode printableOrder(String orderId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/orders/" + orderId + "/printable";
+        log.info("OROS: Issuing printable QR for order={}", orderId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body != null ? body : Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Claim a patient-carried order QR at a fulfilling facility.
+     */
+    public JsonNode qrClaim(Map<String, Object> body) {
+        String url = baseUrl + "/v1/intake/qr/claim";
+        log.info("OROS: QR claim");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * Assign a routing destination to an order.
      */
     public JsonNode routeOrder(String orderId, Map<String, Object> body) {
