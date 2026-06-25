@@ -108,15 +108,24 @@ public class TransfusionService {
         episode.setCompletedAt(OffsetDateTime.now());
         episode.setUpdatedAt(OffsetDateTime.now());
         TransfusionEpisodeEntity saved = episodeRepository.save(episode);
+        // Resolve the originating OROS order ref so both the event and the REST callback carry it.
+        String orosRef = episode.getOrderId() == null ? null
+                : orderRepository.findByOrderIdAndTenantId(episode.getOrderId(), tenantId)
+                        .map(zw.gov.mohcc.impilo.madi.persistence.entity.BloodOrderEntity::getOrosOrderRef)
+                        .filter(ref -> ref != null && !ref.isBlank())
+                        .orElse(null);
+        java.util.Map<String, Object> payload = new java.util.LinkedHashMap<>();
+        payload.put("outcome", outcomeStatus);
+        payload.put("notes", outcomeNotes);
+        if (orosRef != null) {
+            payload.put("orosOrderRef", orosRef);
+        }
         eventEmitter.emit("TRANSFUSION", episodeId.toString(), "TRANSFUSION_COMPLETED", "TRANSFUSION",
-                episodeId.toString(), Map.of("outcome", outcomeStatus), tenantId);
+                episodeId.toString(), payload, tenantId);
         // Return the transfusion outcome to OROS so it closes the loop on the requesting order /
         // patient file (adverse/stopped -> critical). Best-effort; OROS unavailability is non-blocking.
-        if (episode.getOrderId() != null) {
-            orderRepository.findByOrderIdAndTenantId(episode.getOrderId(), tenantId)
-                    .map(zw.gov.mohcc.impilo.madi.persistence.entity.BloodOrderEntity::getOrosOrderRef)
-                    .filter(ref -> ref != null && !ref.isBlank())
-                    .ifPresent(ref -> orosIntegration.notifyTransfusionOutcome(ref, outcomeStatus, outcomeNotes));
+        if (orosRef != null) {
+            orosIntegration.notifyTransfusionOutcome(orosRef, outcomeStatus, outcomeNotes);
         }
         return saved;
     }

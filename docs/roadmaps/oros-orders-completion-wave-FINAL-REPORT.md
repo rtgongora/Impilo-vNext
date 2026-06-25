@@ -31,6 +31,9 @@ per-category extensions. No parallel order engine was created.
 | O14 | (mobile) | Provider-app lab/procedure/specimen parity (worklist, collect [offline-queued], dispatch/receive/reject, transition, critical-ack) |
 | O15 | (fhir) | FHIR Observation writeback for structured lab results (value/unit/refRange/interpretation) |
 | O16 | (ops) | MADI local DB seed; donor-deferral pre-flight at donation collection |
+| O17 | (hl7) | ORU-outbound emits one OBX per structured observation (flag-gated OFF) |
+| O18 | (sla) | MADI blood-order SLA timers (V007) + scheduled breach detection |
+| O19 | (kafka) | Event-driven OROS↔MADI: OROS consumes madi.blood.order/transfusion (idempotent) |
 
 ## Services changed
 oros-service (spine, lab, procedure, blood callbacks, catalogue), madi-service (bidirectional
@@ -78,19 +81,26 @@ proxies), one-ui-shell (investigations tab + hooks). Registry: `madi-service` po
 - FHIR Observation writeback for structured lab results (O15).
 - MADI local DB seed + donor-deferral pre-flight at donation collection (O16).
 
+## Former residuals — now CLOSED (waves O17–O19)
+- **O17 — HL7 v2 ORU per-observation OBX**: `Hl7OruMapper` emits one OBX per structured observation
+  (value type / units / reference range / abnormal flag), threaded through `ReportService.createFinal`
+  and `LabResultService`; falls back to the summary OBX when none. Still flag-gated OFF.
+- **O18 — MADI blood-order SLA timers**: `blood_order_sla` (V007) + `BloodOrderSlaService` with
+  start/complete at each stage (crossmatch/issue) and a `@Scheduled` breach scan emitting
+  `SLA_BREACHED`; configurable targets; breach count for the dashboard.
+- **O19 — event-driven OROS↔MADI**: `MadiBloodEventConsumer` consumes `madi.blood.order` /
+  `madi.transfusion` and applies them via `BloodOrderCallbackService` (idempotent, synthetic system
+  trust context) — a resilient alternative to the REST callbacks. MADI events enriched to carry
+  `orosOrderRef`.
+
 ## Remaining gaps / next hardening (honest)
-1. **HL7 v2 ORU per-observation OBX**: the ORU-outbound adapter (flag-gated OFF) still emits a
-   summary OBX; expanding to one OBX per structured observation needs the observations threaded
-   through the report lifecycle. Low priority (adapter off by default). FHIR Observation writeback
-   (O15) already carries the structured payload to the SHR.
-2. **MADI blood-order SLA timers**: a dedicated SLA table + scheduler for "crossmatch within N
-   hours / issue within N hours" is not built (the dashboard computes turnaround ad-hoc). MADI is
-   intentionally **not** in `docker-compose.yml` — that file is infrastructure-only (no Spring
-   service runs in compose; services are bare-metal per `port-allocation.md`). Local provisioning
-   is covered by the `madi` DB seed (O16).
-3. **Event-driven OROS↔MADI**: the loop uses best-effort REST callbacks both ways; a Kafka consumer
-   path (madi.* → OROS) is a resilience upgrade.
-4. Ratchet the product-truth baseline down (currently 6; actual 4).
+1. Ratchet the product-truth baseline down (currently 6; actual 4).
+2. End-to-end live verification against self-hosted counterparties (hapi-fhir / dcm4chee / HL7 MLLP)
+   per the interop runbook — the adapters are unit-tested and flag-gated OFF; a live soak is the
+   remaining confidence step.
+3. MADI is intentionally **not** in `docker-compose.yml` (infrastructure-only by repo convention;
+   Spring services run bare-metal per `port-allocation.md`) — local provisioning is the `madi` DB
+   seed (O16).
 
 ## Doctrine compliance
 One OROS order spine; coarse `OrderStatus` untouched; per-category guards on a single

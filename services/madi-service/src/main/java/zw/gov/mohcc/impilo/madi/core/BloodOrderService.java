@@ -85,7 +85,7 @@ public class BloodOrderService {
         // Start the crossmatch SLA timer at submit.
         slaService.start(tenantId, orderId, BloodOrderSlaService.STAGE_CROSSMATCH);
         eventEmitter.emit("BLOOD_ORDER", orderId.toString(), "ORDER_SUBMITTED", "BLOOD_ORDER",
-                orderId.toString(), Map.of(), tenantId);
+                orderId.toString(), refPayload(saved, Map.of("madiOrderId", orderId.toString())), tenantId);
         return saved;
     }
 
@@ -138,7 +138,7 @@ public class BloodOrderService {
         order.setUpdatedAt(OffsetDateTime.now());
         orderRepository.save(order);
         eventEmitter.emit("BLOOD_ORDER", orderId.toString(), "CROSSMATCH_COMPLETED", "BLOOD_ORDER",
-                orderId.toString(), Map.of("result", result.name()), tenantId);
+                orderId.toString(), refPayload(order, Map.of("result", result.name())), tenantId);
         // SLA: crossmatch stage done; open the issue-stage timer.
         slaService.complete(orderId, BloodOrderSlaService.STAGE_CROSSMATCH);
         slaService.start(tenantId, orderId, BloodOrderSlaService.STAGE_ISSUE);
@@ -195,7 +195,7 @@ public class BloodOrderService {
         // SLA: issue stage met.
         slaService.complete(orderId, BloodOrderSlaService.STAGE_ISSUE);
         eventEmitter.emit("BLOOD_ORDER", orderId.toString(), "BLOOD_ISSUED", "BLOOD_ORDER",
-                orderId.toString(), Map.of("unitId", unitId.toString()), tenantId);
+                orderId.toString(), refPayload(order, Map.of("unitId", unitId.toString())), tenantId);
         return saved;
     }
 
@@ -232,5 +232,16 @@ public class BloodOrderService {
     private BloodOrderEntity requireOrder(UUID tenantId, UUID orderId) {
         return orderRepository.findByOrderIdAndTenantId(orderId, tenantId)
                 .orElseThrow(() -> new IllegalArgumentException("Blood order not found"));
+    }
+
+    /**
+     * Event payload carrying {@code orosOrderRef} alongside the supplied fields, so OROS's
+     * event-driven consumer can apply the update to the originating order (resilient alternative
+     * to the best-effort REST callback).
+     */
+    private Map<String, Object> refPayload(BloodOrderEntity order, Map<String, Object> extra) {
+        Map<String, Object> payload = new LinkedHashMap<>(extra);
+        payload.put("orosOrderRef", order.getOrosOrderRef() != null ? order.getOrosOrderRef() : "");
+        return payload;
     }
 }
