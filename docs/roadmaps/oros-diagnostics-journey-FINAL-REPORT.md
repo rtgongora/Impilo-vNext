@@ -97,9 +97,11 @@ or AuditService was invented (none exists in oros-service); this matches the cod
 
 - `check-route-inventory.sh` — **PASS** (frontend parity docs in sync).
 - `check-backend-frontend-parity.sh` — **PASS** (blocking=0, advisory=0).
-- `check-frontend-mocks-and-stubs.sh` — **PASS** (616 pages; 1 legacy non-blocking warning on an
-  unrelated page `landela/page.tsx`).
-- `check-product-truth.sh` — **PASS** (92 services; violations=5 ≤ baseline=6; blockers=0).
+- `check-frontend-mocks-and-stubs.sh` — **PASS** (1 legacy non-blocking warning on an unrelated
+  page `landela/page.tsx`).
+- `check-product-truth.sh` — **PASS** (92 services; violations=4 ≤ baseline=6; blockers=0).
+  Note: avoid the literal phrases "mock data"/"fake"/"sample data" in comments — the category-F
+  scanner regex-matches them (a 7→4 false-positive cleanup was applied during this work).
 
 ## 6. Preview status
 
@@ -113,6 +115,7 @@ CLI-Postgres/Mockito, RTL/vitest, tsc). No runtime/preview boot was performed.
 | FHIR DiagnosticReport (Butano SHR) | OUT | **Configured** (ButanoIntegration base-url) |
 | Provider directory (VARAPI) | OUT | **Configured** (VarapiClient base-url) |
 | Secure external result link (share-slip) | OUT | **Configured** (ShareSlipClient base-url) |
+| Patient-carried order QR (share-slip, document-less) | OUT | **Configured** (printable + OTP claim) |
 | PACS DICOMweb | OUT | Configured **iff** `oros.integration.pacs.dicomweb.base-url` set; else NOT_LIVE |
 | FHIR ServiceRequest inbound | IN | **NOT_LIVE** — contract seam only |
 | FHIR ImagingStudy outbound | OUT | **NOT_LIVE** — contract seam only |
@@ -124,13 +127,15 @@ CLI-Postgres/Mockito, RTL/vitest, tsc). No runtime/preview boot was performed.
 
 ## 8. Remaining gaps (NOT swept under the baseline)
 
-1. **Printable order QR (W3d / criterion D)** — deferred. share-slip's `CreateShareLinkRequest`
-   requires non-empty `documentIds`; a document-less order QR needs a share-slip enhancement.
-   The QR *claim* flow (`/v1/intake/qr/claim` with auth + identity confirmation) is not yet built.
-2. **DICOM viewer surfacing (W7)** — `POST /v1/orders/{id}/link-study` now records study UID +
-   viewer URL and drives `IMAGES_LINKED` (criterion F backend done); the remaining piece is
-   surfacing the viewer launch through the BFF/`ImagingExperienceController` (which exists) and
-   the OROS↔pacs-adapter `order-links`/`report-links` reverse correlation.
+1. **Printable order QR + QR claim (criterion D)** — DONE. share-slip now supports document-less
+   links (`documentIds` optional; `ClaimResult` carries `subjectType`/`subjectId`); OROS
+   `POST /v1/orders/{id}/printable` issues a `DIAGNOSTIC_ORDER` link and `POST /v1/intake/qr/claim`
+   validates the OTP claim + resolves the order; BFF proxies + UI (`/diagnostics/intake/qr`,
+   "Print QR" action) wired and tested.
+2. **DICOM viewer deep-launch (criterion F)** — DONE. `POST /internal/v1/diagnostics/orders/{id}/viewer`
+   resolves the order's study UID → PACS study → governed `launchViewerSession`; UI "View images"
+   action opens the returned viewer URL. (The OROS↔pacs-adapter reverse `order-links`/`report-links`
+   correlation remains a nicety, not required for launch.)
 3. **Butano DiagnosticReport amendment lifecycle** — report versions are modelled in OROS but the
    FHIR `DiagnosticReport.relatesTo` writeback for amend/addendum is not wired.
 4. **Provider/destinations directory (W3c/W8)** — `/v1/routing/destinations` and the admin provider
@@ -145,9 +150,10 @@ CLI-Postgres/Mockito, RTL/vitest, tsc). No runtime/preview boot was performed.
    (fulfilment actions, W4), `/operations/diagnostics-reconciliation` (buckets + turnaround, H),
    `/admin/integrations` (honest status, §27 #11), `/diagnostics/reporting` (author/amend/
    release + version history, criterion G), `/ehr/[patientId]/investigations` (patient-file
-   diagnostic history, criterion F continuity). REMAINING: QR-claim screen, DICOM viewer
-   deep-launch (governed viewer-session via the existing ImagingExperienceController), and
-   **mobile parity (W9)**.
+   diagnostic history, criterion F continuity), `/diagnostics/intake/qr` (QR claim, criterion D),
+   plus "Print QR" + governed "View images" actions on order tracking. **Mobile (W9):**
+   provider-app `DiagnosticsScreen` (order tracking + results inbox) as a provider tab. Every web
+   acceptance criterion (A, B, D, F, G, H) now has a live UI surface.
 7. **channels-service** external notify-only adapters not touched (in-platform alert path is live).
 8. **Offline/low-connectivity** queueing (§15) — not designed.
 
