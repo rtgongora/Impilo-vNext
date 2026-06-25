@@ -206,6 +206,90 @@ public class ButanoIntegration {
     }
 
     /**
+     * Write the structured laboratory observations of a result to the SHR as FHIR Observation
+     * resources (value[x] + UCUM unit + referenceRange + interpretation), each linked to the order's
+     * ServiceRequest. Best-effort: a BUTANO outage stops early and is non-blocking.
+     *
+     * @return the count of observations successfully written
+     */
+    @SuppressWarnings("unchecked")
+    public int createObservations(String orderId, ResultEntity result,
+                                  java.util.List<zw.gov.mohcc.impilo.oros.persistence.entity.ResultObservationEntity> observations) {
+        if (observations == null || observations.isEmpty()) {
+            return 0;
+        }
+        String url = baseUrl + "/fhir/Observation";
+        String obsStatus = "final".equals(fhirStatus(result)) ? "final" : "preliminary";
+        int written = 0;
+        for (var o : observations) {
+            try {
+                Map<String, Object> fhir = new HashMap<>();
+                fhir.put("resourceType", "Observation");
+                fhir.put("status", obsStatus);
+                fhir.put("identifier", java.util.List.of(Map.of(
+                        "system", "https://impilo.gov.zw/oros/observation-id",
+                        "value", o.getObservationId() != null ? o.getObservationId().toString() : orderId)));
+                fhir.put("basedOn", java.util.List.of(Map.of("reference", "ServiceRequest/" + orderId)));
+
+                java.util.List<Map<String, Object>> coding = new java.util.ArrayList<>();
+                if (o.getAnalyteCode() != null) {
+                    coding.add(Map.of(
+                            "system", o.getAnalyteSystem() != null ? o.getAnalyteSystem() : "urn:oros:analyte",
+                            "code", o.getAnalyteCode(),
+                            "display", o.getAnalyteName()));
+                }
+                Map<String, Object> code = new HashMap<>();
+                code.put("coding", coding);
+                code.put("text", o.getAnalyteName());
+                fhir.put("code", code);
+
+                if (o.getValueNumeric() != null) {
+                    Map<String, Object> q = new HashMap<>();
+                    q.put("value", o.getValueNumeric());
+                    if (o.getUnit() != null) {
+                        q.put("unit", o.getUnit());
+                        q.put("system", "http://unitsofmeasure.org");
+                        q.put("code", o.getUnit());
+                    }
+                    fhir.put("valueQuantity", q);
+                } else if (o.getValueText() != null) {
+                    fhir.put("valueString", o.getValueText());
+                }
+
+                if (o.getRefRangeLow() != null || o.getRefRangeHigh() != null || o.getRefRangeText() != null) {
+                    Map<String, Object> rr = new HashMap<>();
+                    if (o.getRefRangeLow() != null) rr.put("low", Map.of("value", o.getRefRangeLow()));
+                    if (o.getRefRangeHigh() != null) rr.put("high", Map.of("value", o.getRefRangeHigh()));
+                    if (o.getRefRangeText() != null) rr.put("text", o.getRefRangeText());
+                    fhir.put("referenceRange", java.util.List.of(rr));
+                }
+
+                String interp = o.isCriticalFlag()
+                        ? (o.getAbnormalFlag() != null ? o.getAbnormalFlag() : "AA")
+                        : o.getAbnormalFlag();
+                if (interp != null && !interp.isBlank() && !"N".equals(interp)) {
+                    fhir.put("interpretation", java.util.List.of(Map.of("coding", java.util.List.of(Map.of(
+                            "system", "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+                            "code", interp)))));
+                }
+
+                HttpHeaders headers = buildTrustHeaders();
+                headers.setContentType(MediaType.APPLICATION_JSON);
+                ResponseEntity<Map> response = restTemplate.postForEntity(
+                        url, new HttpEntity<>(fhir, headers), Map.class);
+                if (response.getStatusCode().is2xxSuccessful()) {
+                    written++;
+                }
+            } catch (RestClientException e) {
+                log.warn("BUTANO unavailable for Observation, orderId={}: {}", orderId, e.getMessage());
+                return written;
+            }
+        }
+        log.info("BUTANO Observations written: orderId={}, count={}/{}", orderId, written, observations.size());
+        return written;
+    }
+
+    /**
      * Create a FHIR DocumentReference in BUTANO for an attached document.
      *
      * @param orderId the order this document belongs to

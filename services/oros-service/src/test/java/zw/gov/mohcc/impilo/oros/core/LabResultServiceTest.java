@@ -31,6 +31,7 @@ class LabResultServiceTest {
 
     @Mock private ReportService reportService;
     @Mock private ResultObservationRepository observationRepository;
+    @Mock private zw.gov.mohcc.impilo.oros.integration.ButanoIntegration butanoIntegration;
 
     private LabResultService service;
 
@@ -38,7 +39,9 @@ class LabResultServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new LabResultService(reportService, observationRepository, OrosTestObjectMapper.create());
+        when(observationRepository.save(any(ResultObservationEntity.class))).thenAnswer(i -> i.getArgument(0));
+        service = new LabResultService(reportService, observationRepository,
+                OrosTestObjectMapper.create(), butanoIntegration);
     }
 
     private ResultEntity resultWithId() {
@@ -70,6 +73,9 @@ class LabResultServiceTest {
         verify(reportService).createFinal(eq(ORDER_ID), anyString(), eq("anaemia + hyperkalaemia"),
                 any(), any(), eq("Z1"));
         verify(observationRepository, times(2)).save(any(ResultObservationEntity.class));
+        // The structured observations are written to the SHR as FHIR Observations.
+        verify(butanoIntegration).createObservations(eq(ORDER_ID), eq(result),
+                org.mockito.ArgumentMatchers.anyList());
         // The critical potassium triggers the result critical workflow exactly once.
         verify(reportService).flagCritical(eq(result.getResultId()), contains("Potassium"));
     }
