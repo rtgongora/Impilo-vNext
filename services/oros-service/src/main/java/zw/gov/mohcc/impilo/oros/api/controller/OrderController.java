@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.oros.api.dto.CancelRequest;
 import zw.gov.mohcc.impilo.oros.api.dto.ImagingTransitionRequest;
+import zw.gov.mohcc.impilo.oros.api.dto.LinkStudyRequest;
 import zw.gov.mohcc.impilo.oros.api.dto.NoteRequest;
 import zw.gov.mohcc.impilo.oros.api.dto.OrderItemDto;
 import zw.gov.mohcc.impilo.oros.api.dto.OrderSummaryDto;
@@ -319,6 +320,16 @@ public class OrderController {
     public ResponseEntity<ApiResponse<OrderSummaryDto>> completeOrder(
             @PathVariable String orderId, @RequestBody(required = false) NoteRequest request) {
         return imagingActionResponse(orderId, ImagingWorkflowState.PERFORMED, request);
+    }
+
+    /** Link a PACS/DICOM study to the order (imaging state -> IMAGES_LINKED). */
+    @PostMapping("/{orderId}/link-study")
+    public ResponseEntity<ApiResponse<OrderSummaryDto>> linkStudy(
+            @PathVariable String orderId, @Valid @RequestBody LinkStudyRequest request) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        OrderEntity order = imagingWorkflowService.linkStudy(
+                orderId, request.studyUid(), request.viewerUrl(), request.accessionNumber());
+        return ResponseEntity.ok(ApiResponse.ok(OrderSummaryDto.from(order), correlationId));
     }
 
     /**

@@ -99,6 +99,13 @@ public class OrderEntity {
     @Column(name = "imaging_state", length = 32)
     private ImagingWorkflowState imagingState;
 
+    // ── Linked PACS/DICOM study (V008) ───────────────────────────────────
+    @Column(name = "study_uid", length = 128)
+    private String studyUid;
+
+    @Column(name = "study_viewer_url", length = 512)
+    private String studyViewerUrl;
+
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
 
@@ -189,4 +196,10 @@ public class OrderEntity {
 
     public ImagingWorkflowState getImagingState() { return imagingState; }
     public void setImagingState(ImagingWorkflowState imagingState) { this.imagingState = imagingState; }
+
+    public String getStudyUid() { return studyUid; }
+    public void setStudyUid(String studyUid) { this.studyUid = studyUid; }
+
+    public String getStudyViewerUrl() { return studyViewerUrl; }
+    public void setStudyViewerUrl(String studyViewerUrl) { this.studyViewerUrl = studyViewerUrl; }
 }

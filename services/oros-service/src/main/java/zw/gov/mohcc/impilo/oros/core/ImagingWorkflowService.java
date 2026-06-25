@@ -92,6 +92,28 @@ public class ImagingWorkflowService {
         return doTransition(order, ImagingWorkflowState.SCHEDULED, note);
     }
 
+    /**
+     * Link a fulfilled exam's PACS/DICOM study to the order and drive the workflow to
+     * {@code IMAGES_LINKED} in one atomic step (criterion F). Records the study UID and viewer
+     * URL on the order; sets the accession number too if not already reserved.
+     *
+     * @throws IllegalStateException if the order is not imaging or is not ready for image linkage
+     */
+    @Transactional
+    public OrderEntity linkStudy(String orderId, String studyUid, String viewerUrl, String accessionNumber) {
+        OrderEntity order = load(orderId);
+        if (studyUid != null && !studyUid.isBlank()) {
+            order.setStudyUid(studyUid);
+        }
+        if (viewerUrl != null && !viewerUrl.isBlank()) {
+            order.setStudyViewerUrl(viewerUrl);
+        }
+        if (accessionNumber != null && !accessionNumber.isBlank() && order.getAccessionNumber() == null) {
+            order.setAccessionNumber(accessionNumber);
+        }
+        return doTransition(order, ImagingWorkflowState.IMAGES_LINKED, "study linked: " + studyUid);
+    }
+
     private OrderEntity doTransition(OrderEntity order, ImagingWorkflowState target, String reason) {
         requireImaging(order);
         ImagingWorkflowState from = order.getImagingState();
@@ -127,6 +149,7 @@ public class ImagingWorkflowService {
         payload.put("from", from != null ? from.name() : null);
         payload.put("to", to.name());
         payload.put("accessionNumber", order.getAccessionNumber());
+        payload.put("studyUid", order.getStudyUid());
         payload.put("patientCpid", order.getPatientCpid());
         payload.put("actorId", ctx.actorId());
         payload.put("reason", reason);

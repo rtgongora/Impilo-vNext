@@ -37,7 +37,9 @@ public record OrderSummaryDto(
         String referringProviderId,
         String referringProviderName,
         OffsetDateTime scheduledAt,
-        ImagingWorkflowState imagingState
+        ImagingWorkflowState imagingState,
+        String studyUid,
+        String studyViewerUrl
 ) {
     /**
      * Factory method to create a summary DTO from an order entity.
@@ -61,7 +63,9 @@ public record OrderSummaryDto(
                 entity.getReferringProviderId(),
                 entity.getReferringProviderName(),
                 entity.getScheduledAt(),
-                entity.getImagingState()
+                entity.getImagingState(),
+                entity.getStudyUid(),
+                entity.getStudyViewerUrl()
         );
     }
 }

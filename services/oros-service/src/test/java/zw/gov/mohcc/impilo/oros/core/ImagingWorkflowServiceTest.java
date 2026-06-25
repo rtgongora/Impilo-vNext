@@ -133,6 +133,36 @@ class ImagingWorkflowServiceTest {
     }
 
     @Test
+    @DisplayName("linkStudy records study UID/viewer and drives state to IMAGES_LINKED")
+    void linkStudySetsStudyAndState() {
+        try (MockedStatic<TrustContextHolder> holder = mockStatic(TrustContextHolder.class)) {
+            holder.when(TrustContextHolder::require).thenReturn(ctx());
+
+            OrderEntity order = imagingOrder(ImagingWorkflowState.PERFORMED);
+            when(orderRepository.findByOrderId(ORDER_ID)).thenReturn(Optional.of(order));
+            when(orderRepository.save(any(OrderEntity.class))).thenAnswer(i -> i.getArgument(0));
+
+            OrderEntity result = service.linkStudy(ORDER_ID, "1.2.840.113619.2", "https://viewer/launch?s=1", "ACC-9");
+
+            assertThat(result.getImagingState()).isEqualTo(ImagingWorkflowState.IMAGES_LINKED);
+            assertThat(result.getStudyUid()).isEqualTo("1.2.840.113619.2");
+            assertThat(result.getStudyViewerUrl()).isEqualTo("https://viewer/launch?s=1");
+            assertThat(result.getAccessionNumber()).isEqualTo("ACC-9");
+        }
+    }
+
+    @Test
+    @DisplayName("linkStudy is rejected before the exam is performed")
+    void linkStudyRejectedBeforePerformed() {
+        OrderEntity order = imagingOrder(ImagingWorkflowState.RECEIVED);
+        when(orderRepository.findByOrderId(ORDER_ID)).thenReturn(Optional.of(order));
+
+        assertThatThrownBy(() -> service.linkStudy(ORDER_ID, "1.2.3", null, null))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Invalid imaging workflow transition");
+    }
+
+    @Test
     @DisplayName("schedule sets scheduledAt and drives state to SCHEDULED")
     void scheduleSetsTimeAndState() {
         try (MockedStatic<TrustContextHolder> holder = mockStatic(TrustContextHolder.class)) {
