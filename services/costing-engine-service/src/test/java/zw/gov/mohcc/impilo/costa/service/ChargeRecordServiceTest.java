@@ -75,7 +75,9 @@ class ChargeRecordServiceTest {
                 + "\"encounterId\":\"ENC-1\","
                 + "\"facilityId\":\"" + FACILITY + "\","
                 + "\"specialty\":\"CARDIOLOGY\","
-                + "\"modality\":\"virtual\""
+                + "\"modality\":\"virtual\","
+                + "\"patientCategory\":\"INDIGENT\","
+                + "\"facilityCategory\":\"CENTRAL\""
                 + "}");
     }
 
@@ -140,6 +142,25 @@ class ChargeRecordServiceTest {
         assertEquals(0, BigDecimal.ZERO.compareTo(saved.getChargeAmount()));
         assertEquals("OPEN", saved.getChargeStatus());
         assertTrue(saved.getMetadataJson().contains("\"pendingPricing\":true"));
+    }
+
+    @Test
+    void ingestTeleconsultCompleted_propagatesCategoriesIntoRuleContext() throws Exception {
+        when(tariffEngine.compute(eq(TENANT), eq(FACILITY), eq("TELECONSULT_CARDIOLOGY"),
+                any(BigDecimal.class), any()))
+                .thenReturn(CostResult.of(new BigDecimal("50.00"), BigDecimal.ONE,
+                        CostMethodType.TARIFF, "TARIFF:TC_CARD", Map.of()));
+
+        service.ingestTeleconsultCompleted(teleconsultEvent());
+
+        ArgumentCaptor<RuleContext> ctxCaptor = ArgumentCaptor.forClass(RuleContext.class);
+        verify(chargingRuleEngine).evaluate(ctxCaptor.capture());
+        RuleContext ctx = ctxCaptor.getValue();
+        // patient/facility category from the value-trigger reach the charging-rule engine,
+        // so exemptions keyed on them (e.g. INDIGENT) can fire.
+        assertEquals("INDIGENT", ctx.patientCategory());
+        assertEquals("CENTRAL", ctx.facilityCategory());
+        assertEquals(0, new BigDecimal("50.00").compareTo(ctx.costAmount()));
     }
 
     @Test
