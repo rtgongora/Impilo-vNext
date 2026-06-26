@@ -2876,6 +2876,60 @@ paths:
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
       responses:
         '200': { description: Term created, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/admissions/applications:
+    get:
+      tags: [FundoStudent]
+      summary: List admission applications (filter by status or program)
+      operationId: listStudentApplications
+      parameters:
+        - { name: status, in: query, required: false, schema: { type: string } }
+        - { name: programId, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 500 } }
+      responses:
+        '200': { description: Applications, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+    post:
+      tags: [FundoStudent]
+      summary: Submit an admission application
+      operationId: submitStudentApplication
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Application submitted, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/admissions/applications/{applicationId}/decision:
+    post:
+      tags: [FundoStudent]
+      summary: Record an admission decision
+      operationId: decideStudentApplication
+      parameters:
+        - { name: applicationId, in: path, required: true, schema: { type: string } }
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Decision recorded, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/students:
+    get:
+      tags: [FundoStudent]
+      summary: List students (optionally by program)
+      operationId: listStudents
+      parameters:
+        - { name: programId, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 500 } }
+      responses:
+        '200': { description: Students, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+    post:
+      tags: [FundoStudent]
+      summary: Admit a student (generates a student number)
+      operationId: admitStudent
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Student admitted, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/students/{studentId}:
+    get:
+      tags: [FundoStudent]
+      summary: Get a student profile
+      operationId: getStudent
+      parameters:
+        - { name: studentId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Student, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
   /workflow-context:
     get:
       operationId: learning_get__workflow_context
