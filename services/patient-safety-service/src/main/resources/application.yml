@@ -78,3 +78,21 @@ patientsafety:
     aefi-url: ${VIGIMOBILE_AEFI_URL:https://primaryreporting.who-umc.org/Reporting/Reporter?OrganizationID=ZW&form=AEFI}
     mcaz-whatsapp-number: ${MCAZ_WHATSAPP_NUMBER:+263 719 757 425}
     mcaz-portal-url: ${MCAZ_PORTAL_URL:https://www.mcaz.co.zw/index.php/pharmacovigilance}
+  # Honest adapter posture. External dispatch / submission is owned by integration-hub; these flags
+  # describe what is connected. ALL default OFF — the PoC never fakes a VigiFlow submission. When an
+  # adapter is off, cases surface as "export pending / adapter not configured / manual entry mode".
+  adapters:
+    vigiflow-e2b:
+      enabled: ${ADAPTER_VIGIFLOW_E2B_ENABLED:false}
+    vigimobile-link:
+      enabled: ${ADAPTER_VIGIMOBILE_LINK_ENABLED:true}   # external link-out is "configured" but Impilo does not receive submissions
+    whatsapp:
+      enabled: ${ADAPTER_WHATSAPP_ENABLED:false}
+    sms:
+      enabled: ${ADAPTER_SMS_ENABLED:false}
+    ussd:
+      enabled: ${ADAPTER_USSD_ENABLED:false}
+    email:
+      enabled: ${ADAPTER_EMAIL_ENABLED:false}
+    voice:
+      enabled: ${ADAPTER_VOICE_ENABLED:false}
