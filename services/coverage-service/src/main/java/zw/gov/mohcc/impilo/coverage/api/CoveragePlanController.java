@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.coverage.api.dto.CoveragePlanResponse;
 import zw.gov.mohcc.impilo.coverage.api.dto.CoverageResponse;
 import zw.gov.mohcc.impilo.coverage.api.dto.CreateCoveragePlanRequest;
+import zw.gov.mohcc.impilo.coverage.api.dto.PatientBillingCategoryResponse;
 import zw.gov.mohcc.impilo.coverage.core.CoverageEventService;
 import zw.gov.mohcc.impilo.coverage.domain.CoveragePlanEntity;
 import zw.gov.mohcc.impilo.coverage.domain.MemberCoverageEntity;
@@ -22,6 +23,7 @@ import zw.gov.mohcc.impilo.coverage.repository.CoveragePlanRepository;
 import zw.gov.mohcc.impilo.coverage.repository.MemberCoverageRepository;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -58,6 +60,34 @@ public class CoveragePlanController {
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam(name = "member_cpid") String memberCpid) {
         return getMemberCoverage(tenantId, memberCpid);
+    }
+
+    /**
+     * Resolve a patient's billing category from their active coverage, for downstream costing
+     * (COSTA charging rules). The active member coverage's plan type is the category; absent any
+     * active coverage the patient is treated as self-pay ({@code CASH}). This keeps the billing
+     * classification owned by coverage-service rather than inferred in the composition layer.
+     */
+    @GetMapping("/patient-category/{clientId}")
+    public ResponseEntity<PatientBillingCategoryResponse> resolvePatientCategory(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @PathVariable String clientId) {
+        UUID tid = UUID.fromString(tenantId);
+        return memberCoverageRepository
+                .findByTenantIdAndClientIdAndStatus(tid, clientId, "ACTIVE")
+                .stream()
+                .findFirst()
+                .map(mc -> {
+                    CoveragePlanEntity plan = planRepository.findById(mc.getPlanId()).orElse(null);
+                    String category = plan != null && plan.getPlanType() != null && !plan.getPlanType().isBlank()
+                            ? plan.getPlanType().trim().toUpperCase(Locale.ROOT)
+                            : "CASH";
+                    String source = plan != null ? "COVERAGE_PLAN" : "DEFAULT_SELF_PAY";
+                    String planCode = plan != null ? plan.getPlanCode() : null;
+                    return ResponseEntity.ok(new PatientBillingCategoryResponse(clientId, category, source, planCode));
+                })
+                .orElseGet(() -> ResponseEntity.ok(
+                        new PatientBillingCategoryResponse(clientId, "CASH", "DEFAULT_SELF_PAY", null)));
     }
 
     @GetMapping
