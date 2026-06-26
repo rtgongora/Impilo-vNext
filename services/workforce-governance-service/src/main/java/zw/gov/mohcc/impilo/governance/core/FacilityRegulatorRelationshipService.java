@@ -80,11 +80,35 @@ public class FacilityRegulatorRelationshipService {
         return saved;
     }
 
+    /** Legal relationship statuses (V004 schema comment: ACTIVE|SUSPENDED|LAPSED|REVOKED|PENDING). */
+    private static final java.util.Set<String> RELATIONSHIP_STATUSES =
+            java.util.Set.of("ACTIVE", "SUSPENDED", "LAPSED", "REVOKED", "PENDING");
+
+    /** Allowed transitions. REVOKED is terminal (use {@code unlink}); no resurrection from REVOKED. */
+    private static final Map<String, java.util.Set<String>> RELATIONSHIP_TRANSITIONS = Map.of(
+            "PENDING", java.util.Set.of("ACTIVE", "REVOKED"),
+            "ACTIVE", java.util.Set.of("SUSPENDED", "LAPSED", "REVOKED"),
+            "SUSPENDED", java.util.Set.of("ACTIVE", "LAPSED", "REVOKED"),
+            "LAPSED", java.util.Set.of("ACTIVE", "REVOKED"),
+            "REVOKED", java.util.Set.of());
+
     @Transactional
     public FacilityRegulatorRelationshipEntity updateStatus(UUID tenantId, String actor, UUID id,
                                                             String status, String correlationId) {
+        if (status == null || status.isBlank()) {
+            throw new IllegalArgumentException("status is required");
+        }
+        if (!RELATIONSHIP_STATUSES.contains(status)) {
+            throw new IllegalArgumentException("Unknown relationship status: " + status);
+        }
         FacilityRegulatorRelationshipEntity entity = repository.findByTenantIdAndId(tenantId, id)
                 .orElseThrow(() -> new IllegalArgumentException("Relationship not found: " + id));
+        String current = entity.getStatus();
+        if (!status.equals(current)
+                && !RELATIONSHIP_TRANSITIONS.getOrDefault(current, java.util.Set.of()).contains(status)) {
+            throw new IllegalArgumentException(
+                    "Illegal relationship status transition: " + current + " -> " + status);
+        }
         entity.setStatus(status);
         entity.setUpdatedBy(actor);
         FacilityRegulatorRelationshipEntity saved = repository.save(entity);

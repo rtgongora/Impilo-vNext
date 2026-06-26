@@ -89,4 +89,34 @@ class FacilityRegulatorRelationshipServiceTest {
         FacilityRegulatorRelationshipEntity e = service.updateStatus(tenantId, "actor-1", id, "SUSPENDED", "c");
         assertEquals("SUSPENDED", e.getStatus());
     }
+
+    @Test
+    void updateStatus_rejectsNullStatus() {
+        UUID id = UUID.randomUUID();
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> service.updateStatus(tenantId, "actor-1", id, null, "c"));
+        assertTrue(ex.getMessage().toLowerCase().contains("required"));
+        // Fails before any repository lookup.
+        verify(repository, never()).findByTenantIdAndId(any(), any());
+    }
+
+    @Test
+    void updateStatus_rejectsUnknownStatus() {
+        UUID id = UUID.randomUUID();
+        assertThrows(IllegalArgumentException.class,
+                () -> service.updateStatus(tenantId, "actor-1", id, "BOGUS", "c"));
+    }
+
+    @Test
+    void updateStatus_rejectsIllegalTransitionFromRevoked() {
+        UUID id = UUID.randomUUID();
+        FacilityRegulatorRelationshipEntity existing = new FacilityRegulatorRelationshipEntity();
+        existing.setId(id);
+        existing.setStatus("REVOKED"); // terminal
+        when(repository.findByTenantIdAndId(tenantId, id)).thenReturn(Optional.of(existing));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> service.updateStatus(tenantId, "actor-1", id, "ACTIVE", "c"));
+        verify(repository, never()).save(any());
+    }
 }
