@@ -52,6 +52,10 @@ public class AcademicProgramEntity {
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
 
+    /** Optional academy/org-unit scope (V022); NULL = national/tenant-wide. */
+    @Column(name = "learning_space_id")
+    private UUID learningSpaceId;
+
     @PrePersist
     void prePersist() {
         if (id == null) id = UUID.randomUUID();
@@ -82,4 +86,6 @@ public class AcademicProgramEntity {
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(OffsetDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public UUID getLearningSpaceId() { return learningSpaceId; }
+    public void setLearningSpaceId(UUID learningSpaceId) { this.learningSpaceId = learningSpaceId; }
 }

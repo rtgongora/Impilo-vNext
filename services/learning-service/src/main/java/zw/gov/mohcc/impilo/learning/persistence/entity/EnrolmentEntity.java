@@ -63,6 +63,10 @@ public class EnrolmentEntity {
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
 
+    /** Optional academy/org-unit scope (V022); NULL = national/tenant-wide. */
+    @Column(name = "learning_space_id")
+    private UUID learningSpaceId;
+
     @PrePersist
     void prePersist() {
         if (id == null) id = UUID.randomUUID();
@@ -100,4 +104,6 @@ public class EnrolmentEntity {
     public void setCompletedAt(OffsetDateTime completedAt) { this.completedAt = completedAt; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
+    public UUID getLearningSpaceId() { return learningSpaceId; }
+    public void setLearningSpaceId(UUID learningSpaceId) { this.learningSpaceId = learningSpaceId; }
 }

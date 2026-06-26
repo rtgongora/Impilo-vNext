@@ -64,6 +64,10 @@ public class CourseEntity {
     @Column(name = "cpd_points")
     private Integer cpdPoints;
 
+    /** Optional academy/org-unit scope (V022); NULL = national/tenant-wide. */
+    @Column(name = "learning_space_id")
+    private java.util.UUID learningSpaceId;
+
     @Column(name = "version", nullable = false)
     private int version = 1;
 
@@ -110,6 +114,8 @@ public class CourseEntity {
     public void setCpdEligible(boolean cpdEligible) { this.cpdEligible = cpdEligible; }
     public Integer getCpdPoints() { return cpdPoints; }
     public void setCpdPoints(Integer cpdPoints) { this.cpdPoints = cpdPoints; }
+    public java.util.UUID getLearningSpaceId() { return learningSpaceId; }
+    public void setLearningSpaceId(java.util.UUID learningSpaceId) { this.learningSpaceId = learningSpaceId; }
     public int getVersion() { return version; }
     public void setVersion(int version) { this.version = version; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
