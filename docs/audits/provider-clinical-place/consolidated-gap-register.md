@@ -41,7 +41,7 @@ doctrine). Two of my own prompt labels were wrong (corrected in §5).
 |----|-----|-----------|--------|
 | GAP-2 | L2's 3 new BFF controllers (`FacilityModeController`, `FacilityRegulatorBffController`, `IndawoPlaceModeController`) have **no dedicated tests** (exercised only indirectly) | L2 | small |
 | GAP-3 | L3 W6 `ProviderBootstrapController/Service` (bulk-preload + self-claim) has **no dedicated unit test** | L3 | small |
-| GAP-4 | Reconcile L1's Java `CadreEngine` (pct-service) against a **pre-existing `one-ui-shell/.../cadreEngine.ts`** Lovable flagged — confirm no duplicate cadre-enforcement SoR (PCT must be authoritative; the TS side may only render) | L1/web | small (verify; refactor if dup) |
+| ~~GAP-4~~ | **Reclassified to §3 (medium)** after inspection — see GAP-4 below | — | — |
 
 ## 3. Gaps PARTIAL / DEFERRED (real functional boundaries)
 
@@ -50,6 +50,7 @@ doctrine). Two of my own prompt labels were wrong (corrected in §5).
 | GAP-5 | **Phone/email/invite identifier resolution** | `SilentIdentifierResolutionService` denies safely for PHONE/EMAIL/INVITE (`notResolved()` + TODO); Health ID/Impilo ID/Provider ID/council are Live | L3 | needs VITO contact-resolve + invite-token endpoints — **verify VITO capability first (SoR-first)** before wiring |
 | GAP-6 | **Policy ENFORCEMENT of all new rules** | Cadre actions, facility-mode entry, Provider-ID-deny, WORK-REQUIRES-ASSIGNMENT, SELF-TREATMENT-BLOCK, PROVIDER-SELF-CLAIM etc. are **spec-only TODOs**; rides existing ext_authz but new fine-grained rego is **not authored/enforced** | track P / **CZO-locked** | NOT ours to author (PolicyEngine single-writer lock). Route to WS-OPA `impilo.authz` or queue CZO lead. **Largest systemic gap.** |
 | GAP-7 | **Work/Pro/Life server-side enforcement** | client boundary helper Live; server authz deferred to GAP-6 | L3 + track P | tied to GAP-6 |
+| GAP-4 | **Two server-side cadre authorities** (medium, reclassified) | Pre-existing `cadre_scope_rules`/`clinical_cadre_definitions` tables exposed at `/internal/v1/pct/cadre-scope-rules` (consumed by client `cadreEngine.ts`/`useScopeGuard`/forms) **vs** L1's new Java `CadreEngine` at `/internal/v1/encounters/cadre-decision` with its own cadre-family logic. They can diverge. | L1 | **Unify: PCT Java `CadreEngine` must be the single authority and source its rules from the `cadre_scope_rules`/`clinical_cadre_definitions` tables** (not parallel hardcoded families); the scope-rules endpoint becomes a read-projection of the same engine. Not a quick fix — deliberate reconciliation. |
 
 ## 4. Gaps MISSING (net-new scope — further waves; **not built**)
 
@@ -59,7 +60,7 @@ Mapped to the 25-part spec and the real Lovable adopt-targets.
 |----|-----|----------|---------|------|
 | GAP-8 | **Patient-facing experience surfaces per stage** (queue-status/ticket/"running late", check-in confirmation, orders/results status, referral/teleconsult status, inpatient updates, outcome) — **largely absent on our side** | Part 3, DoD #5 | #3 (top miss) | **large** |
 | GAP-9 | **Patient message catalog shipped** as i18n strings (en/sn/nd) wired to Khuluma dispatch across all stages (we have design keys, not full implementation+dispatch) | Part 23, DoD #11 | — | medium |
-| GAP-10 | **Cadre-specific History/Exam form content** (Doctor SOCRATES/ICD vs Nurse focused vs CHW danger-signs) — engine exists, forms don't | Part 16/18 | #2 | medium |
+| GAP-10 | **Cadre-specific History/Exam form content** — **PARTIAL** (corrected): `CadreHistoryForm.tsx`/`CadreExamForm.tsx`/`useCadreFormConfig.ts` already exist + are DB-driven; gap is real cadre-specific *content* (Doctor SOCRATES/ICD vs Nurse focused vs CHW danger-signs) sourced from governed config, not the components | Part 16/18 | #2 | medium |
 | GAP-11 | **Unified front-door "sorting session"** entity binding arrival→identity→triage→route + `arrival_mode` tiles (we have a sorting-desk/visit-type step, not the unifying session) | Part 13/14 | #1 | medium |
 | GAP-12 | **Referral Package builder** enhancements — specialist-question prompts, multi-target (facility/specialty/provider/pool/on-call) | Part 19 | #4/#5 | medium |
 | GAP-13 | **Encounter Tools Bar + Clinical Safety/Intelligence Ribbon + AI-assist** (assistive, marked, non-silent) | Part 17 | adapt | large |
