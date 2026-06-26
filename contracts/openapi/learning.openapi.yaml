@@ -3029,6 +3029,49 @@ paths:
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
       responses:
         '200': { description: Space created, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/providers/{providerId}/accreditations:
+    get:
+      tags: [FundoProvider]
+      summary: List a provider's accreditation records
+      operationId: listProviderAccreditations
+      parameters: [{ name: providerId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Accreditations, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/provider-applications:
+    get:
+      tags: [FundoProvider]
+      summary: List learning-provider set-up applications
+      operationId: listProviderApplications
+      parameters:
+        - { name: status, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 500 } }
+      responses:
+        '200': { description: Applications, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+    post:
+      tags: [FundoProvider]
+      summary: Request to set up & run a learning provider/academy (kind-aware)
+      operationId: submitProviderApplication
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Submitted, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/provider-applications/{applicationId}/decision:
+    post:
+      tags: [FundoProvider]
+      summary: Record a review decision on a provider application
+      operationId: decideProviderApplication
+      parameters: [{ name: applicationId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Decision recorded, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/provider-applications/{applicationId}/accredit:
+    post:
+      tags: [FundoProvider]
+      summary: Accredit & provision a provider (routes to the kind's regulator)
+      operationId: accreditProvider
+      parameters: [{ name: applicationId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: false, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Accredited & provisioned, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
   /workflow-context:
     get:
       operationId: learning_get__workflow_context
