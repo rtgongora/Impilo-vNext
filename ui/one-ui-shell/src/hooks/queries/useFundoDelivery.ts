@@ -75,3 +75,38 @@ export function useAssignSessionDelivery() {
       apiClient.post(`/internal/v1/learning/v11/sessions/${encodeURIComponent(sessionId)}/delivery`, body),
   });
 }
+
+/** A2 — attendance + check-in. */
+
+export function useSessionAttendance(sessionId?: string) {
+  return useQuery<ApiData<{ items?: Array<Record<string, unknown>> }>>({
+    queryKey: ["fundo", "attendance", sessionId],
+    enabled: Boolean(sessionId),
+    queryFn: () => apiClient.get(`/internal/v1/learning/v11/sessions/${encodeURIComponent(sessionId!)}/attendance`),
+  });
+}
+
+export function useCreateCheckinToken(sessionId: string) {
+  return useMutation({
+    mutationFn: (body: Record<string, unknown>) =>
+      apiClient.post(`/internal/v1/learning/v11/sessions/${encodeURIComponent(sessionId)}/checkin-tokens`, body),
+  });
+}
+
+export function useMarkAttendance(sessionId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Record<string, unknown>) =>
+      apiClient.post(`/internal/v1/learning/v11/sessions/${encodeURIComponent(sessionId)}/attendance`, body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["fundo", "attendance", sessionId] }),
+  });
+}
+
+export function useSelfCheckin(sessionId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Record<string, unknown>) =>
+      apiClient.post(`/internal/v1/learning/v11/sessions/${encodeURIComponent(sessionId)}/checkin`, body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["fundo", "attendance", sessionId] }),
+  });
+}
