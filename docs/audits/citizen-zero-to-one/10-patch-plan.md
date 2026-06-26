@@ -59,11 +59,15 @@ existing `display-settings` persistence (`PrivacyRightsController`). Add resumab
 
 ## Slice 7 — Consent persistence + citizen consent UI (G-CZO-06/07) 🟡
 
-**SoR-first (critical):** experience-bff has **no datasource** — do NOT persist in the BFF. Route policy-consent
-capture to a sovereign service. **Open question for grounding:** does policy/operational consent belong in
-tshepo-consent-service (alongside clinical consent) or data-governance-service (alongside privacy prefs/DSR)?
-Resolve via `docs/registry/system-of-record-map.md` before building; then make `/status` & `/history` real and
-give `/settings/privacy` true feedback.
+**SoR-first (RESOLVED):** experience-bff has **no datasource** — do NOT persist in the BFF. The SoR is
+**`mvumo-service`** — the sovereign Ring-0 consent *orchestration* service (generic `consentType` covering
+PRIVACY_POLICY/TERMS_OF_USE, templates, multi-channel + assurance + actor capture, offline-sync, proof), which
+writes through to tshepo-consent. (NOT tshepo-consent directly — that's the downstream record store; NOT
+data-governance — that owns privacy-prefs/DSR.) The BFF already has `MvumoServiceClient`. **Build:** route
+`PolicyConsentController` accept → Mvumo consent-request + grant transition (carry channel/assurance/actor);
+revoke → withdraw transition; `/status` & `/history` → Mvumo `listForPatient` filtered to policy consent types;
+then give `/settings/privacy` true feedback. Fail-safe so the login consent interstitial never hard-breaks if
+Mvumo is unavailable.
 
 ## Slice 3 — L5 delegated access (G-CZO-03) 🟠 — DESIGN ONLY, STOP FOR PO
 

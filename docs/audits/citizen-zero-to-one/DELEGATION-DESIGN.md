@@ -58,22 +58,29 @@ PolicyEngine dimension** ("act-on-behalf"), composing with the existing 10 dimen
 
 **Where does the act-on-behalf relationship live?**
 
-- **Option A — Vito** (person registry) as a person-to-person identifier link. Pro: Vito already owns the
-  person anchor and identifier classes; relationships are an identity concern. Con: Vito is identity-of-record,
-  not an authorization/consent engine; scope + legal-basis + revocation semantics lean consent/trust.
-- **Option B — tshepo-consent-service** as a consent-backed delegation directive. Pro: legal basis + scope +
-  revocation are consent-shaped, and this is the consent authority. Con: guardianship/facility-assignment
-  bases aren't strictly "consent."
-- **Option C — a new relationship/delegation service** (trust plane). Pro: clean ownership of a genuinely new
-  capability. Con: a new sovereign service is a heavy commitment; must prove no existing service should own it.
+- **Option A — `mvumo-service`** (sovereign Ring-0 consent orchestration) — **LEADING.** Mvumo **already models
+  the building blocks**: `actorRef` + `actorRelationship` on communication-preferences (someone acting for the
+  patient), remote/assisted **identity-verified** consent sessions (`/remote-sessions/*` with verify → grant),
+  adaptive assurance, and proof artefacts. A delegation is naturally a consent-backed, identity-verified,
+  revocable, time-bounded directive — exactly Mvumo's domain. Pro: reuses existing machinery (assisted capture,
+  assurance floor, proof, withdraw); the BFF already has `MvumoServiceClient`. Con: Mvumo `must-not-own-clinical-
+  record-content` — fine, a relationship is not clinical content.
+- **Option B — Vito** (person registry) as a person-to-person identifier link. Pro: owns the person anchor. Con:
+  identity-of-record, not an authorization/consent engine; scope + legal-basis + revocation lean consent/trust.
+- **Option C — `tshepo-consent-service`** as a consent directive. Con: it's the downstream record store Mvumo
+  writes through to; capture/orchestration (which delegation needs) is Mvumo's role, not tshepo-consent's.
+- **Option D — a new relationship/delegation service.** Con: heavy; must prove Mvumo can't own it (it likely can).
 
-**Registry check (done):** `docs/registry/system-of-record-map.md` shows **no current owner for act-on-behalf
-relationships**. `tshepo-consent-service` owns consent records; Vito owns identity; neither today models a
-person-acts-as-person delegation. So this is a real ownership gap requiring a ruling — it cannot be inferred.
+**Registry check (done):** `system-of-record-map.md` shows no row literally named "act-on-behalf relationship",
+but `mvumo-service` is the consent-orchestration SoR and already carries `actorRelationship`/assisted-session
+primitives. So the ownership is *most likely* Mvumo — but it crosses into a new capability, so it still needs a
+PO ruling rather than being silently assumed.
 
-**Recommendation (non-binding):** Option B (tshepo-consent-service) if the PO accepts modelling
-guardianship/facility-assignment as legal-basis variants of a delegation directive; otherwise Option C. Avoid
-Option A — Vito should hold the identity link but not the authorization/scope/revocation semantics.
+**Recommendation (non-binding, REVISED):** **Option A — `mvumo-service`.** Model delegation as a Mvumo
+consent-backed relationship/directive (legal basis ∈ {CONSENT, LEGAL_GUARDIANSHIP, FACILITY_ASSIGNMENT}, scope,
+assurance floor, expiry, revoke), reusing its assisted/remote identity-verified capture and proof. Vito holds
+only the identity link; tshepo-consent remains the downstream record store. Avoid a new service unless the PO
+finds delegation genuinely outside Mvumo's charter.
 
 ## 5. Build outline (only after the ruling)
 
