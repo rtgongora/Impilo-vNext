@@ -105,6 +105,14 @@ function getV12Headers(): Record<string, string> {
     headers["X-Provider-ID"] = providerId;
   }
 
+  // Subject — delegated "acting for" context (L5). Set only when the user has explicitly entered a
+  // delegation context; the trust plane (PolicyEngine Step 4.5) authorises it against an active
+  // Mvumo delegation. Never sent for normal self-access.
+  const actingForSubject = getContextString("exp:acting_for_subject");
+  if (actingForSubject) {
+    headers["X-Subject-ID"] = actingForSubject;
+  }
+
   // ── Governance (Health OS §11: why / under what authority) ────
   headers["X-Purpose-Of-Use"] = getPurposeOfUse();
   headers["X-Device-Fingerprint"] =

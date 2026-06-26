@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { DelegationManagementSection } from "@/components/citizen/DelegationManagementSection";
 import { useConsentStore, CURRENT_CONSENT_VERSION } from "@/hooks/useConsentStore";
 import {
   usePolicyConsentStatus,
@@ -174,6 +175,9 @@ export default function PrivacySettingsPage() {
                 </ul>
               </section>
             )}
+
+            {/* ── Acting on behalf (delegated access, L5) ── */}
+            <DelegationManagementSection />
 
             {/* ── Your Rights ─────────────────────────────── */}
             <section className="bg-card rounded-lg border border-border p-6">

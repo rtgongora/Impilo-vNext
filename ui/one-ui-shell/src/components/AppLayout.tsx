@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Home, Menu } from "lucide-react";
 import { ExperienceSidebar } from "./navigation/ExperienceSidebar";
 import { ModuleBreadcrumb } from "./navigation/ModuleBreadcrumb";
+import { ActingForBanner } from "./citizen/ActingForBanner";
 import { ShellTopAccountActions } from "./shell/ShellTopAccountActions";
 import { useShellStore } from "@/hooks/useShellStore";
 import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
@@ -77,6 +78,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
           <ShellTopAccountActions />
         </header>
+        <ActingForBanner />
         <main className="impilo-canvas flex-1 overflow-auto px-3 pb-[var(--shell-taskbar-height,0px)] pt-0 md:px-4">{children}</main>
       </div>
     </div>
