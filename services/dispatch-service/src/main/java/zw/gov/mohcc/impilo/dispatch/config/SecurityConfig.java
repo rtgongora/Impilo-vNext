@@ -1,7 +1,7 @@
 package zw.gov.mohcc.impilo.dispatch.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -22,31 +22,39 @@ public class SecurityConfig {
         return new TrustContextFilter(objectMapper);
     }
 
+    /**
+     * JVM tests (MockMvc, @ActiveProfiles("test")) do not send Bearer tokens and run without
+     * a Keycloak/JwtDecoder. Open the chain while keeping TrustContextFilter so trust-header and
+     * idempotency behaviour stays testable, and avoid requiring a JwtDecoder bean.
+     */
     @Bean
-    public SecurityFilterChain filterChain(
-            HttpSecurity http,
-            TrustContextFilter trustContextFilter,
-            @Value("${dispatch.security.oauth2-enabled:true}") boolean oauth2Enabled) throws Exception {
+    @ConditionalOnProperty(name = "impilo.security.disable-oauth-for-tests", havingValue = "true")
+    public SecurityFilterChain testFilterChain(HttpSecurity http, TrustContextFilter trustContextFilter) throws Exception {
         http.csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(trustContextFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(trustContextFilter, UsernamePasswordAuthenticationFilter.class)
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+        return http.build();
+    }
 
-        if (oauth2Enabled) {
-            http.authorizeHttpRequests(auth -> auth
-                            .requestMatchers(
-                                    "/actuator/health",
-                                    "/actuator/health/**",
-                                    "/actuator/info",
-                                    "/actuator/prometheus",
-                                    "/v3/api-docs/**",
-                                    "/swagger-ui/**",
-                                    "/swagger-ui.html"
-                            ).permitAll()
-                            .anyRequest().authenticated())
-                    .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
-        } else {
-            http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
-        }
+    @Bean
+    @ConditionalOnProperty(name = "impilo.security.disable-oauth-for-tests", havingValue = "false", matchIfMissing = true)
+    public SecurityFilterChain productionFilterChain(HttpSecurity http, TrustContextFilter trustContextFilter) throws Exception {
+        http.csrf(csrf -> csrf.disable())
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(trustContextFilter, UsernamePasswordAuthenticationFilter.class)
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/actuator/health",
+                                "/actuator/health/**",
+                                "/actuator/info",
+                                "/actuator/prometheus",
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html"
+                        ).permitAll()
+                        .anyRequest().authenticated())
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
         return http.build();
     }
 }
