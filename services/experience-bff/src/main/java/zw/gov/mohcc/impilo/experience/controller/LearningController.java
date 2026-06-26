@@ -1077,6 +1077,51 @@ public class LearningController {
         return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
     }
 
+    // ---- C1: learning-provider & academy registry ----
+
+    @GetMapping("/v11/providers")
+    public ResponseEntity<Map<String, Object>> listProviders(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestParam(required = false) String kind,
+            @RequestParam(defaultValue = "100") int limit) {
+        JsonNode n = learningClient.getV11("providers", qp("kind", kind, "limit", limit));
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @PostMapping("/v11/providers")
+    public ResponseEntity<Map<String, Object>> createProvider(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("providers", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @GetMapping("/v11/providers/{providerId}")
+    public ResponseEntity<Map<String, Object>> getProvider(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String providerId) {
+        JsonNode n = learningClient.getV11("providers/" + providerId, Map.of());
+        if (n == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(Map.of("data", n));
+    }
+
+    @GetMapping("/v11/providers/{providerId}/spaces")
+    public ResponseEntity<Map<String, Object>> listSpaces(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String providerId) {
+        JsonNode n = learningClient.getV11("providers/" + providerId + "/spaces", Map.of());
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @PostMapping("/v11/providers/{providerId}/spaces")
+    public ResponseEntity<Map<String, Object>> createSpace(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String providerId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("providers/" + providerId + "/spaces", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
     private static Map<String, Object> qp(Object... keyVals) {
         Map<String, Object> out = new LinkedHashMap<>();
         for (int i = 0; i + 1 < keyVals.length; i += 2) {

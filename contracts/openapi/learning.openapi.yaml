@@ -2988,6 +2988,47 @@ paths:
       parameters: [{ name: studentId, in: path, required: true, schema: { type: string } }]
       responses:
         '200': { description: Academic record, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/providers:
+    get:
+      tags: [FundoProvider]
+      summary: List learning providers (INDIVIDUAL/ORGANISATION/FACILITY)
+      operationId: listLearningProviders
+      parameters:
+        - { name: kind, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 500 } }
+      responses:
+        '200': { description: Providers, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+    post:
+      tags: [FundoProvider]
+      summary: Register a learning provider (binds to the kind's identity SoR)
+      operationId: createLearningProvider
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Provider registered, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/providers/{providerId}:
+    get:
+      tags: [FundoProvider]
+      summary: Get a learning provider
+      operationId: getLearningProvider
+      parameters: [{ name: providerId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Provider, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/providers/{providerId}/spaces:
+    get:
+      tags: [FundoProvider]
+      summary: List a provider's learning spaces (academies)
+      operationId: listProviderSpaces
+      parameters: [{ name: providerId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Spaces, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+    post:
+      tags: [FundoProvider]
+      summary: Create a learning space (academy) bound to a governance OrganisationUnit
+      operationId: createProviderSpace
+      parameters: [{ name: providerId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Space created, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
   /workflow-context:
     get:
       operationId: learning_get__workflow_context
