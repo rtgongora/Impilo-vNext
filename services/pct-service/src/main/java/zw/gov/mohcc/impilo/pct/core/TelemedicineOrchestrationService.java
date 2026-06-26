@@ -284,6 +284,12 @@ public class TelemedicineOrchestrationService {
     @Transactional
     public Map<String, Object> completeReferral(String referralId, Map<String, Object> request) {
         ReferralEntity entity = getReferralEntity(referralId);
+        // Idempotency: completion emits a BILLABLE value event (TELECONSULT_COMPLETED -> CHARGE_CREATED in
+        // COSTA). A redelivered/double-clicked completion must NOT re-emit it, or the patient is charged twice.
+        // Return the current payload unchanged without re-running the completion side effects.
+        if ("COMPLETED".equals(entity.getStatus())) {
+            return toReferralPayload(entity);
+        }
         entity.setStatus("COMPLETED");
         entity.setCompletedAt(OffsetDateTime.now());
         entity.setCompletionPayload(writeJsonObject(request == null ? Map.of() : request));
