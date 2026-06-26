@@ -296,3 +296,58 @@ export function useIssueFundoCertificate() {
       apiClient.post(`/internal/v1/learning/v11/enrolments/${encodeURIComponent(enrolmentId)}/certificate`, {}),
   });
 }
+
+export type CertificateValidityState =
+  | "ACTIVE"
+  | "EXPIRING_SOON"
+  | "EXPIRED"
+  | "REVOKED"
+  | "NO_EXPIRY";
+
+export interface CertificateValidity {
+  state: CertificateValidityState;
+  daysRemaining: number | null;
+  label: string;
+  needsRenewal: boolean;
+}
+
+/**
+ * Derive a certificate's renewal/refresher/expiry status from its raw fields.
+ * Mirrors the backend lifecycle sweep semantics (refresher lead window defaults
+ * to 30 days). Pure + exported so it is unit-testable.
+ */
+export function summarizeCertificateValidity(
+  cert: Record<string, unknown>,
+  now: Date = new Date(),
+  refresherLeadDays = 30,
+): CertificateValidity {
+  const status = String(cert.status ?? "").toUpperCase();
+  if (status === "REVOKED") {
+    return { state: "REVOKED", daysRemaining: null, label: "Revoked", needsRenewal: false };
+  }
+  const validUntilRaw = cert.validUntil;
+  if (!validUntilRaw) {
+    if (status === "EXPIRED") {
+      return { state: "EXPIRED", daysRemaining: null, label: "Expired", needsRenewal: true };
+    }
+    return { state: "NO_EXPIRY", daysRemaining: null, label: "No expiry", needsRenewal: false };
+  }
+  const validUntil = new Date(String(validUntilRaw));
+  if (Number.isNaN(validUntil.getTime())) {
+    return { state: "NO_EXPIRY", daysRemaining: null, label: "No expiry", needsRenewal: false };
+  }
+  const msPerDay = 24 * 60 * 60 * 1000;
+  const daysRemaining = Math.ceil((validUntil.getTime() - now.getTime()) / msPerDay);
+  if (status === "EXPIRED" || daysRemaining < 0) {
+    return { state: "EXPIRED", daysRemaining, label: "Expired", needsRenewal: true };
+  }
+  if (daysRemaining <= refresherLeadDays) {
+    return {
+      state: "EXPIRING_SOON",
+      daysRemaining,
+      label: `Expires in ${daysRemaining} day${daysRemaining === 1 ? "" : "s"}`,
+      needsRenewal: true,
+    };
+  }
+  return { state: "ACTIVE", daysRemaining, label: "Active", needsRenewal: false };
+}
