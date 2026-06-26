@@ -20,4 +20,7 @@ public interface EmergencyDeferredChargeRepository
             UUID tenantId, String provisionalPersonRef);
 
     Optional<EmergencyDeferredChargeEntity> findByDeferredChargeIdAndTenantId(UUID id, UUID tenantId);
+
+    /** Existing flag for a concrete charge (M2 idempotency: one charge → one deferred row). */
+    Optional<EmergencyDeferredChargeEntity> findByTenantIdAndChargeId(UUID tenantId, String chargeId);
 }

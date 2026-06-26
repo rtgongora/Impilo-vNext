@@ -92,6 +92,43 @@ class EmergencyReconciliationServiceTest {
         verify(outboxRepository, never()).save(any());
     }
 
+    /**
+     * M1 regression: a flag with no service_access_decision_id AND no emergency justification
+     * (reason / audit_reference) must be rejected — only emergency-overridden access can be
+     * deferred. BEFORE the fix this free-form path was accepted with no proof of an override.
+     */
+    @Test
+    void flag_withoutDecisionAndWithoutJustification_isRejected() {
+        var req = new FlagEmergencyDeferredChargeRequest(
+                null, null, "enc-1", null, "PROV-9",
+                new BigDecimal("100.00"), "USD", null, null);
+        assertThrows(IllegalArgumentException.class, () -> service.flag(req));
+        verify(repository, never()).save(any());
+        verify(outboxRepository, never()).save(any());
+    }
+
+    /**
+     * M2 regression: flagging a charge that already has a deferred row returns the existing row
+     * and does NOT create a second one. BEFORE the fix one charge could yield N deferred rows.
+     */
+    @Test
+    void flag_existingChargeId_isIdempotent() {
+        EmergencyDeferredChargeEntity existing = new EmergencyDeferredChargeEntity();
+        existing.setDeferredChargeId(UUID.randomUUID());
+        existing.setTenantId(tenantId);
+        existing.setChargeId("CHG-1");
+        existing.setReconciliationState(ReconciliationState.PENDING);
+        when(repository.findByTenantIdAndChargeId(tenantId, "CHG-1")).thenReturn(Optional.of(existing));
+
+        var resp = service.flag(new FlagEmergencyDeferredChargeRequest(
+                null, "CHG-1", "enc-1", null, "PROV-9",
+                new BigDecimal("100.00"), "USD", "resus", "AUD-1"));
+
+        assertEquals(existing.getDeferredChargeId(), resp.deferredChargeId());
+        verify(repository, never()).save(any());
+        verify(outboxRepository, never()).save(any());
+    }
+
     @Test
     void flag_withEmergencyDecision_inheritsContext() {
         UUID decisionId = UUID.randomUUID();

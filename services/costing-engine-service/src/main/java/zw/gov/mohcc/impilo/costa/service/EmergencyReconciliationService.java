@@ -62,11 +62,38 @@ public class EmergencyReconciliationService {
         this.objectMapper = objectMapper;
     }
 
-    /** Flag a charge accrued under EMERGENCY_OVERRIDE as deferred, pending reconciliation. */
+    /**
+     * Flag a charge accrued under EMERGENCY_OVERRIDE as deferred, pending reconciliation.
+     *
+     * <p><b>Invariant (M1): only emergency-overridden access can be reconciled.</b> This is
+     * enforced on BOTH entry paths:
+     * <ul>
+     *   <li><b>With a gate decision</b> ({@code serviceAccessDecisionId} present): the referenced
+     *       decision must have status {@code EMERGENCY_OVERRIDE}; any other status is rejected.</li>
+     *   <li><b>Without a gate decision</b> (bedside emergency where the gate decision was not
+     *       recorded in COSTA): an explicit emergency justification is required — both
+     *       {@code reason} and {@code audit_reference} must be present. This path NEVER zeroes a
+     *       charge; it only defers it to PENDING. Actual value disposal (incl. WAIVER) happens
+     *       only at {@link #reconcile} via an explicit, audited settlement route. The hard gate
+     *       prevents arbitrary deferral of a charge whose access was not emergency-overridden.</li>
+     * </ul>
+     *
+     * <p><b>Idempotency (M2):</b> when a concrete {@code charge_id} is supplied, an existing
+     * deferred row for that charge is returned instead of creating a second one — one charge
+     * yields one deferred row / one reconciliation. A unique index backs this in the database.
+     */
     @Transactional
     public EmergencyDeferredChargeResponse flag(FlagEmergencyDeferredChargeRequest req) {
         var ctx = TrustContextHolder.require();
         UUID tenantId = ctx.tenantId();
+
+        // M2: idempotent on the concrete charge.
+        if (req.chargeId() != null && !req.chargeId().isBlank()) {
+            var existing = repository.findByTenantIdAndChargeId(tenantId, req.chargeId());
+            if (existing.isPresent()) {
+                return EmergencyDeferredChargeResponse.fromEntity(existing.get());
+            }
+        }
 
         EmergencyDeferredChargeEntity e = new EmergencyDeferredChargeEntity();
         e.setTenantId(tenantId);
@@ -105,6 +132,17 @@ public class EmergencyReconciliationService {
             if (e.getDeferredAmount() == null) {
                 e.setDeferredAmount(decision.getTariffedPrice() != null
                         ? decision.getTariffedPrice() : decision.getEstimatedCost());
+            }
+        } else {
+            // M1: no gate decision to prove the emergency override — require an explicit emergency
+            // justification + audit so a charge whose access was NOT emergency-overridden can never
+            // be silently deferred. (Decision: gate the free-form path hard rather than forbid it,
+            // because bedside emergencies legitimately lack a COSTA-recorded gate decision.)
+            if (req.reason() == null || req.reason().isBlank()
+                    || req.auditReference() == null || req.auditReference().isBlank()) {
+                throw new IllegalArgumentException(
+                        "Emergency-deferred flag without a service_access_decision_id requires an explicit "
+                                + "emergency justification: both 'reason' and 'audit_reference' are mandatory");
             }
         }
 
@@ -198,39 +236,44 @@ public class EmergencyReconciliationService {
      * {@link zw.gov.mohcc.impilo.costa.kafka.OutboxPublisher} dual-emits it to
      * {@code core.transaction.events} (C8) so Lane-C surfaces and patient notify can consume it.
      */
+    /**
+     * Enqueue the EMERGENCY_DEFERRED_CHARGE value-event in the SAME transaction as the flag/
+     * link/reconcile state change (M3). An outbox-save failure must roll back the business
+     * state so we never commit a deferred-charge state change (incl. WAIVER routing) with no
+     * value event on core.transaction.events (silent value leak).
+     */
     private void publishValueEvent(EmergencyDeferredChargeEntity e, String sourceServiceEvent) {
-        try {
-            Map<String, Object> payload = new LinkedHashMap<>();
-            payload.put("deferredChargeId", e.getDeferredChargeId().toString());
-            payload.put("kind", EVENT_TYPE);
-            payload.put("sourceServiceEvent", sourceServiceEvent);
-            payload.put("encounterId", e.getEncounterId());
-            payload.put("serviceAccessDecisionId",
-                    e.getServiceAccessDecisionId() != null ? e.getServiceAccessDecisionId().toString() : null);
-            payload.put("chargeId", e.getChargeId());
-            payload.put("provisionalPersonRef", e.getProvisionalPersonRef());
-            payload.put("confirmedPersonRef", e.getConfirmedPersonRef());
-            payload.put("identityReconciled", e.isIdentityReconciled());
-            payload.put("amount", e.getDeferredAmount());
-            payload.put("currency", e.getCurrency());
-            payload.put("payerKind", payerKind(e));
-            payload.put("settlementRoute", e.getSettlementRoute() != null ? e.getSettlementRoute().name() : null);
-            payload.put("settlementReference", e.getSettlementReference());
-            payload.put("deferred", e.getReconciliationState() == ReconciliationState.PENDING);
-            payload.put("reconciliationState", e.getReconciliationState().name());
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("deferredChargeId", e.getDeferredChargeId().toString());
+        payload.put("kind", EVENT_TYPE);
+        payload.put("sourceServiceEvent", sourceServiceEvent);
+        payload.put("encounterId", e.getEncounterId());
+        payload.put("serviceAccessDecisionId",
+                e.getServiceAccessDecisionId() != null ? e.getServiceAccessDecisionId().toString() : null);
+        payload.put("chargeId", e.getChargeId());
+        payload.put("provisionalPersonRef", e.getProvisionalPersonRef());
+        payload.put("confirmedPersonRef", e.getConfirmedPersonRef());
+        payload.put("identityReconciled", e.isIdentityReconciled());
+        payload.put("amount", e.getDeferredAmount());
+        payload.put("currency", e.getCurrency());
+        payload.put("payerKind", payerKind(e));
+        payload.put("settlementRoute", e.getSettlementRoute() != null ? e.getSettlementRoute().name() : null);
+        payload.put("settlementReference", e.getSettlementReference());
+        payload.put("deferred", e.getReconciliationState() == ReconciliationState.PENDING);
+        payload.put("reconciliationState", e.getReconciliationState().name());
 
-            EventOutboxEntity ev = new EventOutboxEntity();
-            ev.setAggregateType(AGGREGATE_TYPE);
-            ev.setAggregateId(e.getDeferredChargeId().toString());
-            ev.setEventType(EVENT_TYPE);
+        EventOutboxEntity ev = new EventOutboxEntity();
+        ev.setAggregateType(AGGREGATE_TYPE);
+        ev.setAggregateId(e.getDeferredChargeId().toString());
+        ev.setEventType(EVENT_TYPE);
+        try {
             ev.setPayload(objectMapper.writeValueAsString(payload));
-            ev.setTenantId(e.getTenantId());
-            outboxRepository.save(ev);
         } catch (Exception ex) {
-            // Never fail the business transaction on outbox serialization issues; log loudly.
-            log.error("Failed to enqueue EMERGENCY_DEFERRED_CHARGE value-event for {}: {}",
-                    e.getDeferredChargeId(), ex.getMessage());
+            throw new IllegalStateException(
+                    "Failed to serialize EMERGENCY_DEFERRED_CHARGE value-event", ex);
         }
+        ev.setTenantId(e.getTenantId());
+        outboxRepository.save(ev);
     }
 
     private static String payerKind(EmergencyDeferredChargeEntity e) {
