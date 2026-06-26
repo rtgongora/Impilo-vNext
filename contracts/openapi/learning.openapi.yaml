@@ -2660,6 +2660,77 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiEnvelope_Map'
+  /internal/v1/learning/v11/facilitators:
+    get:
+      tags: [FundoDelivery]
+      summary: List learning facilitators (trainer/teacher/preceptor/guest)
+      operationId: listFacilitators
+      parameters:
+        - { name: kind, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 500 } }
+      responses:
+        '200': { description: Facilitators list, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+    post:
+      tags: [FundoDelivery]
+      summary: Create a facilitator
+      operationId: createFacilitator
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Facilitator created, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/facilitators/{id}/status:
+    post:
+      tags: [FundoDelivery]
+      summary: Update facilitator status
+      operationId: updateFacilitatorStatus
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Facilitator updated, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/venues:
+    get:
+      tags: [FundoDelivery]
+      summary: List training venues
+      operationId: listTrainingVenues
+      parameters:
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 500 } }
+      responses:
+        '200': { description: Venues list, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+    post:
+      tags: [FundoDelivery]
+      summary: Create a training venue
+      operationId: createTrainingVenue
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Venue created, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/cohorts/{cohortId}/facilitators:
+    get:
+      tags: [FundoDelivery]
+      summary: List facilitators assigned to a cohort
+      operationId: listCohortFacilitators
+      parameters:
+        - { name: cohortId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Cohort facilitators, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+    post:
+      tags: [FundoDelivery]
+      summary: Assign a facilitator to a cohort
+      operationId: assignCohortFacilitator
+      parameters:
+        - { name: cohortId, in: path, required: true, schema: { type: string } }
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Assignment created, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/sessions/{sessionId}/delivery:
+    post:
+      tags: [FundoDelivery]
+      summary: Assign structured facilitator/venue to a session (read prefers FK over legacy free-text)
+      operationId: assignSessionDelivery
+      parameters:
+        - { name: sessionId, in: path, required: true, schema: { type: string } }
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Delivery assigned, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
   /workflow-context:
     get:
       operationId: learning_get__workflow_context

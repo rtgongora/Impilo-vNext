@@ -745,6 +745,76 @@ public class LearningController {
         return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
     }
 
+    // ---- A1: learning-delivery administration (facilitators, venues, cohort-facilitators, session delivery) ----
+
+    @GetMapping("/v11/facilitators")
+    public ResponseEntity<Map<String, Object>> listFacilitators(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestParam(required = false) String kind,
+            @RequestParam(defaultValue = "100") int limit) {
+        JsonNode n = learningClient.getV11("facilitators", qp("kind", kind, "limit", limit));
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @PostMapping("/v11/facilitators")
+    public ResponseEntity<Map<String, Object>> createFacilitator(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("facilitators", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @PostMapping("/v11/facilitators/{id}/status")
+    public ResponseEntity<Map<String, Object>> updateFacilitatorStatus(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String id,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("facilitators/" + id + "/status", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @GetMapping("/v11/venues")
+    public ResponseEntity<Map<String, Object>> listVenues(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestParam(defaultValue = "100") int limit) {
+        JsonNode n = learningClient.getV11("venues", Map.of("limit", limit));
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @PostMapping("/v11/venues")
+    public ResponseEntity<Map<String, Object>> createVenue(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("venues", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @GetMapping("/v11/cohorts/{cohortId}/facilitators")
+    public ResponseEntity<Map<String, Object>> listCohortFacilitators(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String cohortId) {
+        JsonNode n = learningClient.getV11("cohorts/" + cohortId + "/facilitators", Map.of());
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @PostMapping("/v11/cohorts/{cohortId}/facilitators")
+    public ResponseEntity<Map<String, Object>> assignCohortFacilitator(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String cohortId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("cohorts/" + cohortId + "/facilitators", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @PostMapping("/v11/sessions/{sessionId}/delivery")
+    public ResponseEntity<Map<String, Object>> assignSessionDelivery(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String sessionId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("sessions/" + sessionId + "/delivery", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
     private static Map<String, Object> qp(Object... keyVals) {
         Map<String, Object> out = new LinkedHashMap<>();
         for (int i = 0; i + 1 < keyVals.length; i += 2) {

@@ -51,6 +51,14 @@ public class ScheduledLearningSessionEntity {
     @Column(name = "location_ref", length = 1024)
     private String locationRef;
 
+    /** Structured facilitator (V016); preferred over the legacy {@code facilitator} text. */
+    @Column(name = "facilitator_id")
+    private UUID facilitatorId;
+
+    /** Structured venue (V016); preferred over the legacy {@code location_ref} text. */
+    @Column(name = "venue_id")
+    private UUID venueId;
+
     @Column(name = "metadata_json", columnDefinition = "TEXT")
     private String metadataJson;
 
@@ -86,6 +94,10 @@ public class ScheduledLearningSessionEntity {
     public void setFacilitator(String facilitator) { this.facilitator = facilitator; }
     public String getLocationRef() { return locationRef; }
     public void setLocationRef(String locationRef) { this.locationRef = locationRef; }
+    public UUID getFacilitatorId() { return facilitatorId; }
+    public void setFacilitatorId(UUID facilitatorId) { this.facilitatorId = facilitatorId; }
+    public UUID getVenueId() { return venueId; }
+    public void setVenueId(UUID venueId) { this.venueId = venueId; }
     public String getMetadataJson() { return metadataJson; }
     public void setMetadataJson(String metadataJson) { this.metadataJson = metadataJson; }
     public String getCreatedBy() { return createdBy; }
