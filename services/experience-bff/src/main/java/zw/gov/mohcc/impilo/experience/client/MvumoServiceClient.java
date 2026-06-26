@@ -141,6 +141,28 @@ public class MvumoServiceClient {
         return extractData(response);
     }
 
+    // ── Legal/platform agreement acceptance (Privacy Policy, Terms of Use) ──────────────
+
+    public JsonNode acceptLegalAgreement(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/mvumo/legal-agreements/accept";
+        log.info("MVUMO: accept legal agreement {}", body.get("documentType"));
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, new HttpEntity<>(body), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listLegalAgreements(String actorId) {
+        String url = baseUrl + "/internal/v1/mvumo/legal-agreements/actors/" + actorId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode withdrawLegalAgreement(String agreementId) {
+        String url = baseUrl + "/internal/v1/mvumo/legal-agreements/" + agreementId + "/withdraw";
+        log.info("MVUMO: withdraw legal agreement {}", agreementId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, null, JsonNode.class);
+        return extractData(response);
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

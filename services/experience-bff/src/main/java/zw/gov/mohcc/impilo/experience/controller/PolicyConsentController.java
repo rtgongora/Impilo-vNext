@@ -53,9 +53,32 @@ public class PolicyConsentController {
             "WEB", "APP", "SMS", "USSD", "KIOSK", "VOICE", "PAPER", "OPERATOR");
 
     private final zw.gov.mohcc.impilo.experience.client.TshepoConsentServiceClient consentClient;
+    private final zw.gov.mohcc.impilo.experience.client.MvumoServiceClient mvumoClient;
 
-    public PolicyConsentController(zw.gov.mohcc.impilo.experience.client.TshepoConsentServiceClient consentClient) {
+    public PolicyConsentController(
+            zw.gov.mohcc.impilo.experience.client.TshepoConsentServiceClient consentClient,
+            zw.gov.mohcc.impilo.experience.client.MvumoServiceClient mvumoClient) {
         this.consentClient = consentClient;
+        this.mvumoClient = mvumoClient;
+    }
+
+    /**
+     * Persist a legal-agreement acceptance in Mvumo (the consent orchestration SoR). FAIL-SAFE:
+     * a Mvumo outage must never block the login consent interstitial — we log and continue so the
+     * user can proceed; the capture is retried on next acceptance. (Closes the prior log-only gap.)
+     */
+    private void persistLegalAgreement(String subjectActorId, String documentType, String version, String channel) {
+        try {
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("subjectActorId", subjectActorId);
+            body.put("documentType", documentType);
+            body.put("version", version);
+            body.put("channel", channel);
+            mvumoClient.acceptLegalAgreement(body);
+        } catch (Exception e) {
+            log.warn("Legal-agreement persistence to Mvumo failed (fail-safe, not blocking): doc={}, err={}",
+                    documentType, e.getMessage());
+        }
     }
 
     // ── Accept consent (primary — all channels) ─────────────────────
@@ -97,10 +120,12 @@ public class PolicyConsentController {
 
         if (privacyAccepted) {
             accepted.add(Map.of("policyType", "PRIVACY_POLICY", "version", version, "acceptedAt", now.toString(), "channel", channel));
+            persistLegalAgreement(userId, "PRIVACY_POLICY", version, channel);
         }
 
         if (termsAccepted) {
             accepted.add(Map.of("policyType", "TERMS_OF_USE", "version", version, "acceptedAt", now.toString(), "channel", channel));
+            persistLegalAgreement(userId, "TERMS_OF_USE", version, channel);
         }
 
         log.info("Policy consent accepted: user={}, version={}, channel={}, privacy={}, terms={}",
@@ -324,14 +349,16 @@ public class PolicyConsentController {
                     "error", Map.of("code", "VALIDATION", "message", "X-Actor-ID header is required")));
         }
 
+        // Current status = the GRANTED legal agreements for this actor (sourced from Mvumo).
+        List<Map<String, Object>> data = legalAgreementsAsJsonApi(actorId, true);
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", List.of());
+        response.put("data", data);
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
     }
 
     /**
-     * Consent history — full audit trail.
+     * Consent history — full audit trail (all states, sourced from Mvumo).
      */
     @GetMapping("/history")
     public ResponseEntity<Map<String, Object>> getConsentHistory(
@@ -345,10 +372,47 @@ public class PolicyConsentController {
                     "error", Map.of("code", "VALIDATION", "message", "X-Actor-ID header is required")));
         }
 
+        List<Map<String, Object>> data = legalAgreementsAsJsonApi(actorId, false);
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", List.of());
+        response.put("data", data);
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Fetch the actor's legal agreements from Mvumo and map to the JSON:API shape the UI parses
+     * ({@code data[].attributes.policyType/version/...}). Fail-safe: returns empty on any error so
+     * the privacy screen degrades gracefully rather than erroring.
+     */
+    private List<Map<String, Object>> legalAgreementsAsJsonApi(String actorId, boolean grantedOnly) {
+        List<Map<String, Object>> out = new ArrayList<>();
+        try {
+            JsonNode rows = mvumoClient.listLegalAgreements(actorId);
+            if (rows != null && rows.isArray()) {
+                for (JsonNode row : rows) {
+                    String state = row.path("state").asText("");
+                    if (grantedOnly && !"GRANTED".equals(state)) {
+                        continue;
+                    }
+                    Map<String, Object> attrs = new LinkedHashMap<>();
+                    attrs.put("policyType", row.path("documentType").asText(null));
+                    attrs.put("version", row.path("version").asText(null));
+                    attrs.put("state", state);
+                    attrs.put("channel", row.path("channel").asText(null));
+                    attrs.put("acceptedAt", row.path("acceptedAt").asText(null));
+                    attrs.put("withdrawnAt", row.path("withdrawnAt").asText(null));
+                    Map<String, Object> item = new LinkedHashMap<>();
+                    item.put("id", row.path("id").asText(null));
+                    item.put("type", "policy_consent");
+                    item.put("attributes", attrs);
+                    out.add(item);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Could not load legal agreements from Mvumo for actor={} (fail-safe empty): {}",
+                    actorId, e.getMessage());
+        }
+        return out;
     }
 
     /**
@@ -369,6 +433,24 @@ public class PolicyConsentController {
         if (userId.isBlank() || policyType.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of(
                     "error", Map.of("code", "VALIDATION", "message", "userId and policyType are required")));
+        }
+
+        // Withdraw the GRANTED legal agreement for this actor + document type in Mvumo. Fail-safe:
+        // the response still reports the user's intent even if the Mvumo call cannot be completed.
+        try {
+            JsonNode rows = mvumoClient.listLegalAgreements(userId);
+            if (rows != null && rows.isArray()) {
+                for (JsonNode row : rows) {
+                    if ("GRANTED".equals(row.path("state").asText())
+                            && policyType.equals(row.path("documentType").asText())) {
+                        mvumoClient.withdrawLegalAgreement(row.path("id").asText());
+                        break;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Legal-agreement revoke to Mvumo failed (fail-safe): policyType={}, err={}",
+                    policyType, e.getMessage());
         }
 
         OffsetDateTime now = OffsetDateTime.now();
