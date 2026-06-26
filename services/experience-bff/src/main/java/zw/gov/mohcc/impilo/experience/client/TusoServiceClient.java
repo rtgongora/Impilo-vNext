@@ -180,6 +180,36 @@ public class TusoServiceClient {
         return extractData(response);
     }
 
+    /** Tenant-scoped control-tower aggregate for scoped dashboards. */
+    public JsonNode getControlTowerAggregate() {
+        String url = baseUrl + "/v1/internal/control-tower/aggregate";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Facility operational summary (occupancy, recent telemetry, alert/shift counts). */
+    public JsonNode getControlTowerFacilitySummary(long facilityId) {
+        String url = baseUrl + "/v1/internal/control-tower/facilities/" + facilityId + "/summary";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Control-tower alerts, optionally facility/status filtered. */
+    public JsonNode listControlTowerAlerts(Long facilityId, String status) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/internal/control-tower/alerts");
+        if (facilityId != null) b.queryParam("facilityId", facilityId);
+        if (status != null) b.queryParam("status", status);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(b.toUriString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Acknowledge a control-tower alert. */
+    public JsonNode acknowledgeAlert(String alertId) {
+        String url = baseUrl + "/v1/internal/control-tower/alerts/" + alertId + "/acknowledge";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, null, JsonNode.class);
+        return extractData(response);
+    }
+
     /** List facility service points. */
     public JsonNode listServicePoints(long facilityId) {
         String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/service-points";

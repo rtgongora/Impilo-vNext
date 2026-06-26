@@ -198,6 +198,66 @@ public class FacilityModeController {
         }
     }
 
+    /** Tenant-scoped control-tower aggregate for scoped dashboards (TUSO SoR). */
+    @GetMapping("/control-tower/aggregate")
+    public ResponseEntity<Map<String, Object>> controlTowerAggregate(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode agg = tusoClient.getControlTowerAggregate();
+            return ResponseEntity.ok(Map.of("data", agg, "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            return badGateway(requestId, correlationId, "CONTROL_TOWER_UNAVAILABLE",
+                    "Unable to load control-tower aggregate from TUSO");
+        }
+    }
+
+    /** Facility operational summary (TUSO SoR). */
+    @GetMapping("/{facilityId}/control-tower/summary")
+    public ResponseEntity<Map<String, Object>> controlTowerSummary(
+            @PathVariable long facilityId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode summary = tusoClient.getControlTowerFacilitySummary(facilityId);
+            return ResponseEntity.ok(Map.of("data", summary, "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            return badGateway(requestId, correlationId, "CONTROL_TOWER_SUMMARY_UNAVAILABLE",
+                    "Unable to load facility summary from TUSO");
+        }
+    }
+
+    /** Facility alerts (TUSO SoR). */
+    @GetMapping("/{facilityId}/control-tower/alerts")
+    public ResponseEntity<Map<String, Object>> controlTowerAlerts(
+            @PathVariable long facilityId,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode alerts = tusoClient.listControlTowerAlerts(facilityId, status);
+            return ResponseEntity.ok(Map.of("data", alerts, "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            return badGateway(requestId, correlationId, "CONTROL_TOWER_ALERTS_UNAVAILABLE",
+                    "Unable to load alerts from TUSO");
+        }
+    }
+
+    /** Acknowledge a control-tower alert (TUSO SoR). */
+    @PostMapping("/control-tower/alerts/{alertId}/acknowledge")
+    public ResponseEntity<Map<String, Object>> acknowledgeAlert(
+            @PathVariable String alertId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode alert = tusoClient.acknowledgeAlert(alertId);
+            return ResponseEntity.ok(Map.of("data", alert, "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            return badGateway(requestId, correlationId, "ALERT_ACK_FAILED",
+                    "Unable to acknowledge alert in TUSO");
+        }
+    }
+
     private static Map<String, Object> meta(String requestId, String correlationId) {
         Map<String, Object> meta = new LinkedHashMap<>();
         meta.put("request_id", requestId);
