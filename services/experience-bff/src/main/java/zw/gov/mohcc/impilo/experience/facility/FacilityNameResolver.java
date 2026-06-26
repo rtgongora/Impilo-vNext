@@ -28,11 +28,7 @@ public class FacilityNameResolver {
         }
         String trimmed = facilityRef.trim();
 
-        String seeded = BffSeededFacilities.resolveName(trimmed);
-        if (seeded != null && !seeded.isBlank()) {
-            return seeded;
-        }
-
+        // Authoritative: resolve a numeric TUSO facility id against the real registry first.
         try {
             long numericId = Long.parseLong(trimmed);
             String fromTuso = resolveFromTuso(numericId);
@@ -41,6 +37,13 @@ public class FacilityNameResolver {
             }
         } catch (NumberFormatException ignored) {
             // not a numeric TUSO id
+        }
+
+        // Fallback only: deterministic seeded names for preview/dev UUID/slug registries
+        // where TUSO numeric lookup does not apply or is unavailable.
+        String seeded = BffSeededFacilities.resolveName(trimmed);
+        if (seeded != null && !seeded.isBlank()) {
+            return seeded;
         }
 
         if (UUID_PATTERN.matcher(trimmed).matches()) {
