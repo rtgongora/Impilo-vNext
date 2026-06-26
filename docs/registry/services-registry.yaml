@@ -468,6 +468,8 @@ services:
     owner_team: TBD
     system_of_record_for:
       - Costing Engine canonical records
+      - Emergency-care deferred charges and reconciliation
+      - Care waivers (request/approve/reject/revoke lifecycle)
     consumes_from:
       - tshepo-authz-service
     exposes_to:
@@ -497,6 +499,7 @@ services:
     owner_team: enterprise-finance
     system_of_record_for:
       - Coverage canonical records
+      - Subsidy enrolments and annual-cap enforcement
     consumes_from:
       - tshepo-authz-service
     exposes_to:
@@ -989,6 +992,11 @@ services:
     owner_team: TBD
     system_of_record_for:
       - Indawo canonical records
+      - Public-health place mode (place-mode summary)
+      - Surveillance signals and alerts
+      - Outbreak case management
+      - Disease case investigations
+      - Field-team deployment and recall
     consumes_from:
       - tshepo-authz-service
     exposes_to:
@@ -1857,6 +1865,11 @@ services:
     owner_team: TBD
     system_of_record_for:
       - Pct canonical records
+      - Encounter cadre decision (Java CadreEngine; GAP-4 unify-with-scope-rules pending)
+      - Front-door sorting desk (visit-type sort; GAP-11 unifying session pending)
+      - Clinical problems list
+      - OPD care plans and goals
+      - Community households, visits and screenings context
     consumes_from:
       - tshepo-authz-service
     exposes_to:
@@ -2468,6 +2481,7 @@ services:
     owner_team: TBD
     system_of_record_for:
       - Tshepo Identity canonical records
+      - Silent identifier resolution (Health/Impilo/Provider-ID/council Live; phone/email/invite Partial GAP-5)
     consumes_from: []
     exposes_to:
       - experience-bff
@@ -2581,6 +2595,10 @@ services:
     owner_team: TBD
     system_of_record_for:
       - Tuso canonical records
+      - Facility Mode context resolution
+      - Facility setup wizard state
+      - Facility units and service points
+      - Facility control-tower telemetry aggregation and alerts
     consumes_from:
       - tshepo-authz-service
     exposes_to:
@@ -2639,6 +2657,8 @@ services:
     owner_team: TBD
     system_of_record_for:
       - Varapi canonical records
+      - Provider bootstrap chain (bulk preload + self-claim)
+      - Council / EC-number registration resolution
     consumes_from:
       - tshepo-authz-service
     exposes_to:
@@ -2761,6 +2781,7 @@ services:
     owner_team: TBD
     system_of_record_for:
       - Workforce Governance canonical records
+      - Facility-to-regulator (multi-council) relationships and status lifecycle
     consumes_from:
       - tshepo-authz-service
     exposes_to:
@@ -2790,6 +2811,8 @@ services:
     owner_team: TBD
     system_of_record_for:
       - Operational workforce profile membership assignment roster shift attendance leave access risk
+      - Work-context query (WHERE/WHAT picker read-model)
+      - Ad-hoc check-in
     consumes_from:
       - tshepo-authz-service
       - varapi-service
