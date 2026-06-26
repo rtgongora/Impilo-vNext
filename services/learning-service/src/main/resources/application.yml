@@ -73,6 +73,14 @@ learning:
       default: ${LEARNING_OUTBOX_DEFAULT_TOPIC:platform.learning.events}
   events:
     legacy-emission-enabled: ${LEARNING_EVENTS_LEGACY_EMISSION_ENABLED:true}
+  lifecycle:
+    certificate:
+      # Scheduled renewal/refresher/expiry sweep. Default true; disable where the
+      # outbox/scheduler is unwanted (e.g. read-only replicas).
+      enabled: ${LEARNING_CERT_LIFECYCLE_ENABLED:true}
+      refresher-lead-days: ${LEARNING_CERT_REFRESHER_LEAD_DAYS:30}
+      initial-delay-ms: ${LEARNING_CERT_LIFECYCLE_INITIAL_DELAY_MS:60000}
+      poll-interval-ms: ${LEARNING_CERT_LIFECYCLE_POLL_INTERVAL_MS:3600000}
 
 impilo:
   companion:
