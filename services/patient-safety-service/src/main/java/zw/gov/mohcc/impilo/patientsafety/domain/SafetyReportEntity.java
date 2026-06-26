@@ -80,7 +80,7 @@ public class SafetyReportEntity {
     @Column(name = "encounter_id", length = 255)
     private String encounterId;
 
-    @Column(name = "narrative")
+    @Column(name = "narrative", columnDefinition = "TEXT")
     private String narrative;
     @Column(name = "onset_date")
     private LocalDate onsetDate;
@@ -92,7 +92,7 @@ public class SafetyReportEntity {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "seriousness_reasons", columnDefinition = "jsonb")
     private String seriousnessReasons;  // JSON array string
-    @Column(name = "seriousness_other_text")
+    @Column(name = "seriousness_other_text", columnDefinition = "TEXT")
     private String seriousnessOtherText;
 
     @Column(name = "form_pack_key", length = 128)

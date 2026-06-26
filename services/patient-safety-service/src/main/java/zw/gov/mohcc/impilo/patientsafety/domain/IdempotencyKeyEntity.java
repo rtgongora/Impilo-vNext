@@ -30,11 +30,11 @@ public class IdempotencyKeyEntity {
     @Column(name = "idempotency_key", nullable = false)
     private String idempotencyKey;
 
-    @Column(name = "request_hash", nullable = false)
+    @Column(name = "request_hash", nullable = false, columnDefinition = "TEXT")
     private String requestHash;
     @Column(name = "response_status", nullable = false)
     private int responseStatus;
-    @Column(name = "response_body", nullable = false)
+    @Column(name = "response_body", nullable = false, columnDefinition = "TEXT")
     private String responseBody;
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt = OffsetDateTime.now();

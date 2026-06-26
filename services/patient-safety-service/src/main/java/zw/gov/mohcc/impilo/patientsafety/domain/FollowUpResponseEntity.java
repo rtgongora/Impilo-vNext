@@ -26,7 +26,7 @@ public class FollowUpResponseEntity {
     private String responderId;
     @Column(name = "responder_kind", length = 16)
     private String responderKind;
-    @Column(name = "response_text", nullable = false)
+    @Column(name = "response_text", nullable = false, columnDefinition = "TEXT")
     private String responseText;
     @Column(name = "attachment_object_id", length = 255)
     private String attachmentObjectId;

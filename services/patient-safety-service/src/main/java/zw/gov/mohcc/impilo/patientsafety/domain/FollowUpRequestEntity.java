@@ -23,7 +23,7 @@ public class FollowUpRequestEntity {
     private UUID tenantId;
     @Column(name = "requested_by", length = 255)
     private String requestedBy;
-    @Column(name = "request_text", nullable = false)
+    @Column(name = "request_text", nullable = false, columnDefinition = "TEXT")
     private String requestText;
     @Column(name = "channel_hint", nullable = false, length = 32)
     private String channelHint = "COMMS_HUB";

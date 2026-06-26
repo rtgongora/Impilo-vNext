@@ -41,7 +41,7 @@ public class AefiInvestigationEntity {
     private String fieldFindings;
     @Column(name = "final_classification", length = 64)
     private String finalClassification;
-    @Column(name = "summary")
+    @Column(name = "summary", columnDefinition = "TEXT")
     private String summary;
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;

@@ -30,7 +30,7 @@ public class VigiFlowSubmissionEntity {
     private String vigiflowReferenceId;
     @Column(name = "entered_by", length = 255)
     private String enteredBy;
-    @Column(name = "note")
+    @Column(name = "note", columnDefinition = "TEXT")
     private String note;
     @Column(name = "entered_at", nullable = false)
     private OffsetDateTime enteredAt;

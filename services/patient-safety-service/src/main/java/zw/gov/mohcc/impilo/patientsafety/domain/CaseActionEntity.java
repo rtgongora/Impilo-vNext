@@ -30,7 +30,7 @@ public class CaseActionEntity {
     private String fromStatus;
     @Column(name = "to_status", length = 32)
     private String toStatus;
-    @Column(name = "note")
+    @Column(name = "note", columnDefinition = "TEXT")
     private String note;
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
