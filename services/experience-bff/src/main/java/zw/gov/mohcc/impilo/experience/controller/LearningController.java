@@ -1096,6 +1096,14 @@ public class LearningController {
         return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
     }
 
+    @GetMapping("/v11/providers/directory")
+    public ResponseEntity<Map<String, Object>> providerDirectory(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestParam(defaultValue = "200") int limit) {
+        JsonNode n = learningClient.getV11("providers/directory", Map.of("limit", limit));
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
     @GetMapping("/v11/providers/{providerId}")
     public ResponseEntity<Map<String, Object>> getProvider(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,

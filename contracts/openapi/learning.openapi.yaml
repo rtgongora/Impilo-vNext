@@ -3005,6 +3005,15 @@ paths:
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
       responses:
         '200': { description: Provider registered, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/providers/directory:
+    get:
+      tags: [FundoProvider]
+      summary: Directory of accredited providers + academies (privacy-safe; micro-spaces included)
+      operationId: learningProviderDirectory
+      parameters:
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 500 } }
+      responses:
+        '200': { description: Directory, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
   /internal/v1/learning/v11/providers/{providerId}:
     get:
       tags: [FundoProvider]

@@ -45,6 +45,12 @@ public class FundoLearningProviderController {
         return ok(service.listProviders(tenantId(), kind, limit));
     }
 
+    @GetMapping("/providers/directory")
+    public ResponseEntity<Map<String, Object>> directory(
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "200") int limit) {
+        return ok(service.directory(tenantId(), limit));
+    }
+
     @GetMapping("/providers/{providerId}")
     public ResponseEntity<Map<String, Object>> getProvider(@PathVariable String providerId) {
         return ok(service.getProvider(tenantId(), providerId));

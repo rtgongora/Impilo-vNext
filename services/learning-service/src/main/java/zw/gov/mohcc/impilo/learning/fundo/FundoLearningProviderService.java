@@ -98,6 +98,33 @@ public class FundoLearningProviderService {
         return Map.of("providerId", providerId, "items", rows.stream().map(FundoLearningProviderService::spaceView).toList());
     }
 
+    /**
+     * Public-style academy directory (C4): accredited providers and their academies.
+     * Read-only, privacy-safe (no learner data). Micro-spaces (an INDIVIDUAL trainer or a
+     * DEPARTMENT) appear here too once accredited.
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Object> directory(UUID tenantId, int limit) {
+        List<Map<String, Object>> items = providerRepository
+                .findByTenantIdOrderByCreatedAtDesc(tenantId, PageRequest.of(0, limit))
+                .stream()
+                .filter(p -> "ACCREDITED".equals(p.getAccreditationStatus()) && "ACTIVE".equals(p.getStatus()))
+                .map(p -> {
+                    Map<String, Object> m = new LinkedHashMap<>();
+                    m.put("providerId", p.getId().toString());
+                    m.put("providerKind", p.getProviderKind());
+                    m.put("displayName", p.getDisplayName());
+                    m.put("academies", spaceRepository.findByTenantIdAndProviderIdOrderByCreatedAtDesc(tenantId, p.getId())
+                            .stream()
+                            .filter(s -> "ACTIVE".equals(s.getStatus()))
+                            .map(s -> Map.of("id", s.getId().toString(), "name", s.getName(), "spaceKind", s.getSpaceKind()))
+                            .toList());
+                    return m;
+                })
+                .toList();
+        return Map.of("items", items, "limit", limit);
+    }
+
     /** Used by the accreditation workflow (C2) to flip a provider's accreditation status. */
     @Transactional
     public void setAccreditationStatus(UUID tenantId, UUID providerId, String status) {
