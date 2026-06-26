@@ -150,6 +150,23 @@ public class PatientSafetyServiceClient {
         return get(baseUrl + BASE + "/config/adapters");
     }
 
+    // ---- public (citizen) path: explicit system trust headers ---------------
+    // The inbound citizen request carries no trust headers, so the forwarding interceptor copies
+    // nothing and these explicit headers survive — satisfying the downstream v1.1 contract.
+
+    public JsonNode createReportWithHeaders(Map<String, Object> body, org.springframework.http.HttpHeaders headers) {
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                baseUrl + BASE + "/reports", HttpMethod.POST, new HttpEntity<>(body, headers), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode submitReportWithHeaders(String id, org.springframework.http.HttpHeaders headers) {
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                baseUrl + BASE + "/reports/" + id + "/submit", HttpMethod.POST,
+                new HttpEntity<>(null, headers), JsonNode.class);
+        return extractData(response);
+    }
+
     // ---- transport helpers --------------------------------------------------
 
     private JsonNode get(String url) {
