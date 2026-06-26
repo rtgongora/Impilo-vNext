@@ -1850,6 +1850,40 @@ services:
     api_contract_status: partial
     authz_audit_status: partial
     observability_status: partial
+  - id: patient-safety-service
+    maven_module: patient-safety-service
+    primary_plane: clinical
+    plane: clinical
+    domain: pharmacovigilance
+    secondary_planes:
+      - data
+      - experience
+    sovereign: false
+    sovereign_group: null
+    primary_protocol: rest
+    default_http_port: 8202
+    product_names:
+      - Patient Safety
+    owner_team: TBD
+    system_of_record_for:
+      - adverse drug reaction (ADR) reports
+      - adverse event following immunization (AEFI) reports
+      - serious adverse event (SAE) cases and MCAZ submissions
+    consumes_from:
+      - tshepo-authz-service
+    exposes_to:
+      - experience-bff
+      - surveillance-service
+    forbidden_responsibilities:
+      - must-not-own-patient-identity-source-of-truth
+      - must-not-own-clinical-encounter-source-of-truth
+      - must-not-bypass-data-governance-or-consent-policy
+    production_status: baseline-assessed
+    implementation_status: implemented-or-partial
+    frontend_wiring_status: partial
+    api_contract_status: partial
+    authz_audit_status: partial
+    observability_status: partial
   - id: pct-service
     maven_module: pct-service
     primary_plane: clinical

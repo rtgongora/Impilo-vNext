@@ -674,6 +674,11 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/my-life/feedback/[caseId]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Track Feedback", navLabel: "Track", navZone: "life" },
   { path: "/work/facility/rito", zone: "facility", layout: "app", sidebar: "facility", guard: "facility", pageTitle: "Facility Quality & Safety", navLabel: "Quality & Safety", navZone: "work" },
   { path: "/work/above-site/rito", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Above-Site Quality & Safety", navLabel: "Quality Oversight", navZone: "work" },
+  { path: "/work/patient-safety", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Patient Safety — Pharmacovigilance", navLabel: "Patient Safety", navZone: "work" },
+  { path: "/work/patient-safety/new", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "New Safety Report", navLabel: "New Report", navZone: "work" },
+  { path: "/work/patient-safety/reports/[reportId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Safety Report", navLabel: "Report", navZone: "work" },
+  { path: "/work/patient-safety/cases/[caseId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Safety Case", navLabel: "Case", navZone: "work" },
+  { path: "/work/patient-safety/mcaz", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "MCAZ Workbench", navLabel: "MCAZ", navZone: "work" },
 ];
 
 // Total route count assertion.

@@ -16,6 +16,7 @@ export type ServiceBrandingSlug =
   | "ndila"
   | "nhume"
   | "nompilo"
+  | "patient-safety"
   | "rito"
   | "simba"
   | "tshepo"
@@ -73,6 +74,28 @@ export const SERVICE_BRANDING: Record<ServiceBrandingSlug, ServiceBrandingEntry>
     domain: "Clinical",
     fallbackIcon: "Droplet",
     aliases: ["madi", "madi-service", "blood", "transfusion", "app-madi", "app-madi-donor"],
+  },
+  "patient-safety": {
+    slug: "patient-safety",
+    name: "Patient Safety",
+    logo: "/brand/services/patient-safety-logo.png",
+    description: "Pharmacovigilance — adverse drug reactions, AEFI, and serious adverse event reporting to MCAZ",
+    domain: "Public Health",
+    fallbackIcon: "ShieldAlert",
+    aliases: [
+      "patient-safety",
+      "patient safety",
+      "patient-safety-service",
+      "pharmacovigilance",
+      "adverse-event",
+      "adverse event",
+      "adr",
+      "aefi",
+      "sae",
+      "side-effect",
+      "side effect",
+      "mcaz",
+    ],
   },
   rito: {
     slug: "rito",
