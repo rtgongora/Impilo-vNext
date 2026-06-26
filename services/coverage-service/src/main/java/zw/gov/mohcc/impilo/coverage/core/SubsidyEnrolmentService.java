@@ -7,10 +7,13 @@ import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.coverage.api.dto.SubsidyConsumeRequest;
 import zw.gov.mohcc.impilo.coverage.api.dto.SubsidyEnrolmentRequest;
 import zw.gov.mohcc.impilo.coverage.api.dto.SubsidyEnrolmentResponse;
+import org.springframework.dao.DataIntegrityViolationException;
 import zw.gov.mohcc.impilo.coverage.domain.SubsidyBalanceEntity;
+import zw.gov.mohcc.impilo.coverage.domain.SubsidyDrawdownEntity;
 import zw.gov.mohcc.impilo.coverage.domain.SubsidyEnrolmentEntity;
 import zw.gov.mohcc.impilo.coverage.domain.SubsidyProgramEntity;
 import zw.gov.mohcc.impilo.coverage.repository.SubsidyBalanceRepository;
+import zw.gov.mohcc.impilo.coverage.repository.SubsidyDrawdownRepository;
 import zw.gov.mohcc.impilo.coverage.repository.SubsidyEnrolmentRepository;
 import zw.gov.mohcc.impilo.coverage.repository.SubsidyProgramRepository;
 
@@ -34,13 +37,16 @@ public class SubsidyEnrolmentService {
     private final SubsidyProgramRepository programRepository;
     private final SubsidyEnrolmentRepository enrolmentRepository;
     private final SubsidyBalanceRepository balanceRepository;
+    private final SubsidyDrawdownRepository drawdownRepository;
 
     public SubsidyEnrolmentService(SubsidyProgramRepository programRepository,
                                    SubsidyEnrolmentRepository enrolmentRepository,
-                                   SubsidyBalanceRepository balanceRepository) {
+                                   SubsidyBalanceRepository balanceRepository,
+                                   SubsidyDrawdownRepository drawdownRepository) {
         this.programRepository = programRepository;
         this.enrolmentRepository = enrolmentRepository;
         this.balanceRepository = balanceRepository;
+        this.drawdownRepository = drawdownRepository;
     }
 
     @Transactional
@@ -52,6 +58,9 @@ public class SubsidyEnrolmentService {
         if (enrolmentRepository.existsByTenantIdAndSubsidyProgramIdAndMemberCpidAndStatus(
                 tenantId, program.getId(), req.memberCpid().trim(), "ACTIVE")) {
             throw new IllegalArgumentException("Member already actively enrolled in subsidy: " + program.getProgramCode());
+        }
+        if (req.annualCapOverride() != null && req.annualCapOverride().signum() < 0) {
+            throw new IllegalArgumentException("annual_cap_override must not be negative");
         }
 
         SubsidyEnrolmentEntity e = new SubsidyEnrolmentEntity();
@@ -90,6 +99,16 @@ public class SubsidyEnrolmentService {
     /**
      * Draw down subsidy value against the annual cap. Rejects (does not partially apply) when
      * the cap would be exceeded — callers should first {@link #checkCap}.
+     *
+     * <p>Money correctness:
+     * <ul>
+     *   <li><b>H1 (no lost update):</b> the drawdown is applied with an atomic conditional
+     *       UPDATE that only succeeds while the new total stays at or under the cap, so two
+     *       concurrent consumes cannot both pass an at-cap boundary.</li>
+     *   <li><b>H2 (idempotent):</b> a non-blank {@code reference} is persisted to a drawdown
+     *       ledger with a unique {@code (enrolment_id, reference)} constraint; a retry with the
+     *       same reference returns the prior result instead of drawing down again.</li>
+     * </ul>
      */
     @Transactional
     public SubsidyEnrolmentResponse consume(UUID tenantId, UUID enrolmentId, SubsidyConsumeRequest req) {
@@ -102,22 +121,91 @@ public class SubsidyEnrolmentService {
                 .orElseThrow(() -> new IllegalArgumentException("Subsidy programme missing for enrolment"));
         BigDecimal cap = effectiveCap(e, program);
         int year = LocalDate.now().getYear();
-        SubsidyBalanceEntity balance = balanceRepository.findByEnrolmentIdAndPeriodYear(enrolmentId, year)
-                .orElseGet(() -> newBalance(tenantId, e, cap, year));
 
-        BigDecimal newConsumed = balance.getConsumedAmount().add(req.amount());
-        if (cap != null && newConsumed.compareTo(cap) > 0) {
+        // H2: idempotent replay — a prior drawdown with this reference returns its snapshot,
+        // never draws down again.
+        String reference = req.reference() != null && !req.reference().isBlank()
+                ? req.reference().trim() : null;
+        if (reference != null) {
+            var prior = drawdownRepository.findByEnrolmentIdAndReference(enrolmentId, reference);
+            if (prior.isPresent()) {
+                SubsidyDrawdownEntity d = prior.get();
+                BigDecimal remaining = d.getCapAmount() != null
+                        ? d.getCapAmount().subtract(d.getConsumedAfter()) : null;
+                log.info("Subsidy enrolment {} drawdown reference {} already applied; replaying",
+                        enrolmentId, reference);
+                return SubsidyEnrolmentResponse.of(e, cap, d.getConsumedAfter(), remaining);
+            }
+        }
+
+        // Ensure a balance row exists (consumed 0) so the atomic update has a target.
+        SubsidyBalanceEntity balance = ensureBalance(tenantId, e, cap, year);
+
+        // H1: atomic check-and-apply. rowcount 0 means the cap would be breached.
+        int applied = balanceRepository.applyDrawdown(balance.getId(), req.amount());
+        if (applied == 0) {
             throw new IllegalArgumentException("Subsidy annual cap exceeded: cap=" + cap
                     + ", consumed=" + balance.getConsumedAmount() + ", requested=" + req.amount());
         }
-        balance.setCapAmount(cap);
-        balance.setConsumedAmount(newConsumed);
-        balanceRepository.save(balance);
+
+        // Re-read the authoritative running total after the atomic update.
+        SubsidyBalanceEntity fresh = balanceRepository.findByEnrolmentIdAndPeriodYear(enrolmentId, year)
+                .orElseThrow(() -> new IllegalStateException("Subsidy balance vanished after drawdown"));
+        BigDecimal newConsumed = fresh.getConsumedAmount();
+
+        if (reference != null) {
+            SubsidyDrawdownEntity d = new SubsidyDrawdownEntity();
+            d.setTenantId(tenantId);
+            d.setEnrolmentId(enrolmentId);
+            d.setPeriodYear(year);
+            d.setReference(reference);
+            d.setAmount(req.amount());
+            d.setConsumedAfter(newConsumed);
+            d.setCapAmount(cap);
+            d.setCurrency(e.getCurrency());
+            try {
+                drawdownRepository.saveAndFlush(d);
+            } catch (DataIntegrityViolationException dup) {
+                // A concurrent consume with the same reference won the unique race; that one
+                // already accounted for this drawdown. Our atomic update double-applied, so
+                // reverse it and replay the winner's snapshot (idempotent result).
+                balanceRepository.applyDrawdown(balance.getId(), req.amount().negate());
+                SubsidyDrawdownEntity winner = drawdownRepository
+                        .findByEnrolmentIdAndReference(enrolmentId, reference)
+                        .orElseThrow(() -> dup);
+                BigDecimal remaining = winner.getCapAmount() != null
+                        ? winner.getCapAmount().subtract(winner.getConsumedAfter()) : null;
+                return SubsidyEnrolmentResponse.of(e, cap, winner.getConsumedAfter(), remaining);
+            }
+        }
+
         log.info("Subsidy enrolment {} consumed {} (total {}/{} {})",
                 enrolmentId, req.amount(), newConsumed, cap, e.getCurrency());
 
         BigDecimal remaining = cap != null ? cap.subtract(newConsumed) : null;
         return SubsidyEnrolmentResponse.of(e, cap, newConsumed, remaining);
+    }
+
+    /** Find or create-and-persist the balance row for the period (consumed 0). */
+    private SubsidyBalanceEntity ensureBalance(UUID tenantId, SubsidyEnrolmentEntity e,
+                                               BigDecimal cap, int year) {
+        var existing = balanceRepository.findByEnrolmentIdAndPeriodYear(e.getId(), year);
+        if (existing.isPresent()) {
+            SubsidyBalanceEntity b = existing.get();
+            // Keep the cap snapshot current (e.g. override changed) without touching consumed.
+            if (cap != null && (b.getCapAmount() == null || b.getCapAmount().compareTo(cap) != 0)) {
+                b.setCapAmount(cap);
+                balanceRepository.save(b);
+            }
+            return b;
+        }
+        try {
+            return balanceRepository.saveAndFlush(newBalance(tenantId, e, cap, year));
+        } catch (DataIntegrityViolationException race) {
+            // Concurrent first-time consume inserted it; use that row.
+            return balanceRepository.findByEnrolmentIdAndPeriodYear(e.getId(), year)
+                    .orElseThrow(() -> race);
+        }
     }
 
     /**

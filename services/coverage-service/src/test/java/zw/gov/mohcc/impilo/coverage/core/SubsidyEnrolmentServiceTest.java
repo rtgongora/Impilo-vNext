@@ -9,9 +9,11 @@ import zw.gov.mohcc.impilo.coverage.api.dto.SubsidyConsumeRequest;
 import zw.gov.mohcc.impilo.coverage.api.dto.SubsidyEnrolmentRequest;
 import zw.gov.mohcc.impilo.coverage.api.dto.SubsidyEnrolmentResponse;
 import zw.gov.mohcc.impilo.coverage.domain.SubsidyBalanceEntity;
+import zw.gov.mohcc.impilo.coverage.domain.SubsidyDrawdownEntity;
 import zw.gov.mohcc.impilo.coverage.domain.SubsidyEnrolmentEntity;
 import zw.gov.mohcc.impilo.coverage.domain.SubsidyProgramEntity;
 import zw.gov.mohcc.impilo.coverage.repository.SubsidyBalanceRepository;
+import zw.gov.mohcc.impilo.coverage.repository.SubsidyDrawdownRepository;
 import zw.gov.mohcc.impilo.coverage.repository.SubsidyEnrolmentRepository;
 import zw.gov.mohcc.impilo.coverage.repository.SubsidyProgramRepository;
 
@@ -32,6 +34,7 @@ class SubsidyEnrolmentServiceTest {
     @Mock private SubsidyProgramRepository programRepository;
     @Mock private SubsidyEnrolmentRepository enrolmentRepository;
     @Mock private SubsidyBalanceRepository balanceRepository;
+    @Mock private SubsidyDrawdownRepository drawdownRepository;
 
     private SubsidyEnrolmentService service;
     private final UUID tenantId = UUID.randomUUID();
@@ -39,7 +42,8 @@ class SubsidyEnrolmentServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new SubsidyEnrolmentService(programRepository, enrolmentRepository, balanceRepository);
+        service = new SubsidyEnrolmentService(
+                programRepository, enrolmentRepository, balanceRepository, drawdownRepository);
         lenient().when(enrolmentRepository.save(any(SubsidyEnrolmentEntity.class))).thenAnswer(inv -> {
             SubsidyEnrolmentEntity e = inv.getArgument(0);
             if (e.getId() == null) e.setId(UUID.randomUUID());
@@ -47,6 +51,16 @@ class SubsidyEnrolmentServiceTest {
             return e;
         });
         lenient().when(balanceRepository.save(any(SubsidyBalanceEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+        lenient().when(balanceRepository.saveAndFlush(any(SubsidyBalanceEntity.class)))
+                .thenAnswer(inv -> {
+                    SubsidyBalanceEntity b = inv.getArgument(0);
+                    if (b.getId() == null) b.setId(UUID.randomUUID());
+                    return b;
+                });
+        lenient().when(drawdownRepository.findByEnrolmentIdAndReference(any(), any()))
+                .thenReturn(Optional.empty());
+        lenient().when(drawdownRepository.saveAndFlush(any(SubsidyDrawdownEntity.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
     }
 
     private SubsidyProgramEntity program(BigDecimal cap, String status) {
@@ -108,15 +122,32 @@ class SubsidyEnrolmentServiceTest {
         when(enrolmentRepository.findByIdAndTenantId(enrolId, tenantId)).thenReturn(Optional.of(e));
         when(programRepository.findByIdAndTenantId(programId, tenantId))
                 .thenReturn(Optional.of(program(new BigDecimal("1000.00"), "ACTIVE")));
+
+        // Mutable balance the atomic update drives. ensureBalance creates it (consumed 0);
+        // applyDrawdown bumps consumed and reports success; subsequent reads see the new total.
+        SubsidyBalanceEntity bal = new SubsidyBalanceEntity();
+        bal.setId(UUID.randomUUID());
+        bal.setEnrolmentId(enrolId);
+        bal.setConsumedAmount(BigDecimal.ZERO);
+        bal.setCapAmount(new BigDecimal("1000.00"));
         when(balanceRepository.findByEnrolmentIdAndPeriodYear(eq(enrolId), anyInt()))
-                .thenReturn(Optional.empty());
+                .thenReturn(Optional.of(bal));
+        when(balanceRepository.applyDrawdown(eq(bal.getId()), any(BigDecimal.class)))
+                .thenAnswer(inv -> {
+                    BigDecimal amt = inv.getArgument(1);
+                    BigDecimal next = bal.getConsumedAmount().add(amt);
+                    if (next.compareTo(bal.getCapAmount()) > 0) return 0;
+                    bal.setConsumedAmount(next);
+                    return 1;
+                });
 
         SubsidyEnrolmentResponse r = service.consume(tenantId, enrolId,
                 new SubsidyConsumeRequest(new BigDecimal("300.00"), "BILL-1"));
 
         assertEquals(0, new BigDecimal("300.00").compareTo(r.consumedAmount()));
         assertEquals(0, new BigDecimal("700.00").compareTo(r.remainingAmount()));
-        verify(balanceRepository).save(any(SubsidyBalanceEntity.class));
+        verify(balanceRepository).applyDrawdown(eq(bal.getId()), eq(new BigDecimal("300.00")));
+        verify(drawdownRepository).saveAndFlush(any(SubsidyDrawdownEntity.class));
     }
 
     @Test
@@ -127,13 +158,71 @@ class SubsidyEnrolmentServiceTest {
         when(programRepository.findByIdAndTenantId(programId, tenantId))
                 .thenReturn(Optional.of(program(new BigDecimal("1000.00"), "ACTIVE")));
         SubsidyBalanceEntity bal = new SubsidyBalanceEntity();
+        bal.setId(UUID.randomUUID());
         bal.setEnrolmentId(enrolId);
         bal.setConsumedAmount(new BigDecimal("900.00"));
+        bal.setCapAmount(new BigDecimal("1000.00"));
         when(balanceRepository.findByEnrolmentIdAndPeriodYear(eq(enrolId), anyInt())).thenReturn(Optional.of(bal));
+        // Atomic update rejects the over-cap drawdown (rowcount 0).
+        when(balanceRepository.applyDrawdown(eq(bal.getId()), any(BigDecimal.class))).thenReturn(0);
 
         var req = new SubsidyConsumeRequest(new BigDecimal("200.00"), null);
         assertThrows(IllegalArgumentException.class, () -> service.consume(tenantId, enrolId, req));
-        verify(balanceRepository, never()).save(any());
+        verify(drawdownRepository, never()).saveAndFlush(any());
+    }
+
+    /**
+     * H2 regression: a retried consume with the same reference returns the prior result and
+     * never draws down again. BEFORE the fix reference was ignored and the subsidy was drawn
+     * down twice.
+     */
+    @Test
+    void consume_sameReferenceTwice_isIdempotent() {
+        UUID enrolId = UUID.randomUUID();
+        SubsidyEnrolmentEntity e = enrolment(enrolId);
+        when(enrolmentRepository.findByIdAndTenantId(enrolId, tenantId)).thenReturn(Optional.of(e));
+        when(programRepository.findByIdAndTenantId(programId, tenantId))
+                .thenReturn(Optional.of(program(new BigDecimal("1000.00"), "ACTIVE")));
+
+        // First call applies; record the ledger row keyed by reference.
+        SubsidyBalanceEntity bal = new SubsidyBalanceEntity();
+        bal.setId(UUID.randomUUID());
+        bal.setEnrolmentId(enrolId);
+        bal.setConsumedAmount(BigDecimal.ZERO);
+        bal.setCapAmount(new BigDecimal("1000.00"));
+        when(balanceRepository.findByEnrolmentIdAndPeriodYear(eq(enrolId), anyInt()))
+                .thenReturn(Optional.of(bal));
+        when(balanceRepository.applyDrawdown(eq(bal.getId()), any(BigDecimal.class)))
+                .thenAnswer(inv -> {
+                    bal.setConsumedAmount(bal.getConsumedAmount().add(inv.getArgument(1)));
+                    return 1;
+                });
+        java.util.Map<String, SubsidyDrawdownEntity> ledger = new java.util.HashMap<>();
+        when(drawdownRepository.findByEnrolmentIdAndReference(eq(enrolId), eq("BILL-9")))
+                .thenAnswer(inv -> Optional.ofNullable(ledger.get("BILL-9")));
+        when(drawdownRepository.saveAndFlush(any(SubsidyDrawdownEntity.class)))
+                .thenAnswer(inv -> { SubsidyDrawdownEntity d = inv.getArgument(0); ledger.put(d.getReference(), d); return d; });
+
+        var req = new SubsidyConsumeRequest(new BigDecimal("400.00"), "BILL-9");
+        SubsidyEnrolmentResponse first = service.consume(tenantId, enrolId, req);
+        SubsidyEnrolmentResponse second = service.consume(tenantId, enrolId, req);
+
+        assertEquals(0, new BigDecimal("400.00").compareTo(first.consumedAmount()));
+        assertEquals(0, new BigDecimal("400.00").compareTo(second.consumedAmount()));
+        // Drawdown applied exactly once across both calls.
+        verify(balanceRepository, times(1)).applyDrawdown(eq(bal.getId()), eq(new BigDecimal("400.00")));
+        verify(drawdownRepository, times(1)).saveAndFlush(any(SubsidyDrawdownEntity.class));
+    }
+
+    @Test
+    void enrol_negativeCapOverride_isRejected() {
+        when(programRepository.findByTenantIdAndProgramCode(tenantId, "SUB-TEST"))
+                .thenReturn(Optional.of(program(new BigDecimal("1500.00"), "ACTIVE")));
+        when(enrolmentRepository.existsByTenantIdAndSubsidyProgramIdAndMemberCpidAndStatus(
+                tenantId, programId, "CPID-1", "ACTIVE")).thenReturn(false);
+        var req = new SubsidyEnrolmentRequest(
+                null, "SUB-TEST", "CPID-1", new BigDecimal("-1.00"), null, "admin");
+        assertThrows(IllegalArgumentException.class, () -> service.enrol(tenantId, req));
     }
 
     @Test
