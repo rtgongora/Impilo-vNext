@@ -43,6 +43,18 @@ public class AttendanceEventEntity {
     private String deviceId;
     private String supervisorConfirmedBy;
 
+    // Ad-hoc check-in context (WHERE/WHAT) — captured when a worker checks in
+    // against an active assignment / facility context rather than a rostered shift.
+    private UUID assignmentId;
+    private UUID facilityId;
+    private String departmentId;
+    private String unitId;
+    private UUID workspaceId;
+    private String contextScope;
+
+    @Column(nullable = false)
+    private boolean adhoc;
+
     @Column(nullable = false)
     private boolean offline;
 

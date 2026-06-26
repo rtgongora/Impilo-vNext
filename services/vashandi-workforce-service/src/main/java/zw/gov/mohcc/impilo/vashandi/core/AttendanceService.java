@@ -5,8 +5,10 @@ import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.vashandi.api.VashandiDtos;
 import zw.gov.mohcc.impilo.vashandi.persistence.entity.AttendanceEventEntity;
 import zw.gov.mohcc.impilo.vashandi.persistence.entity.ShiftEntity;
+import zw.gov.mohcc.impilo.vashandi.persistence.entity.WorkforceAssignmentEntity;
 import zw.gov.mohcc.impilo.vashandi.persistence.repository.AttendanceEventRepository;
 import zw.gov.mohcc.impilo.vashandi.persistence.repository.ShiftRepository;
+import zw.gov.mohcc.impilo.vashandi.persistence.repository.WorkforceAssignmentRepository;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
 import java.time.OffsetDateTime;
@@ -20,13 +22,16 @@ public class AttendanceService {
 
     private final AttendanceEventRepository attendanceRepository;
     private final ShiftRepository shiftRepository;
+    private final WorkforceAssignmentRepository assignmentRepository;
     private final VashandiOutboxWriter outboxWriter;
 
     public AttendanceService(AttendanceEventRepository attendanceRepository,
                              ShiftRepository shiftRepository,
+                             WorkforceAssignmentRepository assignmentRepository,
                              VashandiOutboxWriter outboxWriter) {
         this.attendanceRepository = attendanceRepository;
         this.shiftRepository = shiftRepository;
+        this.assignmentRepository = assignmentRepository;
         this.outboxWriter = outboxWriter;
     }
 
@@ -69,6 +74,79 @@ public class AttendanceService {
 
         emit(tenantId, saved, "checked_in");
         return new VashandiDtos.AttendanceActionResponse(saved.getId(), "completed", "checked in");
+    }
+
+    /**
+     * Ad-hoc check-in: a worker checks in against an active assignment (or a
+     * facility/department/unit context) without a pre-rostered shift. This closes
+     * the gap where the only check-in path required a {@code shiftId}.
+     *
+     * Enforces WORK-REQUIRES-ASSIGNMENT at the data layer: if an assignment id is
+     * supplied it must belong to this profile and be in an active/approved state.
+     * Policy authorisation (CHECKIN-SCOPE, WORK-REQUIRES-ASSIGNMENT) is specced to
+     * track P and applied at the ext_authz gate; this is the SoR-side guard.
+     */
+    @Transactional
+    public VashandiDtos.AttendanceActionResponse adhocCheckIn(UUID tenantId, VashandiDtos.AdhocCheckInRequest request)
+            throws Exception {
+        if (request.workforceProfileId() == null) {
+            return new VashandiDtos.AttendanceActionResponse(null, "denied", "workforce profile required");
+        }
+
+        UUID facilityId = request.facilityId();
+        String departmentId = request.departmentId();
+        String unitId = request.unitId();
+        UUID workspaceId = request.workspaceId();
+        String contextScope = request.contextScope();
+
+        if (request.assignmentId() != null) {
+            WorkforceAssignmentEntity assignment =
+                    assignmentRepository.findByTenantIdAndId(tenantId, request.assignmentId()).orElse(null);
+            if (assignment == null
+                    || !request.workforceProfileId().equals(assignment.getWorkforceProfileId())) {
+                // TODO(policy WORK-REQUIRES-ASSIGNMENT): ext_authz must also deny.
+                return new VashandiDtos.AttendanceActionResponse(null, "denied", "assignment not found for worker");
+            }
+            if (!"active".equals(assignment.getStatus()) && !"approved".equals(assignment.getStatus())) {
+                return new VashandiDtos.AttendanceActionResponse(null, "denied", "assignment not active");
+            }
+            // Default the check-in context from the assignment when not overridden.
+            if (facilityId == null) {
+                facilityId = assignment.getFacilityId();
+            }
+            if (departmentId == null) {
+                departmentId = assignment.getDepartmentId();
+            }
+            if (unitId == null) {
+                unitId = assignment.getUnitId();
+            }
+            if (workspaceId == null) {
+                workspaceId = assignment.getWorkspaceId();
+            }
+        } else if (facilityId == null) {
+            // No assignment and no facility context — nothing to anchor the check-in to.
+            return new VashandiDtos.AttendanceActionResponse(null, "denied", "assignment or facility context required");
+        }
+
+        AttendanceEventEntity event = new AttendanceEventEntity();
+        event.setTenantId(tenantId);
+        event.setWorkforceProfileId(request.workforceProfileId());
+        event.setAssignmentId(request.assignmentId());
+        event.setFacilityId(facilityId);
+        event.setDepartmentId(departmentId);
+        event.setUnitId(unitId);
+        event.setWorkspaceId(workspaceId);
+        event.setContextScope(contextScope);
+        event.setAdhoc(true);
+        event.setEventType("check_in");
+        event.setEventTime(request.eventTime() != null ? request.eventTime() : OffsetDateTime.now());
+        event.setCheckInMode(request.checkInMode() != null ? request.checkInMode() : "adhoc_self_check_in");
+        event.setDeviceId(request.deviceId());
+        event.setOffline(request.offline() != null && request.offline());
+        AttendanceEventEntity saved = attendanceRepository.save(event);
+
+        emit(tenantId, saved, "checked_in");
+        return new VashandiDtos.AttendanceActionResponse(saved.getId(), "completed", "checked in (ad-hoc)");
     }
 
     @Transactional
