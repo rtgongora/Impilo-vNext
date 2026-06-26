@@ -596,8 +596,12 @@ public class CostaEventConsumer {
             }
 
             JsonNode payload = envelope.has("payload") ? envelope.get("payload") : envelope;
-            String aggregateId = text(envelope, "aggregateId");
-            String idemId = aggregateId != null ? aggregateId : text(payload, "id");
+            // Idempotency anchor MUST be the stable shared key across both lifecycle events
+            // (referral-complete and session-end) so the same teleconsult is processed once,
+            // whichever event arrives first (C1). The envelope aggregateId is referralId for the
+            // referral event but sessionId for the session event, so it cannot be the anchor —
+            // resolve referralId → id → encounterId from the payload instead.
+            String idemId = teleconsultAnchor(payload);
             if (isProcessed(idemId, "TELECONSULT")) { ack.acknowledge(); return; }
 
             String tenantTxt = text(envelope, "tenantId");
@@ -614,7 +618,7 @@ public class CostaEventConsumer {
             chargeRecordService.ingestTeleconsultCompleted(payload, tenantId);
 
             var tm = objectMapper.createObjectNode();
-            tm.put("referral_id", text(payload, "id"));
+            tm.put("referral_id", idemId);
             tm.put("specialty", text(payload, "specialty"));
             costEventCaptureService.tryCaptureClinical(
                     "TELECONSULT_COMPLETED",
@@ -712,6 +716,20 @@ public class CostaEventConsumer {
 
     private String text(JsonNode node, String field) {
         return node.has(field) && !node.get(field).isNull() ? node.get(field).asText() : null;
+    }
+
+    /**
+     * Stable shared teleconsult anchor (C1). The same teleconsult yields two lifecycle events:
+     * referral-complete (payload {@code id} = referralId) and session-end (payload {@code id} =
+     * sessionId, plus {@code referralId}). The one key both agree on is the referralId — prefer
+     * the explicit {@code referralId} field, then {@code id} (the referralId on the referral
+     * event), then {@code encounterId} as a last resort.
+     */
+    private String teleconsultAnchor(JsonNode payload) {
+        String anchor = text(payload, "referralId");
+        if (anchor == null) anchor = text(payload, "id");
+        if (anchor == null) anchor = text(payload, "encounterId");
+        return anchor;
     }
 
     private boolean isProcessed(String eventId, String source) {

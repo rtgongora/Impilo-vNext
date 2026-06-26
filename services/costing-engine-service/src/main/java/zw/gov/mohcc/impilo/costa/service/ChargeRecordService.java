@@ -138,17 +138,34 @@ public class ChargeRecordService {
      * value event (journey §9). PCT owns the encounter/referral; COSTA owns the charge — this
      * consumes the service event, it does not re-implement PCT.
      *
+     * <p><b>Double-charge guard (C1).</b> PCT emits {@code telemedicine.session.completed} for
+     * the SAME teleconsult from two sources: the referral-complete event (payload {@code id} =
+     * referralId) and the session-end event (payload {@code id} = sessionId, plus a separate
+     * {@code referralId} = referralId). To bill a teleconsult exactly once regardless of which
+     * event(s) arrive and in what order, the charge is anchored on a STABLE SHARED key — the
+     * referralId — resolved as: explicit {@code referralId} field → {@code id} (which IS the
+     * referralId on the referral-complete event) → {@code encounterId} as a last resort. This
+     * anchor is used as both the idempotency (dedup) key and the {@code sourceRef}, so both
+     * lifecycle events collapse to one {@code TELECONSULT:*} charge + one {@code CHARGE_CREATED}.
+     *
      * @param payload the inner referral payload (envelope already unwrapped by the consumer)
      * @param tenantId resolved tenant from the envelope
      */
     @Transactional
     public void ingestTeleconsultCompleted(JsonNode payload, UUID tenantId) {
-        String referralId = text(payload, "id");
+        // Stable shared anchor across BOTH lifecycle events (C1). The session-end event carries
+        // an explicit referralId; the referral-complete event's id IS the referralId. Prefer the
+        // explicit referralId field, then id, then encounterId as a last resort — this is the one
+        // key both events agree on, so the teleconsult is charged exactly once.
+        String referralId = text(payload, "referralId");
         if (referralId == null) {
-            referralId = text(payload, "referralId");
+            referralId = text(payload, "id");
+        }
+        if (referralId == null) {
+            referralId = text(payload, "encounterId");
         }
         if (referralId == null || tenantId == null) {
-            log.warn("teleconsult.completed event missing referral id or tenantId");
+            log.warn("teleconsult.completed event missing referral anchor (referralId/id/encounterId) or tenantId");
             return;
         }
         String status = text(payload, "status");
