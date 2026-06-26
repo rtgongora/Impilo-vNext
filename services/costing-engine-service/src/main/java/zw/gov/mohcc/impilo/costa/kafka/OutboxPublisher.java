@@ -81,6 +81,7 @@ public class OutboxPublisher {
             case "INVOICE_REFUND_APPLIED" -> "costa.invoice.refund_applied";
             case "REFUND_CREATED" -> "costa.refund.issued";
             case "CLAIM_PACK_CREATED" -> "costa.claim.pack.created";
+            case "EMERGENCY_DEFERRED_CHARGE" -> "costa.emergency.deferred_charge";
             case "ESTIMATE_CREATED" -> "costa.estimate.created";
             case "RULESET_PUBLISHED" -> "costa.ruleset.published";
             default -> "costa.events";
@@ -97,6 +98,7 @@ public class OutboxPublisher {
                  "PAYMENT_STATUS_CHANGED",
                  "PAYMENT_CANCELLED",
                  "CLAIM_PACK_CREATED",
+                 "EMERGENCY_DEFERRED_CHARGE",
                  "REFUND_CREATED" -> true;
             default -> false;
         };
