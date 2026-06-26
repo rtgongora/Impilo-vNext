@@ -28,16 +28,19 @@ import { PageShell } from "@/components/PageShell";
 import { useConsentStore, CURRENT_CONSENT_VERSION } from "@/hooks/useConsentStore";
 import {
   usePolicyConsentStatus,
+  usePolicyConsentHistory,
   useRevokePolicyConsent,
   useDeletionRequestStatus,
   useRequestAccountDeletion,
   useCancelAccountDeletion,
   type PolicyConsentResource,
+  type PolicyConsentHistoryResource,
 } from "@/hooks/queries/usePolicyConsent";
 
 export default function PrivacySettingsPage() {
   const { revokeConsent: revokeClientConsent } = useConsentStore();
   const { data: consentData, isLoading: consentLoading } = usePolicyConsentStatus();
+  const { data: historyData } = usePolicyConsentHistory();
   const { data: deletionData, isLoading: deletionLoading } = useDeletionRequestStatus();
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -45,6 +48,7 @@ export default function PrivacySettingsPage() {
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
   const consentRecords = Array.isArray(consentData?.data) ? consentData.data : [];
+  const consentHistory = Array.isArray(historyData?.data) ? historyData.data : [];
   const privacyConsent = consentRecords.find(
     (c: PolicyConsentResource) => c.attributes.policyType === "PRIVACY_POLICY"
   );
@@ -130,6 +134,46 @@ export default function PrivacySettingsPage() {
                 require you to re-accept before continuing to use Impilo.
               </p>
             </section>
+
+            {/* ── Consent History (real audit trail from Mvumo) ── */}
+            {consentHistory.length > 0 && (
+              <section className="bg-card rounded-lg border border-border p-6">
+                <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-primary" />
+                  Consent History
+                </h3>
+                <ul className="space-y-3">
+                  {consentHistory.map((h: PolicyConsentHistoryResource) => {
+                    const withdrawn = h.attributes.state === "WITHDRAWN" || Boolean(h.attributes.revokedAt);
+                    const superseded = h.attributes.state === "SUPERSEDED";
+                    const label = h.attributes.policyType === "PRIVACY_POLICY" ? "Privacy Policy" : "Terms of Use";
+                    const when = h.attributes.revokedAt || h.attributes.acceptedAt;
+                    return (
+                      <li key={h.id} className="flex items-start gap-3 text-sm">
+                        {withdrawn ? (
+                          <XCircle className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
+                        ) : (
+                          <CheckCircle className="w-4 h-4 mt-0.5 text-green-600 shrink-0" />
+                        )}
+                        <div>
+                          <p className="text-foreground">
+                            {label} <span className="text-muted-foreground">v{h.attributes.policyVersion}</span>
+                            {" · "}
+                            <span className="text-muted-foreground">
+                              {withdrawn ? "withdrawn" : superseded ? "superseded" : "accepted"}
+                              {h.attributes.channel ? ` (${h.attributes.channel})` : ""}
+                            </span>
+                          </p>
+                          {when && (
+                            <p className="text-xs text-muted-foreground">{new Date(when).toLocaleString()}</p>
+                          )}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            )}
 
             {/* ── Your Rights ─────────────────────────────── */}
             <section className="bg-card rounded-lg border border-border p-6">
