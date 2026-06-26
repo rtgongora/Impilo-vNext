@@ -115,6 +115,8 @@
         <module>surveillance-service</module>
         <!-- Campaigns — Public Health Campaign Management (v1.1-Native) -->
         <module>campaigns-service</module>
+        <!-- Patient Safety — Pharmacovigilance (ADR/AEFI), Safety Cases & MCAZ Workbench (v1.1-Native) -->
+        <module>patient-safety-service</module>
         <!-- Identity Assurance — Device Attestation & Risk Scoring (v1.1-Native) -->
         <module>identity-assurance-service</module>
         <!-- Observability — Dashboard & Alert Rule Registry (v1.1-Native Stub) -->
