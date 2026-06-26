@@ -35,12 +35,12 @@ doctrine). Two of my own prompt labels were wrong (corrected in §5).
 |----|-----|-----|-------|
 | GAP-1 | My journey/read-model docs invented a **parallel state machine**, diverging from canonical `contracts/core-transaction.ts` (54 states) | Reframed journey diagram as a narrative overlay + full mapping to canonical `CoreTransactionState`; corrected C6 to import the contract union | ✅ fixed + pushed (`da362bd8e`) |
 
-## 2. Gaps CLOSEABLE NOW (small, low-risk — plug in this wave)
+## 2. Gaps CLOSEABLE NOW (small, low-risk) — ✅ DONE
 
-| ID | Gap | Owner lane | Effort |
-|----|-----|-----------|--------|
-| GAP-2 | L2's 3 new BFF controllers (`FacilityModeController`, `FacilityRegulatorBffController`, `IndawoPlaceModeController`) have **no dedicated tests** (exercised only indirectly) | L2 | small |
-| GAP-3 | L3 W6 `ProviderBootstrapController/Service` (bulk-preload + self-claim) has **no dedicated unit test** | L3 | small |
+| ID | Gap | Owner lane | State |
+|----|-----|-----------|-------|
+| GAP-2 | L2's 3 new BFF controllers had **no dedicated tests** | L2 | ✅ **closed** — 13 tests, module 534 green, `fc55c8c54` pushed |
+| GAP-3 | L3 W6 `ProviderBootstrapService` had **no dedicated unit test** | L3 | ✅ **closed** — 8 tests green, `97c3be846` pushed |
 | ~~GAP-4~~ | **Reclassified to §3 (medium)** after inspection — see GAP-4 below | — | — |
 
 ## 3. Gaps PARTIAL / DEFERRED (real functional boundaries)
