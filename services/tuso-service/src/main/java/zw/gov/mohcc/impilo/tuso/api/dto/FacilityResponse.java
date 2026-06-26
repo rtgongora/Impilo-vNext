@@ -19,6 +19,7 @@ public record FacilityResponse(
         String operationalStatus,
         String ownership,
         String level,
+        String facilityCategory,
         OperatingModelDetail operatingModel,
         Long parentId,
         String parentName,
