@@ -577,6 +577,62 @@ public class CostaEventConsumer {
         };
     }
 
+    /**
+     * Teleconsult → value wiring (journey §9). PCT publishes {@code telemedicine.session.*}
+     * lifecycle events to {@code clinical.teleconsult.lifecycle} as an envelope
+     * {@code {eventType, aggregateId, tenantId, occurredAt, payload}}. On the
+     * {@code telemedicine.session.completed} event we create exactly one teleconsult charge.
+     * PCT owns the encounter/referral; COSTA owns the charge (no SoR duplication).
+     */
+    @KafkaListener(topics = "clinical.teleconsult.lifecycle", groupId = "costa-costing-engine")
+    @Transactional
+    public void onTeleconsultLifecycle(String message, Acknowledgment ack) {
+        try {
+            JsonNode envelope = objectMapper.readTree(message);
+            String eventType = text(envelope, "eventType");
+            if (!"telemedicine.session.completed".equals(eventType)) {
+                ack.acknowledge();
+                return;  // only the completed stage is billable
+            }
+
+            JsonNode payload = envelope.has("payload") ? envelope.get("payload") : envelope;
+            String aggregateId = text(envelope, "aggregateId");
+            String idemId = aggregateId != null ? aggregateId : text(payload, "id");
+            if (isProcessed(idemId, "TELECONSULT")) { ack.acknowledge(); return; }
+
+            String tenantTxt = text(envelope, "tenantId");
+            if (tenantTxt == null) {
+                tenantTxt = text(payload, "tenantId");
+            }
+            if (tenantTxt == null) {
+                log.warn("teleconsult.completed missing tenantId; skipping");
+                ack.acknowledge();
+                return;
+            }
+            UUID tenantId = UUID.fromString(tenantTxt);
+
+            chargeRecordService.ingestTeleconsultCompleted(payload, tenantId);
+
+            var tm = objectMapper.createObjectNode();
+            tm.put("referral_id", text(payload, "id"));
+            tm.put("specialty", text(payload, "specialty"));
+            costEventCaptureService.tryCaptureClinical(
+                    "TELECONSULT_COMPLETED",
+                    "TELECONSULT",
+                    tenantId,
+                    text(payload, "patientCpid"),
+                    text(payload, "encounterId"),
+                    null,
+                    tm);
+
+            markProcessed(idemId, "TELECONSULT");
+            ack.acknowledge();
+        } catch (Exception e) {
+            log.error("Failed to process clinical.teleconsult.lifecycle", e);
+            ack.acknowledge();
+        }
+    }
+
     @KafkaListener(topics = "impilo.costa.cost-signals", groupId = "costa-costing-engine")
     @Transactional
     public void onCostSignals(String message, Acknowledgment ack) {

@@ -24,6 +24,7 @@ public class ChargeRecordService {
     private static final Logger log = LoggerFactory.getLogger(ChargeRecordService.class);
 
     public static final String SOURCE_MSIKA_FLOW_ORDER_PRICED = "MSIKA_FLOW_ORDER_PRICED";
+    public static final String SOURCE_TELECONSULT_COMPLETED = "TELECONSULT_COMPLETED";
 
     private final ChargeRecordRepository chargeRecordRepository;
     private final EventOutboxRepository outboxRepository;
@@ -128,6 +129,92 @@ public class ChargeRecordService {
         chargeRecordRepository.save(e);
         publishChargeCreated(e);
         log.info("Recorded COSTA charge {} for Msika Flow priced order {}", e.getChargeId(), orderId);
+    }
+
+    /**
+     * Idempotent teleconsult charge from PCT's {@code telemedicine.session.completed} event
+     * (topic {@code clinical.teleconsult.lifecycle}). Telemedicine is governed like in-person
+     * care: a completed teleconsult is a billable service event that must map to exactly one
+     * value event (journey §9). PCT owns the encounter/referral; COSTA owns the charge — this
+     * consumes the service event, it does not re-implement PCT.
+     *
+     * @param payload the inner referral payload (envelope already unwrapped by the consumer)
+     * @param tenantId resolved tenant from the envelope
+     */
+    @Transactional
+    public void ingestTeleconsultCompleted(JsonNode payload, UUID tenantId) {
+        String referralId = text(payload, "id");
+        if (referralId == null) {
+            referralId = text(payload, "referralId");
+        }
+        if (referralId == null || tenantId == null) {
+            log.warn("teleconsult.completed event missing referral id or tenantId");
+            return;
+        }
+        String status = text(payload, "status");
+        if (status != null && !"COMPLETED".equalsIgnoreCase(status)) {
+            // Only the completed lifecycle stage is billable.
+            return;
+        }
+        if (chargeRecordRepository.existsByTenantIdAndSourceTypeAndSourceRef(
+                tenantId, SOURCE_TELECONSULT_COMPLETED, referralId)) {
+            return;  // idempotent
+        }
+
+        String patientCpid = text(payload, "patientCpid");
+        String providerId = text(payload, "providerId");
+        String encounterId = text(payload, "encounterId");
+        String specialty = text(payload, "specialty");
+        String modality = text(payload, "modality");
+        if (modality == null) {
+            modality = text(payload, "virtualMode");
+        }
+        UUID facilityId = parseUuidOrNull(text(payload, "facilityId"));
+
+        ChargeRecordEntity e = new ChargeRecordEntity();
+        e.setChargeId(UlidGenerator.generate());
+        e.setTenantId(tenantId);
+        e.setChargeCode("TELECONSULT:" + (specialty != null ? specialty : "GENERAL"));
+        e.setChargeType("TELECONSULT");
+        e.setSourceType(SOURCE_TELECONSULT_COMPLETED);
+        e.setSourceRef(referralId);
+        e.setClientRef(patientCpid);
+        e.setPayerRef(patientCpid);
+        e.setProviderRef(providerId);
+        e.setFacilityId(facilityId);
+        e.setServiceRef(encounterId);
+        e.setOfferingRef(referralId);
+        // Tariff-driven pricing is resolved downstream by charging rules / bill posting;
+        // the charge row is the billable signal. Amount left to ruleset (no fabricated price).
+        e.setChargeAmount(BigDecimal.ZERO);
+        e.setCurrency("USD");
+        e.setChargeStatus("OPEN");
+        e.setBillableFlag(true);
+        try {
+            Map<String, Object> meta = new LinkedHashMap<>();
+            meta.put("kafkaEvent", "telemedicine.session.completed");
+            meta.put("specialty", specialty);
+            meta.put("modality", modality);
+            meta.put("encounterId", encounterId);
+            e.setMetadataJson(objectMapper.writeValueAsString(meta));
+        } catch (Exception ex) {
+            e.setMetadataJson("{}");
+        }
+        chargeRecordRepository.save(e);
+        publishChargeCreated(e);
+        log.info("Recorded COSTA teleconsult charge {} for completed referral {} (specialty={})",
+                e.getChargeId(), referralId, specialty);
+    }
+
+    private static UUID parseUuidOrNull(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        try {
+            return UUID.fromString(raw);
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
     }
 
     private void publishChargeCreated(ChargeRecordEntity e) {
