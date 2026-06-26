@@ -136,6 +136,7 @@ impilo:
     coverage-base-url: ${COVERAGE_BASE_URL:http://localhost:8140}
     surveillance-base-url: ${SURVEILLANCE_BASE_URL:http://localhost:8180}
     campaigns-base-url: ${CAMPAIGNS_BASE_URL:http://localhost:8190}
+    patient-safety-base-url: ${PATIENT_SAFETY_BASE_URL:http://localhost:8202}
     # Public Health & Data Plane — national repository, pipelines, warehouse, ingestion, reporting
     ndr-national-base-url: ${NDR_NATIONAL_BASE_URL:http://localhost:8152}
     ndr-query-base-url: ${NDR_QUERY_BASE_URL:http://localhost:8232}
