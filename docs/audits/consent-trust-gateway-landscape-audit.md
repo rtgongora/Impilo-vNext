@@ -137,7 +137,7 @@ there (see §9).
 | **TPL-2** | 🟠 High | OPA orphaned; ABAC corpus unmounted/untested (§4) | Phase 3 (promote `infra/opa/impilo` → live, shadow→enforce). |
 | **TPL-3** | 🟠 High | 3 consent evaluate contracts diverge (§5) | Phase 2 (consolidate to one contract; verdict-as-PDP-input). |
 | **TPL-4** | 🟡 Med | Mvumo↔tshepo-consent can drift (Mvumo state vs FHIR status) | Phase 2 (reconciliation job). |
-| **TPL-5** | 🟡 Med | Privacy preference (MINIMAL/PARTIAL) ignored by obligations (§6) | **NEW scope** — make privacy-pref a clamping obligation input in step-7 (data-governance as a PIP). |
+| **TPL-5** | ~~🟡 Med~~ → 🔵 Low | Privacy preference (MINIMAL/PARTIAL) ignored by obligations (§6) | **RULED (2026-06-26): by-design — do NOT clamp the PDP obligation.** The data-governance pref is a *self-display* setting (viewer's reversible choice; shoulder-surf/screen-share), NOT data-sharing consent. The PDP obligation is the authorization *ceiling*; baking a voluntary pref into it would make a reversible choice a hard server-side ceiling and **break care** when full data is needed. PolicyEngine correctly ignores it. The real (low-priority, net-new) work is a **BFF/UI default-mask bounded by the obligation ceiling** (with reveal ≤ ceiling + screen-share awareness) — no PolicyEngine change. **Left the rearchitecture scope.** Subject-side "mask my sensitive notes" remains a consent-plane (Mvumo/tshepo-consent) concern, not this. |
 | **TPL-6** | 🟡 Med | Direct service routes bypass BFF header hardening (§2) | Implies edge (Envoy/OPA) is the only safe place for trust-header policy → reinforces TPL-1's fix location. |
 | **TPL-7** | 🔵 Future | Keycloak claim-mappers unused as authoritative identity (§8) | Pairs with TPL-1 (token-as-truth). |
 | — | ✅ | L5 delegation, legal-consent home, LOA propagation | Phase 4 / Phase 1 (done) / done. |
@@ -152,7 +152,9 @@ The approved 4-phase plan stands, **with two additions surfaced by this audit**:
    headers on external listeners (or move them to an `x-ext-*` namespace), (b) tshepo-authz: JWT claims
    authoritative over headers, headers honoured only from an authenticated *trusted internal caller*
    (S2S/BFF) identity.
-2. **TPL-5 (privacy-pref → obligation)** is a small, high-value add to Phase 3's obligation composition.
+2. ~~**TPL-5 (privacy-pref → obligation)**~~ **RULED out of authz scope (2026-06-26)** — it is a self-display
+   preference, enforced as a BFF/UI default-mask bounded by the obligation ceiling, never a PDP clamp (which
+   would break care). No PolicyEngine change. See the TPL-5 register row.
 
 Everything else (Phase 1 done; Phase 2 coherence; Phase 3 OPA; Phase 4 L5) is unchanged and consistent with
 the verified landscape.
