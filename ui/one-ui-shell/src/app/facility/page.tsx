@@ -6,7 +6,7 @@
  */
 
 import { useSearchParams } from "next/navigation";
-import { BarChart3, Receipt, Shield } from "lucide-react";
+import { BarChart3, Building2, Receipt, Shield } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { NompiloHint } from "@/components/intelligent/NompiloHint";
 import { WorkplaceSelectionHub } from "@/components/home/WorkplaceSelectionHub";
@@ -16,6 +16,28 @@ import { useFacilities, type FacilityResource } from "@/hooks/queries/useFacilit
 import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
 import { resolvePostFacilitySelectionPath } from "@/lib/resolve-post-login-destination";
 import { matchRouteDefinition } from "@/lib/routes";
+
+/**
+ * Facility Mode ENTER trigger (L3 owns the entry; L2 owns the cockpit).
+ *
+ * Selecting a facility flips the derived ShellMode to `facility_mode`
+ * (identity-context derives it once a facility + affiliation is present) and,
+ * for facility-mode-eligible actors, routes into L2's facility cockpit at
+ * `/facility/{id}`. T1 only triggers entry + routes; it never builds the
+ * cockpit, setup wizard, or any `facility/[id]/**` destination. Authorization
+ * to enter (FACILITY-MODE-ENTER) is specced to track P and enforced at the
+ * ext_authz gate.
+ */
+function buildFacilityContext(facilityResource: FacilityResource) {
+  return {
+    id: facilityResource.id,
+    name: facilityResource.attributes.name,
+    code: facilityResource.attributes.code,
+    facilityType: facilityResource.attributes.facilityType,
+    capabilities: facilityResource.attributes.capabilities ?? [],
+    operatingModel: facilityResource.attributes.operatingModel,
+  };
+}
 
 export default function FacilityPage() {
   const { hasRole } = useAuthStore();
@@ -27,22 +49,26 @@ export default function FacilityPage() {
   const facilities = data?.data ?? [];
   const pendingRoute = returnTo ? matchRouteDefinition(returnTo) : null;
 
+  // Actors who operate a facility as a place enter Facility Mode rather than a
+  // single clinical workspace. Clinical workers continue into their workspace.
+  const facilityModeEligible =
+    hasRole("SYSTEM_ADMIN") ||
+    hasRole("FACILITY_ADMIN") ||
+    hasRole("FACILITY_WORKFORCE_MANAGER") ||
+    hasRole("FACILITY_MANAGER");
+
   function handleSelect(facilityResource: FacilityResource) {
-    selectFacility(
-      {
-        id: facilityResource.id,
-        name: facilityResource.attributes.name,
-        code: facilityResource.attributes.code,
-        facilityType: facilityResource.attributes.facilityType,
-        capabilities: facilityResource.attributes.capabilities ?? [],
-        operatingModel: facilityResource.attributes.operatingModel,
-      },
-      {
-        mode: "clinical",
-        nextPath: resolvePostFacilitySelectionPath(returnTo),
-      }
-    );
+    // When entering Facility Mode, route into L2's cockpit (/facility/{id});
+    // otherwise resolve the normal post-selection destination.
+    const nextPath = facilityModeEligible && !returnTo
+      ? `/facility/${facilityResource.id}`
+      : resolvePostFacilitySelectionPath(returnTo);
+    selectFacility(buildFacilityContext(facilityResource), {
+      mode: "clinical",
+      nextPath,
+    });
   }
+
 
   return (
     <AppLayout>
@@ -64,6 +90,14 @@ export default function FacilityPage() {
           title="Workplace Selection Hub"
           subtitle="Lovable-style inline facility cards keep the selection flow in one place while preserving the existing auth and router guard sequence."
           modeActions={[
+            ...(facilityModeEligible && facility
+              ? [{
+                  label: "Enter Facility Mode",
+                  description: "Open the facility cockpit for the selected facility.",
+                  icon: Building2,
+                  onClick: () => enterMode("clinical", `/facility/${facility.id}`),
+                }]
+              : []),
             ...(hasRole("SYSTEM_ADMIN") || hasRole("FACILITY_ADMIN") || hasRole("DEVELOPER")
               ? [{
                   label: "Administration",
