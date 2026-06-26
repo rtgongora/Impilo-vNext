@@ -37,10 +37,20 @@ public class ResolutionController {
      * constant-time floor on hit and miss alike, so existence cannot be probed.
      * {@code PROVIDER_ID}/{@code COUNCIL_NUMBER} resolve a profile but never
      * authenticate ({@code canAuthenticate=false}).</p>
+     *
+     * <p>The tenant scope is taken from the trusted {@code X-Tenant-ID} header
+     * (Envoy/ext_authz-injected), never solely from the caller-supplied body. A
+     * request whose body {@code tenantId} disagrees with the trusted header is
+     * rejected, so a caller cannot resolve identifiers in a tenant they are not
+     * scoped to.</p>
      */
     @PostMapping("/resolve-identifier")
     public ResponseEntity<ApiResponse<IdentifierResolveResponse>> resolveIdentifier(
-            @Valid @RequestBody IdentifierResolveRequest request) {
+            @Valid @RequestBody IdentifierResolveRequest request,
+            @RequestHeader("x-tenant-id") UUID trustedTenantId) {
+        if (!trustedTenantId.equals(request.tenantId())) {
+            throw new IllegalArgumentException("tenantId does not match the request trust context");
+        }
         IdentifierResolveResponse result = silentResolutionService.resolve(request);
         return ResponseEntity.ok(ApiResponse.ok(result, null));
     }
