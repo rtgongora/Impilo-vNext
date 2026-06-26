@@ -134,7 +134,7 @@ public class ServiceClientConfig {
             String iotIngestionBaseUrl,
             /** rtc-gateway-service — LiveKit/WebRTC session transport (port 8195). */
             String rtcGatewayBaseUrl,
-            /** Rito — quality, safety & client voice (port 8390). */
+            /** Rito — quality, safety & client voice (port 8391). */
             String ritoBaseUrl
     ) {
         public ServiceEndpoints {
@@ -210,7 +210,7 @@ public class ServiceClientConfig {
             if (analyticsPipelineBaseUrl == null) analyticsPipelineBaseUrl = "http://localhost:8365";
             if (iotIngestionBaseUrl == null) iotIngestionBaseUrl = "http://localhost:8330";
             if (rtcGatewayBaseUrl == null) rtcGatewayBaseUrl = "http://localhost:8195";
-            if (ritoBaseUrl == null) ritoBaseUrl = "http://localhost:8390";
+            if (ritoBaseUrl == null) ritoBaseUrl = "http://localhost:8391";
         }
     }
 

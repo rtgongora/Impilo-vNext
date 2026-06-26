@@ -10,7 +10,7 @@ quality + client-voice + clinical-service-safety + assurance + accountable-impro
 truth and runs the full operating cycle **Listen → Classify → Triage → Assign → Investigate →
 Act → Verify → Close → Learn → Improve**. Delivered end-to-end:
 
-- **Backend** `rito-quality-safety-service` (port **8390**, schema `rito`, 21 `rit_*` tables + outbox).
+- **Backend** `rito-quality-safety-service` (port **8391**, schema `rito`, 21 `rit_*` tables + outbox).
 - **BFF** `RitoController` + `RitoPersonaController` with the full case/safety/signal/audit/CAPA/QI/
   survey/dashboard surface and persona entry points.
 - **Web** 13 real, BFF-backed pages with honest loading/error/empty states.
@@ -66,7 +66,7 @@ inference (`/rito`, `/my-life/feedback`, `/work/{facility,above-site}/rito`) and
 ## 5. BFF
 
 `RitoServiceClient` + `RitoController` (`/internal/v1/rito/**`) and `RitoPersonaController`
-(`/internal/v1/{nompilo,mobile,work,facility,above-site}/rito/**`). Registered `ritoBaseUrl` (8390)
+(`/internal/v1/{nompilo,mobile,work,facility,above-site}/rito/**`). Registered `ritoBaseUrl` (8391)
 in `ServiceEndpoints` + `impilo.services`. Trust context (incl. Idempotency-Key) forwarded downstream.
 
 ## 6. Frontend (web)

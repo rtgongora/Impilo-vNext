@@ -2054,7 +2054,7 @@ services:
     sovereign: false
     sovereign_group: null
     primary_protocol: rest
-    default_http_port: 8390
+    default_http_port: 8391
     product_names:
       - Rito
     owner_team: TBD

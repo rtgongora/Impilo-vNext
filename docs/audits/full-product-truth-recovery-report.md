@@ -1,6 +1,6 @@
 # Full Product Truth Recovery Report
 
-> Generated: 2026-06-26T10:23:25.528Z
+> Generated: 2026-06-26T10:29:47.534Z
 > Branch: `intake/rito-quality-safety`
 
 ## Executive summary

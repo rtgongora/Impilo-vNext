@@ -3,7 +3,7 @@ info:
   title: Rito — Quality, Safety & Client Voice API
   version: 1.0.0
   description: >
-    Internal API for rito-quality-safety-service (port 8390). Owns client-voice cases
+    Internal API for rito-quality-safety-service (port 8391). Owns client-voice cases
     (complaints/compliments/suggestions/surveys), clinical-service safety incidents &
     near-misses, internal quality audits & supportive supervision, corrective/preventive
     actions (CAPA), QI/PDSA plans, and accountable-improvement closure with learning loops.
@@ -11,7 +11,7 @@ info:
     statutory regulatory inspection (tuso/indawo) — those are linked by id reference only.
     All endpoints require the v1.1 trust headers; writes require an Idempotency-Key.
 servers:
-  - url: http://localhost:8390
+  - url: http://localhost:8391
     description: Local dev
 tags:
   - name: cases
