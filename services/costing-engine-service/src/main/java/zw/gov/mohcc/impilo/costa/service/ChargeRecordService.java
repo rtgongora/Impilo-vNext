@@ -9,12 +9,17 @@ import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.costa.api.dto.CreateChargeRecordRequest;
 import zw.gov.mohcc.impilo.costa.domain.entity.ChargeRecordEntity;
 import zw.gov.mohcc.impilo.costa.domain.entity.EventOutboxEntity;
+import zw.gov.mohcc.impilo.costa.domain.enums.CostMethodType;
 import zw.gov.mohcc.impilo.costa.domain.repository.ChargeRecordRepository;
 import zw.gov.mohcc.impilo.costa.domain.repository.EventOutboxRepository;
+import zw.gov.mohcc.impilo.costa.engine.CostEngine;
+import zw.gov.mohcc.impilo.costa.engine.CostEngineRegistry;
+import zw.gov.mohcc.impilo.costa.engine.CostResult;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
 import java.math.BigDecimal;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -26,15 +31,21 @@ public class ChargeRecordService {
     public static final String SOURCE_MSIKA_FLOW_ORDER_PRICED = "MSIKA_FLOW_ORDER_PRICED";
     public static final String SOURCE_TELECONSULT_COMPLETED = "TELECONSULT_COMPLETED";
 
+    /** Tariff code used for teleconsult charges when no specialty-specific tariff is configured. */
+    public static final String TELECONSULT_TARIFF_CODE = "TELECONSULT";
+
     private final ChargeRecordRepository chargeRecordRepository;
     private final EventOutboxRepository outboxRepository;
+    private final CostEngineRegistry costEngineRegistry;
     private final ObjectMapper objectMapper;
 
     public ChargeRecordService(ChargeRecordRepository chargeRecordRepository,
                                EventOutboxRepository outboxRepository,
+                               CostEngineRegistry costEngineRegistry,
                                ObjectMapper objectMapper) {
         this.chargeRecordRepository = chargeRecordRepository;
         this.outboxRepository = outboxRepository;
+        this.costEngineRegistry = costEngineRegistry;
         this.objectMapper = objectMapper;
     }
 
@@ -134,8 +145,12 @@ public class ChargeRecordService {
     /**
      * Idempotent teleconsult charge from PCT {@code TELECONSULT_COMPLETED} /
      * Kafka {@code clinical.teleconsult.value}. The L1 (clinical) value-trigger carries no
-     * price, so the charge is recorded {@code OPEN} with a placeholder amount pending tariff
-     * pricing; the {@code CHARGE_CREATED} event signals the downstream pricing pipeline.
+     * price, so COSTA — as the costing authority — resolves the applicable teleconsult tariff
+     * at ingest via the TARIFF cost engine (specialty-specific code first, then the generic
+     * {@link #TELECONSULT_TARIFF_CODE}), records the resulting amount and full tariff trace,
+     * and emits {@code CHARGE_CREATED}. If no teleconsult tariff is configured for the tenant,
+     * the charge is recorded {@code OPEN} with a zero amount and {@code pendingPricing=true} so
+     * the gap is visible rather than silently dropped.
      */
     @Transactional
     public ChargeRecordEntity ingestTeleconsultCompleted(JsonNode event) {
@@ -160,6 +175,12 @@ public class ChargeRecordService {
             facilityId = UUID.fromString(fid);
         }
 
+        // Resolve the teleconsult tariff via the cost engine (tenant/facility are parameters,
+        // so this works off the request thread, e.g. inside the Kafka consumer).
+        CostResult priced = resolveTeleconsultTariff(tenantId, facilityId, specialty);
+        BigDecimal amount = priced.totalCost() != null ? priced.totalCost() : BigDecimal.ZERO;
+        boolean pendingPricing = amount.signum() <= 0;
+
         ChargeRecordEntity e = new ChargeRecordEntity();
         e.setChargeId(UlidGenerator.generate());
         e.setTenantId(tenantId);
@@ -172,26 +193,53 @@ public class ChargeRecordService {
         e.setFacilityId(facilityId);
         e.setServiceRef(encounterId);
         e.setOfferingRef(referralId);
-        // No price on the value-trigger; record OPEN with a placeholder pending tariff pricing.
-        e.setChargeAmount(BigDecimal.ZERO);
+        e.setChargeAmount(amount);
         e.setCurrency("USD");
         e.setChargeStatus("OPEN");
         e.setBillableFlag(true);
         try {
             Map<String, Object> meta = new LinkedHashMap<>();
             meta.put("kafkaEvent", "clinical.teleconsult.value");
-            meta.put("pendingPricing", true);
+            meta.put("costMethodUsed", priced.methodUsed().name());
+            meta.put("tariffSource", priced.unitCostSource());
+            meta.put("unitPrice", priced.unitCost());
+            meta.put("pendingPricing", pendingPricing);
             if (specialty != null) meta.put("specialty", specialty);
             if (modality != null) meta.put("modality", modality);
             if (encounterId != null) meta.put("encounterId", encounterId);
+            meta.put("tariffTrace", priced.trace());
             e.setMetadataJson(objectMapper.writeValueAsString(meta));
         } catch (Exception ex) {
             e.setMetadataJson("{}");
         }
         chargeRecordRepository.save(e);
         publishChargeCreated(e);
-        log.info("Recorded COSTA teleconsult charge {} for completed referral {}", e.getChargeId(), referralId);
+        if (pendingPricing) {
+            log.warn("Recorded COSTA teleconsult charge {} for referral {} with NO tariff configured "
+                    + "(specialty={}); amount=0, pendingPricing=true", e.getChargeId(), referralId, specialty);
+        } else {
+            log.info("Recorded COSTA teleconsult charge {} for referral {}: {} via {}",
+                    e.getChargeId(), referralId, amount, priced.unitCostSource());
+        }
         return e;
+    }
+
+    /**
+     * Resolve the applicable teleconsult tariff: try a specialty-specific code
+     * ({@code TELECONSULT_<SPECIALTY>}) first, then the generic {@link #TELECONSULT_TARIFF_CODE}.
+     */
+    private CostResult resolveTeleconsultTariff(UUID tenantId, UUID facilityId, String specialty) {
+        CostEngine engine = costEngineRegistry.resolveOrDefault(CostMethodType.TARIFF, CostMethodType.TARIFF);
+        Map<String, Object> context = Map.of();
+        if (specialty != null && !specialty.isBlank()) {
+            String specialtyCode = TELECONSULT_TARIFF_CODE + "_"
+                    + specialty.trim().toUpperCase(Locale.ROOT).replace(' ', '_');
+            CostResult specialtyResult = engine.compute(tenantId, facilityId, specialtyCode, BigDecimal.ONE, context);
+            if (specialtyResult.totalCost() != null && specialtyResult.totalCost().signum() > 0) {
+                return specialtyResult;
+            }
+        }
+        return engine.compute(tenantId, facilityId, TELECONSULT_TARIFF_CODE, BigDecimal.ONE, context);
     }
 
     private void publishChargeCreated(ChargeRecordEntity e) {
