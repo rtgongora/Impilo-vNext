@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.tshepo.identity.api.dto.IdentifierResolveRequest;
 import zw.gov.mohcc.impilo.tshepo.identity.api.dto.IdentifierResolveResponse;
@@ -16,6 +17,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
@@ -26,12 +29,15 @@ class SilentIdentifierResolutionServiceTest {
     IdMappingRepository mappingRepo;
     @Mock
     RestTemplate vitoRestTemplate;
+    @Mock
+    RestTemplate varapiRestTemplate;
 
     SilentIdentifierResolutionService service;
 
     @BeforeEach
     void setUp() {
-        service = new SilentIdentifierResolutionService(mappingRepo, vitoRestTemplate, new ObjectMapper());
+        service = new SilentIdentifierResolutionService(
+                mappingRepo, vitoRestTemplate, varapiRestTemplate, new ObjectMapper());
     }
 
     @Test
@@ -76,17 +82,35 @@ class SilentIdentifierResolutionServiceTest {
     }
 
     @Test
-    void providerId_neverAuthenticates_andDoesNotResolveYet() {
+    void councilNumber_resolvesProviderAnchor_butNeverAuthenticates() {
+        UUID tenant = UUID.randomUUID();
+        UUID healthId = UUID.randomUUID();
+        UUID cpid = UUID.randomUUID();
+        String body = "{\"data\":{\"resolved\":true,\"providerRef\":{\"impiloHealthId\":\""
+                + healthId + "\",\"providerPublicId\":\"PUB-1\",\"canAuthenticate\":false}}}";
+        when(varapiRestTemplate.getForEntity(anyString(), eq(String.class)))
+                .thenReturn(ResponseEntity.ok(body));
+        IdMappingEntity mapping = new IdMappingEntity();
+        mapping.setTenantId(tenant);
+        mapping.setHealthId(healthId);
+        mapping.setCpid(cpid);
+        when(mappingRepo.findByTenantIdAndHealthId(tenant, healthId)).thenReturn(Optional.of(mapping));
+
         IdentifierResolveResponse r = service.resolve(
-                new IdentifierResolveRequest(UUID.randomUUID(), "PROVIDER_ID", "EC-12345"));
-        assertThat(r.resolved()).isFalse();
+                new IdentifierResolveRequest(tenant, "COUNCIL_NUMBER", "MDPCZ/12345"));
+
+        assertThat(r.resolved()).isTrue();
+        assertThat(r.personRef().healthId()).isEqualTo(healthId.toString());
+        // Critical invariant: a council/provider number NEVER authenticates.
         assertThat(r.canAuthenticate()).isFalse();
     }
 
     @Test
-    void councilNumber_neverAuthenticates() {
+    void providerId_unknown_deniesUniformly_andNeverAuthenticates() {
+        when(varapiRestTemplate.getForEntity(anyString(), eq(String.class)))
+                .thenReturn(ResponseEntity.ok("{\"data\":{\"resolved\":false}}"));
         IdentifierResolveResponse r = service.resolve(
-                new IdentifierResolveRequest(UUID.randomUUID(), "COUNCIL_NUMBER", "MDPCZ/12345"));
+                new IdentifierResolveRequest(UUID.randomUUID(), "PROVIDER_ID", "EC-99999"));
         assertThat(r.resolved()).isFalse();
         assertThat(r.canAuthenticate()).isFalse();
     }

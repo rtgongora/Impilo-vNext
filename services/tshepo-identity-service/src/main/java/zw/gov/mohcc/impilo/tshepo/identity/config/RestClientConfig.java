@@ -35,4 +35,14 @@ public class RestClientConfig {
                 .setReadTimeout(Duration.ofSeconds(5))
                 .build();
     }
+
+    @Bean(name = "varapiRestTemplate")
+    public RestTemplate varapiRestTemplate(RestTemplateBuilder builder,
+                                           IdentityProperties properties) {
+        return builder
+                .rootUri(properties.varapiServiceUrl())
+                .setConnectTimeout(Duration.ofSeconds(5))
+                .setReadTimeout(Duration.ofSeconds(10))
+                .build();
+    }
 }

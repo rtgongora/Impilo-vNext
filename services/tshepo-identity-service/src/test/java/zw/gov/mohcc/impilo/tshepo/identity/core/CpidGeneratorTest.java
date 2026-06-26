@@ -33,6 +33,7 @@ class CpidGeneratorTest {
                 300,
                 null,
                 null,
+                null,
                 null
         );
         generator = new CpidGenerator(properties);
@@ -127,7 +128,7 @@ class CpidGeneratorTest {
         @DisplayName("deterministic across separate generator instances with same namespace")
         void generate_acrossInstances_returnsSameCpid() {
             IdentityProperties sameProps = new IdentityProperties(
-                    TEST_NAMESPACE, 300, null, null, null);
+                    TEST_NAMESPACE, 300, null, null, null, null);
             CpidGenerator anotherGenerator = new CpidGenerator(sameProps);
 
             UUID cpid1 = generator.generateCpid(tenantA(), healthId1());
@@ -142,7 +143,7 @@ class CpidGeneratorTest {
         void generate_withDifferentNamespace_returnsDifferentCpid() {
             IdentityProperties altProps = new IdentityProperties(
                     "a1a2a3a4-b1b2-c1c2-d1d2-e1e2e3e4e5e6",
-                    300, null, null, null);
+                    300, null, null, null, null);
             CpidGenerator altGenerator = new CpidGenerator(altProps);
 
             UUID cpidDefault = generator.generateCpid(tenantA(), healthId1());

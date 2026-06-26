@@ -42,13 +42,16 @@ public class SilentIdentifierResolutionService {
 
     private final IdMappingRepository mappingRepo;
     private final RestTemplate vitoRestTemplate;
+    private final RestTemplate varapiRestTemplate;
     private final ObjectMapper objectMapper;
 
     public SilentIdentifierResolutionService(IdMappingRepository mappingRepo,
                                              @Qualifier("vitoRestTemplate") RestTemplate vitoRestTemplate,
+                                             @Qualifier("varapiRestTemplate") RestTemplate varapiRestTemplate,
                                              ObjectMapper objectMapper) {
         this.mappingRepo = mappingRepo;
         this.vitoRestTemplate = vitoRestTemplate;
+        this.varapiRestTemplate = varapiRestTemplate;
         this.objectMapper = objectMapper;
     }
 
@@ -80,13 +83,7 @@ public class SilentIdentifierResolutionService {
             case "PHONE" -> resolvePersonContact(tenantId, "phone", value);
             case "EMAIL" -> resolvePersonContact(tenantId, "email", value);
             // PROVIDER_ID / COUNCIL_NUMBER resolve a profile but never authenticate.
-            // TODO(L3): wire a Varapi client (council/EC resolver) so these resolve
-            //   the provider's person anchor; until then deny uniformly (anti-enum
-            //   preserved — same shape/timing as a real miss).
-            case "PROVIDER_ID", "COUNCIL_NUMBER" -> {
-                log.debug("provider/council resolution not yet wired — uniform deny");
-                yield IdentifierResolveResponse.notResolved();
-            }
+            case "PROVIDER_ID", "COUNCIL_NUMBER" -> resolveCouncilNumber(tenantId, value);
             // INVITE tokens are resolved by the bootstrap/self-claim flow.
             // TODO(L3 W6): resolve invite token -> pre-provisioned person anchor.
             case "INVITE" -> IdentifierResolveResponse.notResolved();
@@ -131,6 +128,54 @@ public class SilentIdentifierResolutionService {
     private IdentifierResolveResponse resolvePersonContact(UUID tenantId, String contactKind, String value) {
         log.debug("contact resolution ({}) not yet wired to VITO — uniform deny", contactKind);
         return IdentifierResolveResponse.notResolved();
+    }
+
+    /**
+     * PROVIDER_ID / COUNCIL_NUMBER: resolve a council registration number to its
+     * provider's person anchor via Varapi's council/EC resolver. The resolved
+     * person anchor is returned, but {@code canAuthenticate} is always
+     * {@code false} — a provider/council number can never be a login credential
+     * (LOGIN-PROVIDERID-DENY).
+     */
+    private IdentifierResolveResponse resolveCouncilNumber(UUID tenantId, String registrationNumber) {
+        try {
+            String url = "/v1/internal/providers/resolve-council-number?registrationNumber="
+                    + java.net.URLEncoder.encode(registrationNumber, java.nio.charset.StandardCharsets.UTF_8);
+            ResponseEntity<String> response = varapiRestTemplate.getForEntity(url, String.class);
+            if (response.getStatusCode() != HttpStatus.OK || response.getBody() == null) {
+                return IdentifierResolveResponse.notResolved();
+            }
+            JsonNode data = objectMapper.readTree(response.getBody()).path("data");
+            if (!data.path("resolved").asBoolean(false)) {
+                return IdentifierResolveResponse.notResolved();
+            }
+            JsonNode ref = data.path("providerRef");
+            String healthId = textOrNull(ref, "impiloHealthId");
+            UUID healthUuid = parseUuidOrNull(healthId);
+            if (healthUuid == null) {
+                return IdentifierResolveResponse.notResolved();
+            }
+            String cpid = mappingRepo.findByTenantIdAndHealthId(tenantId, healthUuid)
+                    .map(m -> m.getCpid() != null ? m.getCpid().toString() : null)
+                    .orElse(null);
+            // canAuthenticate is ALWAYS false for provider/council identifiers.
+            return new IdentifierResolveResponse(
+                    true,
+                    new IdentifierResolveResponse.PersonRef(healthId, cpid, false, "VERIFIED"),
+                    false);
+        } catch (Exception e) {
+            log.debug("council-number resolution failed (suppressed): {}", e.getMessage());
+            return IdentifierResolveResponse.notResolved();
+        }
+    }
+
+    private String textOrNull(JsonNode node, String field) {
+        JsonNode v = node.path(field);
+        if (v.isMissingNode() || v.isNull()) {
+            return null;
+        }
+        String s = v.asText();
+        return s == null || s.isBlank() ? null : s;
     }
 
     /** Calls VITO to resolve an Impilo-ID lookup hash to a Health ID; null on any miss/error. */
