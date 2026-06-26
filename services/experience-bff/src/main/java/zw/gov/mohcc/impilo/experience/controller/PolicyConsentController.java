@@ -394,13 +394,15 @@ public class PolicyConsentController {
                     if (grantedOnly && !"GRANTED".equals(state)) {
                         continue;
                     }
+                    // Field names match the UI contract (PolicyConsentResource.attributes).
                     Map<String, Object> attrs = new LinkedHashMap<>();
                     attrs.put("policyType", row.path("documentType").asText(null));
-                    attrs.put("version", row.path("version").asText(null));
+                    attrs.put("policyVersion", row.path("version").asText(null));
+                    attrs.put("accepted", "GRANTED".equals(state));
                     attrs.put("state", state);
                     attrs.put("channel", row.path("channel").asText(null));
                     attrs.put("acceptedAt", row.path("acceptedAt").asText(null));
-                    attrs.put("withdrawnAt", row.path("withdrawnAt").asText(null));
+                    attrs.put("revokedAt", row.path("withdrawnAt").asText(null));
                     Map<String, Object> item = new LinkedHashMap<>();
                     item.put("id", row.path("id").asText(null));
                     item.put("type", "policy_consent");
