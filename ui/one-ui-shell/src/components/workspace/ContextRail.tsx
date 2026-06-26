@@ -2,6 +2,10 @@
 
 import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import {
+  useWorkContext,
+  type WorkContextAssignment,
+} from "@/hooks/queries/useWorkContext";
 
 /**
  * Extended WHERE/WHAT context dimensions, sourced from the C2 work-context
@@ -15,6 +19,7 @@ export interface ContextRailWhere {
   unitLabel?: string; // ward / service-point
   servicePointLabel?: string;
   virtualPoolLabel?: string;
+  roleLabel?: string;
   scope?: string; // FACILITY | DEPARTMENT | WARD | SERVICE_POINT | VIRTUAL_POOL | ABOVE_SITE
 }
 
@@ -27,6 +32,41 @@ const SCOPE_LABELS: Record<string, string> = {
   ABOVE_SITE: "Above-site",
 };
 
+/**
+ * Pick the assignment that backs the currently-entered facility, falling back
+ * to the sole assignment. Returns null when the picker still needs the user to
+ * choose (>1 candidate and none match the facility) — we then surface only what
+ * the experience-entry context already resolved, never a guessed dimension.
+ */
+export function activeAssignment(
+  assignments: WorkContextAssignment[],
+  facilityId: string | null,
+): WorkContextAssignment | null {
+  if (assignments.length === 0) return null;
+  if (facilityId) {
+    const match = assignments.find((a) => a.facilityId === facilityId);
+    if (match) return match;
+  }
+  return assignments.length === 1 ? assignments[0] : null;
+}
+
+/**
+ * Derive the WHERE dimensions from a resolved C2 assignment. The read-model
+ * carries identifiers, not display names; until a label-resolution read-model
+ * exists we surface the identifier as an honest fallback rather than inventing
+ * a name (CONTEXT-SELECT policy specced to track P).
+ */
+export function whereFromAssignment(a: WorkContextAssignment): ContextRailWhere {
+  return {
+    scope: a.scope,
+    departmentLabel: a.departmentId ?? undefined,
+    unitLabel: a.unitId ?? undefined,
+    servicePointLabel: a.workspaceId ?? undefined,
+    virtualPoolLabel: a.programmeId ?? undefined,
+    roleLabel: a.roleTemplateId ?? undefined,
+  };
+}
+
 export function ContextRail(props: {
   patientLabel?: string;
   encounterLabel?: string;
@@ -35,10 +75,20 @@ export function ContextRail(props: {
 }) {
   const { facility, workspace, shiftActive } = useExperienceEntry();
   const user = useAuthStore((s) => s.user);
-  const where = props.where;
+  const { workContext } = useWorkContext();
+
+  // Explicit prop wins; otherwise derive from the C2 active assignment so every
+  // PlaneWorkspaceShell consumer reflects the full WHERE granularity, not just
+  // facility + workspace, without each call site re-plumbing the dimensions.
+  const derived = (() => {
+    const a = activeAssignment(workContext.activeAssignments, facility?.id ?? null);
+    return a ? whereFromAssignment(a) : undefined;
+  })();
+  const where = props.where ?? derived;
 
   const rows: { label: string; value: string }[] = [];
   if (user?.displayName) rows.push({ label: "Actor", value: user.displayName });
+  if (where?.roleLabel) rows.push({ label: "Role", value: where.roleLabel });
   if (facility?.name) rows.push({ label: "Facility", value: facility.name });
   if (where?.scope && SCOPE_LABELS[where.scope]) {
     rows.push({ label: "Scope", value: SCOPE_LABELS[where.scope] });
