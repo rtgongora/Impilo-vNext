@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { PublicAccessibilityMenu } from "./PublicAccessibilityMenu";
 
 /**
  * Public L0 shell — the chrome for unauthenticated, pre-account pages (welcome,
@@ -20,6 +21,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
             <span className="hidden text-sm font-normal text-slate-500 sm:inline">Health Operating System</span>
           </Link>
           <nav className="flex items-center gap-2 text-sm">
+            <PublicAccessibilityMenu />
             <Link
               href="/auth/login"
               className="rounded-md px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-100"

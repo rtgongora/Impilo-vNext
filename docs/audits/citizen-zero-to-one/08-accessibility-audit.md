@@ -7,7 +7,7 @@ WITHOUT an insecure workaround.
 
 | Capability | Status | Evidence | Gap ID |
 |------------|--------|----------|--------|
-| High-contrast theme | ⚠️ in code, not exposed | contrast/`*-soft`/`*-foreground` tokens used across components; no user toggle surfaced | G-CZO-08 |
+| High-contrast theme | ✅ **exposed (authed) + now public** | CORRECTION (probe): `useAccessibilityPreferences` toggle is mounted via `ShellAccessibilityMenu` in `ShellTaskbar:283` for authed users; Slice 6 added `PublicAccessibilityMenu` for guests too | G-CZO-08 (fixed) |
 | Larger text / font scaling | ⚠️ partial | data-governance `display-settings` (theme/font/density) persisted (`PrivacyRightsController:142-148`) but no citizen-facing control wired | G-CZO-08 |
 | Screen-reader / ARIA | ⚠️ partial | some semantic markup; not audited end-to-end; forms lack consistent labels/roles | G-CZO-08 |
 | Keyboard navigation | ⚠️ unverified | Radix primitives give baseline focus management; custom flows (QR, step-up token inputs) unverified | G-CZO-08 |
