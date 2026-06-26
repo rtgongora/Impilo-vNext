@@ -21,7 +21,9 @@ import zw.gov.mohcc.impilo.coverage.domain.CoveragePlanEntity;
 import zw.gov.mohcc.impilo.coverage.domain.MemberCoverageEntity;
 import zw.gov.mohcc.impilo.coverage.repository.CoveragePlanRepository;
 import zw.gov.mohcc.impilo.coverage.repository.MemberCoverageRepository;
+import zw.gov.mohcc.impilo.coverage.repository.SubsidyEnrollmentRepository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -42,13 +44,16 @@ public class CoveragePlanController {
 
     private final CoveragePlanRepository planRepository;
     private final MemberCoverageRepository memberCoverageRepository;
+    private final SubsidyEnrollmentRepository subsidyEnrollmentRepository;
     private final CoverageEventService eventService;
 
     public CoveragePlanController(CoveragePlanRepository planRepository,
                                   MemberCoverageRepository memberCoverageRepository,
+                                  SubsidyEnrollmentRepository subsidyEnrollmentRepository,
                                   CoverageEventService eventService) {
         this.planRepository = planRepository;
         this.memberCoverageRepository = memberCoverageRepository;
+        this.subsidyEnrollmentRepository = subsidyEnrollmentRepository;
         this.eventService = eventService;
     }
 
@@ -63,16 +68,37 @@ public class CoveragePlanController {
     }
 
     /**
-     * Resolve a patient's billing category from their active coverage, for downstream costing
-     * (COSTA charging rules). The active member coverage's plan type is the category; absent any
-     * active coverage the patient is treated as self-pay ({@code CASH}). This keeps the billing
-     * classification owned by coverage-service rather than inferred in the composition layer.
+     * Resolve a patient's billing category for downstream costing (COSTA charging rules), in
+     * precedence order:
+     * <ol>
+     *   <li>an active subsidy enrolment's exemption category (e.g. INDIGENT, ELDERLY) — exemptions
+     *       win, so waivers apply;</li>
+     *   <li>otherwise the active coverage plan type (e.g. PRIVATE, PUBLIC);</li>
+     *   <li>otherwise self-pay ({@code CASH}).</li>
+     * </ol>
+     * Keeps the billing classification owned by coverage-service rather than inferred in the
+     * composition layer.
      */
     @GetMapping("/patient-category/{clientId}")
     public ResponseEntity<PatientBillingCategoryResponse> resolvePatientCategory(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @PathVariable String clientId) {
         UUID tid = UUID.fromString(tenantId);
+        LocalDate today = LocalDate.now();
+
+        // 1) Active subsidy enrolment takes precedence — its exemption category drives waivers.
+        var enrolment = subsidyEnrollmentRepository
+                .findByTenantIdAndClientIdAndStatusOrderByCreatedAtDesc(tid, clientId, "ACTIVE")
+                .stream()
+                .filter(e -> !e.getEffectiveFrom().isAfter(today)
+                        && (e.getEffectiveTo() == null || !e.getEffectiveTo().isBefore(today)))
+                .findFirst();
+        if (enrolment.isPresent()) {
+            return ResponseEntity.ok(new PatientBillingCategoryResponse(
+                    clientId, enrolment.get().getExemptionCategory(), "SUBSIDY_ENROLLMENT", null));
+        }
+
+        // 2) Otherwise the active coverage plan type; 3) otherwise self-pay.
         return memberCoverageRepository
                 .findByTenantIdAndClientIdAndStatus(tid, clientId, "ACTIVE")
                 .stream()
