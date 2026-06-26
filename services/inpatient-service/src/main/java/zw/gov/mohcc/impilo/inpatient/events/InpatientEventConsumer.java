@@ -36,6 +36,78 @@ public class InpatientEventConsumer {
         this.admissionService = admissionService;
     }
 
+    /**
+     * Consume PCT admission events. The PCT&lt;-&gt;inpatient handshake: on {@code ADMISSION_APPROVED}, PCT has
+     * approved the admission DECISION; inpatient-service materialises the physical CENSUS admission (bed/ward)
+     * and echoes a bed-assignment back (which PCT stamps via {@code linkInpatientAdmission}). PCT owns the
+     * decision; inpatient owns the census — no field is duplicated as a second source-of-truth.
+     */
+    @KafkaListener(
+            topics = {"pct.admission.updated"},
+            groupId = "inpatient-service"
+    )
+    public void consumePctAdmission(String message) {
+        try {
+            JsonNode root = objectMapper.readTree(message);
+            String eventType = firstNonBlank(text(root, "event_type"), text(root, "eventType"));
+            if (!"ADMISSION_APPROVED".equals(eventType)) {
+                // ADMISSION_REQUESTED / PATIENT_ADMITTED are PCT-internal lifecycle markers; only the approval
+                // hands a census admission to inpatient. Ignore the rest (idempotent, no-op).
+                return;
+            }
+
+            JsonNode payload = extractPayload(root);
+            if (payload == null || payload.isNull() || isConsentDenied(payload)) {
+                return;
+            }
+
+            String pctAdmissionId = text(payload, "admissionId");
+            String tenantId = firstNonBlank(text(root, "tenant_id"), text(payload, "tenantId"), text(payload, "tenant_id"));
+            String subjectCpid = firstNonBlank(text(payload, "subjectCpid"), text(payload, "patientCpid"),
+                    text(payload, "patient_cpid"));
+            String facilityId = firstNonBlank(text(payload, "facilityId"), text(payload, "facility_id"));
+            if (pctAdmissionId == null || tenantId == null || subjectCpid == null || facilityId == null) {
+                log.warn("INPATIENT: ADMISSION_APPROVED missing required fields "
+                        + "(admissionId/tenant/subject/facility), skipping");
+                return;
+            }
+
+            UUID encounterId = parseUuid(text(payload, "encounterId"));
+            UUID wardId = parseUuid(text(payload, "wardId"));
+            UUID bedId = parseUuid(text(payload, "bedId"));
+            String admittingDiagnosis = text(payload, "admittingDiagnosis");
+            String admissionType = text(payload, "admissionType");
+
+            admissionService.admitFromPctApproval(
+                    UUID.fromString(pctAdmissionId.trim()),
+                    UUID.fromString(tenantId.trim()),
+                    UUID.fromString(facilityId.trim()),
+                    subjectCpid,
+                    encounterId,
+                    wardId,
+                    bedId,
+                    admittingDiagnosis,
+                    admissionType);
+            log.info("INPATIENT: materialised census admission for PCT admission {} (subject={})",
+                    pctAdmissionId, subjectCpid);
+        } catch (JsonProcessingException e) {
+            log.error("INPATIENT: failed to parse PCT admission event: {}", e.getMessage(), e);
+        } catch (RuntimeException e) {
+            log.error("INPATIENT: error handling PCT admission event: {}", e.getMessage(), e);
+        }
+    }
+
+    private static UUID parseUuid(String v) {
+        if (v == null || v.isBlank()) {
+            return null;
+        }
+        try {
+            return UUID.fromString(v.trim());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
     @KafkaListener(
             topics = {"pct.journey", "impilo.pct.journey", "pct.journey.state_changed"},
             groupId = "inpatient-service"

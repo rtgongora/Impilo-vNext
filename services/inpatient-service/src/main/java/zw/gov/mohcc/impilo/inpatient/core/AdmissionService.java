@@ -193,6 +193,61 @@ public class AdmissionService {
         return admission;
     }
 
+    /**
+     * Create a census admission in response to a PCT {@code ADMISSION_APPROVED} event (the second half of the
+     * PCT&lt;-&gt;inpatient admission handshake).
+     *
+     * <p>PCT owns the admission DECISION (request/approve); inpatient-service owns the physical CENSUS
+     * (ward/bed, bed-day accrual). This method materialises the census record, assigns the bed PCT proposed
+     * (idempotent on {@code pctAdmissionId}), and emits {@code inpatient.admission.bed_assigned} carrying the
+     * PCT admission id so PCT can stamp the {@code inpatient_admission_ref} back.</p>
+     *
+     * @return the census admission (existing one if already materialised for this PCT admission)
+     */
+    @Transactional
+    public AdmissionEntity admitFromPctApproval(UUID pctAdmissionId, UUID tenantId, UUID facilityId,
+                                                String subjectCpid, UUID encounterId, UUID wardId, UUID bedId,
+                                                String admittingDiagnosis, String admissionType) {
+        // Idempotency: if a census admission already references this PCT admission, return it (no double-admit).
+        List<AdmissionEntity> existing = admissionRepository.findBySubjectCpidAndFacilityIdAndStatus(
+                subjectCpid, facilityId, "ADMITTED");
+        for (AdmissionEntity a : existing) {
+            if (pctAdmissionId.equals(a.getPctAdmissionId())) {
+                log.info("Census admission already exists for PCT admission {} (admissionRef={})",
+                        pctAdmissionId, a.getAdmissionRef());
+                return a;
+            }
+        }
+
+        AdmissionEntity admission = new AdmissionEntity();
+        admission.setAdmissionRef(UUID.randomUUID());
+        admission.setPctAdmissionId(pctAdmissionId);
+        admission.setTenantId(tenantId);
+        // inpatient requires a non-null encounter ref; derive a deterministic one from the PCT admission id
+        // when PCT did not supply an encounter (the link, not clinical data, is what matters here).
+        admission.setEncounterId(encounterId != null ? encounterId
+                : UUID.nameUUIDFromBytes(("pct-admission:" + pctAdmissionId).getBytes()));
+        admission.setSubjectCpid(subjectCpid);
+        admission.setFacilityId(facilityId);
+        admission.setWardId(wardId);
+        admission.setBedId(bedId);
+        admission.setAdmittingDiagnosis(admittingDiagnosis);
+        admission.setAdmissionType(admissionType != null ? admissionType : "EMERGENCY");
+        admission.setStatus("ADMITTED");
+        admission.setAdmittedAt(OffsetDateTime.now());
+        admission.setCreatedAt(OffsetDateTime.now());
+        admission = admissionRepository.save(admission);
+
+        Map<String, Object> payload = buildStandardPayload(admission);
+        payload.put("pct_admission_id", pctAdmissionId.toString());
+        appendOutboxEvent("ADMISSION", admission.getAdmissionRef().toString(),
+                "inpatient.admission.bed_assigned", admission.getTenantId(), payload);
+
+        log.info("Census admission created from PCT approval: admissionRef={}, pctAdmissionId={}, ward={}, bed={}",
+                admission.getAdmissionRef(), pctAdmissionId, wardId, bedId);
+        return admission;
+    }
+
     private Map<String, Object> buildStandardPayload(AdmissionEntity admission) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("patient_cpid", admission.getSubjectCpid());

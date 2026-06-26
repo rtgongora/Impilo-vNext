@@ -81,6 +81,19 @@ public class AdmissionWorkflow {
      */
     @Transactional
     public AdmissionEntity requestAdmission(String journeyId, UUID wardId, UUID bedId) {
+        return requestAdmission(journeyId, wardId, bedId, null, null, null);
+    }
+
+    /**
+     * Request admission, capturing the clinical context handed to inpatient-service on approval.
+     *
+     * @param encounterId        encounter ref handed to inpatient as the census parent key; may be {@code null}
+     * @param admittingDiagnosis clinical context; may be {@code null}
+     * @param admissionType      ELECTIVE | EMERGENCY | TRANSFER; may be {@code null}
+     */
+    @Transactional
+    public AdmissionEntity requestAdmission(String journeyId, UUID wardId, UUID bedId,
+                                            UUID encounterId, String admittingDiagnosis, String admissionType) {
         TrustContext ctx = TrustContextHolder.require();
 
         JourneyEntity journey = journeyRepository.findByJourneyId(journeyId)
@@ -94,6 +107,9 @@ public class AdmissionWorkflow {
         admission.setPatientCpid(journey.getPatientCpid());
         admission.setWardId(wardId);
         admission.setBedId(bedId);
+        admission.setEncounterId(encounterId);
+        admission.setAdmittingDiagnosis(admittingDiagnosis);
+        admission.setAdmissionType(admissionType);
         admission.setStatus("REQUESTED");
         admission.setRequestedBy(ctx.actorId());
         admission.setCreatedAt(OffsetDateTime.now());
@@ -147,8 +163,63 @@ public class AdmissionWorkflow {
 
         admission = admissionRepository.save(admission);
 
-        log.info("Admission approved: id={}, journey={}", admissionId, admission.getJourneyId());
+        // PCT<->inpatient handshake: PCT owns the admission DECISION; inpatient-service owns the physical
+        // census (bed/ward, bed-day accrual). On approval, hand the clinical context to inpatient so it can
+        // create the census admission and assign a bed. inpatient echoes back with the admission_ref + bed,
+        // which PCT stamps via linkInpatientAdmission(). Field ownership is documented in V018.
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("admissionId", admission.getId().toString());
+        payload.put("journeyId", admission.getJourneyId());
+        payload.put("patientCpid", admission.getPatientCpid());
+        payload.put("subjectCpid", admission.getPatientCpid());
+        payload.put("facilityId", admission.getFacilityId() != null ? admission.getFacilityId().toString() : null);
+        payload.put("encounterId", admission.getEncounterId() != null ? admission.getEncounterId().toString() : null);
+        payload.put("wardId", admission.getWardId() != null ? admission.getWardId().toString() : null);
+        payload.put("bedId", admission.getBedId() != null ? admission.getBedId().toString() : null);
+        payload.put("admittingDiagnosis", admission.getAdmittingDiagnosis());
+        payload.put("admissionType", admission.getAdmissionType());
+        payload.put("approvedBy", ctx.actorId());
+        writeOutbox("ADMISSION", admission.getId().toString(), "ADMISSION_APPROVED", toJson(payload));
 
+        log.info("Admission approved: id={}, journey={} — handed to inpatient for bed assignment",
+                admissionId, admission.getJourneyId());
+
+        return admission;
+    }
+
+    /**
+     * Stamp the inpatient-service admission reference and assigned bed back onto the PCT admission.
+     *
+     * <p>Called when inpatient-service echoes its bed-assignment event after creating the census admission
+     * (the second half of the PCT&lt;-&gt;inpatient handshake). PCT remains the SoR for the admission decision;
+     * inpatient remains the SoR for the bed/ward census. This records the cross-service link only.</p>
+     *
+     * @param admissionId        the PCT admission
+     * @param inpatientRef       inpatient-service admission_ref
+     * @param wardId             ward inpatient assigned (may be {@code null})
+     * @param bedId              bed inpatient assigned (may be {@code null})
+     * @return the updated PCT admission, or {@code null} if no matching admission exists
+     */
+    @Transactional
+    public AdmissionEntity linkInpatientAdmission(UUID admissionId, UUID inpatientRef, UUID wardId, UUID bedId) {
+        Optional<AdmissionEntity> found = admissionRepository.findById(admissionId);
+        if (found.isEmpty()) {
+            log.warn("PCT admission {} not found for inpatient link (inpatientRef={})", admissionId, inpatientRef);
+            return null;
+        }
+        AdmissionEntity admission = found.get();
+        admission.setInpatientAdmissionRef(inpatientRef);
+        if (wardId != null) {
+            admission.setWardId(wardId);
+        }
+        if (bedId != null) {
+            admission.setBedId(bedId);
+        }
+        admission.setBedAssignedAt(OffsetDateTime.now());
+        admission.setUpdatedAt(OffsetDateTime.now());
+        admission = admissionRepository.save(admission);
+        log.info("PCT admission {} linked to inpatient admission_ref {} (ward={}, bed={})",
+                admissionId, inpatientRef, wardId, bedId);
         return admission;
     }
 

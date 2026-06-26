@@ -156,7 +156,7 @@ public class OutboxPublisher {
             case "ENCOUNTER_COMPLETED" -> "pct.encounter.completed";
 
             case "ADMISSION_CREATED", "ADMISSION_UPDATED",
-                 "ADMISSION_REQUESTED", "PATIENT_ADMITTED" -> "pct.admission.updated";
+                 "ADMISSION_REQUESTED", "ADMISSION_APPROVED", "PATIENT_ADMITTED" -> "pct.admission.updated";
 
             case "DISCHARGE_INITIATED", "DISCHARGE_STARTED" -> "pct.discharge.started";
             case "DISCHARGE_COMPLETED" -> "pct.discharge.completed";
