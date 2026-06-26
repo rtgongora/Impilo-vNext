@@ -16,8 +16,9 @@ import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.companion.context.RequestContext;
 import zw.gov.mohcc.impilo.companion.context.RequestContextHolder;
 import zw.gov.mohcc.impilo.learning.fundo.FundoLearningProviderService;
+import zw.gov.mohcc.impilo.learning.fundo.FundoSpaceAdminService;
 
-/** Learning-provider & academy registry (C1; 3 regulated provider kinds). */
+/** Learning-provider & academy registry (C1) + delegated space administration (C3). */
 @RestController
 @RequestMapping("/internal/v1/learning/v11")
 public class FundoLearningProviderController {
@@ -25,9 +26,11 @@ public class FundoLearningProviderController {
     private static final UUID DEFAULT_TENANT = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
     private final FundoLearningProviderService service;
+    private final FundoSpaceAdminService spaceAdminService;
 
-    public FundoLearningProviderController(FundoLearningProviderService service) {
+    public FundoLearningProviderController(FundoLearningProviderService service, FundoSpaceAdminService spaceAdminService) {
         this.service = service;
+        this.spaceAdminService = spaceAdminService;
     }
 
     @PostMapping("/providers")
@@ -56,6 +59,27 @@ public class FundoLearningProviderController {
     @GetMapping("/providers/{providerId}/spaces")
     public ResponseEntity<Map<String, Object>> listSpaces(@PathVariable String providerId) {
         return ok(service.listSpaces(tenantId(), providerId));
+    }
+
+    // ---- C3: delegated space administration ----
+
+    @PostMapping("/courses/{courseId}/learning-space")
+    public ResponseEntity<Map<String, Object>> assignCourseToSpace(
+            @PathVariable String courseId, @RequestBody Map<String, Object> body) {
+        Object spaceId = body == null ? null : body.get("learningSpaceId");
+        return ok(spaceAdminService.assignCourseToSpace(tenantId(), courseId, spaceId == null ? null : spaceId.toString()));
+    }
+
+    @GetMapping("/spaces/{spaceId}/courses")
+    public ResponseEntity<Map<String, Object>> listSpaceCourses(
+            @PathVariable String spaceId,
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "200") int limit) {
+        return ok(spaceAdminService.listSpaceCourses(tenantId(), spaceId, limit));
+    }
+
+    @GetMapping("/spaces/{spaceId}/summary")
+    public ResponseEntity<Map<String, Object>> spaceSummary(@PathVariable String spaceId) {
+        return ok(spaceAdminService.spaceSummary(tenantId(), spaceId));
     }
 
     private ResponseEntity<Map<String, Object>> ok(Object data) {

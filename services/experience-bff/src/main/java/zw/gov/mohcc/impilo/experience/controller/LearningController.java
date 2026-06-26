@@ -1167,6 +1167,34 @@ public class LearningController {
         return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
     }
 
+    // ---- C3: delegated space administration ----
+
+    @PostMapping("/v11/courses/{courseId}/learning-space")
+    public ResponseEntity<Map<String, Object>> assignCourseToSpace(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String courseId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("courses/" + courseId + "/learning-space", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @GetMapping("/v11/spaces/{spaceId}/courses")
+    public ResponseEntity<Map<String, Object>> listSpaceCourses(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String spaceId,
+            @RequestParam(defaultValue = "200") int limit) {
+        JsonNode n = learningClient.getV11("spaces/" + spaceId + "/courses", Map.of("limit", limit));
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @GetMapping("/v11/spaces/{spaceId}/summary")
+    public ResponseEntity<Map<String, Object>> spaceSummary(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String spaceId) {
+        JsonNode n = learningClient.getV11("spaces/" + spaceId + "/summary", Map.of());
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
     private static Map<String, Object> qp(Object... keyVals) {
         Map<String, Object> out = new LinkedHashMap<>();
         for (int i = 0; i + 1 < keyVals.length; i += 2) {

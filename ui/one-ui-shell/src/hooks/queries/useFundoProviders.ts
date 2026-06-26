@@ -82,3 +82,30 @@ export function useAccreditProvider() {
     },
   });
 }
+
+/** C3 — delegated space administration. */
+
+export function useFundoSpaceSummary(spaceId?: string) {
+  return useQuery<ApiData<Record<string, unknown>>>({
+    queryKey: ["fundo", "space-summary", spaceId],
+    enabled: Boolean(spaceId),
+    queryFn: () => apiClient.get(`/internal/v1/learning/v11/spaces/${encodeURIComponent(spaceId!)}/summary`),
+  });
+}
+
+export function useFundoSpaceCourses(spaceId?: string) {
+  return useQuery<ApiData<{ items?: Array<Record<string, unknown>> }>>({
+    queryKey: ["fundo", "space-courses", spaceId],
+    enabled: Boolean(spaceId),
+    queryFn: () => apiClient.get(`/internal/v1/learning/v11/spaces/${encodeURIComponent(spaceId!)}/courses`),
+  });
+}
+
+export function useAssignCourseToSpace(spaceId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ courseId, learningSpaceId }: { courseId: string; learningSpaceId: string | null }) =>
+      apiClient.post(`/internal/v1/learning/v11/courses/${encodeURIComponent(courseId)}/learning-space`, { learningSpaceId }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["fundo", "space-courses", spaceId] }),
+  });
+}

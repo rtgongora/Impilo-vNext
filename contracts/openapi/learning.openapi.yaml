@@ -3072,6 +3072,33 @@ paths:
       requestBody: { required: false, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
       responses:
         '200': { description: Accredited & provisioned, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/courses/{courseId}/learning-space:
+    post:
+      tags: [FundoProvider]
+      summary: Bind/unbind a course to a learning space (delegated admin)
+      operationId: assignCourseToLearningSpace
+      parameters: [{ name: courseId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Bound, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/spaces/{spaceId}/courses:
+    get:
+      tags: [FundoProvider]
+      summary: Space-scoped course list (delegated admin)
+      operationId: listLearningSpaceCourses
+      parameters:
+        - { name: spaceId, in: path, required: true, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 500 } }
+      responses:
+        '200': { description: Space courses, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/spaces/{spaceId}/summary:
+    get:
+      tags: [FundoProvider]
+      summary: Self-managed academy dashboard summary
+      operationId: learningSpaceSummary
+      parameters: [{ name: spaceId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Space summary, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
   /workflow-context:
     get:
       operationId: learning_get__workflow_context
