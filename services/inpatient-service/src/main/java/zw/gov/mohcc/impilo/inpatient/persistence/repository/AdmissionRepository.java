@@ -25,4 +25,12 @@ public interface AdmissionRepository extends JpaRepository<AdmissionEntity, Long
     List<AdmissionEntity> findBySubjectCpid(String subjectCpid);
 
     List<AdmissionEntity> findBySubjectCpidAndStatus(String subjectCpid, String status);
+
+    /**
+     * Census admission materialised from a given PCT admission (tenant-scoped). The PCT<->inpatient
+     * handshake is keyed on {@code pct_admission_id}; this is the idempotency lookup for
+     * {@code admitFromPctApproval} and matches regardless of admission status (ADMITTED or DISCHARGED),
+     * so a redelivered approval after discharge cannot create a second census row / double bed-day.
+     */
+    Optional<AdmissionEntity> findByTenantIdAndPctAdmissionId(UUID tenantId, UUID pctAdmissionId);
 }

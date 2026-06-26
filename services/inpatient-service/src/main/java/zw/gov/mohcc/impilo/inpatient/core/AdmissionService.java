@@ -19,6 +19,7 @@ import java.time.OffsetDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -208,15 +209,24 @@ public class AdmissionService {
     public AdmissionEntity admitFromPctApproval(UUID pctAdmissionId, UUID tenantId, UUID facilityId,
                                                 String subjectCpid, UUID encounterId, UUID wardId, UUID bedId,
                                                 String admittingDiagnosis, String admissionType) {
-        // Idempotency: if a census admission already references this PCT admission, return it (no double-admit).
-        List<AdmissionEntity> existing = admissionRepository.findBySubjectCpidAndFacilityIdAndStatus(
-                subjectCpid, facilityId, "ADMITTED");
-        for (AdmissionEntity a : existing) {
-            if (pctAdmissionId.equals(a.getPctAdmissionId())) {
-                log.info("Census admission already exists for PCT admission {} (admissionRef={})",
-                        pctAdmissionId, a.getAdmissionRef());
-                return a;
-            }
+        // Idempotency: short-circuit on ANY existing census row for this PCT admission, regardless of status.
+        // Matching only ADMITTED rows let a redelivered ADMISSION_APPROVED create a SECOND census row (and a
+        // second bed-day) once the patient had been discharged. The handshake key is pct_admission_id, so the
+        // lookup must be status-agnostic (the DB unique constraint in V014 is the second line of defence).
+        Optional<AdmissionEntity> existing =
+                admissionRepository.findByTenantIdAndPctAdmissionId(tenantId, pctAdmissionId);
+        if (existing.isPresent()) {
+            AdmissionEntity a = existing.get();
+            log.info("Census admission already exists for PCT admission {} (admissionRef={}, status={}); "
+                            + "re-emitting bed_assigned echo (idempotent)",
+                    pctAdmissionId, a.getAdmissionRef(), a.getStatus());
+            // Re-emit the bed-assignment echo so PCT can stamp inpatient_admission_ref even if the FIRST echo
+            // was lost (M3) — otherwise PCT's link stays null forever. PCT consumes this idempotently.
+            Map<String, Object> echo = buildStandardPayload(a);
+            echo.put("pct_admission_id", pctAdmissionId.toString());
+            appendOutboxEvent("ADMISSION", a.getAdmissionRef().toString(),
+                    "inpatient.admission.bed_assigned", a.getTenantId(), echo);
+            return a;
         }
 
         AdmissionEntity admission = new AdmissionEntity();
