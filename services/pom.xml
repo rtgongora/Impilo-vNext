@@ -101,6 +101,8 @@
         <module>learning-service</module>
         <!-- MADI — Blood Donation, Blood Bank and Transfusion -->
         <module>madi-service</module>
+        <!-- Rito — Quality, Safety & Client Voice -->
+        <module>rito-quality-safety-service</module>
         <!-- Forms Service — Clinical Content Platform -->
         <module>forms-service</module>
         <!-- Data Pipeline — v1.1-Native Ingestion & Watermarking -->
