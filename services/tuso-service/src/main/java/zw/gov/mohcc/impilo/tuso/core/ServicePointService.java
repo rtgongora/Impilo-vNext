@@ -52,6 +52,10 @@ public class ServicePointService {
         FacilityEntity facility = facilityRepository.findById(facilityId)
                 .orElseThrow(() -> new IllegalArgumentException("Facility not found: " + facilityId));
 
+        if (ctx != null && !facility.getTenantId().equals(ctx.tenantId())) {
+            throw new SecurityException("Tenant isolation violation: facility belongs to different tenant");
+        }
+
         ServicePointEntity sp = new ServicePointEntity();
         sp.setFacilityId(facilityId);
         sp.setTenantId(facility.getTenantId());
@@ -77,6 +81,9 @@ public class ServicePointService {
     public ServicePointEntity deactivate(TrustContext ctx, UUID servicePointId) {
         ServicePointEntity sp = repository.findById(servicePointId)
                 .orElseThrow(() -> new IllegalArgumentException("Service point not found: " + servicePointId));
+        if (ctx != null && !sp.getTenantId().equals(ctx.tenantId())) {
+            throw new SecurityException("Tenant isolation violation: service point belongs to different tenant");
+        }
         sp.setActive(false);
         sp.setStatus("RETIRED");
         sp.setUpdatedBy(actor(ctx));

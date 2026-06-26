@@ -76,6 +76,10 @@ public class FacilitySetupService {
         FacilityEntity facility = facilityRepository.findById(facilityId)
                 .orElseThrow(() -> new IllegalArgumentException("Facility not found: " + facilityId));
 
+        if (ctx != null && !facility.getTenantId().equals(ctx.tenantId())) {
+            throw new SecurityException("Tenant isolation violation: facility belongs to different tenant");
+        }
+
         FacilitySetupStateEntity state = setupStateRepository.findByFacilityId(facilityId)
                 .orElseGet(() -> {
                     FacilitySetupStateEntity s = new FacilitySetupStateEntity();

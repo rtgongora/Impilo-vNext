@@ -55,6 +55,10 @@ public class FacilityUnitService {
         FacilityEntity facility = facilityRepository.findById(facilityId)
                 .orElseThrow(() -> new IllegalArgumentException("Facility not found: " + facilityId));
 
+        if (ctx != null && !facility.getTenantId().equals(ctx.tenantId())) {
+            throw new SecurityException("Tenant isolation violation: facility belongs to different tenant");
+        }
+
         FacilityUnitEntity unit = new FacilityUnitEntity();
         unit.setFacility(facility);
         unit.setName(req.name());

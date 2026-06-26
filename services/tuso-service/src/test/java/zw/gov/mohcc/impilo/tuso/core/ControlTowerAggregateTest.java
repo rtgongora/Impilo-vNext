@@ -96,6 +96,7 @@ class ControlTowerAggregateTest {
         f.setTenantId(tenantId);
         AlertEntity alert = new AlertEntity();
         alert.setFacility(f);
+        alert.setTenantId(tenantId);
         alert.setStatus("OPEN");
         UUID alertId = UUID.randomUUID();
         when(alertRepository.findById(alertId)).thenReturn(Optional.of(alert));
@@ -105,5 +106,21 @@ class ControlTowerAggregateTest {
         assertEquals("ACKNOWLEDGED", resp.status());
         assertEquals("actor-1", resp.acknowledgedBy());
         assertNotNull(resp.acknowledgedAt());
+    }
+
+    @Test
+    void acknowledgeAlert_rejectsCrossTenantAlert() {
+        FacilityEntity f = new FacilityEntity();
+        f.setTenantId(UUID.randomUUID());
+        AlertEntity alert = new AlertEntity();
+        alert.setFacility(f);
+        alert.setTenantId(UUID.randomUUID()); // a different tenant than the trust context
+        alert.setStatus("OPEN");
+        UUID alertId = UUID.randomUUID();
+        when(alertRepository.findById(alertId)).thenReturn(Optional.of(alert));
+
+        assertThrows(SecurityException.class,
+                () -> service.acknowledgeAlert(TrustContextHolder.require(), alertId));
+        assertEquals("OPEN", alert.getStatus()); // unchanged
     }
 }

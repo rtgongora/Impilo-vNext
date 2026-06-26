@@ -243,6 +243,9 @@ public class ControlTowerService {
     public AlertResponse acknowledgeAlert(TrustContext ctx, UUID alertId) {
         AlertEntity alert = alertRepository.findById(alertId)
                 .orElseThrow(() -> new IllegalArgumentException("Alert not found: " + alertId));
+        if (ctx != null && !alert.getTenantId().equals(ctx.tenantId())) {
+            throw new SecurityException("Tenant isolation violation: alert belongs to different tenant");
+        }
         if (!"ACKNOWLEDGED".equals(alert.getStatus()) && !"RESOLVED".equals(alert.getStatus())) {
             alert.setStatus("ACKNOWLEDGED");
             alert.setAcknowledgedBy(ctx != null && ctx.actorId() != null ? ctx.actorId() : "system");
