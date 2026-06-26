@@ -133,7 +133,7 @@ there (see §9).
 
 | ID | Sev | Finding | Where the rearchitecture addresses it |
 |----|-----|---------|----------------------------------------|
-| **TPL-1** | 🔴 Critical | Client `X-Actor-ID`/type/tenant/purpose/subject override the JWT (§7) | **NEW scope** — add an edge trust-boundary fix: Envoy strips client trust headers (or marks them untrusted) + tshepo-authz makes JWT claims authoritative over headers (header only for *trusted* internal callers). Fold into Phase 3 (OPA/PDP rework) or a Phase 0 hardening before it. |
+| **TPL-1** | 🔴 Critical | Client `X-Actor-ID`/type/tenant/purpose/subject override the JWT (§7) | ~~NEW scope~~ **FIXED + UNIT-PROVEN (Phase 2.5, `15cadb11d`).** Both ext_authz paths now make the validated JWT sub/type/tenant **authoritative** over client headers (override, not fill-blank); S2S tokens without a sub still use headers. `PolicyEngine.buildHeaderMutations` re-injects the authoritative identity upstream on ALLOW, so Envoy overwrites the spoofed header for downstream "fetch-my-data" endpoints too. `AuthorizeControllerTest` proves spoof-ignored + S2S-fallback. **Residual (defense-in-depth):** Envoy edge-strip of client trust headers — documented, not yet implemented. |
 | **TPL-2** | 🟠 High | OPA orphaned; ABAC corpus unmounted/untested (§4) | Phase 3 (promote `infra/opa/impilo` → live, shadow→enforce). |
 | **TPL-3** | 🟠 High | 3 consent evaluate contracts diverge (§5) | Phase 2 (consolidate to one contract; verdict-as-PDP-input). |
 | **TPL-4** | 🟡 Med | Mvumo↔tshepo-consent can drift (Mvumo state vs FHIR status) | Phase 2 (reconciliation job). |
