@@ -135,7 +135,9 @@ public class FundoWorkforceReadinessService {
             cv.put("status", active ? "ACTIVE" : (expired ? "EXPIRED" : c.getStatus()));
             cv.put("verificationDigest", c.getVerificationDigest());
             certViews.add(cv);
-            if (active && c.isCpdEligible()) {
+            // Privacy guard (B5): only PROVIDER subjects yield CPD candidates. Citizen
+            // learning (USER_HEALTH_ID / CITIZEN_ANON) must never enter the provider CPD path.
+            if (active && c.isCpdEligible() && "PROVIDER".equalsIgnoreCase(subjectType)) {
                 Map<String, Object> cand = new LinkedHashMap<>();
                 cand.put("certificateId", c.getId().toString());
                 cand.put("courseId", c.getCourseId() == null ? null : c.getCourseId().toString());

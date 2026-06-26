@@ -170,6 +170,23 @@ class FundoWorkforceReadinessServiceTest {
         assertThat(candidates.get(0).get("title")).isEqualTo("ACTIVE-CERT");
     }
 
+    @Test
+    void citizenSubjectYieldsNoCpdCandidates() {
+        when(enrolmentRepository.findByTenantIdAndSubjectTypeAndSubjectIdOrderByCreatedAtDesc(
+                        eq(TENANT), eq("USER_HEALTH_ID"), eq("HID-1"), any(Pageable.class)))
+                .thenReturn(List.of());
+        when(courseRepository.findAllById(any())).thenReturn(List.of());
+        CertificateEntity active = certificate(UUID.randomUUID(), "Public health cert", OffsetDateTime.now().plusDays(300), true);
+        when(certificateRepository.findByTenantIdAndSubjectTypeAndSubjectId(TENANT, "USER_HEALTH_ID", "HID-1"))
+                .thenReturn(List.of(active));
+
+        Map<String, Object> out = service.cpdSummary(TENANT, "USER_HEALTH_ID", "HID-1");
+
+        // citizen learning never becomes provider CPD evidence
+        assertThat((List<?>) out.get("cpdCandidates")).isEmpty();
+        assertThat(out.get("activeCertificateCount")).isEqualTo(1);
+    }
+
     private CertificateEntity certificate(UUID courseId, String title, OffsetDateTime validUntil, boolean cpd) {
         CertificateEntity c = new CertificateEntity();
         c.setId(UUID.randomUUID());
