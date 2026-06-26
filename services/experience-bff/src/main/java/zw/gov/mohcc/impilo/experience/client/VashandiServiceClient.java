@@ -83,6 +83,19 @@ public class VashandiServiceClient {
         return unwrap(get("/workforce-profiles/session-context", params));
     }
 
+    /**
+     * C2 work-context read-model — active assignments + check-in state +
+     * affiliations + requiresContextChooser for the WHERE/WHAT picker.
+     * Returns null when upstream is unavailable; callers degrade honestly.
+     */
+    public JsonNode fetchWorkContext(String actorHealthId) {
+        Map<String, String> params = new LinkedHashMap<>();
+        if (actorHealthId != null && !actorHealthId.isBlank()) {
+            params.put("actorId", actorHealthId);
+        }
+        return unwrap(get("/work-context", params));
+    }
+
     private VashandiDtos.UpstreamResult exchange(HttpMethod method,
                                                  String relativePath,
                                                  Map<String, String> queryParams,
