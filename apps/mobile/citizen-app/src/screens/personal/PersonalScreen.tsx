@@ -38,6 +38,8 @@ import { TermsOfUseScreen } from "./TermsOfUseScreen";
 import { CommunicationPreferencesScreen } from "./CommunicationPreferencesScreen";
 import { PatientConsentScreen } from "./PatientConsentScreen";
 import { SupportScreen } from "../support/SupportScreen";
+import { FeedbackScreen } from "../rito/FeedbackScreen";
+import { TrackFeedbackScreen } from "../rito/TrackFeedbackScreen";
 import { NhumeTrackingScreen } from "../NhumeTrackingScreen";
 import { ProductionReadinessJourneyScreen } from "./ProductionReadinessJourneyScreen";
 import { ProviderDiscoveryScreen } from "../discover/ProviderDiscoveryScreen";
@@ -84,6 +86,8 @@ type PersonalTab =
   | "terms"
   | "consent"
   | "support"
+  | "rito-feedback"
+  | "rito-track"
   | "prod-ready"
   | "madi-donor"
   | "impilo-live";
@@ -121,6 +125,8 @@ const PERSONAL_TABS: Array<{ id: PersonalTab; label: string; icon: IoniconsName 
   { id: "consent", label: "Consent", icon: "book-outline" },
   { id: "comms-prefs", label: "Comms", icon: "chatbubbles-outline" },
   { id: "support", label: "Help", icon: "help-circle" },
+  { id: "rito-feedback", label: "Feedback", icon: "chatbox-ellipses" },
+  { id: "rito-track", label: "Track Feedback", icon: "search-circle" },
   { id: "settings", label: "Settings", icon: "settings" },
   { id: "assessments", label: "Assessments", icon: "duplicate" },
   { id: "care-team", label: "Care Team", icon: "people" },
@@ -164,6 +170,8 @@ const SECTIONS: Partial<Record<PersonalTab, React.FC>> = {
   consent: PatientConsentScreen,
   "comms-prefs": CommunicationPreferencesScreen,
   support: SupportScreen,
+  "rito-feedback": FeedbackScreen,
+  "rito-track": TrackFeedbackScreen,
   settings: SettingsSection,
   assessments: AssessmentsSection,
   "care-team": CareTeamSection,
