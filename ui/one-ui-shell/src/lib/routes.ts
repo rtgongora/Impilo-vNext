@@ -659,6 +659,21 @@ export const ROUTES: RouteDefinition[] = [
 
   // Trust & Access Administration (Jun 2026): 90 routes under /work/** driven by Session Experience Contract.
   ...ADMINISTRATION_GOVERNANCE_ROUTES,
+
+  // ── Zone: Rito — Quality, Safety & Client Voice ──
+  { path: "/rito", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Rito — Quality & Safety", navLabel: "Rito", navZone: "professional" },
+  { path: "/rito/cases", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Case Worklist", navLabel: "Cases", navZone: "professional" },
+  { path: "/rito/cases/[caseId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Case Detail", navLabel: "Case", navZone: "professional" },
+  { path: "/rito/quality-signals", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Quality Signals", navLabel: "Signals", navZone: "professional" },
+  { path: "/rito/audits", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Quality Audits", navLabel: "Audits", navZone: "professional" },
+  { path: "/rito/audits/[auditId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Audit Detail", navLabel: "Audit", navZone: "professional" },
+  { path: "/rito/improvement", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Improvement — CAPA & QI", navLabel: "Improvement", navZone: "professional" },
+  { path: "/rito/surveys", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Experience Surveys", navLabel: "Surveys", navZone: "professional" },
+  { path: "/my-life/feedback", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Feedback", navLabel: "Feedback & Safety", navZone: "life" },
+  { path: "/my-life/feedback/new", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Share Feedback", navLabel: "Share Feedback", navZone: "life" },
+  { path: "/my-life/feedback/[caseId]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Track Feedback", navLabel: "Track", navZone: "life" },
+  { path: "/work/facility/rito", zone: "facility", layout: "app", sidebar: "facility", guard: "facility", pageTitle: "Facility Quality & Safety", navLabel: "Quality & Safety", navZone: "work" },
+  { path: "/work/above-site/rito", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Above-Site Quality & Safety", navLabel: "Quality Oversight", navZone: "work" },
 ];
 
 // Total route count assertion.
