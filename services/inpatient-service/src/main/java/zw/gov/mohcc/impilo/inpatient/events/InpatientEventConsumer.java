@@ -78,10 +78,28 @@ public class InpatientEventConsumer {
             String admittingDiagnosis = text(payload, "admittingDiagnosis");
             String admissionType = text(payload, "admissionType");
 
+            // Parse the required identifiers up front. A malformed UUID is a POISON PILL — it can never
+            // succeed on redelivery, so we ack (skip) it rather than retry forever.
+            UUID pctAdmissionUuid;
+            UUID tenantUuid;
+            UUID facilityUuid;
+            try {
+                pctAdmissionUuid = UUID.fromString(pctAdmissionId.trim());
+                tenantUuid = UUID.fromString(tenantId.trim());
+                facilityUuid = UUID.fromString(facilityId.trim());
+            } catch (IllegalArgumentException e) {
+                log.warn("INPATIENT: ADMISSION_APPROVED has a malformed UUID (admission/tenant/facility), "
+                        + "skipping (poison pill): {}", e.getMessage());
+                return;
+            }
+
+            // The census write itself: a transient failure here (e.g. DB connectivity) must NOT be swallowed.
+            // C1 made admitFromPctApproval idempotent on pct_admission_id, so it is safe to let Kafka
+            // redeliver — rethrow so the offset is not committed and the admission is not silently dropped.
             admissionService.admitFromPctApproval(
-                    UUID.fromString(pctAdmissionId.trim()),
-                    UUID.fromString(tenantId.trim()),
-                    UUID.fromString(facilityId.trim()),
+                    pctAdmissionUuid,
+                    tenantUuid,
+                    facilityUuid,
                     subjectCpid,
                     encounterId,
                     wardId,
@@ -91,9 +109,8 @@ public class InpatientEventConsumer {
             log.info("INPATIENT: materialised census admission for PCT admission {} (subject={})",
                     pctAdmissionId, subjectCpid);
         } catch (JsonProcessingException e) {
-            log.error("INPATIENT: failed to parse PCT admission event: {}", e.getMessage(), e);
-        } catch (RuntimeException e) {
-            log.error("INPATIENT: error handling PCT admission event: {}", e.getMessage(), e);
+            // Unparseable JSON is a poison pill: ack and move on (logged), never retry.
+            log.error("INPATIENT: failed to parse PCT admission event, skipping: {}", e.getMessage(), e);
         }
     }
 
