@@ -20,13 +20,25 @@ public class InternalEligibilityCheckService {
     private final CoveragePlanRepository planRepository;
     private final MemberCoverageRepository memberCoverageRepository;
     private final UtilizationSummaryRepository utilizationSummaryRepository;
+    private final SubsidyEnrolmentService subsidyEnrolmentService;
 
     public InternalEligibilityCheckService(CoveragePlanRepository planRepository,
                                            MemberCoverageRepository memberCoverageRepository,
-                                           UtilizationSummaryRepository utilizationSummaryRepository) {
+                                           UtilizationSummaryRepository utilizationSummaryRepository,
+                                           SubsidyEnrolmentService subsidyEnrolmentService) {
         this.planRepository = planRepository;
         this.memberCoverageRepository = memberCoverageRepository;
         this.utilizationSummaryRepository = utilizationSummaryRepository;
+        this.subsidyEnrolmentService = subsidyEnrolmentService;
+    }
+
+    /**
+     * Subsidy cap check for a member at eligibility time. Surfaces whether an ACTIVE subsidy
+     * enrolment has annual-cap headroom (Coverage owns subsidy; cap enforced here).
+     */
+    public SubsidyEnrolmentService.SubsidyCapResult subsidyHeadroom(
+            UUID tenantId, String patientCpid, java.math.BigDecimal requestedAmount) {
+        return subsidyEnrolmentService.checkCap(tenantId, patientCpid, requestedAmount);
     }
 
     /**

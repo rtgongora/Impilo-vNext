@@ -1,11 +1,14 @@
 package zw.gov.mohcc.impilo.coverage.api;
 
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import zw.gov.mohcc.impilo.coverage.api.dto.SubsidyConsumeRequest;
+import zw.gov.mohcc.impilo.coverage.api.dto.SubsidyEnrolmentRequest;
+import zw.gov.mohcc.impilo.coverage.api.dto.SubsidyEnrolmentResponse;
 import zw.gov.mohcc.impilo.coverage.api.dto.SubsidyProgramResponse;
+import zw.gov.mohcc.impilo.coverage.core.SubsidyEnrolmentService;
 import zw.gov.mohcc.impilo.coverage.domain.SubsidyProgramEntity;
 import zw.gov.mohcc.impilo.coverage.repository.SubsidyProgramRepository;
 
@@ -17,9 +20,12 @@ import java.util.UUID;
 public class SubsidyController {
 
     private final SubsidyProgramRepository subsidyProgramRepository;
+    private final SubsidyEnrolmentService enrolmentService;
 
-    public SubsidyController(SubsidyProgramRepository subsidyProgramRepository) {
+    public SubsidyController(SubsidyProgramRepository subsidyProgramRepository,
+                            SubsidyEnrolmentService enrolmentService) {
         this.subsidyProgramRepository = subsidyProgramRepository;
+        this.enrolmentService = enrolmentService;
     }
 
     @GetMapping
@@ -30,6 +36,41 @@ public class SubsidyController {
                 .map(this::toResponse)
                 .toList();
         return ResponseEntity.ok(rows);
+    }
+
+    /** Enrol a member into a subsidy programme (member↔subsidy↔balance link). */
+    @PostMapping("/enrolments")
+    public ResponseEntity<SubsidyEnrolmentResponse> enrol(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @Valid @RequestBody SubsidyEnrolmentRequest body) {
+        UUID tid = UUID.fromString(tenantId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(enrolmentService.enrol(tid, body));
+    }
+
+    @GetMapping("/enrolments")
+    public ResponseEntity<List<SubsidyEnrolmentResponse>> listEnrolments(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestParam("member_cpid") String memberCpid) {
+        UUID tid = UUID.fromString(tenantId);
+        return ResponseEntity.ok(enrolmentService.listForMember(tid, memberCpid));
+    }
+
+    @GetMapping("/enrolments/{id}")
+    public ResponseEntity<SubsidyEnrolmentResponse> getEnrolment(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @PathVariable("id") UUID id) {
+        UUID tid = UUID.fromString(tenantId);
+        return ResponseEntity.ok(enrolmentService.get(tid, id));
+    }
+
+    /** Draw down subsidy value against the annual cap (enforces the cap). */
+    @PostMapping("/enrolments/{id}/consume")
+    public ResponseEntity<SubsidyEnrolmentResponse> consume(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @PathVariable("id") UUID id,
+            @Valid @RequestBody SubsidyConsumeRequest body) {
+        UUID tid = UUID.fromString(tenantId);
+        return ResponseEntity.ok(enrolmentService.consume(tid, id, body));
     }
 
     private SubsidyProgramResponse toResponse(SubsidyProgramEntity entity) {
