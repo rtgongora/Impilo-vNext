@@ -9,15 +9,20 @@ import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.costa.api.dto.CreateChargeRecordRequest;
 import zw.gov.mohcc.impilo.costa.domain.entity.ChargeRecordEntity;
 import zw.gov.mohcc.impilo.costa.domain.entity.EventOutboxEntity;
+import zw.gov.mohcc.impilo.costa.domain.enums.BillLineKind;
 import zw.gov.mohcc.impilo.costa.domain.enums.CostMethodType;
 import zw.gov.mohcc.impilo.costa.domain.repository.ChargeRecordRepository;
 import zw.gov.mohcc.impilo.costa.domain.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.costa.engine.CostEngine;
 import zw.gov.mohcc.impilo.costa.engine.CostEngineRegistry;
 import zw.gov.mohcc.impilo.costa.engine.CostResult;
+import zw.gov.mohcc.impilo.costa.rules.ChargingRuleEngine;
+import zw.gov.mohcc.impilo.costa.rules.RuleContext;
+import zw.gov.mohcc.impilo.costa.rules.RuleResult;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -37,15 +42,18 @@ public class ChargeRecordService {
     private final ChargeRecordRepository chargeRecordRepository;
     private final EventOutboxRepository outboxRepository;
     private final CostEngineRegistry costEngineRegistry;
+    private final ChargingRuleEngine chargingRuleEngine;
     private final ObjectMapper objectMapper;
 
     public ChargeRecordService(ChargeRecordRepository chargeRecordRepository,
                                EventOutboxRepository outboxRepository,
                                CostEngineRegistry costEngineRegistry,
+                               ChargingRuleEngine chargingRuleEngine,
                                ObjectMapper objectMapper) {
         this.chargeRecordRepository = chargeRecordRepository;
         this.outboxRepository = outboxRepository;
         this.costEngineRegistry = costEngineRegistry;
+        this.chargingRuleEngine = chargingRuleEngine;
         this.objectMapper = objectMapper;
     }
 
@@ -145,12 +153,25 @@ public class ChargeRecordService {
     /**
      * Idempotent teleconsult charge from PCT {@code TELECONSULT_COMPLETED} /
      * Kafka {@code clinical.teleconsult.value}. The L1 (clinical) value-trigger carries no
-     * price, so COSTA — as the costing authority — resolves the applicable teleconsult tariff
-     * at ingest via the TARIFF cost engine (specialty-specific code first, then the generic
-     * {@link #TELECONSULT_TARIFF_CODE}), records the resulting amount and full tariff trace,
-     * and emits {@code CHARGE_CREATED}. If no teleconsult tariff is configured for the tenant,
-     * the charge is recorded {@code OPEN} with a zero amount and {@code pendingPricing=true} so
-     * the gap is visible rather than silently dropped.
+     * price, so COSTA — as the costing authority — fully prices it at ingest:
+     * <ol>
+     *   <li>resolve the applicable teleconsult tariff via the TARIFF cost engine
+     *       (specialty-specific code first, then the generic {@link #TELECONSULT_TARIFF_CODE});</li>
+     *   <li>run the resulting cost through the {@link ChargingRuleEngine} so exemptions, waivers,
+     *       discounts and surcharges (e.g. emergency / admitted / patient-category rules) apply,
+     *       exactly as the bill-line path does;</li>
+     *   <li>record the final billable amount with the full tariff + charge traces and emit
+     *       {@code CHARGE_CREATED}.</li>
+     * </ol>
+     * If a charging rule excludes the item the charge is recorded {@code EXCLUDED} and
+     * non-billable (kept for audit, not dropped). If no teleconsult tariff is configured the
+     * charge is recorded {@code OPEN} with amount 0 and {@code pendingPricing=true} so the gap
+     * is visible.
+     *
+     * <p>Note: {@code patient_category}/{@code facility_category} are not carried on the value
+     * trigger, so rules keyed on those dimensions need that context propagated upstream before
+     * they can fire here — matching the bill-line path, which also depends on the caller
+     * supplying those keys.</p>
      */
     @Transactional
     public ChargeRecordEntity ingestTeleconsultCompleted(JsonNode event) {
@@ -169,17 +190,29 @@ public class ChargeRecordService {
         String encounterId = text(event, "encounterId");
         String specialty = text(event, "specialty");
         String modality = text(event, "modality");
+        String facilityCategory = text(event, "facilityCategory");
+        String patientCategory = text(event, "patientCategory");
         UUID facilityId = null;
         String fid = text(event, "facilityId");
         if (fid != null && !fid.isBlank()) {
             facilityId = UUID.fromString(fid);
         }
 
-        // Resolve the teleconsult tariff via the cost engine (tenant/facility are parameters,
-        // so this works off the request thread, e.g. inside the Kafka consumer).
+        // 1) Resolve the teleconsult tariff via the cost engine (tenant/facility are parameters,
+        //    so this works off the request thread, e.g. inside the Kafka consumer).
         CostResult priced = resolveTeleconsultTariff(tenantId, facilityId, specialty);
-        BigDecimal amount = priced.totalCost() != null ? priced.totalCost() : BigDecimal.ZERO;
-        boolean pendingPricing = amount.signum() <= 0;
+        BigDecimal tariffTotal = priced.totalCost() != null ? priced.totalCost() : BigDecimal.ZERO;
+        boolean pendingPricing = tariffTotal.signum() <= 0;
+
+        // 2) Apply charging rules (exemptions / waivers / discounts / surcharges) to the tariff
+        //    cost, mirroring BillService.postLine.
+        RuleContext ruleCtx = new RuleContext(
+                tenantId, facilityId, facilityCategory, patientCategory,
+                priced.unitCostSource(), BillLineKind.SERVICE, BigDecimal.ONE,
+                tariffTotal, "OUTPATIENT", LocalDateTime.now(),
+                false, false, Map.of());
+        RuleResult ruleResult = chargingRuleEngine.evaluate(ruleCtx);
+        BigDecimal finalAmount = ruleResult.chargeAmount() != null ? ruleResult.chargeAmount() : BigDecimal.ZERO;
 
         ChargeRecordEntity e = new ChargeRecordEntity();
         e.setChargeId(UlidGenerator.generate());
@@ -193,33 +226,41 @@ public class ChargeRecordService {
         e.setFacilityId(facilityId);
         e.setServiceRef(encounterId);
         e.setOfferingRef(referralId);
-        e.setChargeAmount(amount);
+        e.setChargeAmount(finalAmount);
         e.setCurrency("USD");
-        e.setChargeStatus("OPEN");
-        e.setBillableFlag(true);
+        e.setChargeStatus(ruleResult.excluded() ? "EXCLUDED" : "OPEN");
+        e.setBillableFlag(!ruleResult.excluded());
         try {
             Map<String, Object> meta = new LinkedHashMap<>();
             meta.put("kafkaEvent", "clinical.teleconsult.value");
             meta.put("costMethodUsed", priced.methodUsed().name());
             meta.put("tariffSource", priced.unitCostSource());
             meta.put("unitPrice", priced.unitCost());
+            meta.put("tariffTotal", tariffTotal);
             meta.put("pendingPricing", pendingPricing);
+            meta.put("excluded", ruleResult.excluded());
+            meta.put("appliedRules", ruleResult.appliedRules());
             if (specialty != null) meta.put("specialty", specialty);
             if (modality != null) meta.put("modality", modality);
             if (encounterId != null) meta.put("encounterId", encounterId);
             meta.put("tariffTrace", priced.trace());
+            meta.put("chargeTrace", ruleResult.trace());
             e.setMetadataJson(objectMapper.writeValueAsString(meta));
         } catch (Exception ex) {
             e.setMetadataJson("{}");
         }
         chargeRecordRepository.save(e);
         publishChargeCreated(e);
-        if (pendingPricing) {
+        if (ruleResult.excluded()) {
+            log.info("Recorded COSTA teleconsult charge {} for referral {} EXCLUDED by charging rules {}",
+                    e.getChargeId(), referralId, ruleResult.appliedRules());
+        } else if (pendingPricing) {
             log.warn("Recorded COSTA teleconsult charge {} for referral {} with NO tariff configured "
                     + "(specialty={}); amount=0, pendingPricing=true", e.getChargeId(), referralId, specialty);
         } else {
-            log.info("Recorded COSTA teleconsult charge {} for referral {}: {} via {}",
-                    e.getChargeId(), referralId, amount, priced.unitCostSource());
+            log.info("Recorded COSTA teleconsult charge {} for referral {}: tariff {} -> charge {} (rules {}) via {}",
+                    e.getChargeId(), referralId, tariffTotal, finalAmount,
+                    ruleResult.appliedRules(), priced.unitCostSource());
         }
         return e;
     }
