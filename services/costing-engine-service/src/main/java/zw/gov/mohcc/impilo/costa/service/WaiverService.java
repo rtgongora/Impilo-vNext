@@ -174,37 +174,41 @@ public class WaiverService {
         throw new IllegalStateException("Unable to allocate a unique waiver reference");
     }
 
+    /**
+     * Enqueue the WAIVER_APPLIED value-event in the SAME transaction as the waiver state change
+     * (M3). An outbox-save failure must roll back the approval/revocation so we never commit a
+     * waiver that zeroes value with no corresponding value event (silent value leak).
+     */
     private void publishWaiverApplied(WaiverEntity e, String sourceServiceEvent) {
-        try {
-            Map<String, Object> payload = new LinkedHashMap<>();
-            payload.put("waiverId", e.getWaiverId().toString());
-            payload.put("waiverReference", e.getWaiverReference());
-            payload.put("kind", EVENT_TYPE);
-            payload.put("sourceServiceEvent", sourceServiceEvent);
-            payload.put("status", e.getStatus().name());
-            payload.put("patientCpid", e.getPatientCpid());
-            payload.put("encounterId", e.getEncounterId());
-            payload.put("billId", e.getBillId());
-            payload.put("chargeId", e.getChargeId());
-            payload.put("deferredChargeId",
-                    e.getDeferredChargeId() != null ? e.getDeferredChargeId().toString() : null);
-            payload.put("waiverType", e.getWaiverType().name());
-            payload.put("amount", e.getWaivedAmount());
-            payload.put("currency", e.getCurrency());
-            payload.put("payerKind", "WAIVER");
-            payload.put("reversal", "WAIVER_REVOKED".equals(sourceServiceEvent));
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("waiverId", e.getWaiverId().toString());
+        payload.put("waiverReference", e.getWaiverReference());
+        payload.put("kind", EVENT_TYPE);
+        payload.put("sourceServiceEvent", sourceServiceEvent);
+        payload.put("status", e.getStatus().name());
+        payload.put("patientCpid", e.getPatientCpid());
+        payload.put("encounterId", e.getEncounterId());
+        payload.put("billId", e.getBillId());
+        payload.put("chargeId", e.getChargeId());
+        payload.put("deferredChargeId",
+                e.getDeferredChargeId() != null ? e.getDeferredChargeId().toString() : null);
+        payload.put("waiverType", e.getWaiverType().name());
+        payload.put("amount", e.getWaivedAmount());
+        payload.put("currency", e.getCurrency());
+        payload.put("payerKind", "WAIVER");
+        payload.put("reversal", "WAIVER_REVOKED".equals(sourceServiceEvent));
 
-            EventOutboxEntity ev = new EventOutboxEntity();
-            ev.setAggregateType(AGGREGATE_TYPE);
-            ev.setAggregateId(e.getWaiverId().toString());
-            ev.setEventType(EVENT_TYPE);
+        EventOutboxEntity ev = new EventOutboxEntity();
+        ev.setAggregateType(AGGREGATE_TYPE);
+        ev.setAggregateId(e.getWaiverId().toString());
+        ev.setEventType(EVENT_TYPE);
+        try {
             ev.setPayload(objectMapper.writeValueAsString(payload));
-            ev.setTenantId(e.getTenantId());
-            outboxRepository.save(ev);
         } catch (Exception ex) {
-            log.error("Failed to enqueue WAIVER_APPLIED value-event for {}: {}",
-                    e.getWaiverId(), ex.getMessage());
+            throw new IllegalStateException("Failed to serialize WAIVER_APPLIED value-event", ex);
         }
+        ev.setTenantId(e.getTenantId());
+        outboxRepository.save(ev);
     }
 
     private static <E extends Enum<E>> E parseEnum(Class<E> type, String raw, String field) {

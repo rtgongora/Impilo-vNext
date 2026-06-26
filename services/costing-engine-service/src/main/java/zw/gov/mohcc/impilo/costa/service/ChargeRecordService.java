@@ -234,12 +234,18 @@ public class ChargeRecordService {
         }
     }
 
+    /**
+     * Enqueue the CHARGE_CREATED value-event in the SAME transaction as the charge (M3).
+     * An outbox-save failure must roll back the charge so we never commit a billable charge
+     * with no value event (silent value leak). Serialization failures are mapped to a runtime
+     * exception so the transaction rolls back rather than being swallowed.
+     */
     private void publishChargeCreated(ChargeRecordEntity e) {
+        EventOutboxEntity ev = new EventOutboxEntity();
+        ev.setAggregateType("CHARGE");
+        ev.setAggregateId(e.getChargeId());
+        ev.setEventType("CHARGE_CREATED");
         try {
-            EventOutboxEntity ev = new EventOutboxEntity();
-            ev.setAggregateType("CHARGE");
-            ev.setAggregateId(e.getChargeId());
-            ev.setEventType("CHARGE_CREATED");
             ev.setPayload(objectMapper.writeValueAsString(new LinkedHashMap<>(Map.of(
                     "chargeId", e.getChargeId(),
                     "sourceType", e.getSourceType(),
@@ -247,11 +253,11 @@ public class ChargeRecordService {
                     "chargeAmount", e.getChargeAmount(),
                     "currency", e.getCurrency()
             ))));
-            ev.setTenantId(e.getTenantId());
-            outboxRepository.save(ev);
         } catch (Exception ex) {
-            log.error("Failed to publish CHARGE_CREATED: {}", ex.getMessage());
+            throw new IllegalStateException("Failed to serialize CHARGE_CREATED value-event", ex);
         }
+        ev.setTenantId(e.getTenantId());
+        outboxRepository.save(ev);
     }
 
     private static String text(JsonNode node, String field) {
