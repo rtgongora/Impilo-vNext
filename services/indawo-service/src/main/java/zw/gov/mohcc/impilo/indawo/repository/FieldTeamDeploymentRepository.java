@@ -11,4 +11,6 @@ public interface FieldTeamDeploymentRepository extends JpaRepository<FieldTeamDe
     List<FieldTeamDeploymentEntity> findByTenantIdAndTeamIdOrderByDeployedAtDesc(UUID tenantId, UUID teamId);
     List<FieldTeamDeploymentEntity> findByTenantIdAndOutbreakIdOrderByDeployedAtDesc(UUID tenantId, UUID outbreakId);
     Optional<FieldTeamDeploymentEntity> findByTenantIdAndDeploymentId(UUID tenantId, UUID deploymentId);
+
+    long countByTenantIdAndTeamIdAndStatus(UUID tenantId, UUID teamId, String status);
 }

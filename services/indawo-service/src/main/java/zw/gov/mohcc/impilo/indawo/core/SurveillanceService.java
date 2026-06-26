@@ -163,6 +163,13 @@ public class SurveillanceService {
         FieldTeamEntity team = teamRepository.findByTenantIdAndTeamId(tenantId, teamId)
                 .orElseThrow(() -> new IllegalArgumentException("Field team not found: " + teamId));
 
+        // Guard against double-deploy: a team already DEPLOYED, or one that still has an
+        // ACTIVE deployment row, cannot be deployed again (would corrupt team status).
+        if ("DEPLOYED".equals(team.getStatus())
+                || deploymentRepository.countByTenantIdAndTeamIdAndStatus(tenantId, teamId, "ACTIVE") > 0) {
+            throw new IllegalStateException("Field team already deployed: " + teamId);
+        }
+
         FieldTeamDeploymentEntity dep = new FieldTeamDeploymentEntity();
         dep.setTenantId(tenantId);
         dep.setTeamId(teamId);
@@ -197,11 +204,15 @@ public class SurveillanceService {
         dep.setUpdatedBy(actor);
         FieldTeamDeploymentEntity saved = deploymentRepository.save(dep);
 
-        teamRepository.findByTenantIdAndTeamId(tenantId, dep.getTeamId()).ifPresent(t -> {
-            t.setStatus("AVAILABLE");
-            t.setUpdatedBy(actor);
-            teamRepository.save(t);
-        });
+        // Only free the team when no other ACTIVE deployment remains (this one is now
+        // RECALLED). Otherwise the team is still in the field on another deployment.
+        if (deploymentRepository.countByTenantIdAndTeamIdAndStatus(tenantId, dep.getTeamId(), "ACTIVE") == 0) {
+            teamRepository.findByTenantIdAndTeamId(tenantId, dep.getTeamId()).ifPresent(t -> {
+                t.setStatus("AVAILABLE");
+                t.setUpdatedBy(actor);
+                teamRepository.save(t);
+            });
+        }
         emit("FIELD_TEAM_DEPLOYMENT", deploymentId.toString(), "FIELD_TEAM_RECALLED",
                 tenantId, Map.of("deploymentId", deploymentId.toString()));
         return saved;
