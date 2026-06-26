@@ -61,6 +61,10 @@ public class AdmissionEntity {
     @Column(name = "created_at", updatable = false)
     private OffsetDateTime createdAt;
 
+    /** PCT admission_id this census admission was created from (PCT<->inpatient handshake). */
+    @Column(name = "pct_admission_id")
+    private UUID pctAdmissionId;
+
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {
@@ -87,6 +91,9 @@ public class AdmissionEntity {
 
     public UUID getEncounterId() { return encounterId; }
     public void setEncounterId(UUID encounterId) { this.encounterId = encounterId; }
+
+    public UUID getPctAdmissionId() { return pctAdmissionId; }
+    public void setPctAdmissionId(UUID pctAdmissionId) { this.pctAdmissionId = pctAdmissionId; }
 
     public String getSubjectCpid() { return subjectCpid; }
     public void setSubjectCpid(String subjectCpid) { this.subjectCpid = subjectCpid; }

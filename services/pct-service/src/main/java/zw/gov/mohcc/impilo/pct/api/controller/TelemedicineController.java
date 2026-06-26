@@ -90,6 +90,24 @@ public class TelemedicineController {
         return ResponseEntity.ok(ApiResponse.ok(telemedicineService.respondReferral(id, request), correlationId));
     }
 
+    /** Stage 6: structured clinical response (C7) — diagnosis / action plan / red flags / follow-up. */
+    @PostMapping("/referrals/{id}/respond-structured")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> respondReferralStructured(
+            @PathVariable String id,
+            @RequestBody Map<String, Object> request) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        return ResponseEntity.ok(ApiResponse.ok(telemedicineService.respondReferralStructured(id, request), correlationId));
+    }
+
+    /** Stage 3: route to a team/pool/on-call roster (not only a single named provider). */
+    @PostMapping("/referrals/{id}/route")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> routeReferral(
+            @PathVariable String id,
+            @RequestBody Map<String, Object> request) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        return ResponseEntity.ok(ApiResponse.ok(telemedicineService.routeReferral(id, request), correlationId));
+    }
+
     @PostMapping("/referrals/{id}/complete")
     public ResponseEntity<ApiResponse<Map<String, Object>>> completeReferral(
             @PathVariable String id,

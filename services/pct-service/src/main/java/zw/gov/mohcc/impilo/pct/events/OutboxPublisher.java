@@ -144,6 +144,10 @@ public class OutboxPublisher {
         if (eventType.startsWith("telemedicine.session.")) {
             return "clinical.teleconsult.lifecycle";
         }
+        // telemed->value: a completed teleconsult is a billable service event consumed by COSTA/L4.
+        if ("TELECONSULT_COMPLETED".equals(eventType)) {
+            return "clinical.teleconsult.value";
+        }
 
         return switch (eventType) {
             case "JOURNEY_CREATED", "JOURNEY_STATE_CHANGED" -> "pct.journey.state_changed";
@@ -156,7 +160,7 @@ public class OutboxPublisher {
             case "ENCOUNTER_COMPLETED" -> "pct.encounter.completed";
 
             case "ADMISSION_CREATED", "ADMISSION_UPDATED",
-                 "ADMISSION_REQUESTED", "PATIENT_ADMITTED" -> "pct.admission.updated";
+                 "ADMISSION_REQUESTED", "ADMISSION_APPROVED", "PATIENT_ADMITTED" -> "pct.admission.updated";
 
             case "DISCHARGE_INITIATED", "DISCHARGE_STARTED" -> "pct.discharge.started";
             case "DISCHARGE_COMPLETED" -> "pct.discharge.completed";
@@ -199,7 +203,8 @@ public class OutboxPublisher {
                  "ENCOUNTER_COMPLETED",
                  "DISCHARGE_COMPLETED",
                  "TASK_CREATED",
-                 "TASK_COMPLETED" -> "core.transaction.events";
+                 "TASK_COMPLETED",
+                 "TELECONSULT_COMPLETED" -> "core.transaction.events";
             default -> null;
         };
     }

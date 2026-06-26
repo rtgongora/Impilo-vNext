@@ -46,7 +46,8 @@ public class AdmissionController {
         String correlationId = TrustContextHolder.require().correlationId().toString();
 
         AdmissionEntity admission = admissionWorkflow.requestAdmission(
-                id, request.wardId(), request.bedId());
+                id, request.wardId(), request.bedId(),
+                request.encounterId(), request.admittingDiagnosis(), request.admissionType());
 
         return ResponseEntity.ok(ApiResponse.ok(admission, correlationId));
     }
