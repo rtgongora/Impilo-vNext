@@ -219,8 +219,9 @@ class ProviderBootstrapServiceTest {
         when(providerRepository.findByTenantIdAndImpiloHealthId(tenantId, claimantHealthId))
                 .thenReturn(Optional.empty());
         when(providerRepository.save(any(ProviderEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(claimTokenRepository.save(any(ProviderClaimTokenEntity.class)))
-                .thenAnswer(inv -> inv.getArgument(0));
+        // Atomic conditional redemption wins the race: rowcount == 1.
+        when(claimTokenRepository.redeem(eq(1L), any(Instant.class), eq(claimantHealthId)))
+                .thenReturn(1);
 
         ClaimProfileResponse resp = service.claimProfile(rawToken, claimantHealthId);
 
@@ -235,10 +236,44 @@ class ProviderBootstrapServiceTest {
         assertThat(preloaded.getImpiloHealthId()).isEqualTo(claimantHealthId);
         assertThat(preloaded.getClaimedHealthId()).isEqualTo(claimantHealthId);
 
-        // The token is burned (single-use): status CLAIMED.
-        assertThat(token.getStatus()).isEqualTo(ProviderClaimTokenEntity.STATUS_CLAIMED);
-        assertThat(token.getClaimedHealthId()).isEqualTo(claimantHealthId);
-        verify(claimTokenRepository).save(token);
+        // The token is burned (single-use) via the ATOMIC conditional UPDATE,
+        // not a read-modify-write save: redeem(...) is the only burn path.
+        verify(claimTokenRepository).redeem(eq(1L), any(Instant.class), eq(claimantHealthId));
+        verify(claimTokenRepository, never()).save(any());
+    }
+
+    // ── (3b) Concurrent redemption: the loser's atomic redeem rowcount==0 → reject
+    @Test
+    void claimProfile_atomicRedeemReturnsZero_rejectsConcurrentClaim() {
+        String rawToken = "raw-claim-token-race";
+        UUID claimantHealthId = UUID.randomUUID();
+
+        // The token still LOOKS redeemable to the in-memory pre-check (a concurrent
+        // claim has not yet committed when this thread reads it)...
+        ProviderClaimTokenEntity token = new ProviderClaimTokenEntity();
+        token.setId(7L);
+        token.setTenantId(tenantId);
+        token.setProviderId(700L);
+        token.setTokenHash(ProviderBootstrapService.hash(rawToken));
+        token.setStatus(ProviderClaimTokenEntity.STATUS_ISSUED);
+        token.setExpiresAt(Instant.now().plus(30, ChronoUnit.DAYS));
+
+        when(claimTokenRepository.findByTenantIdAndTokenHash(
+                tenantId, ProviderBootstrapService.hash(rawToken)))
+                .thenReturn(Optional.of(token));
+        // ...but the atomic conditional UPDATE loses the race: another claim already
+        // flipped ISSUED → CLAIMED, so this redeem matches no row (rowcount == 0).
+        when(claimTokenRepository.redeem(eq(7L), any(Instant.class), eq(claimantHealthId)))
+                .thenReturn(0);
+
+        assertThatThrownBy(() -> service.claimProfile(rawToken, claimantHealthId))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("invalid, expired, or already used");
+
+        // Loser never touches the provider: no read, no mutation, no event.
+        verify(providerRepository, never()).findByIdAndTenantId(any(), any());
+        verify(providerRepository, never()).save(any());
+        verify(outboxRepository, never()).save(any());
     }
 
     @Test
@@ -292,6 +327,10 @@ class ProviderBootstrapServiceTest {
         when(claimTokenRepository.findByTenantIdAndTokenHash(
                 tenantId, ProviderBootstrapService.hash(rawToken)))
                 .thenReturn(Optional.of(token));
+        // The atomic redeem succeeds first (this claim won the row), but the
+        // one-person-one-profile guard fires AFTER it.
+        when(claimTokenRepository.redeem(any(), any(Instant.class), eq(claimantHealthId)))
+                .thenReturn(1);
         when(providerRepository.findByIdAndTenantId(300L, tenantId))
                 .thenReturn(Optional.of(preloaded));
         when(providerRepository.findByTenantIdAndImpiloHealthId(tenantId, claimantHealthId))
@@ -301,8 +340,10 @@ class ProviderBootstrapServiceTest {
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("already has a provider profile");
 
-        // The token is NOT burned and the skeleton is NOT mutated on rejection.
-        assertThat(token.getStatus()).isEqualTo(ProviderClaimTokenEntity.STATUS_ISSUED);
+        // The skeleton is NOT mutated on rejection. The redeem UPDATE is rolled
+        // back by the surrounding @Transactional boundary (the guard throws), so
+        // the token returns to ISSUED at the DB layer — there is no second,
+        // non-atomic save that could leave it half-burned.
         assertThat(preloaded.getLifecycleStatus()).isEqualTo("PRELOADED");
         verify(providerRepository, never()).save(any());
         verify(claimTokenRepository, never()).save(any());

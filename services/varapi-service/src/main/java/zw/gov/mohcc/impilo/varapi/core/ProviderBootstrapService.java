@@ -240,6 +240,19 @@ public class ProviderBootstrapService {
         ProviderClaimTokenEntity token = loadRedeemableToken(ctx.tenantId(), rawToken)
                 .orElseThrow(() -> new IllegalStateException("Claim token is invalid, expired, or already used"));
 
+        Instant now = Instant.now();
+        // Atomically burn the token (ISSUED → CLAIMED) BEFORE mutating the
+        // provider. The conditional UPDATE's row lock serialises concurrent
+        // /claim calls on the same token: exactly one gets rowcount == 1, every
+        // other concurrent redemption sees 0 and is rejected here. This is the
+        // single-use guard that closes the account-takeover race. A later guard
+        // throw (e.g. one-person-one-profile) rolls this UPDATE back because the
+        // whole method is @Transactional.
+        int redeemed = claimTokenRepository.redeem(token.getId(), now, claimantHealthId);
+        if (redeemed != 1) {
+            throw new IllegalStateException("Claim token is invalid, expired, or already used");
+        }
+
         ProviderEntity provider = providerRepository.findByIdAndTenantId(token.getProviderId(), ctx.tenantId())
                 .orElseThrow(() -> new IllegalStateException("Preloaded provider no longer exists"));
 
@@ -256,7 +269,6 @@ public class ProviderBootstrapService {
                     throw new IllegalStateException("This person already has a provider profile");
                 });
 
-        Instant now = Instant.now();
         provider.setImpiloHealthId(claimantHealthId);
         provider.setClaimedHealthId(claimantHealthId);
         provider.setClaimedAt(now);
@@ -266,10 +278,8 @@ public class ProviderBootstrapService {
         provider.setUpdatedBy(ctx.actorId());
         provider = providerRepository.save(provider);
 
-        token.setStatus(ProviderClaimTokenEntity.STATUS_CLAIMED);
-        token.setClaimedAt(now);
-        token.setClaimedHealthId(claimantHealthId);
-        claimTokenRepository.save(token);
+        // The token was already burned atomically above (claimTokenRepository.redeem);
+        // no second, non-atomic save here — that would re-open the race window.
 
         publishEvent("PROVIDER", provider.getProviderPublicId(),
                 "varapi.provider.claimed",
