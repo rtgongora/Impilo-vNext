@@ -1,26 +1,24 @@
 {
-  "generatedAt": "2026-06-24T02:16:05.801Z",
-  "branch": "claude/staging-ux-orchestration-remediation-Yypyl",
+  "generatedAt": "2026-06-26T10:06:37.240Z",
+  "branch": "intake/rito-quality-safety",
   "registryDrift": {
     "unregisteredModules": [],
     "missingOnDiskModules": []
   },
   "summary": {
-    "totalServices": 92,
+    "totalServices": 93,
     "totalLibraries": 12,
     "totalUiWorkspaces": 24,
-    "bffRouteCount": 2152,
-    "contractCount": 102,
+    "bffRouteCount": 2210,
+    "contractCount": 103,
     "byProductStatus": {
-      "internal-only": 24,
-      "real": 67,
-      "deprecated": 1
+      "internal-only": 25,
+      "real": 68
     },
     "byMaturity": {
-      "INTERNAL_ONLY": 24,
-      "REAL_CODE_NOT_PROBED": 65,
-      "FIXTURE_BACKED": 2,
-      "DEFERRED_WITH_ADR": 1
+      "INTERNAL_ONLY": 25,
+      "REAL_CODE_NOT_PROBED": 66,
+      "FIXTURE_BACKED": 2
     },
     "gapCounts": {
       "byCategory": {
@@ -43,9 +41,9 @@
       "missingTest": 0
     },
     "phase6": {
-      "complete": 90,
-      "userFacing": 67,
-      "userFacingReal": 67,
+      "complete": 91,
+      "userFacing": 68,
+      "userFacingReal": 68,
       "userFacingRealProven": 0
     }
   },
@@ -1223,7 +1221,7 @@
         "bffClients": 6,
         "uiReferences": 7,
         "mobileReferences": 0,
-        "tests": 6
+        "tests": 7
       },
       "dimensions": {
         "database": "real",
@@ -1662,11 +1660,11 @@
       "sovereign": false,
       "sovereignGroup": null,
       "registryStatus": {
-        "production": "pilot-ready-enrolled-coverage",
-        "implementation": "implemented",
-        "frontendWiring": "wired",
-        "apiContract": "wired",
-        "authzAudit": "wired",
+        "production": "baseline-assessed",
+        "implementation": "implemented-or-partial",
+        "frontendWiring": "unknown-or-partial",
+        "apiContract": "partial",
+        "authzAudit": "partial",
         "authzAuditCode": "wired"
       },
       "authzReadiness": {
@@ -2833,8 +2831,8 @@
         "entities": 0,
         "repositories": 2,
         "serviceLayer": 41,
-        "controllers": 256,
-        "routes": 2152,
+        "controllers": 258,
+        "routes": 2210,
         "stubRoutes": 0,
         "contractOperations": 1537,
         "contractViolations": 0,
@@ -3758,9 +3756,9 @@
       "sovereign": false,
       "sovereignGroup": null,
       "registryStatus": {
-        "production": "pilot-ready-enrolled-inpatient",
+        "production": "baseline-assessed",
         "implementation": "implemented-or-partial",
-        "frontendWiring": "wired",
+        "frontendWiring": "unknown-or-partial",
         "apiContract": "partial",
         "authzAudit": "partial",
         "authzAuditCode": "wired"
@@ -4537,11 +4535,11 @@
       "sovereign": false,
       "sovereignGroup": null,
       "registryStatus": {
-        "production": "pilot-ready-enrolled-learning",
-        "implementation": "implemented",
+        "production": "baseline-assessed",
+        "implementation": "implemented-or-partial",
         "frontendWiring": "wired",
-        "apiContract": "wired",
-        "authzAudit": "wired",
+        "apiContract": "partial",
+        "authzAudit": "partial",
         "authzAuditCode": "wired"
       },
       "authzReadiness": {
@@ -4701,7 +4699,7 @@
         "contractOperations": 61,
         "contractViolations": 0,
         "bffClients": 2,
-        "uiReferences": 263,
+        "uiReferences": 264,
         "mobileReferences": 58,
         "tests": 5
       },
@@ -6834,9 +6832,9 @@
       "sovereign": false,
       "sovereignGroup": null,
       "registryStatus": {
-        "production": "pilot-ready-enrolled-pacs",
+        "production": "baseline-assessed",
         "implementation": "implemented-or-partial",
-        "frontendWiring": "wired",
+        "frontendWiring": "unknown-or-partial",
         "apiContract": "partial",
         "authzAudit": "partial",
         "authzAuditCode": "wired"
@@ -6948,9 +6946,9 @@
       "sovereign": false,
       "sovereignGroup": null,
       "registryStatus": {
-        "production": "pilot-ready-enrolled-pct",
+        "production": "baseline-assessed",
         "implementation": "implemented-or-partial",
-        "frontendWiring": "wired",
+        "frontendWiring": "unknown-or-partial",
         "apiContract": "partial",
         "authzAudit": "partial",
         "authzAuditCode": "wired"
@@ -7819,6 +7817,115 @@
       "maturity": "REAL_CODE_NOT_PROBED"
     },
     {
+      "id": "rito-quality-safety-service",
+      "mavenModule": "rito-quality-safety-service",
+      "repoPath": "services/rito-quality-safety-service",
+      "domain": "workflow-orchestration",
+      "plane": "experience",
+      "productNames": [
+        "Rito"
+      ],
+      "sovereign": false,
+      "sovereignGroup": null,
+      "registryStatus": {
+        "production": "baseline-assessed",
+        "implementation": "implemented-or-partial",
+        "frontendWiring": "wired",
+        "apiContract": "partial",
+        "authzAudit": "partial",
+        "authzAuditCode": "wired"
+      },
+      "authzReadiness": {
+        "status": "wired",
+        "checks": {
+          "trustContext": true,
+          "tenantScoping": true,
+          "securityBaseline": true,
+          "adminAudit": true,
+          "rateLimit": true,
+          "outbox": true,
+          "outboxCompatible": false,
+          "outboxSchema": null,
+          "securityConfig": true,
+          "configPackage": "zw.gov.mohcc.impilo.rito.config"
+        },
+        "missing": [],
+        "isTrustPlane": false
+      },
+      "counts": {
+        "migrations": 1,
+        "entities": 23,
+        "repositories": 21,
+        "serviceLayer": 8,
+        "controllers": 8,
+        "routes": 79,
+        "stubRoutes": 0,
+        "contractOperations": 0,
+        "contractViolations": 0,
+        "bffClients": 3,
+        "uiReferences": 13,
+        "mobileReferences": 0,
+        "tests": 6
+      },
+      "dimensions": {
+        "database": "real",
+        "entitiesRepos": "real",
+        "serviceLayer": "real",
+        "controllers": "real",
+        "contract": "real",
+        "bffWiring": "real",
+        "frontendUi": "real",
+        "mobileUi": "n/a",
+        "tests": "real",
+        "authzAudit": "real"
+      },
+      "productStatus": "real",
+      "contractFile": "rito-quality-safety.openapi.yaml",
+      "bffClients": [
+        "RitoServiceClient",
+        "RitoController→RitoServiceClient",
+        "RitoPersonaController→RitoServiceClient"
+      ],
+      "uiPaths": [
+        "ui/one-ui-shell/src/app/my-life/feedback/[caseId]/page.tsx",
+        "ui/one-ui-shell/src/app/rito/audits/[auditId]/page.tsx",
+        "ui/one-ui-shell/src/app/rito/audits/page.tsx",
+        "ui/one-ui-shell/src/app/rito/cases/[caseId]/page.tsx",
+        "ui/one-ui-shell/src/app/rito/cases/page.tsx",
+        "ui/one-ui-shell/src/app/rito/improvement/page.tsx",
+        "ui/one-ui-shell/src/app/rito/page.tsx",
+        "ui/one-ui-shell/src/app/rito/quality-signals/page.tsx",
+        "ui/one-ui-shell/src/app/rito/surveys/page.tsx",
+        "ui/one-ui-shell/src/app/work/above-site/rito/page.tsx",
+        "ui/one-ui-shell/src/app/work/facility/rito/page.tsx",
+        "ui/one-ui-shell/src/config/serviceBranding.ts",
+        "ui/one-ui-shell/src/lib/routes.ts"
+      ],
+      "mobilePaths": [],
+      "mockStubHits": [],
+      "securityPlaceholderHits": [],
+      "stubRouteCount": 0,
+      "bffOrphanRoutes": 0,
+      "internalOnlyDocumented": false,
+      "frontendExpected": true,
+      "expectsPersistence": true,
+      "traceability": {
+        "q1_realBackendCapabilities": true,
+        "q2_exposedViaApi": true,
+        "q3_wiredViaBff": true,
+        "q4_visibleInUi": true,
+        "q5_visibleOnMobile": true,
+        "q6_fakePartialDisconnected": false,
+        "q7_backendNoUi": false,
+        "q8_uiNoBackend": false,
+        "q9_persistsToDb": true,
+        "q10_fixtureOnly": false
+      },
+      "phase6Complete": true,
+      "gaps": [],
+      "maturity": "REAL_CODE_NOT_PROBED"
+    },
+    {
       "id": "rtc-gateway-service",
       "mavenModule": "rtc-gateway-service",
       "repoPath": "services/rtc-gateway-service",
@@ -7830,9 +7937,9 @@
       "sovereign": false,
       "sovereignGroup": null,
       "registryStatus": {
-        "production": "pilot-ready-enrolled-telemedicine",
+        "production": "baseline-assessed",
         "implementation": "implemented-or-partial",
-        "frontendWiring": "wired",
+        "frontendWiring": "unknown-or-partial",
         "apiContract": "partial",
         "authzAudit": "partial",
         "authzAuditCode": "wired"
@@ -7992,7 +8099,7 @@
         "stubRoutes": 0,
         "contractOperations": 10,
         "contractViolations": 0,
-        "bffClients": 11,
+        "bffClients": 12,
         "uiReferences": 44,
         "mobileReferences": 4,
         "tests": 4
@@ -8019,6 +8126,7 @@
         "MobileGovernanceController→inline",
         "OmnichannelController→inline",
         "PublicHealthController→inline",
+        "RitoController→inline",
         "TrustAdminController→inline",
         "WalletController→inline",
         "ProviderProfessionalSettingsHubController→inline",
@@ -8348,7 +8456,7 @@
         "contractOperations": 7,
         "contractViolations": 0,
         "bffClients": 35,
-        "uiReferences": 397,
+        "uiReferences": 399,
         "mobileReferences": 52,
         "tests": 6
       },
@@ -8676,11 +8784,11 @@
       "sovereign": false,
       "sovereignGroup": null,
       "registryStatus": {
-        "production": "pilot-ready-enrolled-wellness",
-        "implementation": "implemented",
-        "frontendWiring": "wired",
-        "apiContract": "wired",
-        "authzAudit": "wired",
+        "production": "baseline-assessed",
+        "implementation": "implemented-or-partial",
+        "frontendWiring": "unknown-or-partial",
+        "apiContract": "partial",
+        "authzAudit": "partial",
         "authzAuditCode": "wired"
       },
       "authzReadiness": {
@@ -8840,7 +8948,7 @@
         "contractOperations": 19,
         "contractViolations": 0,
         "bffClients": 26,
-        "uiReferences": 126,
+        "uiReferences": 128,
         "mobileReferences": 36,
         "tests": 3
       },
@@ -10287,6 +10395,105 @@
       "maturity": "REAL_CODE_NOT_PROBED"
     },
     {
+      "id": "vashandi-workforce-service",
+      "mavenModule": "vashandi-workforce-service",
+      "repoPath": "services/vashandi-workforce-service",
+      "domain": "platform-ops",
+      "plane": "integration",
+      "productNames": [
+        "Vashandi Workforce"
+      ],
+      "sovereign": false,
+      "sovereignGroup": null,
+      "registryStatus": {
+        "production": "baseline-assessed",
+        "implementation": "implemented-or-partial",
+        "frontendWiring": "unknown-or-partial",
+        "apiContract": "partial",
+        "authzAudit": "partial",
+        "authzAuditCode": "wired"
+      },
+      "authzReadiness": {
+        "status": "wired",
+        "checks": {
+          "trustContext": true,
+          "tenantScoping": true,
+          "securityBaseline": true,
+          "adminAudit": true,
+          "rateLimit": true,
+          "outbox": true,
+          "outboxCompatible": true,
+          "outboxSchema": "vashandi",
+          "securityConfig": true,
+          "configPackage": "zw.gov.mohcc.impilo.vashandi.config"
+        },
+        "missing": [],
+        "isTrustPlane": false
+      },
+      "counts": {
+        "migrations": 1,
+        "entities": 9,
+        "repositories": 9,
+        "serviceLayer": 9,
+        "controllers": 7,
+        "routes": 42,
+        "stubRoutes": 0,
+        "contractOperations": 35,
+        "contractViolations": 0,
+        "bffClients": 1,
+        "uiReferences": 3,
+        "mobileReferences": 1,
+        "tests": 4
+      },
+      "dimensions": {
+        "database": "real",
+        "entitiesRepos": "real",
+        "serviceLayer": "real",
+        "controllers": "real",
+        "contract": "real",
+        "bffWiring": "real",
+        "frontendUi": "real",
+        "mobileUi": "n/a",
+        "tests": "real",
+        "authzAudit": "real"
+      },
+      "productStatus": "real",
+      "contractFile": "vashandi-workforce.openapi.yaml",
+      "bffClients": [
+        "VashandiServiceClient"
+      ],
+      "uiPaths": [
+        "ui/one-ui-shell/src/components/vashandi/VashandiFriendlyBlockedState.tsx",
+        "ui/one-ui-shell/src/components/vashandi/VashandiShell.tsx",
+        "ui/one-ui-shell/src/lib/administration-governance/route-registry.ts"
+      ],
+      "mobilePaths": [
+        "provider-app:apps/mobile/provider-app/src/screens/provider/VashandiWorkforceHubScreen.tsx"
+      ],
+      "mockStubHits": [],
+      "securityPlaceholderHits": [],
+      "stubRouteCount": 0,
+      "bffOrphanRoutes": 0,
+      "internalOnlyDocumented": false,
+      "frontendExpected": true,
+      "expectsPersistence": true,
+      "traceability": {
+        "q1_realBackendCapabilities": true,
+        "q2_exposedViaApi": true,
+        "q3_wiredViaBff": true,
+        "q4_visibleInUi": true,
+        "q5_visibleOnMobile": true,
+        "q6_fakePartialDisconnected": false,
+        "q7_backendNoUi": false,
+        "q8_uiNoBackend": false,
+        "q9_persistsToDb": true,
+        "q10_fixtureOnly": false
+      },
+      "phase6Complete": true,
+      "gaps": [],
+      "maturity": "REAL_CODE_NOT_PROBED"
+    },
+    {
       "id": "vito-service",
       "mavenModule": "vito-service",
       "repoPath": "services/vito-service",
@@ -10446,11 +10653,11 @@
       "sovereign": false,
       "sovereignGroup": null,
       "registryStatus": {
-        "production": "deprecated-module-retired-runtime",
-        "implementation": "migrated-to-simba",
-        "frontendWiring": "not-applicable",
-        "apiContract": "superseded-by-simba",
-        "authzAudit": "not-applicable",
+        "production": "baseline-assessed",
+        "implementation": "implemented-or-partial",
+        "frontendWiring": "unknown-or-partial",
+        "apiContract": "partial",
+        "authzAudit": "partial",
         "authzAuditCode": "partial"
       },
       "authzReadiness": {
@@ -10501,7 +10708,7 @@
         "tests": "real",
         "authzAudit": "thin"
       },
-      "productStatus": "deprecated",
+      "productStatus": "internal-only",
       "contractFile": "wellness.openapi.yaml",
       "bffClients": [
         "WellnessServiceClient",
@@ -10569,7 +10776,7 @@
       },
       "phase6Complete": true,
       "gaps": [],
-      "maturity": "DEFERRED_WITH_ADR"
+      "maturity": "INTERNAL_ONLY"
     },
     {
       "id": "workflow-service",
@@ -10810,129 +11017,6 @@
         "ui/one-ui-shell/src/lib/plane-landings.ts"
       ],
       "mobilePaths": [],
-      "mockStubHits": [],
-      "securityPlaceholderHits": [],
-      "stubRouteCount": 0,
-      "bffOrphanRoutes": 0,
-      "internalOnlyDocumented": false,
-      "frontendExpected": true,
-      "expectsPersistence": true,
-      "traceability": {
-        "q1_realBackendCapabilities": true,
-        "q2_exposedViaApi": true,
-        "q3_wiredViaBff": true,
-        "q4_visibleInUi": true,
-        "q5_visibleOnMobile": true,
-        "q6_fakePartialDisconnected": false,
-        "q7_backendNoUi": false,
-        "q8_uiNoBackend": false,
-        "q9_persistsToDb": true,
-        "q10_fixtureOnly": false
-      },
-      "phase6Complete": true,
-      "gaps": [],
-      "maturity": "REAL_CODE_NOT_PROBED"
-    },
-    {
-      "id": "vashandi-workforce-service",
-      "mavenModule": "vashandi-workforce-service",
-      "repoPath": "services/vashandi-workforce-service",
-      "domain": "workforce-operations",
-      "plane": "enterprise",
-      "productNames": [
-        "Vashandi"
-      ],
-      "sovereign": false,
-      "sovereignGroup": null,
-      "registryStatus": {
-        "production": "baseline-assessed",
-        "implementation": "implemented-or-partial",
-        "frontendWiring": "partial",
-        "apiContract": "partial",
-        "authzAudit": "partial",
-        "authzAuditCode": "wired"
-      },
-      "authzReadiness": {
-        "status": "wired",
-        "checks": {
-          "trustContext": true,
-          "tenantScoping": true,
-          "securityBaseline": true,
-          "adminAudit": true,
-          "rateLimit": true,
-          "outbox": true,
-          "outboxCompatible": true,
-          "outboxSchema": "vashandi",
-          "securityConfig": true,
-          "configPackage": "zw.gov.mohcc.impilo.vashandi.config"
-        },
-        "missing": [],
-        "isTrustPlane": false
-      },
-      "counts": {
-        "migrations": 1,
-        "entities": 9,
-        "repositories": 9,
-        "serviceLayer": 9,
-        "controllers": 7,
-        "routes": 42,
-        "stubRoutes": 0,
-        "contractOperations": 35,
-        "contractViolations": 0,
-        "bffClients": 1,
-        "uiReferences": 36,
-        "mobileReferences": 8,
-        "tests": 4
-      },
-      "dimensions": {
-        "database": "real",
-        "entitiesRepos": "real",
-        "serviceLayer": "real",
-        "controllers": "real",
-        "contract": "real",
-        "bffWiring": "real",
-        "frontendUi": "real",
-        "mobileUi": "n/a",
-        "tests": "real",
-        "authzAudit": "real"
-      },
-      "productStatus": "real",
-      "contractFile": "vashandi-workforce.openapi.yaml",
-      "bffClients": [
-        "VashandiServiceClient"
-      ],
-      "uiPaths": [
-        "ui/one-ui-shell/src/app/auth/login/page.tsx",
-        "ui/one-ui-shell/src/app/work/vashandi/access-review/page.tsx",
-        "ui/one-ui-shell/src/app/work/vashandi/analytics/page.tsx",
-        "ui/one-ui-shell/src/app/work/vashandi/assignments/page.tsx",
-        "ui/one-ui-shell/src/app/work/vashandi/attendance/page.tsx",
-        "ui/one-ui-shell/src/app/work/vashandi/imports/page.tsx",
-        "ui/one-ui-shell/src/app/work/vashandi/leave-availability/page.tsx",
-        "ui/one-ui-shell/src/app/work/vashandi/page.tsx",
-        "ui/one-ui-shell/src/app/work/vashandi/rosters/page.tsx",
-        "ui/one-ui-shell/src/app/work/vashandi/workforce/[id]/page.tsx",
-        "ui/one-ui-shell/src/app/work/vashandi/workforce/page.tsx",
-        "ui/one-ui-shell/src/components/vashandi/AccessRiskTable.tsx",
-        "ui/one-ui-shell/src/components/vashandi/AssignmentCreateForm.tsx",
-        "ui/one-ui-shell/src/components/vashandi/CheckInOutPanel.tsx",
-        "ui/one-ui-shell/src/components/vashandi/EligibilityCheckPanel.tsx",
-        "ui/one-ui-shell/src/components/vashandi/VashandiFriendlyBlockedState.tsx",
-        "ui/one-ui-shell/src/components/vashandi/VashandiShell.tsx",
-        "ui/one-ui-shell/src/hooks/useVashandi.ts",
-        "ui/one-ui-shell/src/lib/__tests__/provider-workforce-context-golden-thread.test.ts",
-        "ui/one-ui-shell/src/lib/administration-governance/access.ts"
-      ],
-      "mobilePaths": [
-        "provider-app:apps/mobile/provider-app/src/screens/provider/ClinicalToolsScreen.tsx",
-        "provider-app:apps/mobile/provider-app/src/screens/provider/VashandiAttendanceScreen.tsx",
-        "provider-app:apps/mobile/provider-app/src/screens/provider/VashandiAvailabilityScreen.tsx",
-        "provider-app:apps/mobile/provider-app/src/screens/provider/VashandiFacilityStaffScreen.tsx",
-        "provider-app:apps/mobile/provider-app/src/screens/provider/VashandiRosterScreen.tsx",
-        "provider-app:apps/mobile/provider-app/src/screens/provider/VashandiWorkforceHubScreen.tsx",
-        "provider-app:apps/mobile/provider-app/src/services/sessionExperienceService.ts",
-        "provider-app:apps/mobile/provider-app/src/services/vashandiService.ts"
-      ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
       "stubRouteCount": 0,
@@ -38351,6 +38435,735 @@
       "hardcodedDataHints": 0,
       "readsRealData": true,
       "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/rito",
+      "pageTitle": "Rito — Quality & Safety",
+      "zone": "operations",
+      "pageFile": "ui/one-ui-shell/src/app/rito/page.tsx",
+      "bffPaths": [
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": false,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/rito/cases",
+      "pageTitle": "Case Worklist",
+      "zone": "operations",
+      "pageFile": "ui/one-ui-shell/src/app/rito/cases/page.tsx",
+      "bffPaths": [
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "domain-client",
+        "inline-bff-reference",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": false,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/rito/cases/[caseId]",
+      "pageTitle": "Case Detail",
+      "zone": "operations",
+      "pageFile": "ui/one-ui-shell/src/app/rito/cases/[caseId]/page.tsx",
+      "bffPaths": [
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "domain-client",
+        "inline-bff-reference",
+        "auth-keycloak",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": false,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/rito/quality-signals",
+      "pageTitle": "Quality Signals",
+      "zone": "operations",
+      "pageFile": "ui/one-ui-shell/src/app/rito/quality-signals/page.tsx",
+      "bffPaths": [
+        "/internal/v1/rito/quality-signals",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "domain-client",
+        "inline-bff-reference"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": false,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/rito/audits",
+      "pageTitle": "Quality Audits",
+      "zone": "operations",
+      "pageFile": "ui/one-ui-shell/src/app/rito/audits/page.tsx",
+      "bffPaths": [
+        "/internal/v1/rito/audits",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "domain-client",
+        "inline-bff-reference",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": false,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/rito/audits/[auditId]",
+      "pageTitle": "Audit Detail",
+      "zone": "operations",
+      "pageFile": "ui/one-ui-shell/src/app/rito/audits/[auditId]/page.tsx",
+      "bffPaths": [
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "domain-client",
+        "inline-bff-reference",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": false,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/rito/improvement",
+      "pageTitle": "Improvement — CAPA & QI",
+      "zone": "operations",
+      "pageFile": "ui/one-ui-shell/src/app/rito/improvement/page.tsx",
+      "bffPaths": [
+        "/internal/v1/rito/corrective-actions",
+        "/internal/v1/rito/qi-plans",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "domain-client",
+        "inline-bff-reference"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": false,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/rito/surveys",
+      "pageTitle": "Experience Surveys",
+      "zone": "operations",
+      "pageFile": "ui/one-ui-shell/src/app/rito/surveys/page.tsx",
+      "bffPaths": [
+        "/internal/v1/rito/surveys",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "domain-client",
+        "inline-bff-reference"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": false,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/my-life/feedback",
+      "pageTitle": "My Feedback",
+      "zone": "home",
+      "pageFile": "ui/one-ui-shell/src/app/my-life/feedback/page.tsx",
+      "bffPaths": [
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/my-life/feedback/new",
+      "pageTitle": "Share Feedback",
+      "zone": "home",
+      "pageFile": "ui/one-ui-shell/src/app/my-life/feedback/new/page.tsx",
+      "bffPaths": [
+        "/internal/v1/nompilo/rito/cases",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "domain-client",
+        "inline-bff-reference",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/my-life/feedback/[caseId]",
+      "pageTitle": "Track Feedback",
+      "zone": "home",
+      "pageFile": "ui/one-ui-shell/src/app/my-life/feedback/[caseId]/page.tsx",
+      "bffPaths": [
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "domain-client",
+        "inline-bff-reference",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": false,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/work/facility/rito",
+      "pageTitle": "Facility Quality & Safety",
+      "zone": "facility",
+      "pageFile": "ui/one-ui-shell/src/app/work/facility/rito/page.tsx",
+      "bffPaths": [
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "domain-client",
+        "inline-bff-reference"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": false,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/work/above-site/rito",
+      "pageTitle": "Above-Site Quality & Safety",
+      "zone": "operations",
+      "pageFile": "ui/one-ui-shell/src/app/work/above-site/rito/page.tsx",
+      "bffPaths": [
+        "/internal/v1/rito/dashboards/above-site",
+        "/internal/v1/rito/dashboards/safety",
+        "/internal/v1/rito/dashboards/client-voice",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "domain-client",
+        "inline-bff-reference"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": false,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": false,
       "completeVsCosmetic": false,
       "allowlistedShell": false,
       "gaps": []

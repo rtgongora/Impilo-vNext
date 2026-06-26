@@ -1,6 +1,6 @@
 # Product Truth — Backend-to-UI Traceability
 
-> Generated: 2026-06-24T02:16:05.801Z
+> Generated: 2026-06-26T10:06:37.240Z
 
 For each service: backend capabilities → API → BFF → UI → mobile → persistence.
 
@@ -604,7 +604,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 
 | # | Question | Answer |
 |---|----------|--------|
-| 1 | Real backend capabilities? | Yes (256 controllers, 2152 routes) |
+| 1 | Real backend capabilities? | Yes (258 controllers, 2210 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: experience-bff.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (0 clients) |
 | 4 | Visible in UI? | Yes (162 refs) |
@@ -1014,7 +1014,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (11 controllers, 68 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: impilo-live.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (2 clients) |
-| 4 | Visible in UI? | Yes (263 refs) |
+| 4 | Visible in UI? | Yes (264 refs) |
 | 5 | Visible on mobile? | Yes (58 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
@@ -1658,6 +1658,32 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/data-intelligence/pipelines/page.tsx`
 - `ui/one-ui-shell/src/app/data-intelligence/reports/page.tsx`
 
+## rito-quality-safety-service
+
+- **Path:** `services/rito-quality-safety-service`
+- **Domain:** workflow-orchestration (experience)
+- **Product status:** real
+
+| # | Question | Answer |
+|---|----------|--------|
+| 1 | Real backend capabilities? | Yes (8 controllers, 79 routes) |
+| 2 | Exposed via API/contracts? | Yes (contract: rito-quality-safety.openapi.yaml) |
+| 3 | Wired via BFF? | Yes (3 clients) |
+| 4 | Visible in UI? | Yes (13 refs) |
+| 5 | Visible on mobile? | Yes (0 refs) |
+| 6 | Fake/partial/disconnected? | No |
+| 7 | Backend without UI? | No |
+| 8 | UI without backend? | No |
+| 9 | Persists to DB? | Yes (1 migrations) |
+| 10 | Fixture-only flows? | No |
+
+**UI references (sample):**
+- `ui/one-ui-shell/src/app/my-life/feedback/[caseId]/page.tsx`
+- `ui/one-ui-shell/src/app/rito/audits/[auditId]/page.tsx`
+- `ui/one-ui-shell/src/app/rito/audits/page.tsx`
+- `ui/one-ui-shell/src/app/rito/cases/[caseId]/page.tsx`
+- `ui/one-ui-shell/src/app/rito/cases/page.tsx`
+
 ## rtc-gateway-service
 
 - **Path:** `services/rtc-gateway-service`
@@ -1694,7 +1720,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 |---|----------|--------|
 | 1 | Real backend capabilities? | Yes (1 controllers, 7 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: rules.openapi.yaml) |
-| 3 | Wired via BFF? | Yes (11 clients) |
+| 3 | Wired via BFF? | Yes (12 clients) |
 | 4 | Visible in UI? | Yes (44 refs) |
 | 5 | Visible on mobile? | Yes (4 refs) |
 | 6 | Fake/partial/disconnected? | No |
@@ -1769,7 +1795,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (1 controllers, 5 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: search.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (35 clients) |
-| 4 | Visible in UI? | Yes (397 refs) |
+| 4 | Visible in UI? | Yes (399 refs) |
 | 5 | Visible on mobile? | Yes (52 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
@@ -1869,7 +1895,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (8 controllers, 20 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: support.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (26 clients) |
-| 4 | Visible in UI? | Yes (126 refs) |
+| 4 | Visible in UI? | Yes (128 refs) |
 | 5 | Visible on mobile? | Yes (36 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
@@ -2170,6 +2196,30 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/home/page.tsx`
 - `ui/one-ui-shell/src/app/id-services/page.tsx`
 
+## vashandi-workforce-service
+
+- **Path:** `services/vashandi-workforce-service`
+- **Domain:** platform-ops (integration)
+- **Product status:** real
+
+| # | Question | Answer |
+|---|----------|--------|
+| 1 | Real backend capabilities? | Yes (7 controllers, 42 routes) |
+| 2 | Exposed via API/contracts? | Yes (contract: vashandi-workforce.openapi.yaml) |
+| 3 | Wired via BFF? | Yes (1 clients) |
+| 4 | Visible in UI? | Yes (3 refs) |
+| 5 | Visible on mobile? | Yes (1 refs) |
+| 6 | Fake/partial/disconnected? | No |
+| 7 | Backend without UI? | No |
+| 8 | UI without backend? | No |
+| 9 | Persists to DB? | Yes (1 migrations) |
+| 10 | Fixture-only flows? | No |
+
+**UI references (sample):**
+- `ui/one-ui-shell/src/components/vashandi/VashandiFriendlyBlockedState.tsx`
+- `ui/one-ui-shell/src/components/vashandi/VashandiShell.tsx`
+- `ui/one-ui-shell/src/lib/administration-governance/route-registry.ts`
+
 ## vito-service
 
 - **Path:** `services/vito-service`
@@ -2200,7 +2250,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 
 - **Path:** `services/wellness-service`
 - **Domain:** wellness-compatibility-alias (enterprise)
-- **Product status:** deprecated
+- **Product status:** internal-only
 
 | # | Question | Answer |
 |---|----------|--------|
@@ -2273,32 +2323,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/components/administration-governance/AccessRequestBoard.tsx`
 - `ui/one-ui-shell/src/components/administration-governance/BulkImportPanel.tsx`
 - `ui/one-ui-shell/src/components/administration-governance/GovernanceActionResult.tsx`
-
-## vashandi-workforce-service
-
-- **Path:** `services/vashandi-workforce-service`
-- **Domain:** workforce-operations (enterprise)
-- **Product status:** real
-
-| # | Question | Answer |
-|---|----------|--------|
-| 1 | Real backend capabilities? | Yes (7 controllers, 42 routes) |
-| 2 | Exposed via API/contracts? | Yes (contract: vashandi-workforce.openapi.yaml) |
-| 3 | Wired via BFF? | Yes (1 clients) |
-| 4 | Visible in UI? | Yes (36 refs) |
-| 5 | Visible on mobile? | Yes (8 refs) |
-| 6 | Fake/partial/disconnected? | No |
-| 7 | Backend without UI? | No |
-| 8 | UI without backend? | No |
-| 9 | Persists to DB? | Yes (1 migrations) |
-| 10 | Fixture-only flows? | No |
-
-**UI references (sample):**
-- `ui/one-ui-shell/src/app/auth/login/page.tsx`
-- `ui/one-ui-shell/src/app/work/vashandi/access-review/page.tsx`
-- `ui/one-ui-shell/src/app/work/vashandi/analytics/page.tsx`
-- `ui/one-ui-shell/src/app/work/vashandi/assignments/page.tsx`
-- `ui/one-ui-shell/src/app/work/vashandi/attendance/page.tsx`
 
 ## zibo-service
 

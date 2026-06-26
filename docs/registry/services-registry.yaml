@@ -494,7 +494,7 @@ services:
     default_http_port: 8140
     product_names:
       - Coverage
-    owner_team: enterprise-finance
+    owner_team: TBD
     system_of_record_for:
       - Coverage canonical records
     consumes_from:
@@ -505,12 +505,12 @@ services:
     forbidden_responsibilities:
       - must-not-store-clinical-records-as-source-of-truth
       - must-not-own-identity-assurance-policy
-    production_status: pilot-ready-enrolled-coverage
-    implementation_status: implemented
-    frontend_wiring_status: wired
-    api_contract_status: wired
-    authz_audit_status: wired
-    observability_status: wired
+    production_status: baseline-assessed
+    implementation_status: implemented-or-partial
+    frontend_wiring_status: unknown-or-partial
+    api_contract_status: partial
+    authz_audit_status: partial
+    observability_status: partial
   - id: credential-verification-service
     maven_module: credential-verification-service
     primary_plane: enterprise
@@ -1026,9 +1026,9 @@ services:
     forbidden_responsibilities:
       - must-not-act-as-identity-source-of-record
       - must-not-own-enterprise-ledgering
-    production_status: pilot-ready-enrolled-inpatient
+    production_status: baseline-assessed
     implementation_status: implemented-or-partial
-    frontend_wiring_status: wired
+    frontend_wiring_status: unknown-or-partial
     api_contract_status: partial
     authz_audit_status: partial
     observability_status: partial
@@ -1218,7 +1218,7 @@ services:
     default_http_port: null
     product_names:
       - Learning
-    owner_team: experience-platform
+    owner_team: TBD
     system_of_record_for:
       - Learning canonical records
     consumes_from:
@@ -1229,12 +1229,12 @@ services:
     forbidden_responsibilities:
       - must-not-own-domain-source-data
       - must-not-bypass-bff-authz-audit-controls
-    production_status: pilot-ready-enrolled-learning
-    implementation_status: implemented
+    production_status: baseline-assessed
+    implementation_status: implemented-or-partial
     frontend_wiring_status: wired
-    api_contract_status: wired
-    authz_audit_status: wired
-    observability_status: wired
+    api_contract_status: partial
+    authz_audit_status: partial
+    observability_status: partial
   - id: live-service
     maven_module: live-service
     primary_plane: experience
@@ -1836,9 +1836,9 @@ services:
     forbidden_responsibilities:
       - must-not-act-as-identity-source-of-record
       - must-not-own-enterprise-ledgering
-    production_status: pilot-ready-enrolled-pacs
+    production_status: baseline-assessed
     implementation_status: implemented-or-partial
-    frontend_wiring_status: wired
+    frontend_wiring_status: unknown-or-partial
     api_contract_status: partial
     authz_audit_status: partial
     observability_status: partial
@@ -1865,9 +1865,9 @@ services:
     forbidden_responsibilities:
       - must-not-act-as-identity-source-of-record
       - must-not-own-enterprise-ledgering
-    production_status: pilot-ready-enrolled-pct
+    production_status: baseline-assessed
     implementation_status: implemented-or-partial
-    frontend_wiring_status: wired
+    frontend_wiring_status: unknown-or-partial
     api_contract_status: partial
     authz_audit_status: partial
     observability_status: partial
@@ -2045,6 +2045,35 @@ services:
     api_contract_status: partial
     authz_audit_status: partial
     observability_status: partial
+  - id: rito-quality-safety-service
+    maven_module: rito-quality-safety-service
+    primary_plane: experience
+    plane: experience
+    domain: workflow-orchestration
+    secondary_planes: []
+    sovereign: false
+    sovereign_group: null
+    primary_protocol: rest
+    default_http_port: 8390
+    product_names:
+      - Rito
+    owner_team: TBD
+    system_of_record_for:
+      - Rito Quality Safety canonical records
+    consumes_from:
+      - tshepo-authz-service
+      - multiple-domain-services-via-bff
+    exposes_to:
+      - web-mobile-experience
+    forbidden_responsibilities:
+      - must-not-own-domain-source-data
+      - must-not-bypass-bff-authz-audit-controls
+    production_status: baseline-assessed
+    implementation_status: implemented-or-partial
+    frontend_wiring_status: wired
+    api_contract_status: partial
+    authz_audit_status: partial
+    observability_status: partial
   - id: rtc-gateway-service
     maven_module: rtc-gateway-service
     primary_plane: integration
@@ -2054,7 +2083,7 @@ services:
     sovereign: false
     sovereign_group: null
     primary_protocol: rest
-    default_http_port: 8196
+    default_http_port: null
     product_names:
       - Rtc Gateway
     owner_team: TBD
@@ -2068,9 +2097,9 @@ services:
     forbidden_responsibilities:
       - must-not-become-system-of-record-for-clinical-or-finance
       - must-not-embed-actor-facing-business-workflows
-    production_status: pilot-ready-enrolled-telemedicine
+    production_status: baseline-assessed
     implementation_status: implemented-or-partial
-    frontend_wiring_status: wired
+    frontend_wiring_status: unknown-or-partial
     api_contract_status: partial
     authz_audit_status: partial
     observability_status: partial
@@ -2262,11 +2291,10 @@ services:
     sovereign: false
     sovereign_group: null
     primary_protocol: rest
+    default_http_port: null
     product_names:
       - Simba
-    owner_team: enterprise-wellness
-    default_http_port: 8125
-    deployment_note: Single wellness product runtime; wellness-service module is deprecated (not deployed)
+    owner_team: TBD
     system_of_record_for:
       - wellness journeys
       - lifestyle plans
@@ -2296,12 +2324,12 @@ services:
       - must-not-own-consent-policy-authority
       - must-not-own-payment-ledgers
       - must-not-own-public-health-surveillance-source-of-truth
-    production_status: pilot-ready-enrolled-wellness
-    implementation_status: implemented
-    frontend_wiring_status: wired
-    api_contract_status: wired
-    authz_audit_status: wired
-    observability_status: wired
+    production_status: baseline-assessed
+    implementation_status: implemented-or-partial
+    frontend_wiring_status: unknown-or-partial
+    api_contract_status: partial
+    authz_audit_status: partial
+    observability_status: partial
   - id: support-service
     maven_module: support-service
     primary_plane: integration
@@ -2653,6 +2681,35 @@ services:
     api_contract_status: partial
     authz_audit_status: partial
     observability_status: partial
+  - id: vashandi-workforce-service
+    maven_module: vashandi-workforce-service
+    primary_plane: integration
+    plane: integration
+    domain: platform-ops
+    secondary_planes: []
+    sovereign: false
+    sovereign_group: null
+    primary_protocol: rest
+    default_http_port: null
+    product_names:
+      - Vashandi Workforce
+    owner_team: TBD
+    system_of_record_for:
+      - Vashandi Workforce canonical records
+    consumes_from:
+      - tshepo-authz-service
+    exposes_to:
+      - experience-bff
+      - integration-hub
+    forbidden_responsibilities:
+      - must-not-become-system-of-record-for-clinical-or-finance
+      - must-not-embed-actor-facing-business-workflows
+    production_status: baseline-assessed
+    implementation_status: implemented-or-partial
+    frontend_wiring_status: unknown-or-partial
+    api_contract_status: partial
+    authz_audit_status: partial
+    observability_status: partial
   - id: vito-service
     maven_module: vito-service
     primary_plane: registry
@@ -2695,14 +2752,16 @@ services:
     sovereign: false
     sovereign_group: null
     primary_protocol: rest
-    default_http_port: 8161
+    default_http_port: null
     product_names:
       - Wellness
-    owner_team: enterprise-wellness
+    owner_team: TBD
     system_of_record_for: []
     consumes_from:
       - simba-service
-    exposes_to: []
+    exposes_to:
+      - experience-bff
+      - integration-hub
     forbidden_responsibilities:
       - must-not-own-public-health-surveillance-source-of-truth
       - must-not-own-clinical-encounter-lifecycle
@@ -2710,13 +2769,12 @@ services:
       - must-not-own-patient-identity-source-of-truth
       - must-not-own-provider-identity-source-of-truth
       - must-not-own-facility-registry
-      - must-not-be-deployed-as-parallel-wellness-runtime
-    production_status: deprecated-module-retired-runtime
-    implementation_status: migrated-to-simba
-    frontend_wiring_status: not-applicable
-    api_contract_status: superseded-by-simba
-    authz_audit_status: not-applicable
-    observability_status: not-applicable
+    production_status: baseline-assessed
+    implementation_status: implemented-or-partial
+    frontend_wiring_status: unknown-or-partial
+    api_contract_status: partial
+    authz_audit_status: partial
+    observability_status: partial
   - id: workflow-service
     maven_module: workflow-service
     primary_plane: integration
@@ -2772,41 +2830,6 @@ services:
     production_status: baseline-assessed
     implementation_status: implemented-or-partial
     frontend_wiring_status: unknown-or-partial
-    api_contract_status: partial
-    authz_audit_status: partial
-    observability_status: partial
-  - id: vashandi-workforce-service
-    maven_module: vashandi-workforce-service
-    primary_plane: enterprise
-    plane: enterprise
-    domain: workforce-operations
-    secondary_planes: []
-    sovereign: false
-    sovereign_group: null
-    primary_protocol: rest
-    default_http_port: 8167
-    product_names:
-      - Vashandi
-    owner_team: TBD
-    system_of_record_for:
-      - Operational workforce profile membership assignment roster shift attendance leave access risk
-    consumes_from:
-      - tshepo-authz-service
-      - varapi-service
-      - workforce-governance-service
-      - tuso-service
-      - fundo-service
-    exposes_to:
-      - experience-bff
-    forbidden_responsibilities:
-      - must-not-store-clinical-records-as-source-of-truth
-      - must-not-own-person-identity-as-source-of-truth
-      - must-not-own-provider-professional-registry-as-source-of-truth
-      - must-not-own-facility-registry-as-source-of-truth
-      - must-not-own-hsc-employment-as-source-of-truth
-    production_status: baseline-assessed
-    implementation_status: implemented-or-partial
-    frontend_wiring_status: partial
     api_contract_status: partial
     authz_audit_status: partial
     observability_status: partial

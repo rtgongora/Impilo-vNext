@@ -1,24 +1,24 @@
 # Full Product Truth Recovery Report
 
-> Generated: 2026-06-24T02:16:05.801Z
-> Branch: `claude/staging-ux-orchestration-remediation-Yypyl`
+> Generated: 2026-06-26T10:06:37.240Z
+> Branch: `intake/rito-quality-safety`
 
 ## Executive summary
 
 | Metric | Count |
 |--------|------:|
-| Total services audited | 92 |
-| Backend services | 92 |
+| Total services audited | 93 |
+| Backend services | 93 |
 | Shared libraries | 12 |
-| Frontend surfaces (routes) | 614 |
+| Frontend surfaces (routes) | 627 |
 | Mobile screens | 174 |
-| BFF route handlers | 2152 |
-| OpenAPI contracts | 102 |
-| Services with DB persistence | 92 |
-| **Phase 6 complete (user-facing + documented internal)** | **90** |
-| User-facing services with `real` code present (file-existence axis) | 67 / 67 |
+| BFF route handlers | 2210 |
+| OpenAPI contracts | 103 |
+| Services with DB persistence | 93 |
+| **Phase 6 complete (user-facing + documented internal)** | **91** |
+| User-facing services with `real` code present (file-existence axis) | 68 / 68 |
 | — of those, **runtime-proven** (REAL_PROVEN) | **0** |
-| Services internal-only (documented) | 24 |
+| Services internal-only (documented) | 25 |
 | Services partially complete | 0 |
 | Services backend-only (no UI) | 0 |
 | Services UI-only (no backend) | 0 |
@@ -36,10 +36,9 @@
 
 | Maturity | Count |
 |----------|------:|
-| INTERNAL_ONLY | 24 |
-| REAL_CODE_NOT_PROBED | 65 |
+| INTERNAL_ONLY | 25 |
+| REAL_CODE_NOT_PROBED | 66 |
 | FIXTURE_BACKED | 2 |
-| DEFERRED_WITH_ADR | 1 |
 
 ## Quality gates added
 

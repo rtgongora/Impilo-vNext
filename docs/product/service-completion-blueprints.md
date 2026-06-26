@@ -1,6 +1,6 @@
 # Service Completion Blueprints
 
-> Generated: 2026-06-24T02:16:05.801Z
+> Generated: 2026-06-26T10:06:37.240Z
 > End-to-end product expectation per service for mature vNext.
 
 Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and tests required.
@@ -1545,6 +1545,35 @@ Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and
 - BFF: proxy/controller test for each exposed route family
 - UI: vitest hook/page test + Playwright e2e for critical path
 
+## rito-quality-safety-service
+
+**Product names:** Rito
+**Plane/domain:** experience / workflow-orchestration
+**Current status:** real
+
+### Primary personas
+- Operators and domain users for workflow-orchestration plane capabilities
+- Standard governed service consumer
+
+### Main workflows
+- List/search Rito records
+- Create and update governed transactions with TSHEPO authz
+- Detail view with audit trail and status transitions where applicable
+
+### Minimum viable complete UI
+- List + detail routes backed by real BFF hooks
+- Empty/loading/error states with honest maturity labels
+
+### Production-grade complete UI
+- Full CRUD where domain permits; search/filter; role-based visibility
+- Mobile parity where user-facing
+- Cross-service handoffs documented in core-transaction journey maps
+
+### Tests required
+- Backend: `*IT.java` or controller tests for primary workflows
+- BFF: proxy/controller test for each exposed route family
+- UI: vitest hook/page test + Playwright e2e for critical path
+
 ## rtc-gateway-service
 
 **Product names:** Rtc Gateway
@@ -2091,6 +2120,35 @@ Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and
 - BFF: proxy/controller test for each exposed route family
 - UI: vitest hook/page test + Playwright e2e for critical path
 
+## vashandi-workforce-service
+
+**Product names:** Vashandi Workforce
+**Plane/domain:** integration / platform-ops
+**Current status:** real
+
+### Primary personas
+- Operators and domain users for platform-ops plane capabilities
+- Standard governed service consumer
+
+### Main workflows
+- List/search Vashandi Workforce records
+- Create and update governed transactions with TSHEPO authz
+- Detail view with audit trail and status transitions where applicable
+
+### Minimum viable complete UI
+- List + detail routes backed by real BFF hooks
+- Empty/loading/error states with honest maturity labels
+
+### Production-grade complete UI
+- Full CRUD where domain permits; search/filter; role-based visibility
+- Mobile parity where user-facing
+- Cross-service handoffs documented in core-transaction journey maps
+
+### Tests required
+- Backend: `*IT.java` or controller tests for primary workflows
+- BFF: proxy/controller test for each exposed route family
+- UI: vitest hook/page test + Playwright e2e for critical path
+
 ## vito-service
 
 **Product names:** VITO
@@ -2124,7 +2182,7 @@ Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and
 
 **Product names:** Wellness
 **Plane/domain:** enterprise / wellness-compatibility-alias
-**Current status:** deprecated
+**Current status:** internal-only
 
 - **Classification:** Internal-only platform service
 - **Primary users:** Platform operators, integration engineers, SRE
@@ -2173,35 +2231,6 @@ Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and
 
 ### Main workflows
 - List/search Workforce Governance records
-- Create and update governed transactions with TSHEPO authz
-- Detail view with audit trail and status transitions where applicable
-
-### Minimum viable complete UI
-- List + detail routes backed by real BFF hooks
-- Empty/loading/error states with honest maturity labels
-
-### Production-grade complete UI
-- Full CRUD where domain permits; search/filter; role-based visibility
-- Mobile parity where user-facing
-- Cross-service handoffs documented in core-transaction journey maps
-
-### Tests required
-- Backend: `*IT.java` or controller tests for primary workflows
-- BFF: proxy/controller test for each exposed route family
-- UI: vitest hook/page test + Playwright e2e for critical path
-
-## vashandi-workforce-service
-
-**Product names:** Vashandi
-**Plane/domain:** enterprise / workforce-operations
-**Current status:** real
-
-### Primary personas
-- Operators and domain users for workforce-operations plane capabilities
-- Standard governed service consumer
-
-### Main workflows
-- List/search Vashandi records
 - Create and update governed transactions with TSHEPO authz
 - Detail view with audit trail and status transitions where applicable
 

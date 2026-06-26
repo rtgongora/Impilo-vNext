@@ -1,16 +1,15 @@
 # Product Truth — Service Inventory
 
-> Generated: 2026-06-24T02:16:05.801Z
+> Generated: 2026-06-26T10:06:37.240Z
 > Scanner: `scripts/completeness/generate-product-truth.mjs`
-> Total services: **92** | Libraries: **12** | UI workspaces: **24**
+> Total services: **93** | Libraries: **12** | UI workspaces: **24**
 
 ## Summary by product status
 
 | Status | Count |
 |--------|------:|
-| internal-only | 24 |
-| real | 67 |
-| deprecated | 1 |
+| internal-only | 25 |
+| real | 68 |
 
 ## Service inventory
 
@@ -82,6 +81,7 @@
 | product-registry-service | registry | real | real | real | real | real | n/a | real | real |
 | referral-service | integration | real | real | real | real | real | n/a | real | real |
 | reporting-service | data | real | real | real | real | real | n/a | real | real |
+| rito-quality-safety-service | experience | real | real | real | real | real | n/a | real | real |
 | rtc-gateway-service | integration | real | real | real | real | real | n/a | real | real |
 | rules-service | clinical | real | real | real | real | real | n/a | real | real |
 | scheduling-service | clinical | real | real | real | real | real | n/a | real | real |
@@ -102,11 +102,11 @@
 | tuso-service | registry | real | real | real | real | real | n/a | real | real |
 | ubomi-service | registry | real | real | real | real | real | n/a | real | real |
 | varapi-service | registry | real | real | real | real | real | n/a | real | real |
+| vashandi-workforce-service | integration | real | real | real | real | real | n/a | real | real |
 | vito-service | registry | real | real | real | real | real | real | real | real |
-| wellness-service | enterprise | real | real | real | real | real | real | real | deprecated |
+| wellness-service | enterprise | real | real | real | real | real | real | real | internal-only |
 | workflow-service | integration | real | real | real | real | real | n/a | real | real |
 | workforce-governance-service | enterprise | real | real | real | real | real | n/a | real | real |
-| vashandi-workforce-service | enterprise | real | real | real | real | real | n/a | real | real |
 | zibo-service | registry | real | real | real | real | real | n/a | real | real |
 
 ## Libraries

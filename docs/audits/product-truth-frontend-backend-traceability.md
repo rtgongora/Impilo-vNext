@@ -1,7 +1,7 @@
 # Product Truth — Frontend-to-Backend Traceability
 
-> Generated: 2026-06-24T02:16:05.801Z
-> Web surfaces: **614** | Mobile screens: **174**
+> Generated: 2026-06-26T10:06:37.240Z
+> Web surfaces: **627** | Mobile screens: **174**
 
 ## Web routes (one-ui-shell)
 
@@ -495,18 +495,18 @@
 | /live/event/[eventId]/room | Live Room | operations | yes | no | yes | yes | yes | — |
 | /live/event/[eventId]/replay | Event Replay | home | yes | no | yes | yes | yes | — |
 | /live/event/[eventId]/analytics | Live Analytics | operations | yes | no | yes | yes | yes | — |
-| /work/administration-governance | Administration & Governance | operations | yes | no | yes | no | yes | — |
-| /work/administration-governance/access-requests | Access Requests | operations | yes | no | yes | yes | yes | — |
-| /work/administration-governance/access-review | Access Review | operations | yes | no | yes | yes | yes | — |
-| /work/administration-governance/access-review/[subjectId] | Access Review | operations | yes | no | yes | yes | yes | — |
-| /work/administration-governance/audit | Audit | operations | yes | no | yes | yes | yes | — |
-| /work/administration-governance/municipal | Municipal | operations | yes | no | yes | yes | yes | — |
-| /work/administration-governance/onboard | Onboard New Actor | operations | yes | no | yes | no | yes | — |
-| /work/administration-governance/onboard/citizen | Onboard Citizen | operations | yes | no | yes | yes | yes | — |
-| /work/administration-governance/onboard/external-partner-user | Onboard External Partner User | operations | yes | no | yes | yes | yes | — |
-| /work/administration-governance/onboard/hsc-user | Onboard Hsc User | operations | yes | no | yes | yes | yes | — |
-| /work/administration-governance/onboard/madi-user | Onboard Madi User | operations | yes | no | yes | yes | yes | — |
-| /work/administration-governance/onboard/marketplace-user | Onboard Marketplace User | operations | yes | no | yes | yes | yes | — |
+| /rito | Rito — Quality & Safety | operations | yes | no | yes | no | yes | — |
+| /rito/cases | Case Worklist | operations | yes | no | yes | no | yes | — |
+| /rito/cases/[caseId] | Case Detail | operations | yes | no | yes | no | yes | — |
+| /rito/quality-signals | Quality Signals | operations | yes | no | yes | no | yes | — |
+| /rito/audits | Quality Audits | operations | yes | no | yes | no | yes | — |
+| /rito/audits/[auditId] | Audit Detail | operations | yes | no | yes | no | yes | — |
+| /rito/improvement | Improvement — CAPA & QI | operations | yes | no | yes | no | yes | — |
+| /rito/surveys | Experience Surveys | operations | yes | no | yes | no | yes | — |
+| /my-life/feedback | My Feedback | home | yes | no | yes | yes | yes | — |
+| /my-life/feedback/new | Share Feedback | home | yes | no | yes | yes | yes | — |
+| /my-life/feedback/[caseId] | Track Feedback | home | yes | no | yes | no | yes | — |
+| /work/facility/rito | Facility Quality & Safety | facility | yes | no | yes | no | yes | — |
 
 ## Mobile screens
 
