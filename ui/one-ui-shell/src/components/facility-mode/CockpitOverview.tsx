@@ -138,6 +138,12 @@ export function CockpitOverview({
             detail={`${facility.departments.length} departments · ${facility.servicePoints.length} service points`}
           />
           <QuickAction
+            href={`/facility/${facilityId}/regulators`}
+            icon={<ShieldCheck className="h-4 w-4" />}
+            label="Regulators"
+            detail="Councils that regulate this facility"
+          />
+          <QuickAction
             href={`/facility/${facilityId}`}
             icon={<Activity className="h-4 w-4" />}
             label="Facility details"
