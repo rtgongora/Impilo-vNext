@@ -221,3 +221,35 @@ directly-affected modules were compile-verified, but end-to-end/IT verification 
 No Claude task branch is considered complete unless its work has either **landed in Product Truth** or the branch
 is **explicitly documented as superseded or abandoned**. Product Truth (`claude/staging-ux-orchestration-remediation-Yypyl`)
 remains the single source of implementation truth.
+
+---
+
+## Continuation — Phase 0 wins landed (2026-06-26, same day)
+
+Following the closeout, a user-approved plan began driving the 6 HUMAN_REVIEW branches + the WIP to closure
+(`/home/robert/.claude/plans/whats-the-plan-mossy-journal.md`). The **low-risk, fully-verifiable Phase 0** is done
+and pushed (`cfd4d3bd9 → db48bfe74`, fast-forward, no force). Safety snapshot: `safety/pt-before-phase0-20260626-2120`.
+
+| Item | Action | Verify | Result |
+|---|---|---|---|
+| **WIP SecurityConfig** (`wip/oros-intake-uncommitted-preserve-…`) | Applied only `dispatch-service/SecurityConfig.java` (`@ConditionalOnProperty` test/prod chains) — `f86d7cbf7`; completes a half-wired change (PT already set `disable-oauth-for-tests=true`). | `mvn -o dispatch-service test` | **GREEN**; wip branch **deleted** (unique work landed). |
+| **patient-safety-pv** | Merged (`31029901e`) + registered nav/branding/registry (`db48bfe74`): 5 page-backed `/work/patient-safety/**` routes, `serviceBranding` entry, `services-registry.yaml` entry (clinical plane, port 8202). | `mvn -o patient-safety-service compile` ✓, `experience-bff test-compile` ✓ (ServiceClientConfig union resolved), product-truth/phase6/route-inventory gates ✓ | **GREEN**; branch **deleted** (0-unabsorbed). |
+| **wave-b CDS strand** (Phase 0c) | **RECLASSIFIED — not a clean cherry-pick.** Aborted after 2 of 8 commits: the strand restructures `ClinicalEvaluationContext` / `ClinicalContextEnricher` / `ClinicalRulesEngine` in the **same files the already-absorbed a2-golden-thread + clinical-knowledge work modified**. It is a genuine reconciliation of **clinical-safety alert logic** (AKI/hyperkalaemia/critical-lab), not an additive pick. Backed out cleanly to `db48bfe74`. | — | **Deferred** to a dedicated reconciliation with full ckp test verification (see below). |
+
+Gate state at `db48bfe74` unchanged from baseline (no regression): product-truth gaps 4 ≤ 6, phase6 incomplete 2 ≤ 2,
+completeness 12/13 (pre-existing test #13 still 8).
+
+### Remaining work (Phases 1–5) — gated on human sign-off + CI
+These were **intentionally not executed** in this automated pass because the approved plan gates them on
+`/security-review` + a real cross-service test run + human architect/security sign-off, and they are large,
+security-sensitive, and hard to reverse:
+- **Phase 1** — trust substrate (`libs/tshepo-trust-crypto` + tshepo-authz V010/V014/V015/V016 + GdhcnReadiness/StepUp/TrustAuthority), carried by the wave-b trust remainder. No Flyway same-number/different-content collisions found.
+- **Phase 2** — OROS reconciliation (4 named non-mergeable code conflicts: subsidy enrolment spelling, DAGS v1↔v1+v2, teleconsult billing 1-arg↔2-arg, telemedicine API + `OutboxPublisher` duplicate `case`).
+- **Phase 3** — `citizen-zero-to-one` (OPA rego must compile first — tip admits "uncompilable + SHADOW").
+- **Phase 4** — `khuluma-comms-hub` (V017 + khuluma.rego + 22 SecurityConfig edits).
+- **Phase 5** — retire `integration/closeout-staging` once OROS/CDS/khuluma land.
+- **CDS strand reconciliation** (was Phase 0c) — fold into the clinical-rules reconciliation; verify with
+  `clinical-knowledge-platform-service` unit tests (InterpretationEngineTest/RangeResolverTest/ClinicalRulesEngineTest).
+
+The `intake/oros-diagnostics-journey`, `intake/citizen-zero-to-one`, `intake/khuluma-comms-hub`,
+`intake/wave-b-tshepo-gdhcn-trust-primitives`, and `integration/closeout-staging` branches remain **open** pending those phases.
