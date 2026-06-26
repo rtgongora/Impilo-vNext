@@ -73,6 +73,13 @@ learning:
       default: ${LEARNING_OUTBOX_DEFAULT_TOPIC:platform.learning.events}
   events:
     legacy-emission-enabled: ${LEARNING_EVENTS_LEGACY_EMISSION_ENABLED:true}
+  ai:
+    # Provider-agnostic AI authoring. Default is the safe local stub (no external calls).
+    # Set provider=LLM_ORCHESTRATION + llm-base-url to delegate to the platform
+    # llm-orchestration service. Drafts always remain review-gated.
+    provider: ${LEARNING_AI_PROVIDER:STUB_SAFE_LOCAL}
+    llm-base-url: ${LEARNING_AI_LLM_BASE_URL:http://localhost:8265}
+    model: ${LEARNING_AI_MODEL:}
   lifecycle:
     certificate:
       # Scheduled renewal/refresher/expiry sweep. Default true; disable where the
