@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
 import zw.gov.mohcc.impilo.tshepo.identity.api.dto.*;
 import zw.gov.mohcc.impilo.tshepo.identity.core.IdResolutionService;
+import zw.gov.mohcc.impilo.tshepo.identity.core.SilentIdentifierResolutionService;
 
 import java.util.UUID;
 
@@ -20,9 +21,28 @@ import java.util.UUID;
 public class ResolutionController {
 
     private final IdResolutionService resolutionService;
+    private final SilentIdentifierResolutionService silentResolutionService;
 
-    public ResolutionController(IdResolutionService resolutionService) {
+    public ResolutionController(IdResolutionService resolutionService,
+                                SilentIdentifierResolutionService silentResolutionService) {
         this.resolutionService = resolutionService;
+        this.silentResolutionService = silentResolutionService;
+    }
+
+    /**
+     * C3 silent identifier resolution (person-first login hardening).
+     *
+     * <p>Resolves a login-supplied identifier (email/phone/Health ID/Impilo ID/…)
+     * to a person anchor. Anti-enumeration: identical response shape and a
+     * constant-time floor on hit and miss alike, so existence cannot be probed.
+     * {@code PROVIDER_ID}/{@code COUNCIL_NUMBER} resolve a profile but never
+     * authenticate ({@code canAuthenticate=false}).</p>
+     */
+    @PostMapping("/resolve-identifier")
+    public ResponseEntity<ApiResponse<IdentifierResolveResponse>> resolveIdentifier(
+            @Valid @RequestBody IdentifierResolveRequest request) {
+        IdentifierResolveResponse result = silentResolutionService.resolve(request);
+        return ResponseEntity.ok(ApiResponse.ok(result, null));
     }
 
     /**
