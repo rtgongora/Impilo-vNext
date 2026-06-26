@@ -67,7 +67,7 @@ Evidence convention: **ahead/behind** = `git rev-list --left-right --count <cano
 | `intake/clinical-knowledge-placeholder` | 2026-06-23 21:21 · R. Gongora · `7428e31fd` · chore(product-truth): ratchet | 14 / 3 | 21 / 74 / 1048 | clinical-knowledge-platform rules engine, product-truth docs/baseline | **superseded** | Services delta is deletion-dominated (9 files, +9/−737) → branch is behind; specialist-only gating already on canonical. Stale. |
 | `intake/community-moderation-authz` | 2026-06-23 21:09 · R. Gongora · `f785c235d` · chore(product-truth): ratchet | 14 / 3 | 23 / 72 / 853 | community-service (pin authz), product-truth | **already-absorbed** | `SocialServicePinAuthzTest.java` present; **services delta empty** → feature identical on canonical. Only product-truth doc noise remains. |
 | `intake/vito-demographics-update-parity` | 2026-06-23 20:32 · R. Gongora · `abd3720c3` · test(vito): demographics round-trip | 14 / 2 | 21 / 101 / 834 | vito-service (extended demographics preserve), product-truth | **already-absorbed** | `ClientUpdateServiceTest.java` present; **vito services delta empty** → feature identical on canonical. Doc noise only. |
-| `intake/product-truth-scanner-honesty` | 2026-06-23 19:24 · R. Gongora · `aae4494cf` · chore(report): honest gaps | 20 / 6 | 25 / 108 / 1147 | completeness scanner (`generate-product-truth.mjs`, `product-truth-gaps.mjs`), guard scripts, maturity-model doc, baseline.json | **already-absorbed → NEEDS-HUMAN-REVIEW** | Honesty artifacts (`product-truth-maturity-model.md`, `product-truth-baseline.json`, `__tests__/product-truth-truth.test.mjs`) all **present on canonical**, and canonical's scanner has since evolved further (scripts delta would *remove* 77 lines / add 6 → branch is the older, simpler version). **Human check required:** confirm canonical's scanner did not silently re-smooth gaps back toward "0" (per standing guidance the honest gap model must not regress). |
+| `intake/product-truth-scanner-honesty` | 2026-06-23 19:24 · R. Gongora · `aae4494cf` · chore(report): honest gaps | 20 / 6 | 25 / 108 / 1147 | completeness scanner (`generate-product-truth.mjs`, `product-truth-gaps.mjs`), guard scripts, maturity-model doc, baseline.json | **already-absorbed — RESOLVED** | Honesty artifacts (`product-truth-maturity-model.md`, `product-truth-baseline.json`, `__tests__/product-truth-truth.test.mjs`) all present on canonical. **Re-smoothing concern investigated and CLEARED** — see "Resolution" section below. The `−77` lines were the honesty branch being the older/simpler version; canonical's scanner is **stricter**, not weaker. |
 
 ---
 
@@ -94,12 +94,34 @@ The destructive integration gate must **not** merge, delete, rebase, or force-to
 
 ---
 
+## Resolution — product-truth scanner "re-smoothing" concern (read-only probe, 2026-06-26)
+
+**Question:** did canonical's product-truth scanner silently re-smooth gaps back toward "0" relative to the honest-scanner branch?
+
+**Verdict: NO. Concern cleared.** Canonical's scanner is **strictly stricter** than the original honesty branch, and the falling gap count traces to **genuine fixes**, not suppressed detection.
+
+Evidence (all read-only, via `git show` / `git diff` on origin refs):
+
+1. **Detectors strengthened, not weakened** (`git diff <honesty> <canonical> -- scripts/completeness/generate-product-truth.mjs`):
+   - `MOCK_STUB_PATTERNS` widened (added `mock-data`, `mockedData`, `fakeData`, `demoData`).
+   - `scanInMemoryStore` widened — original Rule 1 (`*Store.java` + concurrent field) **kept**, plus new Rule 2 catching Controller/Service static mutable backing collections (e.g. a seeded `CopyOnWriteArrayList`).
+   - New detector `scanStubMarkers` (stub-placeholder + `TODO: wire/implement`).
+   - `scanSecurityPlaceholders` retained and wired into `scanServiceModule`.
+   - (The `−77` lines flagged earlier were simply the honesty branch being the older, smaller version; canonical has *more* detector code.)
+2. **Lock-test intact:** `scripts/completeness/__tests__/product-truth-truth.test.mjs` is present and **identical (181 lines)** on both canonical and `intake/oros-diagnostics-journey`. The test that locks honest maturity + detector behaviour was never removed.
+3. **Detectors still fire and are honestly reported on canonical** — its actual gap list still names a real **S/blocker** (`mushe-wallet-service` security placeholder) and **S/high** (`experience-bff` security placeholder). Not suppressed; canonical is not at 0.
+4. **Gap-count trajectory = real closures** (`summary.gapCounts.total`): honesty **7** → canonical **6** → oros **4**. Between canonical and oros the two **S-category security placeholders closed** (security batch F: `g046` oauth-off-switch removal across ~23 services, vito SMART-card fail-closed key, DAGS permit key; plus citizen TPL-1 JWT-over-headers), and mock/stub hit counts fell with real de-fabrication (experience-bff 10→7, mushe-wallet 3→2). The remaining 4 F-gaps (experience-bff + mushe-wallet mock/stub, `/wellness/commodities`, `/operations/facility-operations`) are still **openly flagged** on oros — i.e. honestly retained, not zeroed.
+
+**Residual caveat (low risk, optional human spot-check):** detector firing and S-gap closure were confirmed via named architectural commits, but a line-by-line check that the mushe-wallet S/blocker fix is substantive (real fail-closed change) rather than a reworded string was **not** performed. Given the commit content, confidence is high; flagged only for completeness.
+
+---
+
 ## Recommended integration ORDER (for the later destructive gate ONLY — not executed here)
 
 Run only after **all** ACTIVE branches quiesce. Re-verify each branch at that time (this inventory is a point-in-time snapshot). Suggested layering:
 
-1. **Product-Truth / guard / docs first** — reconcile the scanner + gap register. Resolve
-   `intake/product-truth-scanner-honesty` (verify no gap re-smoothing) **before** anything ratchets the baseline, so honest debt is preserved.
+1. **Product-Truth / guard / docs first** — reconcile the scanner + gap register.
+   `intake/product-truth-scanner-honesty` is **already absorbed and cleared** (see Resolution above — no re-smoothing; canonical's scanner is stricter). No action needed beyond keeping the honest detectors + the 181-line lock-test in place when later branches regenerate the dataset.
 2. **Backend services** — `intake/b3-dags-permit-key` (clean FF; the only genuinely-unmerged code in scope). Then the active branches' backend layers in dependency order: shared `libs/tshepo-trust-crypto` + tshepo-authz/security substrate → vito/registry → clinical-knowledge-platform/zibo (CDS) → oros/madi/channels → khuluma-service → mvumo consent.
 3. **BFF** — experience-bff endpoints behind each backend (interpretation proxy, comms controllers, OROS observation/specimen, consent/legal-agreement).
 4. **Web UI** — one-ui-shell routes (comms, CDS interpreted flags, OROS worklists/admin catalogue, registry demographics).
