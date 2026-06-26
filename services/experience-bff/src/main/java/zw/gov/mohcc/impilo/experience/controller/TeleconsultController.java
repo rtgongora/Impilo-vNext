@@ -17,6 +17,7 @@ import org.springframework.web.client.ResourceAccessException;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.AnalyticsPipelineServiceClient;
 import zw.gov.mohcc.impilo.experience.client.CostaServiceClient;
+import zw.gov.mohcc.impilo.experience.client.CoverageServiceClient;
 import zw.gov.mohcc.impilo.experience.client.DocumentServiceClient;
 import zw.gov.mohcc.impilo.experience.client.FhirGatewayServiceClient;
 import zw.gov.mohcc.impilo.experience.client.MvumoServiceClient;
@@ -50,6 +51,7 @@ public class TeleconsultController {
     private final DocumentServiceClient documentClient;
     private final VarapiServiceClient varapiClient;
     private final TusoServiceClient tusoClient;
+    private final CoverageServiceClient coverageClient;
     private final NotificationServiceClient notificationClient;
     private final FhirGatewayServiceClient fhirGatewayClient;
     private final CostaServiceClient costaClient;
@@ -63,6 +65,7 @@ public class TeleconsultController {
                                  DocumentServiceClient documentClient,
                                  VarapiServiceClient varapiClient,
                                  TusoServiceClient tusoClient,
+                                 CoverageServiceClient coverageClient,
                                  NotificationServiceClient notificationClient,
                                  FhirGatewayServiceClient fhirGatewayClient,
                                  CostaServiceClient costaClient,
@@ -75,6 +78,7 @@ public class TeleconsultController {
         this.documentClient = documentClient;
         this.varapiClient = varapiClient;
         this.tusoClient = tusoClient;
+        this.coverageClient = coverageClient;
         this.notificationClient = notificationClient;
         this.fhirGatewayClient = fhirGatewayClient;
         this.costaClient = costaClient;
@@ -110,6 +114,7 @@ public class TeleconsultController {
                     "EXTERNAL_MANAGED"));
             payload.put("consent_required", true);
             payload.put("purpose_of_use", normalizedPurpose);
+            applyBillingContext(payload, val(body, "patientId", "patient_id"), facilityId, body);
             var created = pctClient.createReferral(payload);
             if (created == null) {
                 return upstreamFailure("PCT_UNAVAILABLE", "No teleconsult session payload returned", requestId, correlationId);
@@ -553,7 +558,12 @@ public class TeleconsultController {
                 }
                 telemedicineGovernanceService.assertBreakGlassOverrideAllowed();
             }
-            var completed = pctClient.completeReferral(id, body == null ? Map.of() : body);
+            // Finalise billing context at completion (the point the value-trigger fires); falls
+            // back to what was captured at referral creation when not resolvable here.
+            Map<String, Object> completionBody = body == null
+                    ? new java.util.LinkedHashMap<>() : new java.util.LinkedHashMap<>(body);
+            applyBillingContext(completionBody, val(completionBody, "patientId", "patient_id"), facilityId, completionBody);
+            var completed = pctClient.completeReferral(id, completionBody);
             if (completed == null) {
                 return upstreamFailure("PCT_UNAVAILABLE", "No completion payload returned", requestId, correlationId);
             }
@@ -676,6 +686,53 @@ public class TeleconsultController {
             }
         }
         return null;
+    }
+
+    /**
+     * Enrich a referral payload with billing context — {@code patient_category} (from
+     * coverage-service) and {@code facility_category} (from the TUSO facility registry) — so
+     * COSTA's charging rules (exemptions/waivers/surcharges) can fire when the teleconsult is
+     * priced. Caller-supplied values win. Best-effort: any lookup failure, or a non-numeric
+     * facility reference, leaves the field unset and PCT/COSTA degrade gracefully.
+     */
+    private void applyBillingContext(Map<String, Object> payload, String patientCpid,
+                                     String facilityRef, Map<String, Object> body) {
+        String patientCategory = val(body, "patientCategory", "patient_category");
+        if ((patientCategory == null || patientCategory.isBlank())
+                && patientCpid != null && !patientCpid.isBlank()) {
+            try {
+                patientCategory = nodeText(coverageClient.resolvePatientCategory(patientCpid), "category");
+            } catch (Exception e) {
+                log.debug("Coverage patient-category lookup failed for {}: {}", patientCpid, e.getMessage());
+            }
+        }
+        if (patientCategory != null && !patientCategory.isBlank()) {
+            payload.put("patient_category", patientCategory);
+        }
+
+        String facilityCategory = val(body, "facilityCategory", "facility_category");
+        if ((facilityCategory == null || facilityCategory.isBlank())
+                && facilityRef != null && facilityRef.matches("\\d+")) {
+            try {
+                JsonNode facility = tusoClient.getFacility(Long.parseLong(facilityRef));
+                facilityCategory = firstNonBlank(
+                        nodeText(facility, "facilityCategory"),
+                        nodeText(facility, "level"));
+            } catch (Exception e) {
+                log.debug("TUSO facility-category lookup failed for {}: {}", facilityRef, e.getMessage());
+            }
+        }
+        if (facilityCategory != null && !facilityCategory.isBlank()) {
+            payload.put("facility_category", facilityCategory);
+        }
+    }
+
+    private String nodeText(JsonNode node, String field) {
+        if (node == null) return null;
+        JsonNode v = node.get(field);
+        if (v == null || v.isNull()) return null;
+        String s = v.asText();
+        return s == null || s.isBlank() ? null : s;
     }
 
     private ResponseEntity<Map<String, Object>> ok(Object data, String requestId, String correlationId, HttpStatus status) {

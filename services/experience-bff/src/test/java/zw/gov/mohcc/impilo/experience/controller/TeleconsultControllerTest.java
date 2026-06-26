@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.experience.client.AnalyticsPipelineServiceClient;
 import zw.gov.mohcc.impilo.experience.client.CostaServiceClient;
+import zw.gov.mohcc.impilo.experience.client.CoverageServiceClient;
 import zw.gov.mohcc.impilo.experience.client.DocumentServiceClient;
 import zw.gov.mohcc.impilo.experience.client.FhirGatewayServiceClient;
 import zw.gov.mohcc.impilo.experience.client.MvumoServiceClient;
@@ -26,12 +27,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import org.mockito.ArgumentCaptor;
 
 class TeleconsultControllerTest {
 
     private PctServiceClient pctClient;
     private MvumoServiceClient mvumoClient;
     private CostaServiceClient costaClient;
+    private CoverageServiceClient coverageClient;
     private AnalyticsPipelineServiceClient analyticsClient;
     private RtcGatewayServiceClient rtcClient;
     private NotificationServiceClient notificationClient;
@@ -48,6 +51,7 @@ class TeleconsultControllerTest {
         DocumentServiceClient documentClient = Mockito.mock(DocumentServiceClient.class);
         VarapiServiceClient varapiClient = Mockito.mock(VarapiServiceClient.class);
         TusoServiceClient tusoClient = Mockito.mock(TusoServiceClient.class);
+        coverageClient = Mockito.mock(CoverageServiceClient.class);
         notificationClient = Mockito.mock(NotificationServiceClient.class);
         FhirGatewayServiceClient fhirGatewayClient = Mockito.mock(FhirGatewayServiceClient.class);
         costaClient = Mockito.mock(CostaServiceClient.class);
@@ -55,7 +59,7 @@ class TeleconsultControllerTest {
         rtcClient = Mockito.mock(RtcGatewayServiceClient.class);
         governanceService = Mockito.mock(TelemedicineGovernanceService.class);
         controller = new TeleconsultController(
-                pctClient, mvumoClient, documentClient, varapiClient, tusoClient,
+                pctClient, mvumoClient, documentClient, varapiClient, tusoClient, coverageClient,
                 notificationClient, fhirGatewayClient, costaClient, analyticsClient, rtcClient,
                 governanceService, objectMapper
         );
@@ -129,6 +133,30 @@ class TeleconsultControllerTest {
         Map<?, ?> error = (Map<?, ?>) response.getBody().get("error");
         assertEquals("TELEMEDICINE_GOVERNANCE_INVALID", error.get("code"));
         Mockito.verifyNoInteractions(pctClient);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void createSessionEnrichesPatientCategoryFromCoverage() {
+        Mockito.when(governanceService.normalizePurposeOfUse(any())).thenReturn("TREATMENT");
+        ObjectNode category = objectMapper.createObjectNode();
+        category.put("category", "PRIVATE");
+        category.put("source", "COVERAGE_PLAN");
+        Mockito.when(coverageClient.resolvePatientCategory("CPID-1")).thenReturn(category);
+        ObjectNode created = objectMapper.createObjectNode();
+        created.put("id", "ref-1");
+        Mockito.when(pctClient.createReferral(any())).thenReturn(created);
+
+        var response = controller.createSession(
+                "req-x", "corr-x", "tenant-a", "TREATMENT", "fac-uuid", "provider-1",
+                new java.util.HashMap<>(Map.of("patientId", "CPID-1", "specialty", "CARDIOLOGY")));
+
+        assertEquals(201, response.getStatusCode().value());
+        ArgumentCaptor<Map<String, Object>> payloadCaptor = ArgumentCaptor.forClass(Map.class);
+        Mockito.verify(pctClient).createReferral(payloadCaptor.capture());
+        // coverage-resolved category is injected for COSTA's charging rules; non-numeric facility
+        // ref ("fac-uuid") is skipped gracefully, leaving facility_category unset.
+        assertEquals("PRIVATE", payloadCaptor.getValue().get("patient_category"));
     }
 
     @Test
