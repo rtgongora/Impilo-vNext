@@ -2834,6 +2834,48 @@ paths:
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
       responses:
         '200': { description: Marked, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/academic/programs:
+    get:
+      tags: [FundoAcademic]
+      summary: List academic programs (qualifications)
+      operationId: listAcademicPrograms
+      parameters:
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 500 } }
+      responses:
+        '200': { description: Programs, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+    post:
+      tags: [FundoAcademic]
+      summary: Create an academic program
+      operationId: createAcademicProgram
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Program created, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/academic/programs/{programId}:
+    get:
+      tags: [FundoAcademic]
+      summary: Get an academic program
+      operationId: getAcademicProgram
+      parameters:
+        - { name: programId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Program, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/academic/terms:
+    get:
+      tags: [FundoAcademic]
+      summary: List academic terms (optionally by program)
+      operationId: listAcademicTerms
+      parameters:
+        - { name: programId, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 500 } }
+      responses:
+        '200': { description: Terms, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+    post:
+      tags: [FundoAcademic]
+      summary: Create an academic term
+      operationId: createAcademicTerm
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Term created, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
   /workflow-context:
     get:
       operationId: learning_get__workflow_context
