@@ -99,6 +99,7 @@ public class AuthSessionController {
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @RequestBody Map<String, Object> body) {
 
+        long loginStartNanos = System.nanoTime();
         String email = body.getOrDefault("email", body.getOrDefault("identifier", "")).toString();
         String password = body.getOrDefault("password", "").toString();
         String loginMethod = body.get("method") == null ? null : body.get("method").toString().trim();
@@ -109,6 +110,17 @@ public class AuthSessionController {
         if (email.isBlank() || password.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of(
                     "error", Map.of("code", "VALIDATION", "message", "Email and password are required")));
+        }
+
+        // ── L3 additive person-first login guards (CZO-adjacent: additive only) ──
+        // LOGIN-PROVIDERID-DENY: a Provider ID / council registration number is a
+        // *resolvable* identifier, never an authentication credential. If the
+        // login identifier or method indicates a provider/council number was used
+        // as the username, deny with the uniform failure shape (no enumeration of
+        // whether such a provider exists). Policy specced to track P.
+        if (isProviderCredentialAttempt(loginMethod, email)) {
+            log.info("LOGIN-PROVIDERID-DENY: provider/council identifier rejected as auth credential");
+            return uniformAuthFailure(loginStartNanos);
         }
 
         // Attempt Keycloak ROPC grant
@@ -169,9 +181,10 @@ public class AuthSessionController {
             }
         } catch (org.springframework.web.client.HttpClientErrorException e) {
             if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
-                log.info("Keycloak login failed: invalid credentials for {}", email);
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-                        "error", Map.of("code", "INVALID_CREDENTIALS", "message", "Invalid email or password")));
+                log.info("Keycloak login failed: invalid credentials");
+                // LOGIN-ANTI-ENUM: uniform failure shape + constant-time floor so a
+                // caller cannot distinguish "no such user" from "wrong password".
+                return uniformAuthFailure(loginStartNanos);
             }
             log.warn("Keycloak login error (status {}): {}", e.getStatusCode(), e.getMessage());
         } catch (Exception e) {
@@ -759,6 +772,61 @@ public class AuthSessionController {
                     "data", Map.of("count", 0),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
+    }
+
+    /** Anti-enumeration constant-time floor (ms) for failed-login responses. */
+    private static final long AUTH_FAIL_FLOOR_MILLIS = 150L;
+
+    /**
+     * Detect an attempt to authenticate with a Provider ID / council registration
+     * number instead of a person credential. Such identifiers are resolvable but
+     * never authenticate (LOGIN-PROVIDERID-DENY). Heuristic: explicit method hint,
+     * or an identifier that is neither an email nor a UUID Health ID and matches a
+     * provider/council number shape.
+     */
+    static boolean isProviderCredentialAttempt(String loginMethod, String identifier) {
+        if (loginMethod != null) {
+            String m = loginMethod.trim().toLowerCase(Locale.ROOT);
+            if (m.equals("provider_id") || m.equals("providerid")
+                    || m.equals("council_number") || m.equals("council")
+                    || m.equals("ec_number") || m.equals("ec")) {
+                return true;
+            }
+        }
+        if (identifier == null) {
+            return false;
+        }
+        String id = identifier.trim();
+        if (id.isEmpty() || id.contains("@")) {
+            return false; // emails are person credentials
+        }
+        if (id.matches("(?i)^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")) {
+            return false; // a UUID Health ID is a person anchor, not a provider number
+        }
+        // Provider public IDs (ULID, 26 chars) and council numbers (e.g. MDPCZ/123,
+        // EC-12345) used as a username are credential misuse.
+        boolean ulidShaped = id.matches("^[0-9A-HJKMNP-TV-Z]{26}$");
+        boolean councilShaped = id.matches("(?i)^(EC[-/ ]?\\d+|[A-Z]{2,8}[-/]\\w*\\d+\\w*)$");
+        return ulidShaped || councilShaped;
+    }
+
+    /**
+     * Uniform authentication-failure response (LOGIN-ANTI-ENUM). Same body shape
+     * and status for every failure cause (bad password, unknown user, provider-id
+     * misuse), floored to a constant minimum latency to defeat timing oracles.
+     */
+    private ResponseEntity<Map<String, Object>> uniformAuthFailure(long startNanos) {
+        long elapsedMillis = (System.nanoTime() - startNanos) / 1_000_000L;
+        long remaining = AUTH_FAIL_FLOOR_MILLIS - elapsedMillis;
+        if (remaining > 0) {
+            try {
+                Thread.sleep(remaining);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "error", Map.of("code", "INVALID_CREDENTIALS", "message", "Invalid credentials")));
     }
 
     private String determineActorType(List<String> roles) {
