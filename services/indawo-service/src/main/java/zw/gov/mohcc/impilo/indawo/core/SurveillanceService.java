@@ -96,10 +96,32 @@ public class SurveillanceService {
         return saved;
     }
 
+    /** Legal outbreak lifecycle statuses (V007 schema comment: SUSPECTED|CONFIRMED|CONTAINED|CLOSED). */
+    private static final java.util.Set<String> OUTBREAK_STATUSES =
+            java.util.Set.of("SUSPECTED", "CONFIRMED", "CONTAINED", "CLOSED");
+
+    /** Allowed forward transitions. A CLOSED outbreak is terminal; no regression to an earlier stage. */
+    private static final Map<String, java.util.Set<String>> OUTBREAK_TRANSITIONS = Map.of(
+            "SUSPECTED", java.util.Set.of("CONFIRMED", "CLOSED"),
+            "CONFIRMED", java.util.Set.of("CONTAINED", "CLOSED"),
+            "CONTAINED", java.util.Set.of("CLOSED"),
+            "CLOSED", java.util.Set.of());
+
     @Transactional
     public OutbreakEntity updateOutbreakStatus(UUID tenantId, UUID outbreakId, String status, String actor) {
+        if (status == null || status.isBlank()) {
+            throw new IllegalArgumentException("Outbreak status is required");
+        }
+        if (!OUTBREAK_STATUSES.contains(status)) {
+            throw new IllegalArgumentException("Unknown outbreak status: " + status);
+        }
         OutbreakEntity o = outbreakRepository.findByTenantIdAndOutbreakId(tenantId, outbreakId)
                 .orElseThrow(() -> new IllegalArgumentException("Outbreak not found: " + outbreakId));
+        String current = o.getStatus();
+        if (!status.equals(current) && !OUTBREAK_TRANSITIONS.getOrDefault(current, java.util.Set.of()).contains(status)) {
+            throw new IllegalArgumentException(
+                    "Illegal outbreak status transition: " + current + " -> " + status);
+        }
         o.setStatus(status);
         o.setUpdatedBy(actor);
         if ("CONFIRMED".equals(status) && o.getDeclaredAt() == null) o.setDeclaredAt(OffsetDateTime.now());

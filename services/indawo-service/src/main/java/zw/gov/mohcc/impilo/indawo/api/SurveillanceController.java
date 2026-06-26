@@ -179,6 +179,20 @@ public class SurveillanceController {
         return ResponseEntity.ok(Map.of("data", toDeployment(saved)));
     }
 
+    // ── Error mapping ───────────────────────────────────────────────────────
+
+    /**
+     * Validation failures (null/unknown status, illegal transition, missing entity)
+     * are client errors, not server faults. Surface them as 400 rather than 500.
+     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, Object>> handleBadRequest(IllegalArgumentException ex) {
+        log.warn("Surveillance bad request: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("error", "BAD_REQUEST", "message",
+                        ex.getMessage() != null ? ex.getMessage() : "Invalid request"));
+    }
+
     // ── Mappers ─────────────────────────────────────────────────────────────
 
     private static SurveillanceDtos.AlertResponse toAlert(SurveillanceAlertEntity e) {
