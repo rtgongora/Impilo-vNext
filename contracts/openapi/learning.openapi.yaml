@@ -2930,6 +2930,64 @@ paths:
         - { name: studentId, in: path, required: true, schema: { type: string } }
       responses:
         '200': { description: Student, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/students/{studentId}/registrations:
+    get:
+      tags: [FundoStudent]
+      summary: List a student's course registrations
+      operationId: listCourseRegistrations
+      parameters: [{ name: studentId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Registrations, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+    post:
+      tags: [FundoStudent]
+      summary: Register a student for a course (creates the academic enrolment)
+      operationId: registerCourse
+      parameters: [{ name: studentId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Registered, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/students/{studentId}/placements:
+    get:
+      tags: [FundoStudent]
+      summary: List a student's clinical placements
+      operationId: listClinicalPlacements
+      parameters: [{ name: studentId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Placements, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+    post:
+      tags: [FundoStudent]
+      summary: Create a clinical placement
+      operationId: createClinicalPlacement
+      parameters: [{ name: studentId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Placement created, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/placements/{placementId}/signoff:
+    post:
+      tags: [FundoStudent]
+      summary: Preceptor sign-off of a placement
+      operationId: signoffPlacement
+      parameters: [{ name: placementId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Signed off, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/students/{studentId}/graduate:
+    post:
+      tags: [FundoStudent]
+      summary: Confer a qualification / graduate a student
+      operationId: graduateStudent
+      parameters: [{ name: studentId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: false, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Graduated, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/students/{studentId}/academic-record:
+    get:
+      tags: [FundoStudent]
+      summary: Aggregated academic record (registrations + placements + graduation)
+      operationId: getAcademicRecord
+      parameters: [{ name: studentId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Academic record, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
   /workflow-context:
     get:
       operationId: learning_get__workflow_context

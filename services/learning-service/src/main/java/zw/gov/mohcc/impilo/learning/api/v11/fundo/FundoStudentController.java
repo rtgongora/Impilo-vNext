@@ -15,9 +15,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.companion.context.RequestContext;
 import zw.gov.mohcc.impilo.companion.context.RequestContextHolder;
+import zw.gov.mohcc.impilo.learning.fundo.FundoRegistrationService;
 import zw.gov.mohcc.impilo.learning.fundo.FundoStudentService;
 
-/** Pre-service admission + student registry (A5). */
+/** Pre-service admission + student registry (A5) + registration/placement/graduation (A6). */
 @RestController
 @RequestMapping("/internal/v1/learning/v11")
 public class FundoStudentController {
@@ -25,9 +26,11 @@ public class FundoStudentController {
     private static final UUID DEFAULT_TENANT = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
     private final FundoStudentService service;
+    private final FundoRegistrationService registrationService;
 
-    public FundoStudentController(FundoStudentService service) {
+    public FundoStudentController(FundoStudentService service, FundoRegistrationService registrationService) {
         this.service = service;
+        this.registrationService = registrationService;
     }
 
     @PostMapping("/admissions/applications")
@@ -64,6 +67,47 @@ public class FundoStudentController {
     @GetMapping("/students/{studentId}")
     public ResponseEntity<Map<String, Object>> getStudent(@PathVariable String studentId) {
         return ok(service.getStudent(tenantId(), studentId));
+    }
+
+    // ---- A6: registration / placement / graduation ----
+
+    @PostMapping("/students/{studentId}/registrations")
+    public ResponseEntity<Map<String, Object>> register(
+            @PathVariable String studentId, @RequestBody Map<String, Object> body) {
+        return ok(registrationService.registerCourse(tenantId(), studentId, actorId(), body));
+    }
+
+    @GetMapping("/students/{studentId}/registrations")
+    public ResponseEntity<Map<String, Object>> listRegistrations(@PathVariable String studentId) {
+        return ok(registrationService.listRegistrations(tenantId(), studentId));
+    }
+
+    @PostMapping("/students/{studentId}/placements")
+    public ResponseEntity<Map<String, Object>> createPlacement(
+            @PathVariable String studentId, @RequestBody Map<String, Object> body) {
+        return ok(registrationService.createPlacement(tenantId(), studentId, actorId(), body));
+    }
+
+    @GetMapping("/students/{studentId}/placements")
+    public ResponseEntity<Map<String, Object>> listPlacements(@PathVariable String studentId) {
+        return ok(registrationService.listPlacements(tenantId(), studentId));
+    }
+
+    @PostMapping("/placements/{placementId}/signoff")
+    public ResponseEntity<Map<String, Object>> signoffPlacement(
+            @PathVariable String placementId, @RequestBody Map<String, Object> body) {
+        return ok(registrationService.signoffPlacement(tenantId(), placementId, actorId(), body));
+    }
+
+    @PostMapping("/students/{studentId}/graduate")
+    public ResponseEntity<Map<String, Object>> graduate(
+            @PathVariable String studentId, @RequestBody(required = false) Map<String, Object> body) {
+        return ok(registrationService.graduate(tenantId(), studentId, actorId(), body == null ? Map.of() : body));
+    }
+
+    @GetMapping("/students/{studentId}/academic-record")
+    public ResponseEntity<Map<String, Object>> academicRecord(@PathVariable String studentId) {
+        return ok(registrationService.academicRecord(tenantId(), studentId));
     }
 
     private ResponseEntity<Map<String, Object>> ok(Object data) {

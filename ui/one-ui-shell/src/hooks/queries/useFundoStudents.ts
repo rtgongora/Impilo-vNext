@@ -55,3 +55,49 @@ export function useFundoStudents(programId?: string, limit = 100) {
     queryFn: () => apiClient.get(`/internal/v1/learning/v11/students?${qs.toString()}`),
   });
 }
+
+/** A6 — registration / placement / graduation + academic record. */
+
+export function useFundoAcademicRecord(studentId?: string) {
+  return useQuery<ApiData<Record<string, unknown>>>({
+    queryKey: ["fundo", "academic-record", studentId],
+    enabled: Boolean(studentId),
+    queryFn: () => apiClient.get(`/internal/v1/learning/v11/students/${encodeURIComponent(studentId!)}/academic-record`),
+  });
+}
+
+export function useRegisterFundoCourse(studentId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Record<string, unknown>) =>
+      apiClient.post(`/internal/v1/learning/v11/students/${encodeURIComponent(studentId)}/registrations`, body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["fundo", "academic-record", studentId] }),
+  });
+}
+
+export function useCreateFundoPlacement(studentId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Record<string, unknown>) =>
+      apiClient.post(`/internal/v1/learning/v11/students/${encodeURIComponent(studentId)}/placements`, body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["fundo", "academic-record", studentId] }),
+  });
+}
+
+export function useSignoffFundoPlacement(studentId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ placementId, body }: { placementId: string; body: Record<string, unknown> }) =>
+      apiClient.post(`/internal/v1/learning/v11/placements/${encodeURIComponent(placementId)}/signoff`, body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["fundo", "academic-record", studentId] }),
+  });
+}
+
+export function useGraduateFundoStudent(studentId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Record<string, unknown>) =>
+      apiClient.post(`/internal/v1/learning/v11/students/${encodeURIComponent(studentId)}/graduate`, body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["fundo", "academic-record", studentId] }),
+  });
+}
