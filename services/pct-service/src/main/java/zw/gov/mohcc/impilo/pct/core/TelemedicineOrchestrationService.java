@@ -227,6 +227,7 @@ public class TelemedicineOrchestrationService {
         entity.setCompletionPayload(writeJsonObject(request == null ? Map.of() : request));
         ReferralEntity saved = referralRepository.save(entity);
         emitOutbox("telemedicine.session.completed", saved.getReferralId().toString(), toReferralPayload(saved));
+        emitTeleconsultValueTrigger(saved);
         telemetryService.record("telemedicine.referral.completed", null, Map.of(
                 "referralId", saved.getReferralId().toString(),
                 "patientCpid", saved.getPatientCpid(),
@@ -526,6 +527,37 @@ public class TelemedicineOrchestrationService {
         List<Map<String, Object>> responses = new ArrayList<>(readJsonMapList(entity.getResponses()));
         responses.add(payload);
         entity.setResponses(writeJsonArray(responses));
+    }
+
+    /**
+     * Emit a flat-payload value-trigger event when a teleconsult referral completes so the
+     * costing plane (COSTA / L4) can price it. Unlike {@link #emitOutbox}, the payload fields
+     * are written at the top level (matching the encounter/order events COSTA already consumes)
+     * rather than nested under an envelope. {@link zw.gov.mohcc.impilo.pct.events.OutboxPublisher}
+     * routes the {@code TELECONSULT_COMPLETED} event type to {@code clinical.teleconsult.value}
+     * and {@code core.transaction.events}.
+     */
+    private void emitTeleconsultValueTrigger(ReferralEntity referral) {
+        TrustContext ctx = TrustContextHolder.require();
+        String referralId = referral.getReferralId().toString();
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("eventId", referralId + ":TELECONSULT_COMPLETED");
+        payload.put("tenantId", ctx.tenantId().toString());
+        payload.put("referralId", referralId);
+        payload.put("patientCpid", referral.getPatientCpid());
+        payload.put("encounterId", referral.getEncounterId());
+        payload.put("facilityId", referral.getFacilityId());
+        payload.put("specialty", referral.getSpecialty());
+        payload.put("modality", referral.getModality());
+        payload.put("sourceServiceEvent", "TELECONSULT_COMPLETED");
+
+        EventOutboxEntity outbox = new EventOutboxEntity();
+        outbox.setAggregateType("telemedicine");
+        outbox.setAggregateId(referralId);
+        outbox.setEventType("TELECONSULT_COMPLETED");
+        outbox.setTenantId(ctx.tenantId());
+        outbox.setPayload(writeJsonObject(payload));
+        outboxRepository.save(outbox);
     }
 
     private void emitOutbox(String eventType, String aggregateId, Map<String, Object> payload) {
