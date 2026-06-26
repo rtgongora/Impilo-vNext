@@ -75,6 +75,30 @@ class CadreEngineTest {
     }
 
     @Test
+    void deposit_authorisation_and_waiver_required_add_stepup_to_diagnosis() {
+        // COSTA can return DEPOSIT_REQUIRED / AUTHORISATION_REQUIRED / WAIVER_REQUIRED as well as the
+        // BLOCKED_* variants. None of these mean "service is payable yet", so a non-emergency clinical write
+        // must be step-up-gated. Previously these three fell through and the write was let through ungated.
+        for (String accessState : List.of("DEPOSIT_REQUIRED", "AUTHORISATION_REQUIRED", "WAIVER_REQUIRED")) {
+            CadreDecision d = resolve("MEDICAL_PRACTITIONER", "DOCTOR", "FACILITY", "OPD", 4, "OUTPATIENT", accessState);
+            CadreDecision.CockpitAction diag = action(tab(d, "ASSESSMENT"), "RECORD_DIAGNOSIS").orElseThrow();
+            assertTrue(diag.requiresStepUp(),
+                    "RECORD_DIAGNOSIS must be step-up-gated for access state " + accessState);
+        }
+    }
+
+    @Test
+    void emergency_never_stepup_gated_even_for_new_access_states() {
+        // Law 1: emergency care is never gated, regardless of the COSTA access state.
+        for (String accessState : List.of("DEPOSIT_REQUIRED", "AUTHORISATION_REQUIRED", "WAIVER_REQUIRED")) {
+            CadreDecision d = resolve("MEDICAL_PRACTITIONER", "DOCTOR", "FACILITY", "ED", 1, "CASUALTY", accessState);
+            CadreDecision.CockpitAction diag = action(tab(d, "ASSESSMENT"), "RECORD_DIAGNOSIS").orElseThrow();
+            assertFalse(diag.requiresStepUp(),
+                    "Emergency care must never be step-up-gated for access state " + accessState);
+        }
+    }
+
+    @Test
     void community_worker_screens_and_refers_only() {
         CadreDecision d = resolve("COMMUNITY_HEALTH_WORKER", "CHW", "ABOVE_SITE", "OUTREACH", 5, "COMMUNITY", "EXEMPT");
         assertTrue(d.permittedWorkflows().contains("SCREEN"));

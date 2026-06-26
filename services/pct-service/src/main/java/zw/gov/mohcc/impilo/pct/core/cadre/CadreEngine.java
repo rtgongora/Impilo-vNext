@@ -217,13 +217,25 @@ public final class CadreEngine {
         return tabs;
     }
 
+    /**
+     * COSTA {@code ServiceAccessStatus} values that gate a (non-emergency) clinical write behind step-up.
+     * Any "service is not yet payable/authorised/waived" outcome must add friction — omitting one would
+     * fail OPEN (silently let the write through ungated). Kept in sync with COSTA's enum; emergency care is
+     * never gated (Law 1, handled by the {@code emergency} short-circuit below).
+     */
+    private static final Set<String> STEP_UP_ACCESS_STATES = Set.of(
+            "BLOCKED_PENDING_PAYMENT",
+            "BLOCKED_PENDING_AUTHORISATION",
+            "PAYMENT_REQUIRED_BEFORE_SERVICE",
+            "DEPOSIT_REQUIRED",
+            "AUTHORISATION_REQUIRED",
+            "WAIVER_REQUIRED");
+
     private static boolean stepUpForAccess(String accessState, boolean emergency) {
         if (emergency) {
             return false; // Law 1: never add friction to emergency care.
         }
-        return "BLOCKED_PENDING_PAYMENT".equals(accessState)
-                || "BLOCKED_PENDING_AUTHORISATION".equals(accessState)
-                || "PAYMENT_REQUIRED_BEFORE_SERVICE".equals(accessState);
+        return STEP_UP_ACCESS_STATES.contains(accessState);
     }
 
     private static boolean isClinical(CadreFamily f) {
