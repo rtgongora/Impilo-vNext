@@ -82,16 +82,26 @@ public class FundoCertificateService {
                 cert.getIssuedAt()));
         certificateRepository.save(cert);
 
+        // Payload carries the full CPD-candidate shape so a downstream CPD consumer
+        // (varapi-service — the CPD ledger authority) can ingest a candidate WITHOUT
+        // Fundo duplicating the ledger or awarding regulated points. See
+        // docs/policy/fundo-cpd-evidence-egress.md.
+        Map<String, Object> issuedPayload = new LinkedHashMap<>();
+        issuedPayload.put("tenantId", tenantId.toString());
+        issuedPayload.put("certificateId", cert.getId().toString());
+        issuedPayload.put("enrolmentId", enrolmentId.toString());
+        issuedPayload.put("courseId", enrolment.getCourseId().toString());
+        issuedPayload.put("subjectType", enrolment.getSubjectType());
+        issuedPayload.put("subjectId", enrolment.getSubjectId());
+        issuedPayload.put("certificateNumber", cert.getCertificateNumber());
+        issuedPayload.put("title", cert.getTitle());
+        issuedPayload.put("issuedAt", cert.getIssuedAt() == null ? null : cert.getIssuedAt().toString());
+        issuedPayload.put("validUntil", cert.getValidUntil() == null ? null : cert.getValidUntil().toString());
+        issuedPayload.put("cpdEligible", cert.isCpdEligible());
+        issuedPayload.put("suggestedCpdPoints", cert.getCpdPoints());
+        issuedPayload.put("verificationDigest", cert.getVerificationDigest());
         outbox.append("FundoCertificate", cert.getId().toString(),
-                FundoNativeEventTypes.CERTIFICATE_ISSUED,
-                Map.of(
-                        "tenantId", tenantId.toString(),
-                        "enrolmentId", enrolmentId.toString(),
-                        "courseId", enrolment.getCourseId().toString(),
-                        "subjectType", enrolment.getSubjectType(),
-                        "subjectId", enrolment.getSubjectId(),
-                        "certificateNumber", cert.getCertificateNumber(),
-                        "cpdEligible", cert.isCpdEligible()));
+                FundoNativeEventTypes.CERTIFICATE_ISSUED, issuedPayload);
 
         return new CertificateIssueResult(toView(cert), false);
     }
