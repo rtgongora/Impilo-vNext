@@ -23,4 +23,16 @@ class OutboxPublisherRouteTest {
     void unknown_event_falls_back_to_default_topic() {
         assertEquals("pct.events", OutboxPublisher.routeTopic("SOMETHING_NEW"));
     }
+
+    @Test
+    void teleconsult_completed_routes_to_value_topic() {
+        // telemed->value: COSTA/L4 consumes the completed teleconsult to raise a charge.
+        assertEquals("clinical.teleconsult.value", OutboxPublisher.routeTopic("TELECONSULT_COMPLETED"));
+    }
+
+    @Test
+    void telemedicine_session_events_route_to_lifecycle_topic() {
+        assertEquals("clinical.teleconsult.lifecycle", OutboxPublisher.routeTopic("telemedicine.session.completed"));
+        assertEquals("clinical.teleconsult.lifecycle", OutboxPublisher.routeTopic("telemedicine.session.routed"));
+    }
 }

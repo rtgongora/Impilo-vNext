@@ -100,6 +100,20 @@ public class ReferralEntity {
     @Column(name = "completion_payload", columnDefinition = "jsonb")
     private String completionPayload = "{}";
 
+    /** Stage-6 structured clinical response (C7): {diagnosis, actionPlan, redFlags, followUp}. */
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "structured_response", columnDefinition = "jsonb")
+    private String structuredResponse;
+
+    @Column(name = "routing_kind")
+    private String routingKind;
+
+    @Column(name = "routing_pool_id")
+    private String routingPoolId;
+
+    @Column(name = "routed_at")
+    private OffsetDateTime routedAt;
+
     @Column(name = "submitted_at")
     private OffsetDateTime submittedAt;
 
@@ -179,6 +193,14 @@ public class ReferralEntity {
     public void setTshepoDecisionId(String tshepoDecisionId) { this.tshepoDecisionId = tshepoDecisionId; }
     public String getCompletionPayload() { return completionPayload; }
     public void setCompletionPayload(String completionPayload) { this.completionPayload = completionPayload; }
+    public String getStructuredResponse() { return structuredResponse; }
+    public void setStructuredResponse(String structuredResponse) { this.structuredResponse = structuredResponse; }
+    public String getRoutingKind() { return routingKind; }
+    public void setRoutingKind(String routingKind) { this.routingKind = routingKind; }
+    public String getRoutingPoolId() { return routingPoolId; }
+    public void setRoutingPoolId(String routingPoolId) { this.routingPoolId = routingPoolId; }
+    public OffsetDateTime getRoutedAt() { return routedAt; }
+    public void setRoutedAt(OffsetDateTime routedAt) { this.routedAt = routedAt; }
     public OffsetDateTime getSubmittedAt() { return submittedAt; }
     public void setSubmittedAt(OffsetDateTime submittedAt) { this.submittedAt = submittedAt; }
     public OffsetDateTime getCompletedAt() { return completedAt; }
