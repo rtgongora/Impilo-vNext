@@ -388,6 +388,18 @@ public class LearningController {
         return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
     }
 
+    @GetMapping("/v11/reports/programme-summary")
+    public ResponseEntity<Map<String, Object>> reportProgrammeSummary(@RequestHeader(CompanionHeaders.TENANT_ID) String tenantId) {
+        JsonNode n = learningClient.getV11("reports/programme-summary", Map.of());
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @GetMapping("/v11/reports/regulator-summary")
+    public ResponseEntity<Map<String, Object>> reportRegulatorSummary(@RequestHeader(CompanionHeaders.TENANT_ID) String tenantId) {
+        JsonNode n = learningClient.getV11("reports/regulator-summary", Map.of());
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
     @GetMapping("/v11/reports/cohort-completions")
     public ResponseEntity<Map<String, Object>> reportCohortCompletions(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,

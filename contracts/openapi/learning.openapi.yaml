@@ -1734,6 +1734,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiEnvelope_Map'
+  /internal/v1/learning/v11/reports/programme-summary:
+    get:
+      tags: [FundoNativeLMS]
+      summary: Programme dashboard — course/enrolment/completion rollup by programme
+      operationId: getFundoProgrammeSummary
+      responses:
+        '200': { description: Programme summary, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/reports/regulator-summary:
+    get:
+      tags: [FundoNativeLMS]
+      summary: Regulator dashboard — provider accreditation posture by kind
+      operationId: getFundoRegulatorSummary
+      responses:
+        '200': { description: Regulator summary, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
   /internal/v1/learning/v11/reports/course-completions:
     get:
       tags:
