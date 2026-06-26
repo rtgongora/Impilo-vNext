@@ -63,6 +63,7 @@ class TokenIssuanceServiceTest {
                 DEFAULT_TTL_SECONDS,
                 null,
                 "http://localhost:8086",
+                null,
                 null
         );
         ObjectMapper objectMapper = new ObjectMapper();

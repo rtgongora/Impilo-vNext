@@ -37,11 +37,21 @@ public class InternalEligibilityCheckController {
                 request.patientCpid(),
                 request.planCode(),
                 request.serviceCode() != null ? request.serviceCode() : "");
+
+        // Surface subsidy annual-cap headroom alongside scheme eligibility (Lane C).
+        var capResult = eligibilityCheckService.subsidyHeadroom(
+                tenantId, request.patientCpid(), request.requestedAmount());
+        InternalEligibilityCheckResponse.SubsidyHeadroom subsidy = capResult == null ? null
+                : new InternalEligibilityCheckResponse.SubsidyHeadroom(
+                        capResult.eligible(), capResult.reason(),
+                        capResult.cap(), capResult.consumed(), capResult.remaining());
+
         return ResponseEntity.ok(new InternalEligibilityCheckResponse(
                 outcome.eligible(),
                 outcome.reason(),
                 outcome.utilizationLimit(),
                 outcome.utilizationUsed(),
-                outcome.remainingAmount()));
+                outcome.remainingAmount(),
+                subsidy));
     }
 }

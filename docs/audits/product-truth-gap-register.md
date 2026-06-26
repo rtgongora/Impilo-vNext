@@ -1,7 +1,7 @@
 # Product Truth — Gap Register
 
-> Generated: 2026-06-24T02:16:05.801Z
-> Total gaps: **6**
+> Generated: 2026-06-26T16:23:42.967Z
+> Total gaps: **8**
 
 ## Gap categories (A–R)
 
@@ -25,14 +25,14 @@
 | P | Workflow incomplete across services | 0 |
 | Q | Service is internal-only and needs documentation instead of UI | 0 |
 | R | Duplicate/overlapping capability requiring consolidation | 0 |
-| S | Security/crypto/authz placeholder in a product path | 2 |
+| S | Security/crypto/authz placeholder in a product path | 4 |
 
 ## By severity
 
 | Severity | Count |
 |----------|------:|
 | blocker | 1 |
-| high | 5 |
+| high | 7 |
 
 ## Prioritized gaps (top 100)
 
@@ -42,8 +42,10 @@
 | 2 | experience-bff | F | high | experience-bff: mock/stub/fixture/in-memory patterns in product path (10 hits) |
 | 3 | experience-bff | S | high | experience-bff: security/crypto/authz placeholder in product path (2 hits) |
 | 4 | mushe-wallet-service | F | high | mushe-wallet-service: mock/stub/fixture/in-memory patterns in product path (3 hits) |
-| 5 | /wellness/commodities | F | high | /wellness/commodities: mock/stub data |
-| 6 | /operations/facility-operations | F | high | /operations/facility-operations: mock/stub data |
+| 5 | pct-service | S | high | pct-service: security/crypto/authz placeholder in product path (5 hits) |
+| 6 | vashandi-workforce-service | S | high | vashandi-workforce-service: security/crypto/authz placeholder in product path (1 hits) |
+| 7 | /wellness/commodities | F | high | /wellness/commodities: mock/stub data |
+| 8 | /operations/facility-operations | F | high | /operations/facility-operations: mock/stub data |
 
 ## Services requiring product-owner decision
 

@@ -52,6 +52,23 @@ public class AdmissionEntity {
     @Column(name = "discharged_at")
     private OffsetDateTime dischargedAt;
 
+    /** BUTANO/encounter ref handed to inpatient-service as the census admission parent key. */
+    @Column(name = "encounter_id")
+    private UUID encounterId;
+
+    /** inpatient-service admission_ref (the census SoR key) — set on the bed-assignment echo. */
+    @Column(name = "inpatient_admission_ref")
+    private UUID inpatientAdmissionRef;
+
+    @Column(name = "admitting_diagnosis")
+    private String admittingDiagnosis;
+
+    @Column(name = "admission_type")
+    private String admissionType;
+
+    @Column(name = "bed_assigned_at")
+    private OffsetDateTime bedAssignedAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -118,5 +135,20 @@ public class AdmissionEntity {
 
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(OffsetDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public UUID getEncounterId() { return encounterId; }
+    public void setEncounterId(UUID encounterId) { this.encounterId = encounterId; }
+
+    public UUID getInpatientAdmissionRef() { return inpatientAdmissionRef; }
+    public void setInpatientAdmissionRef(UUID inpatientAdmissionRef) { this.inpatientAdmissionRef = inpatientAdmissionRef; }
+
+    public String getAdmittingDiagnosis() { return admittingDiagnosis; }
+    public void setAdmittingDiagnosis(String admittingDiagnosis) { this.admittingDiagnosis = admittingDiagnosis; }
+
+    public String getAdmissionType() { return admissionType; }
+    public void setAdmissionType(String admissionType) { this.admissionType = admissionType; }
+
+    public OffsetDateTime getBedAssignedAt() { return bedAssignedAt; }
+    public void setBedAssignedAt(OffsetDateTime bedAssignedAt) { this.bedAssignedAt = bedAssignedAt; }
 
 }

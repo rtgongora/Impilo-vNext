@@ -61,4 +61,36 @@ public class IndawoServiceClient {
                 url, HttpMethod.PUT, new HttpEntity<>(body, headers), JsonNode.class);
         return response.getBody();
     }
+
+    // ── Public-health surveillance / place mode ─────────────────────────────
+
+    private JsonNode dataOf(ResponseEntity<JsonNode> response) {
+        JsonNode body = response.getBody();
+        if (body != null && body.has("data")) {
+            return body.get("data");
+        }
+        return body;
+    }
+
+    public JsonNode placeModeSummary() {
+        String url = baseUrl + "/internal/v1/surveillance/place-mode/summary";
+        return dataOf(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    public JsonNode listSurveillance(String resource, String queryParam, String queryValue) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(
+                baseUrl + "/internal/v1/surveillance/" + resource);
+        if (queryParam != null && queryValue != null) {
+            b.queryParam(queryParam, queryValue);
+        }
+        return dataOf(restTemplate.getForEntity(b.toUriString(), JsonNode.class));
+    }
+
+    public JsonNode postSurveillance(String path, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/surveillance/" + path;
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return dataOf(restTemplate.exchange(
+                url, HttpMethod.POST, new HttpEntity<>(body, headers), JsonNode.class));
+    }
 }

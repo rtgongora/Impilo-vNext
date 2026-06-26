@@ -219,14 +219,98 @@ public class TelemedicineOrchestrationService {
         return toReferralPayload(saved);
     }
 
+    /**
+     * Stage 6 (Response Package): record a STRUCTURED clinical response (C7) — diagnosis, action plan, red
+     * flags, follow-up — instead of free-text only. The structured fields are persisted to
+     * {@code structured_response} and a summary line is also appended to the responses log for the timeline.
+     */
+    @Transactional
+    public Map<String, Object> respondReferralStructured(String referralId, Map<String, Object> request) {
+        ReferralEntity entity = getReferralEntity(referralId);
+        String responderId = defaulted(optional(request, "responder_id", "responderId"), "unknown");
+
+        Map<String, Object> structured = new LinkedHashMap<>();
+        structured.put("diagnosis", optional(request, "diagnosis"));
+        structured.put("actionPlan", optional(request, "action_plan", "actionPlan"));
+        structured.put("redFlags", optional(request, "red_flags", "redFlags"));
+        structured.put("followUp", optional(request, "follow_up", "followUp"));
+        structured.put("responderId", responderId);
+        structured.put("timestamp", OffsetDateTime.now().toString());
+        entity.setStructuredResponse(writeJsonObject(structured));
+
+        appendResponse(entity, Map.of(
+                "responseType", "STRUCTURED",
+                "responderId", responderId,
+                "diagnosis", defaulted(asString(structured.get("diagnosis")), ""),
+                "timestamp", OffsetDateTime.now().toString()));
+        entity.setStatus("RESPONDED");
+        if (entity.getStage() != null && entity.getStage() < 6) {
+            entity.setStage(6);
+        }
+        ReferralEntity saved = referralRepository.save(entity);
+        emitOutbox("telemedicine.session.response_submitted", saved.getReferralId().toString(), toReferralPayload(saved));
+        return toReferralPayload(saved);
+    }
+
+    /**
+     * Stage 3 (Routing & Worklists): route a referral to a team/pool/on-call roster (not only a single named
+     * provider). Records the routing kind + pool id and timestamps the routing.
+     */
+    @Transactional
+    public Map<String, Object> routeReferral(String referralId, Map<String, Object> request) {
+        ReferralEntity entity = getReferralEntity(referralId);
+        String kind = defaulted(optional(request, "routing_kind", "routingKind"), "POOL")
+                .trim().toUpperCase(Locale.ROOT);
+        entity.setRoutingKind(kind);
+        entity.setRoutingPoolId(optional(request, "routing_pool_id", "routingPoolId", "pool_id", "poolId"));
+        entity.setRoutedAt(OffsetDateTime.now());
+
+        Map<String, Object> routingTarget = new LinkedHashMap<>();
+        routingTarget.put("kind", kind);
+        routingTarget.put("poolId", entity.getRoutingPoolId());
+        routingTarget.put("onCallRosterId", optional(request, "on_call_roster_id", "onCallRosterId"));
+        entity.setRoutingTarget(writeJsonObject(routingTarget));
+        if (entity.getStage() != null && entity.getStage() < 3) {
+            entity.setStage(3);
+        }
+        if ("DRAFT".equals(entity.getStatus())) {
+            entity.setStatus("ROUTED");
+        }
+        ReferralEntity saved = referralRepository.save(entity);
+        emitOutbox("telemedicine.session.routed", saved.getReferralId().toString(), toReferralPayload(saved));
+        return toReferralPayload(saved);
+    }
+
     @Transactional
     public Map<String, Object> completeReferral(String referralId, Map<String, Object> request) {
         ReferralEntity entity = getReferralEntity(referralId);
+        // Idempotency: completion emits a BILLABLE value event (TELECONSULT_COMPLETED -> CHARGE_CREATED in
+        // COSTA). A redelivered/double-clicked completion must NOT re-emit it, or the patient is charged twice.
+        // Return the current payload unchanged without re-running the completion side effects.
+        if ("COMPLETED".equals(entity.getStatus())) {
+            return toReferralPayload(entity);
+        }
         entity.setStatus("COMPLETED");
         entity.setCompletedAt(OffsetDateTime.now());
         entity.setCompletionPayload(writeJsonObject(request == null ? Map.of() : request));
         ReferralEntity saved = referralRepository.save(entity);
         emitOutbox("telemedicine.session.completed", saved.getReferralId().toString(), toReferralPayload(saved));
+
+        // telemed -> value trigger (journey 9): a completed teleconsult is a billable service event. PCT does
+        // NOT price it (COSTA/L4 owns value). Emit a clean service event L4 consumes to raise the teleconsult
+        // charge. TODO(L4 wiring): COSTA CostaEventConsumer must subscribe to clinical.teleconsult.value and
+        // ingest TELECONSULT_COMPLETED -> CHARGE_CREATED. Real-time media stays fail-closed (501); the charge
+        // is for the consultation outcome, not the transport.
+        Map<String, Object> valueEvent = new LinkedHashMap<>();
+        valueEvent.put("referralId", saved.getReferralId().toString());
+        valueEvent.put("patientCpid", saved.getPatientCpid());
+        valueEvent.put("encounterId", saved.getEncounterId());
+        valueEvent.put("facilityId", saved.getFacilityId());
+        valueEvent.put("specialty", defaulted(saved.getSpecialty(), "GENERAL"));
+        valueEvent.put("modality", defaulted(saved.getModality(), defaulted(saved.getPreferredMode(), "ASYNC")));
+        valueEvent.put("sourceServiceEvent", "TELECONSULT_COMPLETED");
+        emitOutbox("TELECONSULT_COMPLETED", saved.getReferralId().toString(), valueEvent);
+
         telemetryService.record("telemedicine.referral.completed", null, Map.of(
                 "referralId", saved.getReferralId().toString(),
                 "patientCpid", saved.getPatientCpid(),
@@ -447,6 +531,10 @@ public class TelemedicineOrchestrationService {
         body.put("modality", entity.getModality());
         body.put("virtualMode", entity.getVirtualMode());
         body.put("routingTarget", readJsonMap(entity.getRoutingTarget()));
+        body.put("routingKind", entity.getRoutingKind());
+        body.put("routingPoolId", entity.getRoutingPoolId());
+        body.put("routedAt", toIso(entity.getRoutedAt()));
+        body.put("structuredResponse", entity.getStructuredResponse() == null ? null : readJsonMap(entity.getStructuredResponse()));
         body.put("attachmentDocumentIds", readJsonStringList(entity.getAttachmentDocumentIds()));
         body.put("messages", readJsonMapList(entity.getMessages()));
         body.put("responses", readJsonMapList(entity.getResponses()));

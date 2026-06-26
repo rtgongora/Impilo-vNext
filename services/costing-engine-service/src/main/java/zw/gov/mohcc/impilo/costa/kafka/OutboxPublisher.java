@@ -81,6 +81,8 @@ public class OutboxPublisher {
             case "INVOICE_REFUND_APPLIED" -> "costa.invoice.refund_applied";
             case "REFUND_CREATED" -> "costa.refund.issued";
             case "CLAIM_PACK_CREATED" -> "costa.claim.pack.created";
+            case "EMERGENCY_DEFERRED_CHARGE" -> "costa.emergency.deferred_charge";
+            case "WAIVER_APPLIED" -> "costa.waiver.applied";
             case "ESTIMATE_CREATED" -> "costa.estimate.created";
             case "RULESET_PUBLISHED" -> "costa.ruleset.published";
             default -> "costa.events";
@@ -90,13 +92,20 @@ public class OutboxPublisher {
     static boolean shouldEmitCoreTransaction(String eventType) {
         if (eventType == null) return false;
         return switch (eventType) {
-            case "BILL_DRAFT_CREATED",
+            // CHARGE_CREATED is a first-class C8 value-event kind (e.g. standalone teleconsult /
+            // marketplace charges that never become a finalized bill). Dual-emit so no billable
+            // service event leaks; downstream keys by lifecycle stage (CHARGE_CREATED vs BILL_*)
+            // so this is distinct value-event stages, not a double-charge.
+            case "CHARGE_CREATED",
+                 "BILL_DRAFT_CREATED",
                  "BILL_FINALIZED",
                  "INVOICE_ISSUED",
                  "PAYMENT_INTENT_CREATED",
                  "PAYMENT_STATUS_CHANGED",
                  "PAYMENT_CANCELLED",
                  "CLAIM_PACK_CREATED",
+                 "EMERGENCY_DEFERRED_CHARGE",
+                 "WAIVER_APPLIED",
                  "REFUND_CREATED" -> true;
             default -> false;
         };

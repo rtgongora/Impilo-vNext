@@ -15,13 +15,18 @@ import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
+import zw.gov.mohcc.impilo.shared.visibility.AggregateVisibilityGuard;
+import zw.gov.mohcc.impilo.shared.visibility.VisibilityContextHolder;
+import zw.gov.mohcc.impilo.tshepo.contracts.dto.VisibilityProfile;
 import zw.gov.mohcc.impilo.tuso.api.dto.AlertResponse;
+import zw.gov.mohcc.impilo.tuso.api.dto.ControlTowerAggregateResponse;
 import zw.gov.mohcc.impilo.tuso.api.dto.FacilitySummaryResponse;
 import zw.gov.mohcc.impilo.tuso.api.dto.OrosTelemetryRequest;
 import zw.gov.mohcc.impilo.tuso.api.dto.PctTelemetryRequest;
 import zw.gov.mohcc.impilo.tuso.core.ControlTowerService;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Internal REST API for the Control Tower subsystem.
@@ -82,6 +87,30 @@ public class ControlTowerController {
 
         FacilitySummaryResponse response = controlTowerService.getFacilitySummary(ctx, facilityId);
 
+        return ResponseEntity.ok(ApiResponse.ok(response, ctx.correlationId().toString()));
+    }
+
+    /**
+     * Tenant-scoped cross-facility control-tower aggregate for scoped dashboards.
+     * Respects {@link AggregateVisibilityGuard}: aggregate-only callers receive counts
+     * only (no per-facility rows).
+     */
+    @GetMapping("/control-tower/aggregate")
+    public ResponseEntity<ApiResponse<ControlTowerAggregateResponse>> getAggregate() {
+        TrustContext ctx = TrustContextHolder.require();
+        VisibilityProfile vis = VisibilityContextHolder.current().orElse(null);
+        boolean aggregateOnly = AggregateVisibilityGuard.blocksRowLevelDetail(vis);
+        log.info("Building control-tower aggregate [tenant={}, aggregateOnly={}] correlationId={}",
+                ctx.tenantId(), aggregateOnly, ctx.correlationId());
+        ControlTowerAggregateResponse response = controlTowerService.aggregate(ctx, aggregateOnly);
+        return ResponseEntity.ok(ApiResponse.ok(response, ctx.correlationId().toString()));
+    }
+
+    @PostMapping("/control-tower/alerts/{alertId}/acknowledge")
+    public ResponseEntity<ApiResponse<AlertResponse>> acknowledgeAlert(@PathVariable UUID alertId) {
+        TrustContext ctx = TrustContextHolder.require();
+        log.info("Acknowledging alert [alertId={}] correlationId={}", alertId, ctx.correlationId());
+        AlertResponse response = controlTowerService.acknowledgeAlert(ctx, alertId);
         return ResponseEntity.ok(ApiResponse.ok(response, ctx.correlationId().toString()));
     }
 

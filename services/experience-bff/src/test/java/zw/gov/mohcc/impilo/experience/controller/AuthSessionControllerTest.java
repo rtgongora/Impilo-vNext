@@ -118,6 +118,47 @@ class AuthSessionControllerTest {
     }
 
     @Test
+    void login_deniesProviderIdAsCredential_uniformShape() {
+        AuthSessionController controller = controller();
+        // A council/EC number used as the login identifier must be denied with the
+        // uniform INVALID_CREDENTIALS shape (LOGIN-PROVIDERID-DENY) — no Keycloak call.
+        ResponseEntity<Map<String, Object>> response = controller.login(
+                "t1", "pod-1", "req-deny", "corr-deny", null,
+                Map.of("identifier", "EC-12345", "password", "whatever12345"));
+
+        assertEquals(401, response.getStatusCode().value());
+        Map<?, ?> error = (Map<?, ?>) response.getBody().get("error");
+        assertEquals("INVALID_CREDENTIALS", error.get("code"));
+    }
+
+    @Test
+    void login_deniesProviderIdMethod_uniformShape() {
+        AuthSessionController controller = controller();
+        ResponseEntity<Map<String, Object>> response = controller.login(
+                "t1", "pod-1", "req-deny2", "corr-deny2", null,
+                Map.of("identifier", "someone", "password", "whatever12345", "method", "provider_id"));
+
+        assertEquals(401, response.getStatusCode().value());
+        Map<?, ?> error = (Map<?, ?>) response.getBody().get("error");
+        assertEquals("INVALID_CREDENTIALS", error.get("code"));
+    }
+
+    @Test
+    void isProviderCredentialAttempt_classifiesIdentifiers() {
+        // Provider/council shapes => denied
+        assertTrue(AuthSessionController.isProviderCredentialAttempt(null, "EC-12345"));
+        assertTrue(AuthSessionController.isProviderCredentialAttempt(null, "MDPCZ/4521"));
+        assertTrue(AuthSessionController.isProviderCredentialAttempt("council_number", "anything"));
+        assertTrue(AuthSessionController.isProviderCredentialAttempt(null, "01ARZ3NDEKTSV4RRFFQ69G5FAV")); // ULID
+        // Person credentials => allowed
+        assertFalse(AuthSessionController.isProviderCredentialAttempt(null, "user@impilo.gov.zw"));
+        assertFalse(AuthSessionController.isProviderCredentialAttempt("email", "user@impilo.gov.zw"));
+        assertFalse(AuthSessionController.isProviderCredentialAttempt(
+                null, "b0000000-0000-4000-8000-000000000010")); // UUID Health ID
+        assertFalse(AuthSessionController.isProviderCredentialAttempt(null, ""));
+    }
+
+    @Test
     void getLinkedIds_returnsProviderAndStaffFromUpstream() {
         AuthSessionController controller = new AuthSessionController(
                 new RestTemplate(),

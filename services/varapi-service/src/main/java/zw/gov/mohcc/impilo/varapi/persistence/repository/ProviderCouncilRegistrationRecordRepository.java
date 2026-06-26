@@ -16,4 +16,14 @@ public interface ProviderCouncilRegistrationRecordRepository
 
     Optional<ProviderCouncilRegistrationRecordEntity> findFirstByTenantIdAndCouncil_IdAndRegistrationNumberIgnoreCase(
             UUID tenantId, Long councilId, String registrationNumber);
+
+    // Council/EC-number resolver (L3): resolve a council registration number to
+    // its provider anchor, scoped by council code when supplied. The number
+    // resolves a profile but never authenticates (LOGIN-PROVIDERID-DENY).
+    Optional<ProviderCouncilRegistrationRecordEntity>
+        findFirstByTenantIdAndCouncil_CouncilCodeIgnoreCaseAndRegistrationNumberIgnoreCase(
+            UUID tenantId, String councilCode, String registrationNumber);
+
+    Optional<ProviderCouncilRegistrationRecordEntity>
+        findFirstByTenantIdAndRegistrationNumberIgnoreCase(UUID tenantId, String registrationNumber);
 }

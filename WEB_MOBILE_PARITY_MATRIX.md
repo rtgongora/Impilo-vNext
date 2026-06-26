@@ -19,3 +19,9 @@ Legend: `Complete`, `Partial`, `Missing`, `N/A`
 | Fundo/Learning | Partial | Partial | Partial | Services present; parity and UX depth pending |
 | Payments/costing views | Partial | Partial | Partial | MusheX/Costa web modules build; mobile depth partial |
 | Public health ops | Partial | Partial | Partial | Backend endpoints compile; front-end surfacing partial |
+| Facility Mode cockpit/setup/units/control-tower | Partial | N/A | Missing | Web surfaces live (`/facility/[id]/*`); **mobile parity Missing (GAP-19)** |
+| Facility↔regulator (multi-council) | Partial | N/A | Missing | Web `/facility/[id]/regulators` live; mobile Missing (GAP-19) |
+| Indawo place mode / surveillance / outbreaks / field-teams | Partial | N/A | Missing | Web `/indawo/*` live; mobile Missing (GAP-19) |
+| Adaptive Encounter Cockpit (cadre-driven) | Partial | Missing | Missing | Web component renders from cadre decision; cadre form *content* Partial (GAP-10); mobile Missing (GAP-19) |
+| Sorting desk / front door | Partial | Missing | Missing | Visit-type sort step on web; unifying sorting_session Missing (GAP-11); mobile Missing (GAP-19) |
+| Patient-facing journey status (queue/check-in/orders/referral/inpatient/outcome) | Missing | Missing | Missing | **No patient surfaces shipped for this journey (GAP-8)** — do not mark done |

@@ -102,10 +102,16 @@ class GoldenPathIntegrationTest {
                 .andExpect(jsonPath("$.data.attributes.user.identifier").value("test@mohcc.gov.zw"));
     }
 
-    // ── Path B: Provider ID + Biometric ──────────────────────────
+    // ── Path B: Person-first login — Provider ID is NOT a credential ──
+    // Doctrine (L3 W5, LOGIN-PROVIDERID-DENY): a Provider ID / council
+    // registration number is a *resolvable* identifier, never an authentication
+    // credential. Attempting to log in with method=provider_id must be denied
+    // with the uniform anti-enumeration failure shape (401 INVALID_CREDENTIALS),
+    // without revealing whether such a provider exists. A provider authenticates
+    // as a person (Path A) and then activates their provider capacity.
     @Test
     @Order(2)
-    @DisplayName("Path B: Provider ID login returns session")
+    @DisplayName("Path B: Provider ID is rejected as a login credential (person-first)")
     void pathB_providerIdLogin() throws Exception {
         mvc.perform(post("/internal/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -119,9 +125,8 @@ class GoldenPathIntegrationTest {
                         .header("X-Request-ID", UUID.randomUUID().toString())
                         .header("X-Correlation-ID", UUID.randomUUID().toString())
                         .header("Idempotency-Key", UUID.randomUUID().toString()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.type").value("auth_token"))
-                .andExpect(jsonPath("$.data.attributes.user.method").value("provider_id"));
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error.code").value("INVALID_CREDENTIALS"));
     }
 
     // ── Path C: Queue → Encounter → Close ────────────────────────

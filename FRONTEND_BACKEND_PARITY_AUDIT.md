@@ -28,6 +28,11 @@ Classification labels:
 | Workflow + dispatch operations | Partial | Partial | Partial | Web ops and provider mobile Flow/Ops now surface workflow/dispatch reads plus live workflow start/transition and dispatch task/delivery commands; citizen mobile remains limited to journey-specific views |
 | Nompilo global companion | Partial | Partial | Partial | Embedded presence exists; command/action parity and policy depth ongoing |
 | Offline/provisional flows | Partial | Partial | Partial | Coverage mobile commands now persist to the shared offline queue, expose retry history, and reconcile via sync engine; other domains still need equivalent UX |
+| Facility / place mode operations | Partial | N/A | Missing | Web `/facility/[id]/*` (cockpit/setup/units/service-points/control-tower/regulators) and `/indawo/*` (surveillance/outbreaks/field-teams) are live against tuso/indawo/governance via BFF; **mobile parity Missing (GAP-19)** |
+| Encounter cadre orchestration | Partial | Missing | Partial | Adaptive Encounter Cockpit renders from PCT/BFF cadre decision; cadre-specific form *content* Partial (GAP-10); two cadre authorities to unify (GAP-4) |
+| Provider bootstrap / silent resolution | Partial | Partial | Partial | VARAPI bootstrap + council/EC resolver and Tshepo-identity silent resolution live for Health/Impilo/Provider-ID/council; phone/email/invite deny-safe (GAP-5) |
+| Access / value / compensation (COSTA + coverage) | Partial | N/A | Missing | Emergency reconciliation, waiver CRUD, teleconsult→value, subsidy+cap are live backend; web surfacing Partial; mobile Missing (GAP-19) |
+| Patient-facing journey status surfaces | Missing | Missing | Missing | **Not shipped for this journey (GAP-8)** — queue/check-in/orders/referral/inpatient/outcome status absent on our side |
 
 ## Doctrine-alignment findings
 
@@ -46,6 +51,8 @@ Classification labels:
 5. Align remaining frontend DTO drift to canonical contracts.
 
 Update in this remediation wave:
+
+- **Provider / Clinical / Place integration wave registered (GAP-22):** the ~21k-line merge on `integration/provider-clinical-place` added new provider/facility/place surfaces (PCT cadre/sorting/problems/care-plans/community/telemedicine, TUSO facility-mode/setup/units/control-tower, Indawo surveillance/place-mode, governance facility↔regulator, VARAPI bootstrap, Tshepo-identity silent resolution, Vashandi work-context, COSTA emergency-reconcile/waivers/teleconsult→value, coverage subsidy+cap) plus web routes `/facility/[id]/{cockpit,setup,departments,regulators,control-tower}` and `/indawo/{,,surveillance,outbreaks,field-teams}`. Status labels are taken straight from `docs/audits/provider-clinical-place/consolidated-gap-register.md` — not inflated. Policy enforcement is spec-only (GAP-6), patient-facing surfaces are Missing (GAP-8), mobile parity is Missing (GAP-19), cadre form content Partial (GAP-10), sorting-session Missing (GAP-11), phone/email resolution Partial (GAP-5).
 
 - Doctrine web journey routes now query live core-transaction feeds without fixture data injection and render explicit empty/error states when no live data is available.
 - Platform journey now includes live workflow and dispatch timeline visibility from `/internal/v1/workflows` and `/internal/v1/dispatch/tasks`.

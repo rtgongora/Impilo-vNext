@@ -36,6 +36,95 @@ public class InpatientEventConsumer {
         this.admissionService = admissionService;
     }
 
+    /**
+     * Consume PCT admission events. The PCT&lt;-&gt;inpatient handshake: on {@code ADMISSION_APPROVED}, PCT has
+     * approved the admission DECISION; inpatient-service materialises the physical CENSUS admission (bed/ward)
+     * and echoes a bed-assignment back (which PCT stamps via {@code linkInpatientAdmission}). PCT owns the
+     * decision; inpatient owns the census — no field is duplicated as a second source-of-truth.
+     */
+    @KafkaListener(
+            topics = {"pct.admission.updated"},
+            groupId = "inpatient-service"
+    )
+    public void consumePctAdmission(String message) {
+        try {
+            JsonNode root = objectMapper.readTree(message);
+            String eventType = firstNonBlank(text(root, "event_type"), text(root, "eventType"));
+            if (!"ADMISSION_APPROVED".equals(eventType)) {
+                // ADMISSION_REQUESTED / PATIENT_ADMITTED are PCT-internal lifecycle markers; only the approval
+                // hands a census admission to inpatient. Ignore the rest (idempotent, no-op).
+                return;
+            }
+
+            JsonNode payload = extractPayload(root);
+            if (payload == null || payload.isNull() || isConsentDenied(payload)) {
+                return;
+            }
+
+            String pctAdmissionId = text(payload, "admissionId");
+            String tenantId = firstNonBlank(text(root, "tenant_id"), text(payload, "tenantId"), text(payload, "tenant_id"));
+            String subjectCpid = firstNonBlank(text(payload, "subjectCpid"), text(payload, "patientCpid"),
+                    text(payload, "patient_cpid"));
+            String facilityId = firstNonBlank(text(payload, "facilityId"), text(payload, "facility_id"));
+            if (pctAdmissionId == null || tenantId == null || subjectCpid == null || facilityId == null) {
+                log.warn("INPATIENT: ADMISSION_APPROVED missing required fields "
+                        + "(admissionId/tenant/subject/facility), skipping");
+                return;
+            }
+
+            UUID encounterId = parseUuid(text(payload, "encounterId"));
+            UUID wardId = parseUuid(text(payload, "wardId"));
+            UUID bedId = parseUuid(text(payload, "bedId"));
+            String admittingDiagnosis = text(payload, "admittingDiagnosis");
+            String admissionType = text(payload, "admissionType");
+
+            // Parse the required identifiers up front. A malformed UUID is a POISON PILL — it can never
+            // succeed on redelivery, so we ack (skip) it rather than retry forever.
+            UUID pctAdmissionUuid;
+            UUID tenantUuid;
+            UUID facilityUuid;
+            try {
+                pctAdmissionUuid = UUID.fromString(pctAdmissionId.trim());
+                tenantUuid = UUID.fromString(tenantId.trim());
+                facilityUuid = UUID.fromString(facilityId.trim());
+            } catch (IllegalArgumentException e) {
+                log.warn("INPATIENT: ADMISSION_APPROVED has a malformed UUID (admission/tenant/facility), "
+                        + "skipping (poison pill): {}", e.getMessage());
+                return;
+            }
+
+            // The census write itself: a transient failure here (e.g. DB connectivity) must NOT be swallowed.
+            // C1 made admitFromPctApproval idempotent on pct_admission_id, so it is safe to let Kafka
+            // redeliver — rethrow so the offset is not committed and the admission is not silently dropped.
+            admissionService.admitFromPctApproval(
+                    pctAdmissionUuid,
+                    tenantUuid,
+                    facilityUuid,
+                    subjectCpid,
+                    encounterId,
+                    wardId,
+                    bedId,
+                    admittingDiagnosis,
+                    admissionType);
+            log.info("INPATIENT: materialised census admission for PCT admission {} (subject={})",
+                    pctAdmissionId, subjectCpid);
+        } catch (JsonProcessingException e) {
+            // Unparseable JSON is a poison pill: ack and move on (logged), never retry.
+            log.error("INPATIENT: failed to parse PCT admission event, skipping: {}", e.getMessage(), e);
+        }
+    }
+
+    private static UUID parseUuid(String v) {
+        if (v == null || v.isBlank()) {
+            return null;
+        }
+        try {
+            return UUID.fromString(v.trim());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
     @KafkaListener(
             topics = {"pct.journey", "impilo.pct.journey", "pct.journey.state_changed"},
             groupId = "inpatient-service"

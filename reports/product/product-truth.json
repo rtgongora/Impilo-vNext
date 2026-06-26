@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-06-24T02:16:05.801Z",
-  "branch": "claude/staging-ux-orchestration-remediation-Yypyl",
+  "generatedAt": "2026-06-26T16:23:42.967Z",
+  "branch": "integration/provider-clinical-place",
   "registryDrift": {
     "unregisteredModules": [],
     "missingOnDiskModules": []
@@ -9,7 +9,7 @@
     "totalServices": 92,
     "totalLibraries": 12,
     "totalUiWorkspaces": 24,
-    "bffRouteCount": 2152,
+    "bffRouteCount": 2183,
     "contractCount": 102,
     "byProductStatus": {
       "internal-only": 24,
@@ -18,20 +18,20 @@
     },
     "byMaturity": {
       "INTERNAL_ONLY": 24,
-      "REAL_CODE_NOT_PROBED": 65,
-      "FIXTURE_BACKED": 2,
+      "REAL_CODE_NOT_PROBED": 63,
+      "FIXTURE_BACKED": 4,
       "DEFERRED_WITH_ADR": 1
     },
     "gapCounts": {
       "byCategory": {
-        "S": 2,
+        "S": 4,
         "F": 4
       },
       "bySeverity": {
         "blocker": 1,
-        "high": 5
+        "high": 7
       },
-      "total": 6
+      "total": 8
     },
     "crossServiceCohesion": {
       "total": 14,
@@ -43,7 +43,7 @@
       "missingTest": 0
     },
     "phase6": {
-      "complete": 90,
+      "complete": 88,
       "userFacing": 67,
       "userFacingReal": 67,
       "userFacingRealProven": 0
@@ -1089,7 +1089,7 @@
         "contractOperations": 12,
         "contractViolations": 0,
         "bffClients": 11,
-        "uiReferences": 24,
+        "uiReferences": 25,
         "mobileReferences": 7,
         "tests": 2
       },
@@ -1135,12 +1135,12 @@
         "ui/one-ui-shell/src/app/privacy/page.tsx",
         "ui/one-ui-shell/src/app/registry/clients/[id]/page.tsx",
         "ui/one-ui-shell/src/components/ZoneNavigation.tsx",
+        "ui/one-ui-shell/src/components/facility-mode/types.ts",
         "ui/one-ui-shell/src/components/platform/NotificationCommsOrchestrationRail.test.tsx",
         "ui/one-ui-shell/src/components/platform/NotificationCommsOrchestrationRail.tsx",
         "ui/one-ui-shell/src/data/workSurfaceModules.ts",
         "ui/one-ui-shell/src/features/maternity/ctg/VitalsCtgSection.tsx",
-        "ui/one-ui-shell/src/features/maternity/ctg/ctgTraceUtils.ts",
-        "ui/one-ui-shell/src/hooks/queries/useCommunication.ts"
+        "ui/one-ui-shell/src/features/maternity/ctg/ctgTraceUtils.ts"
       ],
       "mobilePaths": [
         "provider-app:apps/mobile/provider-app/src/screens/provider/AdminRegistryHubScreen.tsx",
@@ -1223,7 +1223,7 @@
         "bffClients": 6,
         "uiReferences": 7,
         "mobileReferences": 0,
-        "tests": 6
+        "tests": 7
       },
       "dimensions": {
         "database": "real",
@@ -1554,19 +1554,19 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 11,
-        "entities": 114,
-        "repositories": 48,
-        "serviceLayer": 23,
-        "controllers": 20,
-        "routes": 115,
+        "migrations": 14,
+        "entities": 122,
+        "repositories": 50,
+        "serviceLayer": 25,
+        "controllers": 22,
+        "routes": 128,
         "stubRoutes": 0,
         "contractOperations": 101,
         "contractViolations": 0,
         "bffClients": 16,
         "uiReferences": 34,
         "mobileReferences": 3,
-        "tests": 12
+        "tests": 18
       },
       "dimensions": {
         "database": "real",
@@ -1687,19 +1687,19 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 9,
-        "entities": 14,
-        "repositories": 14,
-        "serviceLayer": 4,
+        "migrations": 11,
+        "entities": 17,
+        "repositories": 17,
+        "serviceLayer": 5,
         "controllers": 13,
-        "routes": 52,
+        "routes": 56,
         "stubRoutes": 0,
         "contractOperations": 56,
         "contractViolations": 0,
         "bffClients": 11,
         "uiReferences": 64,
         "mobileReferences": 16,
-        "tests": 5
+        "tests": 6
       },
       "dimensions": {
         "database": "real",
@@ -2833,15 +2833,15 @@
         "entities": 0,
         "repositories": 2,
         "serviceLayer": 41,
-        "controllers": 256,
-        "routes": 2152,
+        "controllers": 260,
+        "routes": 2183,
         "stubRoutes": 0,
         "contractOperations": 1537,
         "contractViolations": 0,
         "bffClients": 0,
-        "uiReferences": 162,
+        "uiReferences": 164,
         "mobileReferences": 54,
-        "tests": 161
+        "tests": 165
       },
       "dimensions": {
         "database": "real",
@@ -3123,7 +3123,7 @@
         "contractOperations": 14,
         "contractViolations": 0,
         "bffClients": 6,
-        "uiReferences": 31,
+        "uiReferences": 32,
         "mobileReferences": 2,
         "tests": 2
       },
@@ -3168,8 +3168,8 @@
         "ui/one-ui-shell/src/components/ehr/CadreHistoryForm.tsx",
         "ui/one-ui-shell/src/components/ehr/EncounterDocumentsSheet.tsx",
         "ui/one-ui-shell/src/components/ehr/sections/OutcomeSection.tsx",
-        "ui/one-ui-shell/src/components/encounter/StructuredEncounterForms.tsx",
-        "ui/one-ui-shell/src/components/encounter/forms/AlliedHealthForms.tsx"
+        "ui/one-ui-shell/src/components/encounter/AdaptiveEncounterCockpit.tsx",
+        "ui/one-ui-shell/src/components/encounter/StructuredEncounterForms.tsx"
       ],
       "mobilePaths": [
         "provider-app:apps/mobile/provider-app/src/__tests__/integration/BackendIntegration.test.tsx",
@@ -3662,19 +3662,19 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 6,
-        "entities": 19,
-        "repositories": 17,
-        "serviceLayer": 2,
-        "controllers": 4,
-        "routes": 33,
+        "migrations": 7,
+        "entities": 24,
+        "repositories": 22,
+        "serviceLayer": 3,
+        "controllers": 5,
+        "routes": 46,
         "stubRoutes": 0,
         "contractOperations": 32,
         "contractViolations": 0,
-        "bffClients": 5,
-        "uiReferences": 17,
+        "bffClients": 6,
+        "uiReferences": 21,
         "mobileReferences": 5,
-        "tests": 5
+        "tests": 6
       },
       "dimensions": {
         "database": "real",
@@ -3692,12 +3692,17 @@
       "contractFile": "indawo.openapi.yaml",
       "bffClients": [
         "IndawoServiceClient",
+        "IndawoPlaceModeController→inline",
         "PublicHealthController→inline",
         "ProviderPublicHealthController→inline",
         "RegistryIntakeController→inline",
         "indawo→yml-base-url"
       ],
       "uiPaths": [
+        "ui/one-ui-shell/src/app/indawo/field-teams/page.tsx",
+        "ui/one-ui-shell/src/app/indawo/outbreaks/page.tsx",
+        "ui/one-ui-shell/src/app/indawo/page.tsx",
+        "ui/one-ui-shell/src/app/indawo/surveillance/page.tsx",
         "ui/one-ui-shell/src/app/production-command-centre/page.tsx",
         "ui/one-ui-shell/src/app/public-health/publicHealthTabParams.test.ts",
         "ui/one-ui-shell/src/app/public-health/site-registry/[siteId]/page.tsx",
@@ -3713,8 +3718,7 @@
         "ui/one-ui-shell/src/features/core-transaction/types.ts",
         "ui/one-ui-shell/src/features/production-command-centre/tile-registry.ts",
         "ui/one-ui-shell/src/hooks/queries/usePublicHealth.ts",
-        "ui/one-ui-shell/src/hooks/queries/useRegistryIntake.ts",
-        "ui/one-ui-shell/src/lib/registry-service-module-refs.ts"
+        "ui/one-ui-shell/src/hooks/queries/useRegistryIntake.ts"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/navigation/citizenServiceNavigation.ts",
@@ -3783,7 +3787,7 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 12,
+        "migrations": 14,
         "entities": 32,
         "repositories": 31,
         "serviceLayer": 5,
@@ -3795,7 +3799,7 @@
         "bffClients": 12,
         "uiReferences": 46,
         "mobileReferences": 10,
-        "tests": 6
+        "tests": 8
       },
       "dimensions": {
         "database": "real",
@@ -4701,7 +4705,7 @@
         "contractOperations": 61,
         "contractViolations": 0,
         "bffClients": 2,
-        "uiReferences": 263,
+        "uiReferences": 272,
         "mobileReferences": 58,
         "tests": 5
       },
@@ -6733,7 +6737,7 @@
         "contractOperations": 58,
         "contractViolations": 0,
         "bffClients": 12,
-        "uiReferences": 53,
+        "uiReferences": 56,
         "mobileReferences": 13,
         "tests": 7
       },
@@ -6777,6 +6781,7 @@
         "ui/one-ui-shell/src/app/ehr/[patientId]/results/page.test.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/results/page.tsx",
         "ui/one-ui-shell/src/app/enterprise/oversight/page.tsx",
+        "ui/one-ui-shell/src/app/facility/[id]/setup/page.tsx",
         "ui/one-ui-shell/src/app/imaging/facility/page.tsx",
         "ui/one-ui-shell/src/app/imaging/worklist/page.tsx",
         "ui/one-ui-shell/src/app/lab/catalog/page.tsx",
@@ -6784,8 +6789,7 @@
         "ui/one-ui-shell/src/app/lab/page.tsx",
         "ui/one-ui-shell/src/app/lab/reconciliation/page.test.tsx",
         "ui/one-ui-shell/src/app/lab/reconciliation/page.tsx",
-        "ui/one-ui-shell/src/app/lab/results/page.tsx",
-        "ui/one-ui-shell/src/app/lab/worklist/page.tsx"
+        "ui/one-ui-shell/src/app/lab/results/page.tsx"
       ],
       "mobilePaths": [
         "provider-app:apps/mobile/provider-app/src/__tests__/integration/ClinicalWriteJourneyContracts.test.ts",
@@ -6973,19 +6977,19 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 14,
-        "entities": 36,
-        "repositories": 26,
-        "serviceLayer": 13,
-        "controllers": 17,
-        "routes": 115,
+        "migrations": 20,
+        "entities": 44,
+        "repositories": 34,
+        "serviceLayer": 18,
+        "controllers": 22,
+        "routes": 143,
         "stubRoutes": 0,
         "contractOperations": 120,
         "contractViolations": 0,
-        "bffClients": 40,
-        "uiReferences": 413,
+        "bffClients": 41,
+        "uiReferences": 422,
         "mobileReferences": 97,
-        "tests": 12
+        "tests": 16
       },
       "dimensions": {
         "database": "real",
@@ -7014,6 +7018,7 @@
         "EdWorkflowController→PctServiceClient",
         "EhrPatientSummaryController→PctServiceClient",
         "EncounterController→PctServiceClient",
+        "FacilityModeController→PctServiceClient",
         "FacilityOperationsAggregateController→PctServiceClient",
         "GrowthController→PctServiceClient",
         "ImmunizationsController→PctServiceClient",
@@ -7078,7 +7083,28 @@
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/RecordSharingScreen.tsx"
       ],
       "mockStubHits": [],
-      "securityPlaceholderHits": [],
+      "securityPlaceholderHits": [
+        {
+          "file": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/CadreController.java",
+          "pattern": "authz-placeholder"
+        },
+        {
+          "file": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/CarePlanController.java",
+          "pattern": "authz-placeholder"
+        },
+        {
+          "file": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/ProblemController.java",
+          "pattern": "authz-placeholder"
+        },
+        {
+          "file": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/SortingDeskController.java",
+          "pattern": "authz-placeholder"
+        },
+        {
+          "file": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/core/cadre/CadreEngine.java",
+          "pattern": "authz-placeholder"
+        }
+      ],
       "stubRouteCount": 0,
       "bffOrphanRoutes": 0,
       "internalOnlyDocumented": false,
@@ -7096,9 +7122,16 @@
         "q9_persistsToDb": true,
         "q10_fixtureOnly": false
       },
-      "phase6Complete": true,
-      "gaps": [],
-      "maturity": "REAL_CODE_NOT_PROBED"
+      "phase6Complete": false,
+      "gaps": [
+        {
+          "category": "S",
+          "severity": "high",
+          "description": "pct-service: security/crypto/authz placeholder in product path (5 hits)",
+          "impactScore": 3
+        }
+      ],
+      "maturity": "FIXTURE_BACKED"
     },
     {
       "id": "pharmacy-elmis-adapter",
@@ -7606,7 +7639,7 @@
         "contractOperations": 11,
         "contractViolations": 0,
         "bffClients": 12,
-        "uiReferences": 70,
+        "uiReferences": 71,
         "mobileReferences": 17,
         "tests": 1
       },
@@ -8348,7 +8381,7 @@
         "contractOperations": 7,
         "contractViolations": 0,
         "bffClients": 35,
-        "uiReferences": 397,
+        "uiReferences": 398,
         "mobileReferences": 52,
         "tests": 6
       },
@@ -8989,8 +9022,8 @@
         "stubRoutes": 0,
         "contractOperations": 55,
         "contractViolations": 0,
-        "bffClients": 7,
-        "uiReferences": 29,
+        "bffClients": 8,
+        "uiReferences": 32,
         "mobileReferences": 4,
         "tests": 7
       },
@@ -9010,6 +9043,7 @@
       "contractFile": "surveillance.openapi.yaml",
       "bffClients": [
         "SurveillanceServiceClient",
+        "IndawoPlaceModeController→inline",
         "PublicHealthController→inline",
         "CitizenPublicHealthController→inline",
         "ProviderAdminRegistryController→inline",
@@ -9021,11 +9055,14 @@
         "ui/one-ui-shell/src/app/api/mobile/provider/hubs/[hub]/route.ts",
         "ui/one-ui-shell/src/app/enterprise/oversight/page.tsx",
         "ui/one-ui-shell/src/app/home/page.tsx",
+        "ui/one-ui-shell/src/app/indawo/page.tsx",
+        "ui/one-ui-shell/src/app/indawo/surveillance/page.tsx",
         "ui/one-ui-shell/src/app/madi/dashboard/page.tsx",
         "ui/one-ui-shell/src/app/public-health/page.tsx",
         "ui/one-ui-shell/src/app/public-health/publicHealthTabParams.test.ts",
         "ui/one-ui-shell/src/app/public-health/publicHealthTabParams.ts",
         "ui/one-ui-shell/src/app/public-health/surveillance/page.tsx",
+        "ui/one-ui-shell/src/components/facility-mode/usePlaceMode.ts",
         "ui/one-ui-shell/src/components/public-health/ComplaintsTab.tsx",
         "ui/one-ui-shell/src/components/public-health/FieldOperationsTab.tsx",
         "ui/one-ui-shell/src/components/public-health/OutbreaksTab.tsx",
@@ -9034,10 +9071,7 @@
         "ui/one-ui-shell/src/components/public-health/SurveillanceOutbreakOrchestrationPanel.tsx",
         "ui/one-ui-shell/src/components/public-health/SurveillanceTab.tsx",
         "ui/one-ui-shell/src/components/public-health/publicHealthAlertMetrics.test.ts",
-        "ui/one-ui-shell/src/components/public-health/publicHealthAlertMetrics.ts",
-        "ui/one-ui-shell/src/components/social/SocialCommunityOrchestrationRail.test.tsx",
-        "ui/one-ui-shell/src/components/social/SocialCommunityOrchestrationRail.tsx",
-        "ui/one-ui-shell/src/components/social/SocialRightRail.tsx"
+        "ui/one-ui-shell/src/components/public-health/publicHealthAlertMetrics.ts"
       ],
       "mobilePaths": [
         "provider-app:apps/mobile/provider-app/src/screens/provider/AdminRegistryHubScreen.tsx",
@@ -9461,16 +9495,16 @@
         "migrations": 1,
         "entities": 5,
         "repositories": 5,
-        "serviceLayer": 4,
+        "serviceLayer": 5,
         "controllers": 6,
-        "routes": 20,
+        "routes": 21,
         "stubRoutes": 0,
         "contractOperations": 27,
         "contractViolations": 0,
         "bffClients": 2,
         "uiReferences": 41,
         "mobileReferences": 6,
-        "tests": 6
+        "tests": 9
       },
       "dimensions": {
         "database": "real",
@@ -9795,8 +9829,8 @@
         "stubRoutes": 0,
         "contractOperations": 16,
         "contractViolations": 0,
-        "bffClients": 24,
-        "uiReferences": 31,
+        "bffClients": 26,
+        "uiReferences": 32,
         "mobileReferences": 5,
         "tests": 9
       },
@@ -9820,6 +9854,7 @@
         "BiometricPolicyBffController→inline",
         "ClinicalToolsController→inline",
         "EhrPatientSummaryController→inline",
+        "FacilityModeController→inline",
         "FinanceBillingWorkspaceController→inline",
         "FinanceMushexPlatformController→inline",
         "GuidanceController→inline",
@@ -9836,6 +9871,7 @@
         "TrustAdminController→inline",
         "TrustProviderController→inline",
         "VisibilityProfileController→inline",
+        "WorkContextController→inline",
         "MobileOfflineController→inline",
         "CitizenConsentController→inline",
         "CitizenProfileController→inline"
@@ -9929,19 +9965,19 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 11,
-        "entities": 43,
-        "repositories": 43,
-        "serviceLayer": 11,
-        "controllers": 15,
-        "routes": 80,
+        "migrations": 12,
+        "entities": 45,
+        "repositories": 45,
+        "serviceLayer": 15,
+        "controllers": 19,
+        "routes": 94,
         "stubRoutes": 0,
         "contractOperations": 90,
         "contractViolations": 0,
-        "bffClients": 16,
-        "uiReferences": 25,
+        "bffClients": 17,
+        "uiReferences": 33,
         "mobileReferences": 5,
-        "tests": 13
+        "tests": 17
       },
       "dimensions": {
         "database": "real",
@@ -9963,6 +9999,7 @@
         "BookingRoutingController→TusoServiceClient",
         "FacilityController→TusoServiceClient",
         "FacilityDataQualityController→TusoServiceClient",
+        "FacilityModeController→TusoServiceClient",
         "FacilityRegulatoryController→TusoServiceClient",
         "RegistryController→TusoServiceClient",
         "RegistryGeoLocalityController→TusoServiceClient",
@@ -9978,6 +10015,10 @@
       "uiPaths": [
         "ui/one-ui-shell/src/app/developer/api-catalog/page.tsx",
         "ui/one-ui-shell/src/app/developer/sandbox/page.tsx",
+        "ui/one-ui-shell/src/app/facility/[id]/cockpit/page.tsx",
+        "ui/one-ui-shell/src/app/facility/[id]/control-tower/page.tsx",
+        "ui/one-ui-shell/src/app/facility/[id]/departments/page.tsx",
+        "ui/one-ui-shell/src/app/facility/[id]/setup/page.tsx",
         "ui/one-ui-shell/src/app/marketplace/catalog/page.tsx",
         "ui/one-ui-shell/src/app/registry/facilities/page.tsx",
         "ui/one-ui-shell/src/app/registry/intake/page.tsx",
@@ -9985,17 +10026,13 @@
         "ui/one-ui-shell/src/app/scheduling/page.tsx",
         "ui/one-ui-shell/src/app/tuso/page.tsx",
         "ui/one-ui-shell/src/components/facility/FacilityDigitalReadinessOrchestrationPanel.tsx",
+        "ui/one-ui-shell/src/components/facility-mode/SetupChecklist.tsx",
+        "ui/one-ui-shell/src/components/facility-mode/SetupWizard.tsx",
+        "ui/one-ui-shell/src/components/facility-mode/types.ts",
+        "ui/one-ui-shell/src/components/facility-mode/useFacilityMode.ts",
         "ui/one-ui-shell/src/components/workspace-ops/WorkspaceContextOrchestrationRail.tsx",
         "ui/one-ui-shell/src/config/serviceBranding.ts",
-        "ui/one-ui-shell/src/data/workSurfaceModules.ts",
-        "ui/one-ui-shell/src/features/core-transaction/components.tsx",
-        "ui/one-ui-shell/src/features/core-transaction/fixtures/core-transactions.ts",
-        "ui/one-ui-shell/src/features/core-transaction/types.ts",
-        "ui/one-ui-shell/src/features/production-command-centre/tile-registry.ts",
-        "ui/one-ui-shell/src/hooks/queries/useRegistryIntake.ts",
-        "ui/one-ui-shell/src/hooks/useTusoRegistry.ts",
-        "ui/one-ui-shell/src/hooks/useTusoShellCompanion.ts",
-        "ui/one-ui-shell/src/lib/__tests__/facility-workplace-context-golden-thread.test.ts"
+        "ui/one-ui-shell/src/data/workSurfaceModules.ts"
       ],
       "mobilePaths": [
         "provider-app:apps/mobile/provider-app/src/navigation/providerServiceNavigation.ts",
@@ -10181,19 +10218,19 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 15,
-        "entities": 48,
-        "repositories": 48,
-        "serviceLayer": 22,
-        "controllers": 27,
-        "routes": 195,
+        "migrations": 16,
+        "entities": 49,
+        "repositories": 49,
+        "serviceLayer": 24,
+        "controllers": 29,
+        "routes": 201,
         "stubRoutes": 0,
         "contractOperations": 186,
         "contractViolations": 0,
         "bffClients": 22,
         "uiReferences": 28,
         "mobileReferences": 6,
-        "tests": 10
+        "tests": 12
       },
       "dimensions": {
         "database": "real",
@@ -10618,7 +10655,7 @@
         "contractOperations": 11,
         "contractViolations": 0,
         "bffClients": 28,
-        "uiReferences": 170,
+        "uiReferences": 177,
         "mobileReferences": 26,
         "tests": 2
       },
@@ -10760,19 +10797,19 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 3,
-        "entities": 22,
-        "repositories": 21,
-        "serviceLayer": 17,
-        "controllers": 1,
-        "routes": 60,
+        "migrations": 4,
+        "entities": 23,
+        "repositories": 22,
+        "serviceLayer": 18,
+        "controllers": 2,
+        "routes": 66,
         "stubRoutes": 0,
         "contractOperations": 28,
         "contractViolations": 0,
-        "bffClients": 3,
+        "bffClients": 4,
         "uiReferences": 14,
         "mobileReferences": 0,
-        "tests": 1
+        "tests": 2
       },
       "dimensions": {
         "database": "real",
@@ -10790,6 +10827,7 @@
       "contractFile": "workforce-governance.openapi.yaml",
       "bffClients": [
         "WorkforceGovernanceClient",
+        "FacilityRegulatorBffController→inline",
         "WorkforceGovernanceController→inline",
         "workforce-governance→yml-base-url"
       ],
@@ -10870,19 +10908,19 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 1,
+        "migrations": 2,
         "entities": 9,
         "repositories": 9,
-        "serviceLayer": 9,
-        "controllers": 7,
-        "routes": 42,
+        "serviceLayer": 10,
+        "controllers": 8,
+        "routes": 45,
         "stubRoutes": 0,
         "contractOperations": 35,
         "contractViolations": 0,
-        "bffClients": 1,
-        "uiReferences": 36,
+        "bffClients": 2,
+        "uiReferences": 39,
         "mobileReferences": 8,
-        "tests": 4
+        "tests": 6
       },
       "dimensions": {
         "database": "real",
@@ -10899,7 +10937,8 @@
       "productStatus": "real",
       "contractFile": "vashandi-workforce.openapi.yaml",
       "bffClients": [
-        "VashandiServiceClient"
+        "VashandiServiceClient",
+        "WorkContextController→VashandiServiceClient"
       ],
       "uiPaths": [
         "ui/one-ui-shell/src/app/auth/login/page.tsx",
@@ -10919,9 +10958,9 @@
         "ui/one-ui-shell/src/components/vashandi/EligibilityCheckPanel.tsx",
         "ui/one-ui-shell/src/components/vashandi/VashandiFriendlyBlockedState.tsx",
         "ui/one-ui-shell/src/components/vashandi/VashandiShell.tsx",
-        "ui/one-ui-shell/src/hooks/useVashandi.ts",
-        "ui/one-ui-shell/src/lib/__tests__/provider-workforce-context-golden-thread.test.ts",
-        "ui/one-ui-shell/src/lib/administration-governance/access.ts"
+        "ui/one-ui-shell/src/components/workspace/ContextRail.tsx",
+        "ui/one-ui-shell/src/hooks/queries/useWorkContext.ts",
+        "ui/one-ui-shell/src/hooks/useVashandi.ts"
       ],
       "mobilePaths": [
         "provider-app:apps/mobile/provider-app/src/screens/provider/ClinicalToolsScreen.tsx",
@@ -10934,7 +10973,12 @@
         "provider-app:apps/mobile/provider-app/src/services/vashandiService.ts"
       ],
       "mockStubHits": [],
-      "securityPlaceholderHits": [],
+      "securityPlaceholderHits": [
+        {
+          "file": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/core/AttendanceService.java",
+          "pattern": "authz-placeholder"
+        }
+      ],
       "stubRouteCount": 0,
       "bffOrphanRoutes": 0,
       "internalOnlyDocumented": false,
@@ -10952,9 +10996,16 @@
         "q9_persistsToDb": true,
         "q10_fixtureOnly": false
       },
-      "phase6Complete": true,
-      "gaps": [],
-      "maturity": "REAL_CODE_NOT_PROBED"
+      "phase6Complete": false,
+      "gaps": [
+        {
+          "category": "S",
+          "severity": "high",
+          "description": "vashandi-workforce-service: security/crypto/authz placeholder in product path (1 hits)",
+          "impactScore": 3
+        }
+      ],
+      "maturity": "FIXTURE_BACKED"
     },
     {
       "id": "zibo-service",
@@ -12092,7 +12143,8 @@
         "/internal/v1/workflows/definitions",
         "/internal/v1/workflows/instances",
         "/internal/v1/identity/linked-ids",
-        "/internal/v1/session/experience"
+        "/internal/v1/session/experience",
+        "/internal/v1/work-context"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -12734,7 +12786,8 @@
       "pageFile": "ui/one-ui-shell/src/app/clinical/inpatient/page.tsx",
       "bffPaths": [
         "/internal/v1/identity/linked-ids",
-        "/internal/v1/session/experience"
+        "/internal/v1/session/experience",
+        "/internal/v1/work-context"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -12790,7 +12843,8 @@
       "bffPaths": [
         "/internal/v1/inpatient/admissions",
         "/internal/v1/identity/linked-ids",
-        "/internal/v1/session/experience"
+        "/internal/v1/session/experience",
+        "/internal/v1/work-context"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -12847,6 +12901,7 @@
         "/internal/v1/inpatient/admissions",
         "/internal/v1/identity/linked-ids",
         "/internal/v1/session/experience",
+        "/internal/v1/work-context",
         "/internal/v1/core-transactions",
         "/internal/v1/workflows/definitions",
         "/internal/v1/workflows/instances"
@@ -12905,6 +12960,7 @@
       "bffPaths": [
         "/internal/v1/identity/linked-ids",
         "/internal/v1/session/experience",
+        "/internal/v1/work-context",
         "/internal/v1/inpatient/admissions"
       ],
       "backingSignals": [
@@ -12961,7 +13017,8 @@
       "bffPaths": [
         "/internal/v1/inpatient/admissions",
         "/internal/v1/identity/linked-ids",
-        "/internal/v1/session/experience"
+        "/internal/v1/session/experience",
+        "/internal/v1/work-context"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -13017,7 +13074,8 @@
       "bffPaths": [
         "/internal/v1/inpatient/admissions",
         "/internal/v1/identity/linked-ids",
-        "/internal/v1/session/experience"
+        "/internal/v1/session/experience",
+        "/internal/v1/work-context"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -13073,7 +13131,8 @@
       "bffPaths": [
         "/internal/v1/inpatient/admissions",
         "/internal/v1/identity/linked-ids",
-        "/internal/v1/session/experience"
+        "/internal/v1/session/experience",
+        "/internal/v1/work-context"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -13257,7 +13316,8 @@
       "pageFile": "ui/one-ui-shell/src/app/data-intelligence/page.tsx",
       "bffPaths": [
         "/internal/v1/identity/linked-ids",
-        "/internal/v1/session/experience"
+        "/internal/v1/session/experience",
+        "/internal/v1/work-context"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -13312,7 +13372,8 @@
       "pageFile": "ui/one-ui-shell/src/app/data-intelligence/quality/page.tsx",
       "bffPaths": [
         "/internal/v1/identity/linked-ids",
-        "/internal/v1/session/experience"
+        "/internal/v1/session/experience",
+        "/internal/v1/work-context"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -13429,7 +13490,8 @@
       "pageFile": "ui/one-ui-shell/src/app/data-intelligence/integration/page.tsx",
       "bffPaths": [
         "/internal/v1/identity/linked-ids",
-        "/internal/v1/session/experience"
+        "/internal/v1/session/experience",
+        "/internal/v1/work-context"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -13484,7 +13546,8 @@
       "pageFile": "ui/one-ui-shell/src/app/data-intelligence/reports/page.tsx",
       "bffPaths": [
         "/internal/v1/identity/linked-ids",
-        "/internal/v1/session/experience"
+        "/internal/v1/session/experience",
+        "/internal/v1/work-context"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -13539,7 +13602,8 @@
       "pageFile": "ui/one-ui-shell/src/app/data-intelligence/audit/page.tsx",
       "bffPaths": [
         "/internal/v1/identity/linked-ids",
-        "/internal/v1/session/experience"
+        "/internal/v1/session/experience",
+        "/internal/v1/work-context"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -13595,12 +13659,12 @@
       "bffPaths": [
         "/internal/v1/identity/linked-ids",
         "/internal/v1/session/experience",
+        "/internal/v1/work-context",
         "/internal/v1/ndila/geocode",
         "/internal/v1/ndila/reverse-geocode",
         "/internal/v1/ndila/tiles/config",
         "/internal/v1/ndila/tiles/{z}/{x}/{y}.png",
-        "/internal/v1/ndila/spatial/nearby",
-        "/api/v1/ndila/validate-location"
+        "/internal/v1/ndila/spatial/nearby"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -24928,7 +24992,8 @@
         "/internal/v1/ndila/tiles/config",
         "/internal/v1/pharmacy/dispense",
         "/internal/v1/identity/linked-ids",
-        "/internal/v1/session/experience"
+        "/internal/v1/session/experience",
+        "/internal/v1/work-context"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -45257,6 +45322,111 @@
       "gaps": []
     },
     {
+      "path": "/facility/[id]/cockpit",
+      "pageTitle": "(unregistered)",
+      "zone": "unregistered",
+      "pageFile": "ui/one-ui-shell/src/app/facility/[id]/cockpit/page.tsx",
+      "bffPaths": [
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [],
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": true,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/facility/[id]/control-tower",
+      "pageTitle": "(unregistered)",
+      "zone": "unregistered",
+      "pageFile": "ui/one-ui-shell/src/app/facility/[id]/control-tower/page.tsx",
+      "bffPaths": [
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [],
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": true,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/facility/[id]/departments",
+      "pageTitle": "(unregistered)",
+      "zone": "unregistered",
+      "pageFile": "ui/one-ui-shell/src/app/facility/[id]/departments/page.tsx",
+      "bffPaths": [
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [],
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": true,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/facility/[id]/regulators",
+      "pageTitle": "(unregistered)",
+      "zone": "unregistered",
+      "pageFile": "ui/one-ui-shell/src/app/facility/[id]/regulators/page.tsx",
+      "bffPaths": [
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [],
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": true,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/facility/[id]/setup",
+      "pageTitle": "(unregistered)",
+      "zone": "unregistered",
+      "pageFile": "ui/one-ui-shell/src/app/facility/[id]/setup/page.tsx",
+      "bffPaths": [
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [],
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": true,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
       "path": "/groups/[id]",
       "pageTitle": "(unregistered)",
       "zone": "unregistered",
@@ -45293,6 +45463,94 @@
       ],
       "backingSignals": [
         "apiClient-dynamic"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [],
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": true,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/indawo/field-teams",
+      "pageTitle": "(unregistered)",
+      "zone": "unregistered",
+      "pageFile": "ui/one-ui-shell/src/app/indawo/field-teams/page.tsx",
+      "bffPaths": [
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/place-mode"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [],
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": true,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/indawo/outbreaks",
+      "pageTitle": "(unregistered)",
+      "zone": "unregistered",
+      "pageFile": "ui/one-ui-shell/src/app/indawo/outbreaks/page.tsx",
+      "bffPaths": [
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/place-mode"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [],
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": true,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/indawo",
+      "pageTitle": "(unregistered)",
+      "zone": "unregistered",
+      "pageFile": "ui/one-ui-shell/src/app/indawo/page.tsx",
+      "bffPaths": [
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/place-mode"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [],
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": true,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/indawo/surveillance",
+      "pageTitle": "(unregistered)",
+      "zone": "unregistered",
+      "pageFile": "ui/one-ui-shell/src/app/indawo/surveillance/page.tsx",
+      "bffPaths": [
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/place-mode"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],

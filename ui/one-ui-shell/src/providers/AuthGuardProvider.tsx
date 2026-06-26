@@ -18,6 +18,7 @@ import { useIdentityContext } from "@/hooks/useIdentityContext";
 import { matchesRequiredRole, ROLE_GROUPS } from "@/lib/auth/role-groups";
 import { isGovernanceWorkPathGrantedBySession } from "@/lib/administration-governance";
 import { isRouteBlockedForCitizen } from "@/lib/identity-context";
+import { evaluateClinicalWorkAccess } from "@/lib/work-pro-life-boundary";
 import { sessionContractAllowsRoute } from "@/lib/trust";
 import { useSessionExperienceContract } from "@/hooks/useSessionExperienceContract";
 import { buildContextGuardRedirect } from "@/lib/resolve-post-login-destination";
@@ -78,6 +79,23 @@ export function AuthGuardProvider({ children }: { children: ReactNode }) {
     ) {
       router.replace("/auth/register/assurance");
       return;
+    }
+
+    // Work / My-Professional / My-Life isolation (L3 W4). The boundary between
+    // the three shells is a correctness invariant: work permissions must never
+    // reach the actor's OWN citizen record, and a non-activated identity must
+    // never transact clinically. Enforced here as defence-in-depth; the Tshepo
+    // policy track (WORK-PRO-LIFE-ISOLATION / SELF-TREATMENT-BLOCK) is the
+    // authoritative server-side enforcement and owns the break-glass path.
+    if (isAuthenticated) {
+      const boundary = evaluateClinicalWorkAccess(pathname, {
+        healthId: user?.healthId ?? user?.id ?? null,
+        providerActivated: user?.providerActivated ?? false,
+      });
+      if (!boundary.allowed) {
+        router.replace(boundary.redirectTo);
+        return;
+      }
     }
 
     const routeInfo = matchRouteDefinition(pathname);
