@@ -48,6 +48,7 @@ class PolicyEngineTest {
     @Mock private AuditPublisher auditPublisher;
     @Mock private VisibilityEscalationService visibilityEscalationService;
     @Mock private DelegationClient delegationClient;
+    @Mock private OpaDecisionClient opaDecisionClient;
 
     private AuthzProperties properties;
     private ObjectMapper objectMapper;
@@ -71,7 +72,7 @@ class PolicyEngineTest {
                 riskScoring, policyCacheService, privilegeRevocationStore, consentClient,
                 stepUpService, breakGlassService, decisionLogRepository,
                 auditPublisher, properties, objectMapper, visibilityEscalationService,
-                delegationClient
+                delegationClient, opaDecisionClient
         );
     }
 
@@ -586,6 +587,40 @@ class PolicyEngineTest {
 
         assertEquals(Verdict.DENY, response.verdict());
         assertEquals("DELEGATION_ASSURANCE_TOO_LOW", response.errorCode());
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // Phase 3: OPA shadow (strangler — must never change the verdict)
+    // ════════════════════════════════════════════════════════════════════
+
+    @Test
+    @DisplayName("OPA SHADOW: a divergent OPA verdict is logged but never changes the Java decision")
+    void evaluate_opaShadow_doesNotAffectVerdict() {
+        properties.setOpaMode("SHADOW");
+        stubHappyPathDefaults(10);
+        when(consentClient.evaluateConsent(eq(TENANT_ID), eq("patients"), eq("cpid-12345"),
+                eq(ACTOR_ID), eq("TREATMENT")))
+                .thenReturn(ConsentDecision.permit("c", List.of("read")));
+        when(opaDecisionClient.decide(any()))
+                .thenReturn(new OpaDecision(false, List.of("MIN_LOA"))); // OPA would DENY
+
+        AuthzResponse response = policyEngine.evaluate(requestWithResourceId("patients", "cpid-12345"));
+
+        assertEquals(Verdict.ALLOW, response.verdict(), "SHADOW OPA divergence must not change the verdict");
+        verify(opaDecisionClient).decide(any());
+    }
+
+    @Test
+    @DisplayName("OPA OFF (default): the OPA sidecar is never called")
+    void evaluate_opaOff_neverCallsOpa() {
+        stubHappyPathDefaults(10);
+        when(consentClient.evaluateConsent(eq(TENANT_ID), eq("patients"), eq("cpid-12345"),
+                eq(ACTOR_ID), eq("TREATMENT")))
+                .thenReturn(ConsentDecision.permit("c", List.of("read")));
+
+        policyEngine.evaluate(requestWithResourceId("patients", "cpid-12345"));
+
+        verifyNoInteractions(opaDecisionClient);
     }
 
     // ════════════════════════════════════════════════════════════════════

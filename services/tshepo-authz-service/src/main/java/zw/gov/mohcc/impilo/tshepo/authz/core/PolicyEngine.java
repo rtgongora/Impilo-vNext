@@ -79,6 +79,7 @@ public class PolicyEngine {
     private final ObjectMapper objectMapper;
     private final VisibilityEscalationService visibilityEscalationService;
     private final DelegationClient delegationClient;
+    private final OpaDecisionClient opaDecisionClient;
 
     public PolicyEngine(DeviceRiskScoreEvaluator riskScoring,
                         PolicyCacheService policyCacheService,
@@ -91,7 +92,8 @@ public class PolicyEngine {
                         AuthzProperties properties,
                         ObjectMapper objectMapper,
                         VisibilityEscalationService visibilityEscalationService,
-                        DelegationClient delegationClient) {
+                        DelegationClient delegationClient,
+                        OpaDecisionClient opaDecisionClient) {
         this.riskScoring = riskScoring;
         this.policyCacheService = policyCacheService;
         this.privilegeRevocationStore = privilegeRevocationStore;
@@ -104,6 +106,7 @@ public class PolicyEngine {
         this.objectMapper = objectMapper;
         this.visibilityEscalationService = visibilityEscalationService;
         this.delegationClient = delegationClient;
+        this.opaDecisionClient = opaDecisionClient;
     }
 
     /**
@@ -220,6 +223,9 @@ public class PolicyEngine {
         Obligations obligations = VisibilityObligationComposer.compose(
                 request, purpose, riskScore, matchedAllowRule, activeEscalation, objectMapper);
         Map<String, String> headerMutations = buildHeaderMutations(obligations, request);
+
+        // Phase 3 strangler: SHADOW-compare the OPA gate decision (Java stays authoritative).
+        shadowCompareOpa(request, purpose, matchedAllowRule, true);
 
         return allowAndLog(request, obligations, headerMutations, riskScore, startTime);
     }
@@ -562,6 +568,62 @@ public class PolicyEngine {
                     "Requested resource is outside the delegation scope", riskScore, startTime);
         }
         return null; // delegation authorises the actor; continue to consent (against the subject)
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // Phase 3: OPA shadow comparison (strangler — Java authoritative)
+    // ════════════════════════════════════════════════════════════════════
+
+    /**
+     * In SHADOW mode, evaluate the OPA gate decision (purpose/min_loa/account-assurance) on a
+     * prepared input and log when it diverges from the Java verdict. OPA is never authoritative
+     * here; any error is swallowed. OFF by default → no-op, zero behaviour change. (The full
+     * DB-rule RBAC/ABAC requires policy_rules delivered as OPA bundle data — a later increment.)
+     */
+    private void shadowCompareOpa(AuthzInternalRequest request, PurposeOfUse purpose,
+                                  PolicyRuleEntity matchedRule, boolean javaAllow) {
+        String mode = properties.getOpaMode();
+        if (mode == null || "OFF".equalsIgnoreCase(mode)) {
+            return;
+        }
+        try {
+            Map<String, Object> input = new LinkedHashMap<>();
+            input.put("actor_id", request.actorId() != null ? request.actorId() : "");
+            input.put("purpose", purpose != null ? purpose.name() : "");
+            input.put("loa", request.loaLevel());
+            input.put("assurance_loa", parseAssuranceLoa(request.assuranceLevel()));
+            Map<String, Object> conditions = parseConditions(matchedRule);
+            if (conditions.get("min_loa") instanceof Number n) {
+                input.put("min_loa", n.intValue());
+            }
+            if (Boolean.TRUE.equals(conditions.get("account_assurance_required"))) {
+                input.put("account_assurance_required", true);
+            }
+            OpaDecision opa = opaDecisionClient.decide(input);
+            if (opa == null) {
+                return; // OPA undefined / unreachable — no signal
+            }
+            if (opa.allow() != javaAllow) {
+                log.warn("OPA-SHADOW divergence: java.allow={} opa.allow={} reasons={} actor={} purpose={} correlation={}",
+                        javaAllow, opa.allow(), opa.denyReasons(), request.actorId(),
+                        purpose != null ? purpose.name() : null, request.correlationId());
+            } else {
+                log.debug("OPA-SHADOW agree: allow={} actor={}", javaAllow, request.actorId());
+            }
+        } catch (Exception e) {
+            log.debug("OPA-SHADOW comparison skipped: {}", e.getMessage());
+        }
+    }
+
+    private Map<String, Object> parseConditions(PolicyRuleEntity rule) {
+        if (rule == null || rule.getConditions() == null || rule.getConditions().isBlank()) {
+            return Map.of();
+        }
+        try {
+            return objectMapper.readValue(rule.getConditions(), new TypeReference<>() {});
+        } catch (JsonProcessingException e) {
+            return Map.of();
+        }
     }
 
     /** Coarse scope containment: "*" allows all; otherwise a token must equal the resource type or prefix it ("type:..."). */
