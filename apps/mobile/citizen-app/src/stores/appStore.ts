@@ -29,6 +29,8 @@ export interface AppState {
   globalError: { code: string; message: string } | null;
   /** Navigate to a Personal screen section once (e.g. madi-donor from Impilo Live). */
   personalSectionRequest: string | null;
+  /** Seed the Rito "Track Feedback" section with a case reference (e.g. right after submitting). */
+  ritoTrackReference: string | null;
   /** Post-registration onboarding: assurance tier before main app. */
   onboardingScreen: "signup" | "assurance" | null;
 
@@ -45,6 +47,7 @@ export interface AppState {
   setUnreadMessages: (count: number) => void;
   setGlobalError: (error: { code: string; message: string } | null) => void;
   setPersonalSectionRequest: (section: string | null) => void;
+  setRitoTrackReference: (reference: string | null) => void;
   setOnboardingScreen: (screen: "signup" | "assurance" | null) => void;
 }
 
@@ -61,6 +64,7 @@ export const appStore = createStore<AppState>((set) => ({
   unreadMessages: 0,
   globalError: null,
   personalSectionRequest: null,
+  ritoTrackReference: null,
   onboardingScreen: null,
 
   setActiveTab: (tab) => set({ activeTab: tab }),
@@ -79,6 +83,7 @@ export const appStore = createStore<AppState>((set) => ({
   setUnreadMessages: (count) => set({ unreadMessages: count }),
   setGlobalError: (error) => set({ globalError: error }),
   setPersonalSectionRequest: (section) => set({ personalSectionRequest: section }),
+  setRitoTrackReference: (ritoTrackReference) => set({ ritoTrackReference }),
   setOnboardingScreen: (onboardingScreen) => set({ onboardingScreen }),
 }));
 

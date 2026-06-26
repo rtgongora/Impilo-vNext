@@ -138,6 +138,7 @@ const MOBILE_SCAN_ROOTS = [
 ];
 
 const BFF_CLIENT_MODULE_OVERRIDES = {
+  RitoServiceClient: 'rito-quality-safety-service',
   VashandiServiceClient: 'vashandi-workforce-service',
   CostaServiceClient: 'costing-engine-service',
   PctServiceClient: 'pct-service',

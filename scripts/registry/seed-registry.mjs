@@ -99,6 +99,7 @@ const LEGACY = new Map(
     ["schema-registry-service", { id: "schema-registry-service", plane: "ops", sovereign: false, primary_protocol: "rest", default_http_port: 8371, product_names: ["Schema Registry"] }],
     ["experience-bff", { id: "experience-bff", plane: "experience", sovereign: false, primary_protocol: "rest", default_http_port: 8160, product_names: ["Experience BFF"] }],
     ["live-service", { id: "live-service", plane: "experience", sovereign: true, sovereign_group: "LIVE", primary_protocol: "rest", default_http_port: 8380, product_names: ["Impilo Live"] }],
+    ["rito-quality-safety-service", { id: "rito-quality-safety-service", plane: "experience", sovereign: false, primary_protocol: "rest", default_http_port: 8391, product_names: ["Rito"] }],
   ]
 );
 

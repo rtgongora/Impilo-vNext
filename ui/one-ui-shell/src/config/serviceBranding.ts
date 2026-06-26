@@ -16,6 +16,7 @@ export type ServiceBrandingSlug =
   | "ndila"
   | "nhume"
   | "nompilo"
+  | "rito"
   | "simba"
   | "tshepo"
   | "tuso"
@@ -72,6 +73,39 @@ export const SERVICE_BRANDING: Record<ServiceBrandingSlug, ServiceBrandingEntry>
     domain: "Clinical",
     fallbackIcon: "Droplet",
     aliases: ["madi", "madi-service", "blood", "transfusion", "app-madi", "app-madi-donor"],
+  },
+  rito: {
+    slug: "rito",
+    name: "Rito",
+    logo: "/brand/services/rito-logo.png",
+    description: "Client voice, service quality, client safety, assurance and accountable improvement",
+    domain: "Quality, Safety & Client Voice",
+    fallbackIcon: "ShieldCheck",
+    aliases: [
+      "rito",
+      "rito-service",
+      "rito-quality-safety-service",
+      "quality",
+      "safety",
+      "client-voice",
+      "client voice",
+      "feedback",
+      "complaint",
+      "complaints",
+      "compliment",
+      "suggestion",
+      "grievance",
+      "satisfaction",
+      "survey",
+      "incident",
+      "near-miss",
+      "capa",
+      "qi",
+      "audit-quality",
+      "supervision",
+      "assurance",
+      "app-rito",
+    ],
   },
   msika: {
     slug: "msika",
@@ -233,6 +267,10 @@ export const ROUTE_SERVICE_SLUG_PREFIXES: ReadonlyArray<{
   { prefix: "/nhume", slug: "nhume" },
   { prefix: "/ndila", slug: "ndila" },
   { prefix: "/madi", slug: "madi" },
+  { prefix: "/rito", slug: "rito" },
+  { prefix: "/my-life/feedback", slug: "rito" },
+  { prefix: "/work/facility/rito", slug: "rito" },
+  { prefix: "/work/above-site/rito", slug: "rito" },
   { prefix: "/ubomi", slug: "ubomi" },
   { prefix: "/ask", slug: "nompilo" },
 ];
@@ -268,6 +306,11 @@ export const SERVICE_SURFACE_COVERAGE: Record<ServiceBrandingSlug, ServiceSurfac
   ndila: { status: "surfaced", primaryRoutes: ["/ndila"] },
   nhume: { status: "surfaced", primaryRoutes: ["/nhume", "/operations/dispatch"] },
   nompilo: { status: "surfaced", primaryRoutes: ["/ask", "/intelligence"] },
+  rito: {
+    status: "surfaced",
+    primaryRoutes: ["/rito", "/my-life/feedback", "/work/facility/rito", "/work/above-site/rito"],
+    notes: "Quality, Safety & Client Voice — client feedback, safety incidents, audits, CAPA/QI, dashboards.",
+  },
   simba: { status: "surfaced", primaryRoutes: ["/wellness"] },
   tshepo: {
     status: "surfaced",

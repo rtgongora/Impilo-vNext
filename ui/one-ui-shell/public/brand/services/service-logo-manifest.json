@@ -60,6 +60,12 @@
     "recommendedPublicPath": "/brand/services/nompilo-logo.png"
   },
   {
+    "service": "Rito",
+    "slug": "rito",
+    "assetFile": "rito-logo.png",
+    "recommendedPublicPath": "/brand/services/rito-logo.png"
+  },
+  {
     "service": "Simba",
     "slug": "simba",
     "assetFile": "simba-logo.png",
