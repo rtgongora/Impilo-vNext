@@ -90,6 +90,35 @@ public class FundoEnrolmentService {
         return v;
     }
 
+    /**
+     * Bulk-enrol a list of subjects into a course (B6). The contract the campaign /
+     * surveillance bridges (BFF/jobs) call: a campaign target group or outbreak-assigned
+     * tracers → learning enrolments. Idempotent per subject (reuses {@link #create}).
+     */
+    @Transactional
+    public Map<String, Object> bulkEnrol(UUID tenantId, UUID courseId, List<Map<String, Object>> subjects,
+            String enrolmentType, String assignedBy) {
+        int created = 0;
+        int existing = 0;
+        for (Map<String, Object> s : subjects) {
+            String subjectType = String.valueOf(s.get("subjectType"));
+            String subjectId = String.valueOf(s.get("subjectId"));
+            if (subjectType == null || subjectId == null || subjectType.isBlank() || subjectId.isBlank()) {
+                continue;
+            }
+            Map<String, Object> r = create(new EnrolmentRequest(
+                    tenantId, subjectType, subjectId, courseId, null,
+                    enrolmentType == null ? "SYSTEM" : enrolmentType, assignedBy, null));
+            if (Boolean.TRUE.equals(r.get("idempotent"))) {
+                existing++;
+            } else {
+                created++;
+            }
+        }
+        return Map.of("courseId", courseId.toString(), "created", created, "alreadyEnrolled", existing,
+                "total", subjects.size());
+    }
+
     @Transactional(readOnly = true)
     public Optional<Map<String, Object>> get(UUID tenantId, UUID enrolmentId) {
         return enrolmentRepository.findByTenantIdAndId(tenantId, enrolmentId).map(FundoEnrolmentService::toView);

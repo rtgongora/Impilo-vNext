@@ -200,6 +200,14 @@ public class LearningController {
         return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
     }
 
+    @PostMapping("/v11/enrolments/bulk")
+    public ResponseEntity<Map<String, Object>> bulkEnrol(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("enrolments/bulk", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
     @GetMapping("/v11/enrolments")
     public ResponseEntity<Map<String, Object>> listEnrolments(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
