@@ -23,7 +23,10 @@ public record IdentityProperties(
         String keysServiceUrl,
 
         /** Base URL of the VITO service for Impilo ID resolution. */
-        String vitoServiceUrl
+        String vitoServiceUrl,
+
+        /** Base URL of the Varapi service for council/EC-number resolution. */
+        String varapiServiceUrl
 ) {
     public IdentityProperties {
         if (cpidNamespace == null || cpidNamespace.isBlank()) {
@@ -37,6 +40,9 @@ public record IdentityProperties(
         }
         if (vitoServiceUrl == null || vitoServiceUrl.isBlank()) {
             vitoServiceUrl = "http://localhost:8082";
+        }
+        if (varapiServiceUrl == null || varapiServiceUrl.isBlank()) {
+            varapiServiceUrl = "http://localhost:8083";
         }
     }
 }

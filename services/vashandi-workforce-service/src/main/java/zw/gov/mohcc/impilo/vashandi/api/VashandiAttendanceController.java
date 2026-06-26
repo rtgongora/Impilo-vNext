@@ -29,6 +29,12 @@ public class VashandiAttendanceController {
         return attendanceService.checkIn(tenantId(), request);
     }
 
+    @PostMapping("/adhoc-check-in")
+    public VashandiDtos.AttendanceActionResponse adhocCheckIn(@RequestBody VashandiDtos.AdhocCheckInRequest request)
+            throws Exception {
+        return attendanceService.adhocCheckIn(tenantId(), request);
+    }
+
     @PostMapping("/check-out")
     public VashandiDtos.AttendanceActionResponse checkOut(@RequestBody VashandiDtos.CheckOutRequest request) throws Exception {
         return attendanceService.checkOut(tenantId(), request);

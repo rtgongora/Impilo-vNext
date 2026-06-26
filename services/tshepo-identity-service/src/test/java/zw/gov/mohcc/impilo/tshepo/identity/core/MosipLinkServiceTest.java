@@ -68,6 +68,7 @@ class MosipLinkServiceTest {
                 300,
                 TEST_KEK_BASE64,
                 null,
+                null,
                 null
         );
         ObjectMapper objectMapper = new ObjectMapper();

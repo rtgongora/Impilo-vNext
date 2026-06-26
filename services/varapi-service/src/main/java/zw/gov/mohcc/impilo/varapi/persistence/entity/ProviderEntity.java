@@ -117,6 +117,22 @@ public class ProviderEntity {
     @Column(name = "updated_by", length = 255)
     private String updatedBy;
 
+    /** How this provider row came into existence (BULK_PRELOAD, SELF_REGISTERED, COUNCIL_IMPORT). */
+    @Column(name = "bootstrap_origin", length = 40)
+    private String bootstrapOrigin;
+
+    /** Groups a single bulk-preload run; null for self-registered profiles. */
+    @Column(name = "preload_batch_id")
+    private UUID preloadBatchId;
+
+    /** When a PRELOADED profile was claimed by its real person. */
+    @Column(name = "claimed_at")
+    private Instant claimedAt;
+
+    /** Impilo Health ID that claimed this preloaded profile. */
+    @Column(name = "claimed_health_id")
+    private UUID claimedHealthId;
+
     @PrePersist
     protected void onCreate() {
         createdAt = Instant.now();
@@ -213,6 +229,18 @@ public class ProviderEntity {
 
     public String getLifecycleStatus() { return lifecycleStatus; }
     public void setLifecycleStatus(String lifecycleStatus) { this.lifecycleStatus = lifecycleStatus; }
+
+    public String getBootstrapOrigin() { return bootstrapOrigin; }
+    public void setBootstrapOrigin(String bootstrapOrigin) { this.bootstrapOrigin = bootstrapOrigin; }
+
+    public UUID getPreloadBatchId() { return preloadBatchId; }
+    public void setPreloadBatchId(UUID preloadBatchId) { this.preloadBatchId = preloadBatchId; }
+
+    public Instant getClaimedAt() { return claimedAt; }
+    public void setClaimedAt(Instant claimedAt) { this.claimedAt = claimedAt; }
+
+    public UUID getClaimedHealthId() { return claimedHealthId; }
+    public void setClaimedHealthId(UUID claimedHealthId) { this.claimedHealthId = claimedHealthId; }
 
     public String getLicenceStatus() { return licenceStatus; }
     public void setLicenceStatus(String licenceStatus) { this.licenceStatus = licenceStatus; }

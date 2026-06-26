@@ -126,6 +126,23 @@ public final class VashandiDtos {
     ) {
     }
 
+    // Ad-hoc check-in — no rostered shift required; check in against an active
+    // assignment (or a facility/department/unit context) directly.
+    public record AdhocCheckInRequest(
+            UUID workforceProfileId,
+            UUID assignmentId,
+            UUID facilityId,
+            String departmentId,
+            String unitId,
+            UUID workspaceId,
+            String contextScope,
+            OffsetDateTime eventTime,
+            String checkInMode,
+            String deviceId,
+            Boolean offline
+    ) {
+    }
+
     public record CheckOutRequest(
             UUID shiftId,
             UUID workforceProfileId,
@@ -223,5 +240,59 @@ public final class VashandiDtos {
             List<UUID> assignmentIds,
             String status
     ) {
+    }
+
+    // ---- C2 Workforce work-context read-model (FROZEN shape, see shared-read-models.md) ----
+    // Producer: vashandi. Consumers: T1 context picker (WHERE/WHAT), Cadre Engine.
+
+    public record WorkContextAssignment(
+            UUID assignmentId,
+            String status,
+            UUID organisationId,
+            UUID facilityId,
+            String departmentId,
+            String unitId,
+            UUID workspaceId,
+            String programmeId,
+            String roleTemplateId,
+            UUID supervisorProfileId,
+            String scope,
+            String eligibilityStatus
+    ) {
+    }
+
+    public record WorkContextCheckIn(
+            String shiftId,
+            String state,
+            OffsetDateTime at,
+            UUID facilityId,
+            boolean supervisorConfirmed
+    ) {
+    }
+
+    public record WorkContextAffiliation(
+            UUID organisationId,
+            String relationshipType,
+            boolean primary,
+            LocalDate validFrom,
+            LocalDate validTo
+    ) {
+    }
+
+    public record WorkforceContextResponse(
+            UUID workforceProfileId,
+            String impiloHealthId,
+            List<WorkContextAssignment> activeAssignments,
+            WorkContextCheckIn checkIn,
+            List<WorkContextAffiliation> affiliations,
+            boolean requiresContextChooser,
+            boolean resolved
+    ) {
+        public static WorkforceContextResponse unresolved() {
+            return new WorkforceContextResponse(
+                    null, null, List.of(),
+                    new WorkContextCheckIn(null, "CHECKED_OUT", null, null, false),
+                    List.of(), false, false);
+        }
     }
 }

@@ -11,5 +11,8 @@ public interface WorkforceMembershipRepository extends JpaRepository<WorkforceMe
     List<WorkforceMembershipEntity> findByTenantIdAndWorkforceProfileIdOrderByEffectiveDateDesc(
             UUID tenantId, UUID workforceProfileId);
 
+    List<WorkforceMembershipEntity> findByTenantIdAndWorkforceProfileIdAndStatusOrderByEffectiveDateDesc(
+            UUID tenantId, UUID workforceProfileId, String status);
+
     List<WorkforceMembershipEntity> findByTenantIdAndOrganisationId(UUID tenantId, UUID organisationId);
 }
