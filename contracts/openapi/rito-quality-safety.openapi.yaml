@@ -1,0 +1,235 @@
+openapi: 3.0.3
+info:
+  title: Rito — Quality, Safety & Client Voice API
+  version: 1.0.0
+  description: >
+    Internal API for rito-quality-safety-service (port 8390). Owns client-voice cases
+    (complaints/compliments/suggestions/surveys), clinical-service safety incidents &
+    near-misses, internal quality audits & supportive supervision, corrective/preventive
+    actions (CAPA), QI/PDSA plans, and accountable-improvement closure with learning loops.
+    Does NOT own pharmacovigilance (patient-safety-service), haemovigilance (madi), or
+    statutory regulatory inspection (tuso/indawo) — those are linked by id reference only.
+    All endpoints require the v1.1 trust headers; writes require an Idempotency-Key.
+servers:
+  - url: http://localhost:8390
+    description: Local dev
+tags:
+  - name: cases
+  - name: safety
+  - name: quality-signals
+  - name: audits
+  - name: improvement
+  - name: surveys
+  - name: dashboards
+  - name: config
+paths:
+  /internal/v1/rito/cases:
+    get:
+      tags: [cases]
+      summary: List cases (filterable)
+      parameters:
+        - { in: query, name: status, schema: { type: string } }
+        - { in: query, name: case_type, schema: { type: string } }
+        - { in: query, name: facility_id, schema: { type: string, format: uuid } }
+        - { in: query, name: assigned_to, schema: { type: string } }
+      responses:
+        "200": { description: Case list, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Case' } } } } }
+    post:
+      tags: [cases]
+      summary: Open a case
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/NewCase' } } }
+      responses:
+        "201": { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/Case' } } } }
+        "400": { $ref: '#/components/responses/BadRequest' }
+  /internal/v1/rito/cases/{id}:
+    get:
+      tags: [cases]
+      summary: Get a case
+      parameters: [ { $ref: '#/components/parameters/CaseId' } ]
+      responses:
+        "200": { description: Case, content: { application/json: { schema: { $ref: '#/components/schemas/Case' } } } }
+        "404": { $ref: '#/components/responses/NotFound' }
+  /internal/v1/rito/cases/{id}/timeline:
+    get:
+      tags: [cases]
+      summary: Case lifecycle timeline
+      parameters: [ { $ref: '#/components/parameters/CaseId' } ]
+      responses:
+        "200": { description: Events, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/CaseEvent' } } } } }
+  /internal/v1/rito/cases/{id}/acknowledge:
+    post: { tags: [cases], summary: Acknowledge, parameters: [ { $ref: '#/components/parameters/CaseId' } ], responses: { "200": { $ref: '#/components/responses/CaseOk' } } }
+  /internal/v1/rito/cases/{id}/triage:
+    post:
+      tags: [cases]
+      summary: Triage (severity/category; AI suggestions advisory only)
+      parameters: [ { $ref: '#/components/parameters/CaseId' } ]
+      requestBody: { content: { application/json: { schema: { $ref: '#/components/schemas/TriageRequest' } } } }
+      responses: { "200": { $ref: '#/components/responses/CaseOk' } }
+  /internal/v1/rito/cases/{id}/assign:
+    post:
+      tags: [cases]
+      summary: Assign an owner
+      parameters: [ { $ref: '#/components/parameters/CaseId' } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/AssignRequest' } } } }
+      responses: { "200": { $ref: '#/components/responses/CaseOk' } }
+  /internal/v1/rito/cases/{id}/escalate:
+    post: { tags: [cases], summary: Escalate, parameters: [ { $ref: '#/components/parameters/CaseId' } ], responses: { "200": { $ref: '#/components/responses/CaseOk' } } }
+  /internal/v1/rito/cases/{id}/resolve:
+    post:
+      tags: [cases]
+      summary: Resolve (human decision-maker required for CRITICAL/sensitive)
+      parameters: [ { $ref: '#/components/parameters/CaseId' } ]
+      responses: { "200": { $ref: '#/components/responses/CaseOk' }, "409": { $ref: '#/components/responses/IllegalState' } }
+  /internal/v1/rito/cases/{id}/close:
+    post:
+      tags: [cases]
+      summary: Close (optional satisfaction 1-5)
+      parameters: [ { $ref: '#/components/parameters/CaseId' } ]
+      responses: { "200": { $ref: '#/components/responses/CaseOk' }, "409": { $ref: '#/components/responses/IllegalState' } }
+  /internal/v1/rito/cases/{id}/reopen:
+    post: { tags: [cases], summary: Reopen, parameters: [ { $ref: '#/components/parameters/CaseId' } ], responses: { "200": { $ref: '#/components/responses/CaseOk' } } }
+  /internal/v1/rito/cases/{caseId}/safety-incident:
+    post:
+      tags: [safety]
+      summary: Record/update the safety-incident detail for a safety case
+      parameters: [ { in: path, name: caseId, required: true, schema: { type: string, format: uuid } } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/SafetyIncident' } } } }
+      responses: { "201": { description: Recorded } }
+    get:
+      tags: [safety]
+      summary: Get the safety-incident detail
+      parameters: [ { in: path, name: caseId, required: true, schema: { type: string, format: uuid } } ]
+      responses: { "200": { description: Safety incident }, "404": { $ref: '#/components/responses/NotFound' } }
+  /internal/v1/rito/safety-incidents/sentinel:
+    get: { tags: [safety], summary: List sentinel incidents, responses: { "200": { description: List } } }
+  /internal/v1/rito/quality-signals:
+    get: { tags: [quality-signals], summary: List quality signals, parameters: [ { in: query, name: status, schema: { type: string } } ], responses: { "200": { description: List } } }
+    post: { tags: [quality-signals], summary: Ingest a quality signal, responses: { "201": { description: Created } } }
+  /internal/v1/rito/quality-signals/{id}/review:
+    post: { tags: [quality-signals], summary: Review or dismiss a signal, parameters: [ { in: path, name: id, required: true, schema: { type: string, format: uuid } } ], responses: { "200": { description: Reviewed } } }
+  /internal/v1/rito/quality-signals/{id}/convert:
+    post: { tags: [quality-signals], summary: Convert a signal to a case, parameters: [ { in: path, name: id, required: true, schema: { type: string, format: uuid } } ], responses: { "201": { description: Case created } } }
+  /internal/v1/rito/audits:
+    get: { tags: [audits], summary: List audits, parameters: [ { in: query, name: status, schema: { type: string } } ], responses: { "200": { description: List } } }
+    post: { tags: [audits], summary: Create an audit, responses: { "201": { description: Created } } }
+  /internal/v1/rito/audits/{id}:
+    get: { tags: [audits], summary: Get an audit, parameters: [ { in: path, name: id, required: true, schema: { type: string, format: uuid } } ], responses: { "200": { description: Audit } } }
+  /internal/v1/rito/audits/{id}/findings:
+    get: { tags: [audits], summary: List findings, parameters: [ { in: path, name: id, required: true, schema: { type: string, format: uuid } } ], responses: { "200": { description: Findings } } }
+    post: { tags: [audits], summary: Add a finding, parameters: [ { in: path, name: id, required: true, schema: { type: string, format: uuid } } ], responses: { "201": { description: Created } } }
+  /internal/v1/rito/audits/{id}/submit:
+    post: { tags: [audits], summary: Submit an audit (computes score), parameters: [ { in: path, name: id, required: true, schema: { type: string, format: uuid } } ], responses: { "200": { description: Submitted } } }
+  /internal/v1/rito/corrective-actions:
+    get: { tags: [improvement], summary: List corrective actions, parameters: [ { in: query, name: status, schema: { type: string } } ], responses: { "200": { description: List } } }
+    post: { tags: [improvement], summary: Create a corrective action, responses: { "201": { description: Created } } }
+  /internal/v1/rito/corrective-actions/{id}/verify:
+    post: { tags: [improvement], summary: Verify a corrective action (EFFECTIVE/NOT_EFFECTIVE/PARTIAL), parameters: [ { in: path, name: id, required: true, schema: { type: string, format: uuid } } ], responses: { "200": { description: Verified } } }
+  /internal/v1/rito/qi-plans:
+    get: { tags: [improvement], summary: List QI plans, responses: { "200": { description: List } } }
+    post: { tags: [improvement], summary: Create a QI/PDSA plan, responses: { "201": { description: Created } } }
+  /internal/v1/rito/surveys:
+    get: { tags: [surveys], summary: List surveys, responses: { "200": { description: List } } }
+    post: { tags: [surveys], summary: Create a survey, responses: { "201": { description: Created } } }
+  /internal/v1/rito/surveys/{id}/responses:
+    post: { tags: [surveys], summary: Submit a survey response (low score may spawn a case), parameters: [ { in: path, name: id, required: true, schema: { type: string, format: uuid } } ], responses: { "201": { description: Created } } }
+  /internal/v1/rito/surveys/{id}/aggregate:
+    get: { tags: [surveys], summary: Aggregate (CSAT/NPS), parameters: [ { in: path, name: id, required: true, schema: { type: string, format: uuid } } ], responses: { "200": { description: Aggregate } } }
+  /internal/v1/rito/dashboards/facility:
+    get: { tags: [dashboards], summary: Facility quality/safety dashboard, parameters: [ { in: query, name: facility_id, schema: { type: string, format: uuid } } ], responses: { "200": { description: Dashboard } } }
+  /internal/v1/rito/dashboards/above-site:
+    get: { tags: [dashboards], summary: Above-site rollup dashboard, responses: { "200": { description: Dashboard } } }
+  /internal/v1/rito/dashboards/client-voice:
+    get: { tags: [dashboards], summary: Client-voice dashboard, responses: { "200": { description: Dashboard } } }
+  /internal/v1/rito/dashboards/safety:
+    get: { tags: [dashboards], summary: Safety dashboard, responses: { "200": { description: Dashboard } } }
+  /internal/v1/rito/config/sla-policies:
+    get: { tags: [config], summary: List SLA policies, responses: { "200": { description: List } } }
+    post: { tags: [config], summary: Create an SLA policy, responses: { "201": { description: Created } } }
+  /internal/v1/rito/config/escalation-rules:
+    get: { tags: [config], summary: List escalation rules, responses: { "200": { description: List } } }
+    post: { tags: [config], summary: Create an escalation rule, responses: { "201": { description: Created } } }
+components:
+  parameters:
+    CaseId:
+      in: path
+      name: id
+      required: true
+      schema: { type: string, format: uuid }
+  responses:
+    CaseOk:
+      description: Updated case
+      content: { application/json: { schema: { $ref: '#/components/schemas/Case' } } }
+    BadRequest:
+      description: Invalid request
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    NotFound:
+      description: Not found
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    IllegalState:
+      description: Illegal lifecycle transition or AI auto-close of a critical/sensitive case
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+  schemas:
+    NewCase:
+      type: object
+      required: [caseType]
+      properties:
+        caseType: { type: string, enum: [COMPLAINT, COMPLIMENT, SUGGESTION, SAFETY_CONCERN, SAFETY_INCIDENT, NEAR_MISS, ADVERSE_EVENT, QUALITY_FINDING, AUDIT_FINDING, SYSTEM_QUALITY_SIGNAL, SATISFACTION_SURVEY] }
+        title: { type: string }
+        description: { type: string }
+        severity: { type: string, enum: [LOW, MODERATE, HIGH, CRITICAL] }
+        source: { type: string }
+        category: { type: string }
+        anonymous: { type: boolean }
+        facilityId: { type: string, format: uuid }
+    TriageRequest:
+      type: object
+      properties:
+        severity: { type: string, enum: [LOW, MODERATE, HIGH, CRITICAL] }
+        category: { type: string }
+        ai_suggested_severity: { type: string }
+        ai_suggested_routing: { type: string }
+    AssignRequest:
+      type: object
+      required: [assignee_actor_id]
+      properties:
+        assignee_actor_id: { type: string }
+        assignee_role: { type: string }
+    Case:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        caseReference: { type: string }
+        caseType: { type: string }
+        pillar: { type: string }
+        severity: { type: string }
+        status: { type: string }
+        sensitive: { type: boolean }
+        title: { type: string }
+        createdAt: { type: string, format: date-time }
+    CaseEvent:
+      type: object
+      properties:
+        eventType: { type: string }
+        fromStatus: { type: string }
+        toStatus: { type: string }
+        actorId: { type: string }
+        note: { type: string }
+        occurredAt: { type: string, format: date-time }
+    SafetyIncident:
+      type: object
+      required: [incident_type]
+      properties:
+        incident_type: { type: string }
+        harm_level: { type: string, enum: [NONE, NEAR_MISS, MINOR, MODERATE, SEVERE, DEATH] }
+        sentinel: { type: boolean }
+        immediate_actions: { type: string }
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
