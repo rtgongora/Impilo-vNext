@@ -68,6 +68,11 @@ public class FundoEnrolmentService {
             row.setAssignedAt(now);
         }
         row.setDueAt(req.dueAt());
+        // Stamp facility / learning-space context from trust headers when present (B0/B3/C0).
+        zw.gov.mohcc.impilo.learning.context.LearningRequestContext.facilityId()
+                .map(FundoEnrolmentService::tryUuid).ifPresent(row::setFacilityId);
+        zw.gov.mohcc.impilo.learning.context.LearningRequestContext.learningSpaceId()
+                .map(FundoEnrolmentService::tryUuid).ifPresent(row::setLearningSpaceId);
         enrolmentRepository.save(row);
 
         outbox.append("FundoEnrolment", row.getId().toString(),
@@ -162,6 +167,14 @@ public class FundoEnrolmentService {
         m.put("completedAt", e.getCompletedAt() == null ? null : e.getCompletedAt().toString());
         m.put("createdAt", e.getCreatedAt() == null ? null : e.getCreatedAt().toString());
         return m;
+    }
+
+    private static UUID tryUuid(String s) {
+        try {
+            return UUID.fromString(s);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public record EnrolmentRequest(

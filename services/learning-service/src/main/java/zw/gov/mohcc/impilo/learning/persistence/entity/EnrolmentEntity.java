@@ -67,6 +67,10 @@ public class EnrolmentEntity {
     @Column(name = "learning_space_id")
     private UUID learningSpaceId;
 
+    /** Optional TUSO facility context (V026); facility identity stays owned by TUSO. */
+    @Column(name = "facility_id")
+    private UUID facilityId;
+
     @PrePersist
     void prePersist() {
         if (id == null) id = UUID.randomUUID();
@@ -106,4 +110,6 @@ public class EnrolmentEntity {
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
     public UUID getLearningSpaceId() { return learningSpaceId; }
     public void setLearningSpaceId(UUID learningSpaceId) { this.learningSpaceId = learningSpaceId; }
+    public UUID getFacilityId() { return facilityId; }
+    public void setFacilityId(UUID facilityId) { this.facilityId = facilityId; }
 }
