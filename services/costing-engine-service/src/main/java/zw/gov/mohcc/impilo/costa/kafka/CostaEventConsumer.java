@@ -228,6 +228,85 @@ public class CostaEventConsumer {
         }
     }
 
+    /**
+     * Consume the L1 (clinical) teleconsult value-trigger emitted by PCT when a teleconsult
+     * referral completes ({@code TELECONSULT_COMPLETED} on {@code clinical.teleconsult.value}).
+     * L4 prices it: resolve or create the COSTA encounter for the teleconsult, then raise a
+     * teleconsult {@code CHARGE_CREATED} via {@link ChargeRecordService}.
+     */
+    @KafkaListener(topics = "clinical.teleconsult.value", groupId = "costa-costing-engine")
+    @Transactional
+    public void onTeleconsultValue(String message, Acknowledgment ack) {
+        try {
+            JsonNode event = objectMapper.readTree(message);
+            String eventId = text(event, "eventId");
+            if (isProcessed(eventId, "TELECONSULT")) { ack.acknowledge(); return; }
+
+            String sourceServiceEvent = text(event, "sourceServiceEvent");
+            if (sourceServiceEvent != null && !"TELECONSULT_COMPLETED".equals(sourceServiceEvent)) {
+                log.debug("clinical.teleconsult.value: ignoring sourceServiceEvent={}", sourceServiceEvent);
+                markProcessed(eventId, "TELECONSULT");
+                ack.acknowledge();
+                return;
+            }
+
+            String referralId = text(event, "referralId");
+            String tenantId = text(event, "tenantId");
+            if (referralId == null || tenantId == null) {
+                log.warn("clinical.teleconsult.value missing referralId or tenantId: {}", message);
+                ack.acknowledge();
+                return;
+            }
+            String patientCpid = text(event, "patientCpid");
+            String encounterId = text(event, "encounterId");
+            String facilityId = text(event, "facilityId");
+            String specialty = text(event, "specialty");
+            String modality = text(event, "modality");
+
+            // Resolve or create the COSTA encounter for this teleconsult, as the other handlers do.
+            // Encounter creation requires a facility; without one we still price the charge (which
+            // does not depend on an encounter, mirroring the priced-order ingest path).
+            EncounterEntity encounter = resolveEncounter(encounterId, patientCpid);
+            if (encounter == null && facilityId != null && !facilityId.isBlank()) {
+                encounter = new EncounterEntity();
+                encounter.setEncounterId(zw.gov.mohcc.impilo.costa.service.UlidGenerator.generate());
+                encounter.setTenantId(UUID.fromString(tenantId));
+                encounter.setFacilityId(UUID.fromString(facilityId));
+                encounter.setPatientCpid(patientCpid);
+                encounter.setPctJourneyId(encounterId);
+                encounter.setEncounterType(EncounterType.OUTPATIENT);
+                encounter.setStatus(EncounterStatus.OPEN);
+                encounterRepository.save(encounter);
+                log.info("Created COSTA encounter {} for teleconsult referral {}",
+                        encounter.getEncounterId(), referralId);
+            }
+
+            // Raise a teleconsult CHARGE_CREATED (L4 prices the L1 value trigger).
+            chargeRecordService.ingestTeleconsultCompleted(event);
+
+            var tm = objectMapper.createObjectNode();
+            tm.put("referral_id", referralId);
+            if (specialty != null) tm.put("specialty", specialty);
+            if (modality != null) tm.put("modality", modality);
+            costEventCaptureService.tryCaptureClinical(
+                    "TELECONSULT_COMPLETED",
+                    "PCT",
+                    UUID.fromString(tenantId),
+                    patientCpid,
+                    encounter != null ? encounter.getEncounterId() : encounterId,
+                    encounter != null ? encounter.getFacilityId()
+                            : (facilityId != null && !facilityId.isBlank() ? UUID.fromString(facilityId) : null),
+                    tm);
+
+            markProcessed(eventId, "TELECONSULT");
+            ack.acknowledge();
+            log.info("Teleconsult referral {} ingested into COSTA (charge created)", referralId);
+        } catch (Exception e) {
+            log.error("Failed to process clinical.teleconsult.value", e);
+            ack.acknowledge();
+        }
+    }
+
     @KafkaListener(topics = "pharmacy.dispense.complete", groupId = "costa-costing-engine")
     @Transactional
     public void onDispenseCompleted(String message, Acknowledgment ack) {

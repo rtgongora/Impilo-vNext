@@ -24,6 +24,7 @@ public class ChargeRecordService {
     private static final Logger log = LoggerFactory.getLogger(ChargeRecordService.class);
 
     public static final String SOURCE_MSIKA_FLOW_ORDER_PRICED = "MSIKA_FLOW_ORDER_PRICED";
+    public static final String SOURCE_TELECONSULT_COMPLETED = "TELECONSULT_COMPLETED";
 
     private final ChargeRecordRepository chargeRecordRepository;
     private final EventOutboxRepository outboxRepository;
@@ -128,6 +129,69 @@ public class ChargeRecordService {
         chargeRecordRepository.save(e);
         publishChargeCreated(e);
         log.info("Recorded COSTA charge {} for Msika Flow priced order {}", e.getChargeId(), orderId);
+    }
+
+    /**
+     * Idempotent teleconsult charge from PCT {@code TELECONSULT_COMPLETED} /
+     * Kafka {@code clinical.teleconsult.value}. The L1 (clinical) value-trigger carries no
+     * price, so the charge is recorded {@code OPEN} with a placeholder amount pending tariff
+     * pricing; the {@code CHARGE_CREATED} event signals the downstream pricing pipeline.
+     */
+    @Transactional
+    public ChargeRecordEntity ingestTeleconsultCompleted(JsonNode event) {
+        String referralId = text(event, "referralId");
+        String tenantStr = text(event, "tenantId");
+        if (referralId == null || tenantStr == null) {
+            log.warn("TELECONSULT_COMPLETED event missing referralId or tenantId");
+            return null;
+        }
+        UUID tenantId = UUID.fromString(tenantStr);
+        if (chargeRecordRepository.existsByTenantIdAndSourceTypeAndSourceRef(
+                tenantId, SOURCE_TELECONSULT_COMPLETED, referralId)) {
+            return null;
+        }
+        String patientCpid = text(event, "patientCpid");
+        String encounterId = text(event, "encounterId");
+        String specialty = text(event, "specialty");
+        String modality = text(event, "modality");
+        UUID facilityId = null;
+        String fid = text(event, "facilityId");
+        if (fid != null && !fid.isBlank()) {
+            facilityId = UUID.fromString(fid);
+        }
+
+        ChargeRecordEntity e = new ChargeRecordEntity();
+        e.setChargeId(UlidGenerator.generate());
+        e.setTenantId(tenantId);
+        e.setChargeCode("TELECONSULT:" + (specialty != null && !specialty.isBlank() ? specialty : referralId));
+        e.setChargeType("TELECONSULT");
+        e.setSourceType(SOURCE_TELECONSULT_COMPLETED);
+        e.setSourceRef(referralId);
+        e.setClientRef(patientCpid);
+        e.setPayerRef(patientCpid);
+        e.setFacilityId(facilityId);
+        e.setServiceRef(encounterId);
+        e.setOfferingRef(referralId);
+        // No price on the value-trigger; record OPEN with a placeholder pending tariff pricing.
+        e.setChargeAmount(BigDecimal.ZERO);
+        e.setCurrency("USD");
+        e.setChargeStatus("OPEN");
+        e.setBillableFlag(true);
+        try {
+            Map<String, Object> meta = new LinkedHashMap<>();
+            meta.put("kafkaEvent", "clinical.teleconsult.value");
+            meta.put("pendingPricing", true);
+            if (specialty != null) meta.put("specialty", specialty);
+            if (modality != null) meta.put("modality", modality);
+            if (encounterId != null) meta.put("encounterId", encounterId);
+            e.setMetadataJson(objectMapper.writeValueAsString(meta));
+        } catch (Exception ex) {
+            e.setMetadataJson("{}");
+        }
+        chargeRecordRepository.save(e);
+        publishChargeCreated(e);
+        log.info("Recorded COSTA teleconsult charge {} for completed referral {}", e.getChargeId(), referralId);
+        return e;
     }
 
     private void publishChargeCreated(ChargeRecordEntity e) {
