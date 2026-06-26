@@ -2769,6 +2769,71 @@ paths:
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
       responses:
         '200': { description: Checked in, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/assignments:
+    get:
+      tags: [FundoAssignment]
+      summary: List assignments (filter by course or cohort)
+      operationId: listAssignments
+      parameters:
+        - { name: courseId, in: query, required: false, schema: { type: string } }
+        - { name: cohortId, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 500 } }
+      responses:
+        '200': { description: Assignments list, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+    post:
+      tags: [FundoAssignment]
+      summary: Create an assignment / task
+      operationId: createAssignment
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Assignment created, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/assignments/{assignmentId}:
+    get:
+      tags: [FundoAssignment]
+      summary: Get an assignment
+      operationId: getAssignment
+      parameters:
+        - { name: assignmentId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Assignment, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/assignments/{assignmentId}/submissions:
+    get:
+      tags: [FundoAssignment]
+      summary: List submissions for an assignment
+      operationId: listAssignmentSubmissions
+      parameters:
+        - { name: assignmentId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Submissions, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+    post:
+      tags: [FundoAssignment]
+      summary: Submit to an assignment (submission_no auto-increments)
+      operationId: submitAssignment
+      parameters:
+        - { name: assignmentId, in: path, required: true, schema: { type: string } }
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Submitted, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/marking-queue:
+    get:
+      tags: [FundoAssignment]
+      summary: Submissions awaiting marking (optionally filtered by cohort)
+      operationId: assignmentMarkingQueue
+      parameters:
+        - { name: cohortId, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 500 } }
+      responses:
+        '200': { description: Marking queue, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/submissions/{submissionId}/mark:
+    post:
+      tags: [FundoAssignment]
+      summary: Mark a submission (score/passed/feedback/rubric)
+      operationId: markAssignmentSubmission
+      parameters:
+        - { name: submissionId, in: path, required: true, schema: { type: string } }
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Marked, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
   /workflow-context:
     get:
       operationId: learning_get__workflow_context
