@@ -1975,6 +1975,51 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /v1/internal/fundo/learners/{subjectId}/training-gate:
+    get:
+      tags:
+        - Integration
+      summary: Training-gate read-model for Tshepo policy (required learning satisfied?)
+      description: >
+        Trusted server-to-server read consumed by `tshepo-authz-service` to gate
+        role/workspace enablement on completed learning. Given native Fundo course
+        codes, returns a per-requirement decision and an overall `satisfied` flag. A
+        requirement is satisfied only when the subject has a COMPLETED enrolment and
+        (where applicable) a non-expired certificate. Fundo is the data source; the
+        access decision remains authoritative in Tshepo. See
+        docs/policy/fundo-training-gated-access.md.
+      operationId: fundoLearnerTrainingGate
+      parameters:
+        - name: subjectId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: subjectType
+          in: query
+          required: false
+          schema:
+            type: string
+            default: PROVIDER
+        - name: courseCodes
+          in: query
+          required: false
+          description: Comma-separated native Fundo course codes to evaluate.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Training-gate decision (raw object, no data envelope)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Map_StringObject'
+        '400':
+          description: Missing tenant context
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /internal/v1/learning/integrations/varapi-fundo-completion:
     post:
       tags:

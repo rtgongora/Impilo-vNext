@@ -1,5 +1,7 @@
 package zw.gov.mohcc.impilo.learning.api.v11.fundo;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.companion.context.RequestContext;
 import zw.gov.mohcc.impilo.companion.context.RequestContextHolder;
+import zw.gov.mohcc.impilo.learning.fundo.FundoTrainingGateService;
 import zw.gov.mohcc.impilo.learning.fundo.FundoWorkforceReadinessService;
 
 /**
@@ -26,9 +29,13 @@ import zw.gov.mohcc.impilo.learning.fundo.FundoWorkforceReadinessService;
 public class FundoWorkforceReadinessController {
 
     private final FundoWorkforceReadinessService readinessService;
+    private final FundoTrainingGateService trainingGateService;
 
-    public FundoWorkforceReadinessController(FundoWorkforceReadinessService readinessService) {
+    public FundoWorkforceReadinessController(
+            FundoWorkforceReadinessService readinessService,
+            FundoTrainingGateService trainingGateService) {
         this.readinessService = readinessService;
+        this.trainingGateService = trainingGateService;
     }
 
     @GetMapping("/learners/{providerWorkerId}/cpd-summary")
@@ -43,5 +50,28 @@ public class FundoWorkforceReadinessController {
         }
         return ResponseEntity.ok(
                 readinessService.cpdSummary(tenantId, subjectType, providerWorkerId));
+    }
+
+    /**
+     * Training-gate read-model consumed by Tshepo policy: is the subject's required
+     * learning satisfied? {@code courseCodes} is a comma-separated list of native
+     * Fundo course codes. Returns a per-requirement decision plus an overall flag.
+     */
+    @GetMapping("/learners/{subjectId}/training-gate")
+    public ResponseEntity<Map<String, Object>> trainingGate(
+            @PathVariable String subjectId,
+            @RequestParam(name = "subjectType", defaultValue = "PROVIDER") String subjectType,
+            @RequestParam(name = "courseCodes", required = false, defaultValue = "") String courseCodes) {
+        RequestContext ctx = RequestContextHolder.require();
+        UUID tenantId = FundoV11Support.requireTenantOrNull(ctx);
+        if (tenantId == null) {
+            return FundoV11Support.badRequest("TENANT_REQUIRED",
+                    "X-Tenant-ID is required for training-gate evaluation");
+        }
+        List<String> codes = courseCodes.isBlank()
+                ? List.of()
+                : Arrays.stream(courseCodes.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList();
+        return ResponseEntity.ok(
+                trainingGateService.evaluate(tenantId, subjectType, subjectId, codes));
     }
 }
