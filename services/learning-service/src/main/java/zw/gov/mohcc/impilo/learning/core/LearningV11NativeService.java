@@ -884,7 +884,8 @@ public class LearningV11NativeService {
         List<Map<String, Object>> rows = jdbcTemplate.query(
                 """
                 select id, title, description, resource_type, file_name, mime_type, storage_ref,
-                       uploaded_by, owner, language, tags_json, review_status, source_attribution, archived_at, created_at, updated_at
+                       uploaded_by, owner, language, tags_json, review_status, source_attribution, archived_at, created_at, updated_at,
+                       review_date, expiry_date, target_audience, cadre, programme, facility_relevance, access_level, ai_usage_permission
                 from lrn_library_resource
                 where tenant_id = ?
                 order by updated_at desc
@@ -905,6 +906,14 @@ public class LearningV11NativeService {
                     row.put("tags", readJson(rs.getString("tags_json")));
                     row.put("reviewStatus", rs.getString("review_status"));
                     row.put("sourceAttribution", rs.getString("source_attribution"));
+                    row.put("reviewDate", str(rs, "review_date"));
+                    row.put("expiryDate", str(rs, "expiry_date"));
+                    row.put("targetAudience", rs.getString("target_audience"));
+                    row.put("cadre", rs.getString("cadre"));
+                    row.put("programme", rs.getString("programme"));
+                    row.put("facilityRelevance", rs.getString("facility_relevance"));
+                    row.put("accessLevel", rs.getString("access_level"));
+                    row.put("aiUsagePermission", rs.getBoolean("ai_usage_permission"));
                     row.put("archivedAt", str(rs, "archived_at"));
                     row.put("createdAt", str(rs, "created_at"));
                     row.put("updatedAt", str(rs, "updated_at"));
@@ -922,8 +931,10 @@ public class LearningV11NativeService {
                 """
                 insert into lrn_library_resource (
                   id, tenant_id, title, description, resource_type, file_name, mime_type, storage_ref,
-                  uploaded_by, owner, language, tags_json, metadata_json, review_status, source_attribution, created_at, updated_at
-                ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now(), now())
+                  uploaded_by, owner, language, tags_json, metadata_json, review_status, source_attribution,
+                  review_date, expiry_date, target_audience, cadre, programme, facility_relevance, access_level, ai_usage_permission,
+                  created_at, updated_at
+                ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now(), now())
                 """,
                 id,
                 tenantId,
@@ -939,7 +950,15 @@ public class LearningV11NativeService {
                 writeJson(body.getOrDefault("tags", List.of())),
                 writeJson(body.getOrDefault("metadata", Map.of())),
                 stringVal(body, "reviewStatus", "DRAFT"),
-                nullableString(body.get("sourceAttribution")));
+                nullableString(body.get("sourceAttribution")),
+                localDateOrNull(body.get("reviewDate")),
+                localDateOrNull(body.get("expiryDate")),
+                nullableString(body.get("targetAudience")),
+                nullableString(body.get("cadre")),
+                nullableString(body.get("programme")),
+                nullableString(body.get("facilityRelevance")),
+                stringVal(body, "accessLevel", "INTERNAL"),
+                Boolean.parseBoolean(String.valueOf(body.getOrDefault("aiUsagePermission", false))));
         return Map.of("resource", Map.of("id", id.toString()));
     }
 
@@ -1577,6 +1596,15 @@ public class LearningV11NativeService {
         if (value == null) return null;
         String out = value.toString().trim();
         return out.isBlank() ? null : out;
+    }
+
+    private static java.time.LocalDate localDateOrNull(Object value) {
+        if (value == null || value.toString().isBlank()) return null;
+        try {
+            return java.time.LocalDate.parse(value.toString());
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private static boolean boolVal(Object value, boolean fallback) {

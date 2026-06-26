@@ -29,4 +29,11 @@ public interface CourseRepository extends JpaRepository<CourseEntity, UUID> {
 
     List<CourseEntity> findByTenantIdAndStatusAndLanguage(
             UUID tenantId, String status, String language, Pageable pageable);
+
+    /** Space-scoped catalogue for delegated/academy administration (V022). */
+    List<CourseEntity> findByTenantIdAndLearningSpaceId(UUID tenantId, UUID learningSpaceId, Pageable pageable);
+
+    Optional<CourseEntity> findByTenantIdAndId(UUID tenantId, UUID id);
+
+    long countByTenantIdAndLearningSpaceId(UUID tenantId, UUID learningSpaceId);
 }

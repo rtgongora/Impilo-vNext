@@ -30,6 +30,22 @@ public class FundoReportController {
         return FundoV11Support.dataEnvelope(reportService.overview(tenantId));
     }
 
+    @GetMapping("/programme-summary")
+    public ResponseEntity<Map<String, Object>> programmeSummary() {
+        RequestContext ctx = RequestContextHolder.require();
+        UUID tenantId = FundoV11Support.requireTenantOrNull(ctx);
+        if (tenantId == null) return FundoV11Support.dataEnvelope(Map.of("items", java.util.List.of()));
+        return FundoV11Support.dataEnvelope(reportService.programmeSummary(tenantId));
+    }
+
+    @GetMapping("/regulator-summary")
+    public ResponseEntity<Map<String, Object>> regulatorSummary() {
+        RequestContext ctx = RequestContextHolder.require();
+        UUID tenantId = FundoV11Support.requireTenantOrNull(ctx);
+        if (tenantId == null) return FundoV11Support.dataEnvelope(Map.of("items", java.util.List.of()));
+        return FundoV11Support.dataEnvelope(reportService.regulatorSummary(tenantId));
+    }
+
     @GetMapping("/course-completions")
     public ResponseEntity<Map<String, Object>> courseCompletions(
             @RequestParam(required = false) String courseId,

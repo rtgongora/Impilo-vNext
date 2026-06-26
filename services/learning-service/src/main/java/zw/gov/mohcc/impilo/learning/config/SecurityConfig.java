@@ -18,7 +18,9 @@ public class SecurityConfig {
     @Order(1)
     public SecurityFilterChain integrationChain(HttpSecurity http) throws Exception {
         http.securityMatcher(
-                        "/internal/v1/learning/integrations/**", "/internal/v1/learning/orchestration/**")
+                        "/internal/v1/learning/integrations/**",
+                        "/internal/v1/learning/orchestration/**",
+                        "/v1/internal/fundo/**")
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(a -> a.anyRequest().permitAll());

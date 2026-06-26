@@ -200,6 +200,14 @@ public class LearningController {
         return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
     }
 
+    @PostMapping("/v11/enrolments/bulk")
+    public ResponseEntity<Map<String, Object>> bulkEnrol(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("enrolments/bulk", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
     @GetMapping("/v11/enrolments")
     public ResponseEntity<Map<String, Object>> listEnrolments(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
@@ -386,6 +394,18 @@ public class LearningController {
     public ResponseEntity<Map<String, Object>> reportOverview(@RequestHeader(CompanionHeaders.TENANT_ID) String tenantId) {
         JsonNode n = learningClient.getV11("reports/overview", Map.of());
         return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @GetMapping("/v11/reports/programme-summary")
+    public ResponseEntity<Map<String, Object>> reportProgrammeSummary(@RequestHeader(CompanionHeaders.TENANT_ID) String tenantId) {
+        JsonNode n = learningClient.getV11("reports/programme-summary", Map.of());
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @GetMapping("/v11/reports/regulator-summary")
+    public ResponseEntity<Map<String, Object>> reportRegulatorSummary(@RequestHeader(CompanionHeaders.TENANT_ID) String tenantId) {
+        JsonNode n = learningClient.getV11("reports/regulator-summary", Map.of());
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
     }
 
     @GetMapping("/v11/reports/cohort-completions")
@@ -742,6 +762,464 @@ public class LearningController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestBody Map<String, Object> body) {
         JsonNode n = learningClient.postV11("sessions", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    // ---- A1: learning-delivery administration (facilitators, venues, cohort-facilitators, session delivery) ----
+
+    @GetMapping("/v11/facilitators")
+    public ResponseEntity<Map<String, Object>> listFacilitators(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestParam(required = false) String kind,
+            @RequestParam(defaultValue = "100") int limit) {
+        JsonNode n = learningClient.getV11("facilitators", qp("kind", kind, "limit", limit));
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @PostMapping("/v11/facilitators")
+    public ResponseEntity<Map<String, Object>> createFacilitator(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("facilitators", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @PostMapping("/v11/facilitators/{id}/status")
+    public ResponseEntity<Map<String, Object>> updateFacilitatorStatus(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String id,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("facilitators/" + id + "/status", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @GetMapping("/v11/venues")
+    public ResponseEntity<Map<String, Object>> listVenues(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestParam(defaultValue = "100") int limit) {
+        JsonNode n = learningClient.getV11("venues", Map.of("limit", limit));
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @PostMapping("/v11/venues")
+    public ResponseEntity<Map<String, Object>> createVenue(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("venues", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @GetMapping("/v11/cohorts/{cohortId}/facilitators")
+    public ResponseEntity<Map<String, Object>> listCohortFacilitators(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String cohortId) {
+        JsonNode n = learningClient.getV11("cohorts/" + cohortId + "/facilitators", Map.of());
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @PostMapping("/v11/cohorts/{cohortId}/facilitators")
+    public ResponseEntity<Map<String, Object>> assignCohortFacilitator(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String cohortId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("cohorts/" + cohortId + "/facilitators", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @PostMapping("/v11/sessions/{sessionId}/delivery")
+    public ResponseEntity<Map<String, Object>> assignSessionDelivery(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String sessionId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("sessions/" + sessionId + "/delivery", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    // ---- A2: attendance + check-in ----
+
+    @PostMapping("/v11/sessions/{sessionId}/checkin-tokens")
+    public ResponseEntity<Map<String, Object>> createCheckinToken(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String sessionId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("sessions/" + sessionId + "/checkin-tokens", body == null ? Map.of() : body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @PostMapping("/v11/sessions/{sessionId}/attendance")
+    public ResponseEntity<Map<String, Object>> markAttendance(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String sessionId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("sessions/" + sessionId + "/attendance", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @PostMapping("/v11/sessions/{sessionId}/checkin")
+    public ResponseEntity<Map<String, Object>> selfCheckin(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String sessionId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("sessions/" + sessionId + "/checkin", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @GetMapping("/v11/sessions/{sessionId}/attendance")
+    public ResponseEntity<Map<String, Object>> listAttendance(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String sessionId) {
+        JsonNode n = learningClient.getV11("sessions/" + sessionId + "/attendance", Map.of());
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    // ---- A3: assignments + marking ----
+
+    @GetMapping("/v11/assignments")
+    public ResponseEntity<Map<String, Object>> listAssignments(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestParam(required = false) String courseId,
+            @RequestParam(required = false) String cohortId,
+            @RequestParam(defaultValue = "100") int limit) {
+        JsonNode n = learningClient.getV11("assignments", qp("courseId", courseId, "cohortId", cohortId, "limit", limit));
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @PostMapping("/v11/assignments")
+    public ResponseEntity<Map<String, Object>> createAssignment(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("assignments", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @GetMapping("/v11/assignments/{assignmentId}")
+    public ResponseEntity<Map<String, Object>> getAssignment(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String assignmentId) {
+        JsonNode n = learningClient.getV11("assignments/" + assignmentId, Map.of());
+        if (n == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(Map.of("data", n));
+    }
+
+    @PostMapping("/v11/assignments/{assignmentId}/submissions")
+    public ResponseEntity<Map<String, Object>> submitAssignment(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String assignmentId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("assignments/" + assignmentId + "/submissions", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @GetMapping("/v11/assignments/{assignmentId}/submissions")
+    public ResponseEntity<Map<String, Object>> listSubmissions(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String assignmentId) {
+        JsonNode n = learningClient.getV11("assignments/" + assignmentId + "/submissions", Map.of());
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @GetMapping("/v11/marking-queue")
+    public ResponseEntity<Map<String, Object>> markingQueue(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestParam(required = false) String cohortId,
+            @RequestParam(defaultValue = "100") int limit) {
+        JsonNode n = learningClient.getV11("marking-queue", qp("cohortId", cohortId, "limit", limit));
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @PostMapping("/v11/submissions/{submissionId}/mark")
+    public ResponseEntity<Map<String, Object>> markSubmission(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String submissionId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("submissions/" + submissionId + "/mark", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    // ---- A4: academic foundation (programs + terms) ----
+
+    @GetMapping("/v11/academic/programs")
+    public ResponseEntity<Map<String, Object>> listPrograms(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestParam(defaultValue = "100") int limit) {
+        JsonNode n = learningClient.getV11("academic/programs", Map.of("limit", limit));
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @PostMapping("/v11/academic/programs")
+    public ResponseEntity<Map<String, Object>> createProgram(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("academic/programs", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @GetMapping("/v11/academic/programs/{programId}")
+    public ResponseEntity<Map<String, Object>> getProgram(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String programId) {
+        JsonNode n = learningClient.getV11("academic/programs/" + programId, Map.of());
+        if (n == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(Map.of("data", n));
+    }
+
+    @GetMapping("/v11/academic/terms")
+    public ResponseEntity<Map<String, Object>> listTerms(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestParam(required = false) String programId,
+            @RequestParam(defaultValue = "100") int limit) {
+        JsonNode n = learningClient.getV11("academic/terms", qp("programId", programId, "limit", limit));
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @PostMapping("/v11/academic/terms")
+    public ResponseEntity<Map<String, Object>> createTerm(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("academic/terms", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    // ---- A5: admissions + student registry ----
+
+    @GetMapping("/v11/admissions/applications")
+    public ResponseEntity<Map<String, Object>> listApplications(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String programId,
+            @RequestParam(defaultValue = "100") int limit) {
+        JsonNode n = learningClient.getV11("admissions/applications", qp("status", status, "programId", programId, "limit", limit));
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @PostMapping("/v11/admissions/applications")
+    public ResponseEntity<Map<String, Object>> submitApplication(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("admissions/applications", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @PostMapping("/v11/admissions/applications/{applicationId}/decision")
+    public ResponseEntity<Map<String, Object>> decideApplication(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String applicationId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("admissions/applications/" + applicationId + "/decision", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @GetMapping("/v11/students")
+    public ResponseEntity<Map<String, Object>> listStudents(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestParam(required = false) String programId,
+            @RequestParam(defaultValue = "100") int limit) {
+        JsonNode n = learningClient.getV11("students", qp("programId", programId, "limit", limit));
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @PostMapping("/v11/students")
+    public ResponseEntity<Map<String, Object>> admitStudent(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("students", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @GetMapping("/v11/students/{studentId}")
+    public ResponseEntity<Map<String, Object>> getStudent(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String studentId) {
+        JsonNode n = learningClient.getV11("students/" + studentId, Map.of());
+        if (n == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(Map.of("data", n));
+    }
+
+    // ---- A6: registration / placement / graduation ----
+
+    @PostMapping("/v11/students/{studentId}/registrations")
+    public ResponseEntity<Map<String, Object>> registerCourse(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String studentId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("students/" + studentId + "/registrations", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @GetMapping("/v11/students/{studentId}/registrations")
+    public ResponseEntity<Map<String, Object>> listRegistrations(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String studentId) {
+        JsonNode n = learningClient.getV11("students/" + studentId + "/registrations", Map.of());
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @PostMapping("/v11/students/{studentId}/placements")
+    public ResponseEntity<Map<String, Object>> createPlacement(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String studentId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("students/" + studentId + "/placements", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @GetMapping("/v11/students/{studentId}/placements")
+    public ResponseEntity<Map<String, Object>> listPlacements(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String studentId) {
+        JsonNode n = learningClient.getV11("students/" + studentId + "/placements", Map.of());
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @PostMapping("/v11/placements/{placementId}/signoff")
+    public ResponseEntity<Map<String, Object>> signoffPlacement(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String placementId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("placements/" + placementId + "/signoff", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @PostMapping("/v11/students/{studentId}/graduate")
+    public ResponseEntity<Map<String, Object>> graduate(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String studentId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("students/" + studentId + "/graduate", body == null ? Map.of() : body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @GetMapping("/v11/students/{studentId}/academic-record")
+    public ResponseEntity<Map<String, Object>> academicRecord(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String studentId) {
+        JsonNode n = learningClient.getV11("students/" + studentId + "/academic-record", Map.of());
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    // ---- C1: learning-provider & academy registry ----
+
+    @GetMapping("/v11/providers")
+    public ResponseEntity<Map<String, Object>> listProviders(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestParam(required = false) String kind,
+            @RequestParam(defaultValue = "100") int limit) {
+        JsonNode n = learningClient.getV11("providers", qp("kind", kind, "limit", limit));
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @PostMapping("/v11/providers")
+    public ResponseEntity<Map<String, Object>> createProvider(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("providers", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @GetMapping("/v11/providers/directory")
+    public ResponseEntity<Map<String, Object>> providerDirectory(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestParam(defaultValue = "200") int limit) {
+        JsonNode n = learningClient.getV11("providers/directory", Map.of("limit", limit));
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @GetMapping("/v11/providers/{providerId}")
+    public ResponseEntity<Map<String, Object>> getProvider(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String providerId) {
+        JsonNode n = learningClient.getV11("providers/" + providerId, Map.of());
+        if (n == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(Map.of("data", n));
+    }
+
+    @GetMapping("/v11/providers/{providerId}/spaces")
+    public ResponseEntity<Map<String, Object>> listSpaces(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String providerId) {
+        JsonNode n = learningClient.getV11("providers/" + providerId + "/spaces", Map.of());
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @PostMapping("/v11/providers/{providerId}/spaces")
+    public ResponseEntity<Map<String, Object>> createSpace(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String providerId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("providers/" + providerId + "/spaces", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @GetMapping("/v11/providers/{providerId}/accreditations")
+    public ResponseEntity<Map<String, Object>> listAccreditations(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String providerId) {
+        JsonNode n = learningClient.getV11("providers/" + providerId + "/accreditations", Map.of());
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    // ---- C2: provider accreditation workflow ----
+
+    @GetMapping("/v11/provider-applications")
+    public ResponseEntity<Map<String, Object>> listProviderApplications(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "100") int limit) {
+        JsonNode n = learningClient.getV11("provider-applications", qp("status", status, "limit", limit));
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @PostMapping("/v11/provider-applications")
+    public ResponseEntity<Map<String, Object>> submitProviderApplication(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("provider-applications", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @PostMapping("/v11/provider-applications/{applicationId}/decision")
+    public ResponseEntity<Map<String, Object>> decideProviderApplication(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String applicationId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("provider-applications/" + applicationId + "/decision", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @PostMapping("/v11/provider-applications/{applicationId}/accredit")
+    public ResponseEntity<Map<String, Object>> accreditProvider(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String applicationId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("provider-applications/" + applicationId + "/accredit", body == null ? Map.of() : body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    // ---- C3: delegated space administration ----
+
+    @PostMapping("/v11/courses/{courseId}/learning-space")
+    public ResponseEntity<Map<String, Object>> assignCourseToSpace(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String courseId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("courses/" + courseId + "/learning-space", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @GetMapping("/v11/spaces/{spaceId}/courses")
+    public ResponseEntity<Map<String, Object>> listSpaceCourses(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String spaceId,
+            @RequestParam(defaultValue = "200") int limit) {
+        JsonNode n = learningClient.getV11("spaces/" + spaceId + "/courses", Map.of("limit", limit));
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @GetMapping("/v11/spaces/{spaceId}/summary")
+    public ResponseEntity<Map<String, Object>> spaceSummary(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String spaceId) {
+        JsonNode n = learningClient.getV11("spaces/" + spaceId + "/summary", Map.of());
         return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
     }
 

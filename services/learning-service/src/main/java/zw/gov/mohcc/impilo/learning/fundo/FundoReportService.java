@@ -27,18 +27,57 @@ public class FundoReportService {
     private final AssessmentRepository assessmentRepository;
     private final AssessmentAttemptRepository attemptRepository;
     private final FundoCohortReportService cohortReportService;
+    private final zw.gov.mohcc.impilo.learning.persistence.repository.LearningProviderRepository providerRepository;
 
     public FundoReportService(
             EnrolmentRepository enrolmentRepository,
             CourseRepository courseRepository,
             AssessmentRepository assessmentRepository,
             AssessmentAttemptRepository attemptRepository,
-            FundoCohortReportService cohortReportService) {
+            FundoCohortReportService cohortReportService,
+            zw.gov.mohcc.impilo.learning.persistence.repository.LearningProviderRepository providerRepository) {
         this.enrolmentRepository = enrolmentRepository;
         this.courseRepository = courseRepository;
         this.assessmentRepository = assessmentRepository;
         this.attemptRepository = attemptRepository;
         this.cohortReportService = cohortReportService;
+        this.providerRepository = providerRepository;
+    }
+
+    /** Programme dashboard (B4): course/enrolment/completion rollup grouped by category (programme). */
+    @Transactional(readOnly = true)
+    public Map<String, Object> programmeSummary(UUID tenantId) {
+        List<CourseEntity> courses = courseRepository.findByTenantIdAndStatus(tenantId, "PUBLISHED", PageRequest.of(0, 500));
+        Map<String, int[]> byProgramme = new java.util.LinkedHashMap<>();
+        for (CourseEntity c : courses) {
+            String key = c.getCategory() == null || c.getCategory().isBlank() ? "GENERAL" : c.getCategory();
+            int[] agg = byProgramme.computeIfAbsent(key, k -> new int[3]); // courses, enrolments, completed
+            agg[0]++;
+            for (EnrolmentEntity e : enrolmentRepository.findByTenantIdAndCourseId(tenantId, c.getId())) {
+                agg[1]++;
+                if ("COMPLETED".equals(e.getStatus())) agg[2]++;
+            }
+        }
+        List<Map<String, Object>> items = new ArrayList<>();
+        byProgramme.forEach((k, v) -> items.add(Map.of(
+                "programme", k, "courses", v[0], "enrolments", v[1], "completed", v[2],
+                "completionRatePercent", v[1] == 0 ? 0.0 : Math.round(v[2] * 1000.0 / v[1]) / 10.0)));
+        return Map.of("items", items);
+    }
+
+    /** Regulator dashboard (B4): provider accreditation posture by kind. */
+    @Transactional(readOnly = true)
+    public Map<String, Object> regulatorSummary(UUID tenantId) {
+        var providers = providerRepository.findByTenantIdOrderByCreatedAtDesc(tenantId, PageRequest.of(0, 1000));
+        Map<String, int[]> byKind = new java.util.LinkedHashMap<>();
+        for (var p : providers) {
+            int[] agg = byKind.computeIfAbsent(p.getProviderKind(), k -> new int[2]); // total, accredited
+            agg[0]++;
+            if ("ACCREDITED".equals(p.getAccreditationStatus())) agg[1]++;
+        }
+        List<Map<String, Object>> items = new ArrayList<>();
+        byKind.forEach((k, v) -> items.add(Map.of("providerKind", k, "total", v[0], "accredited", v[1])));
+        return Map.of("items", items, "totalProviders", providers.size());
     }
 
     @Transactional(readOnly = true)

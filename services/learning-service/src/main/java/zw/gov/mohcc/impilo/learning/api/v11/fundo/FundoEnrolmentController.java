@@ -80,6 +80,27 @@ public class FundoEnrolmentController {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    @PostMapping("/enrolments/bulk")
+    public ResponseEntity<Map<String, Object>> bulkEnrol(@RequestBody Map<String, Object> body) {
+        RequestContext ctx = RequestContextHolder.require();
+        UUID tenantId = FundoV11Support.requireTenantOrNull(ctx);
+        if (tenantId == null || body == null) {
+            return FundoV11Support.badRequest("INVALID_INPUT", "Tenant header + body required");
+        }
+        UUID courseId = FundoV11Support.tryParseUuid(asString(body.get("courseId")));
+        if (courseId == null) {
+            return FundoV11Support.badRequest("INVALID_INPUT", "courseId is required");
+        }
+        List<Map<String, Object>> subjects = (List<Map<String, Object>>) body.getOrDefault("subjects", List.of());
+        try {
+            return FundoV11Support.dataEnvelope(enrolmentService.bulkEnrol(
+                    tenantId, courseId, subjects, asString(body.get("enrolmentType")), asString(body.get("assignedBy"))));
+        } catch (IllegalArgumentException ex) {
+            return FundoV11Support.notFound("COURSE_NOT_FOUND", ex.getMessage());
+        }
+    }
+
     @GetMapping("/enrolments")
     public ResponseEntity<Map<String, Object>> listEnrolments(
             @RequestParam(required = false) String subjectType,

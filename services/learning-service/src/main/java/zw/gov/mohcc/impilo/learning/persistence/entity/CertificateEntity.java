@@ -71,6 +71,10 @@ public class CertificateEntity {
     @Column(name = "verification_digest", length = 128)
     private String verificationDigest;
 
+    /** Set when the scheduled lifecycle sweep emits the pre-expiry refresher signal (dedupe marker). */
+    @Column(name = "refresher_notified_at")
+    private OffsetDateTime refresherNotifiedAt;
+
     @PrePersist
     void prePersist() {
         if (id == null) id = UUID.randomUUID();
@@ -105,4 +109,6 @@ public class CertificateEntity {
     public void setCpdPoints(Integer cpdPoints) { this.cpdPoints = cpdPoints; }
     public String getVerificationDigest() { return verificationDigest; }
     public void setVerificationDigest(String verificationDigest) { this.verificationDigest = verificationDigest; }
+    public OffsetDateTime getRefresherNotifiedAt() { return refresherNotifiedAt; }
+    public void setRefresherNotifiedAt(OffsetDateTime refresherNotifiedAt) { this.refresherNotifiedAt = refresherNotifiedAt; }
 }

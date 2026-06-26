@@ -68,6 +68,11 @@ public class FundoEnrolmentService {
             row.setAssignedAt(now);
         }
         row.setDueAt(req.dueAt());
+        // Stamp facility / learning-space context from trust headers when present (B0/B3/C0).
+        zw.gov.mohcc.impilo.learning.context.LearningRequestContext.facilityId()
+                .map(FundoEnrolmentService::tryUuid).ifPresent(row::setFacilityId);
+        zw.gov.mohcc.impilo.learning.context.LearningRequestContext.learningSpaceId()
+                .map(FundoEnrolmentService::tryUuid).ifPresent(row::setLearningSpaceId);
         enrolmentRepository.save(row);
 
         outbox.append("FundoEnrolment", row.getId().toString(),
@@ -83,6 +88,35 @@ public class FundoEnrolmentService {
         Map<String, Object> v = toView(row);
         v.put("idempotent", false);
         return v;
+    }
+
+    /**
+     * Bulk-enrol a list of subjects into a course (B6). The contract the campaign /
+     * surveillance bridges (BFF/jobs) call: a campaign target group or outbreak-assigned
+     * tracers → learning enrolments. Idempotent per subject (reuses {@link #create}).
+     */
+    @Transactional
+    public Map<String, Object> bulkEnrol(UUID tenantId, UUID courseId, List<Map<String, Object>> subjects,
+            String enrolmentType, String assignedBy) {
+        int created = 0;
+        int existing = 0;
+        for (Map<String, Object> s : subjects) {
+            String subjectType = String.valueOf(s.get("subjectType"));
+            String subjectId = String.valueOf(s.get("subjectId"));
+            if (subjectType == null || subjectId == null || subjectType.isBlank() || subjectId.isBlank()) {
+                continue;
+            }
+            Map<String, Object> r = create(new EnrolmentRequest(
+                    tenantId, subjectType, subjectId, courseId, null,
+                    enrolmentType == null ? "SYSTEM" : enrolmentType, assignedBy, null));
+            if (Boolean.TRUE.equals(r.get("idempotent"))) {
+                existing++;
+            } else {
+                created++;
+            }
+        }
+        return Map.of("courseId", courseId.toString(), "created", created, "alreadyEnrolled", existing,
+                "total", subjects.size());
     }
 
     @Transactional(readOnly = true)
@@ -162,6 +196,14 @@ public class FundoEnrolmentService {
         m.put("completedAt", e.getCompletedAt() == null ? null : e.getCompletedAt().toString());
         m.put("createdAt", e.getCreatedAt() == null ? null : e.getCreatedAt().toString());
         return m;
+    }
+
+    private static UUID tryUuid(String s) {
+        try {
+            return UUID.fromString(s);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public record EnrolmentRequest(

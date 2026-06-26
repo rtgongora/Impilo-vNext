@@ -878,6 +878,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /internal/v1/learning/v11/enrolments/bulk:
+    post:
+      tags: [FundoNativeLMS]
+      summary: Bulk-enrol subjects into a course (campaign/surveillance bridge contract)
+      operationId: bulkEnrol
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Bulk enrolment result, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
   /internal/v1/learning/v11/enrolments:
     post:
       tags:
@@ -1734,6 +1742,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiEnvelope_Map'
+  /internal/v1/learning/v11/reports/programme-summary:
+    get:
+      tags: [FundoNativeLMS]
+      summary: Programme dashboard — course/enrolment/completion rollup by programme
+      operationId: getFundoProgrammeSummary
+      responses:
+        '200': { description: Programme summary, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/reports/regulator-summary:
+    get:
+      tags: [FundoNativeLMS]
+      summary: Regulator dashboard — provider accreditation posture by kind
+      operationId: getFundoRegulatorSummary
+      responses:
+        '200': { description: Regulator summary, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
   /internal/v1/learning/v11/reports/course-completions:
     get:
       tags:
@@ -1935,6 +1957,91 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiEnvelope_Map'
+  /v1/internal/fundo/learners/{providerWorkerId}/cpd-summary:
+    get:
+      tags:
+        - Integration
+      summary: Training-evidence / workforce-readiness summary for a provider worker
+      description: >
+        Trusted server-to-server read consumed by `vashandi-workforce-service`
+        (`FundoIntegrationClient#fetchTrainingEvidence`) to populate workforce
+        readiness and eligibility. Returns a compact, Fundo-owned readiness signal
+        (mandatory learning satisfied / at-risk / overdue, certificate validity) plus
+        CPD-eligible completions as candidates only — Varapi remains the CPD ledger
+        authority and no regulated CPD points are awarded here. Tenant is resolved
+        from the `X-Tenant-ID` companion trust header; not OAuth/JWT protected.
+      operationId: fundoLearnerCpdSummary
+      parameters:
+        - name: providerWorkerId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Provider worker identifier, used as the Fundo subjectId (PROVIDER subject type).
+        - name: subjectType
+          in: query
+          required: false
+          schema:
+            type: string
+            default: PROVIDER
+      responses:
+        '200':
+          description: Readiness summary (raw object, no data envelope — consumed directly by Vashandi)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Map_StringObject'
+        '400':
+          description: Missing tenant context
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/internal/fundo/learners/{subjectId}/training-gate:
+    get:
+      tags:
+        - Integration
+      summary: Training-gate read-model for Tshepo policy (required learning satisfied?)
+      description: >
+        Trusted server-to-server read consumed by `tshepo-authz-service` to gate
+        role/workspace enablement on completed learning. Given native Fundo course
+        codes, returns a per-requirement decision and an overall `satisfied` flag. A
+        requirement is satisfied only when the subject has a COMPLETED enrolment and
+        (where applicable) a non-expired certificate. Fundo is the data source; the
+        access decision remains authoritative in Tshepo. See
+        docs/policy/fundo-training-gated-access.md.
+      operationId: fundoLearnerTrainingGate
+      parameters:
+        - name: subjectId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: subjectType
+          in: query
+          required: false
+          schema:
+            type: string
+            default: PROVIDER
+        - name: courseCodes
+          in: query
+          required: false
+          description: Comma-separated native Fundo course codes to evaluate.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Training-gate decision (raw object, no data envelope)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Map_StringObject'
+        '400':
+          description: Missing tenant context
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /internal/v1/learning/integrations/varapi-fundo-completion:
     post:
       tags:
@@ -2575,6 +2682,454 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiEnvelope_Map'
+  /internal/v1/learning/v11/facilitators:
+    get:
+      tags: [FundoDelivery]
+      summary: List learning facilitators (trainer/teacher/preceptor/guest)
+      operationId: listFacilitators
+      parameters:
+        - { name: kind, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 500 } }
+      responses:
+        '200': { description: Facilitators list, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+    post:
+      tags: [FundoDelivery]
+      summary: Create a facilitator
+      operationId: createFacilitator
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Facilitator created, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/facilitators/{id}/status:
+    post:
+      tags: [FundoDelivery]
+      summary: Update facilitator status
+      operationId: updateFacilitatorStatus
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Facilitator updated, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/venues:
+    get:
+      tags: [FundoDelivery]
+      summary: List training venues
+      operationId: listTrainingVenues
+      parameters:
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 500 } }
+      responses:
+        '200': { description: Venues list, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+    post:
+      tags: [FundoDelivery]
+      summary: Create a training venue
+      operationId: createTrainingVenue
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Venue created, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/cohorts/{cohortId}/facilitators:
+    get:
+      tags: [FundoDelivery]
+      summary: List facilitators assigned to a cohort
+      operationId: listCohortFacilitators
+      parameters:
+        - { name: cohortId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Cohort facilitators, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+    post:
+      tags: [FundoDelivery]
+      summary: Assign a facilitator to a cohort
+      operationId: assignCohortFacilitator
+      parameters:
+        - { name: cohortId, in: path, required: true, schema: { type: string } }
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Assignment created, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/sessions/{sessionId}/delivery:
+    post:
+      tags: [FundoDelivery]
+      summary: Assign structured facilitator/venue to a session (read prefers FK over legacy free-text)
+      operationId: assignSessionDelivery
+      parameters:
+        - { name: sessionId, in: path, required: true, schema: { type: string } }
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Delivery assigned, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/sessions/{sessionId}/checkin-tokens:
+    post:
+      tags: [FundoAttendance]
+      summary: Create a code/QR check-in token for a session
+      operationId: createSessionCheckinToken
+      parameters:
+        - { name: sessionId, in: path, required: true, schema: { type: string } }
+      requestBody: { required: false, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Token created, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/sessions/{sessionId}/attendance:
+    get:
+      tags: [FundoAttendance]
+      summary: List attendance for a session
+      operationId: listSessionAttendance
+      parameters:
+        - { name: sessionId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Attendance list, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+    post:
+      tags: [FundoAttendance]
+      summary: Facilitator bulk-mark attendance (entries[] of subjectType/subjectId/status)
+      operationId: markSessionAttendance
+      parameters:
+        - { name: sessionId, in: path, required: true, schema: { type: string } }
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Attendance marked, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/sessions/{sessionId}/checkin:
+    post:
+      tags: [FundoAttendance]
+      summary: Learner self check-in with a code/QR token
+      operationId: sessionSelfCheckin
+      parameters:
+        - { name: sessionId, in: path, required: true, schema: { type: string } }
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Checked in, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/assignments:
+    get:
+      tags: [FundoAssignment]
+      summary: List assignments (filter by course or cohort)
+      operationId: listAssignments
+      parameters:
+        - { name: courseId, in: query, required: false, schema: { type: string } }
+        - { name: cohortId, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 500 } }
+      responses:
+        '200': { description: Assignments list, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+    post:
+      tags: [FundoAssignment]
+      summary: Create an assignment / task
+      operationId: createAssignment
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Assignment created, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/assignments/{assignmentId}:
+    get:
+      tags: [FundoAssignment]
+      summary: Get an assignment
+      operationId: getAssignment
+      parameters:
+        - { name: assignmentId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Assignment, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/assignments/{assignmentId}/submissions:
+    get:
+      tags: [FundoAssignment]
+      summary: List submissions for an assignment
+      operationId: listAssignmentSubmissions
+      parameters:
+        - { name: assignmentId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Submissions, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+    post:
+      tags: [FundoAssignment]
+      summary: Submit to an assignment (submission_no auto-increments)
+      operationId: submitAssignment
+      parameters:
+        - { name: assignmentId, in: path, required: true, schema: { type: string } }
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Submitted, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/marking-queue:
+    get:
+      tags: [FundoAssignment]
+      summary: Submissions awaiting marking (optionally filtered by cohort)
+      operationId: assignmentMarkingQueue
+      parameters:
+        - { name: cohortId, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 500 } }
+      responses:
+        '200': { description: Marking queue, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/submissions/{submissionId}/mark:
+    post:
+      tags: [FundoAssignment]
+      summary: Mark a submission (score/passed/feedback/rubric)
+      operationId: markAssignmentSubmission
+      parameters:
+        - { name: submissionId, in: path, required: true, schema: { type: string } }
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Marked, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/academic/programs:
+    get:
+      tags: [FundoAcademic]
+      summary: List academic programs (qualifications)
+      operationId: listAcademicPrograms
+      parameters:
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 500 } }
+      responses:
+        '200': { description: Programs, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+    post:
+      tags: [FundoAcademic]
+      summary: Create an academic program
+      operationId: createAcademicProgram
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Program created, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/academic/programs/{programId}:
+    get:
+      tags: [FundoAcademic]
+      summary: Get an academic program
+      operationId: getAcademicProgram
+      parameters:
+        - { name: programId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Program, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/academic/terms:
+    get:
+      tags: [FundoAcademic]
+      summary: List academic terms (optionally by program)
+      operationId: listAcademicTerms
+      parameters:
+        - { name: programId, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 500 } }
+      responses:
+        '200': { description: Terms, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+    post:
+      tags: [FundoAcademic]
+      summary: Create an academic term
+      operationId: createAcademicTerm
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Term created, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/admissions/applications:
+    get:
+      tags: [FundoStudent]
+      summary: List admission applications (filter by status or program)
+      operationId: listStudentApplications
+      parameters:
+        - { name: status, in: query, required: false, schema: { type: string } }
+        - { name: programId, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 500 } }
+      responses:
+        '200': { description: Applications, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+    post:
+      tags: [FundoStudent]
+      summary: Submit an admission application
+      operationId: submitStudentApplication
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Application submitted, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/admissions/applications/{applicationId}/decision:
+    post:
+      tags: [FundoStudent]
+      summary: Record an admission decision
+      operationId: decideStudentApplication
+      parameters:
+        - { name: applicationId, in: path, required: true, schema: { type: string } }
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Decision recorded, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/students:
+    get:
+      tags: [FundoStudent]
+      summary: List students (optionally by program)
+      operationId: listStudents
+      parameters:
+        - { name: programId, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 500 } }
+      responses:
+        '200': { description: Students, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+    post:
+      tags: [FundoStudent]
+      summary: Admit a student (generates a student number)
+      operationId: admitStudent
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Student admitted, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/students/{studentId}:
+    get:
+      tags: [FundoStudent]
+      summary: Get a student profile
+      operationId: getStudent
+      parameters:
+        - { name: studentId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Student, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/students/{studentId}/registrations:
+    get:
+      tags: [FundoStudent]
+      summary: List a student's course registrations
+      operationId: listCourseRegistrations
+      parameters: [{ name: studentId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Registrations, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+    post:
+      tags: [FundoStudent]
+      summary: Register a student for a course (creates the academic enrolment)
+      operationId: registerCourse
+      parameters: [{ name: studentId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Registered, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/students/{studentId}/placements:
+    get:
+      tags: [FundoStudent]
+      summary: List a student's clinical placements
+      operationId: listClinicalPlacements
+      parameters: [{ name: studentId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Placements, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+    post:
+      tags: [FundoStudent]
+      summary: Create a clinical placement
+      operationId: createClinicalPlacement
+      parameters: [{ name: studentId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Placement created, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/placements/{placementId}/signoff:
+    post:
+      tags: [FundoStudent]
+      summary: Preceptor sign-off of a placement
+      operationId: signoffPlacement
+      parameters: [{ name: placementId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Signed off, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/students/{studentId}/graduate:
+    post:
+      tags: [FundoStudent]
+      summary: Confer a qualification / graduate a student
+      operationId: graduateStudent
+      parameters: [{ name: studentId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: false, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Graduated, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/students/{studentId}/academic-record:
+    get:
+      tags: [FundoStudent]
+      summary: Aggregated academic record (registrations + placements + graduation)
+      operationId: getAcademicRecord
+      parameters: [{ name: studentId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Academic record, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/providers:
+    get:
+      tags: [FundoProvider]
+      summary: List learning providers (INDIVIDUAL/ORGANISATION/FACILITY)
+      operationId: listLearningProviders
+      parameters:
+        - { name: kind, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 500 } }
+      responses:
+        '200': { description: Providers, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+    post:
+      tags: [FundoProvider]
+      summary: Register a learning provider (binds to the kind's identity SoR)
+      operationId: createLearningProvider
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Provider registered, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/providers/directory:
+    get:
+      tags: [FundoProvider]
+      summary: Directory of accredited providers + academies (privacy-safe; micro-spaces included)
+      operationId: learningProviderDirectory
+      parameters:
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 500 } }
+      responses:
+        '200': { description: Directory, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/providers/{providerId}:
+    get:
+      tags: [FundoProvider]
+      summary: Get a learning provider
+      operationId: getLearningProvider
+      parameters: [{ name: providerId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Provider, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/providers/{providerId}/spaces:
+    get:
+      tags: [FundoProvider]
+      summary: List a provider's learning spaces (academies)
+      operationId: listProviderSpaces
+      parameters: [{ name: providerId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Spaces, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+    post:
+      tags: [FundoProvider]
+      summary: Create a learning space (academy) bound to a governance OrganisationUnit
+      operationId: createProviderSpace
+      parameters: [{ name: providerId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Space created, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/providers/{providerId}/accreditations:
+    get:
+      tags: [FundoProvider]
+      summary: List a provider's accreditation records
+      operationId: listProviderAccreditations
+      parameters: [{ name: providerId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Accreditations, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/provider-applications:
+    get:
+      tags: [FundoProvider]
+      summary: List learning-provider set-up applications
+      operationId: listProviderApplications
+      parameters:
+        - { name: status, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 500 } }
+      responses:
+        '200': { description: Applications, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+    post:
+      tags: [FundoProvider]
+      summary: Request to set up & run a learning provider/academy (kind-aware)
+      operationId: submitProviderApplication
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Submitted, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/provider-applications/{applicationId}/decision:
+    post:
+      tags: [FundoProvider]
+      summary: Record a review decision on a provider application
+      operationId: decideProviderApplication
+      parameters: [{ name: applicationId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Decision recorded, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/provider-applications/{applicationId}/accredit:
+    post:
+      tags: [FundoProvider]
+      summary: Accredit & provision a provider (routes to the kind's regulator)
+      operationId: accreditProvider
+      parameters: [{ name: applicationId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: false, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Accredited & provisioned, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/courses/{courseId}/learning-space:
+    post:
+      tags: [FundoProvider]
+      summary: Bind/unbind a course to a learning space (delegated admin)
+      operationId: assignCourseToLearningSpace
+      parameters: [{ name: courseId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Map_StringObject' } } } }
+      responses:
+        '200': { description: Bound, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/spaces/{spaceId}/courses:
+    get:
+      tags: [FundoProvider]
+      summary: Space-scoped course list (delegated admin)
+      operationId: listLearningSpaceCourses
+      parameters:
+        - { name: spaceId, in: path, required: true, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 500 } }
+      responses:
+        '200': { description: Space courses, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
+  /internal/v1/learning/v11/spaces/{spaceId}/summary:
+    get:
+      tags: [FundoProvider]
+      summary: Self-managed academy dashboard summary
+      operationId: learningSpaceSummary
+      parameters: [{ name: spaceId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Space summary, content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } } }
   /workflow-context:
     get:
       operationId: learning_get__workflow_context

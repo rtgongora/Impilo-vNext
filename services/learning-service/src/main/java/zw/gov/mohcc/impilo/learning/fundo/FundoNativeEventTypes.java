@@ -29,4 +29,9 @@ public final class FundoNativeEventTypes {
     public static final String ASSESSMENT_ATTEMPT_REVIEWED     = "impilo.learning.assessment.attempt.reviewed.v1";
     public static final String CERTIFICATE_ISSUED             = "impilo.learning.certificate.issued.v1";
     public static final String COURSE_COMPLETED               = "impilo.learning.course.completed.v1";
+    public static final String CERTIFICATE_REFRESHER_DUE      = "impilo.learning.certificate.refresher.due.v1";
+    public static final String CERTIFICATE_EXPIRED            = "impilo.learning.certificate.expired.v1";
+    public static final String ASSIGNMENT_SUBMITTED           = "impilo.learning.assignment.submitted.v1";
+    public static final String ASSIGNMENT_MARKED              = "impilo.learning.assignment.marked.v1";
+    public static final String PROVIDER_ACCREDITED            = "impilo.learning.provider.accredited.v1";
 }
