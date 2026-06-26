@@ -92,7 +92,12 @@ public class OutboxPublisher {
     static boolean shouldEmitCoreTransaction(String eventType) {
         if (eventType == null) return false;
         return switch (eventType) {
-            case "BILL_DRAFT_CREATED",
+            // CHARGE_CREATED is a first-class C8 value-event kind (e.g. standalone teleconsult /
+            // marketplace charges that never become a finalized bill). Dual-emit so no billable
+            // service event leaks; downstream keys by lifecycle stage (CHARGE_CREATED vs BILL_*)
+            // so this is distinct value-event stages, not a double-charge.
+            case "CHARGE_CREATED",
+                 "BILL_DRAFT_CREATED",
                  "BILL_FINALIZED",
                  "INVOICE_ISSUED",
                  "PAYMENT_INTENT_CREATED",

@@ -633,6 +633,70 @@ public class CostaEventConsumer {
         }
     }
 
+    /**
+     * Blood unit issued/transfused → value signal (journey §9, previously Partial).
+     *
+     * <p>MADI publishes {@code BLOOD_ISSUED} / {@code TRANSFUSION_COMPLETED} to
+     * {@code madi.blood.order} / {@code madi.transfusion}. The MADI event payload is thin
+     * ({@code unitId}; patient/component/price live on the order, not the event) and blood
+     * ordered via OROS is already priced through the {@code oros.order.placed} /
+     * {@code msika.flow.order.priced} paths. To avoid <em>double-charging</em> OROS-originated
+     * blood and to avoid <em>fabricating</em> a price from insufficient data, we capture the
+     * blood event as a cost <em>signal</em> (visibility, no priced bill line). When MADI
+     * enriches the event with patient + priced component (a MADI-lane change — not ours),
+     * this can graduate to a priced charge. Honest product truth: this closes the value-leakage
+     * <em>visibility</em> gap, not full blood pricing.
+     */
+    @KafkaListener(topics = {"madi.blood.order", "madi.transfusion"}, groupId = "costa-costing-engine")
+    @Transactional
+    public void onMadiBloodEvent(String message, Acknowledgment ack) {
+        try {
+            JsonNode event = objectMapper.readTree(message);
+            // Support both the legacy raw payload and the v1.1 envelope shape.
+            String eventType = text(event, "eventType");
+            if (eventType == null) eventType = text(event, "event_type");
+            JsonNode payload = event.has("payload") ? event.get("payload") : event;
+
+            boolean billable = "BLOOD_ISSUED".equals(eventType) || "TRANSFUSION_COMPLETED".equals(eventType);
+            if (!billable) { ack.acknowledge(); return; }
+
+            String tenantTxt = text(event, "tenantId");
+            if (tenantTxt == null) tenantTxt = text(event, "tenant_id");
+            String subjectId = text(event, "subjectId");
+            if (subjectId == null) subjectId = text(event, "subject_id");
+            if (subjectId == null) subjectId = text(event, "aggregateId");
+            String unitId = text(payload, "unitId");
+
+            String idemId = text(event, "eventId");
+            if (idemId == null) idemId = text(event, "event_id");
+            if (idemId == null && subjectId != null) idemId = subjectId + ":" + eventType;
+            if (isProcessed(idemId, "MADI_BLOOD")) { ack.acknowledge(); return; }
+
+            if (tenantTxt != null) {
+                var bm = objectMapper.createObjectNode();
+                bm.put("event_type", eventType);
+                bm.put("order_or_episode_id", subjectId != null ? subjectId : "");
+                if (unitId != null) bm.put("unit_id", unitId);
+                bm.put("note", "blood value signal; pricing via OROS order path to avoid double-charge");
+                costEventCaptureService.tryCaptureClinical(
+                        eventType,
+                        "MADI",
+                        UUID.fromString(tenantTxt),
+                        text(payload, "patientCpid"),
+                        text(payload, "encounterId"),
+                        null,
+                        bm);
+                log.info("Captured MADI blood value signal {} for {}", eventType, subjectId);
+            }
+
+            markProcessed(idemId, "MADI_BLOOD");
+            ack.acknowledge();
+        } catch (Exception e) {
+            log.error("Failed to process MADI blood event", e);
+            ack.acknowledge();
+        }
+    }
+
     @KafkaListener(topics = "impilo.costa.cost-signals", groupId = "costa-costing-engine")
     @Transactional
     public void onCostSignals(String message, Acknowledgment ack) {

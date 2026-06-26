@@ -40,6 +40,8 @@ class OutboxPublisherRoutingConventionTest {
         assertTrue(OutboxPublisher.shouldEmitCoreTransaction("PAYMENT_STATUS_CHANGED"));
         assertTrue(OutboxPublisher.shouldEmitCoreTransaction("CLAIM_PACK_CREATED"));
         assertTrue(OutboxPublisher.shouldEmitCoreTransaction("EMERGENCY_DEFERRED_CHARGE"));
+        assertTrue(OutboxPublisher.shouldEmitCoreTransaction("WAIVER_APPLIED"));
+        assertTrue(OutboxPublisher.shouldEmitCoreTransaction("CHARGE_CREATED"));
         assertFalse(OutboxPublisher.shouldEmitCoreTransaction("RULESET_PUBLISHED"));
     }
 }
