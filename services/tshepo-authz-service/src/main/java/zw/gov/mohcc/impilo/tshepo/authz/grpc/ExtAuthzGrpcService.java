@@ -107,11 +107,19 @@ public class ExtAuthzGrpcService extends AuthorizationGrpc.AuthorizationImplBase
                     loaLevel = session.loaLevel();
                     sessionId = session.sessionId();
 
-                    // Session info can override/enrich header values
-                    if ((actorId == null || actorId.isBlank()) && session.actorId() != null) {
+                    // JWT identity is AUTHORITATIVE over client-supplied headers (TPL-1): a valid
+                    // session's sub/type/tenant OVERRIDE any X-Actor-ID/X-Actor-Type/X-Tenant-ID the
+                    // client set, preventing header-injection impersonation. The authoritative
+                    // identity is re-injected upstream by PolicyEngine.buildHeaderMutations. Client
+                    // headers are used only when the session does not carry the claim (S2S tokens).
+                    if (session.actorId() != null && !session.actorId().isBlank()) {
+                        if (actorId != null && !actorId.isBlank() && !actorId.equals(session.actorId())) {
+                            log.warn("Trust-header override: client X-Actor-ID differs from session sub — using session (correlation={})",
+                                    correlationId);
+                        }
                         actorId = session.actorId();
                     }
-                    if ((actorType == null || actorType.isBlank()) && session.actorType() != null) {
+                    if (session.actorType() != null && !session.actorType().isBlank()) {
                         actorType = session.actorType();
                     }
                     if (tenantId == null && session.tenantId() != null) {
