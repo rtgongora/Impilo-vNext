@@ -133,7 +133,9 @@ public class ServiceClientConfig {
             /** iot-ingestion-service — device registry + telemetry (port 8330). */
             String iotIngestionBaseUrl,
             /** rtc-gateway-service — LiveKit/WebRTC session transport (port 8195). */
-            String rtcGatewayBaseUrl
+            String rtcGatewayBaseUrl,
+            /** patient-safety-service — pharmacovigilance (ADR/AEFI) SoR + MCAZ workbench (port 8202). */
+            String patientSafetyBaseUrl
     ) {
         public ServiceEndpoints {
             if (pctBaseUrl == null) pctBaseUrl = "http://localhost:8088";
@@ -208,6 +210,7 @@ public class ServiceClientConfig {
             if (analyticsPipelineBaseUrl == null) analyticsPipelineBaseUrl = "http://localhost:8365";
             if (iotIngestionBaseUrl == null) iotIngestionBaseUrl = "http://localhost:8330";
             if (rtcGatewayBaseUrl == null) rtcGatewayBaseUrl = "http://localhost:8195";
+            if (patientSafetyBaseUrl == null) patientSafetyBaseUrl = "http://localhost:8202";
         }
     }
 
@@ -224,7 +227,7 @@ public class ServiceClientConfig {
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
-                null
+                null, null
         );
     }
 
@@ -244,7 +247,8 @@ public class ServiceClientConfig {
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null, null
+                null, null, null, null, null, null, null, null, null, null, null, null,
+                null
         );
     }
 
