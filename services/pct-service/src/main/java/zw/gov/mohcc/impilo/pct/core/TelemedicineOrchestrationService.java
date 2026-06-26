@@ -82,6 +82,8 @@ public class TelemedicineOrchestrationService {
         referral.setPreferredMode(optional(request, "preferredMode", "preferred_mode"));
         referral.setModality(defaulted(optional(request, "modality"), "virtual"));
         referral.setVirtualMode(defaulted(optional(request, "virtual_mode", "virtualMode"), "video"));
+        referral.setPatientCategory(optional(request, "patientCategory", "patient_category"));
+        referral.setFacilityCategory(optional(request, "facilityCategory", "facility_category"));
         referral.setStatus("DRAFT");
         referral.setStage(1);
         referral.setRoutingTarget("{}");
@@ -224,6 +226,12 @@ public class TelemedicineOrchestrationService {
         ReferralEntity entity = getReferralEntity(referralId);
         entity.setStatus("COMPLETED");
         entity.setCompletedAt(OffsetDateTime.now());
+        // Billing context may be finalised at completion (e.g. eligibility resolved); keep what
+        // was captured at referral time unless the completion request overrides it.
+        entity.setPatientCategory(defaulted(optional(request, "patientCategory", "patient_category"),
+                entity.getPatientCategory()));
+        entity.setFacilityCategory(defaulted(optional(request, "facilityCategory", "facility_category"),
+                entity.getFacilityCategory()));
         entity.setCompletionPayload(writeJsonObject(request == null ? Map.of() : request));
         ReferralEntity saved = referralRepository.save(entity);
         emitOutbox("telemedicine.session.completed", saved.getReferralId().toString(), toReferralPayload(saved));
@@ -447,6 +455,8 @@ public class TelemedicineOrchestrationService {
         body.put("preferredMode", entity.getPreferredMode());
         body.put("modality", entity.getModality());
         body.put("virtualMode", entity.getVirtualMode());
+        body.put("patientCategory", entity.getPatientCategory());
+        body.put("facilityCategory", entity.getFacilityCategory());
         body.put("routingTarget", readJsonMap(entity.getRoutingTarget()));
         body.put("attachmentDocumentIds", readJsonStringList(entity.getAttachmentDocumentIds()));
         body.put("messages", readJsonMapList(entity.getMessages()));
@@ -549,6 +559,8 @@ public class TelemedicineOrchestrationService {
         payload.put("facilityId", referral.getFacilityId());
         payload.put("specialty", referral.getSpecialty());
         payload.put("modality", referral.getModality());
+        payload.put("patientCategory", referral.getPatientCategory());
+        payload.put("facilityCategory", referral.getFacilityCategory());
         payload.put("sourceServiceEvent", "TELECONSULT_COMPLETED");
 
         EventOutboxEntity outbox = new EventOutboxEntity();

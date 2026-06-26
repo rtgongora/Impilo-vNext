@@ -65,6 +65,14 @@ public class ReferralEntity {
     @Column(name = "virtual_mode")
     private String virtualMode;
 
+    // Billing context captured at referral time (composed by the BFF from coverage/registry)
+    // and propagated to COSTA on the teleconsult value-trigger so charging rules can fire.
+    @Column(name = "patient_category")
+    private String patientCategory;
+
+    @Column(name = "facility_category")
+    private String facilityCategory;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "routing_target", columnDefinition = "jsonb")
     private String routingTarget = "{}";
@@ -159,6 +167,10 @@ public class ReferralEntity {
     public void setModality(String modality) { this.modality = modality; }
     public String getVirtualMode() { return virtualMode; }
     public void setVirtualMode(String virtualMode) { this.virtualMode = virtualMode; }
+    public String getPatientCategory() { return patientCategory; }
+    public void setPatientCategory(String patientCategory) { this.patientCategory = patientCategory; }
+    public String getFacilityCategory() { return facilityCategory; }
+    public void setFacilityCategory(String facilityCategory) { this.facilityCategory = facilityCategory; }
     public String getRoutingTarget() { return routingTarget; }
     public void setRoutingTarget(String routingTarget) { this.routingTarget = routingTarget; }
     public String getAttachmentDocumentIds() { return attachmentDocumentIds; }
