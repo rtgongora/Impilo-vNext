@@ -1935,6 +1935,46 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiEnvelope_Map'
+  /v1/internal/fundo/learners/{providerWorkerId}/cpd-summary:
+    get:
+      tags:
+        - Integration
+      summary: Training-evidence / workforce-readiness summary for a provider worker
+      description: >
+        Trusted server-to-server read consumed by `vashandi-workforce-service`
+        (`FundoIntegrationClient#fetchTrainingEvidence`) to populate workforce
+        readiness and eligibility. Returns a compact, Fundo-owned readiness signal
+        (mandatory learning satisfied / at-risk / overdue, certificate validity) plus
+        CPD-eligible completions as candidates only — Varapi remains the CPD ledger
+        authority and no regulated CPD points are awarded here. Tenant is resolved
+        from the `X-Tenant-ID` companion trust header; not OAuth/JWT protected.
+      operationId: fundoLearnerCpdSummary
+      parameters:
+        - name: providerWorkerId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Provider worker identifier, used as the Fundo subjectId (PROVIDER subject type).
+        - name: subjectType
+          in: query
+          required: false
+          schema:
+            type: string
+            default: PROVIDER
+      responses:
+        '200':
+          description: Readiness summary (raw object, no data envelope — consumed directly by Vashandi)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Map_StringObject'
+        '400':
+          description: Missing tenant context
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /internal/v1/learning/integrations/varapi-fundo-completion:
     post:
       tags:
