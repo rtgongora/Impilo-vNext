@@ -205,6 +205,63 @@ public class ControlTowerService {
     }
 
     /**
+     * Tenant-scoped cross-facility control-tower aggregate.
+     *
+     * <p>Respects the cross-tenant visibility guard: under {@code AGGREGATE_ONLY}
+     * only counts are returned (no per-facility rows / no row-level detail).</p>
+     */
+    @Transactional(readOnly = true)
+    public zw.gov.mohcc.impilo.tuso.api.dto.ControlTowerAggregateResponse aggregate(
+            TrustContext ctx, boolean aggregateOnly) {
+        UUID tenantId = ctx.tenantId();
+        List<FacilityEntity> facilities = facilityRepository.findByTenantId(tenantId);
+        long openAlerts = alertRepository.countOpenByTenant(tenantId);
+
+        List<zw.gov.mohcc.impilo.tuso.api.dto.ControlTowerAggregateResponse.FacilityRow> rows =
+                aggregateOnly ? List.of() : facilities.stream()
+                        .map(f -> {
+                            OccupancySnapshotEntity occ = occupancyRepository.findLatestByFacility(f.getId());
+                            Integer bedPct = null;
+                            if (occ != null && occ.getTotalBeds() != null && occ.getTotalBeds() > 0) {
+                                bedPct = (int) Math.round(100.0 * occ.getOccupiedBeds() / occ.getTotalBeds());
+                            }
+                            return new zw.gov.mohcc.impilo.tuso.api.dto.ControlTowerAggregateResponse.FacilityRow(
+                                    f.getId(), f.getName(),
+                                    (int) alertRepository.countOpenByFacility(f.getId()), bedPct);
+                        })
+                        .toList();
+
+        return new zw.gov.mohcc.impilo.tuso.api.dto.ControlTowerAggregateResponse(
+                facilities.size(), (int) openAlerts,
+                aggregateOnly ? "AGGREGATE_ONLY" : "ROW_DETAIL", rows);
+    }
+
+    /**
+     * Acknowledge an open alert. Idempotent: re-acknowledging is a no-op.
+     */
+    @Transactional
+    public AlertResponse acknowledgeAlert(TrustContext ctx, UUID alertId) {
+        AlertEntity alert = alertRepository.findById(alertId)
+                .orElseThrow(() -> new IllegalArgumentException("Alert not found: " + alertId));
+        if (ctx != null && !alert.getTenantId().equals(ctx.tenantId())) {
+            throw new SecurityException("Tenant isolation violation: alert belongs to different tenant");
+        }
+        if (!"ACKNOWLEDGED".equals(alert.getStatus()) && !"RESOLVED".equals(alert.getStatus())) {
+            alert.setStatus("ACKNOWLEDGED");
+            alert.setAcknowledgedBy(ctx != null && ctx.actorId() != null ? ctx.actorId() : "system");
+            alert.setAcknowledgedAt(java.time.Instant.now());
+            alertRepository.save(alert);
+            log.info("Alert {} acknowledged by {}", alertId, alert.getAcknowledgedBy());
+        }
+        return new AlertResponse(
+                alert.getId(), alert.getFacility().getId(), alert.getFacility().getName(),
+                alert.getAlertType(), alert.getSeverity(), alert.getTitle(), alert.getDescription(),
+                alert.getMetricType(), alert.getMetricValue(), alert.getThreshold(), alert.getStatus(),
+                alert.getAcknowledgedBy(), alert.getAcknowledgedAt(), alert.getResolvedAt(),
+                alert.getCreatedAt());
+    }
+
+    /**
      * Get alerts, optionally filtered by facility and status.
      */
     @Transactional(readOnly = true)

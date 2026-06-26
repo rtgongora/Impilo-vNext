@@ -144,6 +144,86 @@ public class TusoServiceClient {
         return extractData(response);
     }
 
+    /** C4 FacilityModeContext read-model produced by TUSO (single producer). */
+    public JsonNode getFacilityModeContext(long facilityId) {
+        String url = baseUrl + "/v1/internal/facility-mode/" + facilityId + "/context";
+        log.info("TUSO: Getting facility-mode context id={}", facilityId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Facility-mode setup-wizard state. */
+    public JsonNode getFacilitySetupState(long facilityId) {
+        String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/setup";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Update a single facility-mode setup-wizard step. */
+    public JsonNode updateFacilitySetupStep(long facilityId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/setup/steps";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** List facility units (departments). */
+    public JsonNode listFacilityUnits(long facilityId) {
+        String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/units";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Create a facility unit (department). */
+    public JsonNode createFacilityUnit(long facilityId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/units";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Tenant-scoped control-tower aggregate for scoped dashboards. */
+    public JsonNode getControlTowerAggregate() {
+        String url = baseUrl + "/v1/internal/control-tower/aggregate";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Facility operational summary (occupancy, recent telemetry, alert/shift counts). */
+    public JsonNode getControlTowerFacilitySummary(long facilityId) {
+        String url = baseUrl + "/v1/internal/control-tower/facilities/" + facilityId + "/summary";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Control-tower alerts, optionally facility/status filtered. */
+    public JsonNode listControlTowerAlerts(Long facilityId, String status) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/internal/control-tower/alerts");
+        if (facilityId != null) b.queryParam("facilityId", facilityId);
+        if (status != null) b.queryParam("status", status);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(b.toUriString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Acknowledge a control-tower alert. */
+    public JsonNode acknowledgeAlert(String alertId) {
+        String url = baseUrl + "/v1/internal/control-tower/alerts/" + alertId + "/acknowledge";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, null, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** List facility service points. */
+    public JsonNode listServicePoints(long facilityId) {
+        String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/service-points";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Create a facility service point. */
+    public JsonNode createServicePoint(long facilityId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/service-points";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
     // ── Shift Management ─────────────────────────────────────────────
 
     /** Get current active shift for a user. */

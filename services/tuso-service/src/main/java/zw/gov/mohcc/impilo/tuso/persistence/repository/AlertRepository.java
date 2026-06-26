@@ -24,6 +24,12 @@ public interface AlertRepository extends JpaRepository<AlertEntity, UUID> {
 
     Page<AlertEntity> findByTenantIdOrderByCreatedAtDesc(UUID tenantId, Pageable pageable);
 
+    @Query("SELECT COUNT(a) FROM AlertEntity a WHERE a.tenantId = :tenantId AND a.status = 'OPEN'")
+    long countOpenByTenant(@Param("tenantId") UUID tenantId);
+
+    @Query("SELECT COUNT(a) FROM AlertEntity a WHERE a.facility.id = :facilityId AND a.status = 'OPEN'")
+    long countOpenByFacility(@Param("facilityId") Long facilityId);
+
     @Query("SELECT a FROM AlertEntity a WHERE a.facility.id = :facilityId AND a.alertType = :alertType AND a.status = :status")
     Optional<AlertEntity> findByFacilityIdAndAlertTypeAndStatus(
             @Param("facilityId") Long facilityId, @Param("alertType") String alertType, @Param("status") String status);
