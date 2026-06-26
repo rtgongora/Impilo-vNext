@@ -78,6 +78,7 @@ public class PolicyEngine {
     private final AuthzProperties properties;
     private final ObjectMapper objectMapper;
     private final VisibilityEscalationService visibilityEscalationService;
+    private final DelegationClient delegationClient;
 
     public PolicyEngine(DeviceRiskScoreEvaluator riskScoring,
                         PolicyCacheService policyCacheService,
@@ -89,7 +90,8 @@ public class PolicyEngine {
                         AuditPublisher auditPublisher,
                         AuthzProperties properties,
                         ObjectMapper objectMapper,
-                        VisibilityEscalationService visibilityEscalationService) {
+                        VisibilityEscalationService visibilityEscalationService,
+                        DelegationClient delegationClient) {
         this.riskScoring = riskScoring;
         this.policyCacheService = policyCacheService;
         this.privilegeRevocationStore = privilegeRevocationStore;
@@ -101,6 +103,7 @@ public class PolicyEngine {
         this.properties = properties;
         this.objectMapper = objectMapper;
         this.visibilityEscalationService = visibilityEscalationService;
+        this.delegationClient = delegationClient;
     }
 
     /**
@@ -171,6 +174,18 @@ public class PolicyEngine {
             return step4.deny();
         }
         PolicyRuleEntity matchedAllowRule = step4.matchedAllowRule();
+
+        // ────────────────────────────────────────────────────────────────
+        // Step 4.5: Delegated / act-on-behalf authorization (L5, G-CZO-03)
+        // When the actor declares acting FOR another subject (X-Subject-ID ≠ actor), require an
+        // ACTIVE, in-scope, unexpired Mvumo delegation with the delegate meeting the assurance
+        // floor. Delegation authorises WHO may act; the subject's clinical consent (Step 5) still
+        // governs WHAT data. Conjunctive with base RBAC — never widens beyond it. Fail-closed.
+        // ────────────────────────────────────────────────────────────────
+        AuthzResponse delegationDeny = evaluateDelegation(request, riskScore, startTime);
+        if (delegationDeny != null) {
+            return delegationDeny;
+        }
 
         // ────────────────────────────────────────────────────────────────
         // Step 5: Consent evaluation (clinical resources)
@@ -507,6 +522,60 @@ public class PolicyEngine {
         if (parseAssuranceLoa(request.assuranceLevel()) >= 3) return true;
         String v = request.assuranceLevel() == null ? "" : request.assuranceLevel().toUpperCase(Locale.ROOT);
         return v.contains("VERIFIED") || v.contains("REGISTRY");
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // Step 4.5: Delegated / act-on-behalf helpers (L5, G-CZO-03)
+    // ════════════════════════════════════════════════════════════════════
+
+    /**
+     * Returns a DENY when the actor declares acting for another subject ({@code X-Subject-ID} ≠
+     * actor) but lacks an active, in-scope, sufficiently-assured delegation; returns {@code null}
+     * when the request is not delegated (subject absent or == actor) or the delegation authorises it.
+     * Fail-closed: a resolution error denies. Delegation authorises WHO may act; the subject's
+     * clinical consent (Step 5) still governs WHAT data.
+     */
+    private AuthzResponse evaluateDelegation(AuthzInternalRequest request, int riskScore, long startTime) {
+        String subjectId = request.subjectId();
+        String actorId = request.actorId();
+        if (subjectId == null || subjectId.isBlank() || subjectId.equals(actorId)) {
+            return null; // not acting on behalf of a different subject
+        }
+        DelegationResolution res;
+        try {
+            res = delegationClient.resolve(request.tenantId(), actorId, subjectId);
+        } catch (Exception e) {
+            log.warn("Delegation resolution failed for actor={} subject={}: {}", actorId, subjectId, e.getMessage());
+            return denyAndLog(request, "DELEGATION_UNAVAILABLE",
+                    "Delegation could not be verified", riskScore, startTime);
+        }
+        if (res == null || !res.active()) {
+            return denyAndLog(request, "DELEGATION_NOT_ACTIVE",
+                    "No active delegation authorising this actor to act for the subject", riskScore, startTime);
+        }
+        if (effectiveLoa(request) < res.assuranceFloor()) {
+            return denyAndLog(request, "DELEGATION_ASSURANCE_TOO_LOW",
+                    "Delegate assurance below the delegation floor", riskScore, startTime);
+        }
+        if (!scopeAllows(res.scope(), request.resourceType())) {
+            return denyAndLog(request, "DELEGATION_OUT_OF_SCOPE",
+                    "Requested resource is outside the delegation scope", riskScore, startTime);
+        }
+        return null; // delegation authorises the actor; continue to consent (against the subject)
+    }
+
+    /** Coarse scope containment: "*" allows all; otherwise a token must equal the resource type or prefix it ("type:..."). */
+    private static boolean scopeAllows(List<String> scope, String resourceType) {
+        if (scope == null || scope.isEmpty()) return false;
+        String rt = resourceType == null ? "" : resourceType.toLowerCase(Locale.ROOT);
+        for (String s : scope) {
+            if (s == null) continue;
+            String tok = s.trim().toLowerCase(Locale.ROOT);
+            if (tok.equals("*") || tok.equals(rt) || (!rt.isEmpty() && tok.startsWith(rt + ":"))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // ════════════════════════════════════════════════════════════════════

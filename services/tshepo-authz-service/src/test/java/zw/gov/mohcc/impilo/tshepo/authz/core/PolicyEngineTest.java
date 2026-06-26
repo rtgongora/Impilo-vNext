@@ -47,6 +47,7 @@ class PolicyEngineTest {
     @Mock private PolicyDecisionLogRepository decisionLogRepository;
     @Mock private AuditPublisher auditPublisher;
     @Mock private VisibilityEscalationService visibilityEscalationService;
+    @Mock private DelegationClient delegationClient;
 
     private AuthzProperties properties;
     private ObjectMapper objectMapper;
@@ -69,7 +70,8 @@ class PolicyEngineTest {
         policyEngine = new PolicyEngine(
                 riskScoring, policyCacheService, privilegeRevocationStore, consentClient,
                 stepUpService, breakGlassService, decisionLogRepository,
-                auditPublisher, properties, objectMapper, visibilityEscalationService
+                auditPublisher, properties, objectMapper, visibilityEscalationService,
+                delegationClient
         );
     }
 
@@ -511,6 +513,79 @@ class PolicyEngineTest {
 
         assertEquals(Verdict.ALLOW, response.verdict(),
                 "Bare numeric X-Assurance-Level must parse to LOA rank and satisfy min_loa");
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // Step 4.5: Delegated / act-on-behalf authorization (L5, G-CZO-03)
+    // ════════════════════════════════════════════════════════════════════
+
+    /** A request where the actor declares acting FOR a different subject (X-Subject-ID set). */
+    private static AuthzInternalRequest delegatedRequest(String subjectId, int acrLoa, String assuranceLevel) {
+        return new AuthzInternalRequest(
+                TENANT_ID, ACTOR_ID, "CITIZEN", List.of("CITIZEN"), "TREATMENT",
+                DEVICE_FP, CORRELATION_ID, FACILITY_ID, WORKSPACE_ID,
+                null, "GET", "/v1/patients/cpid-12345", "GET:/v1/patients/cpid-12345",
+                "patients", "cpid-12345",
+                acrLoa, "session-abc", null,
+                null, null, null, null, subjectId, assuranceLevel,
+                null, null
+        );
+    }
+
+    @Test
+    @DisplayName("Step 4.5: acting for a subject with NO active delegation -> DENY")
+    void evaluate_delegated_noActiveDelegation_denies() {
+        stubHappyPathDefaults(10);
+        when(delegationClient.resolve(eq(TENANT_ID), eq(ACTOR_ID), eq("subject-other")))
+                .thenReturn(DelegationResolution.inactive());
+
+        AuthzResponse response = policyEngine.evaluate(delegatedRequest("subject-other", 3, "LOA3"));
+
+        assertEquals(Verdict.DENY, response.verdict());
+        assertEquals("DELEGATION_NOT_ACTIVE", response.errorCode());
+    }
+
+    @Test
+    @DisplayName("Step 4.5: active, in-scope, sufficiently-assured delegation + consent -> ALLOW")
+    void evaluate_delegated_activeInScope_allows() {
+        stubHappyPathDefaults(10);
+        when(delegationClient.resolve(eq(TENANT_ID), eq(ACTOR_ID), eq("subject-other")))
+                .thenReturn(new DelegationResolution(true, List.of("patients"), 2, "GUARDIAN"));
+        when(consentClient.evaluateConsent(eq(TENANT_ID), eq("patients"), eq("cpid-12345"),
+                eq(ACTOR_ID), eq("TREATMENT")))
+                .thenReturn(ConsentDecision.permit("c1", List.of("read")));
+
+        AuthzResponse response = policyEngine.evaluate(delegatedRequest("subject-other", 3, "LOA3"));
+
+        assertEquals(Verdict.ALLOW, response.verdict(),
+                "an active in-scope delegation with assurance met must allow (consent still applies)");
+    }
+
+    @Test
+    @DisplayName("Step 4.5: delegation scope does not cover the resource -> DENY")
+    void evaluate_delegated_outOfScope_denies() {
+        stubHappyPathDefaults(10);
+        when(delegationClient.resolve(eq(TENANT_ID), eq(ACTOR_ID), eq("subject-other")))
+                .thenReturn(new DelegationResolution(true, List.of("appointments"), 2, "CAREGIVER"));
+
+        AuthzResponse response = policyEngine.evaluate(delegatedRequest("subject-other", 3, "LOA3"));
+
+        assertEquals(Verdict.DENY, response.verdict());
+        assertEquals("DELEGATION_OUT_OF_SCOPE", response.errorCode());
+    }
+
+    @Test
+    @DisplayName("Step 4.5: delegate assurance below the floor -> DENY")
+    void evaluate_delegated_belowAssuranceFloor_denies() {
+        stubHappyPathDefaults(10);
+        when(delegationClient.resolve(eq(TENANT_ID), eq(ACTOR_ID), eq("subject-other")))
+                .thenReturn(new DelegationResolution(true, List.of("patients"), 4, "GUARDIAN"));
+
+        // effectiveLoa = max(acr=2, header LOA2) = 2 < floor 4
+        AuthzResponse response = policyEngine.evaluate(delegatedRequest("subject-other", 2, "LOA2"));
+
+        assertEquals(Verdict.DENY, response.verdict());
+        assertEquals("DELEGATION_ASSURANCE_TOO_LOW", response.errorCode());
     }
 
     // ════════════════════════════════════════════════════════════════════
