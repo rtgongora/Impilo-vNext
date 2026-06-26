@@ -195,9 +195,11 @@ interface FundoReadiness {
 ```ts
 interface CoreTransactionState {
   transactionId: string;             // correlation id across the journey
-  state: "IDENTIFIED"|"ACCESS_DETERMINED"|"ELIGIBILITY_CHECKED"|"SCHEDULED"|"ARRIVED"|
-         "SORTED"|"TRIAGED"|"QUEUED"|"IN_ENCOUNTER"|"ADMITTED"|"INPATIENT_STAY"|
-         "OUTCOME_SET"|"RECONCILED"|"CLOSED"|"EMERGENCY";
+  // AUTHORITATIVE: this is the `CoreTransactionState` union from contracts/core-transaction.ts
+  // (54 states: DRAFT, INITIATED, IDENTITY_PENDING ... READY_FOR_PROVIDER, IN_SERVICE ...
+  //  POST_SERVICE_BILLING_PENDING, RECONCILIATION_PENDING, COMPLETED, CLOSED + branch/exception states).
+  // Do NOT invent a parallel enum; import it. Use isValidCoreTransactionTransition / getAllowedNextStates.
+  state: CoreTransactionState;       // from contracts/core-transaction.ts
   context: "OUTPATIENT"|"INPATIENT"|"CASUALTY"|"PROCEDURE"|"COMMUNITY"|"VIRTUAL";
   personRef: PersonRef;
   encounterId: string | null;        // PCT

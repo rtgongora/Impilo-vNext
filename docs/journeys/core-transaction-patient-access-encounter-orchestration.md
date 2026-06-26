@@ -37,6 +37,37 @@ The Core Transaction is a **composition object** the experience-bff assembles fr
 NOT a new system-of-record. Its canonical shape is frozen in
 [`../design/provider-clinical-place/shared-read-models.md`](../design/provider-clinical-place/shared-read-models.md) (§ Core-Transaction state object).
 
+> **⚠ DOCTRINE RECONCILIATION (added by the full audit).** The **authoritative** Core Transaction state machine
+> is **`contracts/core-transaction.ts`** (54 states + transition validators + journey-stage mappers) and
+> [`../doctrine/CORE_TRANSACTION_STATE_MACHINE.md`](../doctrine/CORE_TRANSACTION_STATE_MACHINE.md). The diagram
+> below is a **simplified narrative overlay for readability only — it is NOT a new state machine.** All
+> implementation MUST use `CoreTransactionState` from the contract and its helpers
+> (`isValidCoreTransactionTransition`, `getAllowedNextStates`, `getProviderJourneyStageForTransactionState`,
+> `getPersonJourneyStageForTransactionState`, `getPlatformJourneyStageForTransactionState`). The narrative
+> stages map onto canonical states as follows:
+>
+> | Narrative stage (below) | Canonical `CoreTransactionState`(s) |
+> |---|---|
+> | IDENTIFIED | `INITIATED` · `IDENTITY_PENDING` (`PROVISIONAL_IDENTITY` / `DUPLICATE_SUSPECTED` for emergency/unknown) |
+> | ACCESS_DETERMINED | `IDENTITY_RESOLVED` · `TRUST_CONTEXT_ESTABLISHED` · `SERVICE_SELECTED` |
+> | ELIGIBILITY_CHECKED | `COSTING_REQUIRED` · `COST_ESTIMATED` · `COVERAGE_CHECK_PENDING` · `COVERAGE_CONFIRMED` · `EXEMPTION_CONFIRMED` · `PRE_SERVICE_PAYMENT_*` · `ACCESS_GRANTED` / `ACCESS_BLOCKED_PAYMENT_REQUIRED` |
+> | SCHEDULED | `SCHEDULED` |
+> | ARRIVED | `QUEUED` · `TASKED` |
+> | SORTED | `TASKED` (sorting desk → visit-type) |
+> | TRIAGED | `TRIAGE_IN_PROGRESS` → `READY_FOR_PROVIDER` |
+> | QUEUED | `QUEUED` · `READY_FOR_PROVIDER` |
+> | IN_ENCOUNTER | `IN_SERVICE` · `ORDERS_PENDING` · `ANCILLARY_IN_PROGRESS` · `PROVIDER_REVIEW_PENDING` |
+> | ADMITTED / INPATIENT_STAY | `ADMITTED` |
+> | OUTCOME_SET | `CLINICAL_COMPLETION_PENDING` · `SHR_UPDATE_PENDING` |
+> | RECONCILED | `POST_SERVICE_BILLING_PENDING` · `FINANCIAL_PROCESSING` · `CLAIM_PENDING` · `RECONCILIATION_PENDING` |
+> | FOLLOW_UP | `FOLLOW_UP_ACTIVE` |
+> | CLOSED | `COMPLETED` · `CLOSED` |
+> | EMERGENCY | `EMERGENCY_OVERRIDE` (+ later `PENDING_RECONCILIATION`) |
+> | (branches) | `CANCELLED` · `NO_SHOW` · `REFERRED_OUT` · `TRANSFERRED` · `CONSENT_DENIED` · `ACCESS_DENIED` · `SERVICE_DEFERRED` |
+>
+> The shared-read-model C6 `CoreTransactionState.state` enum is likewise corrected to **be** the contract's
+> `CoreTransactionState` union, not a parallel vocabulary.
+
 ```mermaid
 stateDiagram-v2
     [*] --> IDENTIFIED: need surfaced (person or provider initiated)
