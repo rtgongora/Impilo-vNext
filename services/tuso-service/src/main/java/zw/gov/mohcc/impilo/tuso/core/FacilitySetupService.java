@@ -91,15 +91,17 @@ public class FacilitySetupService {
                 });
 
         // Reconcile derived flags from live entities (honest reflection, no faking).
+        // Bidirectional: flags follow reality both up (entities exist) and down
+        // (all entities removed) so a wizard step cannot stay stuck "configured".
         boolean hasDepartments = !facilityUnitRepository.findByFacilityIdOrderByCreatedAtAsc(facilityId).isEmpty();
         boolean hasServicePoints = servicePointRepository.countByFacilityIdAndActiveTrue(facilityId) > 0;
         boolean changed = false;
-        if (hasDepartments && !state.isDepartmentsConfigured()) {
-            state.setDepartmentsConfigured(true);
+        if (hasDepartments != state.isDepartmentsConfigured()) {
+            state.setDepartmentsConfigured(hasDepartments);
             changed = true;
         }
-        if (hasServicePoints && !state.isServicePointsConfigured()) {
-            state.setServicePointsConfigured(true);
+        if (hasServicePoints != state.isServicePointsConfigured()) {
+            state.setServicePointsConfigured(hasServicePoints);
             changed = true;
         }
         if (changed) {

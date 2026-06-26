@@ -13,6 +13,7 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilitySetupStateEntity;
+import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityUnitEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilitySetupStateRepository;
@@ -89,6 +90,11 @@ class FacilitySetupServiceTest {
     void goLive_succeedsWhenAllPrerequisitesMet() {
         FacilitySetupStateEntity state = fullyConfigured();
         when(setupStateRepository.findByFacilityId(anyLong())).thenReturn(Optional.of(state));
+        // Reconcile is now bidirectional: the configured dept/service-point flags must be
+        // backed by live entities, otherwise getOrCreateState would clear them.
+        FacilityUnitEntity unit = new FacilityUnitEntity();
+        when(facilityUnitRepository.findByFacilityIdOrderByCreatedAtAsc(anyLong())).thenReturn(List.of(unit));
+        when(servicePointRepository.countByFacilityIdAndActiveTrue(anyLong())).thenReturn(1L);
 
         FacilitySetupStateEntity result = service.advanceStep(TrustContextHolder.require(), 42L,
                 FacilitySetupService.SetupStep.GO_LIVE, true);
@@ -101,6 +107,32 @@ class FacilitySetupServiceTest {
         FacilitySetupStateEntity state = new FacilitySetupStateEntity();
         state.setDepartmentsConfigured(true);
         assertEquals(FacilitySetupService.SetupStep.SERVICE_POINTS, service.nextStep(state));
+    }
+
+    @Test
+    void getOrCreateState_rejectsCrossTenantFacility() {
+        FacilityEntity otherTenant = new FacilityEntity();
+        otherTenant.setTenantId(UUID.randomUUID());
+        when(facilityRepository.findById(anyLong())).thenReturn(Optional.of(otherTenant));
+
+        assertThrows(SecurityException.class,
+                () -> service.getOrCreateState(TrustContextHolder.require(), 42L));
+    }
+
+    @Test
+    void getOrCreateState_reconcilesFlagsBackToFalseWhenEntitiesRemoved() {
+        // State says configured, but no live departments/service-points remain.
+        FacilitySetupStateEntity state = new FacilitySetupStateEntity();
+        state.setFacilityId(42L);
+        state.setTenantId(tenantId);
+        state.setDepartmentsConfigured(true);
+        state.setServicePointsConfigured(true);
+        when(setupStateRepository.findByFacilityId(anyLong())).thenReturn(Optional.of(state));
+        // setUp already mocks units empty and service-point count 0.
+
+        FacilitySetupStateEntity result = service.getOrCreateState(TrustContextHolder.require(), 42L);
+        assertFalse(result.isDepartmentsConfigured());
+        assertFalse(result.isServicePointsConfigured());
     }
 
     private FacilitySetupStateEntity fullyConfigured() {
