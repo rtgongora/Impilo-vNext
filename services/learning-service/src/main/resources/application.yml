@@ -81,6 +81,18 @@ learning:
       refresher-lead-days: ${LEARNING_CERT_REFRESHER_LEAD_DAYS:30}
       initial-delay-ms: ${LEARNING_CERT_LIFECYCLE_INITIAL_DELAY_MS:60000}
       poll-interval-ms: ${LEARNING_CERT_LIFECYCLE_POLL_INTERVAL_MS:3600000}
+  notifications:
+    # Honest provider-agnostic Fundo notification adapter. The default STUB provider
+    # records delivery intent WITHOUT contacting any channel (status RECORDED, never
+    # SENT). Set provider=NOTIFICATION_SERVICE + notification-base-url to deliver via
+    # the platform comms hub (notification-service POST /internal/v1/notify).
+    dispatch:
+      enabled: ${LEARNING_NOTIFICATION_DISPATCH_ENABLED:true}
+      provider: ${LEARNING_NOTIFICATION_PROVIDER:STUB}
+      notification-base-url: ${LEARNING_NOTIFICATION_BASE_URL:}
+      initial-delay-ms: ${LEARNING_NOTIFICATION_DISPATCH_INITIAL_DELAY_MS:90000}
+      poll-interval-ms: ${LEARNING_NOTIFICATION_DISPATCH_POLL_MS:300000}
+      batch-size: ${LEARNING_NOTIFICATION_DISPATCH_BATCH:100}
 
 impilo:
   companion:
