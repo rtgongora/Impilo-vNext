@@ -1,0 +1,332 @@
+"use client";
+
+import { useState } from "react";
+import { CheckCircle2, Circle, Loader2, Plus, Rocket, AlertTriangle } from "lucide-react";
+import {
+  useFacilitySetupState,
+  useAdvanceSetupStep,
+  useFacilityUnits,
+  useCreateFacilityUnit,
+  useServicePoints,
+  useCreateServicePoint,
+} from "./useFacilityMode";
+import { SETUP_STEPS, type FacilitySetupStepState } from "./types";
+
+/**
+ * Facility-mode setup wizard. Drives the TUSO setup-state SoR through:
+ * dept -> service-point -> queue -> workflow -> workforce -> OROS-routing ->
+ * Khuluma-channel -> Fundo-readiness -> go-live.
+ *
+ * Honest behaviour: Fundo readiness is never auto-faked (the operator confirms it);
+ * go-live is rejected by TUSO if prerequisites are incomplete and the rejection is
+ * surfaced verbatim.
+ */
+export function SetupWizard({ facilityId }: { facilityId: string }) {
+  const { data: state, isLoading } = useFacilitySetupState(facilityId);
+  const advance = useAdvanceSetupStep(facilityId);
+  const [error, setError] = useState<string | null>(null);
+
+  if (isLoading || !state) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  const toggle = (step: string, complete: boolean) => {
+    setError(null);
+    advance.mutate(
+      { step, complete },
+      {
+        onError: (e: unknown) => {
+          const msg =
+            (e as { body?: { error?: { message?: string } } })?.body?.error?.message ??
+            (e as Error)?.message ??
+            "Setup step could not be updated.";
+          setError(String(msg));
+        },
+      },
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      {error && (
+        <div className="flex items-start gap-2 rounded-md border border-danger/28 bg-danger-soft p-3 text-sm text-red-600">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* Department configuration */}
+      <DepartmentsStep facilityId={facilityId} state={state} onToggle={toggle} />
+
+      {/* Service-point configuration */}
+      <ServicePointsStep facilityId={facilityId} state={state} onToggle={toggle} />
+
+      {/* Remaining toggle-only steps */}
+      <div className="rounded-lg border border-border bg-card p-4">
+        <h3 className="mb-3 text-sm font-medium text-foreground">Operational configuration</h3>
+        <ul className="space-y-2">
+          {SETUP_STEPS.filter(
+            (s) =>
+              !["DEPARTMENTS", "SERVICE_POINTS", "GO_LIVE"].includes(s.key),
+          ).map((s) => {
+            const done = Boolean(state[s.flag]);
+            return (
+              <li key={s.key} className="flex items-center gap-3">
+                <button
+                  type="button"
+                  disabled={advance.isPending}
+                  onClick={() => toggle(s.key, !done)}
+                  className="flex items-center gap-2 text-sm disabled:opacity-50"
+                >
+                  {done ? (
+                    <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                  ) : (
+                    <Circle className="h-5 w-5 text-muted-foreground/50" />
+                  )}
+                  <span className={done ? "text-foreground" : "text-muted-foreground"}>
+                    {s.label}
+                  </span>
+                </button>
+                {s.key === "FUNDO_READINESS" && !done && (
+                  <span className="ml-auto text-[10px] uppercase tracking-wide text-amber-600">
+                    Confirm readiness
+                  </span>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+
+      {/* Go-live */}
+      <GoLiveStep state={state} onToggle={toggle} pending={advance.isPending} />
+    </div>
+  );
+}
+
+function StepCard({
+  title,
+  flag,
+  state,
+  stepKey,
+  onToggle,
+  children,
+}: {
+  title: string;
+  flag: keyof FacilitySetupStepState;
+  state: FacilitySetupStepState;
+  stepKey: string;
+  onToggle: (step: string, complete: boolean) => void;
+  children: React.ReactNode;
+}) {
+  const done = Boolean(state[flag]);
+  return (
+    <div className="rounded-lg border border-border bg-card p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="flex items-center gap-2 text-sm font-medium text-foreground">
+          {done ? (
+            <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+          ) : (
+            <Circle className="h-5 w-5 text-muted-foreground/50" />
+          )}
+          {title}
+        </h3>
+        <button
+          type="button"
+          onClick={() => onToggle(stepKey, !done)}
+          className="text-xs font-medium text-primary hover:underline"
+        >
+          {done ? "Mark incomplete" : "Mark complete"}
+        </button>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function DepartmentsStep({
+  facilityId,
+  state,
+  onToggle,
+}: {
+  facilityId: string;
+  state: FacilitySetupStepState;
+  onToggle: (step: string, complete: boolean) => void;
+}) {
+  const { data: units } = useFacilityUnits(facilityId);
+  const create = useCreateFacilityUnit(facilityId);
+  const [name, setName] = useState("");
+  const [serviceLine, setServiceLine] = useState("");
+
+  return (
+    <StepCard
+      title="Departments"
+      flag="departmentsConfigured"
+      stepKey="DEPARTMENTS"
+      state={state}
+      onToggle={onToggle}
+    >
+      <ul className="mb-3 space-y-1">
+        {(units ?? []).map((u) => (
+          <li key={u.id} className="flex items-center justify-between text-sm">
+            <span className="text-foreground">{u.name}</span>
+            <span className="text-xs text-muted-foreground">
+              {u.serviceLine ?? u.unitType}
+            </span>
+          </li>
+        ))}
+        {(units ?? []).length === 0 && (
+          <li className="text-xs text-muted-foreground">No departments yet.</li>
+        )}
+      </ul>
+      <div className="flex flex-wrap gap-2">
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Department name"
+          className="flex-1 rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+        />
+        <input
+          value={serviceLine}
+          onChange={(e) => setServiceLine(e.target.value)}
+          placeholder="Service line"
+          className="w-32 rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+        />
+        <button
+          type="button"
+          disabled={!name.trim() || create.isPending}
+          onClick={() =>
+            create.mutate(
+              { name: name.trim(), serviceLine: serviceLine.trim() || undefined },
+              { onSuccess: () => { setName(""); setServiceLine(""); } },
+            )
+          }
+          className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
+        >
+          <Plus className="h-4 w-4" /> Add
+        </button>
+      </div>
+    </StepCard>
+  );
+}
+
+function ServicePointsStep({
+  facilityId,
+  state,
+  onToggle,
+}: {
+  facilityId: string;
+  state: FacilitySetupStepState;
+  onToggle: (step: string, complete: boolean) => void;
+}) {
+  const { data: sps } = useServicePoints(facilityId);
+  const { data: units } = useFacilityUnits(facilityId);
+  const create = useCreateServicePoint(facilityId);
+  const [name, setName] = useState("");
+  const [unitId, setUnitId] = useState<string>("");
+
+  return (
+    <StepCard
+      title="Service points"
+      flag="servicePointsConfigured"
+      stepKey="SERVICE_POINTS"
+      state={state}
+      onToggle={onToggle}
+    >
+      <ul className="mb-3 space-y-1">
+        {(sps ?? []).map((sp) => (
+          <li key={sp.id} className="flex items-center justify-between text-sm">
+            <span className="text-foreground">{sp.name}</span>
+            <span className="text-xs text-muted-foreground">{sp.servicePointType}</span>
+          </li>
+        ))}
+        {(sps ?? []).length === 0 && (
+          <li className="text-xs text-muted-foreground">No service points yet.</li>
+        )}
+      </ul>
+      <div className="flex flex-wrap gap-2">
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Service point name"
+          className="flex-1 rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+        />
+        <select
+          value={unitId}
+          onChange={(e) => setUnitId(e.target.value)}
+          className="w-36 rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+        >
+          <option value="">No department</option>
+          {(units ?? []).map((u) => (
+            <option key={u.id} value={u.id}>
+              {u.name}
+            </option>
+          ))}
+        </select>
+        <button
+          type="button"
+          disabled={!name.trim() || create.isPending}
+          onClick={() =>
+            create.mutate(
+              {
+                name: name.trim(),
+                facilityUnitId: unitId ? Number(unitId) : undefined,
+              },
+              { onSuccess: () => setName("") },
+            )
+          }
+          className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
+        >
+          <Plus className="h-4 w-4" /> Add
+        </button>
+      </div>
+    </StepCard>
+  );
+}
+
+function GoLiveStep({
+  state,
+  onToggle,
+  pending,
+}: {
+  state: FacilitySetupStepState;
+  onToggle: (step: string, complete: boolean) => void;
+  pending: boolean;
+}) {
+  return (
+    <div
+      className={`rounded-lg border p-4 ${
+        state.goLive
+          ? "border-emerald-500/30 bg-emerald-500/10"
+          : "border-border bg-card"
+      }`}
+    >
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="flex items-center gap-2 text-sm font-medium text-foreground">
+            <Rocket className="h-4 w-4" /> Go live
+          </h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {state.goLive
+              ? "Facility is live."
+              : state.readyForGoLive
+                ? "All prerequisites complete. Ready to go live."
+                : `Next required step: ${state.nextStep ?? "—"}`}
+          </p>
+        </div>
+        <button
+          type="button"
+          disabled={pending || (!state.goLive && !state.readyForGoLive)}
+          onClick={() => onToggle("GO_LIVE", !state.goLive)}
+          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+        >
+          {state.goLive ? "Take offline" : "Go live"}
+        </button>
+      </div>
+    </div>
+  );
+}

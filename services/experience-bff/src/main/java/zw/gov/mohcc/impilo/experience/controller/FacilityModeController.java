@@ -134,6 +134,70 @@ public class FacilityModeController {
         }
     }
 
+    /** List facility units (departments) — TUSO SoR. */
+    @GetMapping("/{facilityId}/units")
+    public ResponseEntity<Map<String, Object>> listUnits(
+            @PathVariable long facilityId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode units = tusoClient.listFacilityUnits(facilityId);
+            return ResponseEntity.ok(Map.of("data", units, "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            return badGateway(requestId, correlationId, "FACILITY_UNITS_UNAVAILABLE",
+                    "Unable to load facility units from TUSO");
+        }
+    }
+
+    /** Create a facility unit (department) — TUSO SoR. */
+    @PostMapping("/{facilityId}/units")
+    public ResponseEntity<Map<String, Object>> createUnit(
+            @PathVariable long facilityId,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode unit = tusoClient.createFacilityUnit(facilityId, body);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(Map.of("data", unit, "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            return badGateway(requestId, correlationId, "FACILITY_UNIT_CREATE_FAILED",
+                    "Unable to create facility unit in TUSO");
+        }
+    }
+
+    /** List facility service points — TUSO SoR. */
+    @GetMapping("/{facilityId}/service-points")
+    public ResponseEntity<Map<String, Object>> listServicePoints(
+            @PathVariable long facilityId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode sps = tusoClient.listServicePoints(facilityId);
+            return ResponseEntity.ok(Map.of("data", sps, "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            return badGateway(requestId, correlationId, "SERVICE_POINTS_UNAVAILABLE",
+                    "Unable to load service points from TUSO");
+        }
+    }
+
+    /** Create a facility service point — TUSO SoR. */
+    @PostMapping("/{facilityId}/service-points")
+    public ResponseEntity<Map<String, Object>> createServicePoint(
+            @PathVariable long facilityId,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode sp = tusoClient.createServicePoint(facilityId, body);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(Map.of("data", sp, "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            return badGateway(requestId, correlationId, "SERVICE_POINT_CREATE_FAILED",
+                    "Unable to create service point in TUSO");
+        }
+    }
+
     private static Map<String, Object> meta(String requestId, String correlationId) {
         Map<String, Object> meta = new LinkedHashMap<>();
         meta.put("request_id", requestId);
