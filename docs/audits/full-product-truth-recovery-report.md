@@ -1,6 +1,6 @@
 # Full Product Truth Recovery Report
 
-> Generated: 2026-06-26T10:06:37.240Z
+> Generated: 2026-06-26T10:23:25.528Z
 > Branch: `intake/rito-quality-safety`
 
 ## Executive summary
@@ -11,7 +11,7 @@
 | Backend services | 93 |
 | Shared libraries | 12 |
 | Frontend surfaces (routes) | 627 |
-| Mobile screens | 174 |
+| Mobile screens | 178 |
 | BFF route handlers | 2210 |
 | OpenAPI contracts | 103 |
 | Services with DB persistence | 93 |

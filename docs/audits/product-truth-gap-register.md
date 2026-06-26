@@ -1,6 +1,6 @@
 # Product Truth — Gap Register
 
-> Generated: 2026-06-26T10:06:37.240Z
+> Generated: 2026-06-26T10:23:25.528Z
 > Total gaps: **6**
 
 ## Gap categories (A–R)

@@ -1,6 +1,6 @@
 # Product Truth — Backend-to-UI Traceability
 
-> Generated: 2026-06-26T10:06:37.240Z
+> Generated: 2026-06-26T10:23:25.528Z
 
 For each service: backend capabilities → API → BFF → UI → mobile → persistence.
 
@@ -157,7 +157,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 2 | Exposed via API/contracts? | Yes (contract: butano.custom.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (8 clients) |
 | 4 | Visible in UI? | Yes (32 refs) |
-| 5 | Visible on mobile? | Yes (18 refs) |
+| 5 | Visible on mobile? | Yes (20 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
 | 8 | UI without backend? | No |
@@ -582,7 +582,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 2 | Exposed via API/contracts? | Yes (contract: document-store.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (21 clients) |
 | 4 | Visible in UI? | Yes (150 refs) |
-| 5 | Visible on mobile? | Yes (118 refs) |
+| 5 | Visible on mobile? | Yes (120 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
 | 8 | UI without backend? | No |
@@ -608,7 +608,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 2 | Exposed via API/contracts? | Yes (contract: experience-bff.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (0 clients) |
 | 4 | Visible in UI? | Yes (162 refs) |
-| 5 | Visible on mobile? | Yes (54 refs) |
+| 5 | Visible on mobile? | Yes (58 refs) |
 | 6 | Fake/partial/disconnected? | Yes — review |
 | 7 | Backend without UI? | No |
 | 8 | UI without backend? | No |
@@ -1644,7 +1644,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 2 | Exposed via API/contracts? | Yes (contract: reporting.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (6 clients) |
 | 4 | Visible in UI? | Yes (38 refs) |
-| 5 | Visible on mobile? | Yes (3 refs) |
+| 5 | Visible on mobile? | Yes (5 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
 | 8 | UI without backend? | No |
@@ -1670,7 +1670,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 2 | Exposed via API/contracts? | Yes (contract: rito-quality-safety.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (3 clients) |
 | 4 | Visible in UI? | Yes (13 refs) |
-| 5 | Visible on mobile? | Yes (0 refs) |
+| 5 | Visible on mobile? | Yes (7 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
 | 8 | UI without backend? | No |
@@ -1748,7 +1748,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 2 | Exposed via API/contracts? | Yes (contract: scheduling.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (9 clients) |
 | 4 | Visible in UI? | Yes (57 refs) |
-| 5 | Visible on mobile? | Yes (104 refs) |
+| 5 | Visible on mobile? | Yes (106 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
 | 8 | UI without backend? | No |
@@ -1844,7 +1844,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 2 | Exposed via API/contracts? | Yes (contract: share-slip.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (1 clients) |
 | 4 | Visible in UI? | Yes (6 refs) |
-| 5 | Visible on mobile? | Yes (104 refs) |
+| 5 | Visible on mobile? | Yes (106 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
 | 8 | UI without backend? | No |

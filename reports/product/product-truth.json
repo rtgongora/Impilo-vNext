@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-26T10:06:37.240Z",
+  "generatedAt": "2026-06-26T10:23:25.528Z",
   "branch": "intake/rito-quality-safety",
   "registryDrift": {
     "unregisteredModules": [],
@@ -733,7 +733,7 @@
         "contractViolations": 0,
         "bffClients": 8,
         "uiReferences": 32,
-        "mobileReferences": 18,
+        "mobileReferences": 20,
         "tests": 4
       },
       "dimensions": {
@@ -788,11 +788,11 @@
         "citizen-app:apps/mobile/citizen-app/src/screens/NhumeTrackingScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/HealthTimelineScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/PersonalScreen.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/screens/rito/TrackFeedbackScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/social/CommunitiesScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/social/SocialFeedScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/social/TimelineComposer.tsx",
-        "citizen-app:apps/mobile/citizen-app/src/services/healthTimelineService.ts",
-        "citizen-app:apps/mobile/citizen-app/src/services/nhumeService.ts"
+        "citizen-app:apps/mobile/citizen-app/src/services/healthTimelineService.ts"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -2693,7 +2693,7 @@
         "contractViolations": 0,
         "bffClients": 21,
         "uiReferences": 150,
-        "mobileReferences": 118,
+        "mobileReferences": 120,
         "tests": 2
       },
       "dimensions": {
@@ -2838,7 +2838,7 @@
         "contractViolations": 0,
         "bffClients": 0,
         "uiReferences": 162,
-        "mobileReferences": 54,
+        "mobileReferences": 58,
         "tests": 161
       },
       "dimensions": {
@@ -2885,10 +2885,10 @@
         "citizen-app:apps/mobile/citizen-app/src/screens/marketplace/HealthOsAppsScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/RecordSharingScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/WalletSection.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/screens/rito/FeedbackScreen.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/screens/rito/TrackFeedbackScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/social/CommunitiesScreen.tsx",
-        "citizen-app:apps/mobile/citizen-app/src/screens/social/SocialFeedScreen.tsx",
-        "citizen-app:apps/mobile/citizen-app/src/services/appointmentService.ts",
-        "citizen-app:apps/mobile/citizen-app/src/services/cartService.ts"
+        "citizen-app:apps/mobile/citizen-app/src/screens/social/SocialFeedScreen.tsx"
       ],
       "mockStubHits": [
         {
@@ -7741,7 +7741,7 @@
         "contractViolations": 0,
         "bffClients": 6,
         "uiReferences": 38,
-        "mobileReferences": 3,
+        "mobileReferences": 5,
         "tests": 8
       },
       "dimensions": {
@@ -7791,6 +7791,8 @@
       "mobilePaths": [
         "provider-app:apps/mobile/provider-app/src/screens/provider/OpsReportsHubScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/SystemStatusScreen.tsx",
+        "provider-app:apps/mobile/provider-app/src/screens/rito/ReportSafetyScreen.tsx",
+        "provider-app:apps/mobile/provider-app/src/services/ritoSafetyService.ts",
         "packages:apps/mobile/packages/mobile-nompilo/src/nompiloClient.ts"
       ],
       "mockStubHits": [],
@@ -7864,7 +7866,7 @@
         "contractViolations": 0,
         "bffClients": 3,
         "uiReferences": 13,
-        "mobileReferences": 0,
+        "mobileReferences": 7,
         "tests": 6
       },
       "dimensions": {
@@ -7901,7 +7903,15 @@
         "ui/one-ui-shell/src/config/serviceBranding.ts",
         "ui/one-ui-shell/src/lib/routes.ts"
       ],
-      "mobilePaths": [],
+      "mobilePaths": [
+        "citizen-app:apps/mobile/citizen-app/src/screens/rito/FeedbackScreen.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/screens/rito/TrackFeedbackScreen.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/services/ritoFeedbackService.ts",
+        "citizen-app:apps/mobile/citizen-app/src/stores/appStore.ts",
+        "provider-app:apps/mobile/provider-app/src/screens/rito/MySafetyCasesScreen.tsx",
+        "provider-app:apps/mobile/provider-app/src/screens/rito/ReportSafetyScreen.tsx",
+        "provider-app:apps/mobile/provider-app/src/services/ritoSafetyService.ts"
+      ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
       "stubRouteCount": 0,
@@ -8231,7 +8241,7 @@
         "contractViolations": 0,
         "bffClients": 9,
         "uiReferences": 57,
-        "mobileReferences": 104,
+        "mobileReferences": 106,
         "tests": 1
       },
       "dimensions": {
@@ -8709,7 +8719,7 @@
         "contractViolations": 0,
         "bffClients": 1,
         "uiReferences": 6,
-        "mobileReferences": 104,
+        "mobileReferences": 106,
         "tests": 1
       },
       "dimensions": {
@@ -46989,6 +46999,20 @@
     },
     {
       "app": "citizen-app",
+      "screen": "apps/mobile/citizen-app/src/screens/rito/FeedbackScreen.tsx",
+      "bffPaths": [],
+      "mockStubHits": [],
+      "readsRealData": false
+    },
+    {
+      "app": "citizen-app",
+      "screen": "apps/mobile/citizen-app/src/screens/rito/TrackFeedbackScreen.tsx",
+      "bffPaths": [],
+      "mockStubHits": [],
+      "readsRealData": false
+    },
+    {
+      "app": "citizen-app",
       "screen": "apps/mobile/citizen-app/src/screens/social/ClubsScreen.tsx",
       "bffPaths": [],
       "mockStubHits": [],
@@ -47739,6 +47763,20 @@
           "pattern": "json-stringify-render"
         }
       ],
+      "readsRealData": false
+    },
+    {
+      "app": "provider-app",
+      "screen": "apps/mobile/provider-app/src/screens/rito/MySafetyCasesScreen.tsx",
+      "bffPaths": [],
+      "mockStubHits": [],
+      "readsRealData": false
+    },
+    {
+      "app": "provider-app",
+      "screen": "apps/mobile/provider-app/src/screens/rito/ReportSafetyScreen.tsx",
+      "bffPaths": [],
+      "mockStubHits": [],
       "readsRealData": false
     },
     {

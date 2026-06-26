@@ -1,7 +1,7 @@
 # Product Truth — Frontend-to-Backend Traceability
 
-> Generated: 2026-06-26T10:06:37.240Z
-> Web surfaces: **627** | Mobile screens: **174**
+> Generated: 2026-06-26T10:23:25.528Z
+> Web surfaces: **627** | Mobile screens: **178**
 
 ## Web routes (one-ui-shell)
 
@@ -580,6 +580,8 @@
 | citizen-app | apps/mobile/citizen-app/src/screens/personal/WalletSection.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/personal/WellnessSection.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/publicHealth/PublicHealthScreen.tsx | 0 | no |
+| citizen-app | apps/mobile/citizen-app/src/screens/rito/FeedbackScreen.tsx | 0 | no |
+| citizen-app | apps/mobile/citizen-app/src/screens/rito/TrackFeedbackScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/social/ClubsScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/social/CommunitiesScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/social/CrowdfundingScreen.tsx | 0 | no |
@@ -681,6 +683,8 @@
 | provider-app | apps/mobile/provider-app/src/screens/provider/VitalsPanel.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/WardAlertsScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/WorkflowDispatchOpsScreen.tsx | 0 | yes |
+| provider-app | apps/mobile/provider-app/src/screens/rito/MySafetyCasesScreen.tsx | 0 | no |
+| provider-app | apps/mobile/provider-app/src/screens/rito/ReportSafetyScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/supervisor/EscalationsScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/supervisor/InventoryScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/supervisor/StockScreen.tsx | 0 | no |
