@@ -1176,6 +1176,21 @@ public class PctServiceClient {
         return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
     }
 
+    /**
+     * Resolve a Cadre Engine decision (shared read-model C9). The Encounter Cockpit renders its adaptive spine
+     * strictly from {@code cockpitSpine}; disabled actions are never live buttons. PCT owns the decision and
+     * audits every resolution; the BFF only composes.
+     *
+     * @param request the C9 request (role/cadre/scope/visitType/acuity/context/accessState + optional
+     *                journeyId/encounterId correlations)
+     * @return the CadreDecision JSON (permittedWorkflows, cockpitSpine, escalation, auditRef)
+     */
+    public JsonNode resolveCadreDecision(Map<String, Object> request) {
+        String url = baseUrl + "/v1/cadre/decision";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, request, JsonNode.class);
+        return extractData(response);
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

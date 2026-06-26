@@ -54,6 +54,30 @@ public class EncounterController {
             @JsonProperty("pathway_ref") String pathwayRef,
             @JsonProperty("protocol_ref") String protocolRef) {}
 
+    /**
+     * Resolve the Cadre Engine decision (C9) that drives the adaptive Encounter Cockpit spine. PCT owns and
+     * audits the decision; the BFF composes only. The cockpit renders strictly from {@code cockpitSpine} —
+     * disabled actions are not rendered as live buttons.
+     */
+    @PostMapping("/cadre-decision")
+    public ResponseEntity<Map<String, Object>> cadreDecision(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            JsonNode data = pctClient.resolveCadreDecision(body == null ? Map.of() : body);
+            if (data == null) {
+                return upstreamFailure("PCT_UNAVAILABLE", "No cadre decision returned", requestId, correlationId);
+            }
+            return ResponseEntity.ok(Map.of(
+                    "data", data,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.warn("PCT cadre-decision failed: {}", e.getMessage());
+            return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
+    }
+
     @GetMapping
     public ResponseEntity<Map<String, Object>> listEncounters(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
