@@ -10,6 +10,7 @@ import zw.gov.mohcc.impilo.tshepo.keys.api.dto.IssueTokenRequest;
 import zw.gov.mohcc.impilo.tshepo.keys.api.dto.SignPayloadRequest;
 import zw.gov.mohcc.impilo.tshepo.keys.api.dto.SignPayloadResponse;
 import zw.gov.mohcc.impilo.tshepo.keys.core.Ed25519SigningService;
+import zw.gov.mohcc.impilo.tshepo.keys.core.KeyPurpose;
 import zw.gov.mohcc.impilo.tshepo.keys.core.TokenSigningService;
 import zw.gov.mohcc.impilo.tshepo.keys.persistence.entity.SigningKeyEntity;
 
@@ -39,26 +40,33 @@ public class SigningController {
     }
 
     /**
-     * POST /v1/sign — Sign a payload with the current active key.
+     * POST /v1/sign — Sign a payload with the tenant's active key for the requested
+     * {@link KeyPurpose} (GENERAL when {@code purpose} is null/blank).
      *
-     * <p>If {@code jwsCompact} is true, returns a full JWS compact serialization.
-     * Otherwise, returns a raw Base64url-encoded Ed25519 signature.</p>
+     * <p>If {@code jwsCompact} is true, returns a full JWS compact serialization;
+     * otherwise a raw Base64url-encoded Ed25519 signature. The returned {@code keyId}
+     * is the key actually used, so JWS verifiers can resolve it from the JWKS.</p>
+     *
+     * <p>Sensitive purposes are fail-closed: if no key is provisioned for the purpose,
+     * {@code getActiveKeyForPurpose} throws and the request fails rather than signing a
+     * trust-bearing artefact with an unauthorised general key.</p>
      */
     @PostMapping
     public ResponseEntity<SignPayloadResponse> signPayload(@Valid @RequestBody SignPayloadRequest request) {
-        SigningKeyEntity activeKey = signingService.getCurrentActiveKey(request.tenantId());
+        KeyPurpose purpose = KeyPurpose.fromString(request.purpose());
+        SigningKeyEntity key = signingService.getActiveKeyForPurpose(request.tenantId(), purpose);
         String signature;
 
         if (request.jwsCompact()) {
-            signature = signingService.signJws(request.tenantId(), request.payload());
+            signature = signingService.signJwsWithKey(key, request.payload());
         } else {
             byte[] payloadBytes = request.payload().getBytes(StandardCharsets.UTF_8);
-            signature = signingService.signPayload(request.tenantId(), payloadBytes);
+            signature = signingService.signPayloadWithKey(key, payloadBytes);
         }
 
         SignPayloadResponse response = new SignPayloadResponse(
-                activeKey.getKeyId(),
-                activeKey.getAlgorithm(),
+                key.getKeyId(),
+                key.getAlgorithm(),
                 signature
         );
 

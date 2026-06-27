@@ -36,6 +36,18 @@ public class SigningKeyEntity {
     @Column(name = "status", nullable = false, length = 16)
     private String status = "ACTIVE";
 
+    /** Canonical key purpose (see {@link zw.gov.mohcc.impilo.tshepo.keys.core.KeyPurpose}). */
+    @Column(name = "purpose", nullable = false, length = 32)
+    private String purpose = "GENERAL";
+
+    /** Human-friendly key alias for discovery/operations. */
+    @Column(name = "alias", length = 128)
+    private String alias;
+
+    /** Issuing trust authority / origin of the key (custody origin). */
+    @Column(name = "issuer", length = 128)
+    private String issuer;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -49,6 +61,9 @@ public class SigningKeyEntity {
     protected void onCreate() {
         if (createdAt == null) {
             createdAt = Instant.now();
+        }
+        if (purpose == null || purpose.isBlank()) {
+            purpose = "GENERAL";
         }
     }
 
@@ -74,6 +89,15 @@ public class SigningKeyEntity {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public String getPurpose() { return purpose; }
+    public void setPurpose(String purpose) { this.purpose = purpose; }
+
+    public String getAlias() { return alias; }
+    public void setAlias(String alias) { this.alias = alias; }
+
+    public String getIssuer() { return issuer; }
+    public void setIssuer(String issuer) { this.issuer = issuer; }
 
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }

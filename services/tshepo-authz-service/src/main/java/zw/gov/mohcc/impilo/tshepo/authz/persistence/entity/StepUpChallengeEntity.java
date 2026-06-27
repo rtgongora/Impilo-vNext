@@ -31,8 +31,35 @@ public class StepUpChallengeEntity {
     @Column(name = "challenge_type", nullable = false, length = 32)
     private String challengeType;
 
+    /** Verification mode (TOTP / SMS_OTP / BIOMETRIC / SUPERVISOR_APPROVAL). */
+    @Column(name = "mode", length = 32)
+    private String mode;
+
     @Column(nullable = false, length = 16)
     private String status = "PENDING";
+
+    /** Hashed verification secret (e.g. SHA-256 of an issued SMS OTP); never the raw code. */
+    @Column(name = "verification_secret_hash", length = 128)
+    private String verificationSecretHash;
+
+    @Column(name = "purpose", length = 64)
+    private String purpose;
+
+    @Column(name = "requested_action", length = 255)
+    private String requestedAction;
+
+    @Column(name = "risk_level", length = 16)
+    private String riskLevel;
+
+    @Column(name = "attempt_count", nullable = false)
+    private int attemptCount = 0;
+
+    /** Authorised supervisor principal that approved a SUPERVISOR_APPROVAL challenge. */
+    @Column(name = "approved_by", length = 255)
+    private String approvedBy;
+
+    @Column(name = "audit_metadata", columnDefinition = "TEXT")
+    private String auditMetadata;
 
     @Column(name = "issued_at", nullable = false)
     private Instant issuedAt;
@@ -69,6 +96,30 @@ public class StepUpChallengeEntity {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public String getMode() { return mode; }
+    public void setMode(String mode) { this.mode = mode; }
+
+    public String getVerificationSecretHash() { return verificationSecretHash; }
+    public void setVerificationSecretHash(String verificationSecretHash) { this.verificationSecretHash = verificationSecretHash; }
+
+    public String getPurpose() { return purpose; }
+    public void setPurpose(String purpose) { this.purpose = purpose; }
+
+    public String getRequestedAction() { return requestedAction; }
+    public void setRequestedAction(String requestedAction) { this.requestedAction = requestedAction; }
+
+    public String getRiskLevel() { return riskLevel; }
+    public void setRiskLevel(String riskLevel) { this.riskLevel = riskLevel; }
+
+    public int getAttemptCount() { return attemptCount; }
+    public void setAttemptCount(int attemptCount) { this.attemptCount = attemptCount; }
+
+    public String getApprovedBy() { return approvedBy; }
+    public void setApprovedBy(String approvedBy) { this.approvedBy = approvedBy; }
+
+    public String getAuditMetadata() { return auditMetadata; }
+    public void setAuditMetadata(String auditMetadata) { this.auditMetadata = auditMetadata; }
 
     public Instant getIssuedAt() { return issuedAt; }
     public void setIssuedAt(Instant issuedAt) { this.issuedAt = issuedAt; }

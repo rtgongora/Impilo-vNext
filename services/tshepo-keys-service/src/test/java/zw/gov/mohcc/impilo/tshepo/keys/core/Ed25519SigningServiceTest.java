@@ -111,6 +111,37 @@ class Ed25519SigningServiceTest {
         assertThat(result).isTrue();
     }
 
+    // ------------------------------------------------------------------
+    // B0-lite: purpose-scoped, fail-closed key lookup
+    // ------------------------------------------------------------------
+
+    @Test
+    @DisplayName("getActiveKeyForPurpose returns the purpose-scoped active key")
+    void getActiveKeyForPurpose_returnsScopedKey() {
+        SigningKeyEntity entity = new SigningKeyEntity();
+        entity.setKeyId("kid-offline");
+        entity.setPurpose("OFFLINE_CAPABILITY");
+        when(signingKeyRepository.findActiveKeysByTenantAndPurpose(TENANT_ID, "OFFLINE_CAPABILITY"))
+                .thenReturn(List.of(entity));
+
+        SigningKeyEntity result = signingService.getActiveKeyForPurpose(TENANT_ID, KeyPurpose.OFFLINE_CAPABILITY);
+
+        assertThat(result.getKeyId()).isEqualTo("kid-offline");
+    }
+
+    @Test
+    @DisplayName("getActiveKeyForPurpose fails closed for a sensitive purpose with no provisioned key")
+    void getActiveKeyForPurpose_sensitivePurposeNoKey_failsClosed() {
+        when(signingKeyRepository.findActiveKeysByTenantAndPurpose(TENANT_ID, "PERMIT"))
+                .thenReturn(List.of());
+
+        assertThatThrownBy(() -> signingService.getActiveKeyForPurpose(TENANT_ID, KeyPurpose.PERMIT))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("fail-closed");
+        // it must NOT silently mint a key for a sensitive purpose
+        verify(signingKeyRepository, never()).save(any());
+    }
+
     @Test
     @DisplayName("verify with tampered data returns false")
     void verify_withTamperedData_returnsFalse() {

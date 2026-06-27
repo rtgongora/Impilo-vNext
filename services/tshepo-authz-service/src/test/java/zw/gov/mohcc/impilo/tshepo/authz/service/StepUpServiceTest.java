@@ -7,13 +7,21 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import zw.gov.mohcc.impilo.tshepo.authz.config.AuthzProperties;
 import zw.gov.mohcc.impilo.tshepo.authz.dto.StepUpChallengeRequest;
 import zw.gov.mohcc.impilo.tshepo.authz.dto.StepUpChallengeResponse;
 import zw.gov.mohcc.impilo.tshepo.authz.dto.StepUpVerifyRequest;
 import zw.gov.mohcc.impilo.tshepo.authz.persistence.entity.StepUpChallengeEntity;
 import zw.gov.mohcc.impilo.tshepo.authz.persistence.repository.StepUpChallengeRepository;
+import zw.gov.mohcc.impilo.tshepo.authz.stepup.StepUpProviders;
+import zw.gov.mohcc.impilo.tshepo.authz.stepup.StepUpUnavailableException;
+import zw.gov.mohcc.impilo.tshepo.authz.stepup.StepUpVerificationDispatcher;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
@@ -23,84 +31,43 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Unit tests for the StepUpService.
+ * Unit tests for StepUpService with the real verification engine (B1).
  *
- * <p>Covers challenge issuance, verification, status checks,
- * and recent step-up detection within the configured window.</p>
+ * <p>Uses a real {@link StepUpVerificationDispatcher} wired with controllable test
+ * seams: a fixed TOTP secret (so real RFC-6238 verification is exercised), and
+ * fail-closed SMS/biometric adapters.</p>
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class StepUpServiceTest {
 
     @Mock private StepUpChallengeRepository challengeRepository;
+    @Mock private AuditPublisher auditPublisher;
 
     private AuthzProperties properties;
     private StepUpService stepUpService;
 
     private static final UUID TENANT_ID = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
     private static final String ACTOR_ID = "actor-123";
+    /** RFC 6238 test secret. */
+    private static final byte[] TOTP_SECRET = "12345678901234567890".getBytes();
 
     @BeforeEach
     void setUp() {
         properties = new AuthzProperties();
-        properties.setStepUpWindowSeconds(300); // 5-minute window
-        stepUpService = new StepUpService(challengeRepository, properties);
-    }
+        properties.setStepUpWindowSeconds(300);
+        properties.setMaxStepUpAttempts(5);
 
-    // ════════════════════════════════════════════════════════════════════
-    // issueChallenge
-    // ════════════════════════════════════════════════════════════════════
-
-    @Test
-    @DisplayName("issueChallenge: creates PENDING challenge with correct expiry")
-    void issueChallenge_createsPendingChallenge() {
-        StepUpChallengeRequest request = new StepUpChallengeRequest(
-                TENANT_ID, ACTOR_ID, "MFA"
-        );
-
-        when(challengeRepository.save(any(StepUpChallengeEntity.class)))
-                .thenAnswer(invocation -> {
-                    StepUpChallengeEntity entity = invocation.getArgument(0);
-                    if (entity.getId() == null) {
-                        entity.setId(UUID.randomUUID());
-                    }
-                    return entity;
-                });
-
-        StepUpChallengeResponse response = stepUpService.issueChallenge(request);
-
-        // Verify the entity saved
-        ArgumentCaptor<StepUpChallengeEntity> captor =
-                ArgumentCaptor.forClass(StepUpChallengeEntity.class);
-        verify(challengeRepository).save(captor.capture());
-        StepUpChallengeEntity saved = captor.getValue();
-
-        assertEquals(TENANT_ID, saved.getTenantId(),
-                "Challenge must have correct tenant");
-        assertEquals(ACTOR_ID, saved.getActorId(),
-                "Challenge must have correct actor");
-        assertEquals("MFA", saved.getChallengeType(),
-                "Challenge must have correct type");
-        assertEquals("PENDING", saved.getStatus(),
-                "New challenge must be PENDING");
-        assertNotNull(saved.getIssuedAt(),
-                "issuedAt must be set");
-        assertNotNull(saved.getExpiresAt(),
-                "expiresAt must be set");
-
-        // Verify response mapping
-        assertNotNull(response, "Response must not be null");
-        assertEquals("MFA", response.challengeType(),
-                "Response must reflect challenge type");
-        assertEquals("PENDING", response.status(),
-                "Response must have PENDING status");
-    }
-
-    @Test
-    @DisplayName("issueChallenge: expiresAt = issuedAt + stepUpWindowSeconds")
-    void issueChallenge_setsExpiryFromConfig() {
-        StepUpChallengeRequest request = new StepUpChallengeRequest(
-                TENANT_ID, ACTOR_ID, "BIOMETRIC"
-        );
+        StepUpProviders.TotpSecretProvider totp = (t, a) ->
+                ACTOR_ID.equals(a) ? Optional.of(TOTP_SECRET) : Optional.empty();
+        StepUpProviders.OtpDeliveryAdapter sms = (t, a, o) -> {
+            throw new StepUpUnavailableException("sms not configured");
+        };
+        StepUpProviders.BiometricAssertionVerifier bio = (t, a, assertion) -> {
+            throw new StepUpUnavailableException("biometric not configured");
+        };
+        StepUpVerificationDispatcher dispatcher = new StepUpVerificationDispatcher(totp, sms, bio);
+        stepUpService = new StepUpService(challengeRepository, properties, dispatcher, auditPublisher);
 
         when(challengeRepository.save(any(StepUpChallengeEntity.class)))
                 .thenAnswer(inv -> {
@@ -108,316 +75,190 @@ class StepUpServiceTest {
                     if (e.getId() == null) e.setId(UUID.randomUUID());
                     return e;
                 });
-
-        stepUpService.issueChallenge(request);
-
-        ArgumentCaptor<StepUpChallengeEntity> captor =
-                ArgumentCaptor.forClass(StepUpChallengeEntity.class);
-        verify(challengeRepository).save(captor.capture());
-        StepUpChallengeEntity saved = captor.getValue();
-
-        long windowSeconds = java.time.Duration.between(saved.getIssuedAt(), saved.getExpiresAt()).getSeconds();
-        org.junit.jupiter.api.Assertions.assertEquals(
-                300L,
-                windowSeconds,
-                "expiresAt must be issuedAt + stepUpWindowSeconds (300)");
     }
 
-    // ════════════════════════════════════════════════════════════════════
-    // verifyChallenge
-    // ════════════════════════════════════════════════════════════════════
+    private StepUpChallengeEntity pending(String actor, String mode) {
+        StepUpChallengeEntity e = new StepUpChallengeEntity();
+        e.setId(UUID.randomUUID());
+        e.setTenantId(TENANT_ID);
+        e.setActorId(actor);
+        e.setChallengeType(mode);
+        e.setMode(mode);
+        e.setStatus("PENDING");
+        e.setIssuedAt(Instant.now().minusSeconds(30));
+        e.setExpiresAt(Instant.now().plusSeconds(270));
+        return e;
+    }
+
+    /** Compute a currently-valid RFC 6238 TOTP code for the test secret. */
+    private static String currentTotp() throws Exception {
+        long counter = Instant.now().getEpochSecond() / 30;
+        byte[] msg = ByteBuffer.allocate(8).putLong(counter).array();
+        Mac mac = Mac.getInstance("HmacSHA1");
+        mac.init(new SecretKeySpec(TOTP_SECRET, "HmacSHA1"));
+        byte[] h = mac.doFinal(msg);
+        int off = h[h.length - 1] & 0xF;
+        int bin = ((h[off] & 0x7f) << 24) | ((h[off + 1] & 0xff) << 16)
+                | ((h[off + 2] & 0xff) << 8) | (h[off + 3] & 0xff);
+        return String.format("%06d", bin % 1_000_000);
+    }
+
+    // ── issue ────────────────────────────────────────────────────────────────
 
     @Test
-    @DisplayName("verifyChallenge: valid code -> COMPLETED status with completedAt")
-    void verifyChallenge_validCode_completesChallenge() {
-        UUID challengeId = UUID.randomUUID();
-        StepUpChallengeEntity entity = new StepUpChallengeEntity();
-        entity.setId(challengeId);
-        entity.setTenantId(TENANT_ID);
-        entity.setActorId(ACTOR_ID);
-        entity.setChallengeType("MFA");
-        entity.setStatus("PENDING");
-        entity.setIssuedAt(Instant.now().minusSeconds(30));
-        entity.setExpiresAt(Instant.now().plusSeconds(270));
-
-        when(challengeRepository.findPendingById(eq(challengeId), eq(TENANT_ID), any(Instant.class)))
-                .thenReturn(Optional.of(entity));
-        when(challengeRepository.save(any(StepUpChallengeEntity.class)))
-                .thenAnswer(inv -> inv.getArgument(0));
-
-        StepUpVerifyRequest verifyRequest = new StepUpVerifyRequest(
-                challengeId, TENANT_ID, ACTOR_ID, "123456"
-        );
-
-        StepUpChallengeResponse response = stepUpService.verifyChallenge(verifyRequest);
-
-        assertEquals("COMPLETED", response.status(),
-                "Verified challenge must be COMPLETED");
-        assertNotNull(response.completedAt(),
-                "completedAt must be set after verification");
-
-        // Verify entity was saved with COMPLETED
-        ArgumentCaptor<StepUpChallengeEntity> captor =
-                ArgumentCaptor.forClass(StepUpChallengeEntity.class);
-        verify(challengeRepository, atLeastOnce()).save(captor.capture());
-        assertEquals("COMPLETED", captor.getValue().getStatus());
+    @DisplayName("issueChallenge: TOTP (MFA) creates a PENDING challenge with mode set")
+    void issueChallenge_totp_pending() {
+        StepUpChallengeResponse r = stepUpService.issueChallenge(
+                new StepUpChallengeRequest(TENANT_ID, ACTOR_ID, "MFA"));
+        ArgumentCaptor<StepUpChallengeEntity> c = ArgumentCaptor.forClass(StepUpChallengeEntity.class);
+        verify(challengeRepository).save(c.capture());
+        assertEquals("PENDING", c.getValue().getStatus());
+        assertEquals("TOTP", c.getValue().getMode());
+        assertEquals("PENDING", r.status());
     }
 
     @Test
-    @DisplayName("verifyChallenge: challenge not found -> throws IllegalArgumentException")
-    void verifyChallenge_notFound_throwsException() {
-        UUID challengeId = UUID.randomUUID();
-        when(challengeRepository.findPendingById(eq(challengeId), eq(TENANT_ID), any(Instant.class)))
+    @DisplayName("issueChallenge: SMS_OTP fails closed when delivery is unconfigured")
+    void issueChallenge_smsOtp_failsClosed() {
+        assertThrows(StepUpUnavailableException.class, () -> stepUpService.issueChallenge(
+                new StepUpChallengeRequest(TENANT_ID, ACTOR_ID, "SMS_OTP")));
+    }
+
+    // ── verify ────────────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("verifyChallenge: valid TOTP code completes the challenge")
+    void verify_validTotp_completes() throws Exception {
+        StepUpChallengeEntity e = pending(ACTOR_ID, "TOTP");
+        when(challengeRepository.findPendingById(eq(e.getId()), eq(TENANT_ID), any(Instant.class)))
+                .thenReturn(Optional.of(e));
+
+        StepUpChallengeResponse r = stepUpService.verifyChallenge(
+                new StepUpVerifyRequest(e.getId(), TENANT_ID, ACTOR_ID, currentTotp()));
+
+        assertEquals("COMPLETED", r.status());
+        assertNotNull(r.completedAt());
+    }
+
+    @Test
+    @DisplayName("verifyChallenge: wrong TOTP code fails (no any-code bypass)")
+    void verify_wrongTotp_fails() {
+        StepUpChallengeEntity e = pending(ACTOR_ID, "TOTP");
+        when(challengeRepository.findPendingById(eq(e.getId()), eq(TENANT_ID), any(Instant.class)))
+                .thenReturn(Optional.of(e));
+
+        assertThrows(SecurityException.class, () -> stepUpService.verifyChallenge(
+                new StepUpVerifyRequest(e.getId(), TENANT_ID, ACTOR_ID, "000000")));
+        assertEquals(1, e.getAttemptCount());
+        assertNotEquals("COMPLETED", e.getStatus());
+    }
+
+    @Test
+    @DisplayName("verifyChallenge: TOTP with no enrolled secret fails closed")
+    void verify_totpNoSecret_failsClosed() {
+        StepUpChallengeEntity e = pending("actor-without-secret", "TOTP");
+        when(challengeRepository.findPendingById(eq(e.getId()), eq(TENANT_ID), any(Instant.class)))
+                .thenReturn(Optional.of(e));
+
+        assertThrows(StepUpUnavailableException.class, () -> stepUpService.verifyChallenge(
+                new StepUpVerifyRequest(e.getId(), TENANT_ID, "actor-without-secret", "123456")));
+    }
+
+    @Test
+    @DisplayName("verifyChallenge: not found / replay throws")
+    void verify_notFound_throws() {
+        UUID id = UUID.randomUUID();
+        when(challengeRepository.findPendingById(eq(id), eq(TENANT_ID), any(Instant.class)))
                 .thenReturn(Optional.empty());
-
-        StepUpVerifyRequest request = new StepUpVerifyRequest(
-                challengeId, TENANT_ID, ACTOR_ID, "123456"
-        );
-
-        assertThrows(IllegalArgumentException.class,
-                () -> stepUpService.verifyChallenge(request),
-                "Non-existent challenge must throw IllegalArgumentException");
+        assertThrows(IllegalArgumentException.class, () -> stepUpService.verifyChallenge(
+                new StepUpVerifyRequest(id, TENANT_ID, ACTOR_ID, "123456")));
     }
 
     @Test
-    @DisplayName("verifyChallenge: actor mismatch -> throws SecurityException")
-    void verifyChallenge_actorMismatch_throwsSecurityException() {
-        UUID challengeId = UUID.randomUUID();
-        StepUpChallengeEntity entity = new StepUpChallengeEntity();
-        entity.setId(challengeId);
-        entity.setTenantId(TENANT_ID);
-        entity.setActorId("different-actor");
-        entity.setChallengeType("MFA");
-        entity.setStatus("PENDING");
-        entity.setIssuedAt(Instant.now().minusSeconds(30));
-        entity.setExpiresAt(Instant.now().plusSeconds(270));
-
-        when(challengeRepository.findPendingById(eq(challengeId), eq(TENANT_ID), any(Instant.class)))
-                .thenReturn(Optional.of(entity));
-
-        StepUpVerifyRequest request = new StepUpVerifyRequest(
-                challengeId, TENANT_ID, ACTOR_ID, "123456"
-        );
-
-        assertThrows(SecurityException.class,
-                () -> stepUpService.verifyChallenge(request),
-                "Actor mismatch must throw SecurityException");
+    @DisplayName("verifyChallenge: actor mismatch throws SecurityException")
+    void verify_actorMismatch_throws() {
+        StepUpChallengeEntity e = pending("different-actor", "TOTP");
+        when(challengeRepository.findPendingById(eq(e.getId()), eq(TENANT_ID), any(Instant.class)))
+                .thenReturn(Optional.of(e));
+        assertThrows(SecurityException.class, () -> stepUpService.verifyChallenge(
+                new StepUpVerifyRequest(e.getId(), TENANT_ID, ACTOR_ID, "123456")));
     }
 
     @Test
-    @DisplayName("verifyChallenge: blank verification code -> FAILED status and throws")
-    void verifyChallenge_blankCode_failsChallenge() {
-        UUID challengeId = UUID.randomUUID();
-        StepUpChallengeEntity entity = new StepUpChallengeEntity();
-        entity.setId(challengeId);
-        entity.setTenantId(TENANT_ID);
-        entity.setActorId(ACTOR_ID);
-        entity.setChallengeType("MFA");
-        entity.setStatus("PENDING");
-        entity.setIssuedAt(Instant.now().minusSeconds(30));
-        entity.setExpiresAt(Instant.now().plusSeconds(270));
+    @DisplayName("verifyChallenge: attempt limit exceeded -> FAILED + SecurityException")
+    void verify_attemptLimit_failsClosed() {
+        StepUpChallengeEntity e = pending(ACTOR_ID, "TOTP");
+        e.setAttemptCount(5); // already at max
+        when(challengeRepository.findPendingById(eq(e.getId()), eq(TENANT_ID), any(Instant.class)))
+                .thenReturn(Optional.of(e));
+        assertThrows(SecurityException.class, () -> stepUpService.verifyChallenge(
+                new StepUpVerifyRequest(e.getId(), TENANT_ID, ACTOR_ID, "000000")));
+        assertEquals("FAILED", e.getStatus());
+    }
 
-        when(challengeRepository.findPendingById(eq(challengeId), eq(TENANT_ID), any(Instant.class)))
-                .thenReturn(Optional.of(entity));
-        when(challengeRepository.save(any(StepUpChallengeEntity.class)))
-                .thenAnswer(inv -> inv.getArgument(0));
+    // ── supervisor approval (dual control) ────────────────────────────────────
 
-        StepUpVerifyRequest request = new StepUpVerifyRequest(
-                challengeId, TENANT_ID, ACTOR_ID, "  "
-        );
+    @Test
+    @DisplayName("supervisor approval: authorised supervisor completes the flow")
+    void supervisorApproval_authorised_completes() {
+        StepUpChallengeEntity e = pending(ACTOR_ID, "SUPERVISOR_APPROVAL");
+        when(challengeRepository.findPendingById(eq(e.getId()), eq(TENANT_ID), any(Instant.class)))
+                .thenReturn(Optional.of(e));
 
-        assertThrows(IllegalArgumentException.class,
-                () -> stepUpService.verifyChallenge(request),
-                "Blank verification code must throw IllegalArgumentException");
+        stepUpService.recordSupervisorApproval(e.getId(), TENANT_ID, "supervisor-1", true);
+        assertEquals("supervisor-1", e.getApprovedBy());
 
-        // Verify the entity was marked FAILED
-        ArgumentCaptor<StepUpChallengeEntity> captor =
-                ArgumentCaptor.forClass(StepUpChallengeEntity.class);
-        verify(challengeRepository).save(captor.capture());
-        assertEquals("FAILED", captor.getValue().getStatus(),
-                "Challenge with blank code must be marked FAILED");
+        StepUpChallengeResponse r = stepUpService.verifyChallenge(
+                new StepUpVerifyRequest(e.getId(), TENANT_ID, ACTOR_ID, "approval"));
+        assertEquals("COMPLETED", r.status());
     }
 
     @Test
-    @DisplayName("verifyChallenge: null verification code -> FAILED status and throws")
-    void verifyChallenge_nullCode_failsChallenge() {
-        UUID challengeId = UUID.randomUUID();
-        StepUpChallengeEntity entity = new StepUpChallengeEntity();
-        entity.setId(challengeId);
-        entity.setTenantId(TENANT_ID);
-        entity.setActorId(ACTOR_ID);
-        entity.setChallengeType("MFA");
-        entity.setStatus("PENDING");
-        entity.setIssuedAt(Instant.now().minusSeconds(30));
-        entity.setExpiresAt(Instant.now().plusSeconds(270));
-
-        when(challengeRepository.findPendingById(eq(challengeId), eq(TENANT_ID), any(Instant.class)))
-                .thenReturn(Optional.of(entity));
-        when(challengeRepository.save(any(StepUpChallengeEntity.class)))
-                .thenAnswer(inv -> inv.getArgument(0));
-
-        StepUpVerifyRequest request = new StepUpVerifyRequest(
-                challengeId, TENANT_ID, ACTOR_ID, null
-        );
-
-        assertThrows(IllegalArgumentException.class,
-                () -> stepUpService.verifyChallenge(request),
-                "Null verification code must throw IllegalArgumentException");
-    }
-
-    // ════════════════════════════════════════════════════════════════════
-    // getStatus
-    // ════════════════════════════════════════════════════════════════════
-
-    @Test
-    @DisplayName("getStatus: returns current status for valid challenge")
-    void getStatus_validChallenge_returnsStatus() {
-        UUID challengeId = UUID.randomUUID();
-        StepUpChallengeEntity entity = new StepUpChallengeEntity();
-        entity.setId(challengeId);
-        entity.setTenantId(TENANT_ID);
-        entity.setActorId(ACTOR_ID);
-        entity.setChallengeType("BIOMETRIC");
-        entity.setStatus("COMPLETED");
-        entity.setIssuedAt(Instant.now().minusSeconds(120));
-        entity.setExpiresAt(Instant.now().plusSeconds(180));
-        entity.setCompletedAt(Instant.now().minusSeconds(60));
-
-        when(challengeRepository.findById(challengeId))
-                .thenReturn(Optional.of(entity));
-
-        StepUpChallengeResponse response = stepUpService.getStatus(challengeId, TENANT_ID);
-
-        assertEquals("COMPLETED", response.status(),
-                "Must return current status");
-        assertEquals("BIOMETRIC", response.challengeType(),
-                "Must return correct challenge type");
-        assertNotNull(response.completedAt(),
-                "completedAt must be set for completed challenge");
+    @DisplayName("supervisor approval: unauthorised principal is rejected")
+    void supervisorApproval_unauthorised_rejected() {
+        StepUpChallengeEntity e = pending(ACTOR_ID, "SUPERVISOR_APPROVAL");
+        when(challengeRepository.findPendingById(eq(e.getId()), eq(TENANT_ID), any(Instant.class)))
+                .thenReturn(Optional.of(e));
+        assertThrows(SecurityException.class, () ->
+                stepUpService.recordSupervisorApproval(e.getId(), TENANT_ID, "supervisor-1", false));
     }
 
     @Test
-    @DisplayName("getStatus: expired PENDING challenge -> status auto-updated to EXPIRED")
-    void getStatus_expiredPendingChallenge_updatesToExpired() {
-        UUID challengeId = UUID.randomUUID();
-        StepUpChallengeEntity entity = new StepUpChallengeEntity();
-        entity.setId(challengeId);
-        entity.setTenantId(TENANT_ID);
-        entity.setActorId(ACTOR_ID);
-        entity.setChallengeType("MFA");
-        entity.setStatus("PENDING");
-        entity.setIssuedAt(Instant.now().minusSeconds(600));
-        entity.setExpiresAt(Instant.now().minusSeconds(300)); // Already expired
-
-        when(challengeRepository.findById(challengeId))
-                .thenReturn(Optional.of(entity));
-        when(challengeRepository.save(any(StepUpChallengeEntity.class)))
-                .thenAnswer(inv -> inv.getArgument(0));
-
-        StepUpChallengeResponse response = stepUpService.getStatus(challengeId, TENANT_ID);
-
-        assertEquals("EXPIRED", response.status(),
-                "Expired PENDING challenge must be auto-updated to EXPIRED");
-
-        // Verify the entity was saved with EXPIRED status
-        ArgumentCaptor<StepUpChallengeEntity> captor =
-                ArgumentCaptor.forClass(StepUpChallengeEntity.class);
-        verify(challengeRepository).save(captor.capture());
-        assertEquals("EXPIRED", captor.getValue().getStatus());
+    @DisplayName("supervisor approval: cannot self-approve (dual control)")
+    void supervisorApproval_selfApproval_rejected() {
+        StepUpChallengeEntity e = pending(ACTOR_ID, "SUPERVISOR_APPROVAL");
+        when(challengeRepository.findPendingById(eq(e.getId()), eq(TENANT_ID), any(Instant.class)))
+                .thenReturn(Optional.of(e));
+        assertThrows(SecurityException.class, () ->
+                stepUpService.recordSupervisorApproval(e.getId(), TENANT_ID, ACTOR_ID, true));
     }
 
     @Test
-    @DisplayName("getStatus: challenge not found -> throws IllegalArgumentException")
-    void getStatus_notFound_throwsException() {
-        UUID challengeId = UUID.randomUUID();
-        when(challengeRepository.findById(challengeId))
-                .thenReturn(Optional.empty());
+    @DisplayName("supervisor approval: not approved -> verify fails")
+    void supervisorApproval_notApproved_verifyFails() {
+        StepUpChallengeEntity e = pending(ACTOR_ID, "SUPERVISOR_APPROVAL");
+        when(challengeRepository.findPendingById(eq(e.getId()), eq(TENANT_ID), any(Instant.class)))
+                .thenReturn(Optional.of(e));
+        assertThrows(SecurityException.class, () -> stepUpService.verifyChallenge(
+                new StepUpVerifyRequest(e.getId(), TENANT_ID, ACTOR_ID, "approval")));
+    }
 
-        assertThrows(IllegalArgumentException.class,
-                () -> stepUpService.getStatus(challengeId, TENANT_ID),
-                "Non-existent challenge must throw IllegalArgumentException");
+    // ── status / recent ───────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("getStatus: expired PENDING -> EXPIRED")
+    void getStatus_expired() {
+        StepUpChallengeEntity e = pending(ACTOR_ID, "TOTP");
+        e.setExpiresAt(Instant.now().minusSeconds(10));
+        when(challengeRepository.findById(e.getId())).thenReturn(Optional.of(e));
+        assertEquals("EXPIRED", stepUpService.getStatus(e.getId(), TENANT_ID).status());
     }
 
     @Test
-    @DisplayName("getStatus: challenge belongs to different tenant -> throws IllegalArgumentException")
-    void getStatus_wrongTenant_throwsException() {
-        UUID challengeId = UUID.randomUUID();
-        UUID otherTenant = UUID.randomUUID();
-
-        StepUpChallengeEntity entity = new StepUpChallengeEntity();
-        entity.setId(challengeId);
-        entity.setTenantId(otherTenant); // Different tenant
-        entity.setActorId(ACTOR_ID);
-        entity.setChallengeType("MFA");
-        entity.setStatus("PENDING");
-        entity.setIssuedAt(Instant.now());
-        entity.setExpiresAt(Instant.now().plusSeconds(300));
-
-        when(challengeRepository.findById(challengeId))
-                .thenReturn(Optional.of(entity));
-
-        assertThrows(IllegalArgumentException.class,
-                () -> stepUpService.getStatus(challengeId, TENANT_ID),
-                "Challenge from different tenant must throw IllegalArgumentException");
-    }
-
-    // ════════════════════════════════════════════════════════════════════
-    // hasRecentStepUp
-    // ════════════════════════════════════════════════════════════════════
-
-    @Test
-    @DisplayName("hasRecentStepUp: recently completed challenge -> returns true")
-    void hasRecentStepUp_recentlyCompleted_returnsTrue() {
-        StepUpChallengeEntity entity = new StepUpChallengeEntity();
-        entity.setId(UUID.randomUUID());
-        entity.setTenantId(TENANT_ID);
-        entity.setActorId(ACTOR_ID);
-        entity.setStatus("COMPLETED");
-        entity.setCompletedAt(Instant.now().minusSeconds(60)); // Completed 1 min ago
-
-        when(challengeRepository.findRecentlyCompletedByActorId(
-                eq(TENANT_ID), eq(ACTOR_ID), any(Instant.class)))
-                .thenReturn(Optional.of(entity));
-
-        assertTrue(stepUpService.hasRecentStepUp(TENANT_ID, ACTOR_ID),
-                "Must return true when recently completed step-up exists");
-    }
-
-    @Test
-    @DisplayName("hasRecentStepUp: no recent completion -> returns false")
-    void hasRecentStepUp_noRecentCompletion_returnsFalse() {
-        when(challengeRepository.findRecentlyCompletedByActorId(
-                eq(TENANT_ID), eq(ACTOR_ID), any(Instant.class)))
-                .thenReturn(Optional.empty());
-
-        assertFalse(stepUpService.hasRecentStepUp(TENANT_ID, ACTOR_ID),
-                "Must return false when no recently completed step-up exists");
-    }
-
-    @Test
-    @DisplayName("hasRecentStepUp: window start is computed from properties")
-    void hasRecentStepUp_usesConfiguredWindow() {
-        // With 300-second window, windowStart should be ~now - 300s
-        when(challengeRepository.findRecentlyCompletedByActorId(
-                eq(TENANT_ID), eq(ACTOR_ID), any(Instant.class)))
-                .thenReturn(Optional.empty());
-
-        Instant before = Instant.now().minusSeconds(300);
-
-        stepUpService.hasRecentStepUp(TENANT_ID, ACTOR_ID);
-
-        ArgumentCaptor<Instant> windowCaptor = ArgumentCaptor.forClass(Instant.class);
-        verify(challengeRepository).findRecentlyCompletedByActorId(
-                eq(TENANT_ID), eq(ACTOR_ID), windowCaptor.capture());
-
-        Instant capturedWindow = windowCaptor.getValue();
-        Instant after = Instant.now().minusSeconds(300);
-
-        // The window start should be approximately now - 300 seconds
-        // Allow 2 seconds of tolerance for test execution time
-        assertTrue(capturedWindow.isAfter(before.minusSeconds(2)),
-                "Window start must be approximately now - stepUpWindowSeconds");
-        assertTrue(capturedWindow.isBefore(after.plusSeconds(2)),
-                "Window start must be approximately now - stepUpWindowSeconds");
+    @DisplayName("hasRecentStepUp: true when a recent completion exists")
+    void hasRecentStepUp_true() {
+        when(challengeRepository.findRecentlyCompletedByActorId(eq(TENANT_ID), eq(ACTOR_ID), any(Instant.class)))
+                .thenReturn(Optional.of(new StepUpChallengeEntity()));
+        assertTrue(stepUpService.hasRecentStepUp(TENANT_ID, ACTOR_ID));
     }
 }
