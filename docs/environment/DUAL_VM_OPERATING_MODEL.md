@@ -1,13 +1,13 @@
 # Dual-VM Operating Model (Web Preview + Mobile Android Sandbox)
 
-Impilo vNext development and runtime validation uses **two active VMs** with distinct roles. GitHub (`rtgongora/Impilo-vNext`) is the sync layer; both VMs work the same branch without divergent unpushed work.
+Impilo vNext development and runtime validation uses **two active VMs** today within the **full 11-step pipeline ladder** ([`VNEXT_ENVIRONMENT_LADDER.md`](./VNEXT_ENVIRONMENT_LADDER.md)). GitHub (`rtgongora/Impilo-vNext`) is the sync layer; both VMs work the same branch without divergent unpushed work.
 
 > **This is a dual-VM development/testing model, not a replacement of the Web Preview VM.**  
 > The Maestro VM consumes the preview API exposed by the Web Preview VM. It does **not** host the backend, full integration stack, production simulation lab, or production.
 
 ## VM roles
 
-### 1. Web Preview / Engineering Control — `41.57.127.235`
+### 1. Web Preview / Engineering Control — `impilo-web-preview` · `41.57.127.235`
 
 | Item | Value |
 |------|-------|
@@ -20,7 +20,7 @@ Impilo vNext development and runtime validation uses **two active VMs** with dis
 
 **Does not run here:** Android emulator load, Maestro runtime smoke (use 218).
 
-### 2. Mobile Android Sandbox / MOHCC Maestro — `41.57.127.218`
+### 2. Mobile Android Sandbox / MOHCC Maestro — `impilo-mobile-android-sandbox` · `41.57.127.218`
 
 | Item | Value |
 |------|-------|
@@ -43,26 +43,17 @@ Full Maestro VM runbook: [`docs/mobile/MOBILE_ANDROID_SANDBOX.md`](../mobile/MOB
 4. **218 targets 235 API** — mobile tests use `http://41.57.127.235` unless another endpoint is explicitly provided.
 5. **Reports flow back** — Maestro/runtime artifacts committed or copied into the repo branch.
 
-## Environment ladder (dev-test)
+## Environment ladder (full pipeline)
 
-| Tier | Host | Purpose | Promotion gate |
-|------|------|---------|----------------|
-| Engineering control | 235 | Build, test, deploy preview | VM quality gates + user deploy auth |
-| Dev preview API | 235 (`http://41.57.127.235`) | Web + BFF integration target | Smoke + `/health/version` |
-| Mobile runtime validation | 218 | Android emulator + Maestro | KVM ready + Maestro flows + runtime report |
-| Future formal staging | TBD | Not on either VM today | See `FUTURE_FORMAL_TEST_STAGING_REQUIREMENTS.md` |
+See [`VNEXT_ENVIRONMENT_LADDER.md`](./VNEXT_ENVIRONMENT_LADDER.md) for all 11 named environments. Active today:
 
-## Testing strategy by environment
+| Ladder step | Host | Purpose |
+|-------------|------|---------|
+| impilo-web-preview | 235 | Build, test, deploy preview |
+| impilo-mobile-android-sandbox | 218 | Android emulator + Maestro runtime |
+| Steps 2, 4–11 | TBD | Progressive activation |
 
-| Test type | Where | Script / doc |
-|-----------|-------|--------------|
-| VM quality gates | 235 | `scripts/pipeline/run-local-quality-gates.sh` |
-| HTTP preview regression | 235 (against 235 URL) | `tests/regression/preview-http-regression.sh` |
-| Playwright / web E2E | 235 or CI | `ui/one-ui-shell` |
-| Mobile typecheck | 235 or 218 | `apps/mobile` → `pnpm mobile:typecheck` |
-| Android prebuild / APK | **218 only** | Expo prebuild + Gradle on Maestro VM |
-| Maestro mobile smoke | **218 only** | `scripts/mobile/verify-maestro-flows.sh` |
-| GitHub CI mobile job | CI runners | `.github/workflows/ci.yml` (Maestro + emulator) |
+Promotion gates: [`VNEXT_PROMOTION_GATES.md`](./VNEXT_PROMOTION_GATES.md) · Testing: [`VNEXT_TESTING_STRATEGY_BY_ENVIRONMENT.md`](./VNEXT_TESTING_STRATEGY_BY_ENVIRONMENT.md).
 
 ## Historical note on `41.57.127.218`
 

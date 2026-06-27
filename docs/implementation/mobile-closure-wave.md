@@ -81,6 +81,21 @@ EXPO_PUBLIC_APP_VARIANT=preview EXPO_PUBLIC_API_BASE_URL=http://41.57.127.235 np
 # Scan QR with Expo Go on phone against http://41.57.127.235
 ```
 
+## Maestro VM — runtime closure path (2026-06-27)
+
+Static closure (this wave) is **not** runtime closure. The **impilo-mobile-android-sandbox** (`41.57.127.218`) is provisioned to move mobile from static/code closure to **runtime/mobile preview closure**.
+
+| Item | Static (235/CI) | Runtime (218) |
+|------|-----------------|---------------|
+| Typecheck / unit tests | PASS | N/A |
+| Maestro / emulator smoke | NOT RUN | **PENDING** |
+| Citizen/provider start | NOT RUN | **PENDING** |
+| EAS/APK | NOT RUN | **PENDING** on 218 after toolchain approval |
+
+**Reference commit:** `46254765` (prior parity wave `0ce94f82`).
+
+Runbook: [`docs/mobile/MOBILE_ANDROID_SANDBOX.md`](../mobile/MOBILE_ANDROID_SANDBOX.md) · Closure report: [`reports/mobile/MAESTRO_MOBILE_RUNTIME_CLOSURE_REPORT.md`](../../reports/mobile/MAESTRO_MOBILE_RUNTIME_CLOSURE_REPORT.md) · Toolchain plan: [`docs/mobile/MAESTRO_VM_TOOLCHAIN_SETUP_PLAN.md`](../mobile/MAESTRO_VM_TOOLCHAIN_SETUP_PLAN.md).
+
 ## Files changed (closure wave)
 
 - `apps/mobile/citizen-app/src/__tests__/setup.ts`, `vitest.config.ts`, `mocks/expo-vector-icons.tsx`

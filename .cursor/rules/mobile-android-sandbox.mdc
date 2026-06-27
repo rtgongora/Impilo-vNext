@@ -27,14 +27,18 @@ Impilo vNext uses a **dual-VM model**. Do not confuse the two environments.
 ## Operating rules
 
 1. **Git is the sync layer** — no divergent unpushed work across VMs.
-2. **Backend deploys stay on 235** unless explicitly authorized elsewhere.
+2. **Backend/API preview deploys stay on 235** unless explicitly authorized elsewhere.
 3. **Emulator / Maestro runtime smoke runs on 218** — not on 235.
 4. **Mobile tests on 218 target `http://41.57.127.235`** unless another endpoint is explicitly provided.
-5. **Runtime reports** (`reports/mobile/*`) commit or copy back to the repo branch.
+5. **Runtime reports from 218** must be committed or copied back into the branch.
 6. **No production secrets**, **no real patient data**, **no app-store publishing**.
 7. **No fake iOS native build claims** — 218 is Android/KVM only.
+8. **No Android emulator load on 235.**
+9. **No backend deploys from 218.**
+10. **No fake blocked states** — preserve truthful UX (e.g. Costa citizen blocked).
 
 ## Docs
 
 - [`docs/mobile/MOBILE_ANDROID_SANDBOX.md`](../../docs/mobile/MOBILE_ANDROID_SANDBOX.md)
 - [`docs/environment/DUAL_VM_OPERATING_MODEL.md`](../../docs/environment/DUAL_VM_OPERATING_MODEL.md)
+- [`docs/environment/VNEXT_ENVIRONMENT_LADDER.md`](../../docs/environment/VNEXT_ENVIRONMENT_LADDER.md)

@@ -99,6 +99,10 @@ bash scripts/deploy/preview-smoke-test.sh
 
 | Document | Description |
 |----------|-------------|
+| [VNEXT_ENVIRONMENT_LADDER.md](./VNEXT_ENVIRONMENT_LADDER.md) | Full 11-step pipeline ladder (2 active today) |
+| [VNEXT_ENVIRONMENT_TARGET_TOPOLOGY.md](./VNEXT_ENVIRONMENT_TARGET_TOPOLOGY.md) | Topology map |
+| [VNEXT_TESTING_STRATEGY_BY_ENVIRONMENT.md](./VNEXT_TESTING_STRATEGY_BY_ENVIRONMENT.md) | Tests per environment |
+| [VNEXT_PROMOTION_GATES.md](./VNEXT_PROMOTION_GATES.md) | Static → runtime promotion gates |
 | [DUAL_VM_OPERATING_MODEL.md](./DUAL_VM_OPERATING_MODEL.md) | Web Preview (235) + Maestro (218) roles and sync rules |
 | [../mobile/MOBILE_ANDROID_SANDBOX.md](../mobile/MOBILE_ANDROID_SANDBOX.md) | Maestro VM runbook, KVM, operator commands |
 | [VM_BASELINE_AUDIT.md](./VM_BASELINE_AUDIT.md) | Pre-setup server snapshot (235) |

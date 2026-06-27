@@ -1,8 +1,11 @@
 # MOHCC Maestro Android Mobile Automation Sandbox
 
+**Environment name:** `impilo-mobile-android-sandbox` / MOHCC Maestro VM  
+**Hostname:** `ministryofhealth-HVM-domU`  
 **Role:** Mobile Android Sandbox / Maestro runtime validation runner  
 **Host:** `41.57.127.218`  
 **SSH:** `ssh facility@41.57.127.218 -p 2027`  
+**Active user:** `facility` (sudo available; member of `kvm` group)  
 **Branch:** `claude/staging-ux-orchestration-remediation-Yypyl` (same as Web Preview VM — sync via Git)  
 **Mobile API target:** `EXPO_PUBLIC_API_BASE_URL=http://41.57.127.235`
 
@@ -28,7 +31,12 @@ Dedicated Android emulator automation and mobile runtime validation for Impilo v
 
 ## Relationship to Web Preview VM
 
-| Item | Web Preview / Engineering Control | Mobile Android Sandbox |
+The Maestro VM:
+
+- **Consumes** API from `http://41.57.127.235`
+- **Does not** host backend, web preview, full integration stack, production simulation, or production
+
+| Item | Web Preview / Engineering Control (`impilo-web-preview`) | Mobile Android Sandbox (`impilo-mobile-android-sandbox`) |
 |------|-----------------------------------|-------------------------|
 | IP | `41.57.127.235` | `41.57.127.218` |
 | SSH | `robert@41.57.127.235 -p 2276` | `facility@41.57.127.218 -p 2027` |
@@ -37,7 +45,7 @@ Dedicated Android emulator automation and mobile runtime validation for Impilo v
 | Preview/API | Hosts `http://41.57.127.235` | **Consumes** `http://41.57.127.235` |
 | Git sync | Source-of-truth branch operations | Pull same branch; no divergent unpushed work |
 
-Full dual-VM operating model: [`docs/environment/DUAL_VM_OPERATING_MODEL.md`](../environment/DUAL_VM_OPERATING_MODEL.md).
+Full pipeline ladder: [`docs/environment/VNEXT_ENVIRONMENT_LADDER.md`](../environment/VNEXT_ENVIRONMENT_LADDER.md) · Dual-VM model: [`docs/environment/DUAL_VM_OPERATING_MODEL.md`](../environment/DUAL_VM_OPERATING_MODEL.md).
 
 ## Validated KVM readiness
 
@@ -80,22 +88,79 @@ Before mobile smoke, confirm preview API readiness on 235:
 curl -sf http://41.57.127.235/health/version || curl -sf http://41.57.127.235/
 ```
 
+## What runs here
+
+- Android SDK, platform-tools, build-tools
+- Android emulator (KVM-backed), ADB
+- Mobile runtime smoke (manual + automated)
+- APK install / build validation
+- Screenshots, logcat, runtime evidence
+- Citizen app runtime validation
+- Provider app runtime validation
+- Maestro / Detox / Appium (when configured)
+- Mobile runtime reports (committed back via Git)
+
+## What must not run here
+
+- Backend deploys or k3s/Helm preview operations
+- Production services, production secrets, real patient data
+- App-store / Play Store publishing
+- Full integration stack or production simulation load
+- Web preview hosting
+- Fake iOS native build claims (Android/KVM only on Ubuntu)
+- Replacing truthful blocked states with fake data
+
+## Promotion role
+
+Mobile work cannot move from **static/code closure** to **runtime/mobile preview closure** until this environment passes:
+
+| Gate | Report |
+|------|--------|
+| Emulator readiness | `reports/mobile/android-emulator-readiness.md` |
+| KVM / VM activation | `reports/mobile/maestro-vm-activation.md` |
+| Citizen runtime smoke | `reports/mobile/citizen-runtime-smoke.md` |
+| Provider runtime smoke | `reports/mobile/provider-runtime-smoke.md` |
+| Mobile no-mock/no-stub guard | CI / `guard:mobile-parity` on 235 |
+| Mobile parity/wiring guard | `pnpm guard:mobile-parity` |
+| APK/build readiness | Debug APK or documented blocker |
+| Runtime closure summary | `reports/mobile/MAESTRO_MOBILE_RUNTIME_CLOSURE_REPORT.md` |
+
+See [`docs/environment/VNEXT_PROMOTION_GATES.md`](../environment/VNEXT_PROMOTION_GATES.md).
+
+## Mobile Closure Wave → runtime closure
+
+**Static closure achieved** (commit `46254765`, prior `0ce94f82`):
+
+- Citizen/provider typecheck: PASS · tests: PASS (122 + 123 + 4 registry)
+- Service parity, wiring, no-mocks (412 files), combined `guard:mobile-parity`: PASS
+- Costa citizen: truthfully blocked (no citizen BFF route)
+- Expo export: blocked by missing `react-native-web@^0.21.0`
+- Runtime smoke, citizen/provider start, EAS/APK/iOS: **NOT RUN**
+
+**Purpose of this VM:** move mobile from static/code closure to **runtime/mobile preview closure** by running emulator validation against `http://41.57.127.235`.
+
+Details: [`docs/implementation/mobile-closure-wave.md`](../implementation/mobile-closure-wave.md).
+
 ## Expected reports
 
-Commit or copy back to the repo branch on the Web Preview VM when artifacts are documentation/report outputs:
+Commit or copy back to the repo branch (prefer commit via Git on 235 as source-of-truth):
 
-| Artifact | Location |
-|----------|----------|
-| Maestro VM activation | `reports/mobile/maestro-vm-activation.md`, `.json` |
-| Mobile runtime smoke | `reports/mobile/mobile-runtime-smoke.md` |
-| Maestro run output | `reports/mobile/maestro-runs/` (per-run logs/screenshots as added) |
-| Runtime closure checklist | `docs/implementation/mobile-runtime-smoke.md` (update checkboxes) |
+| Report | Purpose |
+|--------|---------|
+| `reports/mobile/maestro-vm-activation.md` (+ `.json`) | VM activation evidence |
+| `reports/mobile/android-emulator-readiness.md` | SDK/emulator/ADB readiness |
+| `reports/mobile/citizen-runtime-smoke.md` | Citizen journey runtime PASS/FAIL |
+| `reports/mobile/provider-runtime-smoke.md` | Provider journey runtime PASS/FAIL |
+| `reports/mobile/mobile-preview-access.md` | Preview API reachability from mobile |
+| `reports/mobile/MAESTRO_MOBILE_RUNTIME_CLOSURE_REPORT.md` | Runtime closure summary |
+| `reports/mobile/mobile-runtime-smoke.md` | Legacy combined smoke rollup |
+| `docs/implementation/mobile-runtime-smoke.md` | Checklist checkbox updates |
 
 ## Runtime closure responsibilities
 
 1. **235 first:** Web preview API healthy; quality gates pass for the target commit.
 2. **Git sync:** Maestro VM on same branch/commit as 235 (`git pull` before runs).
-3. **Maestro VM:** Install toolchain (see Next steps), prebuild, emulator, Maestro flows.
+3. **Maestro VM:** Install toolchain per [`MAESTRO_VM_TOOLCHAIN_SETUP_PLAN.md`](./MAESTRO_VM_TOOLCHAIN_SETUP_PLAN.md) (after approval), prebuild, emulator, Maestro flows.
 4. **Evidence:** Update `reports/mobile/mobile-runtime-smoke.md` with PASS/FAIL per journey.
 5. **Commit on 235:** Push report artifacts from either VM via Git — no divergent unpushed work.
 
@@ -168,7 +233,12 @@ Maestro VM is **operationally ready** when all of the following pass on `41.57.1
 
 ## Related docs
 
+- [`docs/environment/VNEXT_ENVIRONMENT_LADDER.md`](../environment/VNEXT_ENVIRONMENT_LADDER.md)
 - [`docs/environment/DUAL_VM_OPERATING_MODEL.md`](../environment/DUAL_VM_OPERATING_MODEL.md)
+- [`MOBILE_SANDBOX_ARCHITECTURE.md`](./MOBILE_SANDBOX_ARCHITECTURE.md)
+- [`MOBILE_RUNTIME_SANDBOX_ARCHITECTURE.md`](./MOBILE_RUNTIME_SANDBOX_ARCHITECTURE.md)
+- [`MAESTRO_VM_TOOLCHAIN_SETUP_PLAN.md`](./MAESTRO_VM_TOOLCHAIN_SETUP_PLAN.md)
+- [`docs/implementation/mobile-closure-wave.md`](../implementation/mobile-closure-wave.md)
 - [`docs/implementation/mobile-runtime-smoke.md`](../implementation/mobile-runtime-smoke.md)
 - [`apps/mobile/maestro/README.md`](../../apps/mobile/maestro/README.md)
 - [`reports/mobile/maestro-vm-activation.md`](../../reports/mobile/maestro-vm-activation.md)
