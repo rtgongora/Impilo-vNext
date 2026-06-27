@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-27T22:49:34.917Z",
+  "generatedAt": "2026-06-27T23:14:15.274Z",
   "branch": "chore/paydown-authz-stores",
   "registryDrift": {
     "unregisteredModules": [],
@@ -17,17 +17,12 @@
     },
     "byMaturity": {
       "INTERNAL_ONLY": 25,
-      "REAL_CODE_NOT_PROBED": 69,
-      "FIXTURE_BACKED": 1
+      "REAL_CODE_NOT_PROBED": 70
     },
     "gapCounts": {
-      "byCategory": {
-        "F": 1
-      },
-      "bySeverity": {
-        "high": 1
-      },
-      "total": 1
+      "byCategory": {},
+      "bySeverity": {},
+      "total": 0
     },
     "crossServiceCohesion": {
       "total": 14,
@@ -39,7 +34,7 @@
       "missingTest": 0
     },
     "phase6": {
-      "complete": 94,
+      "complete": 95,
       "userFacing": 70,
       "userFacingReal": 70,
       "userFacingRealProven": 0
@@ -2893,16 +2888,7 @@
         "citizen-app:apps/mobile/citizen-app/src/screens/social/CommunitiesScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/social/SocialFeedScreen.tsx"
       ],
-      "mockStubHits": [
-        {
-          "file": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/scheduling/AppointmentCommsHistoryStore.java",
-          "pattern": "in-memory-store"
-        },
-        {
-          "file": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/telemedicine/TelemedicineWorkflowHistoryStore.java",
-          "pattern": "in-memory-store"
-        }
-      ],
+      "mockStubHits": [],
       "securityPlaceholderHits": [],
       "stubRouteCount": 0,
       "bffOrphanRoutes": 0,
@@ -2915,22 +2901,15 @@
         "q3_wiredViaBff": true,
         "q4_visibleInUi": true,
         "q5_visibleOnMobile": true,
-        "q6_fakePartialDisconnected": true,
+        "q6_fakePartialDisconnected": false,
         "q7_backendNoUi": false,
         "q8_uiNoBackend": false,
         "q9_persistsToDb": true,
         "q10_fixtureOnly": false
       },
-      "phase6Complete": false,
-      "gaps": [
-        {
-          "category": "F",
-          "severity": "high",
-          "description": "experience-bff: mock/stub/fixture/in-memory patterns in product path (2 hits)",
-          "impactScore": 3
-        }
-      ],
-      "maturity": "FIXTURE_BACKED"
+      "phase6Complete": true,
+      "gaps": [],
+      "maturity": "REAL_CODE_NOT_PROBED"
     },
     {
       "id": "fhir-gateway-service",
@@ -6234,7 +6213,7 @@
         "stubRoutes": 0,
         "contractOperations": 33,
         "contractViolations": 0,
-        "bffClients": 20,
+        "bffClients": 21,
         "uiReferences": 63,
         "mobileReferences": 22,
         "tests": 5
@@ -6256,6 +6235,7 @@
       "bffClients": [
         "NotificationServiceClient",
         "AccessChannelsController→inline",
+        "AppointmentCommsController→inline",
         "AssistantNotificationsController→inline",
         "CommsApprovalController→inline",
         "CommsTemplateController→inline",
@@ -8290,7 +8270,7 @@
         "stubRoutes": 0,
         "contractOperations": 9,
         "contractViolations": 0,
-        "bffClients": 8,
+        "bffClients": 7,
         "uiReferences": 57,
         "mobileReferences": 111,
         "tests": 1
@@ -8311,7 +8291,6 @@
       "contractFile": "scheduling.openapi.yaml",
       "bffClients": [
         "SchedulingServiceClient",
-        "AppointmentCommsController→inline",
         "BookingController→inline",
         "LiveController→inline",
         "SchedulingController→inline",
@@ -9281,7 +9260,7 @@
         "stubRoutes": 0,
         "contractOperations": 18,
         "contractViolations": 0,
-        "bffClients": 6,
+        "bffClients": 8,
         "uiReferences": 18,
         "mobileReferences": 0,
         "tests": 4
@@ -9302,7 +9281,9 @@
       "contractFile": "tshepo-audit.openapi.yaml",
       "bffClients": [
         "TshepoAuditServiceClient",
+        "AppointmentCommsController→inline",
         "AuditController→inline",
+        "CommunicationController→inline",
         "QueueController→inline",
         "TriageImagingLinkController→inline",
         "TrustAdminController→inline",
@@ -9389,7 +9370,7 @@
         "isTrustPlane": true
       },
       "counts": {
-        "migrations": 17,
+        "migrations": 18,
         "entities": 13,
         "repositories": 13,
         "serviceLayer": 12,
@@ -9972,7 +9953,7 @@
         "stubRoutes": 0,
         "contractOperations": 16,
         "contractViolations": 0,
-        "bffClients": 28,
+        "bffClients": 30,
         "uiReferences": 36,
         "mobileReferences": 5,
         "tests": 9
@@ -9993,10 +9974,12 @@
       "contractFile": "tshepo.openapi.yaml",
       "bffClients": [
         "AdminUserController→inline",
+        "AppointmentCommsController→inline",
         "AuditController→inline",
         "BiometricPolicyBffController→inline",
         "CitizenStepUpController→inline",
         "ClinicalToolsController→inline",
+        "CommunicationController→inline",
         "EhrPatientSummaryController→inline",
         "FacilityModeController→inline",
         "FinanceBillingWorkspaceController→inline",

@@ -30,26 +30,26 @@ public class TelemedicineCommsWorkflowService {
     private final SupportServiceClient supportClient;
     private final TelemedicineCommunicationEventPublisher eventPublisher;
     private final TelemedicineCommsMetricsStore metricsStore;
-    private final TelemedicineWorkflowHistoryStore workflowHistoryStore;
+    private final TelemedicineWorkflowTelemetry workflowTelemetry;
 
     public TelemedicineCommsWorkflowService(
             NotificationServiceClient notificationClient,
             SupportServiceClient supportClient,
             TelemedicineCommunicationEventPublisher eventPublisher,
             TelemedicineCommsMetricsStore metricsStore,
-            TelemedicineWorkflowHistoryStore workflowHistoryStore) {
+            TelemedicineWorkflowTelemetry workflowTelemetry) {
         this.notificationClient = notificationClient;
         this.supportClient = supportClient;
         this.eventPublisher = eventPublisher;
         this.metricsStore = metricsStore;
-        this.workflowHistoryStore = workflowHistoryStore;
+        this.workflowTelemetry = workflowTelemetry;
     }
 
     public void processLifecycleEvent(String eventType, Map<String, Object> payload) {
         if (eventType == null || eventType.isBlank()) {
             return;
         }
-        workflowHistoryStore.onEventReceived(eventType, payload);
+        workflowTelemetry.onEventReceived(eventType, payload);
         try {
             switch (eventType) {
                 case "telemedicine.session.scheduled", "telemedicine.session.rescheduled" -> {
@@ -72,7 +72,7 @@ public class TelemedicineCommsWorkflowService {
                 }
                 case "telemedicine.session.waiting_room.entered" -> {
                     if (isStuckWaitingRoom(payload)) {
-                        workflowHistoryStore.recordStuckWaitingRoomNotification(eventType, payload);
+                        workflowTelemetry.recordStuckWaitingRoomNotification(eventType, payload);
                     }
                 }
                 case "telemedicine.session.client_not_joined" -> handleNoShowHeuristics(eventType, payload);
@@ -107,9 +107,9 @@ public class TelemedicineCommsWorkflowService {
                 }
                 default -> log.debug("No comms workflow bound to event {}", eventType);
             }
-            workflowHistoryStore.onEventProcessed(eventType, payload);
+            workflowTelemetry.onEventProcessed(eventType, payload);
         } catch (Exception ex) {
-            workflowHistoryStore.onEventFailed(eventType, payload, ex.getMessage());
+            workflowTelemetry.onEventFailed(eventType, payload, ex.getMessage());
             throw new IllegalStateException("Failed telemedicine comms workflow for " + eventType, ex);
         }
     }
@@ -123,7 +123,7 @@ public class TelemedicineCommsWorkflowService {
         if (recipient == null || recipient.isBlank()) {
             metricsStore.incrementClientUnreachable();
             emitCommsEvent("telemedicine.communication.client_unreachable", payload);
-            workflowHistoryStore.recordNotificationDispatch(eventType, channel, templateKey, "FAILED_UNREACHABLE", payload);
+            workflowTelemetry.recordNotificationDispatch(eventType, channel, templateKey, "FAILED_UNREACHABLE", payload);
             return;
         }
         String safeMessage = enforceSensitiveContentPolicy(channel, candidateMessage);
@@ -137,10 +137,10 @@ public class TelemedicineCommsWorkflowService {
                     "telemedicineLinkage", linkagePayload(payload)
             ));
             notificationClient.sendNotification(body);
-            workflowHistoryStore.recordNotificationDispatch(eventType, channel, templateKey, "SENT", payload);
+            workflowTelemetry.recordNotificationDispatch(eventType, channel, templateKey, "SENT", payload);
         } catch (Exception ex) {
             log.warn("Telemedicine notification failed on {}: {}", channel, ex.getMessage());
-            workflowHistoryStore.recordNotificationDispatch(eventType, channel, templateKey, "FAILED", payload);
+            workflowTelemetry.recordNotificationDispatch(eventType, channel, templateKey, "FAILED", payload);
             if (!"SMS".equalsIgnoreCase(channel)) {
                 try {
                     Map<String, Object> fallback = new LinkedHashMap<>();
@@ -153,11 +153,11 @@ public class TelemedicineCommsWorkflowService {
                     ));
                     notificationClient.sendNotification(fallback);
                     metricsStore.incrementFallbackEvents();
-                    workflowHistoryStore.recordNotificationDispatch(eventType, "SMS", templateKey + "_FALLBACK_SMS", "SENT_FALLBACK", payload);
+                    workflowTelemetry.recordNotificationDispatch(eventType, "SMS", templateKey + "_FALLBACK_SMS", "SENT_FALLBACK", payload);
                 } catch (Exception ignored) {
                     metricsStore.incrementClientUnreachable();
                     emitCommsEvent("telemedicine.communication.client_unreachable", payload);
-                    workflowHistoryStore.recordNotificationDispatch(eventType, "SMS", templateKey + "_FALLBACK_SMS", "FAILED", payload);
+                    workflowTelemetry.recordNotificationDispatch(eventType, "SMS", templateKey + "_FALLBACK_SMS", "FAILED", payload);
                 }
             }
         }
@@ -179,7 +179,7 @@ public class TelemedicineCommsWorkflowService {
             emitCommsEvent("telemedicine.communication.escalated_to_agent", payload);
         } catch (Exception ex) {
             log.warn("Telemedicine support escalation failed: {}", ex.getMessage());
-            workflowHistoryStore.recordSupportEscalationFailure(eventType, payload, ex.getMessage());
+            workflowTelemetry.recordSupportEscalationFailure(eventType, payload, ex.getMessage());
         } finally {
             metricsStore.recordSupportResponseTimeMs(System.currentTimeMillis() - startMs);
         }
@@ -187,7 +187,7 @@ public class TelemedicineCommsWorkflowService {
 
     private void handleNoShowHeuristics(String eventType, Map<String, Object> payload) {
         if (hasJoinOpenedSignal(payload)) {
-            workflowHistoryStore.recordNotificationDispatch(eventType, "IN_APP", "TELEMEDICINE_NO_SHOW_NUDGE", "SUPPRESSED_ALREADY_OPENED", payload);
+            workflowTelemetry.recordNotificationDispatch(eventType, "IN_APP", "TELEMEDICINE_NO_SHOW_NUDGE", "SUPPRESSED_ALREADY_OPENED", payload);
             return;
         }
         if (hasDeliveryFailure(payload)) {
@@ -198,7 +198,7 @@ public class TelemedicineCommsWorkflowService {
             return;
         }
         if (isTooEarlyForNoShow(payload)) {
-            workflowHistoryStore.recordNotificationDispatch(eventType, "IN_APP", "TELEMEDICINE_NO_SHOW_NUDGE", "SUPPRESSED_TOO_EARLY", payload);
+            workflowTelemetry.recordNotificationDispatch(eventType, "IN_APP", "TELEMEDICINE_NO_SHOW_NUDGE", "SUPPRESSED_TOO_EARLY", payload);
             return;
         }
         sendSafeNotification(eventType, "IN_APP", "TELEMEDICINE_NO_SHOW_NUDGE", payload,
@@ -214,7 +214,7 @@ public class TelemedicineCommsWorkflowService {
         OffsetDateTime deliveredAt = parseDate(string(payload, "notificationDeliveredAt", "deliveredAt", "delivery_receipt_at"));
         if (createdAt != null && deliveredAt != null && deliveredAt.isAfter(createdAt)) {
             long lagMs = Duration.between(createdAt, deliveredAt).toMillis();
-            workflowHistoryStore.recordDeliveryReceiptLagMs(lagMs, eventType, payload);
+            workflowTelemetry.recordDeliveryReceiptLagMs(lagMs, eventType, payload);
         }
     }
 

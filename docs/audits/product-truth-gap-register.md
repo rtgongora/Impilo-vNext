@@ -1,7 +1,7 @@
 # Product Truth — Gap Register
 
-> Generated: 2026-06-27T22:49:34.917Z
-> Total gaps: **1**
+> Generated: 2026-06-27T23:14:15.274Z
+> Total gaps: **0**
 
 ## Gap categories (A–R)
 
@@ -12,7 +12,7 @@
 | C | Backend exists, contract missing/stale | 0 |
 | D | Backend exists, frontend only partially wired | 0 |
 | E | UI exists, backend missing | 0 |
-| F | UI exists, uses mock/stub/fixture data | 1 |
+| F | UI exists, uses mock/stub/fixture data | 0 |
 | G | UI exists, form submits but does not persist | 0 |
 | H | UI exists, button/card is dead or decorative | 0 |
 | I | API exists, database persistence missing | 0 |
@@ -31,13 +31,11 @@
 
 | Severity | Count |
 |----------|------:|
-| high | 1 |
 
 ## Prioritized gaps (top 100)
 
 | Rank | Entity | Category | Severity | Description |
 |------|--------|----------|----------|-------------|
-| 1 | experience-bff | F | high | experience-bff: mock/stub/fixture/in-memory patterns in product path (2 hits) |
 
 ## Services requiring product-owner decision
 

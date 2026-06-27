@@ -1,19 +1,29 @@
 package zw.gov.mohcc.impilo.experience.scheduling;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import zw.gov.mohcc.impilo.experience.client.NotificationServiceClient;
+import zw.gov.mohcc.impilo.experience.client.TshepoAuditServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
 import zw.gov.mohcc.impilo.experience.facility.FacilityNameResolver;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -30,10 +40,44 @@ class AppointmentCommsWorkflowServiceTest {
         FacilityNameResolver facilityNames = new FacilityNameResolver(stubTusoClient());
         AppointmentProviderRecipientResolver recipients =
                 new AppointmentProviderRecipientResolver(stubTusoClient());
-        AppointmentCommsHistoryStore history = new AppointmentCommsHistoryStore();
+        TshepoAuditServiceClient audit = stubAuditClient();
         AppointmentReminderReceiptStore reminders = new AppointmentReminderReceiptStore(mock(org.springframework.data.redis.core.StringRedisTemplate.class));
         service = new AppointmentCommsWorkflowService(
-                notify, facilityNames, recipients, history, reminders, "Africa/Harare");
+                notify, facilityNames, recipients, audit, reminders, "Africa/Harare");
+    }
+
+    /**
+     * Stub audit client that captures ingested events in-memory and replays them through
+     * {@code queryEvents} so read-after-write history assertions hold without a live audit sovereign.
+     */
+    private TshepoAuditServiceClient stubAuditClient() {
+        TshepoAuditServiceClient audit = mock(TshepoAuditServiceClient.class);
+        List<ObjectNode> events = new ArrayList<>();
+        doAnswer(inv -> {
+            java.util.Map<String, Object> body = inv.getArgument(0);
+            events.add(mapper.valueToTree(body));
+            return null;
+        }).when(audit).ingestAuditEvent(any());
+        when(audit.queryEvents(isNull(), anyString(), anyString(), isNull(), isNull(), anyInt(), anyInt()))
+                .thenAnswer(inv -> filterEvents(events, inv.getArgument(1), inv.getArgument(2)));
+        when(audit.queryEvents(isNull(), isNull(), anyString(), isNull(), isNull(), anyInt(), anyInt()))
+                .thenAnswer(inv -> filterEvents(events, null, inv.getArgument(2)));
+        return audit;
+    }
+
+    private JsonNode filterEvents(List<ObjectNode> events, String subjectRef, String eventType) {
+        ObjectNode data = mapper.createObjectNode();
+        ArrayNode items = data.putArray("items");
+        for (ObjectNode ev : events) {
+            if (eventType != null && !eventType.equals(ev.path("eventType").asText())) {
+                continue;
+            }
+            if (subjectRef != null && !subjectRef.equals(ev.path("subjectRef").asText())) {
+                continue;
+            }
+            items.add(ev);
+        }
+        return data;
     }
 
     @Test

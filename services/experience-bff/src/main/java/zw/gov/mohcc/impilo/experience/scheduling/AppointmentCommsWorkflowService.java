@@ -6,13 +6,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import zw.gov.mohcc.impilo.experience.client.NotificationServiceClient;
+import zw.gov.mohcc.impilo.experience.client.TshepoAuditServiceClient;
 import zw.gov.mohcc.impilo.experience.facility.FacilityNameResolver;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -32,6 +35,10 @@ public class AppointmentCommsWorkflowService {
 
     private static final Logger log = LoggerFactory.getLogger(AppointmentCommsWorkflowService.class);
     private static final String MESSAGE_KIND = "APPOINTMENT";
+    private static final String EVENT_LIFECYCLE = "APPOINTMENT_COMMS_LIFECYCLE";
+    private static final String EVENT_NOTIFICATION = "APPOINTMENT_COMMS_NOTIFICATION";
+    private static final String EVENT_MESSAGE = "APPOINTMENT_COMMS_MESSAGE";
+    private static final int MAX_MESSAGES_PER_APPOINTMENT = 200;
     private static final Duration REMINDER_WINDOW = Duration.ofHours(24);
     private static final Duration REMINDER_TOLERANCE = Duration.ofHours(1);
     private static final Set<String> SENSITIVE_TERMS = Set.of(
@@ -43,7 +50,7 @@ public class AppointmentCommsWorkflowService {
     private final NotificationServiceClient notificationClient;
     private final FacilityNameResolver facilityNameResolver;
     private final AppointmentProviderRecipientResolver providerRecipientResolver;
-    private final AppointmentCommsHistoryStore historyStore;
+    private final TshepoAuditServiceClient auditClient;
     private final AppointmentReminderReceiptStore reminderReceiptStore;
     private final ZoneId displayZone;
     private final DateTimeFormatter displayFormatter;
@@ -52,13 +59,13 @@ public class AppointmentCommsWorkflowService {
             NotificationServiceClient notificationClient,
             FacilityNameResolver facilityNameResolver,
             AppointmentProviderRecipientResolver providerRecipientResolver,
-            AppointmentCommsHistoryStore historyStore,
+            TshepoAuditServiceClient auditClient,
             AppointmentReminderReceiptStore reminderReceiptStore,
             @Value("${impilo.scheduling.display-timezone:Africa/Harare}") String displayTimezone) {
         this.notificationClient = notificationClient;
         this.facilityNameResolver = facilityNameResolver;
         this.providerRecipientResolver = providerRecipientResolver;
-        this.historyStore = historyStore;
+        this.auditClient = auditClient;
         this.reminderReceiptStore = reminderReceiptStore;
         this.displayZone = ZoneId.of(displayTimezone);
         this.displayFormatter = DateTimeFormatter.ofPattern("EEE d MMM yyyy, HH:mm", Locale.ENGLISH)
@@ -70,21 +77,21 @@ public class AppointmentCommsWorkflowService {
         notifyCitizen(booking, "APPOINTMENT_CITIZEN_REQUESTED", "IN_APP", vars);
         notifyCitizen(booking, "APPOINTMENT_CITIZEN_REQUESTED_SMS", "SMS", vars);
         notifyProvider(booking, "APPOINTMENT_PROVIDER_NEW_REQUEST", "PUSH", vars);
-        historyStore.recordLifecycle("booking.created", lifecyclePayload(booking), "sent");
+        recordLifecycle("booking.created", booking, "sent");
     }
 
     public void onBookingApproved(JsonNode booking) {
         Map<String, String> vars = varsFromBooking(booking);
         notifyCitizen(booking, "APPOINTMENT_CITIZEN_CONFIRMED", "IN_APP", vars);
         notifyCitizen(booking, "APPOINTMENT_CITIZEN_CONFIRMED_SMS", "SMS", vars);
-        historyStore.recordLifecycle("booking.confirmed", lifecyclePayload(booking), "sent");
+        recordLifecycle("booking.confirmed", booking, "sent");
     }
 
     public void onBookingRejected(JsonNode booking, String reason) {
         Map<String, String> vars = varsFromBooking(booking);
         vars.put("reason", safe(reason, "Booking not approved"));
         notifyCitizen(booking, "APPOINTMENT_CITIZEN_REJECTED", "IN_APP", vars);
-        historyStore.recordLifecycle("booking.rejected", lifecyclePayload(booking), "sent");
+        recordLifecycle("booking.rejected", booking, "sent");
     }
 
     public void onBookingCancelled(JsonNode booking, String reason) {
@@ -100,7 +107,7 @@ public class AppointmentCommsWorkflowService {
         } else {
             notifyProvider(booking, "APPOINTMENT_PROVIDER_CANCELLED_BY_STAFF", "PUSH", vars);
         }
-        historyStore.recordLifecycle("booking.cancelled", lifecyclePayload(booking), "sent");
+        recordLifecycle("booking.cancelled", booking, "sent");
     }
 
     public void onAppointmentCreated(JsonNode appointment) {
@@ -113,7 +120,7 @@ public class AppointmentCommsWorkflowService {
             Map<String, String> vars = varsFromAppointment(appointment);
             notifyCitizen(appointment, "APPOINTMENT_CITIZEN_CONFIRMED", "IN_APP", vars);
             notifyCitizen(appointment, "APPOINTMENT_CITIZEN_CONFIRMED_SMS", "SMS", vars);
-            historyStore.recordLifecycle("appointment.booked", lifecyclePayload(appointment), "sent");
+            recordLifecycle("appointment.booked", appointment, "sent");
         }
     }
 
@@ -121,7 +128,7 @@ public class AppointmentCommsWorkflowService {
         Map<String, String> vars = varsFromAppointment(appointment);
         notifyCitizen(appointment, "APPOINTMENT_CITIZEN_CONFIRMED", "IN_APP", vars);
         notifyCitizen(appointment, "APPOINTMENT_CITIZEN_CONFIRMED_SMS", "SMS", vars);
-        historyStore.recordLifecycle("appointment.confirmed", lifecyclePayload(appointment), "sent");
+        recordLifecycle("appointment.confirmed", appointment, "sent");
     }
 
     public void onAppointmentCancelled(JsonNode appointment, String reason) {
@@ -137,7 +144,7 @@ public class AppointmentCommsWorkflowService {
         } else {
             notifyProvider(appointment, "APPOINTMENT_PROVIDER_CANCELLED_BY_STAFF", "PUSH", vars);
         }
-        historyStore.recordLifecycle("appointment.cancelled", lifecyclePayload(appointment), "sent");
+        recordLifecycle("appointment.cancelled", appointment, "sent");
     }
 
     public void onAppointmentRescheduled(JsonNode appointment) {
@@ -145,21 +152,21 @@ public class AppointmentCommsWorkflowService {
         notifyCitizen(appointment, "APPOINTMENT_CITIZEN_RESCHEDULED", "IN_APP", vars);
         notifyCitizen(appointment, "APPOINTMENT_CITIZEN_RESCHEDULED_SMS", "SMS", vars);
         notifyProvider(appointment, "APPOINTMENT_PROVIDER_RESCHEDULED", "PUSH", vars);
-        historyStore.recordLifecycle("appointment.rescheduled", lifecyclePayload(appointment), "sent");
+        recordLifecycle("appointment.rescheduled", appointment, "sent");
     }
 
     public void onAppointmentCheckedIn(JsonNode appointment) {
         Map<String, String> vars = varsFromAppointment(appointment);
         notifyCitizen(appointment, "APPOINTMENT_CITIZEN_CHECKED_IN", "IN_APP", vars);
         notifyProvider(appointment, "APPOINTMENT_PROVIDER_CHECKED_IN", "PUSH", vars);
-        historyStore.recordLifecycle("appointment.checked_in", lifecyclePayload(appointment), "sent");
+        recordLifecycle("appointment.checked_in", appointment, "sent");
     }
 
     public void sendCitizenToProviderMessage(JsonNode appointment, String message, String senderActorId) {
         Map<String, String> vars = varsFromAppointment(appointment);
         vars.put("message", safe(message, ""));
         notifyProvider(appointment, "APPOINTMENT_PROVIDER_MESSAGE", "PUSH", vars);
-        historyStore.recordMessage(text(appointment, "id"), "citizen_to_provider", message, senderActorId);
+        recordMessage(text(appointment, "id"), "citizen_to_provider", message, senderActorId);
     }
 
     public void sendProviderToCitizenMessage(JsonNode appointment, String message, String senderActorId) {
@@ -167,11 +174,21 @@ public class AppointmentCommsWorkflowService {
         vars.put("message", safe(message, ""));
         notifyCitizen(appointment, "APPOINTMENT_CITIZEN_MESSAGE", "IN_APP", vars);
         notifyCitizen(appointment, "APPOINTMENT_CITIZEN_MESSAGE_SMS", "SMS", vars);
-        historyStore.recordMessage(text(appointment, "id"), "provider_to_citizen", message, senderActorId);
+        recordMessage(text(appointment, "id"), "provider_to_citizen", message, senderActorId);
     }
 
     public List<Map<String, Object>> listMessages(String appointmentId) {
-        return historyStore.listMessages(appointmentId);
+        if (appointmentId == null || appointmentId.isBlank()) {
+            return List.of();
+        }
+        try {
+            JsonNode data = auditClient.queryEvents(
+                    null, "appointment:" + appointmentId, EVENT_MESSAGE, null, null, 0, MAX_MESSAGES_PER_APPOINTMENT);
+            return mapAuditEventsToMessages(data, appointmentId);
+        } catch (Exception ex) {
+            log.debug("Appointment message history query failed for {}: {}", appointmentId, ex.getMessage());
+            return List.of();
+        }
     }
 
     public int dispatchUpcomingReminders(Iterable<JsonNode> appointments) {
@@ -197,15 +214,15 @@ public class AppointmentCommsWorkflowService {
             Map<String, String> vars = varsFromAppointment(appt);
             notifyCitizen(appt, "APPOINTMENT_CITIZEN_REMINDER", "IN_APP", vars);
             notifyCitizen(appt, "APPOINTMENT_CITIZEN_REMINDER_SMS", "SMS", vars);
-            historyStore.recordLifecycle("appointment.reminder", lifecyclePayload(appt), "sent");
+            recordLifecycle("appointment.reminder", appt, "sent");
             sent++;
         }
         return sent;
     }
 
     public void processOutboxEvent(String eventType, Map<String, Object> payload, long eventId) {
-        String eventKey = eventType + ":" + eventId;
-        if (!historyStore.markOutboxProcessed(eventKey)) {
+        String eventKey = "booking-outbox:" + eventType + ":" + eventId;
+        if (!reminderReceiptStore.tryClaim(eventKey)) {
             return;
         }
         JsonNode node = toJsonNode(payload);
@@ -261,12 +278,12 @@ public class AppointmentCommsWorkflowService {
             }
             body.put("messageKind", MESSAGE_KIND);
             notificationClient.sendNotification(body);
-            historyStore.recordNotification(templateKey, channel, templateKey, "SENT",
+            recordNotification(templateKey, channel, templateKey, "SENT", patientRef,
                     Map.of("to", to, "inboxRecipient", inboxRecipient));
         } catch (Exception ex) {
             log.warn("Appointment comms failed template={} channel={} to={}: {}", templateKey, channel, to, ex.getMessage());
-            historyStore.recordNotification(templateKey, channel, templateKey, "FAILED",
-                    Map.of("to", to, "error", ex.getMessage()));
+            recordNotification(templateKey, channel, templateKey, "FAILED", patientRef,
+                    Map.of("to", to, "error", ex.getMessage() == null ? "unknown" : ex.getMessage()));
         }
     }
 
@@ -342,6 +359,88 @@ public class AppointmentCommsWorkflowService {
         payload.put("facilityId", text(node, "facilityId", "facility_id"));
         payload.put("status", text(node, "status"));
         return payload;
+    }
+
+    /**
+     * Durable lifecycle history — ingested into the TSHEPO audit sovereign (the BFF holds no datasource).
+     * subjectRef anchors on the appointment/booking id so the history can be queried back per subject.
+     */
+    private void recordLifecycle(String eventType, JsonNode node, String status) {
+        Map<String, Object> detail = new LinkedHashMap<>();
+        detail.put("kind", "LIFECYCLE");
+        detail.put("lifecycle_event", eventType);
+        detail.put("status", status);
+        detail.put("payload", lifecyclePayload(node));
+        ingest(EVENT_LIFECYCLE, subjectRefFor(text(node, "id")), eventType, status, detail);
+    }
+
+    private void recordNotification(String templateKey, String channel, String eventType, String status,
+                                    String patientRef, Map<String, Object> meta) {
+        Map<String, Object> detail = new LinkedHashMap<>();
+        detail.put("kind", "NOTIFICATION");
+        detail.put("notification_event", eventType);
+        detail.put("channel", channel);
+        detail.put("template_key", templateKey);
+        detail.put("status", status);
+        detail.put("meta", meta != null ? meta : Map.of());
+        ingest(EVENT_NOTIFICATION, subjectRefFor(patientRef), eventType, status, detail);
+    }
+
+    private void recordMessage(String appointmentId, String direction, String message, String senderActorId) {
+        Map<String, Object> detail = new LinkedHashMap<>();
+        detail.put("kind", "MESSAGE");
+        detail.put("appointmentId", appointmentId);
+        detail.put("direction", direction);
+        detail.put("message", message);
+        detail.put("senderActorId", senderActorId);
+        ingest(EVENT_MESSAGE, "appointment:" + safe(appointmentId, "unknown"), direction, "sent", detail);
+    }
+
+    private void ingest(String eventType, String subjectRef, String action, String outcome,
+                        Map<String, Object> detail) {
+        try {
+            Map<String, Object> event = new LinkedHashMap<>();
+            event.put("eventType", eventType);
+            event.put("actorId", "experience-bff");
+            event.put("actorType", "SERVICE");
+            event.put("subjectRef", subjectRef);
+            event.put("resourceType", "APPOINTMENT_COMMS");
+            event.put("action", action);
+            event.put("outcome", outcome != null ? outcome : "SUCCESS");
+            event.put("purposeOfUse", "OPERATIONS");
+            event.put("occurredAt", OffsetDateTime.now().toString());
+            event.put("detail", detail);
+            auditClient.ingestAuditEvent(event);
+        } catch (Exception ex) {
+            log.debug("Appointment comms audit ingest failed for {}: {}", eventType, ex.getMessage());
+        }
+    }
+
+    private static String subjectRefFor(String id) {
+        return id != null && !id.isBlank() ? "appointment:" + id : "appointment:unknown";
+    }
+
+    private static List<Map<String, Object>> mapAuditEventsToMessages(JsonNode data, String appointmentId) {
+        if (data == null || data.isNull()) {
+            return List.of();
+        }
+        JsonNode items = data.has("items") ? data.path("items") : data;
+        if (!items.isArray()) {
+            return List.of();
+        }
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (JsonNode ev : items) {
+            JsonNode detail = ev.path("detail");
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("id", ev.path("id").asText(ev.path("eventId").asText("")));
+            row.put("appointmentId", appointmentId);
+            row.put("direction", detail.path("direction").asText(ev.path("action").asText("")));
+            row.put("message", detail.path("message").asText(""));
+            row.put("senderActorId", detail.path("senderActorId").asText(""));
+            row.put("sentAt", ev.path("createdAt").asText(ev.path("occurredAt").asText("")));
+            out.add(row);
+        }
+        return out;
     }
 
     private static JsonNode toJsonNode(Map<String, Object> payload) {

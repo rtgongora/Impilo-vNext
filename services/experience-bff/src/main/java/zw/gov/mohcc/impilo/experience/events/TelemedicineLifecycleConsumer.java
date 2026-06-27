@@ -9,7 +9,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 import zw.gov.mohcc.impilo.experience.telemedicine.TelemedicineCommsWorkflowService;
-import zw.gov.mohcc.impilo.experience.telemedicine.TelemedicineWorkflowHistoryStore;
+import zw.gov.mohcc.impilo.experience.telemedicine.TelemedicineWorkflowTelemetry;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -23,15 +23,15 @@ public class TelemedicineLifecycleConsumer {
 
     private final ObjectMapper objectMapper;
     private final TelemedicineCommsWorkflowService workflowService;
-    private final TelemedicineWorkflowHistoryStore workflowHistoryStore;
+    private final TelemedicineWorkflowTelemetry workflowTelemetry;
 
     public TelemedicineLifecycleConsumer(
             ObjectMapper objectMapper,
             TelemedicineCommsWorkflowService workflowService,
-            TelemedicineWorkflowHistoryStore workflowHistoryStore) {
+            TelemedicineWorkflowTelemetry workflowTelemetry) {
         this.objectMapper = objectMapper;
         this.workflowService = workflowService;
-        this.workflowHistoryStore = workflowHistoryStore;
+        this.workflowTelemetry = workflowTelemetry;
     }
 
     @KafkaListener(topics = {"clinical.teleconsult.lifecycle", "pct.events"}, groupId = "experience-bff")
@@ -52,8 +52,8 @@ public class TelemedicineLifecycleConsumer {
             workflowService.processLifecycleEvent(eventType, payload);
         } catch (Exception ex) {
             log.warn("Failed to process telemedicine lifecycle event: {}", ex.getMessage());
-            workflowHistoryStore.onEventFailed("telemedicine.session.unmapped", Map.of(), ex.getMessage());
-            workflowHistoryStore.recordWebhookFailure("telemedicine.session.unmapped", Map.of(), ex.getMessage());
+            workflowTelemetry.onEventFailed("telemedicine.session.unmapped", Map.of(), ex.getMessage());
+            workflowTelemetry.recordWebhookFailure("telemedicine.session.unmapped", Map.of(), ex.getMessage());
         }
     }
 

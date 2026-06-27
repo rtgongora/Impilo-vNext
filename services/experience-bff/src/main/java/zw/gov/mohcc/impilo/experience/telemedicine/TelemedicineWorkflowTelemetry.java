@@ -1,26 +1,34 @@
 package zw.gov.mohcc.impilo.experience.telemedicine;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import zw.gov.mohcc.impilo.experience.client.TshepoAuditServiceClient;
 
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 
+/**
+ * Ephemeral operational telemetry for the telemedicine comms workflow.
+ *
+ * <p>This component holds only process-local observability counters (queue depth, failure tallies,
+ * delivery-receipt lag) used to render the operational console snapshot. It is intentionally
+ * <strong>not</strong> a store: the durable workflow event history is owned by the TSHEPO audit
+ * sovereign — every recording method here dual-ingests an immutable audit event via
+ * {@link TshepoAuditServiceClient}. The experience BFF holds no datasource of its own, so these
+ * counters reset on restart by design and are not a source of record.</p>
+ */
 @Component
-public class TelemedicineWorkflowHistoryStore {
+public class TelemedicineWorkflowTelemetry {
 
-    private volatile int maxHistory = 2000;
-    private volatile int retentionHours = 24 * 7;
+    private static final Logger log = LoggerFactory.getLogger(TelemedicineWorkflowTelemetry.class);
+    private static final String EVENT_TYPE = "TELEMEDICINE_WORKFLOW";
 
-    private final ConcurrentLinkedDeque<Map<String, Object>> history = new ConcurrentLinkedDeque<>();
-    private final ConcurrentHashMap<String, Map<String, Object>> latestStateBySession = new ConcurrentHashMap<>();
+    private final TshepoAuditServiceClient auditClient;
+
     private final AtomicLong inFlightEvents = new AtomicLong(0);
     private final LongAdder deadLetterEvents = new LongAdder();
     private final LongAdder webhookFailures = new LongAdder();
@@ -31,20 +39,24 @@ public class TelemedicineWorkflowHistoryStore {
     private final LongAdder deliveryReceiptLagMsSum = new LongAdder();
     private final LongAdder deliveryReceiptLagMsCount = new LongAdder();
 
+    public TelemedicineWorkflowTelemetry(TshepoAuditServiceClient auditClient) {
+        this.auditClient = auditClient;
+    }
+
     public void onEventReceived(String eventType, Map<String, Object> payload) {
         inFlightEvents.incrementAndGet();
-        append("RECEIVED", eventType, payload, "accepted", null, null, null, null);
+        ingest("RECEIVED", eventType, payload, "accepted", null, null, null);
     }
 
     public void onEventProcessed(String eventType, Map<String, Object> payload) {
         inFlightEvents.updateAndGet(v -> Math.max(0, v - 1));
-        append("PROCESSED", eventType, payload, "processed", null, null, null, null);
+        ingest("PROCESSED", eventType, payload, "processed", null, null, null);
     }
 
     public void onEventFailed(String eventType, Map<String, Object> payload, String reason) {
         inFlightEvents.updateAndGet(v -> Math.max(0, v - 1));
         deadLetterEvents.increment();
-        append("FAILED", eventType, payload, reason, null, null, null, null);
+        ingest("FAILED", eventType, payload, reason, null, null, null);
     }
 
     public void recordNotificationDispatch(String eventType, String channel, String templateKey, String status, Map<String, Object> payload) {
@@ -52,22 +64,22 @@ public class TelemedicineWorkflowHistoryStore {
         if ("FAILED".equalsIgnoreCase(status)) {
             notificationFailures.increment();
         }
-        append("NOTIFICATION", eventType, payload, status, channel, templateKey, null, null);
+        ingest("NOTIFICATION", eventType, payload, status, channel, templateKey, null);
     }
 
     public void recordWebhookFailure(String eventType, Map<String, Object> payload, String reason) {
         webhookFailures.increment();
-        append("WEBHOOK_FAILURE", eventType, payload, reason, null, null, null, null);
+        ingest("WEBHOOK_FAILURE", eventType, payload, reason, null, null, null);
     }
 
     public void recordStuckWaitingRoomNotification(String eventType, Map<String, Object> payload) {
         stuckWaitingRoomNotifications.increment();
-        append("WAITING_ROOM_STUCK", eventType, payload, "stuck_waiting_room_notification", null, null, null, null);
+        ingest("WAITING_ROOM_STUCK", eventType, payload, "stuck_waiting_room_notification", null, null, null);
     }
 
     public void recordSupportEscalationFailure(String eventType, Map<String, Object> payload, String reason) {
         supportEscalationFailures.increment();
-        append("SUPPORT_ESCALATION_FAILURE", eventType, payload, reason, null, null, null, null);
+        ingest("SUPPORT_ESCALATION_FAILURE", eventType, payload, reason, null, null, null);
     }
 
     public void recordDeliveryReceiptLagMs(long lagMs, String eventType, Map<String, Object> payload) {
@@ -76,7 +88,7 @@ public class TelemedicineWorkflowHistoryStore {
         }
         deliveryReceiptLagMsSum.add(lagMs);
         deliveryReceiptLagMsCount.increment();
-        append("DELIVERY_RECEIPT", eventType, payload, "lag_recorded", null, null, lagMs, null);
+        ingest("DELIVERY_RECEIPT", eventType, payload, "lag_recorded", null, null, lagMs);
     }
 
     public Map<String, Object> operationalSnapshot(Map<String, Object> telemedicineMetrics) {
@@ -100,94 +112,65 @@ public class TelemedicineWorkflowHistoryStore {
         return out;
     }
 
-    public List<Map<String, Object>> history(
-            String sessionId,
-            int limit,
-            String eventType,
-            String action,
-            OffsetDateTime from,
-            OffsetDateTime to) {
-        int boundedLimit = Math.max(1, Math.min(limit, 500));
-        List<Map<String, Object>> all = new ArrayList<>(history);
-        List<Map<String, Object>> filtered = new ArrayList<>();
-        for (int i = all.size() - 1; i >= 0; i--) {
-            Map<String, Object> item = all.get(i);
-            if (!matchesSession(item, sessionId)) continue;
-            if (!matchesEventType(item, eventType)) continue;
-            if (!matchesAction(item, action)) continue;
-            if (!matchesTimeWindow(item, from, to)) continue;
-            filtered.add(item);
-            if (filtered.size() >= boundedLimit) {
-                break;
-            }
-        }
-        return filtered;
-    }
-
+    /**
+     * Workflow event history is retained by the TSHEPO audit sovereign; the BFF no longer keeps a
+     * local projection, so this is informational only.
+     */
     public Map<String, Object> retentionConfig() {
         return Map.of(
-                "max_history", maxHistory,
-                "retention_hours", retentionHours
+                "retained_by", "tshepo-audit",
+                "note", "Telemedicine workflow history is owned by the TSHEPO audit service; "
+                        + "retention is governed there, not in the experience BFF."
         );
     }
 
+    /**
+     * Informational — the BFF holds no local history to reconfigure. Retention is owned by tshepo-audit.
+     */
     public Map<String, Object> updateRetention(Integer maxHistory, Integer retentionHours) {
-        if (maxHistory != null && maxHistory > 0) {
-            this.maxHistory = Math.min(maxHistory, 100000);
-        }
-        if (retentionHours != null && retentionHours > 0) {
-            this.retentionHours = Math.min(retentionHours, 24 * 365);
-        }
         return retentionConfig();
     }
 
+    /**
+     * Informational — there is no local history deque to prune. Always returns zero removed.
+     */
     public int pruneExpired() {
-        OffsetDateTime cutoff = OffsetDateTime.now().minusHours(retentionHours);
-        int removed = 0;
-        while (true) {
-            Map<String, Object> first = history.peekFirst();
-            if (first == null) break;
-            OffsetDateTime occurred = parseDate(str(first.get("occurred_at")));
-            if (occurred == null || occurred.isBefore(cutoff)) {
-                history.pollFirst();
-                removed++;
-                continue;
-            }
-            break;
-        }
-        return removed;
+        return 0;
     }
 
-    private void append(
+    private void ingest(
             String action,
             String eventType,
             Map<String, Object> payload,
             String outcome,
             String channel,
             String templateKey,
-            Long deliveryLagMs,
-            String notes) {
-        Map<String, Object> row = new LinkedHashMap<>();
-        row.put("id", UUID.randomUUID().toString());
-        row.put("action", action);
-        row.put("event_type", eventType);
-        row.put("session_id", string(payload, "id", "sessionId", "session_id"));
-        row.put("tenant_id", string(payload, "tenantId", "tenant_id"));
-        row.put("outcome", outcome);
-        row.put("channel", channel);
-        row.put("template_key", templateKey);
-        row.put("delivery_receipt_lag_ms", deliveryLagMs);
-        row.put("notes", notes);
-        row.put("occurred_at", OffsetDateTime.now().toString());
-        row.put("links", linkage(payload));
-        history.addLast(row);
-        while (history.size() > maxHistory) {
-            history.pollFirst();
-        }
-        pruneExpired();
-        String sessionId = str(row.get("session_id"));
-        if (sessionId != null && !sessionId.isBlank()) {
-            latestStateBySession.put(sessionId, row);
+            Long deliveryLagMs) {
+        try {
+            Map<String, Object> detail = new LinkedHashMap<>();
+            detail.put("action", action);
+            detail.put("workflow_event", eventType);
+            detail.put("outcome", outcome);
+            detail.put("channel", channel);
+            detail.put("template_key", templateKey);
+            detail.put("delivery_receipt_lag_ms", deliveryLagMs);
+            detail.put("links", linkage(payload));
+
+            String sessionId = string(payload, "id", "sessionId", "session_id");
+            Map<String, Object> event = new LinkedHashMap<>();
+            event.put("eventType", EVENT_TYPE);
+            event.put("actorId", "experience-bff");
+            event.put("actorType", "SERVICE");
+            event.put("subjectRef", "telemedicine-session:" + (sessionId != null ? sessionId : "unknown"));
+            event.put("resourceType", "TELEMEDICINE_WORKFLOW");
+            event.put("action", action);
+            event.put("outcome", outcome != null ? outcome : "SUCCESS");
+            event.put("purposeOfUse", "OPERATIONS");
+            event.put("occurredAt", OffsetDateTime.now().toString());
+            event.put("detail", detail);
+            auditClient.ingestAuditEvent(event);
+        } catch (Exception ex) {
+            log.debug("Telemedicine workflow audit ingest failed for {}: {}", eventType, ex.getMessage());
         }
     }
 
@@ -219,44 +202,5 @@ public class TelemedicineWorkflowHistoryStore {
             }
         }
         return null;
-    }
-
-    private String str(Object value) {
-        return value == null ? null : value.toString();
-    }
-
-    private boolean matchesSession(Map<String, Object> row, String sessionId) {
-        if (sessionId == null || sessionId.isBlank()) return true;
-        return sessionId.equals(str(row.get("session_id")));
-    }
-
-    private boolean matchesEventType(Map<String, Object> row, String eventType) {
-        if (eventType == null || eventType.isBlank()) return true;
-        String rowValue = str(row.get("event_type"));
-        return rowValue != null && rowValue.toLowerCase().contains(eventType.toLowerCase());
-    }
-
-    private boolean matchesAction(Map<String, Object> row, String action) {
-        if (action == null || action.isBlank()) return true;
-        String rowValue = str(row.get("action"));
-        return rowValue != null && rowValue.equalsIgnoreCase(action);
-    }
-
-    private boolean matchesTimeWindow(Map<String, Object> row, OffsetDateTime from, OffsetDateTime to) {
-        if (from == null && to == null) return true;
-        OffsetDateTime occurred = parseDate(str(row.get("occurred_at")));
-        if (occurred == null) return false;
-        if (from != null && occurred.isBefore(from)) return false;
-        if (to != null && occurred.isAfter(to)) return false;
-        return true;
-    }
-
-    private OffsetDateTime parseDate(String raw) {
-        if (raw == null || raw.isBlank()) return null;
-        try {
-            return OffsetDateTime.parse(raw);
-        } catch (Exception ignored) {
-            return null;
-        }
     }
 }

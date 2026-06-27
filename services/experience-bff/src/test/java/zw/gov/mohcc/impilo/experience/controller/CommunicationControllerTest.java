@@ -7,15 +7,17 @@ import zw.gov.mohcc.impilo.experience.client.ChannelsServiceClient;
 import zw.gov.mohcc.impilo.experience.client.NotificationServiceClient;
 import zw.gov.mohcc.impilo.experience.client.SupportServiceClient;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
+import zw.gov.mohcc.impilo.experience.client.TshepoAuditServiceClient;
 import zw.gov.mohcc.impilo.experience.resilience.UpstreamSourceCircuitBreaker;
 import zw.gov.mohcc.impilo.experience.telemedicine.TelemedicineCommsMetricsStore;
-import zw.gov.mohcc.impilo.experience.telemedicine.TelemedicineWorkflowHistoryStore;
+import zw.gov.mohcc.impilo.experience.telemedicine.TelemedicineWorkflowTelemetry;
 
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 
 class CommunicationControllerTest {
 
@@ -27,7 +29,8 @@ class CommunicationControllerTest {
                 new ChannelsServiceClient(new RestTemplate(), ServiceClientConfig.testServiceEndpoints()),
                 new NotificationServiceClient(new RestTemplate(), ServiceClientConfig.testServiceEndpoints()),
                 new TelemedicineCommsMetricsStore(),
-                new TelemedicineWorkflowHistoryStore(),
+                new TelemedicineWorkflowTelemetry(mock(TshepoAuditServiceClient.class)),
+                mock(TshepoAuditServiceClient.class),
                 new UpstreamSourceCircuitBreaker());
 
         var response = controller.listAnnouncements("tenant-1", "req-1", "corr-1", null, 0, 30);
@@ -45,7 +48,8 @@ class CommunicationControllerTest {
                 new FailingChannelsClient(),
                 new FailingNotificationClient(),
                 new TelemedicineCommsMetricsStore(),
-                new TelemedicineWorkflowHistoryStore(),
+                new TelemedicineWorkflowTelemetry(mock(TshepoAuditServiceClient.class)),
+                mock(TshepoAuditServiceClient.class),
                 new UpstreamSourceCircuitBreaker());
 
         var response = controller.dashboard("req-1", "corr-1");
@@ -65,7 +69,8 @@ class CommunicationControllerTest {
                 new FailingChannelsClient(),
                 new FailingNotificationClient(),
                 new TelemedicineCommsMetricsStore(),
-                new TelemedicineWorkflowHistoryStore(),
+                new TelemedicineWorkflowTelemetry(mock(TshepoAuditServiceClient.class)),
+                mock(TshepoAuditServiceClient.class),
                 new UpstreamSourceCircuitBreaker());
         var response = controller.health("req-1", "corr-1");
         assertEquals(200, response.getStatusCode().value());
@@ -81,7 +86,8 @@ class CommunicationControllerTest {
                 new FailingChannelsClient(),
                 new FailingNotificationClient(),
                 new TelemedicineCommsMetricsStore(),
-                new TelemedicineWorkflowHistoryStore(),
+                new TelemedicineWorkflowTelemetry(mock(TshepoAuditServiceClient.class)),
+                mock(TshepoAuditServiceClient.class),
                 new UpstreamSourceCircuitBreaker());
         var response = controller.telemedicineOperationalConsole("req-1", "corr-1");
         assertEquals(200, response.getStatusCode().value());
@@ -98,7 +104,8 @@ class CommunicationControllerTest {
                 new FailingChannelsClient(),
                 new FailingNotificationClient(),
                 new TelemedicineCommsMetricsStore(),
-                new TelemedicineWorkflowHistoryStore(),
+                new TelemedicineWorkflowTelemetry(mock(TshepoAuditServiceClient.class)),
+                mock(TshepoAuditServiceClient.class),
                 new UpstreamSourceCircuitBreaker());
 
         var retention = controller.updateTelemedicineWorkflowRetention(

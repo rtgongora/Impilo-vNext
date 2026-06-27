@@ -163,18 +163,16 @@ test('generated product-truth.json reflects honest maturity + baseline (no regre
   assert.equal(byMaturity.REAL_PROVEN || 0, 0, 'static scan must not emit REAL_PROVEN');
   assert.equal(d.summary.phase6.userFacingRealProven, 0);
 
-  // Known genuine debt must remain visible (guards against silent re-hiding).
+  // Service-level gaps (S/F) are now fully paid down — guard against silent re-hiding by
+  // asserting the services that previously carried debt stay fixed once landed.
   const flagged = new Set(
     d.services.filter((s) => (s.gaps || []).some((g) => g.category === 'S' || g.category === 'F')).map((s) => s.id),
   );
-  // experience-bff still carries the two in-memory *Store history projections
-  // (AppointmentComms/Telemedicine) pending their sovereign migration.
-  for (const id of ['experience-bff']) {
-    assert.ok(flagged.has(id), `expected ${id} to be flagged`);
-  }
-  // Landed fixes must STAY fixed (3B community pin authz, 3C clinical level-of-care;
-  // paydown P1 resolved the mushe-wallet CardController stub + 0 mockStubHits).
-  for (const id of ['community-service', 'clinical-knowledge-platform-service', 'mushe-wallet-service']) {
+  // Landed fixes must STAY fixed: 3B community pin authz, 3C clinical level-of-care;
+  // paydown P1 mushe-wallet CardController stub; P3 pct/vashandi clinical authz (V018 rules);
+  // P2 experience-bff in-memory *Store history projections (migrated to tshepo-audit + Redis).
+  for (const id of ['community-service', 'clinical-knowledge-platform-service', 'mushe-wallet-service',
+                    'pct-service', 'vashandi-workforce-service', 'experience-bff']) {
     assert.ok(!flagged.has(id), `${id} was fixed and must not be flagged again`);
   }
 

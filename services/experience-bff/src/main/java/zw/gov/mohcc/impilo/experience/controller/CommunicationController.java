@@ -12,11 +12,12 @@ import zw.gov.mohcc.impilo.experience.client.CampaignsServiceClient;
 import zw.gov.mohcc.impilo.experience.client.ChannelsServiceClient;
 import zw.gov.mohcc.impilo.experience.client.NotificationServiceClient;
 import zw.gov.mohcc.impilo.experience.client.SupportServiceClient;
+import zw.gov.mohcc.impilo.experience.client.TshepoAuditServiceClient;
 import zw.gov.mohcc.impilo.experience.controller.dto.ApiEnvelope;
 import zw.gov.mohcc.impilo.experience.controller.dto.ApiResponseFactory;
 import zw.gov.mohcc.impilo.experience.controller.dto.comms.RoleDashboardDto;
 import zw.gov.mohcc.impilo.experience.telemedicine.TelemedicineCommsMetricsStore;
-import zw.gov.mohcc.impilo.experience.telemedicine.TelemedicineWorkflowHistoryStore;
+import zw.gov.mohcc.impilo.experience.telemedicine.TelemedicineWorkflowTelemetry;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -39,8 +40,11 @@ public class CommunicationController {
     private final ChannelsServiceClient channelsClient;
     private final NotificationServiceClient notificationClient;
     private final TelemedicineCommsMetricsStore telemedicineCommsMetricsStore;
-    private final TelemedicineWorkflowHistoryStore telemedicineWorkflowHistoryStore;
+    private final TelemedicineWorkflowTelemetry telemedicineWorkflowTelemetry;
+    private final TshepoAuditServiceClient auditClient;
     private final UpstreamSourceCircuitBreaker circuitBreaker;
+
+    private static final String TELEMEDICINE_WORKFLOW_EVENT_TYPE = "TELEMEDICINE_WORKFLOW";
 
     public CommunicationController(
             CampaignsServiceClient campaignsClient,
@@ -48,14 +52,16 @@ public class CommunicationController {
             ChannelsServiceClient channelsClient,
             NotificationServiceClient notificationClient,
             TelemedicineCommsMetricsStore telemedicineCommsMetricsStore,
-            TelemedicineWorkflowHistoryStore telemedicineWorkflowHistoryStore,
+            TelemedicineWorkflowTelemetry telemedicineWorkflowTelemetry,
+            TshepoAuditServiceClient auditClient,
             UpstreamSourceCircuitBreaker circuitBreaker) {
         this.campaignsClient = campaignsClient;
         this.supportClient = supportClient;
         this.channelsClient = channelsClient;
         this.notificationClient = notificationClient;
         this.telemedicineCommsMetricsStore = telemedicineCommsMetricsStore;
-        this.telemedicineWorkflowHistoryStore = telemedicineWorkflowHistoryStore;
+        this.telemedicineWorkflowTelemetry = telemedicineWorkflowTelemetry;
+        this.auditClient = auditClient;
         this.circuitBreaker = circuitBreaker;
     }
 
@@ -192,7 +198,7 @@ public class CommunicationController {
                 "support_tickets", 100,
                 "notifications", 200
         ));
-        governance.put("telemedicine_operational_console", telemedicineWorkflowHistoryStore.operationalSnapshot(telemedicineMetrics));
+        governance.put("telemedicine_operational_console", telemedicineWorkflowTelemetry.operationalSnapshot(telemedicineMetrics));
         governance.put("last_refreshed_at", OffsetDateTime.now().toString());
         RoleDashboardDto dashboard = new RoleDashboardDto(executive, operations, clinical, communications, governance);
         Metrics.timer("impilo.communication.dashboard.latency").record(System.nanoTime() - startedNs, TimeUnit.NANOSECONDS);
@@ -231,7 +237,7 @@ public class CommunicationController {
         Map<String, Object> metrics = telemedicineCommsMetricsStore.snapshot();
         Map<String, Object> operations = new LinkedHashMap<>();
         operations.put("metrics", metrics);
-        operations.put("console", telemedicineWorkflowHistoryStore.operationalSnapshot(metrics));
+        operations.put("console", telemedicineWorkflowTelemetry.operationalSnapshot(metrics));
         operations.put("last_refreshed_at", OffsetDateTime.now().toString());
         return ResponseEntity.ok(ApiResponseFactory.ok(operations, requestId, correlationId));
     }
@@ -248,14 +254,15 @@ public class CommunicationController {
             @RequestParam(name = "limit", defaultValue = "100") int limit) {
         OffsetDateTime fromTs = parseDate(from);
         OffsetDateTime toTs = parseDate(to);
+        int boundedLimit = Math.max(1, Math.min(limit, 500));
         Map<String, Object> data = new LinkedHashMap<>();
-        data.put("items", telemedicineWorkflowHistoryStore.history(sessionId, limit, eventType, action, fromTs, toTs));
+        data.put("items", queryTelemedicineWorkflowHistory(sessionId, boundedLimit, eventType, action, fromTs, toTs));
         data.put("session_id", sessionId);
         data.put("event_type", eventType);
         data.put("action", action);
         data.put("from", fromTs == null ? null : fromTs.toString());
         data.put("to", toTs == null ? null : toTs.toString());
-        data.put("limit", Math.max(1, Math.min(limit, 500)));
+        data.put("limit", boundedLimit);
         return ResponseEntity.ok(ApiResponseFactory.ok(data, requestId, correlationId));
     }
 
@@ -267,7 +274,7 @@ public class CommunicationController {
         Integer maxHistory = asPositiveInteger(body == null ? null : body.get("max_history"));
         Integer retentionHours = asPositiveInteger(body == null ? null : body.get("retention_hours"));
         Map<String, Object> data = new LinkedHashMap<>();
-        data.put("retention", telemedicineWorkflowHistoryStore.updateRetention(maxHistory, retentionHours));
+        data.put("retention", telemedicineWorkflowTelemetry.updateRetention(maxHistory, retentionHours));
         data.put("updated_at", OffsetDateTime.now().toString());
         return ResponseEntity.ok(ApiResponseFactory.ok(data, requestId, correlationId));
     }
@@ -276,10 +283,10 @@ public class CommunicationController {
     public ResponseEntity<ApiEnvelope<Map<String, Object>>> pruneTelemedicineWorkflowHistory(
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        int removed = telemedicineWorkflowHistoryStore.pruneExpired();
+        int removed = telemedicineWorkflowTelemetry.pruneExpired();
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("removed", removed);
-        data.put("retention", telemedicineWorkflowHistoryStore.retentionConfig());
+        data.put("retention", telemedicineWorkflowTelemetry.retentionConfig());
         data.put("pruned_at", OffsetDateTime.now().toString());
         return ResponseEntity.ok(ApiResponseFactory.ok(data, requestId, correlationId));
     }
@@ -296,9 +303,9 @@ public class CommunicationController {
             @RequestParam(name = "limit", defaultValue = "500") int limit) {
         OffsetDateTime fromTs = parseDate(from);
         OffsetDateTime toTs = parseDate(to);
-        List<Map<String, Object>> items = telemedicineWorkflowHistoryStore.history(
+        List<Map<String, Object>> items = queryTelemedicineWorkflowHistory(
                 sessionId,
-                limit,
+                Math.max(1, Math.min(limit, 500)),
                 eventType,
                 action,
                 fromTs,
@@ -739,5 +746,84 @@ public class CommunicationController {
         } catch (Exception ignored) {
             return null;
         }
+    }
+
+    /**
+     * Telemedicine workflow history is owned by the TSHEPO audit sovereign (the BFF holds no datasource).
+     * Query it back and map each immutable audit event to the same row shape the in-memory projection used,
+     * preserving the {@code session_id}/{@code action}/{@code event_type}/time-window filters.
+     */
+    private List<Map<String, Object>> queryTelemedicineWorkflowHistory(
+            String sessionId, int limit, String eventType, String action,
+            OffsetDateTime from, OffsetDateTime to) {
+        String subjectRef = sessionId != null && !sessionId.isBlank()
+                ? "telemedicine-session:" + sessionId : null;
+        String fromTime = from == null ? null : from.toString();
+        String toTime = to == null ? null : to.toString();
+        try {
+            JsonNode data = auditClient.queryEvents(
+                    null, subjectRef, TELEMEDICINE_WORKFLOW_EVENT_TYPE, fromTime, toTime, 0, limit);
+            return mapTelemedicineWorkflowEvents(data, eventType, action, limit);
+        } catch (Exception e) {
+            log.debug("Telemedicine workflow history query failed: {}", e.getMessage());
+            return List.of();
+        }
+    }
+
+    private List<Map<String, Object>> mapTelemedicineWorkflowEvents(
+            JsonNode data, String eventTypeFilter, String actionFilter, int limit) {
+        if (data == null || data.isNull()) {
+            return List.of();
+        }
+        JsonNode items = data.has("items") ? data.path("items") : data;
+        if (!items.isArray()) {
+            return List.of();
+        }
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (JsonNode ev : items) {
+            JsonNode detail = ev.path("detail");
+            String workflowEvent = detail.path("workflow_event").asText(ev.path("eventType").asText(""));
+            String rowAction = ev.path("action").asText(detail.path("action").asText(""));
+            if (eventTypeFilter != null && !eventTypeFilter.isBlank()
+                    && !workflowEvent.toLowerCase(Locale.ROOT).contains(eventTypeFilter.toLowerCase(Locale.ROOT))) {
+                continue;
+            }
+            if (actionFilter != null && !actionFilter.isBlank()
+                    && !rowAction.equalsIgnoreCase(actionFilter)) {
+                continue;
+            }
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("id", ev.path("id").asText(ev.path("eventId").asText("")));
+            row.put("action", rowAction);
+            row.put("event_type", workflowEvent);
+            row.put("session_id", subjectRefSession(ev.path("subjectRef").asText("")));
+            row.put("tenant_id", ev.path("tenantId").isMissingNode() ? null : ev.path("tenantId").asText());
+            row.put("outcome", detail.path("outcome").asText(ev.path("outcome").asText("")));
+            row.put("channel", detail.path("channel").isMissingNode() || detail.path("channel").isNull()
+                    ? null : detail.path("channel").asText());
+            row.put("template_key", detail.path("template_key").isMissingNode() || detail.path("template_key").isNull()
+                    ? null : detail.path("template_key").asText());
+            row.put("delivery_receipt_lag_ms",
+                    detail.path("delivery_receipt_lag_ms").isMissingNode() || detail.path("delivery_receipt_lag_ms").isNull()
+                            ? null : detail.path("delivery_receipt_lag_ms").asLong());
+            row.put("notes", detail.path("notes").isMissingNode() || detail.path("notes").isNull()
+                    ? null : detail.path("notes").asText());
+            row.put("occurred_at", ev.path("createdAt").asText(ev.path("occurredAt").asText("")));
+            JsonNode links = detail.path("links");
+            row.put("links", links.isMissingNode() ? Map.of() : links);
+            out.add(row);
+            if (out.size() >= limit) {
+                break;
+            }
+        }
+        return out;
+    }
+
+    private static String subjectRefSession(String subjectRef) {
+        if (subjectRef == null || subjectRef.isBlank()) {
+            return null;
+        }
+        int idx = subjectRef.indexOf(':');
+        return idx >= 0 && idx < subjectRef.length() - 1 ? subjectRef.substring(idx + 1) : subjectRef;
     }
 }
