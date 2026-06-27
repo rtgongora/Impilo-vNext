@@ -35,8 +35,10 @@ public class DelegationController {
     @PostMapping
     public ResponseEntity<ApiResponse<Map<String, Object>>> create(
             @RequestHeader(value = "X-Tenant-ID", required = false) String tenant,
+            @RequestHeader(value = "X-Actor-ID", required = false) String actorId,
+            @RequestHeader(value = "X-Actor-Type", required = false) String actorType,
             @RequestBody Map<String, Object> body) {
-        return created(service.create(parseTenant(tenant), body));
+        return created(service.create(parseTenant(tenant), actorId, actorType, body));
     }
 
     @GetMapping("/delegate/{actorId}")

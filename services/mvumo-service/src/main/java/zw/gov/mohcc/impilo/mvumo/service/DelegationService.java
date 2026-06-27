@@ -8,6 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.mvumo.persistence.ConsentEventEntity;
 import zw.gov.mohcc.impilo.mvumo.persistence.ConsentEventRepository;
+import zw.gov.mohcc.impilo.mvumo.persistence.ConsentRequestEntity;
+import zw.gov.mohcc.impilo.mvumo.persistence.ConsentRequestRepository;
 import zw.gov.mohcc.impilo.mvumo.persistence.DelegationRelationshipEntity;
 import zw.gov.mohcc.impilo.mvumo.persistence.DelegationRelationshipRepository;
 import zw.gov.mohcc.impilo.mvumo.persistence.EventOutboxEntity;
@@ -33,24 +35,42 @@ public class DelegationService {
             Set.of("GUARDIAN", "CAREGIVER", "CHW", "FACILITY_STAFF");
     private static final Set<String> LEGAL_BASES =
             Set.of("CONSENT", "GUARDIANSHIP", "FACILITY_ASSIGNMENT");
+    /**
+     * Non-CONSENT delegations assert authority OVER another subject (guardian over ward, facility over
+     * patient); they must be created by an administrative authority, never self-asserted by a citizen.
+     */
+    private static final Set<String> ADMIN_ACTOR_TYPES = Set.of("PROVIDER", "OPERATOR", "SYSTEM");
+    /** Consent-request states that constitute a valid, identity-verified grant. */
+    private static final Set<String> GRANTED_CONSENT_STATES = Set.of("GRANTED", "ACTIVE", "VERIFIED");
+    /** A delegation grant may not lower the delegate's assurance floor below this policy minimum. */
+    private static final int MIN_DELEGATE_LOA_FLOOR = 2;
 
     private final DelegationRelationshipRepository repository;
     private final ConsentEventRepository consentEventRepository;
+    private final ConsentRequestRepository consentRequestRepository;
     private final EventOutboxRepository eventOutboxRepository;
     private final ObjectMapper objectMapper;
 
     public DelegationService(DelegationRelationshipRepository repository,
                              ConsentEventRepository consentEventRepository,
+                             ConsentRequestRepository consentRequestRepository,
                              EventOutboxRepository eventOutboxRepository,
                              ObjectMapper objectMapper) {
         this.repository = repository;
         this.consentEventRepository = consentEventRepository;
+        this.consentRequestRepository = consentRequestRepository;
         this.eventOutboxRepository = eventOutboxRepository;
         this.objectMapper = objectMapper;
     }
 
     @Transactional
-    public Map<String, Object> create(UUID tenantId, Map<String, Object> body) {
+    public Map<String, Object> create(UUID tenantId, String callerActorId, String callerActorType,
+                                      Map<String, Object> body) {
+        // Accountability: a delegation grant is an authority-asserting act; it must be attributable.
+        if (callerActorId == null || callerActorId.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "an authenticated actor (X-Actor-ID) is required to create a delegation");
+        }
         DelegationRelationshipEntity e = new DelegationRelationshipEntity();
         e.setTenantId(tenantId);
         e.setDelegatorSubjectRef(required(body, "delegatorSubjectRef"));
@@ -58,24 +78,66 @@ public class DelegationService {
         e.setRelationshipType(enumOf(required(body, "relationshipType"), RELATIONSHIP_TYPES, "relationshipType"));
         e.setLegalBasis(enumOf(required(body, "legalBasis"), LEGAL_BASES, "legalBasis"));
         e.setScope(writeJson(body.getOrDefault("scope", List.of())));
-        if (body.get("minDelegateLoa") != null) {
-            e.setMinDelegateLoa(((Number) body.get("minDelegateLoa")).intValue());
-        }
+        // Clamp the assurance floor: a grant may RAISE the delegate's required LOA but never lower it
+        // below the policy minimum (otherwise the grant could defeat the PDP's assurance-floor check).
+        int requestedLoa = body.get("minDelegateLoa") != null
+                ? ((Number) body.get("minDelegateLoa")).intValue() : MIN_DELEGATE_LOA_FLOOR;
+        e.setMinDelegateLoa(Math.max(requestedLoa, MIN_DELEGATE_LOA_FLOOR));
         if (body.get("backingConsentRequestId") != null) {
             e.setBackingConsentRequestId(UUID.fromString(body.get("backingConsentRequestId").toString()));
         }
         if (body.get("expiresAt") != null && !body.get("expiresAt").toString().isBlank()) {
             e.setExpiresAt(Instant.parse(body.get("expiresAt").toString()));
         }
-        // A CONSENT-based delegation must be backed by an identity-verified grant.
-        if ("CONSENT".equals(e.getLegalBasis()) && e.getBackingConsentRequestId() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "CONSENT-based delegation requires backingConsentRequestId (identity-verified grant)");
+
+        // ── Authorisation to assert this delegation (closes the self-grant IDOR) ──
+        if ("CONSENT".equals(e.getLegalBasis())) {
+            // Self-service: the SUBJECT delegates their own access. The grant must be backed by a real,
+            // identity-verified consent record FOR THIS SUBJECT — not merely any UUID. A forged/foreign
+            // id cannot reference a granted consent whose subject matches the claimed delegator.
+            if (e.getBackingConsentRequestId() == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "CONSENT-based delegation requires backingConsentRequestId (identity-verified grant)");
+            }
+            ConsentRequestEntity consent = consentRequestRepository
+                    .findByIdAndTenantId(e.getBackingConsentRequestId(), tenantId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN,
+                            "backingConsentRequestId does not reference a known consent in this tenant"));
+            if (consent.getState() == null
+                    || !GRANTED_CONSENT_STATES.contains(consent.getState().toUpperCase(Locale.ROOT))) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "backing consent is not granted");
+            }
+            if (!subjectsMatch(consent.getSubjectPatientRef(), e.getDelegatorSubjectRef())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "backing consent subject does not match the delegation subject");
+            }
+        } else {
+            // GUARDIANSHIP / FACILITY_ASSIGNMENT assert authority over ANOTHER subject. They must be
+            // created by an administrative authority (registrar/provider/facility/system) — a self-service
+            // citizen or caregiver can never establish guardianship/facility authority by request body alone.
+            String type = callerActorType == null ? "" : callerActorType.trim().toUpperCase(Locale.ROOT);
+            if (!ADMIN_ACTOR_TYPES.contains(type)) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        e.getLegalBasis() + " delegation may only be created by an administrative actor "
+                                + "(PROVIDER/OPERATOR/SYSTEM), not self-asserted");
+            }
         }
+
         e.setStatus(DelegationRelationshipEntity.Status.GRANTED.name());
         e = repository.save(e);
         audit(e, "DELEGATION_GRANTED", "impilo.mvumo.delegation.granted.v1");
         return toView(e);
+    }
+
+    /** Compare subject references tolerant of a {@code Patient/} (or similar) namespace prefix. */
+    private static boolean subjectsMatch(String a, String b) {
+        return stripRefPrefix(a).equalsIgnoreCase(stripRefPrefix(b));
+    }
+
+    private static String stripRefPrefix(String ref) {
+        if (ref == null) return "";
+        int slash = ref.lastIndexOf('/');
+        return (slash >= 0 ? ref.substring(slash + 1) : ref).trim();
     }
 
     @Transactional(readOnly = true)
