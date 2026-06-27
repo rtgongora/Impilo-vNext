@@ -26,9 +26,11 @@ import java.util.zip.GZIPOutputStream;
  * Manages encrypted health data stored for card synchronization.
  *
  * <p>Health data (critical summaries and IPS bundles) is serialized, compressed,
- * and encrypted before storage. The actual encryption is a placeholder until
- * integration with tshepo-keys-service is complete. Data integrity is verified
- * via SHA-256 hashing of the plaintext.</p>
+ * and encrypted before storage. Encryption is AES-256-GCM with a per-record data key
+ * derived (HMAC-SHA256) from a fail-closed deployment master key (≥32 chars or the
+ * service refuses to start); centralized key custody via tshepo-keys-service is a
+ * planned enhancement. Data integrity is additionally verified via SHA-256 hashing
+ * of the plaintext.</p>
  *
  * <p>Updates are queued in {@code card_update_queue} for eventual synchronization
  * to the physical smart card via the card-print-agent or NFC writer.</p>
@@ -73,8 +75,8 @@ public class CardHealthDataService {
     /**
      * Update the critical health summary for a card.
      *
-     * <p>Process: JSON -> CBOR (simulated as JSON) -> compress (gzip) ->
-     * encrypt (placeholder) -> store with SHA-256 hash -> queue for card sync.</p>
+     * <p>Process: JSON -> CBOR (encoded as JSON) -> compress (gzip) ->
+     * encrypt (AES-256-GCM) -> store with SHA-256 hash -> queue for card sync.</p>
      *
      * @param cardId           the card to update
      * @param patientCpid      the patient's CPID (no PII — per doctrine)
@@ -186,8 +188,8 @@ public class CardHealthDataService {
         // Step 3: Compress with gzip
         byte[] compressed = gzipCompress(cborBytes);
 
-        // Step 4: Simulate encryption (placeholder — real encryption via tshepo-keys-service)
-        // In production: AES-256-GCM encryption using key fetched from tshepo-keys-service
+        // Step 4: AES-256-GCM encryption with a per-record data key derived (HMAC-SHA256) from the
+        // fail-closed deployment master key (centralized key custody via tshepo-keys-service is a planned enhancement).
         byte[] encrypted = encrypt(compressed, encryptionKeyRef);
 
         // Step 5: Upsert card_health_data
