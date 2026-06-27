@@ -192,12 +192,16 @@ class OrderSubmissionServiceTest {
     @Test
     @DisplayName("submit of a non-draft order is rejected")
     void submitNonDraftRejected() {
-        OrderEntity order = draft(OrderType.IMAGING);
-        order.setStatus(OrderStatus.PLACED);
-        when(orderRepository.findByOrderId(ORDER_ID)).thenReturn(Optional.of(order));
+        try (MockedStatic<TrustContextHolder> holder = mockStatic(TrustContextHolder.class)) {
+            holder.when(TrustContextHolder::require).thenReturn(ctx());
 
-        assertThatThrownBy(() -> service.submit(ORDER_ID))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("cannot be submitted");
+            OrderEntity order = draft(OrderType.IMAGING);
+            order.setStatus(OrderStatus.PLACED);
+            when(orderRepository.findByOrderId(ORDER_ID)).thenReturn(Optional.of(order));
+
+            assertThatThrownBy(() -> service.submit(ORDER_ID))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("cannot be submitted");
+        }
     }
 }

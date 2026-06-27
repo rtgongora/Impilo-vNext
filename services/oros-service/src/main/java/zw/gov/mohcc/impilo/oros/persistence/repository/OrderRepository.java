@@ -22,6 +22,13 @@ public interface OrderRepository extends JpaRepository<OrderEntity, String> {
 
     Optional<OrderEntity> findByOrderId(String orderId);
 
+    /**
+     * Tenant-scoped by-id lookup. Request-facing access MUST use this (not {@link #findByOrderId})
+     * so an order/result cannot be read or mutated across tenant boundaries (orderIds are
+     * time-sortable ULIDs and partially predictable / leaked via events and share slips).
+     */
+    Optional<OrderEntity> findByTenantIdAndOrderId(UUID tenantId, String orderId);
+
     /** Idempotency lookup for externally-originated orders (FHIR/HL7 inbound). */
     Optional<OrderEntity> findByTenantIdAndExternalOrderRef(UUID tenantId, String externalOrderRef);
 

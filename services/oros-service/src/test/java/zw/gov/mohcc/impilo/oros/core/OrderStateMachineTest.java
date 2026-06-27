@@ -86,6 +86,37 @@ class OrderStateMachineTest {
     }
 
     @Nested
+    @DisplayName("Tenant isolation (IDOR guard)")
+    class TenantIsolation {
+
+        @Test
+        @DisplayName("getOrder denies an order belonging to another tenant (no existence leak)")
+        void getOrderDeniesCrossTenant() {
+            OrderEntity order = createOrderInStatus(OrderStatus.PLACED); // tenantId = TENANT_ID
+            when(orderRepository.findByOrderId(order.getOrderId())).thenReturn(java.util.Optional.of(order));
+            TrustContext otherTenant = new TrustContext(java.util.UUID.randomUUID(), ACTOR_ID, "PROVIDER",
+                    "TREATMENT", null, CORRELATION_ID, FACILITY_ID, WORKSPACE_ID, null, AccessMode.INTERNAL);
+            try (MockedStatic<TrustContextHolder> mockedHolder = mockStatic(TrustContextHolder.class)) {
+                mockedHolder.when(TrustContextHolder::require).thenReturn(otherTenant);
+                assertThatThrownBy(() -> stateMachine.getOrder(order.getOrderId()))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("not found");
+            }
+        }
+
+        @Test
+        @DisplayName("getOrder returns the order for its owning tenant")
+        void getOrderAllowsSameTenant() {
+            OrderEntity order = createOrderInStatus(OrderStatus.PLACED);
+            when(orderRepository.findByOrderId(order.getOrderId())).thenReturn(java.util.Optional.of(order));
+            try (MockedStatic<TrustContextHolder> mockedHolder = mockStatic(TrustContextHolder.class)) {
+                mockedHolder.when(TrustContextHolder::require).thenReturn(createTrustContext());
+                assertThat(stateMachine.getOrder(order.getOrderId())).isSameAs(order);
+            }
+        }
+    }
+
+    @Nested
     @DisplayName("Valid State Transitions")
     class ValidTransitions {
 

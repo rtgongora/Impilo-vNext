@@ -270,8 +270,7 @@ public class OrderStateMachine {
      */
     @Transactional
     public OrderEntity cancelOrder(String orderId, String reason) {
-        OrderEntity order = orderRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
+        OrderEntity order = getOrder(orderId);
 
         order.setClinicalNotes(
                 (order.getClinicalNotes() != null ? order.getClinicalNotes() + "\n" : "")
@@ -281,11 +280,20 @@ public class OrderStateMachine {
     }
 
     /**
-     * Get an order by its ID.
+     * Get an order by its ID, scoped to the caller's tenant. Reached only from request-scoped
+     * paths (controllers); cross-tenant access is denied (order appears not-found) — closes the
+     * by-id IDOR on every order/result endpoint that resolves through here. Background/event
+     * paths use the tenant-aware finders or system-trusted ids directly, not this method.
      */
     public OrderEntity getOrder(String orderId) {
-        return orderRepository.findByOrderId(orderId)
+        OrderEntity order = orderRepository.findByOrderId(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
+        UUID tenantId = TrustContextHolder.require().tenantId();
+        if (order.getTenantId() == null || !order.getTenantId().equals(tenantId)) {
+            // Deny cross-tenant access without leaking existence — same error as not-found.
+            throw new IllegalArgumentException("Order not found: " + orderId);
+        }
+        return order;
     }
 
     /**

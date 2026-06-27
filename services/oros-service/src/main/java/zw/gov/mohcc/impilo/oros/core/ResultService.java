@@ -98,8 +98,13 @@ public class ResultService {
 
     /**
      * Get all results for an order, ordered by creation time descending.
+     *
+     * <p>Tenant-scoped: results carry no tenant column, so we first resolve the order through the
+     * tenant-scoped {@link OrderStateMachine#getOrder} (throws if the order is not in the caller's
+     * tenant) before returning its results — closes the cross-tenant result-read (PHI) IDOR.
      */
     public List<ResultEntity> getResults(String orderId) {
+        stateMachine.getOrder(orderId);
         return resultRepository.findByOrderIdOrderByCreatedAtDesc(orderId);
     }
 
