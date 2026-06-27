@@ -63,6 +63,32 @@ class KhulumaServicesTest {
     }
 
     @Test
+    void mutatingMembershipOrLinks_requiresActiveParticipant() {
+        // IDOR guard: a non-participant must not be able to add themselves (and then read the PHI
+        // thread via the membership-gated read path), nor link clinical objects, nor remove others.
+        UUID tenant = UUID.randomUUID();
+        ActorContext owner = ctx(tenant, "provider-A");
+        ActorContext stranger = ctx(tenant, "provider-X");
+
+        ConversationEntity conv = conversationService.create(owner, "DIRECT", null, null,
+                List.of(new ConversationService.NewParticipant("provider-B", "PROVIDER", "Dr B", "MEMBER")), null);
+        UUID convId = conv.getConversationId();
+
+        assertThatThrownBy(() -> conversationService.addParticipant(
+                stranger, convId, "provider-X", "PROVIDER", "X", "MEMBER"))
+                .isInstanceOf(SecurityException.class);
+        assertThatThrownBy(() -> conversationService.linkObject(
+                stranger, convId, "PATIENT", "cpid-999", "SUBJECT", null))
+                .isInstanceOf(SecurityException.class);
+        assertThatThrownBy(() -> conversationService.removeParticipant(stranger, convId, "provider-B"))
+                .isInstanceOf(SecurityException.class);
+
+        // An existing participant (the OWNER/creator) can add others.
+        assertThat(conversationService.addParticipant(
+                owner, convId, "provider-C", "PROVIDER", "Dr C", "MEMBER")).isNotNull();
+    }
+
+    @Test
     void sendMessage_enforcesMembership_updatesInbox_andUnread() {
         UUID tenant = UUID.randomUUID();
         ActorContext a = ctx(tenant, "provider-A");

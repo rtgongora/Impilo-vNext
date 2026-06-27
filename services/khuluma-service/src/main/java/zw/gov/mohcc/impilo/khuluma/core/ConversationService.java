@@ -141,11 +141,24 @@ public class ConversationService {
         return participants.existsByConversationIdAndActorIdAndActiveTrue(conversationId, actorId);
     }
 
+    /**
+     * Mutating a conversation's membership or its clinical-object links is an insider operation:
+     * the acting actor MUST already be an active participant. Without this, any authenticated actor
+     * in the tenant could add themselves to an arbitrary conversation and then read its (PHI) messages
+     * — the read/send paths are membership-gated, so the membership mutation must be gated too.
+     */
+    private void requireActiveParticipant(ActorContext ctx, UUID conversationId) {
+        if (!participants.existsByConversationIdAndActorIdAndActiveTrue(conversationId, ctx.actorId())) {
+            throw new SecurityException("Actor is not an active participant of conversation " + conversationId);
+        }
+    }
+
     @Transactional
     public ConversationParticipantEntity addParticipant(ActorContext ctx, UUID conversationId,
                                                         String actorId, String actorType,
                                                         String displayName, String role) {
         ConversationEntity conv = get(ctx, conversationId);
+        requireActiveParticipant(ctx, conversationId);
         ConversationParticipantEntity p = upsertParticipant(conv, actorId, actorType, displayName,
                 role != null ? role : "MEMBER");
 
@@ -163,6 +176,7 @@ public class ConversationService {
     @Transactional
     public void removeParticipant(ActorContext ctx, UUID conversationId, String actorId) {
         get(ctx, conversationId);
+        requireActiveParticipant(ctx, conversationId);
         ConversationParticipantEntity p = participants.findByConversationIdAndActorId(conversationId, actorId)
                 .orElseThrow(() -> new NoSuchElementException("Participant not found: " + actorId));
         p.setActive(false);
@@ -183,6 +197,7 @@ public class ConversationService {
     public ConversationLinkEntity linkObject(ActorContext ctx, UUID conversationId,
                                              String objectType, String objectId, String linkRole, String note) {
         ConversationEntity conv = get(ctx, conversationId);
+        requireActiveParticipant(ctx, conversationId);
         ConversationLinkEntity link = persistLink(conv, ctx, objectType, objectId, linkRole, note);
         emitLinkedEvent(ctx, conversationId, objectType, objectId);
         return link;
