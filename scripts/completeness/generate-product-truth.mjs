@@ -785,6 +785,13 @@ const SURFACE_ALLOWLIST_PREFIXES = [
   '/auth',
   '/privacy',
   '/terms',
+  // Public pre-auth orientation pages (/welcome, /welcome/find-care, /welcome/emergency,
+  // /welcome/accessibility): static info shells in the same class as /privacy and /terms —
+  // no personal data and no sovereign backing by design. (Their only mock/stub hit is a
+  // confirmed false positive: the broad json-stringify-render pattern matching a
+  // sessionStorage.setItem(JSON.stringify(...)) serialization in the shared
+  // useAccessibilityPreferences hook, not a debug render.)
+  '/welcome',
   '/account-deletion',
   '/bootstrap',
   '/platform/all-features',

@@ -1,7 +1,7 @@
 # Product Truth — Gap Register
 
-> Generated: 2026-06-27T15:55:29.263Z
-> Total gaps: **13**
+> Generated: 2026-06-27T16:24:42.300Z
+> Total gaps: **5**
 
 ## Gap categories (A–R)
 
@@ -11,8 +11,8 @@
 | B | Backend exists, BFF missing | 0 |
 | C | Backend exists, contract missing/stale | 0 |
 | D | Backend exists, frontend only partially wired | 0 |
-| E | UI exists, backend missing | 4 |
-| F | UI exists, uses mock/stub/fixture data | 7 |
+| E | UI exists, backend missing | 0 |
+| F | UI exists, uses mock/stub/fixture data | 3 |
 | G | UI exists, form submits but does not persist | 0 |
 | H | UI exists, button/card is dead or decorative | 0 |
 | I | API exists, database persistence missing | 0 |
@@ -31,25 +31,17 @@
 
 | Severity | Count |
 |----------|------:|
-| high | 13 |
+| high | 5 |
 
 ## Prioritized gaps (top 100)
 
 | Rank | Entity | Category | Severity | Description |
 |------|--------|----------|----------|-------------|
-| 1 | /welcome | E | high | /welcome: no BFF/API backing detected |
-| 2 | /welcome/find-care | E | high | /welcome/find-care: no BFF/API backing detected |
-| 3 | /welcome/emergency | E | high | /welcome/emergency: no BFF/API backing detected |
-| 4 | /welcome/accessibility | E | high | /welcome/accessibility: no BFF/API backing detected |
-| 5 | experience-bff | F | high | experience-bff: mock/stub/fixture/in-memory patterns in product path (5 hits) |
-| 6 | pct-service | S | high | pct-service: security/crypto/authz placeholder in product path (5 hits) |
-| 7 | vashandi-workforce-service | S | high | vashandi-workforce-service: security/crypto/authz placeholder in product path (1 hits) |
-| 8 | /welcome | F | high | /welcome: mock/stub data |
-| 9 | /welcome/find-care | F | high | /welcome/find-care: mock/stub data |
-| 10 | /welcome/emergency | F | high | /welcome/emergency: mock/stub data |
-| 11 | /welcome/accessibility | F | high | /welcome/accessibility: mock/stub data |
-| 12 | /wellness/commodities | F | high | /wellness/commodities: mock/stub data |
-| 13 | /operations/facility-operations | F | high | /operations/facility-operations: mock/stub data |
+| 1 | experience-bff | F | high | experience-bff: mock/stub/fixture/in-memory patterns in product path (2 hits) |
+| 2 | pct-service | S | high | pct-service: security/crypto/authz placeholder in product path (5 hits) |
+| 3 | vashandi-workforce-service | S | high | vashandi-workforce-service: security/crypto/authz placeholder in product path (1 hits) |
+| 4 | /wellness/commodities | F | high | /wellness/commodities: mock/stub data |
+| 5 | /operations/facility-operations | F | high | /operations/facility-operations: mock/stub data |
 
 ## Services requiring product-owner decision
 

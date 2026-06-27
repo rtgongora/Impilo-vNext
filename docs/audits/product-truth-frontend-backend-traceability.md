@@ -1,6 +1,6 @@
 # Product Truth — Frontend-to-Backend Traceability
 
-> Generated: 2026-06-27T15:55:29.263Z
+> Generated: 2026-06-27T16:24:42.300Z
 > Web surfaces: **672** | Mobile screens: **181**
 
 ## Web routes (one-ui-shell)
@@ -22,10 +22,10 @@
 | /auth/register/status | Registration Status | auth | no | no | yes | no | yes | — |
 | /auth/resolving | Resolving Session | auth | yes | no | yes | no | yes | — |
 | /auth/context-chooser | Choose Work Context | auth | yes | no | yes | no | yes | — |
-| /welcome | Welcome to Impilo | auth | no | no | no | no | yes | F,E |
-| /welcome/find-care | Find Care | auth | no | no | no | no | yes | F,E |
-| /welcome/emergency | Emergency & Public Health | auth | no | no | no | no | yes | F,E |
-| /welcome/accessibility | Accessibility & Language | auth | no | no | no | no | yes | F,E |
+| /welcome | Welcome to Impilo | auth | no | no | yes | no | yes | — |
+| /welcome/find-care | Find Care | auth | no | no | yes | no | yes | — |
+| /welcome/emergency | Emergency & Public Health | auth | no | no | yes | no | yes | — |
+| /welcome/accessibility | Accessibility & Language | auth | no | no | yes | no | yes | — |
 | /privacy | Privacy Policy | auth | no | no | yes | no | no | — |
 | /terms | Terms of Use | auth | no | no | yes | no | no | — |
 | /consent | Review Policies | auth | yes | no | yes | yes | yes | — |

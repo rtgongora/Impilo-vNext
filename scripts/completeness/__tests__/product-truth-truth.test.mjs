@@ -167,11 +167,14 @@ test('generated product-truth.json reflects honest maturity + baseline (no regre
   const flagged = new Set(
     d.services.filter((s) => (s.gaps || []).some((g) => g.category === 'S' || g.category === 'F')).map((s) => s.id),
   );
-  for (const id of ['mushe-wallet-service', 'experience-bff']) {
+  // experience-bff still carries the two in-memory *Store history projections
+  // (AppointmentComms/Telemedicine) pending their sovereign migration.
+  for (const id of ['experience-bff']) {
     assert.ok(flagged.has(id), `expected ${id} to be flagged`);
   }
-  // Landed fixes must STAY fixed (3B community pin authz, 3C clinical level-of-care).
-  for (const id of ['community-service', 'clinical-knowledge-platform-service']) {
+  // Landed fixes must STAY fixed (3B community pin authz, 3C clinical level-of-care;
+  // paydown P1 resolved the mushe-wallet CardController stub + 0 mockStubHits).
+  for (const id of ['community-service', 'clinical-knowledge-platform-service', 'mushe-wallet-service']) {
     assert.ok(!flagged.has(id), `${id} was fixed and must not be flagged again`);
   }
 
