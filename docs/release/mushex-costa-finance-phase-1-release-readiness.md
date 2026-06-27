@@ -142,7 +142,7 @@ All other audited surfaces (routes registry, OpenAPI, doctrine, audit, downstrea
 
 | # | Item | Verified | Evidence |
 | - | ---- | -------- | -------- |
-| 1 | Wallet fallback production default is `false`. | ✓ | `BffWalletProperties.allowLocalFallback = false` (default value in field declaration). `application-test.yml` overrides to `true` for tests only. |
+| 1 | Wallet fallback production default is `false`. | ✓ (superseded — fabrication now fully removed) | Originally gated by `BffWalletProperties.allowLocalFallback=false`. The in-memory wallet fabrication and the `BffWalletProperties` flag were subsequently deleted entirely (paydown WS-C): `WalletController` now always fails clean with `503 WALLET_UPSTREAM_UNAVAILABLE` on upstream outage in every profile; mushe-wallet-service is the sole owner. |
 | 2 | Mobile uses `/internal/v1/wallet/**`. | ✓ | `apps/mobile/citizen-app/src/services/walletService.ts` `const V1 = "/internal/v1/wallet";`. `financeService.ts` `const WALLET = "/internal/v1/wallet";`. |
 | 3 | Legacy wallet routes remain available. | ✓ | `services/wellness-service/.../CitizenMyLifeController.java` and `services/experience-bff/.../WellnessServiceProxyController.java` are both present and unchanged in the current change-set. |
 | 4 | `/finance/costa` resolves. | ✓ | `ui/one-ui-shell/src/app/finance/costa/page.tsx` exists; registered in `src/lib/routes.ts` with `requiredRole: "FINANCE"`. |

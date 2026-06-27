@@ -129,10 +129,15 @@ class GoldenPathIntegrationTest {
                 .andExpect(jsonPath("$.error.code").value("INVALID_CREDENTIALS"));
     }
 
-    // ── Path C: Queue → Encounter → Close ────────────────────────
+    // ── Path C: Queue is sovereign-owned — BFF fails clean, never fabricates ──
+    // pct-service owns queue state. The BFF no longer holds an in-memory queue,
+    // so with pct-service unreachable in this integration JVM both create and list
+    // fail clean with 502 PCT_UNAVAILABLE rather than synthesising a seeded entry.
+    // (The golden "happy path" is covered against a stubbed PctServiceClient in
+    // QueueControllerTest.createEntryReturnsJourneyCorrelationMetaWhenPctSucceeds.)
     @Test
     @Order(3)
-    @DisplayName("Path C: List queue entries returns seeded data")
+    @DisplayName("Path C: Queue create/list fail clean when pct-service is unavailable (no fabrication)")
     void pathC_listQueueEntries() throws Exception {
         String fid = "f1000000-0000-0000-0000-000000000001";
         mvc.perform(post("/internal/v1/queue/entries")
@@ -146,7 +151,8 @@ class GoldenPathIntegrationTest {
                         .header("X-Request-ID", UUID.randomUUID().toString())
                         .header("X-Correlation-ID", UUID.randomUUID().toString())
                         .header("Idempotency-Key", UUID.randomUUID().toString()))
-                .andExpect(status().isCreated());
+                .andExpect(status().isBadGateway())
+                .andExpect(jsonPath("$.error.code").value("PCT_UNAVAILABLE"));
 
         mvc.perform(get("/internal/v1/queue/entries")
                         .param("facility_id", fid)
@@ -154,9 +160,8 @@ class GoldenPathIntegrationTest {
                         .header("X-Pod-ID", POD)
                         .header("X-Request-ID", UUID.randomUUID().toString())
                         .header("X-Correlation-ID", UUID.randomUUID().toString()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data").isArray())
-                .andExpect(jsonPath("$.data.length()").value(greaterThanOrEqualTo(1)));
+                .andExpect(status().isBadGateway())
+                .andExpect(jsonPath("$.error.code").value("PCT_UNAVAILABLE"));
     }
 
     @Test

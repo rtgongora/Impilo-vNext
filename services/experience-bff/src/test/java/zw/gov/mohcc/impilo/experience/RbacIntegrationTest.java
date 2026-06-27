@@ -67,19 +67,23 @@ class RbacIntegrationTest {
                 .andExpect(status().isOk());
     }
 
-    // ── Queue endpoints should work in dev mode ──────────────────
+    // ── Queue endpoints are reachable (RBAC passes) and fail clean ───
+    // The BFF no longer fabricates an in-memory queue, and pct-service is not
+    // running in this integration JVM, so the deterministic result is
+    // 502 PCT_UNAVAILABLE. A 502 (not 401/403) proves the request passed RBAC
+    // and reached the sovereign — which is what this RBAC test exists to verify.
 
     @Test
     @Order(2)
-    void queueEntriesListShouldWork() throws Exception {
+    void queueEntriesListPassesRbacAndFailsCleanWhenPctUnavailable() throws Exception {
         mockMvc.perform(get("/internal/v1/queue/entries")
                 .param("facility_id", "a1b2c3d4-0001-4000-8000-000000000001")
                 .header("X-Tenant-ID", "tenant-moh-zw")
                 .header("X-Pod-ID", "national-spine")
                 .header("X-Request-ID", requestId())
                 .header("X-Correlation-ID", correlationId()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data").isArray());
+                .andExpect(status().isBadGateway())
+                .andExpect(jsonPath("$.error.code").value("PCT_UNAVAILABLE"));
     }
 
     // ── Encounter endpoints should work ──────────────────────────
@@ -125,11 +129,11 @@ class RbacIntegrationTest {
                 .andExpect(jsonPath("$.data").isArray());
     }
 
-    // ── Queue stats endpoint should work ─────────────────────────
+    // ── Queue stats endpoint is reachable (RBAC passes) and fails clean ──
 
     @Test
     @Order(6)
-    void queueStatsShouldWork() throws Exception {
+    void queueStatsPassesRbacAndFailsCleanWhenPctUnavailable() throws Exception {
         mockMvc.perform(post("/internal/v1/queue/entries/stats")
                 .header("X-Tenant-ID", "tenant-moh-zw")
                 .header("X-Pod-ID", "national-spine")
@@ -138,8 +142,8 @@ class RbacIntegrationTest {
                 .header("Idempotency-Key", UUID.randomUUID().toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"facilityId\":\"00000000-0000-0000-0000-000000000001\"}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data").exists());
+                .andExpect(status().isBadGateway())
+                .andExpect(jsonPath("$.error.code").value("PCT_UNAVAILABLE"));
     }
 
     // ── Bed endpoints should work ────────────────────────────────
