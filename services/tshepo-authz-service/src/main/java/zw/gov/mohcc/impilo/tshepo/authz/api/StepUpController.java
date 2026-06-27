@@ -5,12 +5,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import zw.gov.mohcc.impilo.tshepo.authz.config.AuthzProperties;
 import zw.gov.mohcc.impilo.tshepo.authz.dto.StepUpChallengeRequest;
 import zw.gov.mohcc.impilo.tshepo.authz.dto.StepUpChallengeResponse;
 import zw.gov.mohcc.impilo.tshepo.authz.dto.StepUpVerifyRequest;
 import zw.gov.mohcc.impilo.tshepo.authz.service.StepUpService;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -33,9 +39,11 @@ public class StepUpController {
     private static final Logger log = LoggerFactory.getLogger(StepUpController.class);
 
     private final StepUpService stepUpService;
+    private final AuthzProperties properties;
 
-    public StepUpController(StepUpService stepUpService) {
+    public StepUpController(StepUpService stepUpService, AuthzProperties properties) {
         this.stepUpService = stepUpService;
+        this.properties = properties;
     }
 
     /**
@@ -67,6 +75,37 @@ public class StepUpController {
     }
 
     /**
+     * Record a supervisor's approval of a SUPERVISOR_APPROVAL challenge (dual control).
+     *
+     * <p>The supervisor's identity and authority are taken from the authenticated principal
+     * (server-side trust context: {@code x-actor-id} + JWT realm roles) — never from the
+     * request body. Fail-closed: a caller lacking a configured supervisor role is rejected
+     * (403), and the service additionally enforces that a supervisor cannot approve their own
+     * challenge. After approval, the original actor completes the challenge via {@code /verify}.
+     * Closes the G058 residual (SUPERVISOR_APPROVAL had no controller endpoint).
+     */
+    @PostMapping("/{challengeId}/supervisor-approval")
+    public ResponseEntity<Void> recordSupervisorApproval(
+            @PathVariable UUID challengeId,
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestHeader("x-tenant-id") UUID tenantId,
+            @RequestHeader("x-actor-id") String supervisorActorId) {
+        boolean authorisedSupervisor = realmRoles(jwt).stream()
+                .anyMatch(role -> properties.getStepUpSupervisorRoles().contains(role));
+        try {
+            stepUpService.recordSupervisorApproval(
+                    challengeId, tenantId, supervisorActorId, authorisedSupervisor);
+            return ResponseEntity.noContent().build();
+        } catch (SecurityException e) {
+            log.warn("Step-up supervisor approval forbidden: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        } catch (IllegalArgumentException e) {
+            log.warn("Step-up supervisor approval rejected: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    /**
      * Get the status of a step-up challenge.
      */
     @GetMapping("/status/{challengeId}")
@@ -79,5 +118,24 @@ public class StepUpController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    /** Extract realm roles from the authenticated JWT (Keycloak {@code realm_access.roles}). */
+    @SuppressWarnings("unchecked")
+    private static List<String> realmRoles(Jwt jwt) {
+        if (jwt == null) {
+            return List.of();
+        }
+        Map<String, Object> realm = jwt.getClaimAsMap("realm_access");
+        if (realm == null || !(realm.get("roles") instanceof List<?> list)) {
+            return List.of();
+        }
+        List<String> out = new ArrayList<>();
+        for (Object o : list) {
+            if (o != null) {
+                out.add(o.toString());
+            }
+        }
+        return out;
     }
 }

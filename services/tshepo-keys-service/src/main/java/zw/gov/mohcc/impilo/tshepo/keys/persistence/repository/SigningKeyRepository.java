@@ -28,6 +28,14 @@ public interface SigningKeyRepository extends JpaRepository<SigningKeyEntity, Lo
     List<SigningKeyEntity> findActiveKeysByTenant(@Param("tenantId") UUID tenantId);
 
     /**
+     * Purpose-scoped active keys for a tenant — the basis of fail-closed,
+     * purpose-bound key lookup (most recently created first).
+     */
+    @Query("SELECT k FROM SigningKeyEntity k WHERE k.tenantId = :tenantId AND k.purpose = :purpose AND k.status = 'ACTIVE' ORDER BY k.createdAt DESC")
+    List<SigningKeyEntity> findActiveKeysByTenantAndPurpose(@Param("tenantId") UUID tenantId,
+                                                            @Param("purpose") String purpose);
+
+    /**
      * Find all ACTIVE keys across all tenants (used for JWKS endpoint).
      */
     @Query("SELECT k FROM SigningKeyEntity k WHERE k.status = 'ACTIVE' ORDER BY k.createdAt DESC")

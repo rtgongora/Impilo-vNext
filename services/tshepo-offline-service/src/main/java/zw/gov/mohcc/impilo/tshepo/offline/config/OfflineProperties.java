@@ -23,7 +23,17 @@ public record OfflineProperties(
         /** Default TTL in hours for offline packs. */
         int offlinePackTtlHours,
         /** Maximum number of actions to reconcile in a single batch. */
-        int reconciliationBatchSize
+        int reconciliationBatchSize,
+        /** Expected {@code iss} claim on capability tokens (minted and verified). */
+        String tokenIssuer,
+        /** Expected {@code aud} claim on capability tokens (minted and verified). */
+        String tokenAudience,
+        /**
+         * TTL in seconds for the locally-cached JWKS. Within the TTL, token verification
+         * uses the cached keys and never contacts the keys-service — verification works
+         * truly offline. On a fetch failure the last-known-good JWKS is retained.
+         */
+        int jwksCacheTtlSeconds
 ) {
     public OfflineProperties {
         if (defaultCapabilityTtlHours <= 0) {
@@ -49,6 +59,15 @@ public record OfflineProperties(
         }
         if (reconciliationBatchSize <= 0) {
             reconciliationBatchSize = 100;
+        }
+        if (tokenIssuer == null || tokenIssuer.isBlank()) {
+            tokenIssuer = "tshepo-offline-service";
+        }
+        if (tokenAudience == null || tokenAudience.isBlank()) {
+            tokenAudience = "impilo-offline";
+        }
+        if (jwksCacheTtlSeconds <= 0) {
+            jwksCacheTtlSeconds = 3600;
         }
     }
 }

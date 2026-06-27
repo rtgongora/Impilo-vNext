@@ -132,12 +132,47 @@ public class Ed25519SigningService {
     }
 
     /**
+     * Purpose-scoped, fail-closed active-key lookup. A key may only be used for the
+     * purpose it was issued for. GENERAL may be auto-provisioned (backward compatible);
+     * any sensitive purpose (step-up, offline-capability, permit, document-signer, VDHC)
+     * MUST be explicitly provisioned and fails closed if absent — keys for trust-bearing
+     * operations are never silently minted.
+     */
+    public SigningKeyEntity getActiveKeyForPurpose(UUID tenantId, KeyPurpose purpose) {
+        KeyPurpose p = purpose == null ? KeyPurpose.GENERAL : purpose;
+        List<SigningKeyEntity> keys = signingKeyRepository.findActiveKeysByTenantAndPurpose(tenantId, p.name());
+        if (!keys.isEmpty()) {
+            return keys.get(0);
+        }
+        if (p == KeyPurpose.GENERAL) {
+            log.info("No active GENERAL key for tenant {}, generating one", tenantId);
+            SigningKeyEntity key = generateKeyPair(tenantId);
+            key.setPurpose(KeyPurpose.GENERAL.name());
+            return signingKeyRepository.save(key);
+        }
+        writeOutboxEvent("SigningKey", tenantId.toString(), "KEY_LOOKUP_FAILED_CLOSED",
+                "{\"tenantId\":\"" + tenantId + "\",\"purpose\":\"" + p.name() + "\"}");
+        throw new IllegalStateException(
+                "No active signing key for tenant " + tenantId + " purpose " + p.name()
+                + " — purpose-scoped keys must be explicitly provisioned (fail-closed).");
+    }
+
+    /**
      * Sign an arbitrary byte payload with the current active Ed25519 key (raw signature).
      *
      * @return Base64url-encoded Ed25519 signature
      */
     public String signPayload(UUID tenantId, byte[] payload) {
-        SigningKeyEntity keyEntity = getCurrentActiveKey(tenantId);
+        return signPayloadWithKey(getCurrentActiveKey(tenantId), payload);
+    }
+
+    /**
+     * Sign a raw byte payload with a specific (already-resolved) key. Used by callers
+     * that have resolved a purpose-scoped key via {@link #getActiveKeyForPurpose}.
+     *
+     * @return Base64url-encoded Ed25519 signature
+     */
+    public String signPayloadWithKey(SigningKeyEntity keyEntity, byte[] payload) {
         byte[] privateKeyBytes = decryptPrivateKey(keyEntity.getPrivateKeyEncrypted());
 
         Ed25519PrivateKeyParameters privateKey = new Ed25519PrivateKeyParameters(privateKeyBytes, 0);
@@ -150,14 +185,32 @@ public class Ed25519SigningService {
     }
 
     /**
-     * Sign a payload and produce a JWS compact serialization (EdDSA with Ed25519).
+     * Sign a payload and produce a JWS compact serialization (EdDSA with Ed25519),
+     * using the tenant's current active key (legacy/unscoped callers).
      *
      * @param tenantId the tenant whose key to use
      * @param payload  the payload string to sign
      * @return JWS compact serialization string
      */
     public String signJws(UUID tenantId, String payload) {
-        SigningKeyEntity keyEntity = getCurrentActiveKey(tenantId);
+        return signJwsWithKey(getCurrentActiveKey(tenantId), payload);
+    }
+
+    /**
+     * Sign a payload as JWS using the tenant's active key for a specific {@link KeyPurpose}.
+     * Sensitive purposes are fail-closed: if no key is provisioned for the purpose this
+     * throws (via {@link #getActiveKeyForPurpose}), so a trust-bearing artefact is never
+     * signed with a general key it was not authorised for.
+     */
+    public String signJws(UUID tenantId, String payload, KeyPurpose purpose) {
+        return signJwsWithKey(getActiveKeyForPurpose(tenantId, purpose), payload);
+    }
+
+    /**
+     * Produce a JWS compact serialization for a specific (already-resolved) key. The JWS
+     * {@code kid} header is the key's id, so verifiers can resolve it from the JWKS.
+     */
+    public String signJwsWithKey(SigningKeyEntity keyEntity, String payload) {
         byte[] privateKeyBytes = decryptPrivateKey(keyEntity.getPrivateKeyEncrypted());
         byte[] publicKeyBytes = decodePublicKeyPem(keyEntity.getPublicKeyPem());
 

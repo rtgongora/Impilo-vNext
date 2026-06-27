@@ -55,6 +55,12 @@ tshepo:
       - DISPENSE_MEDICATION
     offline-pack-ttl-hours: 24
     reconciliation-batch-size: 100
+    # Capability-token trust claims (minted on issue, enforced on verify).
+    token-issuer: tshepo-offline-service
+    token-audience: impilo-offline
+    # Locally-cached JWKS TTL — verification stays offline within this window and
+    # falls back to the last-known-good keys if the keys-service is unreachable.
+    jwks-cache-ttl-seconds: 3600
   outbox:
     poll-interval-ms: 1000
   services:

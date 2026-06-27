@@ -39,7 +39,8 @@ import java.util.*;
 public class OfflinePackService {
 
     private static final Logger log = LoggerFactory.getLogger(OfflinePackService.class);
-    private static final String SIGNING_KEY_ID = "offline-pack-signing-key";
+    /** Purpose-scoped key the keys-service signs offline packs with (fail-closed). */
+    private static final String SIGNING_PURPOSE = "OFFLINE_PACK";
 
     private final OfflinePackRepository packRepo;
     private final EventOutboxRepository outboxRepo;
@@ -106,7 +107,7 @@ public class OfflinePackService {
         packContent.put("terminology", terminologySnapshot);
 
         String packJson = toJson(packContent);
-        String signedPack = keysClient.signPayload(packJson, SIGNING_KEY_ID);
+        String signedPack = keysClient.signPayload(entity.getTenantId(), packJson, SIGNING_PURPOSE);
 
         // Write outbox event
         writeOutboxEvent("OfflinePack", entity.getId().toString(),

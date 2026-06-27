@@ -36,7 +36,8 @@ import java.util.*;
 public class CapabilityTokenService {
 
     private static final Logger log = LoggerFactory.getLogger(CapabilityTokenService.class);
-    private static final String SIGNING_KEY_ID = "offline-capability-signing-key";
+    /** Purpose-scoped key the keys-service signs capability tokens with (fail-closed). */
+    private static final String SIGNING_PURPOSE = "OFFLINE_CAPABILITY";
 
     private final CapabilityTokenRepository tokenRepo;
     private final EventOutboxRepository outboxRepo;
@@ -44,19 +45,22 @@ public class CapabilityTokenService {
     private final KeysServiceClient keysClient;
     private final OfflineProperties offlineProperties;
     private final ObjectMapper objectMapper;
+    private final CapabilityTokenJwsVerifier jwsVerifier;
 
     public CapabilityTokenService(CapabilityTokenRepository tokenRepo,
                                    EventOutboxRepository outboxRepo,
                                    AuthzServiceClient authzClient,
                                    KeysServiceClient keysClient,
                                    OfflineProperties offlineProperties,
-                                   ObjectMapper objectMapper) {
+                                   ObjectMapper objectMapper,
+                                   CapabilityTokenJwsVerifier jwsVerifier) {
         this.tokenRepo = tokenRepo;
         this.outboxRepo = outboxRepo;
         this.authzClient = authzClient;
         this.keysClient = keysClient;
         this.offlineProperties = offlineProperties;
         this.objectMapper = objectMapper;
+        this.jwsVerifier = jwsVerifier;
     }
 
     /**
@@ -102,7 +106,7 @@ public class CapabilityTokenService {
         // Step 5: Build JWT claims and sign with keys-service
         Map<String, Object> claims = buildTokenClaims(entity, capabilities);
         String claimsJson = toJson(claims);
-        String signedToken = keysClient.signPayload(claimsJson, SIGNING_KEY_ID);
+        String signedToken = keysClient.signPayload(entity.getTenantId(), claimsJson, SIGNING_PURPOSE);
 
         // Step 6: Write outbox event
         writeOutboxEvent("CapabilityToken", entity.getId().toString(),
@@ -176,69 +180,71 @@ public class CapabilityTokenService {
     /**
      * Verify a signed capability token: check JWS signature, expiry, and revocation status.
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public CapabilityVerifyResponse verifyToken(CapabilityVerifyRequest request) {
         log.debug("Verifying capability token");
 
-        try {
-            // Step 1: Parse the JWS to extract claims
-            // The signed token is a JWS compact serialization.
-            // We decode the payload (second part of the JWS)
-            String[] parts = request.signedToken().split("\\.");
-            if (parts.length != 3) {
-                return CapabilityVerifyResponse.invalid("Invalid JWS format");
-            }
-
-            String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]));
-            Map<String, Object> claims = objectMapper.readValue(payloadJson,
-                    new TypeReference<Map<String, Object>>() {});
-
-            // Step 2: Validate the signature by requesting keys-service JWKS
-            // In production, the JWKS would be cached and signature verified locally.
-            // For now, we verify by checking the token exists and is active in DB.
-            String tokenIdStr = (String) claims.get("jti");
-            if (tokenIdStr == null) {
-                return CapabilityVerifyResponse.invalid("Missing token ID in claims");
-            }
-
-            UUID tokenId = UUID.fromString(tokenIdStr);
-            Optional<CapabilityTokenEntity> entityOpt = tokenRepo.findByIdAndTenantId(tokenId, request.tenantId());
-            if (entityOpt.isEmpty()) {
-                return CapabilityVerifyResponse.invalid("Token not found");
-            }
-
-            CapabilityTokenEntity entity = entityOpt.get();
-
-            // Step 3: Check revocation
-            if ("REVOKED".equals(entity.getStatus())) {
-                return CapabilityVerifyResponse.invalid("Token has been revoked");
-            }
-
-            // Step 4: Check expiry
-            if (Instant.now().isAfter(entity.getExpiresAt())) {
-                return CapabilityVerifyResponse.invalid("Token has expired");
-            }
-
-            // Step 5: Check status is ACTIVE
-            if (!"ACTIVE".equals(entity.getStatus())) {
-                return CapabilityVerifyResponse.invalid("Token is not active (status=" + entity.getStatus() + ")");
-            }
-
-            List<String> capabilities = parseCapabilities(entity.getCapabilities());
-
-            return CapabilityVerifyResponse.valid(
-                    entity.getId(),
-                    entity.getActorId(),
-                    entity.getFacilityId(),
-                    capabilities,
-                    entity.getExpiresAt()
-            );
-
-        } catch (IllegalArgumentException e) {
-            return CapabilityVerifyResponse.invalid("Invalid token format: " + e.getMessage());
-        } catch (JsonProcessingException e) {
-            return CapabilityVerifyResponse.invalid("Failed to parse token claims");
+        // Step 1: Cryptographic JWS verification (local, against JWKS) BEFORE any claim
+        // is trusted — fail closed on malformed / unsupported-alg / unknown-kid / bad
+        // signature / expired token. This replaces the previous DB-existence-only check.
+        CapabilityTokenJwsVerifier.Result jws = jwsVerifier.verify(request.signedToken());
+        if (!jws.valid()) {
+            writeOutboxEvent("CapabilityToken", "unknown", "CAPABILITY_TOKEN_VERIFY_REJECTED",
+                    "{\"reason\":\"" + jws.reason() + "\"}");
+            return CapabilityVerifyResponse.invalid("Token signature/format invalid: " + jws.reason());
         }
+
+        // Step 2: Read the cryptographically-verified token id from the signed claims.
+        String tokenIdStr;
+        try {
+            tokenIdStr = jws.claims().getJWTID();
+        } catch (Exception e) {
+            tokenIdStr = null;
+        }
+        if (tokenIdStr == null || tokenIdStr.isBlank()) {
+            return CapabilityVerifyResponse.invalid("Missing token ID in verified claims");
+        }
+        UUID tokenId;
+        try {
+            tokenId = UUID.fromString(tokenIdStr);
+        } catch (IllegalArgumentException e) {
+            return CapabilityVerifyResponse.invalid("Invalid token ID");
+        }
+
+        // Step 3: Revocation / status / expiry checks against the registry.
+        Optional<CapabilityTokenEntity> entityOpt = tokenRepo.findByIdAndTenantId(tokenId, request.tenantId());
+        if (entityOpt.isEmpty()) {
+            writeOutboxEvent("CapabilityToken", tokenId.toString(), "CAPABILITY_TOKEN_VERIFY_REJECTED",
+                    "{\"reason\":\"NOT_FOUND\"}");
+            return CapabilityVerifyResponse.invalid("Token not found");
+        }
+        CapabilityTokenEntity entity = entityOpt.get();
+        if ("REVOKED".equals(entity.getStatus())) {
+            writeOutboxEvent("CapabilityToken", tokenId.toString(), "CAPABILITY_TOKEN_VERIFY_REJECTED",
+                    "{\"reason\":\"REVOKED\"}");
+            return CapabilityVerifyResponse.invalid("Token has been revoked");
+        }
+        if (Instant.now().isAfter(entity.getExpiresAt())) {
+            writeOutboxEvent("CapabilityToken", tokenId.toString(), "CAPABILITY_TOKEN_VERIFY_REJECTED",
+                    "{\"reason\":\"EXPIRED\"}");
+            return CapabilityVerifyResponse.invalid("Token has expired");
+        }
+        if (!"ACTIVE".equals(entity.getStatus())) {
+            writeOutboxEvent("CapabilityToken", tokenId.toString(), "CAPABILITY_TOKEN_VERIFY_REJECTED",
+                    "{\"reason\":\"NOT_ACTIVE\"}");
+            return CapabilityVerifyResponse.invalid("Token is not active (status=" + entity.getStatus() + ")");
+        }
+
+        List<String> capabilities = parseCapabilities(entity.getCapabilities());
+        writeOutboxEvent("CapabilityToken", entity.getId().toString(), "CAPABILITY_TOKEN_VERIFY_ACCEPTED",
+                "{\"actorId\":\"" + entity.getActorId() + "\"}");
+        return CapabilityVerifyResponse.valid(
+                entity.getId(),
+                entity.getActorId(),
+                entity.getFacilityId(),
+                capabilities,
+                entity.getExpiresAt()
+        );
     }
 
     // ------------------------------------------------------------------
@@ -274,9 +280,9 @@ public class CapabilityTokenService {
     private Map<String, Object> buildTokenClaims(CapabilityTokenEntity entity, List<String> capabilities) {
         Map<String, Object> claims = new LinkedHashMap<>();
         claims.put("jti", entity.getId().toString());
-        claims.put("iss", "tshepo-offline-service");
+        claims.put("iss", offlineProperties.tokenIssuer());
         claims.put("sub", entity.getActorId());
-        claims.put("aud", "impilo-offline");
+        claims.put("aud", offlineProperties.tokenAudience());
         claims.put("iat", entity.getIssuedAt().getEpochSecond());
         claims.put("exp", entity.getExpiresAt().getEpochSecond());
         claims.put("tenant_id", entity.getTenantId().toString());
