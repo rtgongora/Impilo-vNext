@@ -14,6 +14,9 @@ CREATE DATABASE pharmacy;
 -- MADI — blood donation, blood bank & transfusion (port 8300). Flyway V001–V006 bootstrap.
 CREATE DATABASE madi;
 CREATE DATABASE impilo_learning;
+-- Khuluma — Comms Hub; live — virtual meetings / live events.
+CREATE DATABASE impilo_khuluma;
+CREATE DATABASE live;
 -- NDILA — Geospatial Intelligence, Routing, Location & Spatial Orchestration.
 -- The schema bootstrap (Flyway V001) conditionally enables PostGIS if the
 -- extension is available on the host cluster. When running against a

@@ -69,6 +69,9 @@ CREATE DATABASE pipeline;
 CREATE DATABASE impilo_data_ingestion;
 CREATE DATABASE impilo_data_governance;
 
+-- Communication & Coordination (Khuluma — Impilo Comms Hub)
+CREATE DATABASE impilo_khuluma;
+
 -- Governance & Compliance
 CREATE DATABASE dags;
 CREATE DATABASE secharden;

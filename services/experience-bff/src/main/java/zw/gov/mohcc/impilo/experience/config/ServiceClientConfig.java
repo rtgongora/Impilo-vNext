@@ -114,6 +114,8 @@ public class ServiceClientConfig {
             String workforceGovernanceBaseUrl,
             /** vashandi-workforce-service — operational workforce SoR (roster, attendance, leave, access risk) */
             String vashandiBaseUrl,
+            /** khuluma-service — Comms Hub (conversations, presence, calls, realtime gateway) */
+            String khulumaBaseUrl,
             /** scheduling-service MVP — slot templates + holds (distinct default port from inpatient-service) */
             String schedulingServiceBaseUrl,
             /** booking-service — sovereign Booking + Appointment aggregates (port 8265) */
@@ -204,6 +206,7 @@ public class ServiceClientConfig {
             if (wellnessBaseUrl == null) wellnessBaseUrl = "http://localhost:8125";
             if (workforceGovernanceBaseUrl == null) workforceGovernanceBaseUrl = "http://localhost:8165";
             if (vashandiBaseUrl == null) vashandiBaseUrl = "http://localhost:8167";
+            if (khulumaBaseUrl == null) khulumaBaseUrl = "http://localhost:8390";
             if (schedulingServiceBaseUrl == null) schedulingServiceBaseUrl = "http://localhost:8128";
             if (bookingBaseUrl == null) bookingBaseUrl = "http://localhost:8265";
             if (msikaAppsBaseUrl == null) msikaAppsBaseUrl = "http://localhost:8181";
@@ -233,7 +236,7 @@ public class ServiceClientConfig {
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null
+                null, null, null, null, null
         );
     }
 
@@ -254,7 +257,7 @@ public class ServiceClientConfig {
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null
+                null, null, null
         );
     }
 

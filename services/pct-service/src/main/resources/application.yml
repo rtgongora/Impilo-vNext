@@ -83,6 +83,10 @@ pct:
     require-payment-clearance: true
   telemedicine:
     provider:
+      # Set to RTC_GATEWAY to run consults on self-hosted LiveKit via rtc-gateway (same media path as Khuluma).
+      default-provider-type: ${PCT_TELEMED_DEFAULT_PROVIDER:MANAGED_PRIMARY}
+      rtc-gateway:
+        base-url: ${RTC_GATEWAY_BASE_URL:http://localhost:8195}
       external:
         enabled: ${PCT_TELEMED_EXTERNAL_ENABLED:false}
         base-url: ${PCT_TELEMED_EXTERNAL_BASE_URL:}

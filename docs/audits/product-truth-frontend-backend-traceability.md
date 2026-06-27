@@ -1,7 +1,7 @@
 # Product Truth — Frontend-to-Backend Traceability
 
-> Generated: 2026-06-27T13:14:25.927Z
-> Web surfaces: **670** | Mobile screens: **179**
+> Generated: 2026-06-27T13:47:09.777Z
+> Web surfaces: **672** | Mobile screens: **181**
 
 ## Web routes (one-ui-shell)
 
@@ -115,8 +115,10 @@
 | /scheduling/booking-requests | Booking Requests | queue | yes | no | yes | yes | yes | — |
 | /scheduling/today | Today's Appointments | queue | yes | no | yes | yes | yes | — |
 | /scheduling/bookings/config | Booking Configuration | queue | yes | no | yes | yes | yes | — |
-| /communication | Communication Hub | queue | yes | no | yes | yes | yes | — |
-| /communication/secure-messaging | Secure Messaging | queue | yes | no | yes | yes | yes | — |
+| /communication | Khuluma — Communication Hub | queue | yes | no | yes | yes | yes | — |
+| /communication/secure-messaging | Khuluma — Secure Messaging | queue | yes | no | yes | yes | yes | — |
+| /work/comms | Khuluma — Comms Hub | queue | yes | no | yes | yes | yes | — |
+| /my/comms | Khuluma — Messages | home | yes | no | yes | yes | yes | — |
 | /queue | Patient Queue | queue | yes | no | yes | yes | yes | — |
 | /queue/triage | Triage Queue | queue | yes | no | yes | yes | yes | — |
 | /queue/waiting | Waiting Room | queue | yes | no | yes | yes | yes | — |
@@ -505,8 +507,6 @@
 | /live/create | Create Live Event | operations | yes | no | yes | yes | yes | — |
 | /live/discover | Discover Live Events | home | yes | no | yes | yes | yes | — |
 | /live/saved | Saved Live Events | home | yes | no | yes | yes | yes | — |
-| /live/my-events | My Live Events | home | yes | no | yes | yes | yes | — |
-| /live/replays | Live Event Replays | home | yes | no | yes | yes | yes | — |
 
 ## Mobile screens
 
@@ -524,8 +524,10 @@
 | citizen-app | apps/mobile/citizen-app/src/screens/auth/AssuranceChoiceScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/auth/SignUpScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/caregiving/DelegationSection.tsx | 0 | no |
+| citizen-app | apps/mobile/citizen-app/src/screens/comms/CommsHubScreen.tsx | 0 | yes |
 | citizen-app | apps/mobile/citizen-app/src/screens/crvs/UbomiCrvsScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/discover/ProviderDiscoveryScreen.tsx | 0 | no |
+| citizen-app | apps/mobile/citizen-app/src/screens/live/EventDiscussionSection.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/live/LiveDiscoverScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/live/LiveEventScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/madi/BecomeDonorScreen.tsx | 0 | no |

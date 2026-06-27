@@ -1,0 +1,560 @@
+# =============================================================================
+# khuluma-service — handler-synced OpenAPI (Wave 2)
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: "Khuluma Service"
+  version: "1.0.0"
+  description: |
+    Sovereign HTTP surface for `khuluma-service`, generated from Spring handler paths.
+    Extend schemas as DTOs stabilise.
+
+servers:
+  - url: /
+    description: Service-relative paths (Envoy/BFF may prefix)
+
+security:
+  - bearerAuth: []
+
+paths:
+  /calls:
+    post:
+      operationId: khuluma_post_calls
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /calls/incoming:
+    get:
+      operationId: khuluma_get_calls_incoming
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /calls/{id}:
+    get:
+      operationId: khuluma_get_calls_id
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /calls/{id}/accept:
+    post:
+      operationId: khuluma_post_calls_id_accept
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /calls/{id}/decline:
+    post:
+      operationId: khuluma_post_calls_id_decline
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /calls/{id}/end:
+    post:
+      operationId: khuluma_post_calls_id_end
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /calls/{id}/signals:
+    post:
+      operationId: khuluma_post_calls_id_signals
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /conversations:
+    get:
+      operationId: khuluma_get_conversations
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: khuluma_post_conversations
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /conversations/{id}:
+    get:
+      operationId: khuluma_get_conversations_id
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /conversations/{id}/links:
+    post:
+      operationId: khuluma_post_conversations_id_links
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /conversations/{id}/meeting/end:
+    post:
+      operationId: khuluma_post_conversations_id_meeting_end
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /conversations/{id}/meeting/join:
+    post:
+      operationId: khuluma_post_conversations_id_meeting_join
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /conversations/{id}/messages:
+    get:
+      operationId: khuluma_get_conversations_id_messages
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: khuluma_post_conversations_id_messages
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /conversations/{id}/messages/read:
+    post:
+      operationId: khuluma_post_conversations_id_messages_read
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /conversations/{id}/participants:
+    post:
+      operationId: khuluma_post_conversations_id_participants
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /conversations/{id}/participants/{actorId}:
+    delete:
+      operationId: khuluma_delete_conversations_id_participants_actorId
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /events/{eventId}/conversation:
+    get:
+      operationId: khuluma_get_events_eventId_conversation
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /health:
+    get:
+      operationId: khuluma_get_health
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1:
+    delete:
+      operationId: khuluma_delete_internal_v1
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    get:
+      operationId: khuluma_get_internal_v1
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    patch:
+      operationId: khuluma_patch_internal_v1
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: khuluma_post_internal_v1
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    put:
+      operationId: khuluma_put_internal_v1
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/khuluma:
+    delete:
+      operationId: khuluma_delete_internal_v1_khuluma
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    get:
+      operationId: khuluma_get_internal_v1_khuluma
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    patch:
+      operationId: khuluma_patch_internal_v1_khuluma
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: khuluma_post_internal_v1_khuluma
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    put:
+      operationId: khuluma_put_internal_v1_khuluma
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/khuluma/stream:
+    delete:
+      operationId: khuluma_delete_internal_v1_khuluma_stream
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    get:
+      operationId: khuluma_get_internal_v1_khuluma_stream
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    patch:
+      operationId: khuluma_patch_internal_v1_khuluma_stream
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: khuluma_post_internal_v1_khuluma_stream
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    put:
+      operationId: khuluma_put_internal_v1_khuluma_stream
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /meetings:
+    post:
+      operationId: khuluma_post_meetings
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /meetings/from-event:
+    post:
+      operationId: khuluma_post_meetings_from-event
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /presence:
+    put:
+      operationId: khuluma_put_presence
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /presence/{actorId}:
+    get:
+      operationId: khuluma_get_presence_actorId
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /sse:
+    get:
+      operationId: khuluma_get_sse
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /test-command:
+    post:
+      operationId: khuluma_post_test-command
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /unread-count:
+    get:
+      operationId: khuluma_get_unread-count
+      tags: [Generated-From-Handler]
+      summary: Documented from khuluma-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas: {}
