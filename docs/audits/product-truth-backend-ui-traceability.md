@@ -1,6 +1,6 @@
 # Product Truth — Backend-to-UI Traceability
 
-> Generated: 2026-06-27T13:47:09.777Z
+> Generated: 2026-06-27T15:46:29.817Z
 
 For each service: backend capabilities → API → BFF → UI → mobile → persistence.
 
@@ -623,7 +623,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/admin/federation/page.tsx`
 
 **Gaps:**
-- [F] experience-bff: mock/stub/fixture/in-memory patterns in product path (7 hits) (high)
+- [F] experience-bff: mock/stub/fixture/in-memory patterns in product path (5 hits) (high)
 
 ## fhir-gateway-service
 
@@ -1179,7 +1179,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/components/navigation/ExperienceSidebar.tsx`
 
 **Gaps:**
-- [F] mushe-wallet-service: mock/stub/fixture/in-memory patterns in product path (2 hits) (high)
+- [F] mushe-wallet-service: mock/stub/fixture/in-memory patterns in product path (1 hits) (high)
 
 ## mushex-service
 
@@ -1191,7 +1191,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 |---|----------|--------|
 | 1 | Real backend capabilities? | Yes (16 controllers, 73 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: mushex.openapi.yaml) |
-| 3 | Wired via BFF? | Yes (12 clients) |
+| 3 | Wired via BFF? | Yes (11 clients) |
 | 4 | Visible in UI? | Yes (90 refs) |
 | 5 | Visible on mobile? | Yes (18 refs) |
 | 6 | Fake/partial/disconnected? | No |
@@ -1483,12 +1483,12 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 
 - **Path:** `services/patient-safety-service`
 - **Domain:** pharmacovigilance (clinical)
-- **Product status:** mostly-real
+- **Product status:** real
 
 | # | Question | Answer |
 |---|----------|--------|
 | 1 | Real backend capabilities? | Yes (5 controllers, 30 routes) |
-| 2 | Exposed via API/contracts? | Yes (contract: none) |
+| 2 | Exposed via API/contracts? | Yes (contract: patient-safety.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (4 clients) |
 | 4 | Visible in UI? | Yes (8 refs) |
 | 5 | Visible on mobile? | Yes (0 refs) |
@@ -1504,9 +1504,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/work/patient-safety/new/page.tsx`
 - `ui/one-ui-shell/src/app/work/patient-safety/page.tsx`
 - `ui/one-ui-shell/src/app/work/patient-safety/reports/[reportId]/page.tsx`
-
-**Gaps:**
-- [C] patient-safety-service: no matched OpenAPI contract (medium)
 
 ## pct-service
 
@@ -1569,7 +1566,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 |---|----------|--------|
 | 1 | Real backend capabilities? | Yes (10 controllers, 38 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: pharmacy.openapi.yaml) |
-| 3 | Wired via BFF? | Yes (13 clients) |
+| 3 | Wired via BFF? | Yes (12 clients) |
 | 4 | Visible in UI? | Yes (83 refs) |
 | 5 | Visible on mobile? | Yes (14 refs) |
 | 6 | Fake/partial/disconnected? | No |
@@ -1751,7 +1748,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 |---|----------|--------|
 | 1 | Real backend capabilities? | Yes (1 controllers, 7 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: rules.openapi.yaml) |
-| 3 | Wired via BFF? | Yes (14 clients) |
+| 3 | Wired via BFF? | Yes (13 clients) |
 | 4 | Visible in UI? | Yes (48 refs) |
 | 5 | Visible on mobile? | Yes (4 refs) |
 | 6 | Fake/partial/disconnected? | No |
@@ -1825,7 +1822,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 |---|----------|--------|
 | 1 | Real backend capabilities? | Yes (1 controllers, 5 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: search.openapi.yaml) |
-| 3 | Wired via BFF? | Yes (35 clients) |
+| 3 | Wired via BFF? | Yes (34 clients) |
 | 4 | Visible in UI? | Yes (412 refs) |
 | 5 | Visible on mobile? | Yes (53 refs) |
 | 6 | Fake/partial/disconnected? | No |

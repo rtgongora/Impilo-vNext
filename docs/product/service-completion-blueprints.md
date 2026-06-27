@@ -1,6 +1,6 @@
 # Service Completion Blueprints
 
-> Generated: 2026-06-27T13:47:09.777Z
+> Generated: 2026-06-27T15:46:29.817Z
 > End-to-end product expectation per service for mature vNext.
 
 Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and tests required.
@@ -1363,7 +1363,7 @@ Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and
 
 **Product names:** Patient Safety
 **Plane/domain:** clinical / pharmacovigilance
-**Current status:** mostly-real
+**Current status:** real
 
 ### Primary personas
 - Operators and domain users for pharmacovigilance plane capabilities

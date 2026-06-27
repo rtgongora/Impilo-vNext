@@ -1,0 +1,456 @@
+# =============================================================================
+# Patient Safety — pharmacovigilance, AEFI & MCAZ safety surveillance (OpenAPI 3.0)
+# Sovereign: patient-safety-service (port 8202). Internal API uses TSHEPO
+# TrustContext and returns ApiResponse envelopes. Routes mirror the live handlers
+# in api/{SafetyReport,SafetyCase,AefiInvestigation,McazWorkbench,Config}Controller.
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: Patient Safety Service API
+  version: "1.0.0"
+  description: |
+    Adverse-event reporting (ADR/AEFI), safety-case management, AEFI investigation,
+    and the MCAZ reviewer workbench. PII stays out of the safety record per doctrine;
+    subjects are referenced by CPID. Every mutation is audited and event-sourced via
+    the service outbox.
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8202
+    description: Local development
+  - url: https://{tenant}.impilo.health/api
+    description: Production (per-tenant)
+    variables:
+      tenant:
+        default: demo
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Safety-Reports
+    description: Adverse-event report intake and lifecycle
+  - name: Safety-Cases
+    description: Triage, review, follow-up and closure of safety cases
+  - name: AEFI-Investigation
+    description: Adverse Event Following Immunization causality investigation
+  - name: MCAZ-Workbench
+    description: Regulator (MCAZ) review queues and workbench
+  - name: Config
+    description: Adapter and external-link configuration (read-only)
+
+paths:
+  /internal/v1/patient-safety/reports:
+    post:
+      operationId: safetyReportCreate
+      tags: [Safety-Reports]
+      summary: Create a draft adverse-event report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SafetyReportCreateRequest' }
+      responses:
+        '201': { $ref: '#/components/responses/EnvelopeObject' }
+        '400': { $ref: '#/components/responses/Error' }
+    get:
+      operationId: safetyReportList
+      tags: [Safety-Reports]
+      summary: List adverse-event reports (paged, filterable)
+      parameters:
+        - { name: status, in: query, schema: { type: string } }
+        - { name: page, in: query, schema: { type: integer, default: 0 } }
+        - { name: size, in: query, schema: { type: integer, default: 20 } }
+      responses:
+        '200': { $ref: '#/components/responses/EnvelopeArray' }
+
+  /internal/v1/patient-safety/reports/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      operationId: safetyReportGet
+      tags: [Safety-Reports]
+      summary: Get a single adverse-event report
+      responses:
+        '200': { $ref: '#/components/responses/EnvelopeObject' }
+        '404': { $ref: '#/components/responses/Error' }
+    patch:
+      operationId: safetyReportUpdate
+      tags: [Safety-Reports]
+      summary: Update a draft adverse-event report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        '200': { $ref: '#/components/responses/EnvelopeObject' }
+        '400': { $ref: '#/components/responses/Error' }
+
+  /internal/v1/patient-safety/reports/{id}/products:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      operationId: safetyReportAddProduct
+      tags: [Safety-Reports]
+      summary: Add a suspect/concomitant product to a report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SafetyReportProductRequest' }
+      responses:
+        '201': { $ref: '#/components/responses/EnvelopeObject' }
+        '400': { $ref: '#/components/responses/Error' }
+
+  /internal/v1/patient-safety/reports/{id}/events:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      operationId: safetyReportAddEvent
+      tags: [Safety-Reports]
+      summary: Add an adverse-event detail line to a report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SafetyReportEventRequest' }
+      responses:
+        '201': { $ref: '#/components/responses/EnvelopeObject' }
+        '400': { $ref: '#/components/responses/Error' }
+
+  /internal/v1/patient-safety/reports/{id}/attachments:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      operationId: safetyReportAddAttachment
+      tags: [Safety-Reports]
+      summary: Attach a supporting document reference to a report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        '201': { $ref: '#/components/responses/EnvelopeObject' }
+        '400': { $ref: '#/components/responses/Error' }
+
+  /internal/v1/patient-safety/reports/{id}/submit:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      operationId: safetyReportSubmit
+      tags: [Safety-Reports]
+      summary: Submit a completed report, promoting it to a safety case
+      responses:
+        '200': { $ref: '#/components/responses/EnvelopeObject' }
+        '400': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+
+  /internal/v1/patient-safety/cases:
+    get:
+      operationId: safetyCaseList
+      tags: [Safety-Cases]
+      summary: List safety cases (paged, filterable)
+      parameters:
+        - { name: status, in: query, schema: { type: string } }
+        - { name: page, in: query, schema: { type: integer, default: 0 } }
+        - { name: size, in: query, schema: { type: integer, default: 20 } }
+      responses:
+        '200': { $ref: '#/components/responses/EnvelopeArray' }
+
+  /internal/v1/patient-safety/cases/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      operationId: safetyCaseGet
+      tags: [Safety-Cases]
+      summary: Get a single safety case
+      responses:
+        '200': { $ref: '#/components/responses/EnvelopeObject' }
+        '404': { $ref: '#/components/responses/Error' }
+
+  /internal/v1/patient-safety/cases/{id}/triage:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      operationId: safetyCaseTriage
+      tags: [Safety-Cases]
+      summary: Triage a case (seriousness, causality, priority)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SafetyCaseTriageRequest' }
+      responses:
+        '200': { $ref: '#/components/responses/EnvelopeObject' }
+        '400': { $ref: '#/components/responses/Error' }
+
+  /internal/v1/patient-safety/cases/{id}/review-actions:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      operationId: safetyCaseReviewAction
+      tags: [Safety-Cases]
+      summary: Record a clinical-review action on a case
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        '201': { $ref: '#/components/responses/EnvelopeObject' }
+        '400': { $ref: '#/components/responses/Error' }
+
+  /internal/v1/patient-safety/cases/{id}/follow-up:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      operationId: safetyCaseCreateFollowUp
+      tags: [Safety-Cases]
+      summary: Open a follow-up request on a case
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        '201': { $ref: '#/components/responses/EnvelopeObject' }
+        '400': { $ref: '#/components/responses/Error' }
+
+  /internal/v1/patient-safety/cases/{id}/follow-up/{followUpId}/response:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: followUpId, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      operationId: safetyCaseRespondFollowUp
+      tags: [Safety-Cases]
+      summary: Record a response to a follow-up request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        '200': { $ref: '#/components/responses/EnvelopeObject' }
+        '400': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+
+  /internal/v1/patient-safety/cases/{id}/vigiflow-manual-entry:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      operationId: safetyCaseVigiflowManualEntry
+      tags: [Safety-Cases]
+      summary: Record a manual VigiFlow entry reference for a case
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        '200': { $ref: '#/components/responses/EnvelopeObject' }
+        '400': { $ref: '#/components/responses/Error' }
+
+  /internal/v1/patient-safety/cases/{id}/mark-export-ready:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      operationId: safetyCaseMarkExportReady
+      tags: [Safety-Cases]
+      summary: Flag a case as ready for regulatory (E2B/VigiFlow) export
+      responses:
+        '200': { $ref: '#/components/responses/EnvelopeObject' }
+        '409': { $ref: '#/components/responses/Error' }
+
+  /internal/v1/patient-safety/cases/{id}/close:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      operationId: safetyCaseClose
+      tags: [Safety-Cases]
+      summary: Close a safety case with an outcome
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SafetyCaseCloseRequest' }
+      responses:
+        '200': { $ref: '#/components/responses/EnvelopeObject' }
+        '400': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+
+  /internal/v1/patient-safety/cases/{caseId}/investigation:
+    parameters:
+      - { name: caseId, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      operationId: aefiInvestigationCreate
+      tags: [AEFI-Investigation]
+      summary: Open an AEFI causality investigation for a case
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        '201': { $ref: '#/components/responses/EnvelopeObject' }
+        '400': { $ref: '#/components/responses/Error' }
+    get:
+      operationId: aefiInvestigationGet
+      tags: [AEFI-Investigation]
+      summary: Get the AEFI investigation for a case
+      responses:
+        '200': { $ref: '#/components/responses/EnvelopeObject' }
+        '404': { $ref: '#/components/responses/Error' }
+
+  /internal/v1/patient-safety/investigations/{investigationId}:
+    parameters:
+      - { name: investigationId, in: path, required: true, schema: { type: string, format: uuid } }
+    patch:
+      operationId: aefiInvestigationUpdate
+      tags: [AEFI-Investigation]
+      summary: Update an AEFI investigation (classification, findings)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        '200': { $ref: '#/components/responses/EnvelopeObject' }
+        '400': { $ref: '#/components/responses/Error' }
+
+  /internal/v1/patient-safety/mcaz/workbench:
+    get:
+      operationId: mcazWorkbench
+      tags: [MCAZ-Workbench]
+      summary: MCAZ reviewer workbench summary
+      responses:
+        '200': { $ref: '#/components/responses/EnvelopeObject' }
+
+  /internal/v1/patient-safety/mcaz/incoming-queue:
+    get:
+      operationId: mcazIncomingQueue
+      tags: [MCAZ-Workbench]
+      summary: MCAZ incoming case queue
+      parameters:
+        - { name: page, in: query, schema: { type: integer, default: 0 } }
+        - { name: size, in: query, schema: { type: integer, default: 20 } }
+      responses:
+        '200': { $ref: '#/components/responses/EnvelopeArray' }
+
+  /internal/v1/patient-safety/mcaz/priority-queue:
+    get:
+      operationId: mcazPriorityQueue
+      tags: [MCAZ-Workbench]
+      summary: MCAZ priority (serious/expedited) case queue
+      parameters:
+        - { name: page, in: query, schema: { type: integer, default: 0 } }
+        - { name: size, in: query, schema: { type: integer, default: 20 } }
+      responses:
+        '200': { $ref: '#/components/responses/EnvelopeArray' }
+
+  /internal/v1/patient-safety/config/vigimobile-links:
+    get:
+      operationId: configVigimobileLinks
+      tags: [Config]
+      summary: List VigiMobile deep-link configuration
+      responses:
+        '200': { $ref: '#/components/responses/EnvelopeArray' }
+
+  /internal/v1/patient-safety/config/adapters:
+    get:
+      operationId: configAdapters
+      tags: [Config]
+      summary: List configured external safety adapters and their status
+      responses:
+        '200': { $ref: '#/components/responses/EnvelopeArray' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    EnvelopeObject:
+      description: ApiResponse envelope wrapping a single resource
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiResponseObject' }
+    EnvelopeArray:
+      description: ApiResponse envelope wrapping a list/page of resources
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiResponseArray' }
+    Error:
+      description: Error envelope
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  schemas:
+    ApiResponseObject:
+      type: object
+      properties:
+        data: { type: object, additionalProperties: true }
+        meta: { type: object, additionalProperties: true }
+    ApiResponseArray:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { type: object, additionalProperties: true }
+        meta: { type: object, additionalProperties: true }
+    ErrorEnvelope:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+        meta: { type: object, additionalProperties: true }
+    SafetyReportCreateRequest:
+      type: object
+      required: [reportType, subjectCpid]
+      properties:
+        reportType: { type: string, description: "ADR | AEFI | DEVICE | OTHER" }
+        subjectCpid: { type: string, description: "Subject reference (CPID — no PII)" }
+        facilityId: { type: string, format: uuid }
+        reporterActorId: { type: string }
+        narrative: { type: string }
+    SafetyReportProductRequest:
+      type: object
+      required: [productRole]
+      properties:
+        productRole: { type: string, description: "SUSPECT | CONCOMITANT" }
+        productId: { type: string }
+        productName: { type: string }
+        dose: { type: string }
+        route: { type: string }
+    SafetyReportEventRequest:
+      type: object
+      required: [eventTerm]
+      properties:
+        eventTerm: { type: string, description: "Reaction/MedDRA term" }
+        onsetDate: { type: string, format: date }
+        seriousness: { type: string }
+        outcome: { type: string }
+    SafetyCaseTriageRequest:
+      type: object
+      properties:
+        seriousness: { type: string }
+        causality: { type: string }
+        priority: { type: string }
+        assignedReviewerId: { type: string }
+    SafetyCaseCloseRequest:
+      type: object
+      required: [outcome]
+      properties:
+        outcome: { type: string }
+        closureNote: { type: string }

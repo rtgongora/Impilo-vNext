@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-06-27T13:47:09.777Z",
-  "branch": "prep/phase4-khuluma",
+  "generatedAt": "2026-06-27T15:46:29.817Z",
+  "branch": "chore/paydown-placeholder-gaps",
   "registryDrift": {
     "unregisteredModules": [],
     "missingOnDiskModules": []
@@ -13,27 +13,23 @@
     "contractCount": 104,
     "byProductStatus": {
       "internal-only": 25,
-      "real": 69,
-      "mostly-real": 1
+      "real": 70
     },
     "byMaturity": {
       "INTERNAL_ONLY": 25,
-      "REAL_CODE_NOT_PROBED": 65,
-      "FIXTURE_BACKED": 4,
-      "PARTIAL": 1
+      "REAL_CODE_NOT_PROBED": 66,
+      "FIXTURE_BACKED": 4
     },
     "gapCounts": {
       "byCategory": {
         "E": 4,
         "F": 8,
-        "S": 2,
-        "C": 1
+        "S": 2
       },
       "bySeverity": {
-        "high": 14,
-        "medium": 1
+        "high": 14
       },
-      "total": 15
+      "total": 14
     },
     "crossServiceCohesion": {
       "total": 14,
@@ -45,9 +41,9 @@
       "missingTest": 0
     },
     "phase6": {
-      "complete": 90,
+      "complete": 91,
       "userFacing": 70,
-      "userFacingReal": 69,
+      "userFacingReal": 70,
       "userFacingRealProven": 0
     }
   },
@@ -2913,14 +2909,6 @@
           "pattern": "in-memory-backing"
         },
         {
-          "file": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/QueueController.java",
-          "pattern": "in-memory-backing"
-        },
-        {
-          "file": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/WalletController.java",
-          "pattern": "in-memory-backing"
-        },
-        {
           "file": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/scheduling/AppointmentCommsHistoryStore.java",
           "pattern": "in-memory-store"
         },
@@ -2952,7 +2940,7 @@
         {
           "category": "F",
           "severity": "high",
-          "description": "experience-bff: mock/stub/fixture/in-memory patterns in product path (7 hits)",
+          "description": "experience-bff: mock/stub/fixture/in-memory patterns in product path (5 hits)",
           "impactScore": 3
         }
       ],
@@ -5481,10 +5469,6 @@
         {
           "file": "services/mushe-wallet-service/src/main/java/zw/gov/mohcc/impilo/wallet/card/CardController.java",
           "pattern": "stub-placeholder"
-        },
-        {
-          "file": "services/mushe-wallet-service/src/main/java/zw/gov/mohcc/impilo/wallet/card/CardHealthDataService.java",
-          "pattern": "stub-placeholder"
         }
       ],
       "securityPlaceholderHits": [],
@@ -5510,7 +5494,7 @@
         {
           "category": "F",
           "severity": "high",
-          "description": "mushe-wallet-service: mock/stub/fixture/in-memory patterns in product path (2 hits)",
+          "description": "mushe-wallet-service: mock/stub/fixture/in-memory patterns in product path (1 hits)",
           "impactScore": 3
         }
       ],
@@ -5562,7 +5546,7 @@
         "stubRoutes": 0,
         "contractOperations": 75,
         "contractViolations": 0,
-        "bffClients": 12,
+        "bffClients": 11,
         "uiReferences": 90,
         "mobileReferences": 18,
         "tests": 19
@@ -5592,7 +5576,6 @@
         "RefundOpsController→inline",
         "RegistryController→inline",
         "SettlementController→inline",
-        "WalletController→inline",
         "mushex→yml-base-url"
       ],
       "uiPaths": [
@@ -6974,15 +6957,15 @@
         "entitiesRepos": "real",
         "serviceLayer": "real",
         "controllers": "real",
-        "contract": "absent",
+        "contract": "real",
         "bffWiring": "real",
         "frontendUi": "real",
         "mobileUi": "n/a",
         "tests": "real",
         "authzAudit": "real"
       },
-      "productStatus": "mostly-real",
-      "contractFile": null,
+      "productStatus": "real",
+      "contractFile": "patient-safety.openapi.yaml",
       "bffClients": [
         "PatientSafetyServiceClient",
         "PatientSafetyController→inline",
@@ -7019,16 +7002,9 @@
         "q9_persistsToDb": true,
         "q10_fixtureOnly": false
       },
-      "phase6Complete": false,
-      "gaps": [
-        {
-          "category": "C",
-          "severity": "medium",
-          "description": "patient-safety-service: no matched OpenAPI contract",
-          "impactScore": 2
-        }
-      ],
-      "maturity": "PARTIAL"
+      "phase6Complete": true,
+      "gaps": [],
+      "maturity": "REAL_CODE_NOT_PROBED"
     },
     {
       "id": "pct-service",
@@ -7363,7 +7339,7 @@
         "stubRoutes": 0,
         "contractOperations": 52,
         "contractViolations": 0,
-        "bffClients": 13,
+        "bffClients": 12,
         "uiReferences": 83,
         "mobileReferences": 14,
         "tests": 9
@@ -7391,7 +7367,6 @@
         "MobileProviderExtendedController→inline",
         "PatientSafetyController→inline",
         "PharmacyController→inline",
-        "QueueController→inline",
         "WorkspaceController→inline",
         "MobilePrescriptionController→inline",
         "CitizenPrescriptionController→inline",
@@ -8238,7 +8213,7 @@
         "stubRoutes": 0,
         "contractOperations": 10,
         "contractViolations": 0,
-        "bffClients": 14,
+        "bffClients": 13,
         "uiReferences": 48,
         "mobileReferences": 4,
         "tests": 4
@@ -8269,7 +8244,6 @@
         "RitoController→inline",
         "TeleconsultController→inline",
         "TrustAdminController→inline",
-        "WalletController→inline",
         "ProviderProfessionalSettingsHubController→inline",
         "rules→yml-base-url"
       ],
@@ -8595,7 +8569,7 @@
         "stubRoutes": 0,
         "contractOperations": 7,
         "contractViolations": 0,
-        "bffClients": 35,
+        "bffClients": 34,
         "uiReferences": 412,
         "mobileReferences": 53,
         "tests": 6
@@ -8641,7 +8615,6 @@
         "SupportController→inline",
         "TeleconsultController→inline",
         "VitoInternalSearchBffController→inline",
-        "WalletController→inline",
         "WorkforceGovernanceController→inline",
         "MobileDiagnosisController→inline",
         "MobileProviderSearchController→inline",

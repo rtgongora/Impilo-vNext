@@ -1,6 +1,6 @@
 # Product Truth — Service Inventory
 
-> Generated: 2026-06-27T13:47:09.777Z
+> Generated: 2026-06-27T15:46:29.817Z
 > Scanner: `scripts/completeness/generate-product-truth.mjs`
 > Total services: **95** | Libraries: **12** | UI workspaces: **24**
 
@@ -9,8 +9,7 @@
 | Status | Count |
 |--------|------:|
 | internal-only | 25 |
-| real | 69 |
-| mostly-real | 1 |
+| real | 70 |
 
 ## Service inventory
 
@@ -75,7 +74,7 @@
 | offline-sync-service | integration | real | real | real | absent | real | real | real | internal-only |
 | oros-service | clinical | real | real | real | real | real | real | real | real |
 | pacs-adapter-service | clinical | real | real | real | absent | real | real | real | internal-only |
-| patient-safety-service | clinical | real | real | absent | real | real | n/a | real | mostly-real |
+| patient-safety-service | clinical | real | real | real | real | real | n/a | real | real |
 | pct-service | clinical | real | real | real | real | real | real | real | real |
 | pharmacy-elmis-adapter | clinical | real | real | real | absent | thin | absent | real | internal-only |
 | pharmacy-service | clinical | real | real | real | real | real | real | real | real |

@@ -1,7 +1,7 @@
 # Full Product Truth Recovery Report
 
-> Generated: 2026-06-27T13:47:09.777Z
-> Branch: `prep/phase4-khuluma`
+> Generated: 2026-06-27T15:46:29.817Z
+> Branch: `chore/paydown-placeholder-gaps`
 
 ## Executive summary
 
@@ -15,15 +15,15 @@
 | BFF route handlers | 2418 |
 | OpenAPI contracts | 104 |
 | Services with DB persistence | 95 |
-| **Phase 6 complete (user-facing + documented internal)** | **90** |
-| User-facing services with `real` code present (file-existence axis) | 69 / 70 |
+| **Phase 6 complete (user-facing + documented internal)** | **91** |
+| User-facing services with `real` code present (file-existence axis) | 70 / 70 |
 | — of those, **runtime-proven** (REAL_PROVEN) | **0** |
 | Services internal-only (documented) | 25 |
-| Services partially complete | 1 |
+| Services partially complete | 0 |
 | Services backend-only (no UI) | 0 |
 | Services UI-only (no backend) | 0 |
 | Services with mock/stub hits | 3 |
-| Total classified gaps | 15 |
+| Total classified gaps | 14 |
 | Blocker gaps | 0 |
 | High severity gaps | 14 |
 | Cross-service cohesion | 14/14 pass |
@@ -37,9 +37,8 @@
 | Maturity | Count |
 |----------|------:|
 | INTERNAL_ONLY | 25 |
-| REAL_CODE_NOT_PROBED | 65 |
+| REAL_CODE_NOT_PROBED | 66 |
 | FIXTURE_BACKED | 4 |
-| PARTIAL | 1 |
 
 ## Quality gates added
 
@@ -62,7 +61,6 @@
 ## Remaining gaps by severity
 
 - **high:** 14
-- **medium:** 1
 
 ## Implementation status
 

@@ -1,7 +1,7 @@
 # Product Truth — Gap Register
 
-> Generated: 2026-06-27T13:47:09.777Z
-> Total gaps: **15**
+> Generated: 2026-06-27T15:46:29.817Z
+> Total gaps: **14**
 
 ## Gap categories (A–R)
 
@@ -9,7 +9,7 @@
 |-----|-------------|------:|
 | A | Backend exists, UI missing | 0 |
 | B | Backend exists, BFF missing | 0 |
-| C | Backend exists, contract missing/stale | 1 |
+| C | Backend exists, contract missing/stale | 0 |
 | D | Backend exists, frontend only partially wired | 0 |
 | E | UI exists, backend missing | 4 |
 | F | UI exists, uses mock/stub/fixture data | 8 |
@@ -32,7 +32,6 @@
 | Severity | Count |
 |----------|------:|
 | high | 14 |
-| medium | 1 |
 
 ## Prioritized gaps (top 100)
 
@@ -42,8 +41,8 @@
 | 2 | /welcome/find-care | E | high | /welcome/find-care: no BFF/API backing detected |
 | 3 | /welcome/emergency | E | high | /welcome/emergency: no BFF/API backing detected |
 | 4 | /welcome/accessibility | E | high | /welcome/accessibility: no BFF/API backing detected |
-| 5 | experience-bff | F | high | experience-bff: mock/stub/fixture/in-memory patterns in product path (7 hits) |
-| 6 | mushe-wallet-service | F | high | mushe-wallet-service: mock/stub/fixture/in-memory patterns in product path (2 hits) |
+| 5 | experience-bff | F | high | experience-bff: mock/stub/fixture/in-memory patterns in product path (5 hits) |
+| 6 | mushe-wallet-service | F | high | mushe-wallet-service: mock/stub/fixture/in-memory patterns in product path (1 hits) |
 | 7 | pct-service | S | high | pct-service: security/crypto/authz placeholder in product path (5 hits) |
 | 8 | vashandi-workforce-service | S | high | vashandi-workforce-service: security/crypto/authz placeholder in product path (1 hits) |
 | 9 | /welcome | F | high | /welcome: mock/stub data |
@@ -52,7 +51,6 @@
 | 12 | /welcome/accessibility | F | high | /welcome/accessibility: mock/stub data |
 | 13 | /wellness/commodities | F | high | /wellness/commodities: mock/stub data |
 | 14 | /operations/facility-operations | F | high | /operations/facility-operations: mock/stub data |
-| 15 | patient-safety-service | C | medium | patient-safety-service: no matched OpenAPI contract |
 
 ## Services requiring product-owner decision
 
