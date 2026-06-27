@@ -239,11 +239,36 @@ and pushed (`cfd4d3bd9 → db48bfe74`, fast-forward, no force). Safety snapshot:
 Gate state at `db48bfe74` unchanged from baseline (no regression): product-truth gaps 4 ≤ 6, phase6 incomplete 2 ≤ 2,
 completeness 12/13 (pre-existing test #13 still 8).
 
-### Remaining work (Phases 1–5) — gated on human sign-off + CI
+## Continuation — Phase 1 trust substrate LANDED (2026-06-27, with human sign-off)
+
+The Phase-1 trust substrate was prepared on a local `prep/phase1-trust-substrate` branch (PT untouched until
+sign-off), verified, **explicitly approved by the user**, then merged and pushed: **`6d8da4779 → fc4d014ee`**
+(fast-forward, no force). Safety snapshot: `safety/pt-before-phase1-20260627-0245`.
+
+- **Method:** curated **file-level extraction** of the substrate dirs from `intake/wave-b-tshepo-gdhcn-trust-primitives`
+  (NOT a wholesale wave-b merge — that would have unregistered rito/patient-safety from `services/pom.xml`). PT had
+  **zero** changes to these dirs since the merge-base, so wave-b's versions are clean supersets. The `tshepo-trust-crypto`
+  lib module was added to `services/pom.xml` surgically (rito + patient-safety preserved).
+- **Contents:** `libs/tshepo-trust-crypto` (B4 JWS + canonical trust error model); `tshepo-authz-service` (real step-up
+  verification, TOTP/SMS-OTP/supervisor-approval seams, Trust Authority registry B5, GDHCN readiness B6, Flyway
+  V010/V014/V015/V016); `tshepo-keys-service` (purpose-scoped signing); `tshepo-offline-service` (capability-token JWS +
+  offline JWKS cache w/ iss/aud/scope checks); runtime-proof scripts + GDHCN architecture doc.
+- **Verification:** `tshepo-trust-crypto` install ✓; `tshepo-keys`/`tshepo-offline` tests ✓; **`tshepo-authz` 98/98 tests, 0 failures** ✓;
+  gates unchanged (product-truth 4 ≤ 6, phase6 2 ≤ 2, completeness 12/13 pre-existing #13 still 8 — no regression).
+- **Security review** (`/security-review`, scoped to the substrate diff after correcting the skill's worktree mis-targeting):
+  **no high-confidence vulnerabilities.** Confirmed constant-time compares, AES-256-GCM with fresh random IVs, EdDSA-only
+  allowlist (no `alg:none`/alg-confusion), signature-verified-before-claims, parameterized JPQL, server-side actor/role
+  derivation, dual-control supervisor approval with self-approval prevention, fail-closed providers, persisted lockout/replay
+  rejection. One non-blocking config note: `AuthzProperties.ESignet.clientSecret="changeme"` placeholder (eSignet disabled
+  by default, config-overridden; pre-existing) — tighten as config hygiene.
+
+`intake/wave-b-tshepo-gdhcn-trust-primitives` stays **open** (its trust strand is now substantially in PT, but its Wave C–I
+de-fab strand + CDS strand are not; close it only after those are reconciled or explicitly dropped).
+
+### Remaining work (Phases 2–5) — gated on human sign-off + CI
 These were **intentionally not executed** in this automated pass because the approved plan gates them on
 `/security-review` + a real cross-service test run + human architect/security sign-off, and they are large,
 security-sensitive, and hard to reverse:
-- **Phase 1** — trust substrate (`libs/tshepo-trust-crypto` + tshepo-authz V010/V014/V015/V016 + GdhcnReadiness/StepUp/TrustAuthority), carried by the wave-b trust remainder. No Flyway same-number/different-content collisions found.
 - **Phase 2** — OROS reconciliation (4 named non-mergeable code conflicts: subsidy enrolment spelling, DAGS v1↔v1+v2, teleconsult billing 1-arg↔2-arg, telemedicine API + `OutboxPublisher` duplicate `case`).
 - **Phase 3** — `citizen-zero-to-one` (OPA rego must compile first — tip admits "uncompilable + SHADOW").
 - **Phase 4** — `khuluma-comms-hub` (V017 + khuluma.rego + 22 SecurityConfig edits).
