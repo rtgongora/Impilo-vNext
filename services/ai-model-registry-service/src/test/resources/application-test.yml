@@ -19,7 +19,6 @@ spring:
 
 air:
   security:
-    oauth2-enabled: false
     allow-insecure-permit-all: true
 
 impilo:

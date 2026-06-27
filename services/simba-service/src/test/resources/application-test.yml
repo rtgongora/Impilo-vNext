@@ -18,8 +18,10 @@ spring:
   flyway:
     enabled: false
 
-simba:
+impilo:
   security:
-    oauth2-enabled: false
+    disable-oauth-for-tests: true
+
+simba:
   outbox:
     publisher-enabled: false

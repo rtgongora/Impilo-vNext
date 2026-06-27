@@ -16,7 +16,7 @@ import {
   useHrPayslips,
 } from "@/hooks/queries/useHrPayroll";
 
-type Emp = { employeeId?: string };
+type Emp = { employeeId?: string; providerId?: string };
 
 export default function ErpHrPage() {
   const employees = useHrEmployees();
@@ -27,6 +27,11 @@ export default function ErpHrPage() {
   }, [list]);
   const [employeeId, setEmployeeId] = useState("");
   const effEmp = employeeId || defaultEmp;
+  // Leave + attendance read Vashandi by the worker's provider id (the bridge).
+  const effProvider = useMemo(() => {
+    const e = Array.isArray(list) ? list.find((x) => x.employeeId === effEmp) : undefined;
+    return e?.providerId ?? "";
+  }, [list, effEmp]);
 
   const runs = useHrPayrollRuns();
   const runList = runs.data as { runId?: string }[] | undefined;
@@ -39,8 +44,8 @@ export default function ErpHrPage() {
 
   const contracts = useHrContracts(effEmp || null);
   const leaveTypes = useHrLeaveTypes();
-  const leaveReq = useHrLeaveRequests(effEmp || null);
-  const attendance = useHrAttendance(effEmp || null);
+  const leaveReq = useHrLeaveRequests(effProvider || null);
+  const attendance = useHrAttendance(effProvider || null);
   const payslips = useHrPayslips(effRun || null);
   const deductions = useHrDeductionTypes();
 
@@ -182,8 +187,8 @@ export default function ErpHrPage() {
             <JsonApiDataTable
               data={attendance.data}
               columns={[
-                { key: "date", header: "Date", fields: ["date", "attendanceDate"] },
-                { key: "shift", header: "Shift", fields: ["shift", "shiftId"] },
+                { key: "date", header: "Date", fields: ["eventTime", "date", "attendanceDate"] },
+                { key: "event", header: "Event", fields: ["eventType", "shift", "shiftId"] },
                 { key: "hours", header: "Hours", fields: ["hoursWorked", "hours"] },
                 { key: "status", header: "Status", fields: ["status"] },
               ]}

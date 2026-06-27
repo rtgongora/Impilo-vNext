@@ -137,7 +137,9 @@ public class ServiceClientConfig {
             /** Rito — quality, safety & client voice (port 8391). */
             String ritoBaseUrl,
             /** patient-safety-service — pharmacovigilance (ADR/AEFI) SoR + MCAZ workbench (port 8202). */
-            String patientSafetyBaseUrl
+            String patientSafetyBaseUrl,
+            /** identity-assurance-service — identity assurance level + upgrade workflow (port 8201). */
+            String identityAssuranceBaseUrl
     ) {
         public ServiceEndpoints {
             if (pctBaseUrl == null) pctBaseUrl = "http://localhost:8088";
@@ -214,6 +216,7 @@ public class ServiceClientConfig {
             if (rtcGatewayBaseUrl == null) rtcGatewayBaseUrl = "http://localhost:8195";
             if (ritoBaseUrl == null) ritoBaseUrl = "http://localhost:8391";
             if (patientSafetyBaseUrl == null) patientSafetyBaseUrl = "http://localhost:8202";
+            if (identityAssuranceBaseUrl == null) identityAssuranceBaseUrl = "http://localhost:8201";
         }
     }
 
@@ -230,7 +233,7 @@ public class ServiceClientConfig {
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
-                null, null, null
+                null, null, null, null
         );
     }
 
@@ -251,7 +254,7 @@ public class ServiceClientConfig {
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null
+                null, null
         );
     }
 

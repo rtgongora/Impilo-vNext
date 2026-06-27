@@ -4,9 +4,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.vashandi.api.VashandiDtos;
 import zw.gov.mohcc.impilo.vashandi.persistence.entity.LeaveAvailabilityEntity;
+import zw.gov.mohcc.impilo.vashandi.persistence.entity.LeaveBalanceEntity;
+import zw.gov.mohcc.impilo.vashandi.persistence.entity.LeaveTypeEntity;
 import zw.gov.mohcc.impilo.vashandi.persistence.repository.LeaveAvailabilityRepository;
+import zw.gov.mohcc.impilo.vashandi.persistence.repository.LeaveBalanceRepository;
+import zw.gov.mohcc.impilo.vashandi.persistence.repository.LeaveTypeRepository;
+import zw.gov.mohcc.impilo.vashandi.persistence.repository.WorkforceProfileRepository;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,12 +23,63 @@ import java.util.UUID;
 public class LeaveAvailabilityService {
 
     private final LeaveAvailabilityRepository leaveRepository;
+    private final LeaveBalanceRepository balanceRepository;
+    private final LeaveTypeRepository leaveTypeRepository;
+    private final WorkforceProfileRepository profileRepository;
     private final VashandiOutboxWriter outboxWriter;
 
     public LeaveAvailabilityService(LeaveAvailabilityRepository leaveRepository,
+                                    LeaveBalanceRepository balanceRepository,
+                                    LeaveTypeRepository leaveTypeRepository,
+                                    WorkforceProfileRepository profileRepository,
                                     VashandiOutboxWriter outboxWriter) {
         this.leaveRepository = leaveRepository;
+        this.balanceRepository = balanceRepository;
+        this.leaveTypeRepository = leaveTypeRepository;
+        this.profileRepository = profileRepository;
         this.outboxWriter = outboxWriter;
+    }
+
+    public List<LeaveTypeEntity> leaveTypes(UUID tenantId) {
+        return leaveTypeRepository.findByTenantIdOrderByNameAsc(tenantId);
+    }
+
+    @Transactional
+    public LeaveTypeEntity createLeaveType(UUID tenantId, LeaveTypeEntity type) {
+        type.setTenantId(tenantId);
+        return leaveTypeRepository.save(type);
+    }
+
+    /** Leave windows for the worker identified by provider-worker-id (the ERP-HR bridge). */
+    public List<LeaveAvailabilityEntity> listByProviderWorkerId(UUID tenantId, String providerWorkerId) {
+        return profileRepository.findByTenantIdAndProviderWorkerId(tenantId, providerWorkerId)
+                .map(p -> leaveRepository.findByTenantIdAndWorkforceProfileIdOrderByStartDateDesc(tenantId, p.getId()))
+                .orElseGet(List::of);
+    }
+
+    public List<LeaveBalanceEntity> balances(UUID tenantId, UUID workforceProfileId, int fiscalYear) {
+        return balanceRepository.findByTenantIdAndWorkforceProfileIdAndFiscalYear(
+                tenantId, workforceProfileId, fiscalYear);
+    }
+
+    @Transactional
+    public LeaveBalanceEntity upsertBalance(UUID tenantId, VashandiDtos.UpsertLeaveBalanceRequest request) {
+        LeaveBalanceEntity balance = balanceRepository
+                .findByTenantIdAndWorkforceProfileIdAndLeaveTypeAndFiscalYear(
+                        tenantId, request.workforceProfileId(), request.leaveType(), request.fiscalYear())
+                .orElseGet(() -> {
+                    LeaveBalanceEntity b = new LeaveBalanceEntity();
+                    b.setTenantId(tenantId);
+                    b.setWorkforceProfileId(request.workforceProfileId());
+                    b.setLeaveType(request.leaveType());
+                    b.setFiscalYear(request.fiscalYear());
+                    return b;
+                });
+        balance.setEntitlement(request.entitlement());
+        balance.setCarriedOver(request.carriedOver());
+        balance.setUsed(request.used());
+        balance.setAvailable(request.entitlement() + request.carriedOver() - request.used());
+        return balanceRepository.save(balance);
     }
 
     public List<LeaveAvailabilityEntity> list(UUID tenantId, UUID workforceProfileId) {
@@ -46,6 +103,28 @@ public class LeaveAvailabilityService {
         leave.setStartDate(request.startDate());
         leave.setEndDate(request.endDate());
         leave.setSourceAuthority(request.sourceAuthority());
+
+        // Reserve against entitlement IF a balance is configured for this (profile, type, year).
+        // When no balance row exists, the leave window is recorded without enforcement so
+        // existing operational use is not broken.
+        if (request.startDate() != null && request.endDate() != null) {
+            int fiscalYear = request.startDate().getYear();
+            int days = (int) (ChronoUnit.DAYS.between(request.startDate(), request.endDate()) + 1);
+            Optional<LeaveBalanceEntity> balanceOpt = balanceRepository
+                    .findByTenantIdAndWorkforceProfileIdAndLeaveTypeAndFiscalYear(
+                            tenantId, request.workforceProfileId(), request.leaveType(), fiscalYear);
+            if (balanceOpt.isPresent() && days > 0) {
+                LeaveBalanceEntity balance = balanceOpt.get();
+                if (balance.getAvailable() < days) {
+                    throw new IllegalArgumentException(
+                            "Insufficient leave balance: available=" + balance.getAvailable() + ", requested=" + days);
+                }
+                balance.setUsed(balance.getUsed() + days);
+                balance.setAvailable(balance.getAvailable() - days);
+                balanceRepository.save(balance);
+            }
+        }
+
         LeaveAvailabilityEntity saved = leaveRepository.save(leave);
         emit(tenantId, saved, "created");
         return saved;

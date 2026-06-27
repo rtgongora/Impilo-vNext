@@ -15,7 +15,6 @@ spring:
 
 learning:
   security:
-    oauth2-enabled: false
   integration:
     varapi-internal-key: test-learning-key
     orchestration-internal-key: test-orch-key

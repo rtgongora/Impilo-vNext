@@ -175,6 +175,16 @@ public final class VashandiDtos {
     public record UpdateLeaveRequest(String status, LocalDate endDate, String approvedBy) {
     }
 
+    public record UpsertLeaveBalanceRequest(
+            UUID workforceProfileId,
+            String leaveType,
+            int fiscalYear,
+            int entitlement,
+            int carriedOver,
+            int used
+    ) {
+    }
+
     public record AccessRiskScanResponse(int detectedCount, List<AccessRiskEntity> risks, String status) {
     }
 

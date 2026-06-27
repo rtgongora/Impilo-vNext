@@ -43,6 +43,20 @@ public class VitoClientRegistryBffController {
         return forward(() -> vitoServiceClient.rawGet("/v1/client-registry/clients/" + healthId), requestId, correlationId);
     }
 
+    /**
+     * Update a client's demographics — proxies VITO's canonical {@code PUT /v1/clients/{healthId}}
+     * (the SoR write that preserves all demographic fields). Previously this had no consumer above
+     * VITO (no BFF method/route, no UI) — G055.
+     */
+    @PutMapping(value = "/clients/{healthId}/demographics", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> updateDemographics(
+            @PathVariable String healthId,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forward(() -> vitoServiceClient.rawPut("/v1/clients/" + healthId, body), requestId, correlationId);
+    }
+
     @GetMapping("/clients/{healthId}/identity-summary")
     public ResponseEntity<String> getIdentitySummary(
             @PathVariable String healthId,

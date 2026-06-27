@@ -25,6 +25,7 @@ import java.security.SecureRandom;
 import java.time.OffsetDateTime;
 import java.util.LinkedHashMap;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -129,7 +130,9 @@ public class ShareLinkService {
         entity.setSubjectName(request.subjectName());
         entity.setCreatedBy(actorId);
         entity.setPurpose(request.purpose());
-        entity.setDocumentIds(request.documentIds());
+        // Normalize to an empty list so document-less links (e.g. DIAGNOSTIC_ORDER QR) are safe
+        // downstream (PDF generation, claim signed-URL generation).
+        entity.setDocumentIds(request.documentIds() != null ? request.documentIds() : List.of());
         entity.setVerificationMethod(verificationMethod);
         entity.setOtpHash(otpHash);
         entity.setMaxClaims(request.maxClaims() != null ? request.maxClaims() : 1);

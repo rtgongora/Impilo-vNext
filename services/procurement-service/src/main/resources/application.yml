@@ -41,7 +41,6 @@ spring:
           issuer-uri: ${KEYCLOAK_ISSUER:${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}}
 procurement:
   security:
-    oauth2-enabled: true
   outbox:
     poll-interval-ms: 2000
   v11:

@@ -44,3 +44,37 @@ Provide a single operator-facing runbook for enterprise-plane finance-domain eve
 - Reconciliation unmatched count grows over two cycles.
 - Triple-source rows show invoice without intent for finalized billing.
 - Audit scoped query returns no records for expected mutation windows.
+
+## 7. Billing-category vocabulary alignment (patient_category / facility_category)
+
+COSTA charging rules and tariffs match on two string dimensions — `patient_category` and
+`facility_category`. These strings are **not** defined by COSTA; they are **sourced upstream**
+and must be kept in sync with the rule/tariff conditions admins configure, or exemptions and
+facility-tier pricing silently fail to match.
+
+**Where each value originates (system of record):**
+
+| Dimension | Source of truth | How it is produced |
+| --------- | --------------- | ------------------ |
+| `patient_category` | **coverage-service** | `GET /internal/v1/coverage/patient-category/{cpid}` resolves, in order: an **active subsidy enrolment**'s `exemption_category` (`cv_subsidy_enrollments`) → the active **coverage plan**'s `plan_type` (`cv_coverage_plans`) → `CASH` (self-pay). |
+| `facility_category` | **tuso-service** | `facility.facility_category` on the facility record, exposed via `GET /v1/internal/facilities/{id}` (falls back to `level`). |
+
+**Flow into pricing:** experience-bff composes both onto the teleconsult referral → PCT persists
+them and emits them on the `TELECONSULT_COMPLETED` value-trigger (`clinical.teleconsult.value`) →
+COSTA reads them into the `RuleContext` evaluated by `ChargingRuleEngine`.
+
+**Operational rule:** when an admin authors a charging rule or tariff condition such as
+`{"patient_category": "INDIGENT"}` or `{"facility_category": "CENTRAL"}`, the matching value
+**must already exist** as:
+
+- a subsidy enrolment `exemption_category` (or coverage `plan_type`) string for `patient_category`, and
+- a facility `facility_category` (or `level`) string for `facility_category`.
+
+Strings are compared exactly (COSTA uppercases nothing on the rule side); coverage-service
+uppercases `exemption_category`/`plan_type` on resolution, so author tariff/rule conditions in
+**UPPER CASE**. Mismatched casing or vocabulary is the most common reason an exemption "does not
+fire" despite an active enrolment.
+
+**Before adding a new patient/facility category to tariff/rule config:** confirm the same string
+is produced by the source above (enrol a member, or set the facility's `facility_category`).
+Categories with no upstream producer will never match and should not be added to rules.

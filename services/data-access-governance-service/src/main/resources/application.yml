@@ -38,6 +38,12 @@ spring:
           issuer-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}
 
 dags:
+  enforcement:
+    # Permit-token HMAC signing secret. MUST be provided (a strong secret) per environment;
+    # the service fails closed on a blank or the historical insecure default key.
+    signing-key: ${DAGS_ENFORCEMENT_SIGNING_KEY:}
+    # Lifetime of an issued permit token (single-use, enforced at /internal/v1/permits/enforce).
+    permit-ttl-seconds: ${DAGS_PERMIT_TTL_SECONDS:3600}
   outbox:
     poll-interval-ms: 2000
 

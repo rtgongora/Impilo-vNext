@@ -15,13 +15,17 @@ import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.coverage.api.dto.CoveragePlanResponse;
 import zw.gov.mohcc.impilo.coverage.api.dto.CoverageResponse;
 import zw.gov.mohcc.impilo.coverage.api.dto.CreateCoveragePlanRequest;
+import zw.gov.mohcc.impilo.coverage.api.dto.PatientBillingCategoryResponse;
 import zw.gov.mohcc.impilo.coverage.core.CoverageEventService;
 import zw.gov.mohcc.impilo.coverage.domain.CoveragePlanEntity;
 import zw.gov.mohcc.impilo.coverage.domain.MemberCoverageEntity;
 import zw.gov.mohcc.impilo.coverage.repository.CoveragePlanRepository;
 import zw.gov.mohcc.impilo.coverage.repository.MemberCoverageRepository;
+import zw.gov.mohcc.impilo.coverage.repository.SubsidyEnrollmentRepository;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -40,13 +44,16 @@ public class CoveragePlanController {
 
     private final CoveragePlanRepository planRepository;
     private final MemberCoverageRepository memberCoverageRepository;
+    private final SubsidyEnrollmentRepository subsidyEnrollmentRepository;
     private final CoverageEventService eventService;
 
     public CoveragePlanController(CoveragePlanRepository planRepository,
                                   MemberCoverageRepository memberCoverageRepository,
+                                  SubsidyEnrollmentRepository subsidyEnrollmentRepository,
                                   CoverageEventService eventService) {
         this.planRepository = planRepository;
         this.memberCoverageRepository = memberCoverageRepository;
+        this.subsidyEnrollmentRepository = subsidyEnrollmentRepository;
         this.eventService = eventService;
     }
 
@@ -58,6 +65,55 @@ public class CoveragePlanController {
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam(name = "member_cpid") String memberCpid) {
         return getMemberCoverage(tenantId, memberCpid);
+    }
+
+    /**
+     * Resolve a patient's billing category for downstream costing (COSTA charging rules), in
+     * precedence order:
+     * <ol>
+     *   <li>an active subsidy enrolment's exemption category (e.g. INDIGENT, ELDERLY) — exemptions
+     *       win, so waivers apply;</li>
+     *   <li>otherwise the active coverage plan type (e.g. PRIVATE, PUBLIC);</li>
+     *   <li>otherwise self-pay ({@code CASH}).</li>
+     * </ol>
+     * Keeps the billing classification owned by coverage-service rather than inferred in the
+     * composition layer.
+     */
+    @GetMapping("/patient-category/{clientId}")
+    public ResponseEntity<PatientBillingCategoryResponse> resolvePatientCategory(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @PathVariable String clientId) {
+        UUID tid = UUID.fromString(tenantId);
+        LocalDate today = LocalDate.now();
+
+        // 1) Active subsidy enrolment takes precedence — its exemption category drives waivers.
+        var enrolment = subsidyEnrollmentRepository
+                .findByTenantIdAndClientIdAndStatusOrderByCreatedAtDesc(tid, clientId, "ACTIVE")
+                .stream()
+                .filter(e -> !e.getEffectiveFrom().isAfter(today)
+                        && (e.getEffectiveTo() == null || !e.getEffectiveTo().isBefore(today)))
+                .findFirst();
+        if (enrolment.isPresent()) {
+            return ResponseEntity.ok(new PatientBillingCategoryResponse(
+                    clientId, enrolment.get().getExemptionCategory(), "SUBSIDY_ENROLLMENT", null));
+        }
+
+        // 2) Otherwise the active coverage plan type; 3) otherwise self-pay.
+        return memberCoverageRepository
+                .findByTenantIdAndClientIdAndStatus(tid, clientId, "ACTIVE")
+                .stream()
+                .findFirst()
+                .map(mc -> {
+                    CoveragePlanEntity plan = planRepository.findById(mc.getPlanId()).orElse(null);
+                    String category = plan != null && plan.getPlanType() != null && !plan.getPlanType().isBlank()
+                            ? plan.getPlanType().trim().toUpperCase(Locale.ROOT)
+                            : "CASH";
+                    String source = plan != null ? "COVERAGE_PLAN" : "DEFAULT_SELF_PAY";
+                    String planCode = plan != null ? plan.getPlanCode() : null;
+                    return ResponseEntity.ok(new PatientBillingCategoryResponse(clientId, category, source, planCode));
+                })
+                .orElseGet(() -> ResponseEntity.ok(
+                        new PatientBillingCategoryResponse(clientId, "CASH", "DEFAULT_SELF_PAY", null)));
     }
 
     @GetMapping

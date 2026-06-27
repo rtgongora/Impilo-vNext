@@ -7,15 +7,21 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.inpatient.api.dto.CreateAdmissionRequest;
+import zw.gov.mohcc.impilo.inpatient.api.dto.PatientLocationView;
 import zw.gov.mohcc.impilo.inpatient.api.dto.TransferRequest;
 import zw.gov.mohcc.impilo.inpatient.persistence.entity.AdmissionEntity;
+import zw.gov.mohcc.impilo.inpatient.persistence.entity.BedEntity;
 import zw.gov.mohcc.impilo.inpatient.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.inpatient.persistence.entity.TransferEntity;
+import zw.gov.mohcc.impilo.inpatient.persistence.entity.WardEntity;
 import zw.gov.mohcc.impilo.inpatient.persistence.repository.AdmissionRepository;
+import zw.gov.mohcc.impilo.inpatient.persistence.repository.BedRepository;
 import zw.gov.mohcc.impilo.inpatient.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.inpatient.persistence.repository.TransferRepository;
+import zw.gov.mohcc.impilo.inpatient.persistence.repository.WardRepository;
 
 import java.time.OffsetDateTime;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,15 +40,21 @@ public class AdmissionService {
     private final AdmissionRepository admissionRepository;
     private final TransferRepository transferRepository;
     private final EventOutboxRepository outboxRepository;
+    private final WardRepository wardRepository;
+    private final BedRepository bedRepository;
     private final ObjectMapper objectMapper;
 
     public AdmissionService(AdmissionRepository admissionRepository,
                             TransferRepository transferRepository,
                             EventOutboxRepository outboxRepository,
+                            WardRepository wardRepository,
+                            BedRepository bedRepository,
                             ObjectMapper objectMapper) {
         this.admissionRepository = admissionRepository;
         this.transferRepository = transferRepository;
         this.outboxRepository = outboxRepository;
+        this.wardRepository = wardRepository;
+        this.bedRepository = bedRepository;
         this.objectMapper = objectMapper;
     }
 
@@ -80,6 +92,42 @@ public class AdmissionService {
      */
     public List<AdmissionEntity> findActiveAdmissionsForPatientAtFacility(String subjectCpid, UUID facilityId) {
         return admissionRepository.findBySubjectCpidAndFacilityIdAndStatus(subjectCpid, facilityId, "ADMITTED");
+    }
+
+    /**
+     * Resolves a patient's current inpatient location — the most-recent ADMITTED admission
+     * (optionally scoped to a facility) with ward/bed UUIDs resolved to human-readable labels.
+     * Returns empty when the patient has no active admission (i.e. they are not an inpatient).
+     * Backs the experience-shell patient-location badge (G053).
+     */
+    public Optional<PatientLocationView> getCurrentLocation(String subjectCpid, UUID facilityId) {
+        if (subjectCpid == null || subjectCpid.isBlank()) {
+            return Optional.empty();
+        }
+        List<AdmissionEntity> active = facilityId != null
+                ? admissionRepository.findBySubjectCpidAndFacilityIdAndStatus(subjectCpid, facilityId, "ADMITTED")
+                : admissionRepository.findBySubjectCpidAndStatus(subjectCpid, "ADMITTED");
+        return active.stream()
+                .max(Comparator.comparing(AdmissionEntity::getAdmittedAt,
+                        Comparator.nullsFirst(Comparator.naturalOrder())))
+                .map(this::toLocationView);
+    }
+
+    private PatientLocationView toLocationView(AdmissionEntity admission) {
+        String wardName = admission.getWardId() == null ? null
+                : wardRepository.findById(admission.getWardId()).map(WardEntity::getName).orElse(null);
+        String bedNumber = admission.getBedId() == null ? null
+                : bedRepository.findById(admission.getBedId()).map(BedEntity::getBedNumber).orElse(null);
+        return new PatientLocationView(
+                admission.getAdmissionRef(),
+                admission.getStatus(),
+                admission.getFacilityId(),
+                admission.getWardId(),
+                wardName,
+                admission.getBedId(),
+                bedNumber,
+                admission.getAdmissionType(),
+                admission.getAdmittedAt());
     }
 
     /**

@@ -17,6 +17,10 @@ public enum OrderType {
     PHARMACY,
     /** Clinical procedures (biopsies, minor surgeries, etc.). */
     PROCEDURE,
+    /** Blood bank / transfusion requests, fulfilled by the MADI service (grouping, crossmatch,
+     *  reservation, issue, transfusion). OROS owns the order spine; MADI is the sovereign
+     *  fulfiller and reports back via the blood-order callbacks. */
+    BLOOD_BANK,
     /** Catch-all for order types not covered by specific categories. */
     OTHER
 }

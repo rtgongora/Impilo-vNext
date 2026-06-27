@@ -63,6 +63,26 @@ public class InpatientServiceClient {
         return response.getBody();
     }
 
+    /**
+     * Resolved current inpatient location for a patient (ward + bed with labels), or {@code null}
+     * when the patient is not currently admitted (upstream returns 204). Backs the patient-location
+     * badge (G053). {@code facilityId} is optional.
+     */
+    public JsonNode getCurrentLocation(String subjectCpid, String facilityId) {
+        UriComponentsBuilder b = UriComponentsBuilder
+                .fromHttpUrl(baseUrl + "/internal/v1/admissions/current-location")
+                .queryParam("subject_cpid", subjectCpid);
+        Optional.ofNullable(facilityId)
+                .filter(s -> !s.isBlank())
+                .ifPresent(f -> b.queryParam("facility_id", f));
+        String url = b.encode().toUriString();
+        log.info("INPATIENT: getCurrentLocation operation [subjectCpid={}, facilityId={}]",
+                subjectCpid != null ? subjectCpid.substring(0, Math.min(8, subjectCpid.length())) + "..." : null,
+                facilityId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
     public JsonNode dischargeAdmission(String id, Map<String, Object> request) {
         String url = baseUrl + "/internal/v1/admissions/" + id + "/discharge";
         log.info("INPATIENT: dischargeAdmission operation [id={}]", id);
@@ -326,6 +346,13 @@ public class InpatientServiceClient {
 
     public JsonNode getApgar(String patientId) {
         String url = baseUrl + "/internal/v1/apgar?patientId=" + patientId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode listHandovers(String facilityId, String status) {
+        String url = baseUrl + "/internal/v1/handover?facilityId=" + facilityId
+                + (status != null && !status.isBlank() ? "&status=" + status : "");
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
         return response.getBody();
     }

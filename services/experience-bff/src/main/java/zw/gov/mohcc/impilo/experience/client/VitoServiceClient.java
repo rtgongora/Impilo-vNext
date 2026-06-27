@@ -299,6 +299,13 @@ public class VitoServiceClient {
         return restTemplate.postForEntity(baseUrl + path, body, String.class);
     }
 
+    public ResponseEntity<String> rawPut(String path, Object body) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return restTemplate.exchange(
+                baseUrl + path, HttpMethod.PUT, new HttpEntity<>(body, headers), String.class);
+    }
+
     public ResponseEntity<String> rawPostWithHeader(String path, Object body, String headerName, String headerValue) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);

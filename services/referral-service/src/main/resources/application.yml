@@ -22,7 +22,6 @@ spring:
 
 referral:
   security:
-    oauth2-enabled: ${REFERRAL_OAUTH2_ENABLED:true}
   outbox:
     poll-interval-ms: ${REFERRAL_OUTBOX_POLL_MS:2000}
 

@@ -7,6 +7,64 @@ import { apiClient } from "@/lib/api-client";
 
 export type FinanceWorkspaceJson = unknown;
 
+/**
+ * COSTA revenue summary for a facility/period — returns totalRevenue, encounterCount,
+ * byPayerType (payer mix), byDepartment, monthlyTrend. Real aggregation, already
+ * proxied by FinancialReportsBffController.
+ */
+/** Facility-scoped unbilled charges (non-final bills) from COSTA. */
+export function useFacilityUnbilledCharges(facilityId: string | null | undefined) {
+  return useQuery<FinanceWorkspaceJson>({
+    queryKey: ["finance", "facility", "unbilled-charges", facilityId ?? null],
+    queryFn: () =>
+      apiClient.get<FinanceWorkspaceJson>(
+        `/internal/v1/finance/facility/unbilled-charges?facility_id=${encodeURIComponent(facilityId!)}`,
+      ),
+    enabled: !!facilityId,
+  });
+}
+
+/** Facility-scoped invoices from COSTA. */
+export function useFacilityInvoices(facilityId: string | null | undefined) {
+  return useQuery<FinanceWorkspaceJson>({
+    queryKey: ["finance", "facility", "invoices", facilityId ?? null],
+    queryFn: () =>
+      apiClient.get<FinanceWorkspaceJson>(
+        `/internal/v1/finance/facility/invoices?facility_id=${encodeURIComponent(facilityId!)}`,
+      ),
+    enabled: !!facilityId,
+  });
+}
+
+/** Facility-scoped recent payments from COSTA. */
+export function useFacilityPayments(facilityId: string | null | undefined) {
+  return useQuery<FinanceWorkspaceJson>({
+    queryKey: ["finance", "facility", "payments", facilityId ?? null],
+    queryFn: () =>
+      apiClient.get<FinanceWorkspaceJson>(
+        `/internal/v1/finance/facility/payments?facility_id=${encodeURIComponent(facilityId!)}`,
+      ),
+    enabled: !!facilityId,
+  });
+}
+
+export function useFinanceRevenueSummary(
+  facilityId: string | null | undefined,
+  year: number,
+  month: number,
+) {
+  const q = new URLSearchParams();
+  if (facilityId) q.set("facility_id", facilityId);
+  q.set("year", String(year));
+  q.set("month", String(month));
+  return useQuery<FinanceWorkspaceJson>({
+    queryKey: ["finance", "revenue-summary", facilityId ?? null, year, month],
+    queryFn: () =>
+      apiClient.get<FinanceWorkspaceJson>(`/internal/v1/finance/reports/revenue-summary?${q.toString()}`),
+    enabled: !!facilityId,
+  });
+}
+
 export function useFinanceBillingInvoice(invoiceId: string, enabled: boolean) {
   return useQuery<FinanceWorkspaceJson>({
     queryKey: ["finance", "billing-workspace", "invoice", invoiceId],

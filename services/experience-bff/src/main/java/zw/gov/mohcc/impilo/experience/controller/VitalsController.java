@@ -75,10 +75,9 @@ public class VitalsController {
         }
 
         if (cpid == null || cpid.isBlank()) {
-            // TODO: wire to PctServiceClient when PCT supports vitals listing without patient_id
-            return ResponseEntity.ok(Map.of(
-                    "data", List.of(),
-                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            // Vitals are per-patient — without a resolvable patient there is no list to return.
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "patient_id or a resolvable encounter_id is required to list vitals");
         }
 
         try {

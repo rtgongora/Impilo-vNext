@@ -3,8 +3,12 @@ package zw.gov.mohcc.impilo.mushex.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.mushex.config.MushexProperties;
 import zw.gov.mohcc.impilo.mushex.domain.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.mushex.domain.entity.PaymentIntentEntity;
@@ -14,6 +18,7 @@ import zw.gov.mohcc.impilo.mushex.domain.enums.RefundStatus;
 import zw.gov.mohcc.impilo.mushex.domain.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.mushex.domain.repository.PaymentIntentRepository;
 import zw.gov.mohcc.impilo.mushex.domain.repository.RefundRepository;
+import zw.gov.mohcc.impilo.shared.auth.AccessMode;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
@@ -99,14 +104,11 @@ public class RefundService {
                             intent.getAmountPaid().toPlainString(), totalRefunded.toPlainString()));
         }
 
-        // Check step-up threshold for large refunds
+        // Enforce step-up for large refunds — BLOCK (don't just warn) unless step-up is present,
+        // before any refund record or ledger entry is written.
         BigDecimal threshold = properties.getStepUp().getLargeRefundThreshold();
         if (amount.compareTo(threshold) > 0) {
-            log.warn("Large refund detected: amount={} exceeds threshold={}. Step-up authorization required.",
-                    amount.toPlainString(), threshold.toPlainString());
-            // In a full implementation, this would trigger step-up auth via TSHEPO.
-            // For now, we log a warning and proceed. Real step-up enforcement would be
-            // at the controller/filter level using TrustContext.mode() == STEP_UP.
+            requireStepUp(ctx, amount, threshold);
         }
 
         // Create refund record
@@ -243,6 +245,33 @@ public class RefundService {
                 ctx.tenantId());
 
         return refund;
+    }
+
+    /**
+     * Large refunds require step-up. Trusted service-to-service (INTERNAL) calls bypass; external
+     * callers must carry a step-up token (the platform {@code X-Step-Up-Token} header, set by an
+     * upstream step-up gate — same convention VITO's StepUpAspect enforces). Missing ⇒ fail closed:
+     * a {@code 401 STEP_UP_REQUIRED} is thrown BEFORE any refund record or ledger entry is written.
+     */
+    private void requireStepUp(TrustContext ctx, BigDecimal amount, BigDecimal threshold) {
+        if (ctx.mode() == AccessMode.INTERNAL) {
+            return;
+        }
+        String stepUpToken = currentRequestHeader("X-Step-Up-Token");
+        if (stepUpToken == null || stepUpToken.isBlank()) {
+            log.warn("Blocked large refund (amount={} > threshold={}) — no step-up token present",
+                    amount.toPlainString(), threshold.toPlainString());
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                    "STEP_UP_REQUIRED: a refund exceeding " + threshold.toPlainString()
+                            + " requires step-up authentication");
+        }
+    }
+
+    private static String currentRequestHeader(String name) {
+        if (RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes sra) {
+            return sra.getRequest().getHeader(name);
+        }
+        return null;
     }
 
     private void publishEvent(String aggregateType, String aggregateId,

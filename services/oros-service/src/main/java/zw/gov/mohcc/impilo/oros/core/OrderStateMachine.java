@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.oros.domain.OrderPriority;
 import zw.gov.mohcc.impilo.oros.domain.OrderStatus;
 import zw.gov.mohcc.impilo.oros.domain.OrderType;
+import zw.gov.mohcc.impilo.oros.domain.RequestSource;
 import zw.gov.mohcc.impilo.oros.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.oros.persistence.entity.OrderEntity;
 import zw.gov.mohcc.impilo.oros.persistence.entity.OrderItemEntity;
@@ -65,6 +66,9 @@ public class OrderStateMachine {
 
     /**
      * Inner class for order item data transfer during order placement.
+     *
+     * <p>The imaging examination fields are optional and only meaningful for {@code IMAGING}
+     * order items. A convenience factory {@link #lab} preserves the lab/pharmacy call shape.</p>
      */
     public record OrderItemData(
             String code,
@@ -72,8 +76,19 @@ public class OrderStateMachine {
             int quantity,
             String instructions,
             String specimenType,
-            String bodySite
-    ) {}
+            String bodySite,
+            String modality,
+            String laterality,
+            String contrast,
+            String procedureCode
+    ) {
+        /** Construct a non-imaging item (lab/pharmacy/procedure) with imaging fields null. */
+        public static OrderItemData lab(String code, String displayName, int quantity,
+                                        String instructions, String specimenType, String bodySite) {
+            return new OrderItemData(code, displayName, quantity, instructions, specimenType,
+                    bodySite, null, null, null, null);
+        }
+    }
 
     /**
      * Place a new order. Generates a ULID, creates the order entity and items,
@@ -105,24 +120,123 @@ public class OrderStateMachine {
 
         order = orderRepository.save(order);
 
-        if (items != null) {
-            for (OrderItemData itemData : items) {
-                OrderItemEntity item = new OrderItemEntity();
-                item.setOrderId(orderId);
-                item.setCode(itemData.code());
-                item.setDisplayName(itemData.displayName());
-                item.setQuantity(itemData.quantity());
-                item.setInstructions(itemData.instructions());
-                item.setSpecimenType(itemData.specimenType());
-                item.setBodySite(itemData.bodySite());
-                orderItemRepository.save(item);
-            }
-        }
+        persistItems(orderId, items);
 
         publishEvent("ORDER", orderId, "ORDER_PLACED", order, ctx.tenantId());
 
         log.info("Order placed: orderId={}, type={}, facility={}", orderId, type, facilityId);
         return order;
+    }
+
+    /**
+     * Create a diagnostic/imaging order in {@code DRAFT} state.
+     *
+     * <p>Unlike {@link #placeOrder}, a draft is not routed, has no worksteps, and starts no
+     * SLA timer. Routing/worksteps/SLA and (for imaging) accession reservation happen later at
+     * submit time via {@link OrderSubmissionService}. Carries the full diagnostic field set:
+     * request source, referring provider, scheduled acquisition time, safety questionnaire.</p>
+     */
+    @Transactional
+    public OrderEntity createDraft(UUID facilityId, String patientCpid, OrderType type,
+                                   OrderPriority priority, RequestSource requestSource,
+                                   String ziboCode, String encounterRef, String clinicalNotes,
+                                   String referringProviderId, String referringProviderName,
+                                   OffsetDateTime scheduledAt, String safetyJson,
+                                   List<OrderItemData> items) {
+        TrustContext ctx = TrustContextHolder.require();
+
+        String orderId = generateUlid();
+
+        OrderEntity order = new OrderEntity();
+        order.setOrderId(orderId);
+        order.setTenantId(ctx.tenantId());
+        order.setFacilityId(facilityId);
+        order.setPatientCpid(patientCpid);
+        order.setOrderType(type);
+        order.setPriority(priority != null ? priority : OrderPriority.ROUTINE);
+        order.setStatus(OrderStatus.DRAFT);
+        order.setPlacedBy(ctx.actorId());
+        order.setWorkspaceId(ctx.workspaceId());
+        order.setEncounterRef(encounterRef);
+        order.setZiboOrderCode(ziboCode);
+        order.setClinicalNotes(clinicalNotes);
+        order.setRequestSource(requestSource != null ? requestSource : RequestSource.INTERNAL);
+        order.setReferringProviderId(referringProviderId);
+        order.setReferringProviderName(referringProviderName);
+        order.setScheduledAt(scheduledAt);
+        order.setSafetyJson(safetyJson);
+
+        order = orderRepository.save(order);
+        persistItems(orderId, items);
+
+        publishEvent("ORDER", orderId, "ORDER_DRAFT_CREATED", order, ctx.tenantId());
+
+        log.info("Order draft created: orderId={}, type={}, source={}, facility={}",
+                orderId, type, order.getRequestSource(), facilityId);
+        return order;
+    }
+
+    /**
+     * Update an existing {@code DRAFT} order. Replaces its items wholesale.
+     *
+     * @throws IllegalStateException if the order is not in {@code DRAFT}
+     */
+    @Transactional
+    public OrderEntity updateDraft(String orderId, OrderPriority priority, RequestSource requestSource,
+                                   String ziboCode, String encounterRef, String clinicalNotes,
+                                   String referringProviderId, String referringProviderName,
+                                   OffsetDateTime scheduledAt, String safetyJson,
+                                   List<OrderItemData> items) {
+        TrustContext ctx = TrustContextHolder.require();
+        OrderEntity order = getOrder(orderId);
+
+        if (order.getStatus() != OrderStatus.DRAFT) {
+            throw new IllegalStateException(
+                    "Order " + orderId + " is not a draft (status=" + order.getStatus() + ")");
+        }
+
+        if (priority != null) order.setPriority(priority);
+        if (requestSource != null) order.setRequestSource(requestSource);
+        order.setZiboOrderCode(ziboCode);
+        order.setEncounterRef(encounterRef);
+        order.setClinicalNotes(clinicalNotes);
+        order.setReferringProviderId(referringProviderId);
+        order.setReferringProviderName(referringProviderName);
+        order.setScheduledAt(scheduledAt);
+        order.setSafetyJson(safetyJson);
+
+        order = orderRepository.save(order);
+
+        if (items != null) {
+            orderItemRepository.deleteByOrderId(orderId);
+            persistItems(orderId, items);
+        }
+
+        publishEvent("ORDER", orderId, "ORDER_DRAFT_UPDATED", order, ctx.tenantId());
+
+        log.info("Order draft updated: orderId={}", orderId);
+        return order;
+    }
+
+    private void persistItems(String orderId, List<OrderItemData> items) {
+        if (items == null) {
+            return;
+        }
+        for (OrderItemData itemData : items) {
+            OrderItemEntity item = new OrderItemEntity();
+            item.setOrderId(orderId);
+            item.setCode(itemData.code());
+            item.setDisplayName(itemData.displayName());
+            item.setQuantity(itemData.quantity());
+            item.setInstructions(itemData.instructions());
+            item.setSpecimenType(itemData.specimenType());
+            item.setBodySite(itemData.bodySite());
+            item.setModality(itemData.modality());
+            item.setLaterality(itemData.laterality());
+            item.setContrast(itemData.contrast());
+            item.setProcedureCode(itemData.procedureCode());
+            orderItemRepository.save(item);
+        }
     }
 
     /**

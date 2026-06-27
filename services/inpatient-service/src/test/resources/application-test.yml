@@ -3,7 +3,6 @@ server:
 
 inpatient:
   security:
-    oauth2-enabled: false
 
 spring:
   application:

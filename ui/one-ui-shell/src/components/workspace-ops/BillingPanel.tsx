@@ -6,7 +6,34 @@ import {
   Clock, Receipt, Send, BarChart3, Loader2,
 } from 'lucide-react';
 import { LiveDataSourceBadge } from '@/components/common/LiveDataSourceBadge';
+import { NotLiveNotice } from '@/components/common/NotLiveNotice';
 import { useCoverageClaimsList, useCoverageRemittances } from '@/hooks/queries/useCoverage';
+import {
+  useFinanceRevenueSummary,
+  useFacilityUnbilledCharges,
+  useFacilityInvoices,
+  useFacilityPayments,
+} from '@/hooks/queries/useFinanceBillingWorkspace';
+
+const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function pickArray(node: unknown, key: string): Record<string, unknown>[] {
+  const obj = node as Record<string, unknown> | undefined;
+  const data = (obj?.data as Record<string, unknown> | undefined) ?? obj;
+  const arr = data?.[key];
+  return Array.isArray(arr) ? (arr as Record<string, unknown>[]) : [];
+}
+
+/** Extract the list from a {data:[...]} envelope (or a bare array). */
+function dataArray(node: unknown): Record<string, unknown>[] {
+  if (Array.isArray(node)) return node as Record<string, unknown>[];
+  const obj = node as Record<string, unknown> | undefined;
+  return Array.isArray(obj?.data) ? (obj!.data as Record<string, unknown>[]) : [];
+}
+
+function num(v: unknown): number {
+  return Number(v ?? 0);
+}
 
 // ─── Types ───
 
@@ -90,6 +117,49 @@ export function BillingPanel({ facilityId }: BillingPanelProps) {
   const liveClaims = liveClaimsQ.data ?? [];
   const hasLiveClaims = liveClaims.length > 0;
   const dataSource = preferLive && hasLiveClaims ? 'live' : preferLive && liveClaimsQ.isLoading ? 'mixed' : 'demo';
+
+  // Overview revenue trend + payer mix — real COSTA aggregation (revenue-summary).
+  const now = new Date();
+  const revenueQ = useFinanceRevenueSummary(facilityId, now.getFullYear(), now.getMonth() + 1);
+  const livePayerMix = useMemo(() => {
+    const rows = pickArray(revenueQ.data, 'byPayerType')
+      .map(r => ({ name: String(r.bucket ?? 'UNSPECIFIED'), total: Number(r.total ?? 0) }))
+      .filter(r => r.total > 0);
+    const sum = rows.reduce((s, r) => s + r.total, 0);
+    return sum > 0 ? rows.map(r => ({ name: r.name, pct: Math.round((r.total / sum) * 100) })) : [];
+  }, [revenueQ.data]);
+  const liveRevenueTrend = useMemo(
+    () => pickArray(revenueQ.data, 'monthlyTrend')
+      .map(r => ({ label: MONTH_LABELS[(Number(r.month ?? 0) - 1) % 12] ?? String(r.month), val: Number(r.total ?? 0) }))
+      .filter(r => r.val > 0),
+    [revenueQ.data],
+  );
+  const overviewLive = preferLive && (livePayerMix.length > 0 || liveRevenueTrend.length > 0);
+  const trendMax = Math.max(1, ...liveRevenueTrend.map(d => d.val));
+  const PAYER_BAR_COLORS = ['bg-primary', 'bg-amber-500', 'bg-green-500', 'bg-purple-500', 'bg-sky-500'];
+
+  // Facility-scoped charges / invoices / payments — real COSTA reads.
+  const chargesQ = useFacilityUnbilledCharges(facilityId);
+  const invoicesQ = useFacilityInvoices(facilityId);
+  const paymentsQ = useFacilityPayments(facilityId);
+  const liveCharges = useMemo(() => dataArray(chargesQ.data).map(r => ({
+    id: String(r.billId ?? ''), encounter: r.encounterId ? String(r.encounterId) : '—',
+    status: String(r.status ?? ''), amount: num(r.totalCharge), payable: num(r.patientPayable),
+    currency: String(r.currency ?? 'USD'),
+  })), [chargesQ.data]);
+  const liveInvoices = useMemo(() => dataArray(invoicesQ.data).map(r => ({
+    id: String(r.invoiceId ?? ''), number: String(r.invoiceNumber ?? '—'), status: String(r.status ?? ''),
+    total: num(r.total), outstanding: num(r.outstanding), currency: String(r.currency ?? 'USD'),
+    payer: r.payerRef ? String(r.payerRef) : '—', issuedAt: r.issuedAt ? String(r.issuedAt).slice(0, 10) : '—',
+  })), [invoicesQ.data]);
+  const livePayments = useMemo(() => dataArray(paymentsQ.data).map(r => ({
+    id: String(r.paymentId ?? ''), status: String(r.status ?? ''), type: String(r.paymentType ?? ''),
+    amount: num(r.paidAmount) || num(r.amount), currency: String(r.currency ?? 'USD'),
+    paidAt: r.paidAt ? String(r.paidAt).slice(0, 16).replace('T', ' ') : '—',
+  })), [paymentsQ.data]);
+  const chargesLive = preferLive && liveCharges.length > 0;
+  const invoicesLive = preferLive && liveInvoices.length > 0;
+  const paymentsLive = preferLive && livePayments.length > 0;
 
   const totalUnbilled = UNBILLED_CHARGES.reduce((s, c) => s + c.amount, 0);
   const totalOutstanding = INVOICES.filter(i => ['sent', 'overdue', 'partial'].includes(i.status)).reduce((s, i) => s + i.amount - i.paidAmount, 0);
@@ -193,27 +263,47 @@ export function BillingPanel({ facilityId }: BillingPanelProps) {
 
       {/* Overview Tab */}
       {activeTab === 'overview' && (
+        <div className="space-y-3">
+        {!overviewLive && (
+          <NotLiveNotice>
+            <span className="font-semibold">Not live yet.</span> No COSTA revenue recorded for
+            this facility/period — showing illustrative figures.
+          </NotLiveNotice>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Revenue This Week */}
+          {/* Revenue trend */}
           <div className="bg-card border border-border rounded-lg">
-            <div className="px-4 pt-4 pb-2"><h4 className="text-sm font-semibold">Revenue This Week</h4></div>
+            <div className="px-4 pt-4 pb-2"><h4 className="text-sm font-semibold">{overviewLive ? 'Revenue Trend (monthly)' : 'Revenue This Week'}</h4></div>
             <div className="px-4 pb-4 space-y-3">
-              {REVENUE_WEEK.map(d => (
-                <div key={d.day} className="flex items-center gap-3">
-                  <span className="text-xs w-8 text-muted-foreground">{d.day}</span>
-                  <div className="flex-1 bg-neutral-100 rounded-full h-2">
-                    <div className="h-2 rounded-full bg-primary" style={{ width: `${(d.val / 60) * 100}%` }} />
-                  </div>
-                  <span className="text-xs font-medium w-12 text-right">R{d.val}k</span>
-                </div>
-              ))}
+              {overviewLive
+                ? liveRevenueTrend.map(d => (
+                    <div key={d.label} className="flex items-center gap-3">
+                      <span className="text-xs w-8 text-muted-foreground">{d.label}</span>
+                      <div className="flex-1 bg-neutral-100 rounded-full h-2">
+                        <div className="h-2 rounded-full bg-primary" style={{ width: `${(d.val / trendMax) * 100}%` }} />
+                      </div>
+                      <span className="text-xs font-medium w-16 text-right">R{Math.round(d.val).toLocaleString()}</span>
+                    </div>
+                  ))
+                : REVENUE_WEEK.map(d => (
+                    <div key={d.day} className="flex items-center gap-3">
+                      <span className="text-xs w-8 text-muted-foreground">{d.day}</span>
+                      <div className="flex-1 bg-neutral-100 rounded-full h-2">
+                        <div className="h-2 rounded-full bg-primary" style={{ width: `${(d.val / 60) * 100}%` }} />
+                      </div>
+                      <span className="text-xs font-medium w-12 text-right">R{d.val}k</span>
+                    </div>
+                  ))}
             </div>
           </div>
           {/* Payer Mix */}
           <div className="bg-card border border-border rounded-lg">
             <div className="px-4 pt-4 pb-2"><h4 className="text-sm font-semibold">Payer Mix</h4></div>
             <div className="px-4 pb-4 space-y-3">
-              {PAYER_MIX.map(p => (
+              {(overviewLive && livePayerMix.length > 0
+                ? livePayerMix.map((p, i) => ({ name: p.name, pct: p.pct, barColor: PAYER_BAR_COLORS[i % PAYER_BAR_COLORS.length] }))
+                : PAYER_MIX
+              ).map(p => (
                 <div key={p.name} className="space-y-1">
                   <div className="flex justify-between text-xs">
                     <span>{p.name}</span><span className="text-muted-foreground">{p.pct}%</span>
@@ -226,11 +316,34 @@ export function BillingPanel({ facilityId }: BillingPanelProps) {
             </div>
           </div>
         </div>
+        </div>
       )}
 
       {/* Charges Tab */}
-      {activeTab === 'charges' && (
+      {activeTab === 'charges' && chargesLive && (
         <div className="space-y-2 max-h-[400px] overflow-auto">
+          {liveCharges.map(ch => (
+            <div key={ch.id} className="bg-card border border-border border-l-4 border-l-amber-400 rounded-lg py-3 px-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">{ch.id}</p>
+                  <p className="text-xs text-muted-foreground">Encounter {ch.encounter} &middot; patient payable {ch.currency} {ch.payable.toLocaleString()}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <p className="text-sm font-bold">{ch.currency} {ch.amount.toLocaleString()}</p>
+                  {getStatusBadge(ch.status.toLowerCase())}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {activeTab === 'charges' && !chargesLive && (
+        <div className="space-y-2 max-h-[400px] overflow-auto">
+          <NotLiveNotice>
+            <span className="font-semibold">No unbilled charges.</span> Showing demo data —
+            no open bills for this facility.
+          </NotLiveNotice>
           {UNBILLED_CHARGES.map(ch => (
             <div key={ch.id} className="bg-card border border-border border-l-4 border-l-amber-400 rounded-lg py-3 px-4">
               <div className="flex items-center justify-between">
@@ -250,8 +363,35 @@ export function BillingPanel({ facilityId }: BillingPanelProps) {
       )}
 
       {/* Invoices Tab */}
-      {activeTab === 'invoices' && (
+      {activeTab === 'invoices' && invoicesLive && (
         <div className="space-y-2 max-h-[400px] overflow-auto">
+          {liveInvoices.map(inv => (
+            <div key={inv.id} className="bg-card border border-border rounded-lg py-3 px-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold">{inv.number}</p>
+                    {getStatusBadge(inv.status.toLowerCase())}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{inv.payer} &middot; {inv.issuedAt}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-bold">{inv.currency} {inv.total.toLocaleString()}</p>
+                  {inv.outstanding > 0 && (
+                    <p className="text-[10px] text-amber-600">{inv.currency} {inv.outstanding.toLocaleString()} outstanding</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {activeTab === 'invoices' && !invoicesLive && (
+        <div className="space-y-2 max-h-[400px] overflow-auto">
+          <NotLiveNotice>
+            <span className="font-semibold">No invoices.</span> Showing demo data — none
+            issued for this facility.
+          </NotLiveNotice>
           {INVOICES.map(inv => (
             <div key={inv.id} className={`bg-card border border-border rounded-lg py-3 px-4 ${inv.status === 'overdue' ? 'border-l-4 border-l-red-500' : ''}`}>
               <div className="flex items-center justify-between">
@@ -302,8 +442,30 @@ export function BillingPanel({ facilityId }: BillingPanelProps) {
       )}
 
       {/* Payments Tab */}
-      {activeTab === 'payments' && (
+      {activeTab === 'payments' && paymentsLive && (
         <div className="space-y-2 max-h-[400px] overflow-auto">
+          {livePayments.map(pmt => (
+            <div key={pmt.id} className="flex items-center justify-between p-3 rounded-lg border border-border">
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-8 rounded-lg bg-green-100 flex items-center justify-center">
+                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">{pmt.type || 'Payment'}</p>
+                  <p className="text-xs text-muted-foreground">{pmt.status} &middot; {pmt.paidAt}</p>
+                </div>
+              </div>
+              <p className="text-sm font-bold text-green-600">+{pmt.currency} {pmt.amount.toLocaleString()}</p>
+            </div>
+          ))}
+        </div>
+      )}
+      {activeTab === 'payments' && !paymentsLive && (
+        <div className="space-y-2 max-h-[400px] overflow-auto">
+          <NotLiveNotice>
+            <span className="font-semibold">No payments.</span> Showing demo data — none
+            recorded for this facility.
+          </NotLiveNotice>
           {RECENT_PAYMENTS.map(pmt => (
             <div key={pmt.id} className="flex items-center justify-between p-3 rounded-lg border border-border">
               <div className="flex items-center gap-3">

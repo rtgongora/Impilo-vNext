@@ -82,7 +82,13 @@ public class PrintJobController {
         event.setAggregateType("PRINT_JOB");
         event.setAggregateId(cardId.toString());
         event.setEventType("vito.print.job.created");
-        event.setPayload("{\"cardId\":" + cardId + ",\"template\":\"" + template + "\",\"did\":\"" + card.getDidUri() + "\"}");
+        // tenantId travels with the job so card-print-agent can scope its print-confirmation
+        // callback (POST /v1/cards/{cardId}/print) to the owning tenant when provisioning the
+        // personalised secure-element public key (G032).
+        event.setPayload("{\"cardId\":" + cardId
+                + ",\"tenantId\":\"" + (tenantId != null ? tenantId : "")
+                + "\",\"template\":\"" + template
+                + "\",\"did\":\"" + card.getDidUri() + "\"}");
         outboxRepo.save(event);
 
         return ResponseEntity.ok(Map.of(

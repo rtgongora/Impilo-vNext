@@ -16,16 +16,18 @@ import { Route, ToggleLeft, ToggleRight, Users, Sparkles, BookMarked } from "luc
 import { cn } from "@/lib/accessibility";
 import { ClinicalToolsMenu } from "@/components/clinical/ClinicalToolsMenu";
 import { ClinicalReferences } from "@/components/clinical/ClinicalReferences";
-import { ActiveCDSBanner } from "@/components/clinical/ActiveCDSBanner";
+import { ActiveCDSBanner, type CDSGuidanceItem } from "@/components/clinical/ActiveCDSBanner";
 import { SystemFeedbackStrip } from "@/components/clinical/SystemFeedbackStrip";
 import { useCadreFormConfig } from "@/hooks/useCadreFormConfig";
 import { useClinicalGuidance } from "@/components/clinical/ClinicalGuidanceContext";
 
 interface ClinicalToolbarProps {
   hasActivePatient?: boolean;
+  /** Real decision-support alerts for the active patient (from the governed rules engine). */
+  cdsAlerts?: CDSGuidanceItem[];
 }
 
-export function ClinicalToolbar({ hasActivePatient = true }: ClinicalToolbarProps) {
+export function ClinicalToolbar({ hasActivePatient = true, cdsAlerts = [] }: ClinicalToolbarProps) {
   const { pathwaysHighlighted, togglePathwaysDock, openDock } = useClinicalGuidance();
   const cadreConfig = useCadreFormConfig();
   const complexity = cadreConfig.complexity;
@@ -119,7 +121,7 @@ export function ClinicalToolbar({ hasActivePatient = true }: ClinicalToolbarProp
         </div>
       </div>
 
-      {cdsEnabled && <ActiveCDSBanner hasActivePatient={hasActivePatient} />}
+      {cdsEnabled && <ActiveCDSBanner hasActivePatient={hasActivePatient} alerts={cdsAlerts} />}
     </div>
   );
 }

@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.inpatient.api.dto.CreateAdmissionRequest;
+import zw.gov.mohcc.impilo.inpatient.api.dto.PatientLocationView;
 import zw.gov.mohcc.impilo.inpatient.api.dto.TransferRequest;
 import zw.gov.mohcc.impilo.inpatient.core.AdmissionService;
 import zw.gov.mohcc.impilo.inpatient.persistence.entity.AdmissionEntity;
@@ -55,6 +56,20 @@ public class AdmissionController {
         List<AdmissionEntity> admissions =
                 admissionService.findActiveAdmissionsForPatientAtFacility(subjectCpid, facilityId);
         return ResponseEntity.ok(admissions);
+    }
+
+    /**
+     * Resolved current inpatient location for a patient — the active admission's ward + bed
+     * with human-readable labels. Returns 204 when the patient is not currently admitted.
+     * Backs the experience-shell patient-location badge (G053).
+     */
+    @GetMapping("/current-location")
+    public ResponseEntity<PatientLocationView> getCurrentLocation(
+            @RequestParam(name = "subject_cpid") String subjectCpid,
+            @RequestParam(name = "facility_id", required = false) UUID facilityId) {
+        return admissionService.getCurrentLocation(subjectCpid, facilityId)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
     }
 
     /**

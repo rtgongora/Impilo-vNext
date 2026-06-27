@@ -51,3 +51,10 @@ impilo:
     enabled: true
   services:
     mushe-wallet-base-url: ${MUSHE_WALLET_BASE_URL:http://localhost:8126}
+  channels:
+    external-notify:
+      # Honest seam: when no external gateway is wired, notify-only sends are QUEUED (recorded as
+      # an outbox event) rather than DISPATCHED. Content is always the fixed, clinical-content-free
+      # template below.
+      enabled: ${EXTERNAL_NOTIFY_ENABLED:false}
+      template: ${EXTERNAL_NOTIFY_TEMPLATE:You have a secure health notification. Please log in to Impilo to view it.}

@@ -77,3 +77,41 @@ oros:
     ack-timeout-minutes: 30
   routing:
     default-mode: INTERNAL
+  integration:
+    # External interoperability adapters — honest configured/not-configured at /admin/integrations.
+    butano:
+      base-url: ${OROS_BUTANO_BASE_URL:http://localhost:8090}
+    varapi:
+      base-url: ${OROS_VARAPI_BASE_URL:http://localhost:8083}
+    tuso:
+      base-url: ${OROS_TUSO_BASE_URL:http://localhost:8084}
+    share-slip:
+      base-url: ${OROS_SHARE_SLIP_BASE_URL:http://localhost:8104}
+    fhir:
+      imagingstudy-outbound:
+        enabled: ${OROS_FHIR_IMAGINGSTUDY_OUTBOUND_ENABLED:false}
+      servicerequest-inbound:
+        enabled: ${OROS_FHIR_SERVICEREQUEST_INBOUND_ENABLED:false}
+    hl7:
+      orm-inbound:
+        enabled: ${OROS_HL7_ORM_INBOUND_ENABLED:false}
+        port: ${OROS_HL7_ORM_INBOUND_PORT:2575}
+        tenant-id: ${OROS_HL7_ORM_INBOUND_TENANT_ID:}
+        facility-id: ${OROS_HL7_ORM_INBOUND_FACILITY_ID:}
+      oru-outbound:
+        enabled: ${OROS_HL7_ORU_OUTBOUND_ENABLED:false}
+        host: ${OROS_HL7_ORU_OUTBOUND_HOST:localhost}
+        port: ${OROS_HL7_ORU_OUTBOUND_PORT:2576}
+    dicom:
+      mwl:
+        # OFF (NOT_LIVE) | REST (DICOMweb/UPS-RS to dcm4chee-arc or Orthanc) | DIMSE (UPS N-CREATE)
+        mode: ${OROS_DICOM_MWL_MODE:OFF}
+        scheduled-station-aet: ${OROS_DICOM_MWL_STATION_AET:IMPILO}
+        rest:
+          base-url: ${OROS_DICOM_MWL_REST_BASE_URL:http://localhost:8088}
+          path: ${OROS_DICOM_MWL_REST_PATH:/dcm4chee-arc/aets/DCM4CHEE/rs/mwlitems}
+        dimse:
+          calling-aet: ${OROS_DICOM_MWL_CALLING_AET:IMPILO_OROS}
+          called-aet: ${OROS_DICOM_MWL_CALLED_AET:DCM4CHEE}
+          host: ${OROS_DICOM_MWL_DIMSE_HOST:localhost}
+          port: ${OROS_DICOM_MWL_DIMSE_PORT:11112}

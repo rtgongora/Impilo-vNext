@@ -77,6 +77,12 @@
             <artifactId>pdfbox</artifactId>
             <version>3.0.3</version>
         </dependency>
+        <!-- UCUM unit conversion (bundles ucum-essence.xml) for reference-range comparison -->
+        <dependency>
+            <groupId>org.fhir</groupId>
+            <artifactId>ucum</artifactId>
+            <version>1.0.8</version>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>

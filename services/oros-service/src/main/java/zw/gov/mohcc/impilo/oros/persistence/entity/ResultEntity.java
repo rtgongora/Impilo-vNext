@@ -6,6 +6,7 @@ import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import zw.gov.mohcc.impilo.oros.domain.ResultKind;
+import zw.gov.mohcc.impilo.oros.domain.ResultStatus;
 
 /**
  * Stores a result captured against a clinical order.
@@ -49,6 +50,41 @@ public class ResultEntity {
     @Column(name = "reported_by", nullable = false, length = 128)
     private String reportedBy;
 
+    // ── Reporting lifecycle (V006) ───────────────────────────────────────
+    @Enumerated(EnumType.STRING)
+    @Column(name = "report_status", length = 20)
+    private ResultStatus reportStatus;
+
+    @Column(name = "impression", columnDefinition = "TEXT")
+    private String impression;
+
+    @Column(name = "recommendations", columnDefinition = "TEXT")
+    private String recommendations;
+
+    @Column(name = "critical_reason", columnDefinition = "TEXT")
+    private String criticalReason;
+
+    @Column(name = "validated_by", length = 128)
+    private String validatedBy;
+
+    @Column(name = "released_at")
+    private OffsetDateTime releasedAt;
+
+    @Column(name = "acknowledged_at")
+    private OffsetDateTime acknowledgedAt;
+
+    @Column(name = "acknowledged_by", length = 128)
+    private String acknowledgedBy;
+
+    @Column(name = "supersedes_result_id")
+    private UUID supersedesResultId;
+
+    @Column(name = "version", nullable = false)
+    private int version = 1;
+
+    @Column(name = "escalated_at")
+    private OffsetDateTime escalatedAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -80,6 +116,39 @@ public class ResultEntity {
 
     public String getReportedBy() { return reportedBy; }
     public void setReportedBy(String reportedBy) { this.reportedBy = reportedBy; }
+
+    public ResultStatus getReportStatus() { return reportStatus; }
+    public void setReportStatus(ResultStatus reportStatus) { this.reportStatus = reportStatus; }
+
+    public String getImpression() { return impression; }
+    public void setImpression(String impression) { this.impression = impression; }
+
+    public String getRecommendations() { return recommendations; }
+    public void setRecommendations(String recommendations) { this.recommendations = recommendations; }
+
+    public String getCriticalReason() { return criticalReason; }
+    public void setCriticalReason(String criticalReason) { this.criticalReason = criticalReason; }
+
+    public String getValidatedBy() { return validatedBy; }
+    public void setValidatedBy(String validatedBy) { this.validatedBy = validatedBy; }
+
+    public OffsetDateTime getReleasedAt() { return releasedAt; }
+    public void setReleasedAt(OffsetDateTime releasedAt) { this.releasedAt = releasedAt; }
+
+    public OffsetDateTime getAcknowledgedAt() { return acknowledgedAt; }
+    public void setAcknowledgedAt(OffsetDateTime acknowledgedAt) { this.acknowledgedAt = acknowledgedAt; }
+
+    public String getAcknowledgedBy() { return acknowledgedBy; }
+    public void setAcknowledgedBy(String acknowledgedBy) { this.acknowledgedBy = acknowledgedBy; }
+
+    public UUID getSupersedesResultId() { return supersedesResultId; }
+    public void setSupersedesResultId(UUID supersedesResultId) { this.supersedesResultId = supersedesResultId; }
+
+    public int getVersion() { return version; }
+    public void setVersion(int version) { this.version = version; }
+
+    public OffsetDateTime getEscalatedAt() { return escalatedAt; }
+    public void setEscalatedAt(OffsetDateTime escalatedAt) { this.escalatedAt = escalatedAt; }
 
     public OffsetDateTime getCreatedAt() { return createdAt; }
 }

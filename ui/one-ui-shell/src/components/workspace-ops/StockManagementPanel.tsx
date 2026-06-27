@@ -3,7 +3,9 @@
 import { useMemo, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { LiveDataSourceBadge } from '@/components/common/LiveDataSourceBadge';
-import { useInventoryOnHand, useInventoryStockouts } from '@/hooks/queries/useInventory';
+import { NotLiveNotice } from '@/components/common/NotLiveNotice';
+import { useInventoryOnHand, useInventoryStockouts, useInventoryLedger } from '@/hooks/queries/useInventory';
+import { useProcPurchaseOrders } from '@/hooks/queries/useProcurement';
 import {
   Package, ShoppingCart, Truck, ClipboardCheck, AlertTriangle,
   Plus, Search, ArrowRightLeft, Calendar, TrendingDown,
@@ -75,12 +77,94 @@ function getStatusBadge(status: string) {
     arrived: { label: 'Arrived', classes: 'bg-green-100 text-green-700' },
     pending: { label: 'Pending', classes: 'bg-amber-100 text-warning-foreground' },
     completed: { label: 'Completed', classes: 'bg-green-100 text-green-700' },
+    // procurement-service PO statuses
+    sent: { label: 'Sent', classes: 'bg-primary-soft text-primary' },
+    acknowledged: { label: 'Acknowledged', classes: 'bg-primary-soft text-primary' },
+    partially_received: { label: 'Partially Received', classes: 'bg-amber-100 text-warning-foreground' },
+    received: { label: 'Received', classes: 'bg-green-100 text-green-700' },
+    cancelled: { label: 'Cancelled', classes: 'bg-red-100 text-danger' },
   };
   const cfg = map[status] || { label: status, classes: 'bg-neutral-100 text-muted-foreground' };
   return <span className={`px-2 py-0.5 rounded text-xs font-medium ${cfg.classes}`}>{cfg.label}</span>;
 }
 
 // ─── Component ───
+
+interface LedgerEvent {
+  id: string;
+  itemCode: string;
+  qtyDelta: number;
+  uom: string;
+  eventType: string;
+  batch: string | null;
+  refType: string | null;
+  refId: string | null;
+  createdAt: string | null;
+}
+
+/** Tolerant extraction of the array from a paged / wrapped JSON response. */
+function extractArray(payload: unknown): unknown[] {
+  if (Array.isArray(payload)) return payload;
+  if (payload && typeof payload === 'object') {
+    const obj = payload as Record<string, unknown>;
+    if (Array.isArray(obj.data)) return obj.data;
+    if (Array.isArray(obj.items)) return obj.items;
+    if (Array.isArray(obj.content)) return obj.content;
+    if (obj.data && typeof obj.data === 'object') {
+      const d = obj.data as Record<string, unknown>;
+      if (Array.isArray(d.content)) return d.content;
+      if (Array.isArray(d.items)) return d.items;
+    }
+  }
+  return [];
+}
+
+interface PurchaseOrder {
+  id: string;
+  poNumber: string;
+  status: string;
+  total: number;
+  currency: string;
+  supplierRef: string | null;
+  createdAt: string | null;
+}
+
+function asPurchaseOrders(payload: unknown): PurchaseOrder[] {
+  return extractArray(payload).map((row, index) => {
+    const r = row as Record<string, unknown>;
+    const a = (r.attributes as Record<string, unknown> | undefined) ?? r;
+    const supplierId = a.supplierId ?? a.supplier_id;
+    return {
+      id: String(r.poId ?? r.id ?? index),
+      poNumber: String(a.poNumber ?? a.po_number ?? '—'),
+      status: String(a.status ?? 'DRAFT'),
+      total: Number(a.totalAmount ?? a.total_amount ?? 0),
+      currency: String(a.currency ?? 'ZWL'),
+      // No supplier name on the PO header (supplierId is a UUID) — show a short ref, don't invent one.
+      supplierRef: supplierId ? `Supplier ${String(supplierId).slice(0, 8)}` : null,
+      createdAt: a.createdAt ?? a.created_at ? String(a.createdAt ?? a.created_at) : null,
+    };
+  });
+}
+
+function asLedgerEvents(payload: unknown): LedgerEvent[] {
+  return extractArray(payload).map((row, index) => {
+    const r = row as Record<string, unknown>;
+    const a = (r.attributes as Record<string, unknown> | undefined) ?? r;
+    const str = (v: unknown) => (v == null ? null : String(v));
+    return {
+      id: String(r.eventId ?? r.id ?? index),
+      itemCode: String(a.itemCode ?? a.item_code ?? '—'),
+      qtyDelta: Number(a.qtyDelta ?? a.qty_delta ?? 0),
+      uom: String(a.uom ?? 'ea'),
+      eventType: String(a.eventType ?? a.event_type ?? ''),
+      batch: str(a.batch),
+      refType: str(a.refType ?? a.ref_type),
+      refId: str(a.refId ?? a.ref_id),
+      createdAt: str(a.createdAt ?? a.created_at),
+    };
+  });
+}
 
 function asInventoryRows(payload: unknown): InventoryItem[] {
   const raw = Array.isArray(payload)
@@ -127,7 +211,29 @@ export function StockManagementPanel({ facilityId }: StockManagementPanelProps) 
   const [preferLive, setPreferLive] = useState(true);
   const onHandQ = useInventoryOnHand(facilityId, { size: 50 });
   const stockoutsQ = useInventoryStockouts(facilityId);
+  const ledgerQ = useInventoryLedger(facilityId, { size: 50 });
+  const poQ = useProcPurchaseOrders();
   const liveItems = useMemo(() => asInventoryRows(onHandQ.data), [onHandQ.data]);
+
+  // Receiving & transfers tabs are derived from the real stock ledger (movement
+  // history), not fixtures — receipts are RECEIPT events, transfers are
+  // TRANSFER_IN/OUT events. Fall back to demo only when the ledger has none.
+  const ledgerEvents = useMemo(() => asLedgerEvents(ledgerQ.data), [ledgerQ.data]);
+  const liveReceipts = useMemo(
+    () => ledgerEvents.filter(e => e.eventType === 'RECEIPT'),
+    [ledgerEvents],
+  );
+  const liveTransfers = useMemo(
+    () => ledgerEvents.filter(e => e.eventType === 'TRANSFER_IN' || e.eventType === 'TRANSFER_OUT'),
+    [ledgerEvents],
+  );
+  const receiptsLive = preferLive && liveReceipts.length > 0;
+  const transfersLive = preferLive && liveTransfers.length > 0;
+
+  // Purchase orders — real procurement-service POs (procurement-service is fully built;
+  // the earlier "not implemented" notice was wrong).
+  const livePOs = useMemo(() => asPurchaseOrders(poQ.data), [poQ.data]);
+  const ordersLive = preferLive && livePOs.length > 0;
   const displayInventory = preferLive && liveItems.length > 0 ? liveItems : INVENTORY_ITEMS;
   const dataSource =
     preferLive && liveItems.length > 0 ? 'live' : preferLive && onHandQ.isLoading ? 'mixed' : 'demo';
@@ -276,8 +382,16 @@ export function StockManagementPanel({ facilityId }: StockManagementPanelProps) 
       {/* Purchase Orders Tab */}
       {activeTab === 'orders' && (
         <div>
+          {!ordersLive && (
+            <NotLiveNotice className="mb-3">
+              <span className="font-semibold">No purchase orders yet.</span> Showing demo
+              data — none have been raised in procurement for this facility.
+            </NotLiveNotice>
+          )}
           <div className="flex items-center justify-between mb-3">
-            <p className="text-sm text-muted-foreground">{PURCHASE_ORDERS.length} orders</p>
+            <p className="text-sm text-muted-foreground">
+              {ordersLive ? `${livePOs.length} orders (procurement)` : `${PURCHASE_ORDERS.length} orders`}
+            </p>
             <button
               onClick={() => setNewOrderOpen(true)}
               className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-primary text-white rounded-md hover:bg-primary-hover"
@@ -286,89 +400,161 @@ export function StockManagementPanel({ facilityId }: StockManagementPanelProps) 
             </button>
           </div>
           <div className="space-y-2 max-h-[400px] overflow-auto">
-            {PURCHASE_ORDERS.map(po => (
-              <div key={po.id} className="bg-card border border-border rounded-lg py-3 px-4 hover:bg-background cursor-pointer">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold">{po.id}</p>
-                      {po.priority === 'urgent' && <span className="px-2 py-0.5 rounded bg-red-100 text-danger text-[10px] font-medium">Urgent</span>}
+            {ordersLive
+              ? livePOs.map(po => (
+                  <div key={po.id} className="bg-card border border-border rounded-lg py-3 px-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold">{po.poNumber}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {po.supplierRef ?? 'Supplier —'} &middot; {po.currency} {po.total.toLocaleString()}
+                        </p>
+                        {po.createdAt && <p className="text-xs text-muted-foreground mt-0.5">{po.createdAt.slice(0, 10)}</p>}
+                      </div>
+                      {getStatusBadge(po.status.toLowerCase())}
                     </div>
-                    <p className="text-xs text-muted-foreground">{po.supplier} &middot; {po.items} items &middot; {po.total}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{po.date}</p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {getStatusBadge(po.status)}
-                    {po.status === 'pending_approval' && (
-                      <button className="px-2 py-1 text-xs border border-border rounded hover:bg-neutral-100">Approve</button>
-                    )}
+                ))
+              : PURCHASE_ORDERS.map(po => (
+                  <div key={po.id} className="bg-card border border-border rounded-lg py-3 px-4 hover:bg-background cursor-pointer">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-semibold">{po.id}</p>
+                          {po.priority === 'urgent' && <span className="px-2 py-0.5 rounded bg-red-100 text-danger text-[10px] font-medium">Urgent</span>}
+                        </div>
+                        <p className="text-xs text-muted-foreground">{po.supplier} &middot; {po.items} items &middot; {po.total}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{po.date}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {getStatusBadge(po.status)}
+                        {po.status === 'pending_approval' && (
+                          <button className="px-2 py-1 text-xs border border-border rounded hover:bg-neutral-100">Approve</button>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            ))}
+                ))}
           </div>
         </div>
       )}
 
-      {/* Receiving Tab */}
+      {/* Receiving Tab — live RECEIPT ledger events, demo fallback */}
       {activeTab === 'receiving' && (
         <div>
-          <p className="text-sm text-muted-foreground mb-3">{PENDING_RECEIPTS.length} pending deliveries</p>
-          <div className="space-y-2">
-            {PENDING_RECEIPTS.map(grn => (
-              <div key={grn.id} className="bg-card border border-border rounded-lg py-3 px-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold">{grn.id}</p>
-                    <p className="text-xs text-muted-foreground">PO: {grn.poNumber} &middot; {grn.supplier} &middot; {grn.items} items</p>
-                    <p className="text-xs text-muted-foreground">Expected: {grn.expectedDate}</p>
+          {receiptsLive ? (
+            <>
+              <p className="text-sm text-muted-foreground mb-3">{liveReceipts.length} recent receipts (stock ledger)</p>
+              <div className="space-y-2 max-h-[400px] overflow-auto">
+                {liveReceipts.map(e => (
+                  <div key={e.id} className="bg-card border border-border rounded-lg py-3 px-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold">{e.itemCode}</p>
+                        <p className="text-xs text-muted-foreground">
+                          +{e.qtyDelta} {e.uom}{e.batch ? ` · batch ${e.batch}` : ''}{e.refId ? ` · ${e.refType ?? 'ref'} ${e.refId}` : ''}
+                        </p>
+                        {e.createdAt && <p className="text-xs text-muted-foreground">{e.createdAt.slice(0, 16).replace('T', ' ')}</p>}
+                      </div>
+                      <span className="px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">Received</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {getStatusBadge(grn.status)}
-                    {grn.status === 'arrived' && (
-                      <button className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-primary text-white rounded hover:bg-primary-hover">
-                        <ClipboardCheck className="h-3 w-3" />Receive
-                      </button>
-                    )}
-                  </div>
-                </div>
+                ))}
               </div>
-            ))}
-            {PENDING_RECEIPTS.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground text-sm">No pending deliveries</div>
-            )}
-          </div>
+            </>
+          ) : (
+            <>
+              <NotLiveNotice className="mb-3">
+                <span className="font-semibold">Not live yet.</span> No RECEIPT events in the
+                stock ledger — showing demo deliveries.
+              </NotLiveNotice>
+              <p className="text-sm text-muted-foreground mb-3">{PENDING_RECEIPTS.length} pending deliveries</p>
+              <div className="space-y-2">
+                {PENDING_RECEIPTS.map(grn => (
+                  <div key={grn.id} className="bg-card border border-border rounded-lg py-3 px-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold">{grn.id}</p>
+                        <p className="text-xs text-muted-foreground">PO: {grn.poNumber} &middot; {grn.supplier} &middot; {grn.items} items</p>
+                        <p className="text-xs text-muted-foreground">Expected: {grn.expectedDate}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {getStatusBadge(grn.status)}
+                        {grn.status === 'arrived' && (
+                          <button className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-primary text-white rounded hover:bg-primary-hover">
+                            <ClipboardCheck className="h-3 w-3" />Receive
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       )}
 
-      {/* Transfers Tab */}
+      {/* Transfers Tab — live TRANSFER_IN/OUT ledger events, demo fallback */}
       {activeTab === 'transfers' && (
         <div>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-sm text-muted-foreground">{TRANSFERS.length} transfers</p>
+            <p className="text-sm text-muted-foreground">
+              {transfersLive ? `${liveTransfers.length} transfer movements (stock ledger)` : `${TRANSFERS.length} transfers`}
+            </p>
             <button className="inline-flex items-center gap-1 px-3 py-1.5 text-sm border border-border rounded-md hover:bg-background">
               <ArrowRightLeft className="h-3.5 w-3.5" />Request Transfer
             </button>
           </div>
-          <div className="space-y-2">
-            {TRANSFERS.map(t => (
-              <div key={t.id} className="bg-card border border-border rounded-lg py-3 px-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold">{t.id}</p>
-                    <p className="text-xs text-muted-foreground">{t.from} &rarr; {t.to} &middot; {t.items} items</p>
-                    <p className="text-xs text-muted-foreground">By {t.requestedBy} &middot; {t.date}</p>
+          {transfersLive ? (
+            <div className="space-y-2 max-h-[400px] overflow-auto">
+              {liveTransfers.map(e => {
+                const isIn = e.eventType === 'TRANSFER_IN';
+                return (
+                  <div key={e.id} className="bg-card border border-border rounded-lg py-3 px-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold">{e.itemCode}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {isIn ? '+' : ''}{e.qtyDelta} {e.uom}{e.batch ? ` · batch ${e.batch}` : ''}{e.refId ? ` · ${e.refType ?? 'ref'} ${e.refId}` : ''}
+                        </p>
+                        {e.createdAt && <p className="text-xs text-muted-foreground">{e.createdAt.slice(0, 16).replace('T', ' ')}</p>}
+                      </div>
+                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${isIn ? 'bg-green-100 text-green-700' : 'bg-sky-100 text-sky-800'}`}>
+                        {isIn ? 'Transfer in' : 'Transfer out'}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {getStatusBadge(t.status)}
-                    {t.status === 'pending' && (
-                      <button className="px-2 py-1 text-xs border border-border rounded hover:bg-neutral-100">Approve</button>
-                    )}
+                );
+              })}
+            </div>
+          ) : (
+            <>
+              <NotLiveNotice className="mb-3">
+                <span className="font-semibold">Not live yet.</span> No transfer events in the
+                stock ledger — showing demo transfers.
+              </NotLiveNotice>
+              <div className="space-y-2">
+                {TRANSFERS.map(t => (
+                  <div key={t.id} className="bg-card border border-border rounded-lg py-3 px-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold">{t.id}</p>
+                        <p className="text-xs text-muted-foreground">{t.from} &rarr; {t.to} &middot; {t.items} items</p>
+                        <p className="text-xs text-muted-foreground">By {t.requestedBy} &middot; {t.date}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {getStatusBadge(t.status)}
+                        {t.status === 'pending' && (
+                          <button className="px-2 py-1 text-xs border border-border rounded hover:bg-neutral-100">Approve</button>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </>
+          )}
         </div>
       )}
 

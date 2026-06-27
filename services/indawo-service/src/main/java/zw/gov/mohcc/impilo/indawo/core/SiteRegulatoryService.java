@@ -347,11 +347,6 @@ public class SiteRegulatoryService {
                 if ("FAIL".equalsIgnoreCase(f.status())) {
                     hasAnyFail = true;
                     if (f.checklistItemId() != null) {
-                        itemRepository.findById(f.checklistItemId()).ifPresent(item -> {
-                            if (item.isCriticalFlag()) {
-                                // captured via outer mutable state by single-thread transactional usage
-                            }
-                        });
                         var item = itemRepository.findById(f.checklistItemId()).orElse(null);
                         if (item != null && item.isCriticalFlag()) {
                             hasCriticalFail = true;

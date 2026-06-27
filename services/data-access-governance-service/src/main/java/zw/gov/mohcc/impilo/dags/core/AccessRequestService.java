@@ -67,7 +67,7 @@ public class AccessRequestService {
             throw new IllegalStateException("Request is not in SUBMITTED status, current: " + request.getStatus());
         }
 
-        String permitToken = enforcementService.issuePermitToken(requestId, tenantId, request.getRequesterId());
+        String permitToken = enforcementService.issuePermitToken(request);
 
         request.setStatus(AccessRequestStatus.APPROVED);
         request.setPermitToken(permitToken);

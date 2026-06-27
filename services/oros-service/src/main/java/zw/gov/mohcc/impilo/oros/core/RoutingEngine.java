@@ -13,6 +13,7 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -113,6 +114,55 @@ public class RoutingEngine {
         publishEvent("ROUTE", route.getRouteId().toString(),
                 "ORDER_ROUTED", route, ctx.tenantId());
 
+        return route;
+    }
+
+    /**
+     * Destination assignment for a diagnostic order's referral/routing page.
+     */
+    public record RouteDestination(
+            RouteDestinationType type,
+            UUID facilityId,
+            String departmentId,
+            String servicePointId,
+            String providerId,
+            String name,
+            String expectedReturnMethod,
+            OffsetDateTime expiry) {}
+
+    /**
+     * Assign (or re-assign) an explicit routing destination to an order — the requester's
+     * referral/routing action. Updates the order's existing route (created at placement) with the
+     * chosen internal department/service-point, external provider/facility, or patient-carried
+     * destination, and emits an {@code ORDER_ROUTED} event.
+     */
+    @Transactional
+    public RoutingEntity assignDestination(String orderId, RouteDestination dest) {
+        TrustContext ctx = TrustContextHolder.require();
+
+        List<RoutingEntity> routes = routingRepository.findByOrderId(orderId);
+        RoutingEntity route = routes.isEmpty() ? new RoutingEntity() : routes.get(0);
+        if (route.getRouteId() == null) {
+            route.setRouteId(UUID.randomUUID());
+            route.setOrderId(orderId);
+            route.setAdapterMode(AdapterMode.INTERNAL);
+            route.setStatus(RouteStatus.SENT);
+        }
+
+        route.setDestinationType(dest.type());
+        route.setDestinationFacilityId(dest.facilityId());
+        route.setDestinationDepartmentId(dest.departmentId());
+        route.setDestinationServicePointId(dest.servicePointId());
+        route.setDestinationProviderId(dest.providerId());
+        route.setDestinationName(dest.name());
+        route.setExpectedReturnMethod(dest.expectedReturnMethod());
+        route.setRouteExpiry(dest.expiry());
+
+        route = routingRepository.save(route);
+        publishEvent("ROUTE", route.getRouteId().toString(), "ORDER_ROUTED", route, ctx.tenantId());
+
+        log.info("Order {} routed to destination type={}, name={}",
+                orderId, dest.type(), dest.name());
         return route;
     }
 

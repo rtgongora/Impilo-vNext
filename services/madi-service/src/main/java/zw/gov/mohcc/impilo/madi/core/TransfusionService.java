@@ -28,17 +28,23 @@ public class TransfusionService {
     private final TransfusionOutcomeRepository outcomeRepository;
     private final ButanoIntegration butanoIntegration;
     private final MadiEventEmitter eventEmitter;
+    private final zw.gov.mohcc.impilo.madi.persistence.repository.BloodOrderRepository orderRepository;
+    private final zw.gov.mohcc.impilo.madi.integration.OrosIntegration orosIntegration;
 
     public TransfusionService(TransfusionEpisodeRepository episodeRepository,
                               TransfusionObservationRepository observationRepository,
                               TransfusionOutcomeRepository outcomeRepository,
                               ButanoIntegration butanoIntegration,
-                              MadiEventEmitter eventEmitter) {
+                              MadiEventEmitter eventEmitter,
+                              zw.gov.mohcc.impilo.madi.persistence.repository.BloodOrderRepository orderRepository,
+                              zw.gov.mohcc.impilo.madi.integration.OrosIntegration orosIntegration) {
         this.episodeRepository = episodeRepository;
         this.observationRepository = observationRepository;
         this.outcomeRepository = outcomeRepository;
         this.butanoIntegration = butanoIntegration;
         this.eventEmitter = eventEmitter;
+        this.orderRepository = orderRepository;
+        this.orosIntegration = orosIntegration;
     }
 
     @Transactional
@@ -102,8 +108,25 @@ public class TransfusionService {
         episode.setCompletedAt(OffsetDateTime.now());
         episode.setUpdatedAt(OffsetDateTime.now());
         TransfusionEpisodeEntity saved = episodeRepository.save(episode);
+        // Resolve the originating OROS order ref so both the event and the REST callback carry it.
+        String orosRef = episode.getOrderId() == null ? null
+                : orderRepository.findByOrderIdAndTenantId(episode.getOrderId(), tenantId)
+                        .map(zw.gov.mohcc.impilo.madi.persistence.entity.BloodOrderEntity::getOrosOrderRef)
+                        .filter(ref -> ref != null && !ref.isBlank())
+                        .orElse(null);
+        java.util.Map<String, Object> payload = new java.util.LinkedHashMap<>();
+        payload.put("outcome", outcomeStatus);
+        payload.put("notes", outcomeNotes);
+        if (orosRef != null) {
+            payload.put("orosOrderRef", orosRef);
+        }
         eventEmitter.emit("TRANSFUSION", episodeId.toString(), "TRANSFUSION_COMPLETED", "TRANSFUSION",
-                episodeId.toString(), Map.of("outcome", outcomeStatus), tenantId);
+                episodeId.toString(), payload, tenantId);
+        // Return the transfusion outcome to OROS so it closes the loop on the requesting order /
+        // patient file (adverse/stopped -> critical). Best-effort; OROS unavailability is non-blocking.
+        if (orosRef != null) {
+            orosIntegration.notifyTransfusionOutcome(orosRef, outcomeStatus, outcomeNotes);
+        }
         return saved;
     }
 

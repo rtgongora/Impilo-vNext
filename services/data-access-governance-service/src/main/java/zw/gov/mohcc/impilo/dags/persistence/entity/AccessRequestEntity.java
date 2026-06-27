@@ -44,7 +44,7 @@ public class AccessRequestEntity {
     @Column(name = "status", nullable = false)
     private AccessRequestStatus status = AccessRequestStatus.SUBMITTED;
 
-    @Column(name = "permit_token")
+    @Column(name = "permit_token", length = 4096)
     private String permitToken;
 
     @Column(name = "created_at", nullable = false, updatable = false)

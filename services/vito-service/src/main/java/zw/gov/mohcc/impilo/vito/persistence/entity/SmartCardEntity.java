@@ -28,7 +28,8 @@ public class SmartCardEntity {
     @Column(name = "did_uri", nullable = false)
     private String didUri;
 
-    @Column(name = "public_key", nullable = false, columnDefinition = "TEXT")
+    // G032: absent until the secure-element keypair is provisioned at print time.
+    @Column(name = "public_key", columnDefinition = "TEXT")
     private String publicKey;
 
     @Enumerated(EnumType.STRING)

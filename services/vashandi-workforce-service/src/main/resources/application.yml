@@ -44,7 +44,6 @@ spring:
 
 vashandi:
   security:
-    oauth2-enabled: ${VASHANDI_OAUTH2_ENABLED:true}
   outbox:
     poll-interval-ms: 2000
   v11:

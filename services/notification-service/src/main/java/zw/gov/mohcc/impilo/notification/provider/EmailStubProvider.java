@@ -24,10 +24,9 @@ public class EmailStubProvider implements NotificationProvider {
 
     @Override
     public void send(String channel, String to, String subject, String body) {
-        log.info("[EMAIL_DEV] to={} subject={} body_length={}", to, subject,
-                body != null ? body.length() : 0);
-        if (log.isDebugEnabled() && body != null) {
-            log.debug("[EMAIL_DEV] body:\n{}", body);
-        }
+        // Loud, not silent: the message is NOT delivered. Configure notification.email.provider=smtp.
+        log.warn("[EMAIL NOT DELIVERED — stub provider] to={} subject={} body_length={}; "
+                        + "set notification.email.provider=smtp for real delivery",
+                to, subject, body != null ? body.length() : 0);
     }
 }

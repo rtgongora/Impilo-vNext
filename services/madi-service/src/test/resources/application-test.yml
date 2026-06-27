@@ -33,7 +33,6 @@ spring:
 
 madi:
   security:
-    oauth2-enabled: false
   outbox:
     poll-interval-ms: 60000
 

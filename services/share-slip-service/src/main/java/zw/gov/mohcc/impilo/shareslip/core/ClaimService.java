@@ -156,7 +156,8 @@ public class ClaimService {
         log.info("Share link claimed successfully: linkId={}, claimCount={}/{}",
                 entity.getLinkId(), entity.getClaimCount(), entity.getMaxClaims());
 
-        return ClaimResult.success(entity.getDocumentIds(), signedUrls);
+        return ClaimResult.success(entity.getSubjectType(), entity.getSubjectId(),
+                entity.getDocumentIds(), signedUrls);
     }
 
     /**

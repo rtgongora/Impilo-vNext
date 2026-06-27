@@ -1,0 +1,68 @@
+package zw.gov.mohcc.impilo.ia.api;
+
+import java.util.List;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import zw.gov.mohcc.impilo.ia.core.AssuranceLevel;
+import zw.gov.mohcc.impilo.ia.core.AssuranceService;
+import zw.gov.mohcc.impilo.ia.persistence.entity.AssuranceUpgradeRequestEntity;
+import zw.gov.mohcc.impilo.shared.auth.TrustContext;
+import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
+import zw.gov.mohcc.impilo.shared.response.ApiResponse;
+
+/**
+ * Identity assurance API (Wave C C2a) — the real source-of-record the experience-bff proxies
+ * (replacing the previous BFF fabrication). Surfaces an actor's assurance status and the
+ * upgrade-request review workflow.
+ */
+@RestController
+@RequestMapping("/internal/v1/assurance")
+public class AssuranceController {
+
+    private final AssuranceService assuranceService;
+
+    public AssuranceController(AssuranceService assuranceService) {
+        this.assuranceService = assuranceService;
+    }
+
+    @GetMapping("/status")
+    public ResponseEntity<ApiResponse<AssuranceService.StatusView>> status() {
+        TrustContext ctx = TrustContextHolder.require();
+        AssuranceService.StatusView view = assuranceService.getStatus(ctx.tenantId(), ctx.actorId());
+        return ResponseEntity.ok(ApiResponse.ok(view, ctx.correlationId().toString()));
+    }
+
+    @PostMapping("/upgrade/request")
+    public ResponseEntity<ApiResponse<AssuranceUpgradeRequestEntity>> requestUpgrade(
+            @RequestBody UpgradeRequest body) {
+        TrustContext ctx = TrustContextHolder.require();
+        AssuranceUpgradeRequestEntity request = assuranceService.requestUpgrade(
+                ctx.tenantId(), ctx.actorId(), body.targetLevel(), body.method());
+        return ResponseEntity.status(201).body(ApiResponse.ok(request, ctx.correlationId().toString()));
+    }
+
+    @GetMapping("/upgrade/requests")
+    public ResponseEntity<ApiResponse<List<AssuranceUpgradeRequestEntity>>> listPending() {
+        TrustContext ctx = TrustContextHolder.require();
+        return ResponseEntity.ok(ApiResponse.ok(
+                assuranceService.listPending(ctx.tenantId()), ctx.correlationId().toString()));
+    }
+
+    @PostMapping("/upgrade/requests/{id}/decide")
+    public ResponseEntity<ApiResponse<AssuranceUpgradeRequestEntity>> decide(
+            @PathVariable Long id, @RequestBody DecideRequest body) {
+        TrustContext ctx = TrustContextHolder.require();
+        AssuranceUpgradeRequestEntity decided = assuranceService.decideUpgrade(
+                ctx.tenantId(), ctx.actorId(), id, body.approve(), body.reason());
+        return ResponseEntity.ok(ApiResponse.ok(decided, ctx.correlationId().toString()));
+    }
+
+    public record UpgradeRequest(AssuranceLevel targetLevel, String method) {}
+
+    public record DecideRequest(boolean approve, String reason) {}
+}

@@ -40,6 +40,19 @@ public class OrderItemEntity {
     @Column(name = "body_site")
     private String bodySite;
 
+    // ── Imaging examination detail (V003) ────────────────────────────────
+    @Column(name = "modality", length = 32)
+    private String modality;       // XR, US, CT, MRI, MG, FL, DEXA, ECG, ECHO, ENDO, OTHER
+
+    @Column(name = "laterality", length = 16)
+    private String laterality;     // LEFT, RIGHT, BILATERAL, NA
+
+    @Column(name = "contrast", length = 16)
+    private String contrast;       // YES, NO, UNKNOWN
+
+    @Column(name = "procedure_code", length = 64)
+    private String procedureCode;
+
     @JdbcTypeCode(SqlTypes.JSON)
 
 
@@ -82,6 +95,18 @@ public class OrderItemEntity {
 
     public String getBodySite() { return bodySite; }
     public void setBodySite(String bodySite) { this.bodySite = bodySite; }
+
+    public String getModality() { return modality; }
+    public void setModality(String modality) { this.modality = modality; }
+
+    public String getLaterality() { return laterality; }
+    public void setLaterality(String laterality) { this.laterality = laterality; }
+
+    public String getContrast() { return contrast; }
+    public void setContrast(String contrast) { this.contrast = contrast; }
+
+    public String getProcedureCode() { return procedureCode; }
+    public void setProcedureCode(String procedureCode) { this.procedureCode = procedureCode; }
 
     public String getMetadata() { return metadata; }
     public void setMetadata(String metadata) { this.metadata = metadata; }

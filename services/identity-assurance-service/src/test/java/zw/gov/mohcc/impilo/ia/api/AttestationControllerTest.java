@@ -41,7 +41,7 @@ class AttestationControllerTest {
         saved.setConfidence(new BigDecimal("0.9500"));
         saved.setRecordedBy("user-1");
 
-        when(attestationService.recordAttestation(any(), any(), any(), any(), any(), any(), any(), any()))
+        when(attestationService.recordAttestation(any(), any(), any(), any(), any(), any()))
                 .thenReturn(saved);
 
         mockMvc.perform(post("/internal/v1/attestations")
@@ -49,7 +49,7 @@ class AttestationControllerTest {
                         .header("X-Tenant-Id", UUID.randomUUID().toString())
                         .header("X-Actor-Id", "user-1")
                         .header("X-Correlation-Id", UUID.randomUUID().toString())
-                        .content("{\"attestationType\":\"DEVICE_BINDING\",\"evidence\":\"{}\",\"outcome\":\"VERIFIED\",\"confidence\":0.95}"))
+                        .content("{\"attestationType\":\"DEVICE_BINDING\",\"evidence\":\"{\\\"signedChallenge\\\":\\\"abc\\\"}\"}"))
                 .andExpect(status().isCreated());
     }
 

@@ -4,8 +4,10 @@
  * PatientLocationBadge -- Compact badge showing the patient's current
  * ward / bed / care-point location. Color-coded by care type.
  *
- * Uses mock data rather than Supabase; production would query VITO or
- * the encounter context for live location.
+ * For an admitted patient the ward + bed are read LIVE from the inpatient-service
+ * system-of-record (active admission, resolved labels) via `usePatientLocation` (G053).
+ * The URL search params remain a fallback for non-inpatient encounter contexts and for
+ * patients with no active admission.
  */
 
 import { useParams, useSearchParams } from "next/navigation";
@@ -18,6 +20,7 @@ import {
   Building2,
 } from "lucide-react";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { usePatientLocation } from "@/hooks/queries/useInpatient";
 
 // ---------------------------------------------------------------------------
 // Variant styles
@@ -47,6 +50,9 @@ export function PatientLocationBadge() {
   const searchParams = useSearchParams();
   const patientId = params?.patientId as string | undefined;
   const { facility } = useFacilityStore();
+  // Live inpatient location from the SoR (no-op until a patient context exists).
+  const locationQuery = usePatientLocation(patientId ?? null, facility?.id ?? null);
+  const liveLocation = locationQuery.data?.data ?? null;
 
   // Only show location when there is an active patient context
   if (!patientId) return null;
@@ -68,10 +74,22 @@ export function PatientLocationBadge() {
   const queueId = searchParams.get("queueId");
   const queueName = searchParams.get("queueName");
 
-  // If no encounter context is available, show nothing rather than fake data
-  if (!encounterType && !queueId && !facility) return null;
+  // If no encounter context is available, show nothing rather than fake data.
+  // A live active admission is itself sufficient context.
+  if (!encounterType && !queueId && !facility && !liveLocation?.wardName) return null;
 
   const getLocationInfo = (): LocationInfo => {
+    // Live active admission is authoritative for where the patient physically is —
+    // it takes precedence over URL-supplied ward/bed hints (G053).
+    if (liveLocation?.wardName) {
+      return {
+        icon: <Bed className="h-3.5 w-3.5" />,
+        label: liveLocation.wardName,
+        detail: liveLocation.bedNumber ?? facility?.name,
+        variant: "default",
+      };
+    }
+
     if (encounterType === "outpatient" && source === "referral") {
       return {
         icon: <Video className="h-3.5 w-3.5" />,

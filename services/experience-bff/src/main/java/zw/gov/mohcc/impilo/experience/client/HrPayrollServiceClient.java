@@ -37,19 +37,7 @@ public class HrPayrollServiceClient {
                 .queryParam("employee_id", employeeId).toUriString());
     }
 
-    public JsonNode getLeaveTypes() {
-        return get(baseUrl + "/internal/v1/hr/leave/types");
-    }
-
-    public JsonNode getLeaveRequests(String employeeId) {
-        return get(UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/hr/leave/requests")
-                .queryParam("employee_id", employeeId).toUriString());
-    }
-
-    public JsonNode getAttendance(String employeeId) {
-        return get(UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/hr/attendance")
-                .queryParam("employee_id", employeeId).toUriString());
-    }
+    // Leave + attendance are owned by Vashandi (read via VashandiServiceClient) — removed here.
 
     public JsonNode getPayrollRuns() {
         return get(baseUrl + "/internal/v1/hr/payroll/runs");

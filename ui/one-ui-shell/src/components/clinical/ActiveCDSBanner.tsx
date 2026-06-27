@@ -1,17 +1,23 @@
 "use client";
 
 /**
- * ActiveCDSBanner — Real-time Clinical Decision Support alerts panel.
+ * ActiveCDSBanner — Clinical Decision Support alerts strip.
  *
- * Shows patient-context alerts (sepsis screening, drug interactions,
- * renal dosing, DVT prophylaxis) with severity levels (critical / high /
- * moderate / info).  Alerts are dismissable and collapsible; when collapsed
- * they auto-rotate every 8 s.
+ * Renders real decision-support alerts (severity critical / high / moderate / info)
+ * supplied by the caller via the `alerts` prop. Alerts are dismissable and collapsible;
+ * when collapsed they auto-rotate every 8 s.
+ *
+ * Product Truth: this component renders ONLY alerts it is given. It does NOT fabricate
+ * patient findings or "AI" insights. (It previously generated hardcoded sepsis/renal/
+ * hyperkalaemia alerts and a setTimeout-faked "AI Diagnostic Engine (Live)" insight with
+ * invented vitals — all removed.) Real, governed clinical decision support lives in
+ * AIDiagnosticAssistant, which is backed by the clinical-knowledge-platform-service.
+ * Until a real per-patient alert feed is wired into the clinical toolbar, this strip
+ * renders nothing rather than inventing alerts.
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import {
-  Sparkles,
   AlertTriangle,
   ChevronRight,
   ChevronDown,
@@ -21,7 +27,7 @@ import {
   Activity,
   CheckCircle2,
   Clock,
-  Loader2,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/accessibility";
 
@@ -38,58 +44,6 @@ export interface CDSGuidanceItem {
   dismissed: boolean;
   actionLabel?: string;
 }
-
-// ── Mock guidance that would come from CDS rules engine + AI ──
-
-const generateContextualGuidance = (): CDSGuidanceItem[] => [
-  {
-    id: "cds-1",
-    type: "alert",
-    severity: "critical",
-    title: "Sepsis Screening Due",
-    message:
-      "Patient has fever (38.2 C), tachycardia (103 bpm), and elevated WBC. qSOFA score >= 2 -- initiate Sepsis Bundle within 1 hour.",
-    source: "Clinical Decision Support Rules Engine",
-    timestamp: new Date(),
-    dismissed: false,
-    actionLabel: "Start Sepsis Bundle",
-  },
-  {
-    id: "cds-2",
-    type: "recommendation",
-    severity: "high",
-    title: "Renal Dose Adjustment Needed",
-    message:
-      "Creatinine rising (1.8 -> 2.1 mg/dL). Metformin 500mg requires dose review -- hold or reduce per eGFR calculation.",
-    source: "Pharmacy Clinical Decision Support",
-    timestamp: new Date(Date.now() - 5 * 60_000),
-    dismissed: false,
-    actionLabel: "Review Medications",
-  },
-  {
-    id: "cds-3",
-    type: "ai-insight",
-    severity: "moderate",
-    title: "AI Clinical Insight",
-    message:
-      "Based on presenting symptoms (acute cholecystitis K81.0), vitals pattern, and diabetes history -- consider early surgical consultation. Evidence suggests better outcomes with cholecystectomy within 72h of admission.",
-    source: "AI Diagnostic Assistant",
-    timestamp: new Date(Date.now() - 10 * 60_000),
-    dismissed: false,
-    actionLabel: "Request Consult",
-  },
-  {
-    id: "cds-4",
-    type: "reminder",
-    severity: "info",
-    title: "DVT Prophylaxis",
-    message:
-      "Patient is post-operative day 1. VTE risk assessment indicates enoxaparin 40mg SC daily. Next dose due at 18:00.",
-    source: "Care Protocol Engine",
-    timestamp: new Date(Date.now() - 15 * 60_000),
-    dismissed: false,
-  },
-];
 
 // ── Severity visual config ─────────────────────────
 
@@ -136,64 +90,28 @@ const typeIcons = {
 interface ActiveCDSBannerProps {
   /** Whether a patient chart is currently active */
   hasActivePatient?: boolean;
+  /**
+   * Real decision-support alerts for the active patient, supplied by the caller from a
+   * governed CDS feed. Defaults to none — this component never fabricates alerts.
+   */
+  alerts?: CDSGuidanceItem[];
 }
 
 // ── Component ──────────────────────────────────────
 
-export function ActiveCDSBanner({ hasActivePatient = true }: ActiveCDSBannerProps) {
-  const [guidance, setGuidance] = useState<CDSGuidanceItem[]>([]);
+export function ActiveCDSBanner({ hasActivePatient = true, alerts = [] }: ActiveCDSBannerProps) {
+  const [guidance, setGuidance] = useState<CDSGuidanceItem[]>(alerts);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [expanded, setExpanded] = useState(false);
-  const [isLoadingAI, setIsLoadingAI] = useState(false);
-  const [aiInsight, setAiInsight] = useState<string | null>(null);
 
   const activeItems = guidance.filter((g) => !g.dismissed);
 
-  const fetchAIGuidance = useCallback(async () => {
-    setIsLoadingAI(true);
-    try {
-      // In production this would call the vNext BFF /ai-diagnostic endpoint.
-      // Simulating async fetch for now.
-      await new Promise((r) => setTimeout(r, 1_500));
-
-      const clinicalPearls = [
-        "Potassium 5.8 mmol/L is critically elevated -- ECG urgently.",
-        "Blood glucose 245 mg/dL with ketosis risk in acute illness.",
-        "Penicillin allergy documented -- avoid amoxicillin/ampicillin derivatives.",
-      ];
-
-      setAiInsight(clinicalPearls.join(" | "));
-
-      setGuidance((prev) => [
-        ...prev,
-        {
-          id: `ai-live-${Date.now()}`,
-          type: "ai-insight" as const,
-          severity: "high" as const,
-          title: "AI Red Flag Detection",
-          message:
-            "Hyperkalaemia (K+ 5.8) with renal impairment -- cardiac monitoring required.",
-          source: "AI Diagnostic Engine (Live)",
-          timestamp: new Date(),
-          dismissed: false,
-        },
-      ]);
-    } catch {
-      console.warn("Clinical Decision Support AI guidance unavailable");
-    } finally {
-      setIsLoadingAI(false);
-    }
-  }, []);
-
-  // Load contextual guidance when patient is active
+  // Render only the real alerts supplied by the caller. No fabrication, no setTimeout-faked
+  // "AI" insight. When no real feed is wired, `alerts` is empty and the strip renders nothing.
   useEffect(() => {
-    if (hasActivePatient) {
-      const items = generateContextualGuidance();
-      setGuidance(items);
-      setCurrentIndex(0);
-      fetchAIGuidance();
-    }
-  }, [fetchAIGuidance, hasActivePatient]);
+    setGuidance(alerts);
+    setCurrentIndex(0);
+  }, [alerts]);
 
   // Auto-rotate through non-dismissed items
   useEffect(() => {
@@ -276,10 +194,6 @@ export function ActiveCDSBanner({ hasActivePatient = true }: ActiveCDSBannerProp
         )}
 
         <div className="flex items-center gap-1 shrink-0">
-          {isLoadingAI && (
-            <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
-          )}
-
           {activeItems.length > 1 && (
             <span className="text-[10px] text-muted-foreground">
               {(currentIndex % activeItems.length) + 1}/{activeItems.length}
@@ -309,19 +223,6 @@ export function ActiveCDSBanner({ hasActivePatient = true }: ActiveCDSBannerProp
       {expanded && (
         <div className="overflow-hidden">
           <div className="px-3 pb-2 space-y-1.5 border-t border-border/30">
-            {/* AI insight banner */}
-            {aiInsight && (
-              <div className="flex items-start gap-2 px-2 py-1.5 mt-1.5 rounded bg-primary-soft border border-primary/20">
-                <Sparkles className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  <span className="font-medium text-foreground">
-                    AI Clinical Pearls:{" "}
-                  </span>
-                  {aiInsight}
-                </p>
-              </div>
-            )}
-
             {activeItems.map((item) => {
               const itemConfig = severityConfig[item.severity];
               const ItemIcon = typeIcons[item.type];

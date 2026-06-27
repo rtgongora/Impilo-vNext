@@ -17,17 +17,37 @@ public record ClinicalEvaluationContext(
         List<MedicationLine> activeMedications,
         Integer empiricBroadSpectrumDays,
         Boolean cultureDocumented,
-        Boolean lastResortAntibioticWithoutAstJustification
+        Boolean lastResortAntibioticWithoutAstJustification,
+        Vitals vitals,
+        List<Allergy> allergies
 ) {
 
     private static final List<String> BROAD = List.of(
             "meropenem", "imipenem", "piperacillin", "tazobactam", "cefepime", "ceftazidime"
     );
 
+    /**
+     * Point-in-time vital signs supplied by the calling system. All nullable — a rule keyed on a
+     * vital only fires when that vital is actually present (never inferred or defaulted).
+     */
+    public record Vitals(
+            Double systolicBp,
+            Double diastolicBp,
+            Double heartRate,
+            Double temperatureC,
+            Double respiratoryRate,
+            Double spo2
+    ) {
+    }
+
+    /** A documented allergy: substance (lower-cased generic/substance) and clinician-recorded severity. */
+    public record Allergy(String substance, String severity) {
+    }
+
     @SuppressWarnings("unchecked")
     public static ClinicalEvaluationContext fromMap(Map<String, Object> map) {
         if (map == null || map.isEmpty()) {
-            return new ClinicalEvaluationContext(null, null, null, null, List.of(), List.of(), null, null, null);
+            return new ClinicalEvaluationContext(null, null, null, null, List.of(), List.of(), null, null, null, null, List.of());
         }
         Double ageYears = toDouble(map.get("ageYears"));
         Integer ageDays = toInt(map.get("ageDays"));
@@ -61,7 +81,38 @@ public record ClinicalEvaluationContext(
         Integer empDays = toInt(map.get("empiricBroadSpectrumDays"));
         Boolean culture = map.get("cultureDocumented") instanceof Boolean b ? b : null;
         Boolean lastResort = map.get("lastResortAntibioticWithoutAstJustification") instanceof Boolean b ? b : null;
-        return new ClinicalEvaluationContext(ageYears, ageDays, weightKg, facilityLevel, dx, meds, empDays, culture, lastResort);
+
+        Vitals vitals = null;
+        if (map.get("vitals") instanceof Map<?, ?> v) {
+            vitals = new Vitals(
+                    toDouble(v.get("systolicBp")),
+                    toDouble(v.get("diastolicBp")),
+                    toDouble(v.get("heartRate")),
+                    toDouble(v.get("temperatureC")),
+                    toDouble(v.get("respiratoryRate")),
+                    toDouble(v.get("spo2"))
+            );
+        }
+
+        List<Allergy> allergies = new ArrayList<>();
+        if (map.get("allergies") instanceof List<?> l) {
+            for (Object o : l) {
+                if (o instanceof Map<?, ?> a) {
+                    String substance = str(a.get("substance")).toLowerCase(Locale.ROOT).trim();
+                    if (!substance.isBlank()) {
+                        allergies.add(new Allergy(substance, str(a.get("severity")).toUpperCase(Locale.ROOT)));
+                    }
+                } else if (o != null) {
+                    String substance = o.toString().toLowerCase(Locale.ROOT).trim();
+                    if (!substance.isBlank()) {
+                        allergies.add(new Allergy(substance, ""));
+                    }
+                }
+            }
+        }
+
+        return new ClinicalEvaluationContext(
+                ageYears, ageDays, weightKg, facilityLevel, dx, meds, empDays, culture, lastResort, vitals, allergies);
     }
 
     private static boolean isBroadSpectrum(String generic) {

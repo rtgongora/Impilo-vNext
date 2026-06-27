@@ -15,6 +15,7 @@ import zw.gov.mohcc.impilo.oros.persistence.entity.ResultEntity;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
+import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,11 +37,14 @@ public class ButanoIntegration {
 
     private final RestTemplate restTemplate;
     private final String baseUrl;
+    private final boolean imagingStudyOutboundEnabled;
 
     public ButanoIntegration(RestTemplate restTemplate,
-                             @Value("${oros.integration.butano.base-url:http://localhost:8090}") String baseUrl) {
+                             @Value("${oros.integration.butano.base-url:http://localhost:8090}") String baseUrl,
+                             @Value("${oros.integration.fhir.imagingstudy-outbound.enabled:false}") boolean imagingStudyOutboundEnabled) {
         this.restTemplate = restTemplate;
         this.baseUrl = baseUrl;
+        this.imagingStudyOutboundEnabled = imagingStudyOutboundEnabled;
     }
 
     /**
@@ -136,11 +140,26 @@ public class ButanoIntegration {
 
             Map<String, Object> fhirResource = new HashMap<>();
             fhirResource.put("resourceType", "DiagnosticReport");
-            fhirResource.put("status", "final");
+            fhirResource.put("status", fhirStatus(result));
+            // Stable identifier so amendments can relatesTo prior versions across the SHR.
+            fhirResource.put("identifier", java.util.List.of(Map.of(
+                    "system", "https://impilo.gov.zw/oros/result-id",
+                    "value", result.getResultId() != null ? result.getResultId().toString() : orderId
+            )));
 
             fhirResource.put("basedOn", java.util.List.of(
                     Map.of("reference", "ServiceRequest/" + orderId)
             ));
+
+            // Amendment/addendum lineage: link this version to the report it supersedes (§10).
+            if (result.getSupersedesResultId() != null) {
+                fhirResource.put("relatesTo", java.util.List.of(Map.of(
+                        "code", relatesToCode(result),
+                        "target", Map.of("identifier", Map.of(
+                                "system", "https://impilo.gov.zw/oros/result-id",
+                                "value", result.getSupersedesResultId().toString()))
+                )));
+            }
 
             // Result category from kind
             fhirResource.put("category", java.util.List.of(Map.of(
@@ -159,7 +178,8 @@ public class ButanoIntegration {
                 ));
             }
 
-            fhirResource.put("conclusion", result.getSummary());
+            fhirResource.put("conclusion",
+                    result.getImpression() != null ? result.getImpression() : result.getSummary());
 
             HttpHeaders headers = buildTrustHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -169,8 +189,8 @@ public class ButanoIntegration {
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 String butanoRef = (String) response.getBody().get("id");
-                log.info("BUTANO DiagnosticReport created: orderId={}, resultId={}, butanoRef={}",
-                        orderId, result.getResultId(), butanoRef);
+                log.info("BUTANO DiagnosticReport written: orderId={}, resultId={}, status={}, butanoRef={}",
+                        orderId, result.getResultId(), fhirStatus(result), butanoRef);
                 return butanoRef;
             }
 
@@ -183,6 +203,90 @@ public class ButanoIntegration {
                     orderId, e.getMessage());
             return null;
         }
+    }
+
+    /**
+     * Write the structured laboratory observations of a result to the SHR as FHIR Observation
+     * resources (value[x] + UCUM unit + referenceRange + interpretation), each linked to the order's
+     * ServiceRequest. Best-effort: a BUTANO outage stops early and is non-blocking.
+     *
+     * @return the count of observations successfully written
+     */
+    @SuppressWarnings("unchecked")
+    public int createObservations(String orderId, ResultEntity result,
+                                  java.util.List<zw.gov.mohcc.impilo.oros.persistence.entity.ResultObservationEntity> observations) {
+        if (observations == null || observations.isEmpty()) {
+            return 0;
+        }
+        String url = baseUrl + "/fhir/Observation";
+        String obsStatus = "final".equals(fhirStatus(result)) ? "final" : "preliminary";
+        int written = 0;
+        for (var o : observations) {
+            try {
+                Map<String, Object> fhir = new HashMap<>();
+                fhir.put("resourceType", "Observation");
+                fhir.put("status", obsStatus);
+                fhir.put("identifier", java.util.List.of(Map.of(
+                        "system", "https://impilo.gov.zw/oros/observation-id",
+                        "value", o.getObservationId() != null ? o.getObservationId().toString() : orderId)));
+                fhir.put("basedOn", java.util.List.of(Map.of("reference", "ServiceRequest/" + orderId)));
+
+                java.util.List<Map<String, Object>> coding = new java.util.ArrayList<>();
+                if (o.getAnalyteCode() != null) {
+                    coding.add(Map.of(
+                            "system", o.getAnalyteSystem() != null ? o.getAnalyteSystem() : "urn:oros:analyte",
+                            "code", o.getAnalyteCode(),
+                            "display", o.getAnalyteName()));
+                }
+                Map<String, Object> code = new HashMap<>();
+                code.put("coding", coding);
+                code.put("text", o.getAnalyteName());
+                fhir.put("code", code);
+
+                if (o.getValueNumeric() != null) {
+                    Map<String, Object> q = new HashMap<>();
+                    q.put("value", o.getValueNumeric());
+                    if (o.getUnit() != null) {
+                        q.put("unit", o.getUnit());
+                        q.put("system", "http://unitsofmeasure.org");
+                        q.put("code", o.getUnit());
+                    }
+                    fhir.put("valueQuantity", q);
+                } else if (o.getValueText() != null) {
+                    fhir.put("valueString", o.getValueText());
+                }
+
+                if (o.getRefRangeLow() != null || o.getRefRangeHigh() != null || o.getRefRangeText() != null) {
+                    Map<String, Object> rr = new HashMap<>();
+                    if (o.getRefRangeLow() != null) rr.put("low", Map.of("value", o.getRefRangeLow()));
+                    if (o.getRefRangeHigh() != null) rr.put("high", Map.of("value", o.getRefRangeHigh()));
+                    if (o.getRefRangeText() != null) rr.put("text", o.getRefRangeText());
+                    fhir.put("referenceRange", java.util.List.of(rr));
+                }
+
+                String interp = o.isCriticalFlag()
+                        ? (o.getAbnormalFlag() != null ? o.getAbnormalFlag() : "AA")
+                        : o.getAbnormalFlag();
+                if (interp != null && !interp.isBlank() && !"N".equals(interp)) {
+                    fhir.put("interpretation", java.util.List.of(Map.of("coding", java.util.List.of(Map.of(
+                            "system", "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+                            "code", interp)))));
+                }
+
+                HttpHeaders headers = buildTrustHeaders();
+                headers.setContentType(MediaType.APPLICATION_JSON);
+                ResponseEntity<Map> response = restTemplate.postForEntity(
+                        url, new HttpEntity<>(fhir, headers), Map.class);
+                if (response.getStatusCode().is2xxSuccessful()) {
+                    written++;
+                }
+            } catch (RestClientException e) {
+                log.warn("BUTANO unavailable for Observation, orderId={}: {}", orderId, e.getMessage());
+                return written;
+            }
+        }
+        log.info("BUTANO Observations written: orderId={}, count={}/{}", orderId, written, observations.size());
+        return written;
     }
 
     /**
@@ -236,6 +340,94 @@ public class ButanoIntegration {
                     orderId, e.getMessage());
             return null;
         }
+    }
+
+    /**
+     * Publish a FHIR R4 {@code ImagingStudy} to BUTANO when a study is linked to an order.
+     *
+     * <p>Flag-gated by {@code oros.integration.fhir.imagingstudy-outbound.enabled} — a no-op (and
+     * reported NOT_LIVE at {@code /admin/integrations}) unless explicitly enabled. Degrades
+     * gracefully if BUTANO is unreachable; never blocks the imaging workflow.</p>
+     *
+     * @param order    imaging order with a linked study ({@code studyUid})
+     * @param modality optional DICOM modality code (XR, CT, MR, US, …)
+     * @return the BUTANO reference, or null if disabled / no study / unavailable
+     */
+    @SuppressWarnings("unchecked")
+    public String createImagingStudy(OrderEntity order, String modality) {
+        if (!imagingStudyOutboundEnabled || order.getStudyUid() == null || order.getStudyUid().isBlank()) {
+            return null;
+        }
+        try {
+            String url = baseUrl + "/fhir/ImagingStudy";
+
+            Map<String, Object> fhir = new HashMap<>();
+            fhir.put("resourceType", "ImagingStudy");
+            fhir.put("status", "available");
+
+            java.util.List<Map<String, Object>> identifiers = new java.util.ArrayList<>();
+            identifiers.add(Map.of("system", "urn:dicom:uid", "value", "urn:oid:" + order.getStudyUid()));
+            if (order.getAccessionNumber() != null) {
+                identifiers.add(Map.of(
+                        "type", Map.of("coding", java.util.List.of(Map.of(
+                                "system", "http://terminology.hl7.org/CodeSystem/v2-0203", "code", "ACSN"))),
+                        "value", order.getAccessionNumber()));
+            }
+            fhir.put("identifier", identifiers);
+
+            fhir.put("subject", Map.of(
+                    "reference", "Patient/" + order.getPatientCpid(), "display", order.getPatientCpid()));
+            fhir.put("started", (order.getScheduledAt() != null
+                    ? order.getScheduledAt() : OffsetDateTime.now()).toString());
+            fhir.put("basedOn", java.util.List.of(Map.of("reference", "ServiceRequest/" + order.getOrderId())));
+            if (modality != null && !modality.isBlank()) {
+                fhir.put("modality", java.util.List.of(Map.of(
+                        "system", "http://dicom.nema.org/resources/ontology/DCM", "code", modality)));
+            }
+            if (order.getStudyViewerUrl() != null) {
+                fhir.put("note", java.util.List.of(Map.of("text", "Viewer: " + order.getStudyViewerUrl())));
+            }
+
+            HttpHeaders headers = buildTrustHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            ResponseEntity<Map> response = restTemplate.postForEntity(
+                    url, new HttpEntity<>(fhir, headers), Map.class);
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                String ref = (String) response.getBody().get("id");
+                log.info("BUTANO ImagingStudy written: orderId={}, studyUid={}, ref={}",
+                        order.getOrderId(), order.getStudyUid(), ref);
+                return ref;
+            }
+            log.warn("BUTANO returned non-success {} for ImagingStudy, orderId={}",
+                    response.getStatusCode(), order.getOrderId());
+            return null;
+
+        } catch (RestClientException e) {
+            log.warn("BUTANO unavailable for ImagingStudy, orderId={}: {}", order.getOrderId(), e.getMessage());
+            return null;
+        }
+    }
+
+    /** Map the OROS report lifecycle status onto a FHIR DiagnosticReport.status code. */
+    private static String fhirStatus(ResultEntity result) {
+        if (result.getReportStatus() == null) {
+            return "final";
+        }
+        return switch (result.getReportStatus()) {
+            case PRELIMINARY -> "preliminary";
+            case FINAL -> "final";
+            case AMENDED -> "amended";
+            case CORRECTED -> "corrected";
+            case ADDENDUM -> "appended";
+        };
+    }
+
+    /** FHIR DiagnosticReport.relatesTo code for the supersession relationship. */
+    private static String relatesToCode(ResultEntity result) {
+        // An addendum appends to the prior report; an amendment/correction replaces it.
+        return result.getReportStatus() == zw.gov.mohcc.impilo.oros.domain.ResultStatus.ADDENDUM
+                ? "appends" : "replaces";
     }
 
     /**

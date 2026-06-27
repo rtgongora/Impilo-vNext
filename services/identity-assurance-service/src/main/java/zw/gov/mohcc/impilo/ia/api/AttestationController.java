@@ -1,6 +1,5 @@
 package zw.gov.mohcc.impilo.ia.api;
 
-import java.math.BigDecimal;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -8,7 +7,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import zw.gov.mohcc.impilo.ia.core.AttestationOutcome;
 import zw.gov.mohcc.impilo.ia.core.AttestationService;
 import zw.gov.mohcc.impilo.ia.core.AttestationType;
 import zw.gov.mohcc.impilo.ia.persistence.entity.AttestationEntity;
@@ -33,8 +31,7 @@ public class AttestationController {
 
         AttestationEntity attestation = attestationService.recordAttestation(
                 ctx.tenantId(), ctx.actorId(), ctx.correlationId(),
-                request.attestationType(), request.deviceFingerprint(),
-                request.evidence(), request.outcome(), request.confidence());
+                request.attestationType(), request.deviceFingerprint(), request.evidence());
 
         return ResponseEntity.status(201).body(
                 ApiResponse.ok(attestation, ctx.correlationId().toString()));
@@ -50,11 +47,13 @@ public class AttestationController {
                 ApiResponse.ok(attestations, ctx.correlationId().toString()));
     }
 
+    /**
+     * The caller submits the attestation type + evidence only. The outcome and confidence are
+     * determined server-side (fail-closed) and are NOT accepted from the client.
+     */
     public record RecordAttestationRequest(
             AttestationType attestationType,
             String deviceFingerprint,
-            String evidence,
-            AttestationOutcome outcome,
-            BigDecimal confidence
+            String evidence
     ) {}
 }

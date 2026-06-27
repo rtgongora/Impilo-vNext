@@ -5,10 +5,12 @@ import zw.gov.mohcc.impilo.vito.persistence.entity.BiometricTemplateEntity;
 import java.util.List;
 
 /**
- * Pluggable biometric comparison. Production deployments should register a vendor-backed engine.
+ * Pluggable biometric comparison. Production deployments must register a vendor-backed engine.
  *
- * <p>The default implementation compares template integrity digests only — suitable for
- * integration tests and deterministic demos, not for population-scale biometrics.</p>
+ * <p>The default {@link FailClosedMatchingEngine} fails closed: it never fabricates a match
+ * ({@code verify(...)} returns {@code UNAVAILABLE}/0.0, {@code identify(...)} returns no
+ * candidates) so person-identity verification denies and stays auditable until a genuine engine
+ * is registered as a {@code @Primary} bean of this type.</p>
  */
 public interface BiometricMatchingEngine {
 

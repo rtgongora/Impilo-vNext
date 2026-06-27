@@ -31,7 +31,7 @@
 | `forms-service` | clinical | Forms canonical records |
 | `general-ledger-service` | enterprise | General Ledger canonical records |
 | `guidance-service` | clinical | Guidance canonical records |
-| `hr-payroll-service` | enterprise | Hr Payroll canonical records |
+| `hr-payroll-service` | enterprise | Payroll-financial: employees, contracts, deductions, payroll runs, payslips, earnings. **Workforce attendance + leave are Vashandi's** — payroll derives worked-hours from Vashandi (no separately-entered attendance). |
 | `identity-assurance-service` | trust | Identity Assurance canonical records |
 | `indawo-service` | registry | Indawo canonical records |
 | `inpatient-service` | clinical | Inpatient canonical records |

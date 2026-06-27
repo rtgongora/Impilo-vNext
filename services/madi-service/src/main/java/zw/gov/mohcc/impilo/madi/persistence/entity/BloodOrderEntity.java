@@ -48,6 +48,12 @@ public class BloodOrderEntity {
 @Column(name = "jurisdiction")
     private String jurisdiction;
 
+@Column(name = "encounter_ref")
+    private String encounterRef;
+
+    @Column(name = "oros_integration_status")
+    private String orosIntegrationStatus;
+
 @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
 
@@ -100,6 +106,12 @@ public class BloodOrderEntity {
 
     public String getJurisdiction() { return jurisdiction; }
     public void setJurisdiction(String jurisdiction) { this.jurisdiction = jurisdiction; }
+
+    public String getEncounterRef() { return encounterRef; }
+    public void setEncounterRef(String encounterRef) { this.encounterRef = encounterRef; }
+
+    public String getOrosIntegrationStatus() { return orosIntegrationStatus; }
+    public void setOrosIntegrationStatus(String orosIntegrationStatus) { this.orosIntegrationStatus = orosIntegrationStatus; }
 
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(OffsetDateTime updatedAt) { this.updatedAt = updatedAt; }
