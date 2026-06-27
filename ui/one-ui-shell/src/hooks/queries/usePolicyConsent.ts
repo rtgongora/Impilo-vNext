@@ -31,16 +31,18 @@ export interface PolicyConsentResource {
 
 export interface PolicyConsentHistoryResource {
   id: string;
-  type: "policy_consent_history";
+  type: "policy_consent" | "policy_consent_history";
   attributes: {
     policyType: string;
     policyVersion: string;
     accepted: boolean;
+    /** Mvumo lifecycle state: GRANTED | WITHDRAWN | SUPERSEDED. */
+    state?: string;
     acceptedAt: string;
     revokedAt: string;
     channel?: string;
     deviceType?: string;
-    createdAt: string;
+    createdAt?: string;
   };
 }
 

@@ -24,6 +24,7 @@
 
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { randomUUID } from "@/lib/uuid";
+import { isStepUpRequired } from "@/lib/stepUp";
 
 // Use NEXT_PUBLIC_BFF_URL when explicitly set (Docker, tests, SSR).
 // In the browser without an explicit URL, use relative paths so requests proxy
@@ -102,6 +103,14 @@ function getV12Headers(): Record<string, string> {
   const providerId = getContextString("exp:provider_id");
   if (providerId) {
     headers["X-Provider-ID"] = providerId;
+  }
+
+  // Subject — delegated "acting for" context (L5). Set only when the user has explicitly entered a
+  // delegation context; the trust plane (PolicyEngine Step 4.5) authorises it against an active
+  // Mvumo delegation. Never sent for normal self-access.
+  const actingForSubject = getContextString("exp:acting_for_subject");
+  if (actingForSubject) {
+    headers["X-Subject-ID"] = actingForSubject;
   }
 
   // ── Governance (Health OS §11: why / under what authority) ────
@@ -378,6 +387,13 @@ async function request<T>(
   });
 
   if (response.status === 401 && !path.includes("/auth/")) {
+    // A STEP_UP_REQUIRED challenge is also a 401, but it is NOT a session expiry — it must
+    // surface to the caller (which shows a verification prompt), not trigger refresh/redirect.
+    const unauthorizedBody = await response.json().catch(() => null);
+    if (isStepUpRequired(unauthorizedBody)) {
+      throw { status: 401, ...(unauthorizedBody || {}) };
+    }
+
     // Attempt token refresh
     const refreshed = await attemptRefresh();
     if (refreshed) {
@@ -400,12 +416,12 @@ async function request<T>(
         return retryResponse.json();
       }
 
-      if (retryResponse.status === 401) {
+      const retryBody = await retryResponse.json().catch(() => null);
+      if (retryResponse.status === 401 && !isStepUpRequired(retryBody)) {
         handleAuthFailure();
       }
 
-      const errorBody = await retryResponse.json().catch(() => null);
-      throw { status: retryResponse.status, ...(errorBody || {}) };
+      throw { status: retryResponse.status, ...(retryBody || {}) };
     }
 
     // Refresh failed — clear auth and redirect

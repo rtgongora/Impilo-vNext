@@ -142,6 +142,8 @@ services:
       - "/policies"
     volumes:
       - ./tools/ops/gateway/opa:/policies:ro
+      # Phase 3 strangler: the impilo.authz decision module (loaded recursively under /policies).
+      - ./infra/opa/authz:/policies/authz:ro
     ports:
       - "8181:8181"
     healthcheck:

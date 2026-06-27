@@ -49,6 +49,83 @@ export function useAskEdlizClinical() {
   });
 }
 
+// ── Context-aware interpretation (CDS keystone) ─────────────────────
+
+/** A reference interval used for an interpretation, with provenance. */
+export interface InterpretationReferenceRange {
+  low: number | null;
+  high: number | null;
+  critical_low: number | null;
+  critical_high: number | null;
+  unit: string | null;
+  source: string | null; // LAB_DELIVERED | OBSERVATION_DEFINITION
+  artifact_id: string | null;
+  version: string | null;
+  canonical_url: string | null;
+}
+
+/** One interpreted observation as returned by the CKP interpretation engine. */
+export interface InterpretedObservationDto {
+  loinc_code: string | null;
+  local_code: string | null;
+  display_name: string | null;
+  category: string | null;
+  value: number | null;
+  unit: string | null;
+  /** NORMAL | LOW | HIGH | CRITICAL_LOW | CRITICAL_HIGH | NO_REFERENCE_RANGE | UNIT_MISMATCH | DATA_QUALITY */
+  interpretation: string;
+  fhir_interpretation_code: string | null;
+  abnormal: boolean;
+  critical: boolean;
+  reference_range: InterpretationReferenceRange | null;
+  delta: number | null;
+  trend: string | null; // RISING | FALLING | STABLE
+  note: string | null;
+  advisory: boolean;
+}
+
+export interface InterpretationResult {
+  interpreted_observations: InterpretedObservationDto[];
+  alerts: Array<Record<string, unknown>>;
+  ranges_used: Array<Record<string, unknown>>;
+  trace_id?: string;
+  support_mode?: string;
+  advisory?: boolean;
+}
+
+/** A single observation to interpret (value + UCUM unit + identifying code). */
+export interface InterpretObservationInput {
+  loincCode?: string;
+  localCode?: string;
+  displayName?: string;
+  category?: string; // VITAL | LAB | DERIVED
+  value: number;
+  unit: string;
+  priorValue?: number;
+  priorUnit?: string;
+  deliveredLow?: number;
+  deliveredHigh?: number;
+  deliveredUnit?: string;
+}
+
+export interface InterpretClinicalRequest {
+  patient_id?: string;
+  encounter_id?: string;
+  context: Record<string, unknown>;
+  observations: InterpretObservationInput[];
+}
+
+/**
+ * Context-aware interpretation of vitals/labs against patient-appropriate reference intervals
+ * (auditable, advisory). Backed by CKP POST /internal/v1/clinical/interpretation/evaluate.
+ */
+export function useInterpretClinical() {
+  return useMutation({
+    mutationFn: (body: InterpretClinicalRequest) =>
+      apiClient.post<ApiResponse<InterpretationResult>>("/internal/v1/clinical/interpretation/evaluate", body),
+  });
+}
+
 /** BFF → clinical platform: counts of pdf/* vs all sections (admin-equivalent JWT roles). */
 export interface ClinicalSourceIngestionSummary {
   document_id: string;

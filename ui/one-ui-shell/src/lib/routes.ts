@@ -58,6 +58,12 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/auth/resolving", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Resolving Session", navLabel: "Resolving" },
   { path: "/auth/context-chooser", zone: "auth", layout: "auth", sidebar: "main", guard: "auth", pageTitle: "Choose Work Context", navLabel: "Context Chooser" },
 
+  // ── Zone: Public L0 (guest entry, no login — G-CZO-02) ──────────────
+  { path: "/welcome", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Welcome to Impilo", navLabel: "Welcome" },
+  { path: "/welcome/find-care", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Find Care", navLabel: "Find Care" },
+  { path: "/welcome/emergency", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Emergency & Public Health", navLabel: "Emergency" },
+  { path: "/welcome/accessibility", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Accessibility & Language", navLabel: "Accessibility" },
+
   // â”€â”€ Zone: Legal / Consent â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/privacy", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Privacy Policy", navLabel: "Privacy Policy" },
   { path: "/terms", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Terms of Use", navLabel: "Terms of Use" },
@@ -732,7 +738,7 @@ export const ROUTES: RouteDefinition[] = [
 // Impilo Live (Jun 2026): 14 routes under /live incl. /live/admin (services/live-service).
 // Trust & Access Administration (Jun 2026): 90 contract-governed routes under /work/** (administration-governance scaffold).
 // Vashandi (Jun 2026): 10 routes under /work/vashandi for operational workforce UI. New canonical total is 589.
-export const EXPECTED_ROUTE_COUNT = 589;
+export const EXPECTED_ROUTE_COUNT = 594;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

@@ -9,6 +9,7 @@ import zw.gov.mohcc.impilo.guidance.persistence.entity.KnowledgeArticleEntity;
 import zw.gov.mohcc.impilo.guidance.persistence.entity.ReminderEntity;
 import zw.gov.mohcc.impilo.guidance.persistence.repository.KnowledgeArticleRepository;
 import zw.gov.mohcc.impilo.guidance.persistence.repository.ReminderRepository;
+import zw.gov.mohcc.impilo.guidance.llm.GuidanceLlmClient;
 
 import java.util.*;
 
@@ -27,10 +28,13 @@ public class GuidanceService {
 
     private final KnowledgeArticleRepository articleRepo;
     private final ReminderRepository reminderRepo;
+    private final GuidanceLlmClient llmClient;
 
-    public GuidanceService(KnowledgeArticleRepository articleRepo, ReminderRepository reminderRepo) {
+    public GuidanceService(KnowledgeArticleRepository articleRepo, ReminderRepository reminderRepo,
+                           GuidanceLlmClient llmClient) {
         this.articleRepo = articleRepo;
         this.reminderRepo = reminderRepo;
+        this.llmClient = llmClient;
     }
 
     /** Conversational ask — search knowledge base and compose a response. */
@@ -44,15 +48,28 @@ public class GuidanceService {
                 .map(a -> Map.of("title", a.getTitle(), "type", a.getDomain(), "url", a.getSourceUrl() != null ? a.getSourceUrl() : ""))
                 .toList();
 
+        // Grounded LLM synthesis over the retrieved articles (G039); falls back to retrieval when
+        // the LLM is disabled/unavailable or no real provider answered (honesty gate).
+        List<GuidanceLlmClient.Source> llmSources = articles.getContent().stream()
+                .map(a -> new GuidanceLlmClient.Source(a.getTitle(), a.getSummary(), a.getDomain()))
+                .toList();
+        Optional<GuidanceLlmClient.GroundedAnswer> grounded = llmClient.synthesize(question, llmSources);
+
         String responseText;
         double confidence;
-        if (!articles.isEmpty()) {
-            KnowledgeArticleEntity top = articles.getContent().get(0);
-            responseText = top.getSummary();
+        String answerSource;
+        if (grounded.isPresent()) {
+            responseText = grounded.get().answer();
+            confidence = grounded.get().confidence();
+            answerSource = "llm";
+        } else if (!articles.isEmpty()) {
+            responseText = articles.getContent().get(0).getSummary();
             confidence = 0.85;
+            answerSource = "retrieval";
         } else {
             responseText = "I don't have specific information about that topic yet. Please consult your healthcare provider for personalized advice.";
             confidence = 0.3;
+            answerSource = "none";
         }
 
         List<String> followUps = List.of(
@@ -60,13 +77,14 @@ public class GuidanceService {
                 "Should I find related health services near you?"
         );
 
-        return Map.of(
-                "response", responseText,
-                "confidence", confidence,
-                "sources", sources,
-                "followUpPrompts", followUps,
-                "personalized", personalized
-        );
+        Map<String, Object> response = new java.util.LinkedHashMap<>();
+        response.put("response", responseText);
+        response.put("confidence", confidence);
+        response.put("answerSource", answerSource);
+        response.put("sources", sources);
+        response.put("followUpPrompts", followUps);
+        response.put("personalized", personalized);
+        return response;
     }
 
     /** Get active reminders for a user. */

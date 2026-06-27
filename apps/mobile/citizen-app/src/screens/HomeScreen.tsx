@@ -29,6 +29,7 @@ import { fetchAppointments } from "../services/appointmentService";
 import { fetchPrescriptions } from "../services/prescriptionService";
 import { fetchLabResults } from "../services/labResultService";
 import type { Appointment, Prescription, LabResult, CitizenTab } from "../types";
+import { TrustBanner } from "../components/TrustBanner";
 import { FacilityDirectoryScreen } from "./FacilityDirectoryScreen";
 import { FacilityDetailScreen } from "./FacilityDetailScreen";
 import { NhumeTrackingScreen } from "./NhumeTrackingScreen";
@@ -159,6 +160,9 @@ export function HomeScreen() {
           </View>
           <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.6)" />
         </Pressable>
+
+        {/* Trust / assurance banner (G-CZO-05) — reflects the citizen's current trust level */}
+        <TrustBanner onPress={() => setActiveTab("personal")} />
 
         {/* Profile card */}
         {profile ? (

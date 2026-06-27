@@ -44,6 +44,14 @@ public class ClinicalKnowledgePlatformClient {
         return extractData(response);
     }
 
+    /** Context-aware interpretation of vitals/labs against patient-appropriate reference intervals. */
+    public JsonNode interpretationEvaluate(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/clinical/interpretation/evaluate";
+        log.debug("Clinical platform: interpretation evaluate");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
     /** Grounded, fail-closed AI summary of the supplied deterministic CDS alerts (insight or null). */
     public JsonNode cdsSummary(Map<String, Object> body) {
         String url = baseUrl + "/internal/v1/clinical/cds/summary";

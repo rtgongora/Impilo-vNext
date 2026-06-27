@@ -90,6 +90,28 @@ public class ClinicalKnowledgeController {
         }
     }
 
+    @PostMapping("/interpretation/evaluate")
+    public ResponseEntity<Map<String, Object>> interpretationEvaluate(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            JsonNode data = clinicalClient.interpretationEvaluate(body);
+            return ResponseEntity.ok(Map.of("data", data != null ? data : emptyInterpretation()));
+        } catch (Exception e) {
+            log.error("Clinical interpretation evaluate failed: {}", e.getMessage());
+            // Fail honest: empty interpretation rather than fabricated flags.
+            return ResponseEntity.ok(Map.of("data", emptyInterpretation()));
+        }
+    }
+
+    private static Map<String, Object> emptyInterpretation() {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("interpreted_observations", java.util.List.of());
+        m.put("alerts", java.util.List.of());
+        m.put("ranges_used", java.util.List.of());
+        return m;
+    }
+
     @PostMapping("/cds/summary")
     public ResponseEntity<Map<String, Object>> cdsSummary(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,

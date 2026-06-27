@@ -20,6 +20,11 @@ public class AuthzProperties {
     private RiskThresholds riskThresholds = new RiskThresholds();
     private String consentServiceUrl = "http://localhost:8182";
     private String consentEvaluatePath = "/v1/consent/evaluate";
+    private String mvumoServiceUrl = "http://localhost:8195";
+    // OPA decision sidecar (Phase 3 strangler). Mode: OFF (no call) | SHADOW (call + log divergence,
+    // Java authoritative) | ENFORCE (not yet wired). Default OFF — zero behaviour change.
+    private String opaUrl = "http://localhost:8181";
+    private String opaMode = "OFF";
     private String identityServiceUrl = "http://localhost:8181";
     private String auditServiceUrl = "http://localhost:8183";
     private String auditKafkaTopic = "tshepo.audit.events";
@@ -167,6 +172,12 @@ public class AuthzProperties {
     public void setRiskThresholds(RiskThresholds riskThresholds) { this.riskThresholds = riskThresholds; }
     public String getConsentServiceUrl() { return consentServiceUrl; }
     public void setConsentServiceUrl(String consentServiceUrl) { this.consentServiceUrl = consentServiceUrl; }
+    public String getMvumoServiceUrl() { return mvumoServiceUrl; }
+    public void setMvumoServiceUrl(String mvumoServiceUrl) { this.mvumoServiceUrl = mvumoServiceUrl; }
+    public String getOpaUrl() { return opaUrl; }
+    public void setOpaUrl(String opaUrl) { this.opaUrl = opaUrl; }
+    public String getOpaMode() { return opaMode; }
+    public void setOpaMode(String opaMode) { this.opaMode = opaMode; }
     public String getConsentEvaluatePath() { return consentEvaluatePath; }
     public void setConsentEvaluatePath(String consentEvaluatePath) { this.consentEvaluatePath = consentEvaluatePath; }
     public String getIdentityServiceUrl() { return identityServiceUrl; }

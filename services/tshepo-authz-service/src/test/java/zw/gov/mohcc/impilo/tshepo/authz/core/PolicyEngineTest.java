@@ -47,6 +47,8 @@ class PolicyEngineTest {
     @Mock private PolicyDecisionLogRepository decisionLogRepository;
     @Mock private AuditPublisher auditPublisher;
     @Mock private VisibilityEscalationService visibilityEscalationService;
+    @Mock private DelegationClient delegationClient;
+    @Mock private OpaDecisionClient opaDecisionClient;
 
     private AuthzProperties properties;
     private ObjectMapper objectMapper;
@@ -69,7 +71,8 @@ class PolicyEngineTest {
         policyEngine = new PolicyEngine(
                 riskScoring, policyCacheService, privilegeRevocationStore, consentClient,
                 stepUpService, breakGlassService, decisionLogRepository,
-                auditPublisher, properties, objectMapper, visibilityEscalationService
+                auditPublisher, properties, objectMapper, visibilityEscalationService,
+                delegationClient, opaDecisionClient
         );
     }
 
@@ -436,6 +439,188 @@ class PolicyEngineTest {
                 "Consent granted with matching ALLOW rule must result in ALLOW");
         assertNotNull(response.headerMutations(),
                 "ALLOW must include header mutations");
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // G-CZO-01: identity-assurance level (X-Assurance-Level) reaches policy
+    // Keystone proof — a self-service verification upgrade changes what policy
+    // sees even when the Keycloak ACR login level is unchanged.
+    // ════════════════════════════════════════════════════════════════════
+
+    /** Build a clinical-resource request with an explicit ACR loaLevel and propagated assurance level. */
+    private static AuthzInternalRequest requestWithAssurance(int acrLoaLevel, String assuranceLevel) {
+        return new AuthzInternalRequest(
+                TENANT_ID, ACTOR_ID, "CITIZEN", List.of("CITIZEN"), "TREATMENT",
+                DEVICE_FP, CORRELATION_ID, FACILITY_ID, WORKSPACE_ID,
+                null, "GET", "/v1/patients/cpid-12345", "GET:/v1/patients/cpid-12345",
+                "patients", "cpid-12345",
+                acrLoaLevel, "session-abc", null,
+                null, null, null, null, null, assuranceLevel,
+                null, null
+        );
+    }
+
+    private PolicyRuleEntity buildMinLoaAllowRule(int minLoa) {
+        PolicyRuleEntity rule = buildAllowRule("patients", null, null, null, null);
+        rule.setConditions("{\"min_loa\":" + minLoa + "}");
+        return rule;
+    }
+
+    @Test
+    @DisplayName("G-CZO-01: ACR LOA1 + no assurance header + rule min_loa=3 -> DENY (temporary cannot read clinical)")
+    void evaluate_lowLoa_noAssuranceHeader_belowMinLoa_denies() {
+        AuthzInternalRequest request = requestWithAssurance(1, null);
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(buildMinLoaAllowRule(3)));
+
+        AuthzResponse response = policyEngine.evaluate(request);
+
+        assertEquals(Verdict.DENY, response.verdict(),
+                "Below the min_loa rule the conditioned ALLOW must not match -> DENY");
+    }
+
+    @Test
+    @DisplayName("G-CZO-01: ACR LOA1 but assurance upgraded to LOA3 (header) + rule min_loa=3 -> ALLOW")
+    void evaluate_assuranceUpgradeReachesPolicy_allows() {
+        // ACR login level is still 1 (token unchanged); identity-assurance upgrade is propagated
+        // via X-Assurance-Level=LOA3. effectiveLoa = max(1,3) = 3 satisfies min_loa=3.
+        AuthzInternalRequest request = requestWithAssurance(1, "LOA3");
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(buildMinLoaAllowRule(3)));
+        when(consentClient.evaluateConsent(
+                eq(TENANT_ID), eq("patients"), eq("cpid-12345"), eq(ACTOR_ID), eq("TREATMENT")))
+                .thenReturn(ConsentDecision.permit("consent-1", List.of("read")));
+
+        AuthzResponse response = policyEngine.evaluate(request);
+
+        assertEquals(Verdict.ALLOW, response.verdict(),
+                "Propagated assurance LOA3 must satisfy min_loa=3 even with ACR loaLevel=1 (closes G-CZO-01)");
+    }
+
+    @Test
+    @DisplayName("G-CZO-01: bare numeric assurance header '3' is parsed and satisfies min_loa=3 -> ALLOW")
+    void evaluate_bareNumericAssuranceHeader_allows() {
+        AuthzInternalRequest request = requestWithAssurance(0, "3");
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(buildMinLoaAllowRule(3)));
+        when(consentClient.evaluateConsent(
+                eq(TENANT_ID), eq("patients"), eq("cpid-12345"), eq(ACTOR_ID), eq("TREATMENT")))
+                .thenReturn(ConsentDecision.permit("consent-1", List.of("read")));
+
+        AuthzResponse response = policyEngine.evaluate(request);
+
+        assertEquals(Verdict.ALLOW, response.verdict(),
+                "Bare numeric X-Assurance-Level must parse to LOA rank and satisfy min_loa");
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // Step 4.5: Delegated / act-on-behalf authorization (L5, G-CZO-03)
+    // ════════════════════════════════════════════════════════════════════
+
+    /** A request where the actor declares acting FOR a different subject (X-Subject-ID set). */
+    private static AuthzInternalRequest delegatedRequest(String subjectId, int acrLoa, String assuranceLevel) {
+        return new AuthzInternalRequest(
+                TENANT_ID, ACTOR_ID, "CITIZEN", List.of("CITIZEN"), "TREATMENT",
+                DEVICE_FP, CORRELATION_ID, FACILITY_ID, WORKSPACE_ID,
+                null, "GET", "/v1/patients/cpid-12345", "GET:/v1/patients/cpid-12345",
+                "patients", "cpid-12345",
+                acrLoa, "session-abc", null,
+                null, null, null, null, subjectId, assuranceLevel,
+                null, null
+        );
+    }
+
+    @Test
+    @DisplayName("Step 4.5: acting for a subject with NO active delegation -> DENY")
+    void evaluate_delegated_noActiveDelegation_denies() {
+        stubHappyPathDefaults(10);
+        when(delegationClient.resolve(eq(TENANT_ID), eq(ACTOR_ID), eq("subject-other")))
+                .thenReturn(DelegationResolution.inactive());
+
+        AuthzResponse response = policyEngine.evaluate(delegatedRequest("subject-other", 3, "LOA3"));
+
+        assertEquals(Verdict.DENY, response.verdict());
+        assertEquals("DELEGATION_NOT_ACTIVE", response.errorCode());
+    }
+
+    @Test
+    @DisplayName("Step 4.5: active, in-scope, sufficiently-assured delegation + consent -> ALLOW")
+    void evaluate_delegated_activeInScope_allows() {
+        stubHappyPathDefaults(10);
+        when(delegationClient.resolve(eq(TENANT_ID), eq(ACTOR_ID), eq("subject-other")))
+                .thenReturn(new DelegationResolution(true, List.of("patients"), 2, "GUARDIAN"));
+        when(consentClient.evaluateConsent(eq(TENANT_ID), eq("patients"), eq("cpid-12345"),
+                eq(ACTOR_ID), eq("TREATMENT")))
+                .thenReturn(ConsentDecision.permit("c1", List.of("read")));
+
+        AuthzResponse response = policyEngine.evaluate(delegatedRequest("subject-other", 3, "LOA3"));
+
+        assertEquals(Verdict.ALLOW, response.verdict(),
+                "an active in-scope delegation with assurance met must allow (consent still applies)");
+    }
+
+    @Test
+    @DisplayName("Step 4.5: delegation scope does not cover the resource -> DENY")
+    void evaluate_delegated_outOfScope_denies() {
+        stubHappyPathDefaults(10);
+        when(delegationClient.resolve(eq(TENANT_ID), eq(ACTOR_ID), eq("subject-other")))
+                .thenReturn(new DelegationResolution(true, List.of("appointments"), 2, "CAREGIVER"));
+
+        AuthzResponse response = policyEngine.evaluate(delegatedRequest("subject-other", 3, "LOA3"));
+
+        assertEquals(Verdict.DENY, response.verdict());
+        assertEquals("DELEGATION_OUT_OF_SCOPE", response.errorCode());
+    }
+
+    @Test
+    @DisplayName("Step 4.5: delegate assurance below the floor -> DENY")
+    void evaluate_delegated_belowAssuranceFloor_denies() {
+        stubHappyPathDefaults(10);
+        when(delegationClient.resolve(eq(TENANT_ID), eq(ACTOR_ID), eq("subject-other")))
+                .thenReturn(new DelegationResolution(true, List.of("patients"), 4, "GUARDIAN"));
+
+        // effectiveLoa = max(acr=2, header LOA2) = 2 < floor 4
+        AuthzResponse response = policyEngine.evaluate(delegatedRequest("subject-other", 2, "LOA2"));
+
+        assertEquals(Verdict.DENY, response.verdict());
+        assertEquals("DELEGATION_ASSURANCE_TOO_LOW", response.errorCode());
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // Phase 3: OPA shadow (strangler — must never change the verdict)
+    // ════════════════════════════════════════════════════════════════════
+
+    @Test
+    @DisplayName("OPA SHADOW: a divergent OPA verdict is logged but never changes the Java decision")
+    void evaluate_opaShadow_doesNotAffectVerdict() {
+        properties.setOpaMode("SHADOW");
+        stubHappyPathDefaults(10);
+        when(consentClient.evaluateConsent(eq(TENANT_ID), eq("patients"), eq("cpid-12345"),
+                eq(ACTOR_ID), eq("TREATMENT")))
+                .thenReturn(ConsentDecision.permit("c", List.of("read")));
+        when(opaDecisionClient.decide(any()))
+                .thenReturn(new OpaDecision(false, List.of("MIN_LOA"))); // OPA would DENY
+
+        AuthzResponse response = policyEngine.evaluate(requestWithResourceId("patients", "cpid-12345"));
+
+        assertEquals(Verdict.ALLOW, response.verdict(), "SHADOW OPA divergence must not change the verdict");
+        verify(opaDecisionClient).decide(any());
+    }
+
+    @Test
+    @DisplayName("OPA OFF (default): the OPA sidecar is never called")
+    void evaluate_opaOff_neverCallsOpa() {
+        stubHappyPathDefaults(10);
+        when(consentClient.evaluateConsent(eq(TENANT_ID), eq("patients"), eq("cpid-12345"),
+                eq(ACTOR_ID), eq("TREATMENT")))
+                .thenReturn(ConsentDecision.permit("c", List.of("read")));
+
+        policyEngine.evaluate(requestWithResourceId("patients", "cpid-12345"));
+
+        verifyNoInteractions(opaDecisionClient);
     }
 
     // ════════════════════════════════════════════════════════════════════

@@ -118,6 +118,36 @@ public class TshepoConsentClient {
         }
     }
 
+    /**
+     * GET /v1/consent/{id} — returns the directive's status (e.g. ACTIVE/REVOKED/SUSPENDED), or
+     * {@code null} if the directive is not found (404). Used by the reconciliation job to detect
+     * out-of-band drift between a Mvumo grant and the trust-layer directive.
+     */
+    public String getDirectiveStatus(UUID tshepoConsentId) {
+        if (!enabled) {
+            return null;
+        }
+        String url = baseUrl + "/v1/consent/" + tshepoConsentId;
+        try {
+            ResponseEntity<String> response = tshepoRestTemplate.getForEntity(url, String.class);
+            JsonNode root = objectMapper.readTree(response.getBody());
+            JsonNode data = root.get("data");
+            if (data == null || data.isNull() || !data.has("status")) {
+                return null;
+            }
+            return data.get("status").asText(null);
+        } catch (HttpStatusCodeException e) {
+            if (e.getStatusCode().value() == 404) {
+                return null; // directive gone → treat as drift by the caller
+            }
+            log.error("tshepo-consent get-status failed: id={} status={}", tshepoConsentId, e.getStatusCode());
+            throw e;
+        } catch (Exception e) {
+            log.error("tshepo-consent get-status failed: id={} err={}", tshepoConsentId, e.getMessage());
+            throw new IllegalStateException("tshepo-consent get-status failed: " + e.getMessage(), e);
+        }
+    }
+
     public void revokeDirective(UUID tshepoConsentId, String reason) {
         if (!enabled) {
             log.warn("Tshepo consent integration disabled; skipping revokeDirective");

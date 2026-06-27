@@ -74,6 +74,22 @@ public class ArtifactEntity {
     @Column(name = "deprecated_at")
     private OffsetDateTime deprecatedAt;
 
+    /**
+     * Inclusive start of the clinical applicability window for this artifact.
+     * Used by governed {@code OBSERVATION_DEFINITION} artifacts to express when
+     * a reference interval becomes effective (e.g. guideline revision dates).
+     * Null means "no lower bound — effective from creation".
+     */
+    @Column(name = "effective_start")
+    private OffsetDateTime effectiveStart;
+
+    /**
+     * Exclusive end of the clinical applicability window for this artifact.
+     * Null means "no upper bound — effective until superseded/retired".
+     */
+    @Column(name = "effective_end")
+    private OffsetDateTime effectiveEnd;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -148,6 +164,12 @@ public class ArtifactEntity {
 
     public OffsetDateTime getDeprecatedAt() { return deprecatedAt; }
     public void setDeprecatedAt(OffsetDateTime deprecatedAt) { this.deprecatedAt = deprecatedAt; }
+
+    public OffsetDateTime getEffectiveStart() { return effectiveStart; }
+    public void setEffectiveStart(OffsetDateTime effectiveStart) { this.effectiveStart = effectiveStart; }
+
+    public OffsetDateTime getEffectiveEnd() { return effectiveEnd; }
+    public void setEffectiveEnd(OffsetDateTime effectiveEnd) { this.effectiveEnd = effectiveEnd; }
 
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
