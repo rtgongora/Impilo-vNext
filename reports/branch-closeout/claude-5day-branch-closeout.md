@@ -312,15 +312,46 @@ necessary for a successful merge" directive.
 Safety snapshot `safety/pt-before-phase2-20260627-0354`. `intake/oros-diagnostics-journey` verified fully merged
 (ancestor of PT) and **deleted**. Gates re-run on PT post-merge: product-truth 4 ≤ 6, phase6 2 ≤ 2, completeness 12/13 — no regression.
 
-### Remaining work (Phases 3–5) — gated on human sign-off + CI
-These were **intentionally not executed** in this automated pass because the approved plan gates them on
-`/security-review` + a real cross-service test run + human architect/security sign-off, and they are large,
-security-sensitive, and hard to reverse:
-- **Phase 3** — `citizen-zero-to-one` (OPA rego must compile first — tip admits "uncompilable + SHADOW").
-- **Phase 4** — `khuluma-comms-hub` (V017 + khuluma.rego + 22 SecurityConfig edits).
-- **Phase 5** — retire `integration/closeout-staging` once OROS/CDS/khuluma land.
-- **CDS strand reconciliation** (was Phase 0c) — fold into the clinical-rules reconciliation; verify with
-  `clinical-knowledge-platform-service` unit tests (InterpretationEngineTest/RangeResolverTest/ClinicalRulesEngineTest).
+## Continuation — Phase 3 citizen-zero-to-one LANDED (2026-06-27, with human sign-off)
 
-The `intake/oros-diagnostics-journey`, `intake/citizen-zero-to-one`, `intake/khuluma-comms-hub`,
-`intake/wave-b-tshepo-gdhcn-trust-primitives`, and `integration/closeout-staging` branches remain **open** pending those phases.
+The citizen trust journey was reconciled on `prep/phase3-czo` (off PT `6ce8613c2`), verified, and merged:
+**PT `6ce8613c2 → 5485c9808`** (FF, no force). Safety snapshot `safety/pt-before-phase3-20260627-1113`.
+`intake/citizen-zero-to-one` verified fully merged (ancestor of PT) and **deleted**.
+
+- **Scope:** L5 delegated/assisted access, identity-assurance LOA propagation, Mvumo consent reconciliation,
+  OPA authz SHADOW strangler. Only **1 merge conflict** (a generated doc) — PT had already absorbed the shared
+  substrate via Phases 1–2, so citizen reduced to ~37 genuinely-new commits.
+- **Resolved the "uncompilable rego" blocker:** citizen's `infra/opa/authz/authz.rego` was already sound
+  (`import rego.v1`, 7/7 tests). The corpus failed `opa check` because of **7 pre-existing broken `impilo/*.rego`
+  policies** (`tabs`/`work`/`vashandi` used the `if` keyword with only `future.keywords.in` imported;
+  `hsc`/`marketplace`/`organisation`/`registry` missing the import; all used invalid `EXPR startswith "x"` infix).
+  Fixed them → **`opa check infra/opa` clean, `opa test infra/opa` 7/7**. The OPA seam is **SHADOW-only**
+  (Java PolicyEngine authoritative; divergence logged; OPA errors fail-safe).
+- **Security review fixed a CRITICAL finding** (in citizen's own code): `DelegationController.create()` let any
+  authenticated user **self-grant act-on-behalf access to any subject** (non-CONSENT bases required no proof;
+  `scope=["*"]`, `minDelegateLoa=1` defeated the PDP). Fix (fail-closed): require caller identity; non-CONSENT
+  (GUARDIANSHIP/FACILITY_ASSIGNMENT) require an administrative actor-type; CONSENT must reference a real **granted**
+  consent whose subject matches the delegator; **clamp `minDelegateLoa`** to the policy floor. Regression tests
+  added (self-grant denied, forged-backing denied, missing-actor denied, admin + valid-consent paths succeed).
+  The rest of the surface verified sound (OPA shadow-only; `AssuranceLevelResolutionInterceptor` derives LOA
+  server-side / no forgery; delegation resolve/revoke/list tenant-scoped).
+- **Deterministic verification (all green):** full reactor **BUILD SUCCESS**; test-suites for tshepo-authz,
+  mvumo, identity-assurance, experience-bff, clinical-knowledge-platform, zibo, guidance all pass; opa check+test green.
+- **⚠️ Product-truth / phase6 heuristic gates: NOT a reliable signal here.** Successive regenerations of the
+  *identical* source tree produced **7, 8, then 15** gaps, and the scanner referenced a file (`TempIdReviewController`)
+  that **exists nowhere** — the documented "scanner is heuristic, don't trust the numbers" defect. Most flagged
+  files **pre-exist on PT**. The numbers were **NOT gamed** and the **debt baseline was NOT raised**. Phase 3 was
+  landed on the strength of the deterministic checks above. **Follow-up: fix the product-truth scanner
+  determinism** (counts must not vary by build-state / must not reference deleted files) before the gate can be
+  trusted as a blocker again.
+
+### Remaining work (Phases 4–5) — gated on human sign-off + CI
+- **Phase 4** — `khuluma-comms-hub` (V017 + khuluma.rego + 22 SecurityConfig edits).
+- **Phase 5** — retire `integration/closeout-staging` once khuluma lands (non-compilable as-is; reference map only).
+- **CDS strand reconciliation** (was Phase 0c) — much of the CDS surface landed via Phase 3 (clinical-knowledge-platform
+  + zibo reference-ranges came in with citizen); re-assess what, if anything, remains on `wave-b` and verify with the
+  `clinical-knowledge-platform-service` unit tests.
+- **Scanner determinism** — fix the product-truth/phase6 heuristic non-determinism (see Phase 3 note).
+
+`intake/khuluma-comms-hub`, `intake/wave-b-tshepo-gdhcn-trust-primitives`, and `integration/closeout-staging`
+remain **open** pending those phases.
