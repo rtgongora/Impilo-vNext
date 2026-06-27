@@ -1,14 +1,16 @@
 package impilo.registry
 
+import future.keywords
+
 default allow := false
 
 allow if {
-    input.action startswith "registry.provider."
+    startswith(input.action, "registry.provider.")
     input.registry_role in {"provider_registry_owner", "provider_registry_steward", "provider_registry_approver"}
 }
 
 allow if {
-    input.action startswith "registry.client."
+    startswith(input.action, "registry.client.")
     input.registry_role in {"client_registry_owner", "client_registry_steward", "client_registry_resolution_officer"}
 }
 
