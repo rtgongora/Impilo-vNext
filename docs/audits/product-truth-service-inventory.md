@@ -1,16 +1,16 @@
 # Product Truth — Service Inventory
 
-> Generated: 2026-06-26T16:23:42.967Z
+> Generated: 2026-06-27T13:14:25.927Z
 > Scanner: `scripts/completeness/generate-product-truth.mjs`
-> Total services: **92** | Libraries: **12** | UI workspaces: **24**
+> Total services: **94** | Libraries: **12** | UI workspaces: **24**
 
 ## Summary by product status
 
 | Status | Count |
 |--------|------:|
-| internal-only | 24 |
-| real | 67 |
-| deprecated | 1 |
+| internal-only | 25 |
+| real | 68 |
+| mostly-real | 1 |
 
 ## Service inventory
 
@@ -75,6 +75,7 @@
 | offline-sync-service | integration | real | real | real | absent | real | real | real | internal-only |
 | oros-service | clinical | real | real | real | real | real | real | real | real |
 | pacs-adapter-service | clinical | real | real | real | absent | real | real | real | internal-only |
+| patient-safety-service | clinical | real | real | absent | real | real | n/a | real | mostly-real |
 | pct-service | clinical | real | real | real | real | real | real | real | real |
 | pharmacy-elmis-adapter | clinical | real | real | real | absent | thin | absent | real | internal-only |
 | pharmacy-service | clinical | real | real | real | real | real | real | real | real |
@@ -82,6 +83,7 @@
 | product-registry-service | registry | real | real | real | real | real | n/a | real | real |
 | referral-service | integration | real | real | real | real | real | n/a | real | real |
 | reporting-service | data | real | real | real | real | real | n/a | real | real |
+| rito-quality-safety-service | experience | real | real | real | real | real | n/a | real | real |
 | rtc-gateway-service | integration | real | real | real | real | real | n/a | real | real |
 | rules-service | clinical | real | real | real | real | real | n/a | real | real |
 | scheduling-service | clinical | real | real | real | real | real | n/a | real | real |
@@ -103,7 +105,7 @@
 | ubomi-service | registry | real | real | real | real | real | n/a | real | real |
 | varapi-service | registry | real | real | real | real | real | n/a | real | real |
 | vito-service | registry | real | real | real | real | real | real | real | real |
-| wellness-service | enterprise | real | real | real | real | real | real | real | deprecated |
+| wellness-service | enterprise | real | real | real | real | real | real | real | internal-only |
 | workflow-service | integration | real | real | real | real | real | n/a | real | real |
 | workforce-governance-service | enterprise | real | real | real | real | real | n/a | real | real |
 | vashandi-workforce-service | enterprise | real | real | real | real | real | n/a | real | real |

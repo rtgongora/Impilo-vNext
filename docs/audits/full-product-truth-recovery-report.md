@@ -1,31 +1,31 @@
 # Full Product Truth Recovery Report
 
-> Generated: 2026-06-26T16:23:42.967Z
-> Branch: `integration/provider-clinical-place`
+> Generated: 2026-06-27T13:14:25.927Z
+> Branch: `claude/staging-ux-orchestration-remediation-Yypyl`
 
 ## Executive summary
 
 | Metric | Count |
 |--------|------:|
-| Total services audited | 92 |
-| Backend services | 92 |
+| Total services audited | 94 |
+| Backend services | 94 |
 | Shared libraries | 12 |
-| Frontend surfaces (routes) | 623 |
-| Mobile screens | 174 |
-| BFF route handlers | 2183 |
-| OpenAPI contracts | 102 |
-| Services with DB persistence | 92 |
-| **Phase 6 complete (user-facing + documented internal)** | **88** |
-| User-facing services with `real` code present (file-existence axis) | 67 / 67 |
+| Frontend surfaces (routes) | 670 |
+| Mobile screens | 179 |
+| BFF route handlers | 2372 |
+| OpenAPI contracts | 103 |
+| Services with DB persistence | 94 |
+| **Phase 6 complete (user-facing + documented internal)** | **89** |
+| User-facing services with `real` code present (file-existence axis) | 68 / 69 |
 | — of those, **runtime-proven** (REAL_PROVEN) | **0** |
-| Services internal-only (documented) | 24 |
-| Services partially complete | 0 |
+| Services internal-only (documented) | 25 |
+| Services partially complete | 1 |
 | Services backend-only (no UI) | 0 |
 | Services UI-only (no backend) | 0 |
-| Services with mock/stub hits | 2 |
-| Total classified gaps | 8 |
-| Blocker gaps | 1 |
-| High severity gaps | 7 |
+| Services with mock/stub hits | 3 |
+| Total classified gaps | 15 |
+| Blocker gaps | 0 |
+| High severity gaps | 14 |
 | Cross-service cohesion | 14/14 pass |
 
 > **Honesty note:** `real` above is the file-existence axis (code present + wired),
@@ -36,10 +36,10 @@
 
 | Maturity | Count |
 |----------|------:|
-| INTERNAL_ONLY | 24 |
-| REAL_CODE_NOT_PROBED | 63 |
+| INTERNAL_ONLY | 25 |
+| REAL_CODE_NOT_PROBED | 64 |
 | FIXTURE_BACKED | 4 |
-| DEFERRED_WITH_ADR | 1 |
+| PARTIAL | 1 |
 
 ## Quality gates added
 
@@ -61,8 +61,8 @@
 
 ## Remaining gaps by severity
 
-- **blocker:** 1
-- **high:** 7
+- **high:** 14
+- **medium:** 1
 
 ## Implementation status
 

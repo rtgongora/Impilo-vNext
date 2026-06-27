@@ -1,7 +1,7 @@
 # Product Truth — Frontend-to-Backend Traceability
 
-> Generated: 2026-06-26T16:23:42.967Z
-> Web surfaces: **623** | Mobile screens: **174**
+> Generated: 2026-06-27T13:14:25.927Z
+> Web surfaces: **670** | Mobile screens: **179**
 
 ## Web routes (one-ui-shell)
 
@@ -22,6 +22,10 @@
 | /auth/register/status | Registration Status | auth | no | no | yes | no | yes | — |
 | /auth/resolving | Resolving Session | auth | yes | no | yes | no | yes | — |
 | /auth/context-chooser | Choose Work Context | auth | yes | no | yes | no | yes | — |
+| /welcome | Welcome to Impilo | auth | no | no | no | no | yes | F,E |
+| /welcome/find-care | Find Care | auth | no | no | no | no | yes | F,E |
+| /welcome/emergency | Emergency & Public Health | auth | no | no | no | no | yes | F,E |
+| /welcome/accessibility | Accessibility & Language | auth | no | no | no | no | yes | F,E |
 | /privacy | Privacy Policy | auth | no | no | yes | no | no | — |
 | /terms | Terms of Use | auth | no | no | yes | no | no | — |
 | /consent | Review Policies | auth | yes | no | yes | yes | yes | — |
@@ -154,6 +158,7 @@
 | /ehr/[patientId]/assessments | Assessments | ehr | yes | no | yes | yes | yes | — |
 | /ehr/[patientId]/charts | Ward Charts | ehr | yes | no | yes | yes | yes | — |
 | /ehr/[patientId]/imaging | Imaging | ehr | yes | no | yes | yes | yes | — |
+| /ehr/[patientId]/investigations | Investigations | ehr | yes | no | yes | yes | yes | — |
 | /ehr/[patientId]/imaging/viewer | DICOM Viewer | ehr | yes | no | yes | yes | yes | — |
 | /admin | Administration | admin | yes | no | yes | no | yes | — |
 | /admin/users | Worker & Provider Access | admin | yes | no | yes | yes | yes | — |
@@ -333,6 +338,19 @@
 | /lab | Laboratory | lab | yes | no | yes | yes | yes | — |
 | /lab/worklist | Lab Worklist | lab | yes | no | yes | yes | yes | — |
 | /imaging/worklist | Imaging Worklist | lab | yes | no | yes | yes | yes | — |
+| /diagnostics/orders | Diagnostics Orders | lab | yes | no | yes | yes | yes | — |
+| /diagnostics/orders/new | Create Diagnostic Order | lab | yes | no | yes | yes | yes | — |
+| /diagnostics/orders/route | Route Order | lab | yes | no | yes | yes | yes | — |
+| /diagnostics/results-inbox | Results Inbox | lab | yes | no | yes | yes | yes | — |
+| /diagnostics/critical-queue | Critical Results | lab | yes | no | yes | yes | yes | — |
+| /diagnostics/worklist | Imaging Worklist | lab | yes | no | yes | yes | yes | — |
+| /diagnostics/lab-worklist | Lab Worklist | lab | yes | no | yes | yes | yes | — |
+| /diagnostics/procedure-worklist | Procedure Worklist | lab | yes | no | yes | yes | yes | — |
+| /diagnostics/reporting | Report Authoring | lab | yes | no | yes | yes | yes | — |
+| /diagnostics/intake/qr | Claim Order QR | lab | yes | no | yes | yes | yes | — |
+| /operations/diagnostics-reconciliation | Diagnostics Reconciliation | lab | yes | no | yes | yes | yes | — |
+| /admin/integrations | Integration Status | admin | yes | no | yes | yes | yes | — |
+| /admin/diagnostics-catalogue | Diagnostics Catalogue | admin | yes | no | yes | yes | yes | — |
 | /imaging/facility | Facility Imaging Dashboard | lab | yes | no | yes | yes | yes | — |
 | /lab/results | Results Review | lab | yes | no | yes | yes | yes | — |
 | /lab/catalog | Test Catalog | lab | yes | no | yes | no | yes | — |
@@ -489,24 +507,6 @@
 | /live/saved | Saved Live Events | home | yes | no | yes | yes | yes | — |
 | /live/my-events | My Live Events | home | yes | no | yes | yes | yes | — |
 | /live/replays | Live Event Replays | home | yes | no | yes | yes | yes | — |
-| /live/cpd | Live CPD | professional | yes | no | yes | yes | yes | — |
-| /live/certificates | Live Certificates | professional | yes | no | yes | yes | yes | — |
-| /live/event/[eventId] | Live Event Detail | operations | yes | no | yes | yes | yes | — |
-| /live/event/[eventId]/room | Live Room | operations | yes | no | yes | yes | yes | — |
-| /live/event/[eventId]/replay | Event Replay | home | yes | no | yes | yes | yes | — |
-| /live/event/[eventId]/analytics | Live Analytics | operations | yes | no | yes | yes | yes | — |
-| /work/administration-governance | Administration & Governance | operations | yes | no | yes | no | yes | — |
-| /work/administration-governance/access-requests | Access Requests | operations | yes | no | yes | yes | yes | — |
-| /work/administration-governance/access-review | Access Review | operations | yes | no | yes | yes | yes | — |
-| /work/administration-governance/access-review/[subjectId] | Access Review | operations | yes | no | yes | yes | yes | — |
-| /work/administration-governance/audit | Audit | operations | yes | no | yes | yes | yes | — |
-| /work/administration-governance/municipal | Municipal | operations | yes | no | yes | yes | yes | — |
-| /work/administration-governance/onboard | Onboard New Actor | operations | yes | no | yes | no | yes | — |
-| /work/administration-governance/onboard/citizen | Onboard Citizen | operations | yes | no | yes | yes | yes | — |
-| /work/administration-governance/onboard/external-partner-user | Onboard External Partner User | operations | yes | no | yes | yes | yes | — |
-| /work/administration-governance/onboard/hsc-user | Onboard Hsc User | operations | yes | no | yes | yes | yes | — |
-| /work/administration-governance/onboard/madi-user | Onboard Madi User | operations | yes | no | yes | yes | yes | — |
-| /work/administration-governance/onboard/marketplace-user | Onboard Marketplace User | operations | yes | no | yes | yes | yes | — |
 
 ## Mobile screens
 
@@ -580,6 +580,8 @@
 | citizen-app | apps/mobile/citizen-app/src/screens/personal/WalletSection.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/personal/WellnessSection.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/publicHealth/PublicHealthScreen.tsx | 0 | no |
+| citizen-app | apps/mobile/citizen-app/src/screens/rito/FeedbackScreen.tsx | 0 | no |
+| citizen-app | apps/mobile/citizen-app/src/screens/rito/TrackFeedbackScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/social/ClubsScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/social/CommunitiesScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/social/CrowdfundingScreen.tsx | 0 | no |
@@ -629,6 +631,7 @@
 | provider-app | apps/mobile/provider-app/src/screens/provider/CriticalEventScreen.tsx | 1 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/DeveloperHubScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/DiagnosisPanel.tsx | 0 | no |
+| provider-app | apps/mobile/provider-app/src/screens/provider/DiagnosticsScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/DischargeClearanceScreen.tsx | 1 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/EdVisitScreen.tsx | 0 | no |
@@ -681,6 +684,8 @@
 | provider-app | apps/mobile/provider-app/src/screens/provider/VitalsPanel.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/WardAlertsScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/WorkflowDispatchOpsScreen.tsx | 0 | yes |
+| provider-app | apps/mobile/provider-app/src/screens/rito/MySafetyCasesScreen.tsx | 0 | no |
+| provider-app | apps/mobile/provider-app/src/screens/rito/ReportSafetyScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/supervisor/EscalationsScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/supervisor/InventoryScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/supervisor/StockScreen.tsx | 0 | no |

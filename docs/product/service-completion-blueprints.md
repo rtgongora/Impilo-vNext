@@ -1,6 +1,6 @@
 # Service Completion Blueprints
 
-> Generated: 2026-06-26T16:23:42.967Z
+> Generated: 2026-06-27T13:14:25.927Z
 > End-to-end product expectation per service for mature vNext.
 
 Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and tests required.
@@ -1359,6 +1359,35 @@ Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and
 - **Production complete:** Contract + implementation + observability + runbook
 - **Tests:** Contract IT + smoke for primary endpoints
 
+## patient-safety-service
+
+**Product names:** Patient Safety
+**Plane/domain:** clinical / pharmacovigilance
+**Current status:** mostly-real
+
+### Primary personas
+- Operators and domain users for pharmacovigilance plane capabilities
+- Standard governed service consumer
+
+### Main workflows
+- List/search Patient Safety records
+- Create and update governed transactions with TSHEPO authz
+- Detail view with audit trail and status transitions where applicable
+
+### Minimum viable complete UI
+- List + detail routes backed by real BFF hooks
+- Empty/loading/error states with honest maturity labels
+
+### Production-grade complete UI
+- Full CRUD where domain permits; search/filter; role-based visibility
+- Mobile parity where user-facing
+- Cross-service handoffs documented in core-transaction journey maps
+
+### Tests required
+- Backend: `*IT.java` or controller tests for primary workflows
+- BFF: proxy/controller test for each exposed route family
+- UI: vitest hook/page test + Playwright e2e for critical path
+
 ## pct-service
 
 **Product names:** PCT
@@ -1528,6 +1557,35 @@ Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and
 
 ### Main workflows
 - List/search Reporting records
+- Create and update governed transactions with TSHEPO authz
+- Detail view with audit trail and status transitions where applicable
+
+### Minimum viable complete UI
+- List + detail routes backed by real BFF hooks
+- Empty/loading/error states with honest maturity labels
+
+### Production-grade complete UI
+- Full CRUD where domain permits; search/filter; role-based visibility
+- Mobile parity where user-facing
+- Cross-service handoffs documented in core-transaction journey maps
+
+### Tests required
+- Backend: `*IT.java` or controller tests for primary workflows
+- BFF: proxy/controller test for each exposed route family
+- UI: vitest hook/page test + Playwright e2e for critical path
+
+## rito-quality-safety-service
+
+**Product names:** Rito
+**Plane/domain:** experience / workflow-orchestration
+**Current status:** real
+
+### Primary personas
+- Operators and domain users for workflow-orchestration plane capabilities
+- Standard governed service consumer
+
+### Main workflows
+- List/search Rito records
 - Create and update governed transactions with TSHEPO authz
 - Detail view with audit trail and status transitions where applicable
 
@@ -2124,7 +2182,7 @@ Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and
 
 **Product names:** Wellness
 **Plane/domain:** enterprise / wellness-compatibility-alias
-**Current status:** deprecated
+**Current status:** internal-only
 
 - **Classification:** Internal-only platform service
 - **Primary users:** Platform operators, integration engineers, SRE

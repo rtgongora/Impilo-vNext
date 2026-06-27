@@ -3,6 +3,35 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
+
+/**
+ * Set of absolute paths git tracks (committed or staged), memoized per process.
+ *
+ * Hermeticity: {@link walkFiles} must reflect the BRANCH, not the physical working directory.
+ * Worktrees accumulate untracked/stale `.java` files from prior branch checkouts (and sibling
+ * worktrees share a parent dir), so a raw filesystem walk would count debt for code that is not in
+ * the branch being scanned — making the gap count vary by worktree state and even flag files absent
+ * from the branch. Restricting to git-tracked files makes the scan reproducible and branch-local.
+ * Returns `null` (→ no filtering, prior behaviour) when git is unavailable.
+ */
+let _trackedFiles; // undefined = not computed; null = git unavailable; Set = tracked abs paths
+function trackedFiles() {
+  if (_trackedFiles !== undefined) return _trackedFiles;
+  try {
+    const root = spawnSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf8' });
+    if (root.status !== 0) { _trackedFiles = null; return _trackedFiles; }
+    const top = root.stdout.trim();
+    const ls = spawnSync('git', ['ls-files', '-z'], { cwd: top, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
+    if (ls.status !== 0) { _trackedFiles = null; return _trackedFiles; }
+    _trackedFiles = new Set(
+      ls.stdout.split('\0').filter(Boolean).map((relPath) => path.resolve(top, relPath)),
+    );
+  } catch {
+    _trackedFiles = null;
+  }
+  return _trackedFiles;
+}
 
 export const STUB_PATTERNS = [
   /HttpStatus\.NOT_IMPLEMENTED/,
@@ -16,12 +45,16 @@ export const STUB_PATTERNS = [
 
 export function walkFiles(dir, filter = () => true, acc = []) {
   if (!fs.existsSync(dir)) return acc;
+  const tracked = trackedFiles(); // null when git unavailable → no hermetic filtering
   for (const name of fs.readdirSync(dir, { withFileTypes: true })) {
     const p = path.join(dir, name.name);
     if (name.isDirectory()) {
       if (name.name === 'node_modules' || name.name === 'target' || name.name === '.git') continue;
       walkFiles(p, filter, acc);
-    } else if (filter(p)) acc.push(p);
+    } else if (filter(p) && (tracked === null || tracked.has(path.resolve(p)))) {
+      // Only count files the current branch tracks — see trackedFiles() (hermeticity).
+      acc.push(p);
+    }
   }
   return acc;
 }
