@@ -43,8 +43,8 @@ public class SortingDeskController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> sort(
             @PathVariable String journeyId,
             @RequestBody SortBody body) {
-        // TODO(policy TRIAGE-RECORD): sort/triage authz is enforced at the existing ext_authz path; the rule
-        //   lives in track P / WS-OPA impilo.authz.
+        // Authz: enforced at ext_authz via tshepo_authz.policy_rule `clinical-triage-sort-*`
+        // (V018) — PROVIDER + CLINICIAN/NURSE, facility-scoped, pinned to /sorting-desk/journeys.
         SortingRecordEntity row = sortingDeskService.sort(
                 journeyId, body.context(), body.visitType(), body.arrivalReason());
         return ResponseEntity.status(HttpStatus.CREATED)

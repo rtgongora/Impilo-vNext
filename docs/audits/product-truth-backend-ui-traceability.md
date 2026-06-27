@@ -1,6 +1,6 @@
 # Product Truth — Backend-to-UI Traceability
 
-> Generated: 2026-06-27T16:44:39.790Z
+> Generated: 2026-06-27T22:49:34.917Z
 
 For each service: backend capabilities → API → BFF → UI → mobile → persistence.
 
@@ -1528,9 +1528,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/admin/clinical-curation/page.test.tsx`
 - `ui/one-ui-shell/src/app/admin/clinical-curation/page.tsx`
 
-**Gaps:**
-- [S] pct-service: security/crypto/authz placeholder in product path (5 hits) (high)
-
 ## pharmacy-elmis-adapter
 
 - **Path:** `services/pharmacy-elmis-adapter`
@@ -2350,9 +2347,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/erp/hr/page.tsx`
 - `ui/one-ui-shell/src/app/work/vashandi/access-review/page.tsx`
 - `ui/one-ui-shell/src/app/work/vashandi/analytics/page.tsx`
-
-**Gaps:**
-- [S] vashandi-workforce-service: security/crypto/authz placeholder in product path (1 hits) (high)
 
 ## khuluma-service
 

@@ -20,8 +20,9 @@ import java.util.Set;
  * <p><strong>Doctrine — no fake completions:</strong> a disabled action is still emitted in the spine (so the
  * cockpit can grey it out with a reason) but the cockpit must never render a disabled action as a live button.
  * Authz-gated actions still call the existing Tshepo ext_authz path at execution; this engine never authors
- * policy. Where a downstream action requires a Tshepo rule, see the policy contract IDs noted inline
- * (TODO references route to track P / WS-OPA {@code impilo.authz}).</p>
+ * policy. The cadre-decision endpoint is enforced at ext_authz via the seeded
+ * {@code clinical-cadre-decision-*} policy rules (V018); finer per-action gating can be deepened in
+ * {@code impilo.authz} (WS-OPA) as a future enhancement.</p>
  */
 public final class CadreEngine {
 

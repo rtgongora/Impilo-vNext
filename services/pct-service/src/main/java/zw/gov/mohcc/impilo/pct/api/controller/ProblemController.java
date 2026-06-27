@@ -41,7 +41,8 @@ public class ProblemController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<Map<String, Object>>> add(@RequestBody Map<String, Object> body) {
-        // TODO(policy CARE-PLAN-WRITE): clinical-write authz enforced at ext_authz; rule lives in track P.
+        // Authz: enforced at ext_authz via tshepo_authz.policy_rule `clinical-problem-write-*`
+        // (V018) — PROVIDER + CLINICIAN/NURSE, facility-scoped, purpose TREATMENT.
         ProblemEntity p = problemService.add(body);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(toMap(p), TrustContextHolder.require().correlationId().toString()));

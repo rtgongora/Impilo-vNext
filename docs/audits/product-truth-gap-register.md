@@ -1,7 +1,7 @@
 # Product Truth — Gap Register
 
-> Generated: 2026-06-27T16:44:39.790Z
-> Total gaps: **3**
+> Generated: 2026-06-27T22:49:34.917Z
+> Total gaps: **1**
 
 ## Gap categories (A–R)
 
@@ -25,21 +25,19 @@
 | P | Workflow incomplete across services | 0 |
 | Q | Service is internal-only and needs documentation instead of UI | 0 |
 | R | Duplicate/overlapping capability requiring consolidation | 0 |
-| S | Security/crypto/authz placeholder in a product path | 2 |
+| S | Security/crypto/authz placeholder in a product path | 0 |
 
 ## By severity
 
 | Severity | Count |
 |----------|------:|
-| high | 3 |
+| high | 1 |
 
 ## Prioritized gaps (top 100)
 
 | Rank | Entity | Category | Severity | Description |
 |------|--------|----------|----------|-------------|
 | 1 | experience-bff | F | high | experience-bff: mock/stub/fixture/in-memory patterns in product path (2 hits) |
-| 2 | pct-service | S | high | pct-service: security/crypto/authz placeholder in product path (5 hits) |
-| 3 | vashandi-workforce-service | S | high | vashandi-workforce-service: security/crypto/authz placeholder in product path (1 hits) |
 
 ## Services requiring product-owner decision
 

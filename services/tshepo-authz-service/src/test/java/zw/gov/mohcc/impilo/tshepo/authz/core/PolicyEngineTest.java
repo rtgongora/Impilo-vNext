@@ -397,6 +397,137 @@ class PolicyEngineTest {
     }
 
     // ════════════════════════════════════════════════════════════════════
+    // Step 4b: path_contains condition (resource-type collision isolation)
+    // ════════════════════════════════════════════════════════════════════
+
+    /** Builds an AuthzInternalRequest with a caller-supplied path (mirrors buildRequest defaults). */
+    private static AuthzInternalRequest buildRequestWithPath(
+            String path, String resourceType, String action, List<String> roles) {
+        return new AuthzInternalRequest(
+                TENANT_ID, ACTOR_ID, "PROVIDER", roles, "TREATMENT",
+                DEVICE_FP, CORRELATION_ID, FACILITY_ID, WORKSPACE_ID,
+                null, "POST", path, action, resourceType, null,
+                3, "session-abc", null,
+                null, null, null, null, null, null,
+                null, null
+        );
+    }
+
+    private PolicyRuleEntity buildAllowRuleWithConditions(
+            String resourceType, String role, String action, String conditionsJson) {
+        PolicyRuleEntity rule = buildAllowRule(resourceType, "PROVIDER", role, action, "TREATMENT");
+        rule.setConditions(conditionsJson);
+        return rule;
+    }
+
+    @Test
+    @DisplayName("path_contains: rule pinned to /cadre/decision ALLOWS the cadre endpoint")
+    void evaluate_pathContains_matchingPath_allows() {
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        // resource_type 'decision' is generic (collides across services); the rule pins it to /cadre/decision.
+        PolicyRuleEntity rule = buildAllowRuleWithConditions(
+                "decision", "CLINICIAN", "POST", "{\"path_contains\": \"/cadre/decision\"}");
+        when(policyCacheService.getActiveRulesForResource(TENANT_ID, "decision"))
+                .thenReturn(List.of(rule));
+
+        AuthzInternalRequest request = buildRequestWithPath(
+                "/v1/cadre/decision", "decision", "POST:/v1/cadre/decision", List.of("CLINICIAN"));
+
+        AuthzResponse response = policyEngine.evaluate(request);
+
+        assertEquals(Verdict.ALLOW, response.verdict(),
+                "A CLINICIAN POSTing to /v1/cadre/decision must be allowed by the pinned rule");
+    }
+
+    @Test
+    @DisplayName("path_contains: same resource_type on a DIFFERENT service path is NOT over-granted")
+    void evaluate_pathContains_collidingSegmentDifferentPath_denies() {
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        // The SAME cadre rule (pinned to /cadre/decision) must not grant another service's
+        // endpoint that merely shares the last path segment 'decision'.
+        PolicyRuleEntity rule = buildAllowRuleWithConditions(
+                "decision", "CLINICIAN", "POST", "{\"path_contains\": \"/cadre/decision\"}");
+        when(policyCacheService.getActiveRulesForResource(TENANT_ID, "decision"))
+                .thenReturn(List.of(rule));
+
+        AuthzInternalRequest request = buildRequestWithPath(
+                "/v1/governance/waiver/decision", "decision",
+                "POST:/v1/governance/waiver/decision", List.of("CLINICIAN"));
+
+        AuthzResponse response = policyEngine.evaluate(request);
+
+        assertEquals(Verdict.DENY, response.verdict(),
+                "A colliding 'decision' segment on a non-cadre path must NOT be granted (no cross-service over-grant)");
+        assertEquals("NO_ALLOW_RULE", response.errorCode());
+    }
+
+    @Test
+    @DisplayName("path_contains: query-string smuggling of the pinned substring is NOT granted")
+    void evaluate_pathContains_querySmuggling_denies() {
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        PolicyRuleEntity rule = buildAllowRuleWithConditions(
+                "decision", "CLINICIAN", "POST", "{\"path_contains\": \"/cadre/decision\"}");
+        when(policyCacheService.getActiveRulesForResource(TENANT_ID, "decision"))
+                .thenReturn(List.of(rule));
+
+        // A non-cadre /decision endpoint with the pinned substring smuggled into the QUERY string.
+        // The path is normalised (query stripped) before matching, so this must still DENY.
+        AuthzInternalRequest request = buildRequestWithPath(
+                "/v1/governance/waiver/decision?x=/cadre/decision", "decision",
+                "POST:/v1/governance/waiver/decision", List.of("CLINICIAN"));
+
+        AuthzResponse response = policyEngine.evaluate(request);
+
+        assertEquals(Verdict.DENY, response.verdict(),
+                "Query-smuggled path_contains substring must not grant an unrelated endpoint");
+        assertEquals("NO_ALLOW_RULE", response.errorCode());
+    }
+
+    @Test
+    @DisplayName("path_contains: percent-encoded query delimiter (%3F) smuggling is NOT granted")
+    void evaluate_pathContains_encodedDelimiterSmuggling_denies() {
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        PolicyRuleEntity rule = buildAllowRuleWithConditions(
+                "decision", "CLINICIAN", "POST", "{\"path_contains\": \"/cadre/decision\"}");
+        when(policyCacheService.getActiveRulesForResource(TENANT_ID, "decision"))
+                .thenReturn(List.of(rule));
+
+        // The pinned substring is smuggled behind a percent-ENCODED '?' (%3F). Envoy delivers
+        // :path undecoded, so the PDP strips at %3F too — this must still DENY.
+        AuthzInternalRequest request = buildRequestWithPath(
+                "/v1/governance/waiver/decision%3F=/cadre/decision", "decision",
+                "POST:/v1/governance/waiver/decision", List.of("CLINICIAN"));
+
+        AuthzResponse response = policyEngine.evaluate(request);
+
+        assertEquals(Verdict.DENY, response.verdict(),
+                "Encoded-delimiter smuggling must not grant an unrelated endpoint");
+        assertEquals("NO_ALLOW_RULE", response.errorCode());
+    }
+
+    @Test
+    @DisplayName("path_contains: a longer same-prefix route (/care-plans-export) is NOT granted")
+    void evaluate_pathContains_segmentBoundary_denies() {
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        PolicyRuleEntity rule = buildAllowRuleWithConditions(
+                "care-plans-export", "CLINICIAN", "POST", "{\"path_contains\": \"/care-plans\"}");
+        when(policyCacheService.getActiveRulesForResource(TENANT_ID, "care-plans-export"))
+                .thenReturn(List.of(rule));
+
+        // resource_type 'care-plans-export' shares the /care-plans prefix but is a different segment;
+        // segment-bounded matching must NOT treat the /care-plans pin as satisfied.
+        AuthzInternalRequest request = buildRequestWithPath(
+                "/v1/care-plans-export", "care-plans-export",
+                "POST:/v1/care-plans-export", List.of("CLINICIAN"));
+
+        AuthzResponse response = policyEngine.evaluate(request);
+
+        assertEquals(Verdict.DENY, response.verdict(),
+                "A /care-plans pin must not match the longer /care-plans-export route (segment boundary)");
+        assertEquals("NO_ALLOW_RULE", response.errorCode());
+    }
+
+    // ════════════════════════════════════════════════════════════════════
     // Step 5: Consent evaluation
     // ════════════════════════════════════════════════════════════════════
 

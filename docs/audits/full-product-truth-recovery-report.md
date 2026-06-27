@@ -1,7 +1,7 @@
 # Full Product Truth Recovery Report
 
-> Generated: 2026-06-27T16:44:39.790Z
-> Branch: `chore/paydown-placeholder-gaps`
+> Generated: 2026-06-27T22:49:34.917Z
+> Branch: `chore/paydown-authz-stores`
 
 ## Executive summary
 
@@ -15,7 +15,7 @@
 | BFF route handlers | 2418 |
 | OpenAPI contracts | 105 |
 | Services with DB persistence | 95 |
-| **Phase 6 complete (user-facing + documented internal)** | **92** |
+| **Phase 6 complete (user-facing + documented internal)** | **94** |
 | User-facing services with `real` code present (file-existence axis) | 70 / 70 |
 | — of those, **runtime-proven** (REAL_PROVEN) | **0** |
 | Services internal-only (documented) | 25 |
@@ -23,9 +23,9 @@
 | Services backend-only (no UI) | 0 |
 | Services UI-only (no backend) | 0 |
 | Services with mock/stub hits | 2 |
-| Total classified gaps | 3 |
+| Total classified gaps | 1 |
 | Blocker gaps | 0 |
-| High severity gaps | 3 |
+| High severity gaps | 1 |
 | Cross-service cohesion | 14/14 pass |
 
 > **Honesty note:** `real` above is the file-existence axis (code present + wired),
@@ -37,8 +37,8 @@
 | Maturity | Count |
 |----------|------:|
 | INTERNAL_ONLY | 25 |
-| REAL_CODE_NOT_PROBED | 67 |
-| FIXTURE_BACKED | 3 |
+| REAL_CODE_NOT_PROBED | 69 |
+| FIXTURE_BACKED | 1 |
 
 ## Quality gates added
 
@@ -60,7 +60,7 @@
 
 ## Remaining gaps by severity
 
-- **high:** 3
+- **high:** 1
 
 ## Implementation status
 

@@ -384,6 +384,15 @@ public class PolicyEngine {
      *   <li>{@code allowed_facilities}: list of facility UUIDs the actor must be in</li>
      *   <li>{@code allowed_actor_types}: list of permitted actor types</li>
      *   <li>{@code max_risk_score}: maximum risk score allowed</li>
+     *   <li>{@code path_contains}: the normalised request path must contain this value as a
+     *       complete path-segment sequence (i.e. followed by {@code /} or end-of-path), or, if a
+     *       list, at least one of them. Lets a rule pin a specific endpoint even when the coarse
+     *       resource-type (the last path segment, e.g. {@code decision}) collides across services
+     *       — closing the cross-service over-grant that bare segment matching would allow. The
+     *       path is normalised first (query/matrix/fragment stripped, literal and percent-encoded)
+     *       and matching is segment-bounded, so neither query smuggling nor a longer same-prefix
+     *       route can satisfy the pin. Fail-closed: a present condition with a null/non-matching
+     *       path denies.</li>
      * </ul>
      * </p>
      */
@@ -453,6 +462,29 @@ public class PolicyEngine {
                 boolean scopeMatch = requestScopes.stream().anyMatch(allowedScopes::contains);
                 if (!scopeMatch) {
                     log.debug("Condition failed: request scopes {} not in allowed_scope_refs {}", requestScopes, allowedScopes);
+                    return false;
+                }
+            }
+
+            // path_contains check — pins a rule to a specific endpoint so a colliding coarse
+            // resource-type (last path segment) cannot grant access to a same-segment endpoint
+            // in another service. Fail-closed: a present condition with a null or non-matching
+            // path denies. The path is normalised first — query string (?), matrix params (;)
+            // and fragment (#) are stripped — so a caller cannot smuggle the required substring
+            // into the query of an unrelated endpoint (e.g. POST /x/decision?=/cadre/decision).
+            if (conditions.containsKey("path_contains")) {
+                String reqPath = normalisePathForMatch(request.path());
+                Object pc = conditions.get("path_contains");
+                boolean matched;
+                if (pc instanceof List<?> list) {
+                    matched = list.stream()
+                            .anyMatch(x -> x != null && pathContainsSegment(reqPath, x.toString()));
+                } else {
+                    matched = pc != null && pathContainsSegment(reqPath, pc.toString());
+                }
+                if (!matched) {
+                    log.debug("Condition failed: path '{}' does not contain required path_contains '{}'",
+                            reqPath, pc);
                     return false;
                 }
             }
@@ -613,6 +645,55 @@ public class PolicyEngine {
         } catch (Exception e) {
             log.debug("OPA-SHADOW comparison skipped: {}", e.getMessage());
         }
+    }
+
+    /** Query/matrix/fragment delimiters — literal and percent-encoded — that end the route path. */
+    private static final String[] PATH_TAIL_DELIMITERS = {"?", ";", "#", "%3f", "%3b", "%23"};
+
+    /**
+     * Normalise a request path for matching: strip the query string, matrix parameters, and
+     * fragment — in both literal ({@code ?;#}) and percent-encoded ({@code %3F/%3B/%23}) form —
+     * so caller-controlled query content cannot smuggle the required substring into an unrelated
+     * route (e.g. {@code POST /x/decision?=/cadre/decision} or its {@code %3F} encoding). The
+     * encoded forms are cut because Envoy delivers {@code :path} undecoded; cutting them prevents
+     * a proxy/parser differential from satisfying the pin. Returns "" for a null path.
+     */
+    private static String normalisePathForMatch(String path) {
+        if (path == null) {
+            return "";
+        }
+        String lower = path.toLowerCase(Locale.ROOT);
+        int cut = path.length();
+        for (String delim : PATH_TAIL_DELIMITERS) {
+            int i = lower.indexOf(delim);
+            if (i >= 0 && i < cut) {
+                cut = i;
+            }
+        }
+        return path.substring(0, cut);
+    }
+
+    /**
+     * Segment-bounded path containment: {@code pin} must appear in {@code path} as a complete
+     * path-segment sequence — i.e. immediately followed by {@code /} or the end of the path —
+     * not merely as an arbitrary substring. This prevents a pin like {@code /care-plans} from
+     * being satisfied by an unrelated route such as {@code /care-plans-export}, so the pin
+     * authorises only the intended endpoint (and its sub-paths).
+     */
+    private static boolean pathContainsSegment(String path, String pin) {
+        if (path == null || pin == null || pin.isEmpty()) {
+            return false;
+        }
+        int from = 0;
+        int idx;
+        while ((idx = path.indexOf(pin, from)) >= 0) {
+            int end = idx + pin.length();
+            if (end == path.length() || path.charAt(end) == '/') {
+                return true;
+            }
+            from = idx + 1;
+        }
+        return false;
     }
 
     private Map<String, Object> parseConditions(PolicyRuleEntity rule) {

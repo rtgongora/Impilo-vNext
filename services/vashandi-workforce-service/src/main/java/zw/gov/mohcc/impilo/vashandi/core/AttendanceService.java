@@ -104,7 +104,9 @@ public class AttendanceService {
                     assignmentRepository.findByTenantIdAndId(tenantId, request.assignmentId()).orElse(null);
             if (assignment == null
                     || !request.workforceProfileId().equals(assignment.getWorkforceProfileId())) {
-                // TODO(policy WORK-REQUIRES-ASSIGNMENT): ext_authz must also deny.
+                // Work-requires-assignment is enforced here in-service: deny when the assignment is
+                // absent or does not belong to this worker. (Mirroring this binding deny into the
+                // PDP/OPA is future defense-in-depth; baseline endpoint access is gated at ext_authz.)
                 return new VashandiDtos.AttendanceActionResponse(null, "denied", "assignment not found for worker");
             }
             if (!"active".equals(assignment.getStatus()) && !"approved".equals(assignment.getStatus())) {

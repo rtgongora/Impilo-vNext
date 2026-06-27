@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-06-27T16:44:39.790Z",
-  "branch": "chore/paydown-placeholder-gaps",
+  "generatedAt": "2026-06-27T22:49:34.917Z",
+  "branch": "chore/paydown-authz-stores",
   "registryDrift": {
     "unregisteredModules": [],
     "missingOnDiskModules": []
@@ -17,18 +17,17 @@
     },
     "byMaturity": {
       "INTERNAL_ONLY": 25,
-      "REAL_CODE_NOT_PROBED": 67,
-      "FIXTURE_BACKED": 3
+      "REAL_CODE_NOT_PROBED": 69,
+      "FIXTURE_BACKED": 1
     },
     "gapCounts": {
       "byCategory": {
-        "F": 1,
-        "S": 2
+        "F": 1
       },
       "bySeverity": {
-        "high": 3
+        "high": 1
       },
-      "total": 3
+      "total": 1
     },
     "crossServiceCohesion": {
       "total": 14,
@@ -40,7 +39,7 @@
       "missingTest": 0
     },
     "phase6": {
-      "complete": 92,
+      "complete": 94,
       "userFacing": 70,
       "userFacingReal": 70,
       "userFacingRealProven": 0
@@ -7125,28 +7124,7 @@
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/RecordSharingScreen.tsx"
       ],
       "mockStubHits": [],
-      "securityPlaceholderHits": [
-        {
-          "file": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/CadreController.java",
-          "pattern": "authz-placeholder"
-        },
-        {
-          "file": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/CarePlanController.java",
-          "pattern": "authz-placeholder"
-        },
-        {
-          "file": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/ProblemController.java",
-          "pattern": "authz-placeholder"
-        },
-        {
-          "file": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/SortingDeskController.java",
-          "pattern": "authz-placeholder"
-        },
-        {
-          "file": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/core/cadre/CadreEngine.java",
-          "pattern": "authz-placeholder"
-        }
-      ],
+      "securityPlaceholderHits": [],
       "stubRouteCount": 0,
       "bffOrphanRoutes": 0,
       "internalOnlyDocumented": false,
@@ -7164,16 +7142,9 @@
         "q9_persistsToDb": true,
         "q10_fixtureOnly": false
       },
-      "phase6Complete": false,
-      "gaps": [
-        {
-          "category": "S",
-          "severity": "high",
-          "description": "pct-service: security/crypto/authz placeholder in product path (5 hits)",
-          "impactScore": 3
-        }
-      ],
-      "maturity": "FIXTURE_BACKED"
+      "phase6Complete": true,
+      "gaps": [],
+      "maturity": "REAL_CODE_NOT_PROBED"
     },
     {
       "id": "pharmacy-elmis-adapter",
@@ -11148,12 +11119,7 @@
         "provider-app:apps/mobile/provider-app/src/services/vashandiService.ts"
       ],
       "mockStubHits": [],
-      "securityPlaceholderHits": [
-        {
-          "file": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/core/AttendanceService.java",
-          "pattern": "authz-placeholder"
-        }
-      ],
+      "securityPlaceholderHits": [],
       "stubRouteCount": 0,
       "bffOrphanRoutes": 0,
       "internalOnlyDocumented": false,
@@ -11171,16 +11137,9 @@
         "q9_persistsToDb": true,
         "q10_fixtureOnly": false
       },
-      "phase6Complete": false,
-      "gaps": [
-        {
-          "category": "S",
-          "severity": "high",
-          "description": "vashandi-workforce-service: security/crypto/authz placeholder in product path (1 hits)",
-          "impactScore": 3
-        }
-      ],
-      "maturity": "FIXTURE_BACKED"
+      "phase6Complete": true,
+      "gaps": [],
+      "maturity": "REAL_CODE_NOT_PROBED"
     },
     {
       "id": "khuluma-service",

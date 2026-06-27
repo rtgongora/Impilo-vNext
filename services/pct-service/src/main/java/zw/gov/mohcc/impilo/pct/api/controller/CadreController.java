@@ -33,8 +33,9 @@ public class CadreController {
 
     @PostMapping("/decision")
     public ResponseEntity<ApiResponse<CadreDecision>> resolve(@RequestBody DecisionBody body) {
-        // TODO(policy CADRE-ACTION): execution-time authz for cadre-gated actions calls the existing
-        //   Tshepo ext_authz path; the rule itself is authored in track P / WS-OPA impilo.authz.
+        // Authz: enforced at ext_authz via tshepo_authz.policy_rule `clinical-cadre-decision-*`
+        // (V018) — PROVIDER + CLINICIAN/NURSE, facility-scoped, pinned to /cadre/decision so the
+        // generic `decision` resource-type cannot grant other services' same-segment endpoints.
         CadreDecisionRequest req = new CadreDecisionRequest(
                 body.role(), body.cadre(), body.scope(), body.visitType(),
                 body.acuity(), body.context(), body.accessState());

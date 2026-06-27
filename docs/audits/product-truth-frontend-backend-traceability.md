@@ -1,6 +1,6 @@
 # Product Truth — Frontend-to-Backend Traceability
 
-> Generated: 2026-06-27T16:44:39.790Z
+> Generated: 2026-06-27T22:49:34.917Z
 > Web surfaces: **672** | Mobile screens: **181**
 
 ## Web routes (one-ui-shell)
