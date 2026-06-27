@@ -1,24 +1,24 @@
 {
-  "generatedAt": "2026-06-27T13:14:25.927Z",
-  "branch": "claude/staging-ux-orchestration-remediation-Yypyl",
+  "generatedAt": "2026-06-27T13:47:09.777Z",
+  "branch": "prep/phase4-khuluma",
   "registryDrift": {
     "unregisteredModules": [],
     "missingOnDiskModules": []
   },
   "summary": {
-    "totalServices": 94,
+    "totalServices": 95,
     "totalLibraries": 12,
     "totalUiWorkspaces": 24,
-    "bffRouteCount": 2372,
-    "contractCount": 103,
+    "bffRouteCount": 2418,
+    "contractCount": 104,
     "byProductStatus": {
       "internal-only": 25,
-      "real": 68,
+      "real": 69,
       "mostly-real": 1
     },
     "byMaturity": {
       "INTERNAL_ONLY": 25,
-      "REAL_CODE_NOT_PROBED": 64,
+      "REAL_CODE_NOT_PROBED": 65,
       "FIXTURE_BACKED": 4,
       "PARTIAL": 1
     },
@@ -45,9 +45,9 @@
       "missingTest": 0
     },
     "phase6": {
-      "complete": 89,
-      "userFacing": 69,
-      "userFacingReal": 68,
+      "complete": 90,
+      "userFacing": 70,
+      "userFacingReal": 69,
       "userFacingRealProven": 0
     }
   },
@@ -2565,7 +2565,7 @@
         "contractViolations": 0,
         "bffClients": 15,
         "uiReferences": 71,
-        "mobileReferences": 21,
+        "mobileReferences": 23,
         "tests": 3
       },
       "dimensions": {
@@ -2622,6 +2622,8 @@
         "ui/one-ui-shell/src/app/nhume/page.tsx"
       ],
       "mobilePaths": [
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/comms/CommsHubScreen.test.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/comms/EventDiscussionSection.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/IdRecoverySection.interaction.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/NhumeTrackingScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/ProductionReadinessJourneyScreen.tsx",
@@ -2629,9 +2631,7 @@
         "provider-app:apps/mobile/provider-app/src/__tests__/provider/AdminRegistryHubScreen.test.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/courier/CourierDashboardScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/courier/CourierProofScreen.tsx",
-        "provider-app:apps/mobile/provider-app/src/screens/provider/ClinicalToolsScreen.tsx",
-        "provider-app:apps/mobile/provider-app/src/screens/provider/CoreTransactionJourneyShellScreen.tsx",
-        "provider-app:apps/mobile/provider-app/src/screens/provider/SystemStatusScreen.tsx"
+        "provider-app:apps/mobile/provider-app/src/screens/provider/ClinicalToolsScreen.tsx"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -2704,7 +2704,7 @@
         "contractViolations": 0,
         "bffClients": 19,
         "uiReferences": 154,
-        "mobileReferences": 122,
+        "mobileReferences": 127,
         "tests": 3
       },
       "dimensions": {
@@ -2765,16 +2765,16 @@
         "ui/one-ui-shell/src/app/ehr/[patientId]/documents/page.tsx"
       ],
       "mobilePaths": [
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/comms/CommsHubScreen.test.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/comms/CommsService.test.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/comms/EventDiscussionSection.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/integration/BackendIntegration.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/marketplace/MarketplaceFlow.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/messaging/MessagingFlow.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/FinanceSection.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/IdRecoverySection.interaction.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/PersonalFlow.test.tsx",
-        "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/WalletSection.test.tsx",
-        "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/walletService.test.ts",
-        "citizen-app:apps/mobile/citizen-app/src/__tests__/social/socialService.test.ts",
-        "citizen-app:apps/mobile/citizen-app/src/__tests__/telehealth/TelehealthFlow.test.tsx"
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/WalletSection.test.tsx"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -2839,16 +2839,16 @@
         "migrations": 45,
         "entities": 0,
         "repositories": 2,
-        "serviceLayer": 41,
-        "controllers": 268,
-        "routes": 2372,
+        "serviceLayer": 42,
+        "controllers": 270,
+        "routes": 2418,
         "stubRoutes": 0,
         "contractOperations": 1537,
         "contractViolations": 0,
         "bffClients": 0,
-        "uiReferences": 176,
-        "mobileReferences": 61,
-        "tests": 173
+        "uiReferences": 177,
+        "mobileReferences": 62,
+        "tests": 175
       },
       "dimensions": {
         "database": "real",
@@ -4698,8 +4698,8 @@
         "contractOperations": 61,
         "contractViolations": 0,
         "bffClients": 2,
-        "uiReferences": 280,
-        "mobileReferences": 58,
+        "uiReferences": 283,
+        "mobileReferences": 63,
         "tests": 5
       },
       "dimensions": {
@@ -4743,16 +4743,16 @@
         "ui/one-ui-shell/src/app/discover/services/page.tsx"
       ],
       "mobilePaths": [
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/comms/CommsHubScreen.test.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/comms/CommsService.test.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/comms/EventDiscussionSection.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/FinanceSection.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/IdRecoverySection.interaction.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/coverageCommandService.test.ts",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/setup.ts",
         "citizen-app:apps/mobile/citizen-app/src/main.tsx",
         "citizen-app:apps/mobile/citizen-app/src/navigation/citizenServiceNavigation.ts",
-        "citizen-app:apps/mobile/citizen-app/src/screens/NhumeTrackingScreen.tsx",
-        "citizen-app:apps/mobile/citizen-app/src/screens/live/LiveDiscoverScreen.tsx",
-        "citizen-app:apps/mobile/citizen-app/src/screens/live/LiveEventScreen.tsx",
-        "citizen-app:apps/mobile/citizen-app/src/screens/marketplace/MarketplaceScreen.tsx"
+        "citizen-app:apps/mobile/citizen-app/src/screens/NhumeTrackingScreen.tsx"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -6277,9 +6277,9 @@
         "stubRoutes": 0,
         "contractOperations": 33,
         "contractViolations": 0,
-        "bffClients": 18,
+        "bffClients": 20,
         "uiReferences": 63,
-        "mobileReferences": 20,
+        "mobileReferences": 22,
         "tests": 5
       },
       "dimensions": {
@@ -6314,6 +6314,8 @@
         "UbomiController→inline",
         "CitizenRemindersController→inline",
         "ProviderProfessionalSettingsHubController→inline",
+        "KhulumaBffController→inline",
+        "KhulumaMobileController→inline",
         "notification→yml-base-url"
       ],
       "uiPaths": [
@@ -6339,16 +6341,16 @@
         "ui/one-ui-shell/src/app/omnichannel/page.tsx"
       ],
       "mobilePaths": [
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/comms/EventDiscussionSection.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/HomeScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/NotificationsScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/crvs/UbomiCrvsScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/madi/DonorProfileScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/marketplace/HealthOsAppsScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/SettingsSection.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/services/khulumaCommsService.ts",
         "citizen-app:apps/mobile/citizen-app/src/services/ubomiService.test.ts",
-        "citizen-app:apps/mobile/citizen-app/src/services/ubomiService.ts",
-        "citizen-app:apps/mobile/citizen-app/src/stores/appStore.ts",
-        "provider-app:apps/mobile/provider-app/src/__tests__/navigation/ModeRouter.test.tsx"
+        "citizen-app:apps/mobile/citizen-app/src/services/ubomiService.ts"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -7077,7 +7079,7 @@
         "bffClients": 42,
         "uiReferences": 435,
         "mobileReferences": 100,
-        "tests": 16
+        "tests": 17
       },
       "dimensions": {
         "database": "real",
@@ -8109,8 +8111,8 @@
         "contractOperations": 8,
         "contractViolations": 0,
         "bffClients": 4,
-        "uiReferences": 74,
-        "mobileReferences": 14,
+        "uiReferences": 75,
+        "mobileReferences": 15,
         "tests": 1
       },
       "dimensions": {
@@ -8158,14 +8160,14 @@
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/__tests__/integration/BackendIntegration.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/telehealth/TelehealthFlow.test.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/screens/comms/CommsHubScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/telehealth/TelehealthListScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/telehealth/TelehealthSessionScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/services/telehealthService.ts",
         "provider-app:apps/mobile/provider-app/src/__tests__/messaging/Telemedicine.test.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/ClinicalToolsScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/ProviderDashboardScreen.tsx",
-        "provider-app:apps/mobile/provider-app/src/screens/provider/SystemStatusScreen.tsx",
-        "provider-app:apps/mobile/provider-app/src/screens/provider/TelemedicineScreen.tsx"
+        "provider-app:apps/mobile/provider-app/src/screens/provider/SystemStatusScreen.tsx"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -8370,7 +8372,7 @@
         "contractViolations": 0,
         "bffClients": 8,
         "uiReferences": 57,
-        "mobileReferences": 108,
+        "mobileReferences": 111,
         "tests": 1
       },
       "dimensions": {
@@ -8420,6 +8422,7 @@
         "ui/one-ui-shell/src/app/scheduling/noticeboard/page.tsx"
       ],
       "mobilePaths": [
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/comms/CommsService.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/integration/BackendIntegration.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/marketplace/MarketplaceFlow.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/messaging/MessagingFlow.test.tsx",
@@ -8428,8 +8431,7 @@
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/WalletSection.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/social/socialService.test.ts",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/telehealth/TelehealthFlow.test.tsx",
-        "citizen-app:apps/mobile/citizen-app/src/screens/discover/ProviderDiscoveryScreen.tsx",
-        "citizen-app:apps/mobile/citizen-app/src/screens/personal/AllergiesSection.tsx"
+        "citizen-app:apps/mobile/citizen-app/src/screens/comms/CommsHubScreen.tsx"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -8847,7 +8849,7 @@
         "contractViolations": 0,
         "bffClients": 1,
         "uiReferences": 7,
-        "mobileReferences": 108,
+        "mobileReferences": 111,
         "tests": 2
       },
       "dimensions": {
@@ -8877,6 +8879,7 @@
         "ui/one-ui-shell/src/lib/sidecar-retirement-ledger.ts"
       ],
       "mobilePaths": [
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/comms/CommsService.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/integration/BackendIntegration.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/marketplace/MarketplaceFlow.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/messaging/MessagingFlow.test.tsx",
@@ -8885,8 +8888,7 @@
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/WalletSection.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/social/socialService.test.ts",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/telehealth/TelehealthFlow.test.tsx",
-        "citizen-app:apps/mobile/citizen-app/src/screens/discover/ProviderDiscoveryScreen.tsx",
-        "citizen-app:apps/mobile/citizen-app/src/screens/personal/AllergiesSection.tsx"
+        "citizen-app:apps/mobile/citizen-app/src/screens/comms/CommsHubScreen.tsx"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -9469,7 +9471,7 @@
         "isTrustPlane": true
       },
       "counts": {
-        "migrations": 16,
+        "migrations": 17,
         "entities": 13,
         "repositories": 13,
         "serviceLayer": 12,
@@ -11232,6 +11234,125 @@
         }
       ],
       "maturity": "FIXTURE_BACKED"
+    },
+    {
+      "id": "khuluma-service",
+      "mavenModule": "khuluma-service",
+      "repoPath": "services/khuluma-service",
+      "domain": "communication-coordination",
+      "plane": "experience",
+      "productNames": [
+        "Khuluma",
+        "Impilo Comms Hub"
+      ],
+      "sovereign": false,
+      "sovereignGroup": null,
+      "registryStatus": {
+        "production": "baseline-assessed",
+        "implementation": "implemented-or-partial",
+        "frontendWiring": "partial",
+        "apiContract": "partial",
+        "authzAudit": "partial",
+        "authzAuditCode": "wired"
+      },
+      "authzReadiness": {
+        "status": "wired",
+        "checks": {
+          "trustContext": true,
+          "tenantScoping": true,
+          "securityBaseline": true,
+          "adminAudit": true,
+          "rateLimit": true,
+          "outbox": true,
+          "outboxCompatible": false,
+          "outboxSchema": null,
+          "securityConfig": true,
+          "configPackage": "zw.gov.mohcc.impilo.khuluma.config"
+        },
+        "missing": [],
+        "isTrustPlane": false
+      },
+      "counts": {
+        "migrations": 2,
+        "entities": 10,
+        "repositories": 10,
+        "serviceLayer": 5,
+        "controllers": 3,
+        "routes": 30,
+        "stubRoutes": 0,
+        "contractOperations": 0,
+        "contractViolations": 0,
+        "bffClients": 4,
+        "uiReferences": 13,
+        "mobileReferences": 7,
+        "tests": 9
+      },
+      "dimensions": {
+        "database": "real",
+        "entitiesRepos": "real",
+        "serviceLayer": "real",
+        "controllers": "real",
+        "contract": "real",
+        "bffWiring": "real",
+        "frontendUi": "real",
+        "mobileUi": "n/a",
+        "tests": "real",
+        "authzAudit": "real"
+      },
+      "productStatus": "real",
+      "contractFile": "khuluma.openapi.yaml",
+      "bffClients": [
+        "KhulumaServiceClient",
+        "KhulumaBffController→inline",
+        "KhulumaMobileController→inline",
+        "khuluma→yml-base-url"
+      ],
+      "uiPaths": [
+        "ui/one-ui-shell/src/app/facility/[id]/setup/page.tsx",
+        "ui/one-ui-shell/src/app/my/comms/page.tsx",
+        "ui/one-ui-shell/src/app/work/comms/page.tsx",
+        "ui/one-ui-shell/src/components/comms/CommsCallModal.tsx",
+        "ui/one-ui-shell/src/components/comms/CommsHub.test.tsx",
+        "ui/one-ui-shell/src/components/comms/CommsHub.tsx",
+        "ui/one-ui-shell/src/components/comms/EventDiscussionPanel.test.tsx",
+        "ui/one-ui-shell/src/components/comms/EventDiscussionPanel.tsx",
+        "ui/one-ui-shell/src/components/facility-mode/SetupWizard.tsx",
+        "ui/one-ui-shell/src/components/facility-mode/types.ts",
+        "ui/one-ui-shell/src/hooks/queries/useComms.ts",
+        "ui/one-ui-shell/src/hooks/useKhulumaRealtime.ts",
+        "ui/one-ui-shell/src/lib/routes.ts"
+      ],
+      "mobilePaths": [
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/comms/CommsHubScreen.test.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/comms/CommsService.test.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/comms/EventDiscussionSection.test.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/navigation/CitizenTabs.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/screens/comms/CommsHubScreen.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/screens/live/EventDiscussionSection.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/services/khulumaCommsService.ts"
+      ],
+      "mockStubHits": [],
+      "securityPlaceholderHits": [],
+      "stubRouteCount": 0,
+      "bffOrphanRoutes": 0,
+      "internalOnlyDocumented": false,
+      "frontendExpected": true,
+      "expectsPersistence": true,
+      "traceability": {
+        "q1_realBackendCapabilities": true,
+        "q2_exposedViaApi": true,
+        "q3_wiredViaBff": true,
+        "q4_visibleInUi": true,
+        "q5_visibleOnMobile": true,
+        "q6_fakePartialDisconnected": false,
+        "q7_backendNoUi": false,
+        "q8_uiNoBackend": false,
+        "q9_persistsToDb": true,
+        "q10_fixtureOnly": false
+      },
+      "phase6Complete": true,
+      "gaps": [],
+      "maturity": "REAL_CODE_NOT_PROBED"
     },
     {
       "id": "zibo-service",
@@ -17389,7 +17510,7 @@
     },
     {
       "path": "/communication",
-      "pageTitle": "Communication Hub",
+      "pageTitle": "Khuluma — Communication Hub",
       "zone": "queue",
       "pageFile": "ui/one-ui-shell/src/app/communication/page.tsx",
       "bffPaths": [
@@ -17454,7 +17575,7 @@
     },
     {
       "path": "/communication/secure-messaging",
-      "pageTitle": "Secure Messaging",
+      "pageTitle": "Khuluma — Secure Messaging",
       "zone": "queue",
       "pageFile": "ui/one-ui-shell/src/app/communication/secure-messaging/page.tsx",
       "bffPaths": [
@@ -17484,6 +17605,122 @@
         },
         {
           "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/work/comms",
+      "pageTitle": "Khuluma — Comms Hub",
+      "zone": "queue",
+      "pageFile": "ui/one-ui-shell/src/app/work/comms/page.tsx",
+      "bffPaths": [
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/khuluma"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/my/comms",
+      "pageTitle": "Khuluma — Messages",
+      "zone": "home",
+      "pageFile": "ui/one-ui-shell/src/app/my/comms/page.tsx",
+      "bffPaths": [
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/khuluma"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
           "pattern": "json-stringify-render"
         },
         {
@@ -40913,7 +41150,8 @@
       "bffPaths": [
         "/internal/v1/live",
         "/internal/v1/identity/linked-ids",
-        "/internal/v1/session/experience"
+        "/internal/v1/session/experience",
+        "/internal/v1/khuluma"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -50494,6 +50732,18 @@
     },
     {
       "app": "citizen-app",
+      "screen": "apps/mobile/citizen-app/src/screens/comms/CommsHubScreen.tsx",
+      "bffPaths": [],
+      "mockStubHits": [
+        {
+          "file": "apps/mobile/citizen-app/src/screens/comms/CommsHubScreen.tsx",
+          "pattern": "mock-data-var"
+        }
+      ],
+      "readsRealData": false
+    },
+    {
+      "app": "citizen-app",
       "screen": "apps/mobile/citizen-app/src/screens/crvs/UbomiCrvsScreen.tsx",
       "bffPaths": [],
       "mockStubHits": [],
@@ -50502,6 +50752,13 @@
     {
       "app": "citizen-app",
       "screen": "apps/mobile/citizen-app/src/screens/discover/ProviderDiscoveryScreen.tsx",
+      "bffPaths": [],
+      "mockStubHits": [],
+      "readsRealData": false
+    },
+    {
+      "app": "citizen-app",
+      "screen": "apps/mobile/citizen-app/src/screens/live/EventDiscussionSection.tsx",
       "bffPaths": [],
       "mockStubHits": [],
       "readsRealData": false

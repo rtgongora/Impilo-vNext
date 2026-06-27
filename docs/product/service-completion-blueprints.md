@@ -1,6 +1,6 @@
 # Service Completion Blueprints
 
-> Generated: 2026-06-27T13:14:25.927Z
+> Generated: 2026-06-27T13:47:09.777Z
 > End-to-end product expectation per service for mature vNext.
 
 Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and tests required.
@@ -2260,6 +2260,35 @@ Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and
 
 ### Main workflows
 - List/search Vashandi records
+- Create and update governed transactions with TSHEPO authz
+- Detail view with audit trail and status transitions where applicable
+
+### Minimum viable complete UI
+- List + detail routes backed by real BFF hooks
+- Empty/loading/error states with honest maturity labels
+
+### Production-grade complete UI
+- Full CRUD where domain permits; search/filter; role-based visibility
+- Mobile parity where user-facing
+- Cross-service handoffs documented in core-transaction journey maps
+
+### Tests required
+- Backend: `*IT.java` or controller tests for primary workflows
+- BFF: proxy/controller test for each exposed route family
+- UI: vitest hook/page test + Playwright e2e for critical path
+
+## khuluma-service
+
+**Product names:** Khuluma, Impilo Comms Hub
+**Plane/domain:** experience / communication-coordination
+**Current status:** real
+
+### Primary personas
+- Operators and domain users for communication-coordination plane capabilities
+- Standard governed service consumer
+
+### Main workflows
+- List/search Khuluma records
 - Create and update governed transactions with TSHEPO authz
 - Detail view with audit trail and status transitions where applicable
 

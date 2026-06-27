@@ -1,22 +1,22 @@
 # Full Product Truth Recovery Report
 
-> Generated: 2026-06-27T13:14:25.927Z
-> Branch: `claude/staging-ux-orchestration-remediation-Yypyl`
+> Generated: 2026-06-27T13:47:09.777Z
+> Branch: `prep/phase4-khuluma`
 
 ## Executive summary
 
 | Metric | Count |
 |--------|------:|
-| Total services audited | 94 |
-| Backend services | 94 |
+| Total services audited | 95 |
+| Backend services | 95 |
 | Shared libraries | 12 |
-| Frontend surfaces (routes) | 670 |
-| Mobile screens | 179 |
-| BFF route handlers | 2372 |
-| OpenAPI contracts | 103 |
-| Services with DB persistence | 94 |
-| **Phase 6 complete (user-facing + documented internal)** | **89** |
-| User-facing services with `real` code present (file-existence axis) | 68 / 69 |
+| Frontend surfaces (routes) | 672 |
+| Mobile screens | 181 |
+| BFF route handlers | 2418 |
+| OpenAPI contracts | 104 |
+| Services with DB persistence | 95 |
+| **Phase 6 complete (user-facing + documented internal)** | **90** |
+| User-facing services with `real` code present (file-existence axis) | 69 / 70 |
 | — of those, **runtime-proven** (REAL_PROVEN) | **0** |
 | Services internal-only (documented) | 25 |
 | Services partially complete | 1 |
@@ -37,7 +37,7 @@
 | Maturity | Count |
 |----------|------:|
 | INTERNAL_ONLY | 25 |
-| REAL_CODE_NOT_PROBED | 64 |
+| REAL_CODE_NOT_PROBED | 65 |
 | FIXTURE_BACKED | 4 |
 | PARTIAL | 1 |
 

@@ -1,15 +1,15 @@
 # Product Truth — Service Inventory
 
-> Generated: 2026-06-27T13:14:25.927Z
+> Generated: 2026-06-27T13:47:09.777Z
 > Scanner: `scripts/completeness/generate-product-truth.mjs`
-> Total services: **94** | Libraries: **12** | UI workspaces: **24**
+> Total services: **95** | Libraries: **12** | UI workspaces: **24**
 
 ## Summary by product status
 
 | Status | Count |
 |--------|------:|
 | internal-only | 25 |
-| real | 68 |
+| real | 69 |
 | mostly-real | 1 |
 
 ## Service inventory
@@ -109,6 +109,7 @@
 | workflow-service | integration | real | real | real | real | real | n/a | real | real |
 | workforce-governance-service | enterprise | real | real | real | real | real | n/a | real | real |
 | vashandi-workforce-service | enterprise | real | real | real | real | real | n/a | real | real |
+| khuluma-service | experience | real | real | real | real | real | n/a | real | real |
 | zibo-service | registry | real | real | real | real | real | n/a | real | real |
 
 ## Libraries
