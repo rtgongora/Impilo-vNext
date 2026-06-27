@@ -204,7 +204,6 @@ public class OutboxPublisher {
                  "QUEUE_ITEM_CALLED",
                  "ENCOUNTER_STARTED",
                  "ENCOUNTER_COMPLETED",
-                 "TELECONSULT_COMPLETED",
                  "DISCHARGE_COMPLETED",
                  "TASK_CREATED",
                  "TASK_COMPLETED",

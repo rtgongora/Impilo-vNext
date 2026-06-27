@@ -657,66 +657,6 @@ public class CostaEventConsumer {
     }
 
     /**
-     * Teleconsult → value wiring (journey §9). PCT publishes {@code telemedicine.session.*}
-     * lifecycle events to {@code clinical.teleconsult.lifecycle} as an envelope
-     * {@code {eventType, aggregateId, tenantId, occurredAt, payload}}. On the
-     * {@code telemedicine.session.completed} event we create exactly one teleconsult charge.
-     * PCT owns the encounter/referral; COSTA owns the charge (no SoR duplication).
-     */
-    @KafkaListener(topics = "clinical.teleconsult.lifecycle", groupId = "costa-costing-engine")
-    @Transactional
-    public void onTeleconsultLifecycle(String message, Acknowledgment ack) {
-        try {
-            JsonNode envelope = objectMapper.readTree(message);
-            String eventType = text(envelope, "eventType");
-            if (!"telemedicine.session.completed".equals(eventType)) {
-                ack.acknowledge();
-                return;  // only the completed stage is billable
-            }
-
-            JsonNode payload = envelope.has("payload") ? envelope.get("payload") : envelope;
-            // Idempotency anchor MUST be the stable shared key across both lifecycle events
-            // (referral-complete and session-end) so the same teleconsult is processed once,
-            // whichever event arrives first (C1). The envelope aggregateId is referralId for the
-            // referral event but sessionId for the session event, so it cannot be the anchor —
-            // resolve referralId → id → encounterId from the payload instead.
-            String idemId = teleconsultAnchor(payload);
-            if (isProcessed(idemId, "TELECONSULT")) { ack.acknowledge(); return; }
-
-            String tenantTxt = text(envelope, "tenantId");
-            if (tenantTxt == null) {
-                tenantTxt = text(payload, "tenantId");
-            }
-            if (tenantTxt == null) {
-                log.warn("teleconsult.completed missing tenantId; skipping");
-                ack.acknowledge();
-                return;
-            }
-            UUID tenantId = UUID.fromString(tenantTxt);
-
-            chargeRecordService.ingestTeleconsultCompleted(payload, tenantId);
-
-            var tm = objectMapper.createObjectNode();
-            tm.put("referral_id", idemId);
-            tm.put("specialty", text(payload, "specialty"));
-            costEventCaptureService.tryCaptureClinical(
-                    "TELECONSULT_COMPLETED",
-                    "TELECONSULT",
-                    tenantId,
-                    text(payload, "patientCpid"),
-                    text(payload, "encounterId"),
-                    null,
-                    tm);
-
-            markProcessed(idemId, "TELECONSULT");
-            ack.acknowledge();
-        } catch (Exception e) {
-            log.error("Failed to process clinical.teleconsult.lifecycle", e);
-            ack.acknowledge();
-        }
-    }
-
-    /**
      * Blood unit issued/transfused → value signal (journey §9, previously Partial).
      *
      * <p>MADI publishes {@code BLOOD_ISSUED} / {@code TRANSFUSION_COMPLETED} to
@@ -795,20 +735,6 @@ public class CostaEventConsumer {
 
     private String text(JsonNode node, String field) {
         return node.has(field) && !node.get(field).isNull() ? node.get(field).asText() : null;
-    }
-
-    /**
-     * Stable shared teleconsult anchor (C1). The same teleconsult yields two lifecycle events:
-     * referral-complete (payload {@code id} = referralId) and session-end (payload {@code id} =
-     * sessionId, plus {@code referralId}). The one key both agree on is the referralId — prefer
-     * the explicit {@code referralId} field, then {@code id} (the referralId on the referral
-     * event), then {@code encounterId} as a last resort.
-     */
-    private String teleconsultAnchor(JsonNode payload) {
-        String anchor = text(payload, "referralId");
-        if (anchor == null) anchor = text(payload, "id");
-        if (anchor == null) anchor = text(payload, "encounterId");
-        return anchor;
     }
 
     private boolean isProcessed(String eventId, String source) {
