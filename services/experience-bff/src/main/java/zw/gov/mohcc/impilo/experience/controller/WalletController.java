@@ -8,36 +8,21 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.MusheWalletServiceClient;
-import zw.gov.mohcc.impilo.experience.config.BffWalletProperties;
 
 import java.time.OffsetDateTime;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Wallet &amp; Payment endpoints — proxies to Mushe Wallet service.
  *
- * <p>When the upstream Mushe Wallet service is reachable, requests are
- * forwarded and the upstream response is returned unchanged.</p>
- *
- * <p>When the upstream call fails (exception or empty response), behaviour is
- * gated by {@link BffWalletProperties#isAllowLocalFallback()}
- * ({@code impilo.wallet.allow-local-fallback}, default {@code false}):</p>
- * <ul>
- *   <li>{@code false} (production-safe) — return {@code 503 Service Unavailable}
- *       with stable error code {@code WALLET_UPSTREAM_UNAVAILABLE}; the BFF
- *       must not synthesise wallet state.</li>
- *   <li>{@code true} (dev/test) — fall back to the in-memory shape and emit a
- *       {@code WARN}-level {@code WALLET FALLBACK ACTIVATED} log line so the
- *       activation is auditable.</li>
- * </ul>
- *
- * <p>Doctrine: {@code docs/doctrine/mushex-gateway-neutrality.md},
- * "Wallet local-fallback principle". Audit gaps: {@code G-5} (the
- * {@code /me} and {@code /pay} flows) and {@code G-5.1} (the
- * {@code /me/balance}, {@code /me/transactions}, and
- * {@code /me/funding-sources} read flows, gated identically as of
- * Stage&nbsp;3.1.1).</p>
+ * <p>When the upstream Mushe Wallet service is reachable, requests are forwarded and the upstream
+ * response is returned unchanged. When the upstream call fails (exception or empty response), the
+ * BFF <strong>fails clean</strong> — it returns {@code 503 Service Unavailable} with the stable
+ * error code {@code WALLET_UPSTREAM_UNAVAILABLE} (and {@code 501} for payment methods not wired to
+ * a production rail). It NEVER fabricates wallet state (balances, transactions, funding sources)
+ * from BFF memory: a stateless composition layer must not be a source of truth for financial data.
+ * (The former {@code impilo.wallet.allow-local-fallback} in-memory fabrication was removed —
+ * mushe-wallet-service is the sole owner; the BFF only proxies.)</p>
  *
  * <p>Covers: wallet lifecycle, balance, payments, funding sources, merchant pay.</p>
  */
@@ -51,16 +36,9 @@ public class WalletController {
 
     private static final Logger log = LoggerFactory.getLogger(WalletController.class);
     private final MusheWalletServiceClient musheClient;
-    private final BffWalletProperties walletProperties;
 
-    // Local fallback state (only consulted when allow-local-fallback=true)
-    private static final Map<String, Map<String, Object>> WALLETS = new ConcurrentHashMap<>();
-    private static final List<Map<String, Object>> TRANSACTIONS = Collections.synchronizedList(new ArrayList<>());
-
-    public WalletController(MusheWalletServiceClient musheClient,
-                            BffWalletProperties walletProperties) {
+    public WalletController(MusheWalletServiceClient musheClient) {
         this.musheClient = musheClient;
-        this.walletProperties = walletProperties;
     }
 
     // ── Get or auto-create wallet for current user ────────────────────
@@ -78,36 +56,10 @@ public class WalletController {
             return ok(lookup.wallet(), requestId, correlationId);
         }
 
-        if (!walletProperties.isAllowLocalFallback()) {
-            return walletUpstreamUnavailable("getMyWallet", lookup.failureReason(), requestId, correlationId);
-        }
-        logFallbackActivation("getMyWallet", lookup.failureReason(), requestId, correlationId);
-
-        // Fallback: get or create local wallet (only when allow-local-fallback=true)
-        Map<String, Object> wallet = WALLETS.computeIfAbsent(ownerId, id -> {
-            Map<String, Object> w = new LinkedHashMap<>();
-            w.put("id", "wal-" + UUID.randomUUID().toString().substring(0, 8));
-            w.put("ownerType", "PERSON");
-            w.put("ownerRef", id);
-            w.put("displayName", "My Health Wallet");
-            w.put("currency", "USD");
-            w.put("balance", 250.00);
-            w.put("availableBalance", 250.00);
-            w.put("holdBalance", 0.00);
-            w.put("status", "ACTIVE");
-            w.put("createdAt", OffsetDateTime.now().toString());
-            w.put("fundingSources", List.of(
-                    Map.of("id", "fs-1", "sourceType", "MOBILE_MONEY", "provider", "EcoCash",
-                            "accountRef", "0771****567", "status", "VERIFIED"),
-                    Map.of("id", "fs-2", "sourceType", "MOBILE_MONEY", "provider", "InnBucks",
-                            "accountRef", "0782****890", "status", "VERIFIED"),
-                    Map.of("id", "fs-3", "sourceType", "BANK_ACCOUNT", "provider", "CBZ Bank",
-                            "accountRef", "****4521", "status", "VERIFIED")
-            ));
-            return w;
-        });
-
-        return ok(Map.of("id", wallet.get("id"), "type", "wallet", "attributes", wallet), requestId, correlationId);
+        // A stateless BFF must never fabricate wallet/financial state: when mushe-wallet-service is
+        // unavailable, fail clean (the caller retries / shows a degraded state) rather than inventing
+        // a balance. (Former allow-local-fallback in-memory wallet removed — see class javadoc.)
+        return walletUpstreamUnavailable("getMyWallet", lookup.failureReason(), requestId, correlationId);
     }
 
     // ── Balance ───────────────────────────────────────────────────────
@@ -137,23 +89,8 @@ public class WalletController {
             failureReason = "upstream wallet missing id";
         }
 
-        if (!walletProperties.isAllowLocalFallback()) {
-            return walletUpstreamUnavailable("getBalance", failureReason, requestId, correlationId);
-        }
-        logFallbackActivation("getBalance", failureReason, requestId, correlationId);
-
-        // Local fallback (only when allow-local-fallback=true) — preserves
-        // the pre-Stage-3.1.1 in-memory response shape exactly.
-        Map<String, Object> wallet = WALLETS.get(ownerId);
-        double balance = wallet != null ? ((Number) wallet.getOrDefault("balance", 0)).doubleValue() : 0;
-        double available = wallet != null ? ((Number) wallet.getOrDefault("availableBalance", 0)).doubleValue() : 0;
-
-        return ok(Map.of(
-                "balance", balance,
-                "availableBalance", available,
-                "currency", "USD",
-                "lastUpdated", OffsetDateTime.now().toString()
-        ), requestId, correlationId);
+        // Never fabricate a balance from BFF memory — fail clean when the sovereign wallet is unavailable.
+        return walletUpstreamUnavailable("getBalance", failureReason, requestId, correlationId);
     }
 
     // ── Pay (universal payment endpoint) ──────────────────────────────
@@ -202,58 +139,17 @@ public class WalletController {
                 upstreamFailureReason = "upstream exception: " + e.getClass().getSimpleName();
             }
 
-            if (!walletProperties.isAllowLocalFallback()) {
-                return walletUpstreamUnavailable("pay[MUSHE_WALLET]", upstreamFailureReason,
-                        requestId, correlationId);
-            }
-            logFallbackActivation("pay[MUSHE_WALLET]", upstreamFailureReason, requestId, correlationId);
-
-            // Local wallet fallback (only when allow-local-fallback=true)
-            String ownerId = actorId != null ? actorId : "anonymous";
-            Map<String, Object> wallet = WALLETS.get(ownerId);
-            if (wallet != null) {
-                double bal = ((Number) wallet.getOrDefault("balance", 0)).doubleValue();
-                if (bal < amount) {
-                    return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).body(Map.of(
-                            "error", Map.of("code", "INSUFFICIENT_FUNDS",
-                                    "message", "Wallet balance ($" + String.format("%.2f", bal) + ") is less than payment amount ($" + String.format("%.2f", amount) + ")"),
-                            "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
-                }
-                wallet.put("balance", bal - amount);
-                wallet.put("availableBalance", bal - amount);
-            }
+            // Never debit/fabricate wallet state from BFF memory — fail clean when mushe-wallet is down.
+            return walletUpstreamUnavailable("pay[MUSHE_WALLET]", upstreamFailureReason,
+                    requestId, correlationId);
         }
 
-        // Non-wallet methods are currently not wired to production payment rails.
-        // Fail closed instead of synthesizing successful financial transactions.
-        if (!"MUSHE_WALLET".equals(method)) {
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(Map.of(
-                    "error", Map.of(
-                            "code", "PAYMENT_METHOD_UNAVAILABLE",
-                            "message", "Requested payment method is not yet wired to a production payment rail"),
-                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
-        }
-
-        // Create transaction record
-        String txnId = "txn-" + UUID.randomUUID().toString().substring(0, 8);
-        Map<String, Object> txn = new LinkedHashMap<>();
-        txn.put("id", txnId);
-        txn.put("method", method);
-        txn.put("amount", amount);
-        txn.put("currency", currency != null ? currency : "USD");
-        txn.put("reference", reference);
-        txn.put("description", description);
-        txn.put("merchantRef", merchantRef);
-        txn.put("status", "COMPLETED");
-        txn.put("createdAt", OffsetDateTime.now().toString());
-        txn.put("actorId", actorId);
-        TRANSACTIONS.add(txn);
-
-        Map<String, Object> attrs = new LinkedHashMap<>(txn);
-        attrs.put("receiptNumber", "RCP-" + txnId.substring(4).toUpperCase());
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
-                "data", Map.of("id", txnId, "type", "payment", "attributes", attrs),
+        // Non-MUSHE_WALLET methods are not wired to a production payment rail — fail closed instead
+        // of synthesizing a successful financial transaction.
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(Map.of(
+                "error", Map.of(
+                        "code", "PAYMENT_METHOD_UNAVAILABLE",
+                        "message", "Requested payment method is not yet wired to a production payment rail"),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
@@ -285,18 +181,8 @@ public class WalletController {
             failureReason = "upstream wallet missing id";
         }
 
-        if (!walletProperties.isAllowLocalFallback()) {
-            return walletUpstreamUnavailable("getTransactions", failureReason, requestId, correlationId);
-        }
-        logFallbackActivation("getTransactions", failureReason, requestId, correlationId);
-
-        // Local fallback (only when allow-local-fallback=true) — preserves
-        // the pre-Stage-3.1.1 in-memory response shape exactly.
-        List<Map<String, Object>> userTxns = TRANSACTIONS.stream()
-                .filter(t -> ownerId.equals(t.get("actorId")))
-                .toList();
-
-        return ok(userTxns, requestId, correlationId);
+        // Never serve a fabricated transaction history from BFF memory — fail clean when mushe-wallet is down.
+        return walletUpstreamUnavailable("getTransactions", failureReason, requestId, correlationId);
     }
 
     // ── Funding sources ───────────────────────────────────────────────
@@ -326,16 +212,8 @@ public class WalletController {
             failureReason = "upstream wallet missing id";
         }
 
-        if (!walletProperties.isAllowLocalFallback()) {
-            return walletUpstreamUnavailable("getFundingSources", failureReason, requestId, correlationId);
-        }
-        logFallbackActivation("getFundingSources", failureReason, requestId, correlationId);
-
-        // Local fallback (only when allow-local-fallback=true) — preserves
-        // the pre-Stage-3.1.1 in-memory response shape exactly.
-        Map<String, Object> wallet = WALLETS.get(ownerId);
-        Object sources = wallet != null ? wallet.getOrDefault("fundingSources", List.of()) : List.of();
-        return ok(sources, requestId, correlationId);
+        // Never serve fabricated funding sources from BFF memory — fail clean when mushe-wallet is down.
+        return walletUpstreamUnavailable("getFundingSources", failureReason, requestId, correlationId);
     }
 
     // ── Payment methods (static reference) ────────────────────────────
@@ -379,8 +257,7 @@ public class WalletController {
     /**
      * Resolves the upstream Mushe wallet for the given owner. Captures both
      * "upstream threw" and "upstream returned null" as failure modes so the
-     * caller can route consistently through {@link #walletUpstreamUnavailable}
-     * or {@link #logFallbackActivation}.
+     * caller can route consistently through {@link #walletUpstreamUnavailable}.
      *
      * <p>Shared between {@code /me}, {@code /me/balance},
      * {@code /me/transactions}, and {@code /me/funding-sources} to avoid
@@ -437,17 +314,17 @@ public class WalletController {
 
     /**
      * Doctrine-correct 503 response when the upstream Mushe Wallet service is
-     * unavailable and {@code impilo.wallet.allow-local-fallback} is {@code false}.
-     * Returns the stable error code {@link #UPSTREAM_UNAVAILABLE_CODE} so
-     * callers can distinguish "wallet service is down" from "this owner has no
-     * wallet" without parsing free-text messages.
+     * unavailable. Returns the stable error code {@link #UPSTREAM_UNAVAILABLE_CODE}
+     * so callers can distinguish "wallet service is down" from "this owner has no
+     * wallet" without parsing free-text messages. The BFF never substitutes
+     * fabricated financial state for the unavailable sovereign — it fails clean.
      */
     private ResponseEntity<Map<String, Object>> walletUpstreamUnavailable(String operation,
                                                                           String reason,
                                                                           String requestId,
                                                                           String correlationId) {
         log.warn("WALLET UPSTREAM UNAVAILABLE — operation={}, reason={}, requestId={}, correlationId={} — "
-                        + "returning 503 because impilo.wallet.allow-local-fallback=false",
+                        + "returning 503 (BFF never fabricates wallet state)",
                 operation, reason, requestId, correlationId);
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of(
                 "error", Map.of(
@@ -463,23 +340,6 @@ public class WalletController {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                 "error", Map.of("code", code, "message", message),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
-    }
-
-    /**
-     * Audit-grade WARN log emitted every time the in-memory wallet fallback is
-     * activated. The stable {@code WALLET FALLBACK ACTIVATED} marker is the
-     * grep handle for log-search and SIEM rules — if this line appears in a
-     * non-development environment, the deployment is doctrine-violating and
-     * {@code impilo.wallet.allow-local-fallback} should be set back to
-     * {@code false}.
-     */
-    private void logFallbackActivation(String operation,
-                                       String reason,
-                                       String requestId,
-                                       String correlationId) {
-        log.warn("WALLET FALLBACK ACTIVATED — operation={}, reason={}, requestId={}, correlationId={} — "
-                        + "in-memory wallet state served because impilo.wallet.allow-local-fallback=true",
-                operation, reason, requestId, correlationId);
     }
 
     private static String str(Map<String, Object> map, String... keys) {

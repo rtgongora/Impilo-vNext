@@ -89,13 +89,6 @@ impilo:
       poll-interval-ms: 30000
     # Merge scheduling-service slot grid with Tuso bookings for /appointments/availability
     use-remote-slots: ${SCHEDULING_USE_REMOTE_SLOTS:true}
-  wallet:
-    # MusheX gateway-neutrality doctrine, "Wallet local-fallback principle" (audit gap G-5).
-    # false (default, production-safe) — when the upstream Mushe Wallet service is unavailable,
-    # return 503 WALLET_UPSTREAM_UNAVAILABLE rather than synthesising wallet balances/transactions.
-    # true (dev/test only) — fall back to the in-memory wallet shape and log a WARN
-    # "WALLET FALLBACK ACTIVATED" line for every activation so the event is auditable.
-    allow-local-fallback: ${IMPILO_WALLET_ALLOW_LOCAL_FALLBACK:false}
   bff:
     citizen-longtail:
       # stub = deterministic BFF behaviour; live = VITO patient-share + credential public verify

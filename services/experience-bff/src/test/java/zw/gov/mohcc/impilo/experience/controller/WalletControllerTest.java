@@ -9,7 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.experience.client.MusheWalletServiceClient;
-import zw.gov.mohcc.impilo.experience.config.BffWalletProperties;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
 import java.util.List;
@@ -23,9 +22,14 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Verifies the doctrine-correct wallet local-fallback gate
+ * Verifies the doctrine-correct wallet fail-clean contract
  * (audit gaps <strong>G-5</strong> and <strong>G-5.1</strong>;
- * doctrine: MusheX gateway-neutrality, <em>Wallet local-fallback principle</em>).
+ * doctrine: MusheX gateway-neutrality, <em>BFF is not a source of truth for
+ * financial state</em>).
+ *
+ * <p>The stateless BFF NEVER fabricates wallet state. The former
+ * {@code impilo.wallet.allow-local-fallback} in-memory fabrication has been
+ * removed: mushe-wallet-service is the sole owner and the BFF only proxies.</p>
  *
  * <p>Coverage:</p>
  * <ul>
@@ -33,15 +37,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *       {@code GET /me}, {@code GET /me/balance}, {@code GET /me/transactions},
  *       {@code GET /me/funding-sources}, and the {@code POST /pay}
  *       {@code MUSHE_WALLET} branch).</li>
- *   <li>Upstream unavailable + {@code allow-local-fallback=false} → 503 with
- *       stable code {@code WALLET_UPSTREAM_UNAVAILABLE} on all five flows.</li>
- *   <li>Upstream unavailable + {@code allow-local-fallback=true} → existing
- *       in-memory fallback shape (preserves dev/test behaviour) on all five
- *       flows.</li>
- *   <li>Non-wallet payment methods (e.g. {@code CASH}) are unaffected by the
- *       gate (the gate only fires when {@code MusheWalletServiceClient} fails).</li>
+ *   <li>Upstream unavailable (exception or empty response) → 503 with stable
+ *       code {@code WALLET_UPSTREAM_UNAVAILABLE} on all five flows — never a
+ *       fabricated balance/transaction/funding-source.</li>
+ *   <li>Non-wallet payment methods (e.g. {@code CASH}) fail closed with
+ *       {@code 501} rather than synthesizing a successful transaction.</li>
  *   <li>Upstream returning {@code null} (wallet not found) is treated as a
- *       failure mode for the gate, matching the existing behavioural contract.</li>
+ *       failure mode, matching the fail-clean contract.</li>
  * </ul>
  */
 class WalletControllerTest {
@@ -55,7 +57,7 @@ class WalletControllerTest {
     @Test
     void getMyWallet_upstreamSucceeds_returnsUpstreamPayloadUnchanged() {
         StubMusheWalletClient stub = StubMusheWalletClient.returningWallet("00000000-0000-0000-0000-000000000001");
-        WalletController controller = new WalletController(stub, fallbackDisabled());
+        WalletController controller = new WalletController(stub);
 
         ResponseEntity<Map<String, Object>> response = controller.getMyWallet(REQ, CORR, ACTOR);
 
@@ -70,7 +72,7 @@ class WalletControllerTest {
     @Test
     void getMyWallet_upstreamThrows_fallbackDisabled_returns503WithStableCode() {
         StubMusheWalletClient stub = StubMusheWalletClient.throwing();
-        WalletController controller = new WalletController(stub, fallbackDisabled());
+        WalletController controller = new WalletController(stub);
 
         ResponseEntity<Map<String, Object>> response = controller.getMyWallet(REQ, CORR, ACTOR);
 
@@ -81,30 +83,12 @@ class WalletControllerTest {
     @Test
     void getMyWallet_upstreamReturnsNull_fallbackDisabled_returns503WithStableCode() {
         StubMusheWalletClient stub = StubMusheWalletClient.returningNull();
-        WalletController controller = new WalletController(stub, fallbackDisabled());
+        WalletController controller = new WalletController(stub);
 
         ResponseEntity<Map<String, Object>> response = controller.getMyWallet(REQ, CORR, ACTOR);
 
         assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode());
         assertWalletUpstreamUnavailable(response.getBody());
-    }
-
-    @Test
-    void getMyWallet_upstreamThrows_fallbackEnabled_returnsLocalShape() {
-        StubMusheWalletClient stub = StubMusheWalletClient.throwing();
-        WalletController controller = new WalletController(stub, fallbackEnabled());
-
-        ResponseEntity<Map<String, Object>> response = controller.getMyWallet(REQ, CORR, "fallback-actor-1");
-
-        assertEquals(200, response.getStatusCode().value());
-        Map<String, Object> body = response.getBody();
-        assertNotNull(body);
-        // Local fallback shape: { data: { id, type: "wallet", attributes: { … } }, meta: { … } }
-        Map<?, ?> data = assertInstanceOf(Map.class, body.get("data"));
-        assertEquals("wallet", data.get("type"));
-        Map<?, ?> attrs = assertInstanceOf(Map.class, data.get("attributes"));
-        assertEquals("fallback-actor-1", attrs.get("ownerRef"));
-        assertEquals("USD", attrs.get("currency"));
     }
 
     // ── POST /pay (MUSHE_WALLET branch) ────────────────────────────────
@@ -113,7 +97,7 @@ class WalletControllerTest {
     void pay_musheWallet_upstreamSucceeds_returnsCreated() {
         StubMusheWalletClient stub = StubMusheWalletClient.returningWallet("00000000-0000-0000-0000-000000000002")
                 .withDebitResponse("debit-001");
-        WalletController controller = new WalletController(stub, fallbackDisabled());
+        WalletController controller = new WalletController(stub);
 
         ResponseEntity<Map<String, Object>> response = controller.pay(
                 REQ, CORR, ACTOR, null,
@@ -129,7 +113,7 @@ class WalletControllerTest {
     @Test
     void pay_musheWallet_upstreamThrows_fallbackDisabled_returns503() {
         StubMusheWalletClient stub = StubMusheWalletClient.throwing();
-        WalletController controller = new WalletController(stub, fallbackDisabled());
+        WalletController controller = new WalletController(stub);
 
         ResponseEntity<Map<String, Object>> response = controller.pay(
                 REQ, CORR, ACTOR, null,
@@ -142,7 +126,7 @@ class WalletControllerTest {
     @Test
     void pay_musheWallet_upstreamReturnsNull_fallbackDisabled_returns503() {
         StubMusheWalletClient stub = StubMusheWalletClient.returningNull();
-        WalletController controller = new WalletController(stub, fallbackDisabled());
+        WalletController controller = new WalletController(stub);
 
         ResponseEntity<Map<String, Object>> response = controller.pay(
                 REQ, CORR, ACTOR, null,
@@ -150,25 +134,6 @@ class WalletControllerTest {
 
         assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode());
         assertWalletUpstreamUnavailable(response.getBody());
-    }
-
-    @Test
-    void pay_musheWallet_upstreamThrows_fallbackEnabled_returnsCreatedReceipt() {
-        StubMusheWalletClient stub = StubMusheWalletClient.throwing();
-        WalletController controller = new WalletController(stub, fallbackEnabled());
-
-        ResponseEntity<Map<String, Object>> response = controller.pay(
-                REQ, CORR, "fallback-pay-1", null,
-                Map.of("method", "MUSHE_WALLET", "amount", 5.0, "reference", "INV-FB"));
-
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        Map<String, Object> body = response.getBody();
-        assertNotNull(body);
-        Map<?, ?> data = assertInstanceOf(Map.class, body.get("data"));
-        assertEquals("payment", data.get("type"));
-        Map<?, ?> attrs = assertInstanceOf(Map.class, data.get("attributes"));
-        assertEquals("MUSHE_WALLET", attrs.get("method"));
-        assertEquals("INV-FB", attrs.get("reference"));
     }
 
     // ── GET /me/balance (G-5.1) ───────────────────────────────────────
@@ -184,7 +149,7 @@ class WalletControllerTest {
         StubMusheWalletClient stub = StubMusheWalletClient
                 .returningWallet("00000000-0000-0000-0000-000000000010")
                 .withBalance(balanceNode);
-        WalletController controller = new WalletController(stub, fallbackDisabled());
+        WalletController controller = new WalletController(stub);
 
         ResponseEntity<Map<String, Object>> response = controller.getBalance(REQ, CORR, ACTOR);
 
@@ -200,30 +165,12 @@ class WalletControllerTest {
     @Test
     void getBalance_upstreamThrows_fallbackDisabled_returns503WithStableCode() {
         StubMusheWalletClient stub = StubMusheWalletClient.throwing();
-        WalletController controller = new WalletController(stub, fallbackDisabled());
+        WalletController controller = new WalletController(stub);
 
         ResponseEntity<Map<String, Object>> response = controller.getBalance(REQ, CORR, ACTOR);
 
         assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode());
         assertWalletUpstreamUnavailable(response.getBody());
-    }
-
-    @Test
-    void getBalance_upstreamThrows_fallbackEnabled_returnsLocalShape() {
-        StubMusheWalletClient stub = StubMusheWalletClient.throwing();
-        WalletController controller = new WalletController(stub, fallbackEnabled());
-
-        ResponseEntity<Map<String, Object>> response = controller.getBalance(REQ, CORR, "fallback-balance-1");
-
-        assertEquals(200, response.getStatusCode().value());
-        Map<String, Object> body = response.getBody();
-        assertNotNull(body);
-        // Pre-Stage-3.1.1 local shape: { data: { balance, availableBalance, currency, lastUpdated }, meta }
-        Map<?, ?> data = assertInstanceOf(Map.class, body.get("data"));
-        assertEquals("USD", data.get("currency"));
-        assertNotNull(data.get("balance"));
-        assertNotNull(data.get("availableBalance"));
-        assertNotNull(data.get("lastUpdated"));
     }
 
     // ── GET /me/transactions (G-5.1) ──────────────────────────────────
@@ -241,7 +188,7 @@ class WalletControllerTest {
         StubMusheWalletClient stub = StubMusheWalletClient
                 .returningWallet("00000000-0000-0000-0000-000000000011")
                 .withTransactions(paginated);
-        WalletController controller = new WalletController(stub, fallbackDisabled());
+        WalletController controller = new WalletController(stub);
 
         ResponseEntity<Map<String, Object>> response = controller.getTransactions(REQ, CORR, ACTOR);
 
@@ -256,29 +203,12 @@ class WalletControllerTest {
     @Test
     void getTransactions_upstreamThrows_fallbackDisabled_returns503WithStableCode() {
         StubMusheWalletClient stub = StubMusheWalletClient.throwing();
-        WalletController controller = new WalletController(stub, fallbackDisabled());
+        WalletController controller = new WalletController(stub);
 
         ResponseEntity<Map<String, Object>> response = controller.getTransactions(REQ, CORR, ACTOR);
 
         assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode());
         assertWalletUpstreamUnavailable(response.getBody());
-    }
-
-    @Test
-    void getTransactions_upstreamThrows_fallbackEnabled_returnsLocalShape() {
-        StubMusheWalletClient stub = StubMusheWalletClient.throwing();
-        WalletController controller = new WalletController(stub, fallbackEnabled());
-
-        ResponseEntity<Map<String, Object>> response = controller.getTransactions(
-                REQ, CORR, "fallback-txn-1");
-
-        assertEquals(200, response.getStatusCode().value());
-        Map<String, Object> body = response.getBody();
-        assertNotNull(body);
-        // Pre-Stage-3.1.1 local shape: { data: List<Map>, meta }. With a
-        // never-seen actor the in-memory TRANSACTIONS list is empty.
-        List<?> data = assertInstanceOf(List.class, body.get("data"));
-        assertTrue(data.isEmpty(), "local transaction list must be empty for a fresh actor");
     }
 
     // ── GET /me/funding-sources (G-5.1) ───────────────────────────────
@@ -295,7 +225,7 @@ class WalletControllerTest {
         StubMusheWalletClient stub = StubMusheWalletClient
                 .returningWallet("00000000-0000-0000-0000-000000000012")
                 .withFundingSources(sourcesNode);
-        WalletController controller = new WalletController(stub, fallbackDisabled());
+        WalletController controller = new WalletController(stub);
 
         ResponseEntity<Map<String, Object>> response = controller.getFundingSources(REQ, CORR, ACTOR);
 
@@ -310,7 +240,7 @@ class WalletControllerTest {
     @Test
     void getFundingSources_upstreamThrows_fallbackDisabled_returns503WithStableCode() {
         StubMusheWalletClient stub = StubMusheWalletClient.throwing();
-        WalletController controller = new WalletController(stub, fallbackDisabled());
+        WalletController controller = new WalletController(stub);
 
         ResponseEntity<Map<String, Object>> response = controller.getFundingSources(REQ, CORR, ACTOR);
 
@@ -318,29 +248,12 @@ class WalletControllerTest {
         assertWalletUpstreamUnavailable(response.getBody());
     }
 
-    @Test
-    void getFundingSources_upstreamThrows_fallbackEnabled_returnsLocalShape() {
-        StubMusheWalletClient stub = StubMusheWalletClient.throwing();
-        WalletController controller = new WalletController(stub, fallbackEnabled());
-
-        ResponseEntity<Map<String, Object>> response = controller.getFundingSources(
-                REQ, CORR, "fallback-funding-1");
-
-        assertEquals(200, response.getStatusCode().value());
-        Map<String, Object> body = response.getBody();
-        assertNotNull(body);
-        // Pre-Stage-3.1.1 local shape: { data: List<…>, meta }. With a
-        // never-seen actor the wallet entry is absent so sources is empty.
-        List<?> data = assertInstanceOf(List.class, body.get("data"));
-        assertTrue(data.isEmpty(), "local funding-sources list must be empty for a fresh actor");
-    }
-
     // ── Non-wallet payment methods are unaffected by the gate ─────────
 
     @Test
     void pay_cashMethodReturnsNotImplementedUntilRailIsWired() {
         StubMusheWalletClient stub = StubMusheWalletClient.throwing();
-        WalletController controller = new WalletController(stub, fallbackDisabled());
+        WalletController controller = new WalletController(stub);
 
         ResponseEntity<Map<String, Object>> response = controller.pay(
                 REQ, CORR, ACTOR, null,
@@ -358,7 +271,7 @@ class WalletControllerTest {
     @Test
     void pay_zeroAmount_stillRejectedAs400_validationBeforeGate() {
         StubMusheWalletClient stub = StubMusheWalletClient.throwing();
-        WalletController controller = new WalletController(stub, fallbackDisabled());
+        WalletController controller = new WalletController(stub);
 
         ResponseEntity<Map<String, Object>> response = controller.pay(
                 REQ, CORR, ACTOR, null,
@@ -374,18 +287,6 @@ class WalletControllerTest {
     }
 
     // ── Helpers ───────────────────────────────────────────────────────
-
-    private static BffWalletProperties fallbackDisabled() {
-        BffWalletProperties props = new BffWalletProperties();
-        props.setAllowLocalFallback(false);
-        return props;
-    }
-
-    private static BffWalletProperties fallbackEnabled() {
-        BffWalletProperties props = new BffWalletProperties();
-        props.setAllowLocalFallback(true);
-        return props;
-    }
 
     private static void assertWalletUpstreamUnavailable(Map<String, Object> body) {
         assertNotNull(body, "503 body must not be null");

@@ -31,10 +31,6 @@ impilo:
       failure-policy: stub_fallback
     facilities:
       mode: stub
-  wallet:
-    # In-JVM tests/golden paths do not run Mushe Wallet, so allow the existing in-memory
-    # wallet shape. Production (application.yml) keeps this false.
-    allow-local-fallback: true
   security:
     allow-anonymous: true
   auth:
