@@ -1,28 +1,34 @@
-# Citizen Runtime Smoke (218)
+# Citizen Runtime Smoke
 
-**Environment:** `impilo-mobile-android-sandbox`  
+**Environment:** `impilo-mobile-android-sandbox` (`41.57.127.218`)  
 **App:** `zw.gov.impilo.citizen`  
 **API:** `EXPO_PUBLIC_API_BASE_URL=http://41.57.127.235`  
-**Status:** `NOT RUN`  
+**Status:** **NOT RUN** — 218 not accessible from 235 agent  
 **Updated:** 2026-06-27
 
-## Static closure (reference)
+## Static prerequisites (235)
 
-Mobile Closure Wave `46254765`: typecheck PASS, 122 tests PASS.
+| Check | Status |
+|-------|--------|
+| Typecheck | PASS |
+| Unit tests | PASS (145) |
+| Expo export | PASS |
 
 ## Runtime checklist
 
-| # | Journey | Status | Notes |
-|---|---------|--------|-------|
-| 1 | App launch / branding | NOT RUN | |
-| 2 | Health ID login → Home | NOT RUN | |
-| 3 | Health tab | NOT RUN | |
-| 4 | Service hub / telehealth | NOT RUN | |
-| 5 | Fundo / Madi / Mushex cards | NOT RUN | Costa: expect blocked state |
-| 6 | Nompilo FAB | NOT RUN | |
-| 7 | API failure resilience | NOT RUN | |
-| 8 | Maestro production-readiness flow | NOT RUN | |
+| # | Journey | Status |
+|---|---------|--------|
+| 1 | Dev server / bundle | NOT RUN |
+| 2 | Emulator connect | NOT RUN |
+| 3 | App launch | NOT RUN |
+| 4 | Preview API base URL | NOT RUN |
+| 5 | Costa blocked state truthful | NOT RUN (expected blocked) |
+| 6 | Maestro flow | NOT RUN |
 
-Maestro: `apps/mobile/maestro/flows/citizen-production-readiness.yaml`
+## Command (on 218 after bootstrap)
 
-Checklist: [`docs/implementation/mobile-runtime-smoke.md`](../../docs/implementation/mobile-runtime-smoke.md)
+```bash
+cd apps/mobile/citizen-app
+EXPO_PUBLIC_APP_VARIANT=preview EXPO_PUBLIC_API_BASE_URL=http://41.57.127.235 pnpm start
+# or: pnpm exec expo run:android
+```

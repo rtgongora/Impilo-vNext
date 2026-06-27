@@ -1,6 +1,7 @@
 # Maestro VM Toolchain Setup Plan (218)
 
-**Status:** Prepared — **do not execute** until product owner approves toolchain install on `41.57.127.218`.
+**Status:** **AUTHORIZED** — execute on 218 via `scripts/mobile/maestro-vm-bootstrap.sh`  
+**235 note:** Static closure + Expo export validated on engineering control VM; runtime requires 218.
 
 **Target host:** `ssh facility@41.57.127.218 -p 2027`  
 **Repo:** `/opt/impilo/repos/Impilo-vNext`  

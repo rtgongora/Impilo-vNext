@@ -1,28 +1,33 @@
-# Provider Runtime Smoke (218)
+# Provider Runtime Smoke
 
-**Environment:** `impilo-mobile-android-sandbox`  
+**Environment:** `impilo-mobile-android-sandbox` (`41.57.127.218`)  
 **App:** `zw.gov.impilo.provider`  
 **API:** `EXPO_PUBLIC_API_BASE_URL=http://41.57.127.235`  
-**Status:** `NOT RUN`  
+**Status:** **NOT RUN** — 218 not accessible from 235 agent  
 **Updated:** 2026-06-27
 
-## Static closure (reference)
+## Static prerequisites (235)
 
-Mobile Closure Wave `46254765`: typecheck PASS, 123 tests PASS.
+| Check | Status |
+|-------|--------|
+| Typecheck | PASS |
+| Unit tests | PASS (135) |
+| Expo export | PASS |
 
 ## Runtime checklist
 
-| # | Journey | Status | Notes |
-|---|---------|--------|-------|
-| 1 | App launch / branding | NOT RUN | |
-| 2 | Provider ID login → Work tab | NOT RUN | |
-| 3 | My Professional / VARAPI | NOT RUN | |
-| 4 | Work context chips | NOT RUN | |
-| 5 | Service hub (PCT, OROS, PACS, etc.) | NOT RUN | |
-| 6 | Nompilo FAB | NOT RUN | |
-| 7 | API failure / offline resilience | NOT RUN | |
-| 8 | Maestro production-readiness flow | NOT RUN | |
+| # | Journey | Status |
+|---|---------|--------|
+| 1 | Dev server / bundle | NOT RUN |
+| 2 | Emulator connect | NOT RUN |
+| 3 | App launch → Work tab | NOT RUN |
+| 4 | Preview API base URL | NOT RUN |
+| 5 | Provider Costa partial wiring truthful | NOT RUN |
+| 6 | Maestro flow | NOT RUN |
 
-Maestro: `apps/mobile/maestro/flows/provider-production-readiness.yaml`
+## Command (on 218 after bootstrap)
 
-Checklist: [`docs/implementation/mobile-runtime-smoke.md`](../../docs/implementation/mobile-runtime-smoke.md)
+```bash
+cd apps/mobile/provider-app
+EXPO_PUBLIC_APP_VARIANT=preview EXPO_PUBLIC_API_BASE_URL=http://41.57.127.235 pnpm start
+```

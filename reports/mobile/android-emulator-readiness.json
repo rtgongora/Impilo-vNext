@@ -1,0 +1,8 @@
+{
+  "status": "not-run",
+  "kvmPreValidated": true,
+  "avdName": "impilo-phone-api35",
+  "adbDevices": null,
+  "bootCompleted": null,
+  "blocker": "218-not-accessible-from-235-agent"
+}

@@ -1,0 +1,8 @@
+{
+  "status": "not-run",
+  "reason": "maestro-vm-218-not-accessible-from-235",
+  "targetApiLevel": 35,
+  "androidHome": "/home/facility/android-sdk",
+  "avdName": "impilo-phone-api35",
+  "bootstrapScript": "scripts/mobile/maestro-vm-bootstrap.sh"
+}

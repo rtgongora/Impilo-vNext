@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "1.0",
+  "date": "2026-06-27",
+  "branch": "claude/staging-ux-orchestration-remediation-Yypyl",
+  "overallStatus": "PARTIAL",
+  "vmClassification": {
+    "webPreview": "impilo-web-preview @ 41.57.127.235",
+    "maestro": "impilo-mobile-android-sandbox @ 41.57.127.218"
+  },
+  "kvmStatus": "pre-validated-not-rerun",
+  "toolchain218": "not-installed",
+  "androidSdk218": "not-installed",
+  "emulator218": "not-run",
+  "commitTested": "391798028",
+  "staticClosureRerun": "PASS",
+  "expoExport": "PASS",
+  "citizenRuntimeSmoke": "NOT_RUN",
+  "providerRuntimeSmoke": "NOT_RUN",
+  "apkDebugBuild": "NOT_RUN",
+  "easIosReadiness": "config-only",
+  "primaryBlocker": "218-not-accessible-from-235-agent-ssh",
+  "repoChangesExpected": true,
+  "definitionOfDoneMet": false,
+  "nextStep": "cursor-remote-ssh-to-218-run-bootstrap-and-runtime-closure-scripts"
+}

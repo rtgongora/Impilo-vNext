@@ -1,28 +1,34 @@
-# Android Emulator Readiness (218)
+# Android Emulator Readiness
 
-**Environment:** `impilo-mobile-android-sandbox`  
-**Host:** `41.57.127.218`  
-**Status:** `PENDING` — toolchain not yet installed  
+**Environment:** `impilo-mobile-android-sandbox` (`41.57.127.218`)  
+**Status:** **NOT RUN** — emulator setup blocked pending 218 SSH access  
 **Updated:** 2026-06-27
 
-## Checklist
+## KVM (pre-validated at activation)
 
-| Item | Status | Notes |
-|------|--------|-------|
-| KVM validated | PASS | See `maestro-vm-activation.md` |
-| Android SDK installed | NOT RUN | |
-| `ANDROID_HOME` configured | NOT RUN | |
-| platform-tools / adb | NOT RUN | |
-| build-tools | NOT RUN | |
-| emulator + system image | NOT RUN | |
-| AVD created and booted | NOT RUN | |
-| `adb devices` shows emulator | NOT RUN | |
+| Check | Result |
+|-------|--------|
+| Nested virtualisation | Enabled |
+| `/dev/kvm` | Present |
+| `facility` in `kvm` group | Yes |
+| KVM readable/writable | Yes |
 
-## Commands (after toolchain install)
+## Emulator checklist
+
+| Item | Status |
+|------|--------|
+| Android SDK installed | NOT RUN |
+| AVD `impilo-phone-api35` | NOT RUN |
+| Headless boot | NOT RUN |
+| `adb devices` | NOT RUN |
+| `sys.boot_completed` | NOT RUN |
+| KVM acceleration in emulator | NOT RUN |
+
+## Run on 218
 
 ```bash
-bash scripts/mobile/verify-maestro-vm-kvm.sh
-adb devices
+bash scripts/mobile/maestro-vm-bootstrap.sh
+emulator -avd impilo-phone-api35 -no-window -no-audio &
+adb wait-for-device
+adb shell getprop sys.boot_completed
 ```
-
-Plan: [`docs/mobile/MAESTRO_VM_TOOLCHAIN_SETUP_PLAN.md`](../../docs/mobile/MAESTRO_VM_TOOLCHAIN_SETUP_PLAN.md)

@@ -1,0 +1,7 @@
+{
+  "status": "NOT_RUN",
+  "app": "zw.gov.impilo.provider",
+  "apiTarget": "http://41.57.127.235",
+  "blocker": "218-not-accessible-from-235-agent",
+  "staticPrerequisites": "PASS"
+}

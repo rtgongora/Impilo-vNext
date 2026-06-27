@@ -1,0 +1,10 @@
+{
+  "date": "2026-06-27",
+  "expoConfigured": true,
+  "easJsonPresent": { "citizen": true, "provider": true },
+  "easCliInstalled218": false,
+  "androidEasReadiness": "config-only-local-build-on-218",
+  "iosNativeOnUbuntu": false,
+  "iosEasCloud": "config-present-credentials-not-verified",
+  "publishingAttempted": false
+}

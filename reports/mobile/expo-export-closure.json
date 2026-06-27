@@ -1,0 +1,12 @@
+{
+  "date": "2026-06-27",
+  "status": "PASS",
+  "priorBlocker": "react-native-web@^0.21.0 missing",
+  "fix": "added react-native-web and react-dom to citizen-app and provider-app dependencies",
+  "citizenExport": "PASS",
+  "providerExport": "PASS",
+  "logs": [
+    "reports/mobile/expo-export-citizen.log",
+    "reports/mobile/expo-export-provider.log"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "date": "2026-06-27",
+  "branch": "claude/staging-ux-orchestration-remediation-Yypyl",
+  "webPreviewVm": {
+    "host": "41.57.127.235",
+    "hostname": "user-HVM-domU",
+    "headAtStart": "391798028",
+    "previewApiReachable": "unverified-empty-response"
+  },
+  "maestroVm": {
+    "host": "41.57.127.218",
+    "sshPort2027From235": "blocked",
+    "sshPort22From235": "auth-failed",
+    "agentExecution": "blocked",
+    "bootstrapScript": "scripts/mobile/maestro-vm-bootstrap.sh",
+    "runtimeScript": "scripts/mobile/maestro-vm-runtime-closure.sh"
+  }
+}

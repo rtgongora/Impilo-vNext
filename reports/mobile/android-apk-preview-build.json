@@ -1,0 +1,7 @@
+{
+  "status": "NOT_RUN",
+  "blocker": "android-sdk-on-218-not-installed",
+  "artifactDir": "reports/mobile/artifacts/android",
+  "citizenApk": null,
+  "providerApk": null
+}

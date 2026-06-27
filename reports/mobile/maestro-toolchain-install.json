@@ -1,0 +1,13 @@
+{
+  "date": "2026-06-27",
+  "vm235": {
+    "node": "available",
+    "pnpm": "9.15.0 via npx",
+    "androidSdk": "not-installed",
+    "status": "static-gates-only"
+  },
+  "vm218": {
+    "status": "pending",
+    "bootstrapScript": "scripts/mobile/maestro-vm-bootstrap.sh"
+  }
+}
