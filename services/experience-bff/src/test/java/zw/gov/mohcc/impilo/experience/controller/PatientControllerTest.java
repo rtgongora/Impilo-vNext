@@ -20,44 +20,52 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 class PatientControllerTest {
 
     @Test
-    void listPatients_returnsSeededDirectoryWhenVitoUnavailable() {
+    void listPatients_failsCleanWhenVitoUnavailable_neverSeeds() {
+        // VITO is the registry of record. With it down, the BFF must NOT serve a
+        // fabricated seeded directory — it fails clean with 503 VITO_UNAVAILABLE.
         PatientController controller = new PatientController(new UnavailableVitoClient());
 
         ResponseEntity<Map<String, Object>> response =
                 controller.listPatients("req-1", "corr-1", 0, 20, null, null);
 
-        assertEquals(200, response.getStatusCode().value());
+        assertEquals(503, response.getStatusCode().value());
         assertNotNull(response.getBody());
-        List<?> data = (List<?>) response.getBody().get("data");
-        assertFalse(data.isEmpty());
+        assertEquals("VITO_UNAVAILABLE", ((Map<?, ?>) response.getBody().get("error")).get("code"));
         assertEquals("req-1", ((Map<?, ?>) response.getBody().get("meta")).get("request_id"));
     }
 
     @Test
-    void listPatients_filtersSeededDirectoryBySearchTerm() {
-        PatientController controller = new PatientController(new UnavailableVitoClient());
+    void listPatients_returnsRealVitoResultsWhenAvailable() {
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode paged = mapper.createObjectNode();
+        paged.put("totalElements", 1);
+        ObjectNode item = paged.putArray("items").addObject();
+        item.put("healthId", "33333333-3333-3333-3333-333333333333");
+        item.put("displayName", "Tatenda Moyo");
+        item.put("lifecycleStatus", "ACTIVE");
+        PatientController controller = new PatientController(new ListReturningVitoClient(paged));
 
         ResponseEntity<Map<String, Object>> response =
-                controller.listPatients("req-2", "corr-2", 0, 20, "Moyo", null);
+                controller.listPatients("req-2", "corr-2", 0, 20, null, null);
 
         assertEquals(200, response.getStatusCode().value());
         List<?> data = (List<?>) response.getBody().get("data");
         assertEquals(1, data.size());
-        Map<?, ?> patient = (Map<?, ?>) data.get(0);
-        Map<?, ?> attrs = (Map<?, ?>) patient.get("attributes");
-        assertEquals("Tatenda", attrs.get("givenName"));
+        Map<?, ?> row = (Map<?, ?>) data.get(0);
+        assertEquals("33333333-3333-3333-3333-333333333333", row.get("id"));
+        Map<?, ?> attrs = (Map<?, ?>) row.get("attributes");
+        assertEquals("Tatenda Moyo", attrs.get("displayName"));
     }
 
     @Test
-    void getPatient_returnsSeededPatientById() {
+    void getPatient_failsCleanWhenVitoUnavailable_neverSeeds() {
         PatientController controller = new PatientController(new UnavailableVitoClient());
 
         ResponseEntity<Map<String, Object>> response =
                 controller.getPatient("pat-001", "req-3", "corr-3");
 
-        assertEquals(200, response.getStatusCode().value());
-        Map<?, ?> data = (Map<?, ?>) response.getBody().get("data");
-        assertEquals("pat-001", data.get("id"));
+        assertEquals(503, response.getStatusCode().value());
+        assertEquals("VITO_UNAVAILABLE", ((Map<?, ?>) response.getBody().get("error")).get("code"));
     }
 
     @Test
@@ -229,6 +237,20 @@ class PatientControllerTest {
         @Override
         public JsonNode getClientRegistryProfile(String id) {
             return profile;
+        }
+    }
+
+    private static final class ListReturningVitoClient extends VitoServiceClient {
+        private final JsonNode paged;
+
+        ListReturningVitoClient(JsonNode paged) {
+            super(new RestTemplate(), endpoints());
+            this.paged = paged;
+        }
+
+        @Override
+        public JsonNode listClientRegistryClients(String search, String status, String verificationState, int page, int size) {
+            return paged;
         }
     }
 

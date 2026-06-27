@@ -7,6 +7,7 @@ import zw.gov.mohcc.impilo.experience.client.ChannelsServiceClient;
 import zw.gov.mohcc.impilo.experience.client.NotificationServiceClient;
 import zw.gov.mohcc.impilo.experience.client.SupportServiceClient;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
+import zw.gov.mohcc.impilo.experience.resilience.UpstreamSourceCircuitBreaker;
 import zw.gov.mohcc.impilo.experience.telemedicine.TelemedicineCommsMetricsStore;
 import zw.gov.mohcc.impilo.experience.telemedicine.TelemedicineWorkflowHistoryStore;
 
@@ -26,7 +27,8 @@ class CommunicationControllerTest {
                 new ChannelsServiceClient(new RestTemplate(), ServiceClientConfig.testServiceEndpoints()),
                 new NotificationServiceClient(new RestTemplate(), ServiceClientConfig.testServiceEndpoints()),
                 new TelemedicineCommsMetricsStore(),
-                new TelemedicineWorkflowHistoryStore());
+                new TelemedicineWorkflowHistoryStore(),
+                new UpstreamSourceCircuitBreaker());
 
         var response = controller.listAnnouncements("tenant-1", "req-1", "corr-1", null, 0, 30);
 
@@ -43,7 +45,8 @@ class CommunicationControllerTest {
                 new FailingChannelsClient(),
                 new FailingNotificationClient(),
                 new TelemedicineCommsMetricsStore(),
-                new TelemedicineWorkflowHistoryStore());
+                new TelemedicineWorkflowHistoryStore(),
+                new UpstreamSourceCircuitBreaker());
 
         var response = controller.dashboard("req-1", "corr-1");
 
@@ -62,7 +65,8 @@ class CommunicationControllerTest {
                 new FailingChannelsClient(),
                 new FailingNotificationClient(),
                 new TelemedicineCommsMetricsStore(),
-                new TelemedicineWorkflowHistoryStore());
+                new TelemedicineWorkflowHistoryStore(),
+                new UpstreamSourceCircuitBreaker());
         var response = controller.health("req-1", "corr-1");
         assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
@@ -77,7 +81,8 @@ class CommunicationControllerTest {
                 new FailingChannelsClient(),
                 new FailingNotificationClient(),
                 new TelemedicineCommsMetricsStore(),
-                new TelemedicineWorkflowHistoryStore());
+                new TelemedicineWorkflowHistoryStore(),
+                new UpstreamSourceCircuitBreaker());
         var response = controller.telemedicineOperationalConsole("req-1", "corr-1");
         assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
@@ -93,7 +98,8 @@ class CommunicationControllerTest {
                 new FailingChannelsClient(),
                 new FailingNotificationClient(),
                 new TelemedicineCommsMetricsStore(),
-                new TelemedicineWorkflowHistoryStore());
+                new TelemedicineWorkflowHistoryStore(),
+                new UpstreamSourceCircuitBreaker());
 
         var retention = controller.updateTelemedicineWorkflowRetention(
                 "req-1",

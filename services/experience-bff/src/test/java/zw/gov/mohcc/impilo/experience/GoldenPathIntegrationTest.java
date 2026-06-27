@@ -164,18 +164,21 @@ class GoldenPathIntegrationTest {
                 .andExpect(jsonPath("$.error.code").value("PCT_UNAVAILABLE"));
     }
 
+    // VITO is the patient registry of record. With it unreachable in this integration
+    // JVM, the BFF fails clean (503 VITO_UNAVAILABLE) rather than serving a seeded
+    // directory — it never fabricates patient identity. (The VITO-success mapping path
+    // is covered against a stubbed client in PatientControllerTest.)
     @Test
     @Order(4)
-    @DisplayName("Path C: List patients returns seeded data")
+    @DisplayName("Path C: List patients fails clean when VITO is unavailable (no seeded data)")
     void pathC_listPatients() throws Exception {
         mvc.perform(get("/internal/v1/patients")
                         .header("X-Tenant-ID", TENANT)
                         .header("X-Pod-ID", POD)
                         .header("X-Request-ID", UUID.randomUUID().toString())
                         .header("X-Correlation-ID", UUID.randomUUID().toString()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data").isArray())
-                .andExpect(jsonPath("$.data.length()").value(greaterThanOrEqualTo(1)));
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.error.code").value("VITO_UNAVAILABLE"));
     }
 
     @Test

@@ -17,7 +17,7 @@ import zw.gov.mohcc.impilo.experience.controller.dto.comms.RoleDashboardDto;
 
 import java.util.*;
 import java.time.OffsetDateTime;
-import java.util.concurrent.ConcurrentHashMap;
+import zw.gov.mohcc.impilo.experience.resilience.UpstreamSourceCircuitBreaker;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -29,20 +29,21 @@ import java.util.concurrent.TimeUnit;
 public class OmnichannelController {
 
     private static final Logger log = LoggerFactory.getLogger(OmnichannelController.class);
-    private static final long SOURCE_COOLDOWN_SECONDS = 30L;
-    private static final Map<String, OffsetDateTime> SOURCE_COOLDOWN_UNTIL = new ConcurrentHashMap<>();
 
     private final SupportServiceClient supportClient;
     private final CampaignsServiceClient campaignsClient;
     private final IntegrationHubServiceClient integrationHubClient;
+    private final UpstreamSourceCircuitBreaker circuitBreaker;
 
     public OmnichannelController(
             SupportServiceClient supportClient,
             CampaignsServiceClient campaignsClient,
-            IntegrationHubServiceClient integrationHubClient) {
+            IntegrationHubServiceClient integrationHubClient,
+            UpstreamSourceCircuitBreaker circuitBreaker) {
         this.supportClient = supportClient;
         this.campaignsClient = campaignsClient;
         this.integrationHubClient = integrationHubClient;
+        this.circuitBreaker = circuitBreaker;
     }
 
     @GetMapping("/dashboard")
@@ -698,15 +699,14 @@ public class OmnichannelController {
     }
 
     private boolean isInCooldown(String source) {
-        OffsetDateTime until = SOURCE_COOLDOWN_UNTIL.get(source);
-        return until != null && until.isAfter(OffsetDateTime.now());
+        return circuitBreaker.isInCooldown(source);
     }
 
     private void markFailure(String source) {
-        SOURCE_COOLDOWN_UNTIL.put(source, OffsetDateTime.now().plusSeconds(SOURCE_COOLDOWN_SECONDS));
+        circuitBreaker.markFailure(source);
     }
 
     private void clearCooldown(String source) {
-        SOURCE_COOLDOWN_UNTIL.remove(source);
+        circuitBreaker.clearCooldown(source);
     }
 }

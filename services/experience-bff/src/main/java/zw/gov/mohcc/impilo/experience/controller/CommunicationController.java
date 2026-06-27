@@ -21,7 +21,7 @@ import zw.gov.mohcc.impilo.experience.telemedicine.TelemedicineWorkflowHistorySt
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import zw.gov.mohcc.impilo.experience.resilience.UpstreamSourceCircuitBreaker;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -33,8 +33,6 @@ import java.util.concurrent.TimeUnit;
 public class CommunicationController {
 
     private static final Logger log = LoggerFactory.getLogger(CommunicationController.class);
-    private static final long SOURCE_COOLDOWN_SECONDS = 30L;
-    private static final Map<String, OffsetDateTime> SOURCE_COOLDOWN_UNTIL = new ConcurrentHashMap<>();
 
     private final CampaignsServiceClient campaignsClient;
     private final SupportServiceClient supportClient;
@@ -42,6 +40,7 @@ public class CommunicationController {
     private final NotificationServiceClient notificationClient;
     private final TelemedicineCommsMetricsStore telemedicineCommsMetricsStore;
     private final TelemedicineWorkflowHistoryStore telemedicineWorkflowHistoryStore;
+    private final UpstreamSourceCircuitBreaker circuitBreaker;
 
     public CommunicationController(
             CampaignsServiceClient campaignsClient,
@@ -49,13 +48,15 @@ public class CommunicationController {
             ChannelsServiceClient channelsClient,
             NotificationServiceClient notificationClient,
             TelemedicineCommsMetricsStore telemedicineCommsMetricsStore,
-            TelemedicineWorkflowHistoryStore telemedicineWorkflowHistoryStore) {
+            TelemedicineWorkflowHistoryStore telemedicineWorkflowHistoryStore,
+            UpstreamSourceCircuitBreaker circuitBreaker) {
         this.campaignsClient = campaignsClient;
         this.supportClient = supportClient;
         this.channelsClient = channelsClient;
         this.notificationClient = notificationClient;
         this.telemedicineCommsMetricsStore = telemedicineCommsMetricsStore;
         this.telemedicineWorkflowHistoryStore = telemedicineWorkflowHistoryStore;
+        this.circuitBreaker = circuitBreaker;
     }
 
     @GetMapping("/dashboard")
@@ -710,16 +711,15 @@ public class CommunicationController {
     }
 
     private boolean isInCooldown(String source) {
-        OffsetDateTime until = SOURCE_COOLDOWN_UNTIL.get(source);
-        return until != null && until.isAfter(OffsetDateTime.now());
+        return circuitBreaker.isInCooldown(source);
     }
 
     private void markFailure(String source) {
-        SOURCE_COOLDOWN_UNTIL.put(source, OffsetDateTime.now().plusSeconds(SOURCE_COOLDOWN_SECONDS));
+        circuitBreaker.markFailure(source);
     }
 
     private void clearCooldown(String source) {
-        SOURCE_COOLDOWN_UNTIL.remove(source);
+        circuitBreaker.clearCooldown(source);
     }
 
     private Integer asPositiveInteger(Object value) {

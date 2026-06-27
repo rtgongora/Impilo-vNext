@@ -10,13 +10,17 @@ import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
 
 import java.time.LocalDate;
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.stream.Collectors;
 
 /**
- * Patient / client directory for walk-in and shell flows — delegates to VITO
- * client registry and identity issuance, with seeded fallback when downstream
- * is unavailable.
+ * Patient / client directory for walk-in and shell flows — pure proxy to the VITO
+ * client registry and identity issuance.
+ *
+ * <p>VITO is the system of record for patient identity (PII stays in VITO per
+ * doctrine). This stateless BFF NEVER fabricates patient identities: when VITO is
+ * unavailable it fails clean ({@code 503 VITO_UNAVAILABLE}) rather than minting a
+ * phantom CPID or serving a seeded directory. (The former in-memory seeded
+ * {@code PATIENTS} fallback was removed — a composition layer must not be a source
+ * of truth for who exists.)</p>
  */
 @RestController
 @RequestMapping("/internal/v1/patients")
@@ -24,10 +28,19 @@ public class PatientController {
 
     private static final Logger log = LoggerFactory.getLogger(PatientController.class);
     private final VitoServiceClient vitoClient;
-    private static final List<Map<String, Object>> PATIENTS = new CopyOnWriteArrayList<>(buildSeeded());
 
     public PatientController(VitoServiceClient vitoClient) {
         this.vitoClient = vitoClient;
+    }
+
+    private ResponseEntity<Map<String, Object>> vitoUnavailable(String operation, String reason,
+                                                                String requestId, String correlationId) {
+        log.warn("VITO UNAVAILABLE — operation={}, reason={}, requestId={} — returning 503 "
+                + "(BFF never fabricates patient identity)", operation, reason, requestId);
+        return ResponseEntity.status(503).body(Map.of(
+                "error", Map.of("code", "VITO_UNAVAILABLE",
+                        "message", "The patient registry is temporarily unavailable. Please try again shortly."),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
     @PostMapping
@@ -98,21 +111,13 @@ public class PatientController {
             response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
             return ResponseEntity.status(201).body(response);
         } catch (Exception e) {
-            log.info("VITO unavailable — creating patient locally: {}", e.getMessage());
+            log.info("VITO legacy issuance unavailable: {}", e.getMessage());
         }
 
-        String id = "pat-" + UUID.randomUUID().toString().substring(0, 8);
-        String cpid = "CPID-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-        Map<String, Object> patient = patient(id, cpid,
-                givenName, familyName != null ? familyName : "",
-                dob, sex != null ? sex : "unknown", nationalId, phone);
-        patient = withRegistrationOverlay(patient, patientData, false);
-        PATIENTS.add(patient);
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", patient);
-        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-        return ResponseEntity.status(201).body(response);
+        // Both VITO registration paths failed. Never mint a phantom CPID in the BFF —
+        // a fabricated patient identity is a patient-safety hazard. Fail clean.
+        return vitoUnavailable("createPatient", "both VITO registration paths failed",
+                requestId, correlationId);
     }
 
     /**
@@ -154,39 +159,18 @@ public class PatientController {
                 }
             }
             long total = paged != null && paged.has("totalElements") ? paged.get("totalElements").asLong() : mapped.size();
-            if (!mapped.isEmpty()) {
-                Map<String, Object> response = new LinkedHashMap<>();
-                response.put("data", mapped);
-                response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId,
-                        "page", Map.of("number", page, "size", size, "total_elements", total)));
-                return ResponseEntity.ok(response);
-            }
-            log.debug("VITO returned no client rows — using local seeded directory");
+            // Return the real VITO result — including a legitimately empty page (no matches).
+            // Never substitute a seeded directory for an empty/failed registry query.
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("data", mapped);
+            response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId,
+                    "page", Map.of("number", page, "size", size, "total_elements", total)));
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            log.warn("VITO client registry list failed, using seed: {}", e.getMessage());
+            // VITO is the registry of record — on outage fail clean rather than serve a seeded list.
+            return vitoUnavailable("listPatients", "VITO client-registry list failed: "
+                    + e.getClass().getSimpleName(), requestId, correlationId);
         }
-
-        List<Map<String, Object>> filtered = PATIENTS;
-        if (search != null && !search.isBlank()) {
-            String q = search.toLowerCase();
-            filtered = filtered.stream().filter(p -> {
-                Map<?, ?> a = (Map<?, ?>) p.get("attributes");
-                String name = a.get("givenName") + " " + a.get("familyName");
-                String cpid = (String) a.get("cpid");
-                String nid = a.get("nationalId") != null ? (String) a.get("nationalId") : "";
-                return name.toLowerCase().contains(q) || cpid.toLowerCase().contains(q) || nid.toLowerCase().contains(q);
-            }).collect(Collectors.toList());
-        }
-
-        int start = page * size;
-        int end = Math.min(start + size, filtered.size());
-        List<Map<String, Object>> paged = start < filtered.size() ? filtered.subList(start, end) : List.of();
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", paged);
-        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId,
-                "page", Map.of("number", page, "size", size, "total_elements", filtered.size())));
-        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
@@ -195,6 +179,7 @@ public class PatientController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
+        boolean upstreamErrored = false;
         try {
             JsonNode profile = vitoClient.getClientRegistryProfile(id);
             if (profile != null) {
@@ -204,7 +189,8 @@ public class PatientController {
                         "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
             }
         } catch (Exception e) {
-            log.debug("VITO client profile miss for id={}: {}", id, e.getMessage());
+            upstreamErrored = true;
+            log.debug("VITO client profile error for id={}: {}", id, e.getMessage());
         }
 
         try {
@@ -215,19 +201,18 @@ public class PatientController {
                         "data", patient,
                         "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
             }
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            upstreamErrored = true;
+            log.debug("VITO getPatient error for id={}: {}", id, e.getMessage());
         }
 
-        return PATIENTS.stream()
-                .filter(p -> p.get("id").equals(id))
-                .findFirst()
-                .map(p -> {
-                    Map<String, Object> body = new LinkedHashMap<>();
-                    body.put("data", p);
-                    body.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-                    return ResponseEntity.ok(body);
-                })
-                .orElse(ResponseEntity.notFound().build());
+        // Distinguish "registry is down" (fail clean, retryable) from "no such patient".
+        if (upstreamErrored) {
+            return vitoUnavailable("getPatient", "VITO lookup failed for id=" + id, requestId, correlationId);
+        }
+        return ResponseEntity.status(404).body(Map.of(
+                "error", Map.of("code", "PATIENT_NOT_FOUND", "message", "Patient not found"),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
     /**
@@ -530,38 +515,6 @@ public class PatientController {
             return null;
         }
         return n.get(field).asText();
-    }
-
-    private static List<Map<String, Object>> buildSeeded() {
-        List<Map<String, Object>> list = new ArrayList<>();
-        list.add(patient("pat-001", "CPID-ZW-00001", "Tatenda", "Moyo", "1990-03-15", "male", "63-123456-A-78", "+263771234567"));
-        list.add(patient("pat-002", "CPID-ZW-00002", "Rumbidzai", "Chienda", "1985-07-22", "female", "63-234567-B-89", "+263772345678"));
-        list.add(patient("pat-003", "CPID-ZW-00003", "Takudzwa", "Ndlovu", "2001-11-03", "male", "63-345678-C-90", "+263773456789"));
-        list.add(patient("pat-004", "CPID-ZW-00004", "Chiedza", "Mapfumo", "1978-01-28", "female", "63-456789-D-01", "+263774567890"));
-        list.add(patient("pat-005", "CPID-ZW-00005", "Tendai", "Zenda", "1995-09-10", "male", null, "+263775678901"));
-        list.add(patient("pat-006", "CPID-ZW-00006", "Nyasha", "Chirandu", "2010-05-20", "female", null, "+263776789012"));
-        list.add(patient("pat-007", "CPID-ZW-00007", "Farai", "Mutasa", "1968-12-01", "male", "63-567890-E-12", "+263777890123"));
-        list.add(patient("pat-008", "CPID-ZW-00008", "Tsitsi", "Gumbo", "2003-08-14", "female", null, null));
-        list.add(patient("pat-009", "CPID-ZW-00009", "Simba", "Makoni", "1992-04-07", "male", "63-678901-F-23", "+263778901234"));
-        list.add(patient("pat-010", "CPID-ZW-00010", "Rudo", "Sibanda", "1988-06-30", "female", "63-789012-G-34", "+263779012345"));
-        return list;
-    }
-
-    private static Map<String, Object> patient(String id, String cpid,
-            String given, String family, String dob, String sex,
-            String nationalId, String phone) {
-        Map<String, Object> attrs = new LinkedHashMap<>();
-        attrs.put("cpid", cpid);
-        attrs.put("givenName", given);
-        attrs.put("familyName", family);
-        attrs.put("displayName", given + " " + family);
-        attrs.put("dateOfBirth", dob);
-        attrs.put("sex", sex);
-        attrs.put("nationalId", nationalId);
-        attrs.put("phone", phone);
-        attrs.put("status", "ACTIVE");
-        attrs.put("age", dob != null ? LocalDate.now().getYear() - LocalDate.parse(dob).getYear() : null);
-        return Map.of("id", id, "type", "patient", "attributes", attrs);
     }
 
     private static String strVal(Map<String, Object> map, String... keys) {

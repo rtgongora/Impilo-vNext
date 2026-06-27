@@ -6,6 +6,7 @@ import zw.gov.mohcc.impilo.experience.client.CampaignsServiceClient;
 import zw.gov.mohcc.impilo.experience.client.IntegrationHubServiceClient;
 import zw.gov.mohcc.impilo.experience.client.SupportServiceClient;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
+import zw.gov.mohcc.impilo.experience.resilience.UpstreamSourceCircuitBreaker;
 
 import java.util.Map;
 
@@ -20,7 +21,8 @@ class OmnichannelControllerTest {
         OmnichannelController controller = new OmnichannelController(
                 new FailingSupportClient(),
                 new CampaignsServiceClient(new RestTemplate(), ServiceClientConfig.testServiceEndpoints()),
-                new IntegrationHubServiceClient(new RestTemplate(), ServiceClientConfig.testServiceEndpoints()));
+                new IntegrationHubServiceClient(new RestTemplate(), ServiceClientConfig.testServiceEndpoints()),
+                new UpstreamSourceCircuitBreaker());
 
         var response = controller.listCallbacks("tenant-1", "req-1", null);
 
@@ -34,7 +36,8 @@ class OmnichannelControllerTest {
         OmnichannelController controller = new OmnichannelController(
                 new FailingSupportClient(),
                 new FailingCampaignsClient(),
-                new FailingIntegrationHubClient());
+                new FailingIntegrationHubClient(),
+                new UpstreamSourceCircuitBreaker());
 
         var response = controller.dashboard("tenant-1", "req-1");
 
@@ -49,7 +52,8 @@ class OmnichannelControllerTest {
         OmnichannelController controller = new OmnichannelController(
                 new FailingSupportClient(),
                 new FailingCampaignsClient(),
-                new FailingIntegrationHubClient());
+                new FailingIntegrationHubClient(),
+                new UpstreamSourceCircuitBreaker());
         var response = controller.health("req-1");
         assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
