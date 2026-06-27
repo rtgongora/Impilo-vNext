@@ -89,3 +89,6 @@ reports/full-boot/local-registry-data/
 !reports/full-boot/*.json
 !reports/full-boot/*.txt
 !reports/full-boot/*.yaml
+
+# Claude Code local worktrees (never commit)
+.claude/worktrees/
