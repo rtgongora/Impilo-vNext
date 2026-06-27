@@ -1,0 +1,40 @@
+---
+description: Maestro Android mobile sandbox VM — runtime validation only (not web preview)
+alwaysApply: true
+---
+
+# Mobile Android Sandbox (Maestro VM)
+
+Impilo vNext uses a **dual-VM model**. Do not confuse the two environments.
+
+## Web Preview / Engineering Control — `41.57.127.235`
+
+- SSH: `robert@41.57.127.235:2276`
+- Repo: `/opt/impilo/repos/Impilo-vNext`
+- Role: canonical engineering workspace, web preview, backend/API readiness, k3s deploy, quality gates
+- Preview API: `http://41.57.127.235`
+- **Default Cursor workspace** for code changes, gates, and preview deploy
+
+## Mobile Android Sandbox — `41.57.127.218`
+
+- SSH: `facility@41.57.127.218:2027`
+- Role: Android emulator, Maestro smoke, APK validation, logcat, mobile runtime reports
+- Mobile API: `EXPO_PUBLIC_API_BASE_URL=http://41.57.127.235`
+- Branch: same as 235 (`claude/staging-ux-orchestration-remediation-Yypyl` unless changed)
+
+> Dual-VM model: Maestro VM **consumes** the preview API on 235. It does **not** host backend, full stack, production simulation, or production.
+
+## Operating rules
+
+1. **Git is the sync layer** — no divergent unpushed work across VMs.
+2. **Backend deploys stay on 235** unless explicitly authorized elsewhere.
+3. **Emulator / Maestro runtime smoke runs on 218** — not on 235.
+4. **Mobile tests on 218 target `http://41.57.127.235`** unless another endpoint is explicitly provided.
+5. **Runtime reports** (`reports/mobile/*`) commit or copy back to the repo branch.
+6. **No production secrets**, **no real patient data**, **no app-store publishing**.
+7. **No fake iOS native build claims** — 218 is Android/KVM only.
+
+## Docs
+
+- [`docs/mobile/MOBILE_ANDROID_SANDBOX.md`](../../docs/mobile/MOBILE_ANDROID_SANDBOX.md)
+- [`docs/environment/DUAL_VM_OPERATING_MODEL.md`](../../docs/environment/DUAL_VM_OPERATING_MODEL.md)

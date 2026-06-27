@@ -1,6 +1,8 @@
 # Impilo vNext — Environment Documentation
 
-Master entry point for the **Remote Development Workspace** and **Dev Preview Sandbox** on VM `41.57.127.235`.
+Master entry point for the **Remote Development Workspace**, **Dev Preview Sandbox** (`41.57.127.235`), and **Mobile Android Sandbox** (`41.57.127.218`).
+
+> **Dual-VM model:** Web preview and engineering control stay on **235**. Android emulator / Maestro runtime validation runs on **218** against `http://41.57.127.235`. This is not a replacement of the web preview VM. See [DUAL_VM_OPERATING_MODEL.md](./DUAL_VM_OPERATING_MODEL.md).
 
 > ## ⭐ Default Development Workflow: Cursor Remote SSH on VM
 >
@@ -41,19 +43,21 @@ bash scripts/deploy/manual-authorized-preview-deploy.sh  # after user approval o
 
 See [DUAL_MODE_TEST_PIPELINE.md](./DUAL_MODE_TEST_PIPELINE.md).
 
-## What This VM Is
+## What the VMs Are
 
-| Environment | Purpose |
-|-------------|---------|
-| **Remote Development Workspace** | Primary Cursor Remote SSH workspace — builds, tests, image builds |
-| **Dev Preview Sandbox** | Single-node k3s + Helm — browser preview for expert validation |
+| VM | Environment | Purpose |
+|----|-------------|---------|
+| **235** | Remote Development Workspace | Primary Cursor Remote SSH — builds, tests, image builds, quality gates |
+| **235** | Dev Preview Sandbox | Single-node k3s + Helm — browser preview, preview API |
+| **218** | Mobile Android Sandbox | KVM emulator, Maestro smoke, APK validation — API target `http://41.57.127.235` |
 
-## What This VM Is Not
+## What These Environments Are Not
 
-- Production deployment
+- Production deployment or production simulation lab
 - Formal production-grade Test/Staging
 - HA / multi-node resilience testing
 - Real patient data or production secrets
+- **218 is not** a backend host — Maestro VM consumes the preview API on 235 only
 
 ## Quick Start
 
@@ -95,7 +99,9 @@ bash scripts/deploy/preview-smoke-test.sh
 
 | Document | Description |
 |----------|-------------|
-| [VM_BASELINE_AUDIT.md](./VM_BASELINE_AUDIT.md) | Pre-setup server snapshot |
+| [DUAL_VM_OPERATING_MODEL.md](./DUAL_VM_OPERATING_MODEL.md) | Web Preview (235) + Maestro (218) roles and sync rules |
+| [../mobile/MOBILE_ANDROID_SANDBOX.md](../mobile/MOBILE_ANDROID_SANDBOX.md) | Maestro VM runbook, KVM, operator commands |
+| [VM_BASELINE_AUDIT.md](./VM_BASELINE_AUDIT.md) | Pre-setup server snapshot (235) |
 | [REPO_ENVIRONMENT_AUDIT.md](./REPO_ENVIRONMENT_AUDIT.md) | Repo structure, services, tooling |
 | [DEPENDENCY_INSTALLATION_REPORT.md](./DEPENDENCY_INSTALLATION_REPORT.md) | Install results |
 | [ENVIRONMENT_STRATEGY.md](./ENVIRONMENT_STRATEGY.md) | Environment model |

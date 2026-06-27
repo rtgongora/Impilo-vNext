@@ -1,8 +1,14 @@
 # Mobile Runtime Smoke Checklist
 
-Manual smoke against preview `http://41.57.127.235` or local BFF `:8160`.
+Manual and Maestro smoke against preview `http://41.57.127.235` (Web Preview VM API).
 
-**Closure wave status (2026-06-11):** Static gates pass; runtime smoke **NOT RUN** on VM (no emulator/device in agent session). Use commands below on a device with Expo Go.
+**Where to run runtime smoke:** **Maestro VM** `facility@41.57.127.218 -p 2027` — not on Web Preview VM (235). See [`docs/mobile/MOBILE_ANDROID_SANDBOX.md`](../mobile/MOBILE_ANDROID_SANDBOX.md).
+
+**Closure wave status (2026-06-27):** Maestro VM activated (KVM validated); mobile toolchain install and runtime smoke **NOT RUN** yet. Static typecheck can run on either VM.
+
+```bash
+export EXPO_PUBLIC_API_BASE_URL=http://41.57.127.235
+```
 
 ## Launch & branding
 
@@ -43,10 +49,13 @@ Manual smoke against preview `http://41.57.127.235` or local BFF `:8160`.
 - [ ] 26. No fake counters on service cards (registry metadata only)
 - [ ] 27. All visible services wired, deep-linked, or truthfully blocked
 
-## Maestro (optional automated)
+## Maestro (Maestro VM — 41.57.127.218)
 
 ```bash
+ssh facility@41.57.127.218 -p 2027
+cd /opt/impilo/repos/Impilo-vNext
+export EXPO_PUBLIC_API_BASE_URL=http://41.57.127.235
 bash scripts/mobile/verify-maestro-flows.sh
 ```
 
-Flows under `apps/mobile/maestro/flows/`.
+Flows under `apps/mobile/maestro/flows/`. Update `reports/mobile/mobile-runtime-smoke.md` after runs.

@@ -1,10 +1,14 @@
 # VM Baseline Audit
 
-**Date:** 2026-05-29  
-**Host:** `41.57.127.235:2276`  
+**Date:** 2026-05-29 (Web Preview VM) · **Updated:** 2026-06-27 (dual-VM model)  
+**Host:** `41.57.127.235:2276` — Web Preview / Engineering Control  
 **Purpose:** Record pre-setup state before Impilo remote dev workspace + dev preview sandbox installation.
 
-> **Note (2026-05-30):** The public IP was reassigned from the original `41.57.127.218` to `41.57.127.235` (the same VM). `41.57.127.218` is retired; use `41.57.127.235` everywhere.
+> **Dual-VM model (2026-06-27):** `41.57.127.235` remains the canonical **Web Preview / Engineering Control** VM (this document).  
+> `41.57.127.218` has been **reactivated/provisioned** as the **MOHCC Maestro Android Mobile Automation Sandbox** — a separate VM for Android emulator and Maestro runtime validation. It is part of the active vNext dev-test pipeline and consumes the preview API at `http://41.57.127.235`.  
+> See [`DUAL_VM_OPERATING_MODEL.md`](./DUAL_VM_OPERATING_MODEL.md) and [`docs/mobile/MOBILE_ANDROID_SANDBOX.md`](../mobile/MOBILE_ANDROID_SANDBOX.md).
+>
+> **Supersedes (2026-05-30 note):** An earlier note stated `41.57.127.218` was retired after IP reassignment to `41.57.127.235`. That applied to a **prior** topology. The two IPs now denote **different active VMs** with distinct roles.
 
 ## Server Snapshot
 

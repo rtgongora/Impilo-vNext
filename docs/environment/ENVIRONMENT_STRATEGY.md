@@ -18,8 +18,20 @@
 
 **MVP slice (initial):** Redis, Postgres, Experience BFF, One UI Shell, Traefik ingress. Keycloak and full service mesh deferred.
 
-## 3. Future Formal Test/Staging
+## 3. Mobile Android Sandbox (Maestro VM)
+
+**Purpose:** Android emulator automation, Maestro E2E smoke, APK build/install validation, mobile runtime reports.
+
+**Runtime:** Separate VM `41.57.127.218` (`facility@41.57.127.218 -p 2027`), KVM-backed emulator, same Git branch as Web Preview VM.
+
+**API target:** `EXPO_PUBLIC_API_BASE_URL=http://41.57.127.235` — consumes Web Preview API; does not host backend.
+
+**Not for:** k3s preview deploy, backend deploy, production simulation, real patient data, production secrets, app-store publishing, iOS native builds.
+
+Full runbook: [MOBILE_ANDROID_SANDBOX.md](../mobile/MOBILE_ANDROID_SANDBOX.md) · Dual-VM model: [DUAL_VM_OPERATING_MODEL.md](./DUAL_VM_OPERATING_MODEL.md).
+
+## 4. Future Formal Test/Staging
 
 Documented only in [FUTURE_FORMAL_TEST_STAGING_REQUIREMENTS.md](./FUTURE_FORMAL_TEST_STAGING_REQUIREMENTS.md).
 
-Separate infrastructure required — not implemented on this VM.
+Separate infrastructure required — not implemented on either dev-test VM.

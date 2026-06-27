@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "1.0",
+  "activationDate": "2026-06-27T00:00:00Z",
+  "status": "activated",
+  "vmRole": "impilo-mobile-android-sandbox",
+  "displayName": "MOHCC Maestro Android Mobile Automation Sandbox",
+  "ssh": {
+    "host": "41.57.127.218",
+    "port": 2027,
+    "user": "facility",
+    "command": "ssh facility@41.57.127.218 -p 2027"
+  },
+  "resources": {
+    "os": "Ubuntu 24.04.4 LTS",
+    "vcpu": 20,
+    "ramGiB": 48,
+    "diskTB": 1
+  },
+  "kvmValidation": {
+    "nestedVirtualisation": true,
+    "cpuVirtFlagsCount": 40,
+    "devKvmPresent": true,
+    "userInKvmGroup": true,
+    "kvmReadable": true,
+    "kvmWritable": true,
+    "verifyScript": "scripts/mobile/verify-maestro-vm-kvm.sh"
+  },
+  "git": {
+    "branch": "claude/staging-ux-orchestration-remediation-Yypyl",
+    "repoPath": "/opt/impilo/repos/Impilo-vNext",
+    "remote": "rtgongora/Impilo-vNext"
+  },
+  "apiTarget": {
+    "EXPO_PUBLIC_API_BASE_URL": "http://41.57.127.235",
+    "previewApiHost": "41.57.127.235"
+  },
+  "webPreviewVm": {
+    "role": "web-preview-engineering-control",
+    "host": "41.57.127.235",
+    "sshPort": 2276,
+    "sshUser": "robert",
+    "previewUrl": "http://41.57.127.235"
+  },
+  "dualVmModel": {
+    "description": "Maestro VM consumes preview API from Web Preview VM; does not host backend or production simulation",
+    "gitSyncLayer": true,
+    "noDivergentUnpushedWork": true,
+    "backendDeployOn235Only": true,
+    "emulatorOn218Only": true
+  },
+  "constraints": {
+    "noProductionSecrets": true,
+    "noRealPatientData": true,
+    "noAppStorePublishing": true,
+    "noFakeIosNativeBuildClaims": true,
+    "notProductionSimulationLab": true
+  },
+  "nextSetupSteps": [
+    "Clone or pull repo on 218 at /opt/impilo/repos/Impilo-vNext; match 235 HEAD",
+    "Install Android SDK, emulator, platform-tools; verify adb devices",
+    "Install Maestro CLI",
+    "Resolve Expo prebuild blockers if any",
+    "Build/install citizen and provider debug APKs with EXPO_PUBLIC_API_BASE_URL=http://41.57.127.235",
+    "Confirm preview API healthy on 235",
+    "Run scripts/mobile/verify-maestro-flows.sh and update reports/mobile/mobile-runtime-smoke.md"
+  ],
+  "documentation": {
+    "mobileSandbox": "docs/mobile/MOBILE_ANDROID_SANDBOX.md",
+    "dualVmModel": "docs/environment/DUAL_VM_OPERATING_MODEL.md",
+    "activationReport": "reports/mobile/maestro-vm-activation.md"
+  }
+}

@@ -57,4 +57,13 @@ bash scripts/ci/collect-ci-feedback.sh
 bash scripts/deploy/manual-authorized-preview-deploy.sh
 ```
 
-See also: [PREVIEW_PIPELINE.md](./PREVIEW_PIPELINE.md), [HUMAN_AUTHORIZED_PREVIEW_DEPLOYMENT.md](./HUMAN_AUTHORIZED_PREVIEW_DEPLOYMENT.md).
+See also: [PREVIEW_PIPELINE.md](./PREVIEW_PIPELINE.md), [HUMAN_AUTHORIZED_PREVIEW_DEPLOYMENT.md](./HUMAN_AUTHORIZED_PREVIEW_DEPLOYMENT.md), [DUAL_VM_OPERATING_MODEL.md](./DUAL_VM_OPERATING_MODEL.md).
+
+## Dual-VM testing
+
+| VM | Runs |
+|----|------|
+| **235** (Web Preview) | `run-local-quality-gates.sh`, preview deploy, HTTP/Playwright regression |
+| **218** (Maestro) | Android emulator, Maestro smoke — `EXPO_PUBLIC_API_BASE_URL=http://41.57.127.235` |
+
+Mobile runtime validation is **not** a substitute for VM quality gates on 235. Sync both VMs via Git on the same branch.

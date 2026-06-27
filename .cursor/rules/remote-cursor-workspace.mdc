@@ -6,9 +6,12 @@ alwaysApply: true
 # Remote Cursor Workspace (Default for All Work)
 
 All Cursor and AI agent development for Impilo vNext happens on the **VM Remote SSH
-workspace**, never on the local laptop clone.
+workspace** (Web Preview / Engineering Control), never on the local laptop clone.
 
-## Canonical workspace
+> **Dual-VM model:** `41.57.127.235` = web preview / engineering control (this rule).  
+> `41.57.127.218` = Android Maestro sandbox only — see `.cursor/rules/mobile-android-sandbox.mdc`.
+
+## Canonical workspace (Web Preview / Engineering Control)
 
 | Item | Value |
 |------|-------|
@@ -18,6 +21,17 @@ workspace**, never on the local laptop clone.
 | Preview URL | `http://41.57.127.235` |
 | Source of truth | **GitHub** `rtgongora/Impilo-vNext` |
 
+## Mobile Android Sandbox (separate VM)
+
+| Item | Value |
+|------|-------|
+| SSH | `facility@41.57.127.218:2027` |
+| Role | Android emulator, Maestro smoke — **not** backend deploy |
+| Mobile API | `EXPO_PUBLIC_API_BASE_URL=http://41.57.127.235` |
+| Sync | Same branch via Git — no divergent unpushed work across VMs |
+
+Docs: `docs/environment/DUAL_VM_OPERATING_MODEL.md`, `docs/mobile/MOBILE_ANDROID_SANDBOX.md`.
+
 ## Rules
 
 1. **GitHub is the source of truth.** The VM disk is the working copy; always push to GitHub.
@@ -25,10 +39,11 @@ workspace**, never on the local laptop clone.
    `robert@41.57.127.235:2276` and open `/opt/impilo/repos/Impilo-vNext`.
 3. **The local laptop clone must not be used for normal development.** The laptop is only
    the Cursor client and the browser-testing machine. All dependency installation, builds,
-   tests, Docker/image builds, k3s deployment, smoke tests, and logs run on the VM.
-4. The active branch is `claude/staging-ux-orchestration-remediation-Yypyl` unless the user
+   tests, Docker/image builds, k3s deployment, smoke tests, and logs run on the **235** VM.
+4. **Do not run Android emulator load on 235.** Maestro / emulator runtime validation runs on **218** (`facility@41.57.127.218:2027`).
+5. The active branch is `claude/staging-ux-orchestration-remediation-Yypyl` unless the user
    explicitly instructs otherwise. Confirm the branch before starting work.
-5. **Pull latest before starting new work**; work on feature/fix branches where appropriate.
+6. **Pull latest before starting new work**; work on feature/fix branches where appropriate.
 
 ## Quality gates (VM-first)
 

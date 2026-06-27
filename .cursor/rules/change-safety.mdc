@@ -28,6 +28,7 @@ Apply these rules to every change made in the Impilo vNext repository.
    `SSH_PASS`) from the environment, never from committed files.
 7. **Never expose internal services publicly.** Only the documented preview ingress is public.
 8. **Do not use real patient data.** The Dev Preview Sandbox is test-data only.
+9. **Dual-VM model:** backend deploy and quality gates on **235** (`41.57.127.235`); Android emulator/Maestro on **218** (`41.57.127.218`) targeting preview API — see `docs/environment/DUAL_VM_OPERATING_MODEL.md`.
 
 ## After changing
 

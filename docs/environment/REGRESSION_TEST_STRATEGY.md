@@ -30,7 +30,7 @@ bash scripts/test/run-preview-gates.sh
 
 - Authenticated session flows end-to-end
 - Write/mutation workflows (prescribe, claim, payment)
-- Mobile app UI regression (Maestro exists in CI separately)
+- Mobile app UI regression — Maestro on **Maestro VM (218)** or CI; see `docs/mobile/MOBILE_ANDROID_SANDBOX.md`
 - Cross-service integration beyond BFF health
 - Performance and visual regression
 

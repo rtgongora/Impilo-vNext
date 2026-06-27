@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "1.0",
+  "updatedAt": "2026-06-27T00:00:00Z",
+  "model": "dual-vm-dev-test",
+  "vms": [
+    {
+      "id": "web-preview-engineering-control",
+      "host": "41.57.127.235",
+      "ssh": "robert@41.57.127.235:2276",
+      "repoPath": "/opt/impilo/repos/Impilo-vNext",
+      "previewUrl": "http://41.57.127.235",
+      "roles": [
+        "engineering-control",
+        "web-preview",
+        "k3s-preview-deploy",
+        "quality-gates",
+        "branch-source-of-truth"
+      ]
+    },
+    {
+      "id": "mobile-android-sandbox-maestro",
+      "host": "41.57.127.218",
+      "ssh": "facility@41.57.127.218:2027",
+      "repoPath": "/opt/impilo/repos/Impilo-vNext",
+      "apiTarget": "http://41.57.127.235",
+      "roles": [
+        "android-emulator",
+        "maestro-smoke",
+        "mobile-runtime-reports"
+      ],
+      "activationReport": "reports/mobile/maestro-vm-activation.json"
+    }
+  ],
+  "syncRules": {
+    "gitAsSyncLayer": true,
+    "noDivergentUnpushedWork": true,
+    "branch": "claude/staging-ux-orchestration-remediation-Yypyl"
+  },
+  "documentation": {
+    "dualVmModel": "docs/environment/DUAL_VM_OPERATING_MODEL.md",
+    "mobileSandbox": "docs/mobile/MOBILE_ANDROID_SANDBOX.md"
+  }
+}
