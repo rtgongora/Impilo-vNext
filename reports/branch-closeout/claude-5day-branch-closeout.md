@@ -345,13 +345,29 @@ The citizen trust journey was reconciled on `prep/phase3-czo` (off PT `6ce8613c2
   determinism** (counts must not vary by build-state / must not reference deleted files) before the gate can be
   trusted as a blocker again.
 
-### Remaining work (Phases 4–5) — gated on human sign-off + CI
-- **Phase 4** — `khuluma-comms-hub` (V017 + khuluma.rego + 22 SecurityConfig edits).
-- **Phase 5** — retire `integration/closeout-staging` once khuluma lands (non-compilable as-is; reference map only).
-- **CDS strand reconciliation** (was Phase 0c) — much of the CDS surface landed via Phase 3 (clinical-knowledge-platform
-  + zibo reference-ranges came in with citizen); re-assess what, if anything, remains on `wave-b` and verify with the
-  `clinical-knowledge-platform-service` unit tests.
-- **Scanner determinism** — fix the product-truth/phase6 heuristic non-determinism (see Phase 3 note).
+## Continuation — Phases 4 & 5 + scanner fix LANDED (2026-06-27) — program COMPLETE
 
-`intake/khuluma-comms-hub`, `intake/wave-b-tshepo-gdhcn-trust-primitives`, and `integration/closeout-staging`
-remain **open** pending those phases.
+- **Scanner hermeticity FIXED** (`b682b0e62`): `walkFiles` now scans git-TRACKED files only (was walking the
+  physical worktree → untracked/stale `.java` from prior checkouts / sibling worktrees inflated counts and flagged
+  files absent from the branch). Reproducible + branch-local now. Baseline re-anchored to the true count (gap 6→15,
+  phase6 2→5 — all pre-existing non-citizen placeholders, newly EXPOSED not new); also fixed the long-red completeness
+  test #13 (now 13/13). NOT gamed.
+- **Phase 4 `khuluma-comms-hub` LANDED** (`a4a964498`, safety `safety/pt-before-phase4-20260627-1627`): 20 net-new
+  commits, 2 conflicts. Fixed `khuluma.rego` (future.keywords); **security review fixed a HIGH** — conversation
+  membership/link mutations (`addParticipant`/`removeParticipant`/`linkObject`) weren't gated on participation
+  (any tenant actor could add themselves and read the PHI thread) → `requireActiveParticipant` guard + regression test.
+  Closed both new-service completeness gaps with REAL artifacts (rate-limit `SecurityBaselineConfig` + 28-path
+  handler-synced OpenAPI contract), gates GREEN at baseline 15/5 (no re-anchor). Full build + khuluma 23 tests green.
+  `intake/khuluma-comms-hub` **deleted** (fully merged).
+- **`wave-b-tshepo-gdhcn-trust-primitives`** — verified an **ancestor of PT** (0 unique commits; trust strand landed
+  via Phase 1, CDS via Phase 3). Fully absorbed → **deleted**.
+- **Phase 5 — `integration/closeout-staging` retired**: only 1 unique commit by patch-id (a docs report,
+  `reports/branch-closeout/phase-a-verification.md`) — cherry-picked into PT (`5d5043a8d`) to preserve the analysis;
+  the rest absorbed; branch non-compilable as-is. **Deleted** as SUPERSEDED.
+
+**All in-scope 5-day Claude branches are now landed or retired. No in-scope branch remains open.** (Older
+~June 17–18 `intake/*` imaging/ioptime branches were out of the 5-day window and were never in scope.)
+
+### Residual follow-ups (not branch-closeout)
+- Pay down the 15 pre-existing placeholder gaps (experience-bff/pct/mushe-wallet/vashandi/inventory-elmis) — ratchet the baseline DOWN.
+- Full reactor build + integration suites in CI (only targeted offline module builds/tests run here).
