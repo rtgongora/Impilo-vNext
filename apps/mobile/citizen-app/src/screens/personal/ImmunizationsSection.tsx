@@ -20,6 +20,7 @@ import {
 } from "@impilo/mobile-design-system";
 import type { Immunization } from "../../types";
 import { appStore } from "../../stores/appStore";
+import { fetchImmunizations } from "../../services/clinicalRecordsService";
 
 const STATUS_VARIANT: Record<string, "default" | "warning" | "success" | "destructive"> = {
   COMPLETED: "success",
@@ -41,10 +42,8 @@ export function ImmunizationsSection({ patientId }: ImmunizationsSectionProps) {
     setIsLoading(true);
     setError(null);
     try {
-      // TODO: Wire to backend service
-      // const result = await fetchImmunizations({ patientId });
-      // setImmunizations(result.items);
-      setImmunizations([]);
+      const result = await fetchImmunizations();
+      setImmunizations(result.items);
     } catch (err) {
       setError(err instanceof Error ? err : new Error(String(err)));
     } finally {

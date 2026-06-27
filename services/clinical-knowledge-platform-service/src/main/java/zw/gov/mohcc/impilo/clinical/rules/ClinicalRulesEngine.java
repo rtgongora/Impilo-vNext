@@ -2,6 +2,9 @@ package zw.gov.mohcc.impilo.clinical.rules;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import zw.gov.mohcc.impilo.clinical.interpretation.model.InterpretationCode;
+import zw.gov.mohcc.impilo.clinical.interpretation.model.InterpretedObservation;
+import zw.gov.mohcc.impilo.clinical.interpretation.model.Trend;
 import zw.gov.mohcc.impilo.clinical.rules.model.ClinicalEvaluationContext;
 import zw.gov.mohcc.impilo.clinical.rules.model.MedicationLine;
 import zw.gov.mohcc.impilo.clinical.rules.model.RuleAlert;
@@ -28,6 +31,22 @@ public class ClinicalRulesEngine {
             "nadolol", "sotalol", "timolol", "labetalol", "nebivolol"
     );
 
+    // LOINC codes for the analytes that the interpretation rules key on (matched OR display-name match).
+    private static final Set<String> POTASSIUM_LOINC = Set.of("2823-3", "6298-4", "32713-0");
+    private static final Set<String> CREATININE_LOINC = Set.of("2160-0", "38483-4", "14682-9");
+
+    // Drugs with a well-established teratogenic / pregnancy contraindication (FDA category D/X equivalents).
+    // CRITICAL = known major teratogen; HIGH = relative/category-D contraindication.
+    private static final Set<String> PREG_CONTRA_CRITICAL = Set.of(
+            "warfarin", "isotretinoin", "methotrexate", "thalidomide", "misoprostol",
+            "valproate", "valproic", "leflunomide", "mycophenolate"
+    );
+    private static final Set<String> PREG_CONTRA_HIGH = Set.of(
+            "lisinopril", "enalapril", "ramipril", "captopril", "perindopril",
+            "losartan", "valsartan", "candesartan", "telmisartan", "irbesartan",
+            "atenolol", "spironolactone", "doxycycline", "tetracycline", "fluconazole"
+    );
+
     private final int stewardshipBroadSpectrumDays;
 
     public ClinicalRulesEngine(
@@ -47,7 +66,163 @@ public class ClinicalRulesEngine {
         out.addAll(levelOfCareRules(ctx));
         out.addAll(lastResortAbxRules(ctx));
         out.addAll(monitoringRules(ctx));
+        // Interpretation-driven rules — consume the already-interpreted observations / derived values.
+        out.addAll(criticalLabRules(ctx));
+        out.addAll(hyperkalaemiaRules(ctx));
+        out.addAll(acuteKidneyInjuryRules(ctx));
+        out.addAll(pregnancyContraindicatedDrugRules(ctx));
         return out;
+    }
+
+    /**
+     * Generic critical-lab safety net: any interpreted observation classified CRITICAL_LOW/CRITICAL_HIGH
+     * raises a critical, interruptive alert (the deterministic interpreter — not the LLM — is the source).
+     */
+    private List<RuleAlert> criticalLabRules(ClinicalEvaluationContext ctx) {
+        List<RuleAlert> out = new ArrayList<>();
+        for (InterpretedObservation o : ctx.interpretedObservations()) {
+            if (o.code() != null && o.code().isCritical()) {
+                String name = displayOf(o);
+                String dir = o.code() == InterpretationCode.CRITICAL_LOW ? "critically low" : "critically high";
+                out.add(new RuleAlert(
+                        "CRITICAL_LAB_VALUE",
+                        "CRITICAL",
+                        name + " is " + dir + " (" + valueUnit(o) + ") — urgent clinical review required.",
+                        "Value beyond the critical threshold of the patient-appropriate reference interval.",
+                        true,
+                        false
+                ));
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Hyperkalaemia: an interpreted potassium classified HIGH or CRITICAL_HIGH. Actionable guidance
+     * (ECG, treat) distinct from the generic critical-lab net.
+     */
+    private List<RuleAlert> hyperkalaemiaRules(ClinicalEvaluationContext ctx) {
+        List<RuleAlert> out = new ArrayList<>();
+        for (InterpretedObservation o : ctx.interpretedObservations()) {
+            if (!isAnalyte(o, POTASSIUM_LOINC, "potassium")) {
+                continue;
+            }
+            if (o.code() == InterpretationCode.HIGH || o.code() == InterpretationCode.CRITICAL_HIGH) {
+                boolean critical = o.code() == InterpretationCode.CRITICAL_HIGH;
+                out.add(new RuleAlert(
+                        "HYPERKALAEMIA",
+                        critical ? "CRITICAL" : "HIGH",
+                        "Elevated potassium (" + valueUnit(o) + ") — obtain ECG and manage hyperkalaemia per protocol"
+                                + (critical ? "; critical level requires emergency treatment." : "."),
+                        "Hyperkalaemia carries arrhythmia risk; severity scales with the interpreted level.",
+                        critical,
+                        true
+                ));
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Acute kidney injury suspicion: a rising creatinine interpreted HIGH/CRITICAL_HIGH, or a derived
+     * eGFR below 60. Advisory — correlates with clinical state and baseline.
+     */
+    private List<RuleAlert> acuteKidneyInjuryRules(ClinicalEvaluationContext ctx) {
+        List<RuleAlert> out = new ArrayList<>();
+        for (InterpretedObservation o : ctx.interpretedObservations()) {
+            if (!isAnalyte(o, CREATININE_LOINC, "creatinine")) {
+                continue;
+            }
+            boolean elevated = o.code() == InterpretationCode.HIGH || o.code() == InterpretationCode.CRITICAL_HIGH;
+            if (elevated && o.trend() == Trend.RISING) {
+                out.add(new RuleAlert(
+                        "ACUTE_KIDNEY_INJURY_SUSPECTED",
+                        "HIGH",
+                        "Rising and elevated creatinine (" + valueUnit(o) + ", trend rising) — assess for acute kidney injury.",
+                        "An upward creatinine trajectory above the reference interval is a hallmark of AKI.",
+                        true,
+                        true
+                ));
+            }
+        }
+        Double egfr = derived(ctx, "egfr");
+        if (egfr != null && egfr < 60) {
+            out.add(new RuleAlert(
+                    "RENAL_IMPAIRMENT_LOW_EGFR",
+                    egfr < 30 ? "HIGH" : "MEDIUM",
+                    "Reduced eGFR (" + trim(egfr) + " mL/min/1.73m²) — review renal-dose adjustments and nephrotoxic agents.",
+                    "A low estimated glomerular filtration rate indicates impaired renal clearance.",
+                    egfr < 30,
+                    true
+            ));
+        }
+        return out;
+    }
+
+    /** Pregnancy-contraindicated medication: an active drug with a teratogenic/category-D profile. */
+    private List<RuleAlert> pregnancyContraindicatedDrugRules(ClinicalEvaluationContext ctx) {
+        List<RuleAlert> out = new ArrayList<>();
+        if (!Boolean.TRUE.equals(ctx.pregnancyStatus())) {
+            return out;
+        }
+        for (MedicationLine m : ctx.activeMedications()) {
+            String gen = m.genericName() == null ? "" : m.genericName();
+            if (gen.isBlank()) {
+                continue;
+            }
+            boolean critical = PREG_CONTRA_CRITICAL.stream().anyMatch(gen::contains);
+            boolean high = !critical && PREG_CONTRA_HIGH.stream().anyMatch(gen::contains);
+            if (critical || high) {
+                String name = (m.displayName() != null && !m.displayName().isBlank()) ? m.displayName() : gen;
+                out.add(new RuleAlert(
+                        "PREGNANCY_CONTRAINDICATED_DRUG",
+                        critical ? "CRITICAL" : "HIGH",
+                        name + " is contraindicated in pregnancy — review for a pregnancy-safe alternative before continuing.",
+                        "The medication has a documented teratogenic or pregnancy-contraindicated profile.",
+                        true,
+                        !critical
+                ));
+            }
+        }
+        return out;
+    }
+
+    // ---- interpretation-rule helpers ----
+
+    private static boolean isAnalyte(InterpretedObservation o, Set<String> loincCodes, String nameFragment) {
+        if (o.loincCode() != null && loincCodes.contains(o.loincCode())) {
+            return true;
+        }
+        String name = o.displayName() == null ? "" : o.displayName().toLowerCase(Locale.ROOT);
+        return name.contains(nameFragment);
+    }
+
+    private static String displayOf(InterpretedObservation o) {
+        if (o.displayName() != null && !o.displayName().isBlank()) {
+            return o.displayName();
+        }
+        if (o.loincCode() != null) {
+            return "LOINC " + o.loincCode();
+        }
+        return "Result";
+    }
+
+    private static String valueUnit(InterpretedObservation o) {
+        String v = o.value() == null ? "?" : o.value().toPlainString();
+        return o.unit() == null ? v : v + " " + o.unit();
+    }
+
+    private static Double derived(ClinicalEvaluationContext ctx, String key) {
+        for (var e : ctx.derivedValues().entrySet()) {
+            if (e.getKey() != null && e.getKey().equalsIgnoreCase(key)) {
+                return e.getValue();
+            }
+        }
+        return null;
+    }
+
+    private static String trim(double d) {
+        return new java.math.BigDecimal(d).setScale(1, java.math.RoundingMode.HALF_UP).toPlainString();
     }
 
     /**

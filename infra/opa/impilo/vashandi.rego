@@ -1,12 +1,12 @@
 package impilo.vashandi
 
-import future.keywords.in
+import future.keywords
 
 default allow := false
 
 # Check-in does not create clinical authority or professional Work access
 deny if {
-    input.action startswith "clinical."
+    startswith(input.action, "clinical.")
     input.attendance_event_type in {"check_in", "offline_check_in", "supervisor_confirmed_check_in"}
 }
 
@@ -17,12 +17,12 @@ deny if {
 }
 
 deny if {
-    input.action startswith "vashandi.attendance.check_in"
+    startswith(input.action, "vashandi.attendance.check_in")
     not input.active_vashandi_assignment
 }
 
 deny if {
-    input.action startswith "vashandi.attendance.check_in"
+    startswith(input.action, "vashandi.attendance.check_in")
     not input.active_rostered_shift
 }
 
@@ -51,14 +51,14 @@ deny if {
 }
 
 deny if {
-    input.action startswith "vashandi."
+    startswith(input.action, "vashandi.")
     input.workforce_status in {"suspended", "dismissed", "offboarded", "under_review"}
 }
 
 # Vashandi roles do not grant clinical service delivery by default
 deny if {
-    input.action startswith "clinical."
-    input.role_template startswith "vashandi_"
+    startswith(input.action, "clinical.")
+    startswith(input.role_template, "vashandi_")
 }
 
 # Facility manager scope — assignments only within assigned facility
@@ -102,7 +102,7 @@ deny if {
 
 # Scope-bounded workspace access
 allow if {
-    input.action startswith "vashandi."
+    startswith(input.action, "vashandi.")
     input.vashandi_workspace in input.visible_vashandi_workspaces
 }
 

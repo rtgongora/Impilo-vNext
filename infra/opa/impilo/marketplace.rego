@@ -1,5 +1,7 @@
 package impilo.marketplace
 
+import future.keywords
+
 default allow := false
 
 allow if {
@@ -13,12 +15,12 @@ allow if {
 }
 
 deny if {
-    input.action startswith "marketplace.api."
+    startswith(input.action, "marketplace.api.")
     input.marketplace_pipeline_state == "sandbox_access_granted"
     not input.action == "marketplace.api.request_sandbox"
 }
 
 deny if {
-    input.action startswith "clinical."
+    startswith(input.action, "clinical.")
     input.identity.identity_type == "marketplace_actor"
 }

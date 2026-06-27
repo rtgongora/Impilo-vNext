@@ -1,12 +1,21 @@
 package zw.gov.mohcc.impilo.clinical.rules.model;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import zw.gov.mohcc.impilo.clinical.interpretation.model.InterpretedObservation;
+import zw.gov.mohcc.impilo.clinical.interpretation.model.Sex;
+
 /**
  * Patient and encounter context supplied by calling systems (never inferred from free text alone).
+ *
+ * <p>Additively extended for the CDS interpretation engine with {@code sex}, {@code pregnancyStatus},
+ * {@code gestationalAgeWeeks}, the already-interpreted observations ({@code interpretedObservations})
+ * and named {@code derivedValues} (e.g. eGFR). The original 11-arg constructor is preserved for
+ * backward compatibility and delegates with defaults; existing rules are unaffected.</p>
  */
 public record ClinicalEvaluationContext(
         Double ageYears,
@@ -19,12 +28,51 @@ public record ClinicalEvaluationContext(
         Boolean cultureDocumented,
         Boolean lastResortAntibioticWithoutAstJustification,
         Vitals vitals,
-        List<Allergy> allergies
+        List<Allergy> allergies,
+        Sex sex,
+        Boolean pregnancyStatus,
+        Integer gestationalAgeWeeks,
+        List<InterpretedObservation> interpretedObservations,
+        Map<String, Double> derivedValues
 ) {
 
     private static final List<String> BROAD = List.of(
             "meropenem", "imipenem", "piperacillin", "tazobactam", "cefepime", "ceftazidime"
     );
+
+    public ClinicalEvaluationContext {
+        if (sex == null) {
+            sex = Sex.UNKNOWN;
+        }
+        if (interpretedObservations == null) {
+            interpretedObservations = List.of();
+        }
+        if (derivedValues == null) {
+            derivedValues = Map.of();
+        }
+    }
+
+    /** Backward-compatible 11-arg constructor (pre-interpretation callers / existing rules + tests). */
+    public ClinicalEvaluationContext(
+            Double ageYears, Integer ageDays, Double weightKg, String facilityLevel,
+            List<String> diagnoses, List<MedicationLine> activeMedications, Integer empiricBroadSpectrumDays,
+            Boolean cultureDocumented, Boolean lastResortAntibioticWithoutAstJustification, Vitals vitals,
+            List<Allergy> allergies) {
+        this(ageYears, ageDays, weightKg, facilityLevel, diagnoses, activeMedications, empiricBroadSpectrumDays,
+                cultureDocumented, lastResortAntibioticWithoutAstJustification, vitals, allergies,
+                Sex.UNKNOWN, null, null, List.of(), Map.of());
+    }
+
+    /** Return a copy with the supplied interpreted observations + derived values attached. */
+    public ClinicalEvaluationContext withInterpretations(
+            List<InterpretedObservation> interpreted, Map<String, Double> derived) {
+        return new ClinicalEvaluationContext(
+                ageYears, ageDays, weightKg, facilityLevel, diagnoses, activeMedications,
+                empiricBroadSpectrumDays, cultureDocumented, lastResortAntibioticWithoutAstJustification,
+                vitals, allergies, sex, pregnancyStatus, gestationalAgeWeeks,
+                interpreted == null ? List.of() : interpreted,
+                derived == null ? Map.of() : derived);
+    }
 
     /**
      * Point-in-time vital signs supplied by the calling system. All nullable — a rule keyed on a
@@ -111,8 +159,22 @@ public record ClinicalEvaluationContext(
             }
         }
 
+        Sex sex = Sex.fromString(map.get("sex") == null ? null : map.get("sex").toString());
+        Boolean pregnancy = map.get("pregnancyStatus") instanceof Boolean b ? b : null;
+        Integer gestation = toInt(map.get("gestationalAgeWeeks"));
+        Map<String, Double> derived = new LinkedHashMap<>();
+        if (map.get("derivedValues") instanceof Map<?, ?> dv) {
+            for (Map.Entry<?, ?> e : dv.entrySet()) {
+                Double val = toDouble(e.getValue());
+                if (e.getKey() != null && val != null) {
+                    derived.put(e.getKey().toString(), val);
+                }
+            }
+        }
+
         return new ClinicalEvaluationContext(
-                ageYears, ageDays, weightKg, facilityLevel, dx, meds, empDays, culture, lastResort, vitals, allergies);
+                ageYears, ageDays, weightKg, facilityLevel, dx, meds, empDays, culture, lastResort, vitals,
+                allergies, sex, pregnancy, gestation, List.of(), derived);
     }
 
     private static boolean isBroadSpectrum(String generic) {

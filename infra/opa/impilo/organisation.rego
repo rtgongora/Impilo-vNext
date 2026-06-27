@@ -1,5 +1,7 @@
 package impilo.organisation
 
+import future.keywords
+
 default allow := false
 
 # Non-citizen Work requires organisation assignment
@@ -15,7 +17,7 @@ deny if {
 
 # Sandbox environment cannot access production APIs
 deny if {
-    input.action startswith "marketplace.api."
+    startswith(input.action, "marketplace.api.")
     input.organisation.access_environment == "sandbox"
     not input.action == "marketplace.api.request_sandbox"
 }
@@ -48,7 +50,7 @@ deny if {
 
 # Marketplace / vendor users cannot browse clinical records
 deny if {
-    input.action startswith "clinical."
+    startswith(input.action, "clinical.")
     input.organisation.organisation_type in {
         "software_vendor",
         "api_integration_partner",
@@ -60,7 +62,7 @@ deny if {
 
 # Insurers / payers limited to claims / eligibility / payment scope
 deny if {
-    input.action startswith "clinical."
+    startswith(input.action, "clinical.")
     input.organisation.organisation_type in {"insurer", "medical_aid_society", "payment_provider", "claims_processor"}
 }
 
@@ -75,7 +77,7 @@ deny if {
 deny if {
     input.organisation.cross_border_access_flag
     not input.organisation.cross_border_approved
-    input.action startswith "clinical."
+    startswith(input.action, "clinical.")
 }
 
 allow if {

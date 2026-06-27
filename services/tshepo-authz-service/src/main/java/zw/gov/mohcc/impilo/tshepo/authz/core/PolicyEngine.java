@@ -78,6 +78,8 @@ public class PolicyEngine {
     private final AuthzProperties properties;
     private final ObjectMapper objectMapper;
     private final VisibilityEscalationService visibilityEscalationService;
+    private final DelegationClient delegationClient;
+    private final OpaDecisionClient opaDecisionClient;
 
     public PolicyEngine(DeviceRiskScoreEvaluator riskScoring,
                         PolicyCacheService policyCacheService,
@@ -89,7 +91,9 @@ public class PolicyEngine {
                         AuditPublisher auditPublisher,
                         AuthzProperties properties,
                         ObjectMapper objectMapper,
-                        VisibilityEscalationService visibilityEscalationService) {
+                        VisibilityEscalationService visibilityEscalationService,
+                        DelegationClient delegationClient,
+                        OpaDecisionClient opaDecisionClient) {
         this.riskScoring = riskScoring;
         this.policyCacheService = policyCacheService;
         this.privilegeRevocationStore = privilegeRevocationStore;
@@ -101,6 +105,8 @@ public class PolicyEngine {
         this.properties = properties;
         this.objectMapper = objectMapper;
         this.visibilityEscalationService = visibilityEscalationService;
+        this.delegationClient = delegationClient;
+        this.opaDecisionClient = opaDecisionClient;
     }
 
     /**
@@ -173,6 +179,18 @@ public class PolicyEngine {
         PolicyRuleEntity matchedAllowRule = step4.matchedAllowRule();
 
         // ────────────────────────────────────────────────────────────────
+        // Step 4.5: Delegated / act-on-behalf authorization (L5, G-CZO-03)
+        // When the actor declares acting FOR another subject (X-Subject-ID ≠ actor), require an
+        // ACTIVE, in-scope, unexpired Mvumo delegation with the delegate meeting the assurance
+        // floor. Delegation authorises WHO may act; the subject's clinical consent (Step 5) still
+        // governs WHAT data. Conjunctive with base RBAC — never widens beyond it. Fail-closed.
+        // ────────────────────────────────────────────────────────────────
+        AuthzResponse delegationDeny = evaluateDelegation(request, riskScore, startTime);
+        if (delegationDeny != null) {
+            return delegationDeny;
+        }
+
+        // ────────────────────────────────────────────────────────────────
         // Step 5: Consent evaluation (clinical resources)
         // ────────────────────────────────────────────────────────────────
         if (requiresConsent(request.resourceType(), purpose)) {
@@ -205,6 +223,9 @@ public class PolicyEngine {
         Obligations obligations = VisibilityObligationComposer.compose(
                 request, purpose, riskScore, matchedAllowRule, activeEscalation, objectMapper);
         Map<String, String> headerMutations = buildHeaderMutations(obligations, request);
+
+        // Phase 3 strangler: SHADOW-compare the OPA gate decision (Java stays authoritative).
+        shadowCompareOpa(request, purpose, matchedAllowRule, true);
 
         return allowAndLog(request, obligations, headerMutations, riskScore, startTime);
     }
@@ -376,12 +397,16 @@ public class PolicyEngine {
             Map<String, Object> conditions = objectMapper.readValue(conditionsJson,
                     new TypeReference<>() {});
 
-            // min_loa check
+            // min_loa check — keyed on the EFFECTIVE LoA (the stronger of the session's
+            // ACR-derived login level and the actor's current identity-assurance level
+            // propagated via X-Assurance-Level). This is what makes a self-service
+            // verification upgrade actually change what policy sees (closes G-CZO-01).
             if (conditions.containsKey("min_loa")) {
                 int minLoa = ((Number) conditions.get("min_loa")).intValue();
-                if (request.loaLevel() < minLoa) {
-                    log.debug("Condition failed: min_loa={} but request.loaLevel={}",
-                            minLoa, request.loaLevel());
+                int effLoa = effectiveLoa(request);
+                if (effLoa < minLoa) {
+                    log.debug("Condition failed: min_loa={} but effectiveLoa={} (acr={}, assuranceHeader={})",
+                            minLoa, effLoa, request.loaLevel(), request.assuranceLevel());
                     return false;
                 }
             }
@@ -432,11 +457,11 @@ public class PolicyEngine {
                 }
             }
 
-            // account assurance state check
+            // account assurance state check — a "verified" account means the actor's current
+            // identity-assurance level is at least LOA3 (in-person verified, per AssurancePolicy).
+            // Legacy verification-state strings ("VERIFIED"/"REGISTRY") still pass for back-compat.
             if (Boolean.TRUE.equals(conditions.get("account_assurance_required"))) {
-                String assuranceLevel = request.assuranceLevel() == null ? "" : request.assuranceLevel().toUpperCase(Locale.ROOT);
-                boolean verified = assuranceLevel.contains("VERIFIED") || assuranceLevel.contains("REGISTRY");
-                if (!verified) {
+                if (!accountVerified(request)) {
                     log.debug("Condition failed: account assurance required but got {}", request.assuranceLevel());
                     return false;
                 }
@@ -445,8 +470,7 @@ public class PolicyEngine {
             // verification grace period check
             if (conditions.containsKey("verification_grace_expiry_epoch_ms")) {
                 long expiryEpochMs = ((Number) conditions.get("verification_grace_expiry_epoch_ms")).longValue();
-                String assuranceLevel = request.assuranceLevel() == null ? "" : request.assuranceLevel().toUpperCase(Locale.ROOT);
-                boolean verified = assuranceLevel.contains("VERIFIED") || assuranceLevel.contains("REGISTRY");
+                boolean verified = accountVerified(request);
                 if (!verified && Instant.now().toEpochMilli() > expiryEpochMs) {
                     log.debug("Condition failed: verification grace expired for actor {}", request.actorId());
                     return false;
@@ -459,6 +483,161 @@ public class PolicyEngine {
             log.warn("Failed to parse policy rule conditions JSON: {}", e.getMessage());
             return false; // Fail-closed: invalid conditions = no match
         }
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // Assurance-level helpers (G-CZO-01: identity-assurance → policy)
+    // ════════════════════════════════════════════════════════════════════
+
+    /**
+     * Effective Level of Assurance for policy: the stronger of the session's ACR-derived
+     * login LoA (frozen at token validation) and the actor's current identity-assurance
+     * level propagated via {@code X-Assurance-Level} (populated authoritatively by the BFF
+     * from identity-assurance-service, the canonical owner). Taking the max is monotonic —
+     * it never reduces access below the prior ACR-only behaviour, and lifts it the moment a
+     * verification upgrade is recorded.
+     */
+    private int effectiveLoa(AuthzInternalRequest request) {
+        return Math.max(request.loaLevel(), parseAssuranceLoa(request.assuranceLevel()));
+    }
+
+    /**
+     * Parse an {@code X-Assurance-Level} header value ("LOA3" or bare "3") to its numeric
+     * rank 1..4. Returns 0 when absent or unparseable (fail-safe: contributes nothing to the
+     * effective LoA, leaving the ACR level in force).
+     */
+    private static int parseAssuranceLoa(String raw) {
+        if (raw == null || raw.isBlank()) return 0;
+        String v = raw.trim().toUpperCase(Locale.ROOT);
+        if (v.startsWith("LOA")) v = v.substring(3).trim();
+        try {
+            int n = Integer.parseInt(v);
+            return (n >= 1 && n <= 4) ? n : 0;
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    /**
+     * Whether the actor holds a "verified" account for {@code account_assurance_required} rules:
+     * identity-assurance level LOA3+ (in-person verified), or a legacy verification-state string.
+     * Note this is keyed on the propagated assurance level only (not the ACR login level), so a
+     * strong login alone does not satisfy an account-verification requirement.
+     */
+    private static boolean accountVerified(AuthzInternalRequest request) {
+        if (parseAssuranceLoa(request.assuranceLevel()) >= 3) return true;
+        String v = request.assuranceLevel() == null ? "" : request.assuranceLevel().toUpperCase(Locale.ROOT);
+        return v.contains("VERIFIED") || v.contains("REGISTRY");
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // Step 4.5: Delegated / act-on-behalf helpers (L5, G-CZO-03)
+    // ════════════════════════════════════════════════════════════════════
+
+    /**
+     * Returns a DENY when the actor declares acting for another subject ({@code X-Subject-ID} ≠
+     * actor) but lacks an active, in-scope, sufficiently-assured delegation; returns {@code null}
+     * when the request is not delegated (subject absent or == actor) or the delegation authorises it.
+     * Fail-closed: a resolution error denies. Delegation authorises WHO may act; the subject's
+     * clinical consent (Step 5) still governs WHAT data.
+     */
+    private AuthzResponse evaluateDelegation(AuthzInternalRequest request, int riskScore, long startTime) {
+        String subjectId = request.subjectId();
+        String actorId = request.actorId();
+        if (subjectId == null || subjectId.isBlank() || subjectId.equals(actorId)) {
+            return null; // not acting on behalf of a different subject
+        }
+        DelegationResolution res;
+        try {
+            res = delegationClient.resolve(request.tenantId(), actorId, subjectId);
+        } catch (Exception e) {
+            log.warn("Delegation resolution failed for actor={} subject={}: {}", actorId, subjectId, e.getMessage());
+            return denyAndLog(request, "DELEGATION_UNAVAILABLE",
+                    "Delegation could not be verified", riskScore, startTime);
+        }
+        if (res == null || !res.active()) {
+            return denyAndLog(request, "DELEGATION_NOT_ACTIVE",
+                    "No active delegation authorising this actor to act for the subject", riskScore, startTime);
+        }
+        if (effectiveLoa(request) < res.assuranceFloor()) {
+            return denyAndLog(request, "DELEGATION_ASSURANCE_TOO_LOW",
+                    "Delegate assurance below the delegation floor", riskScore, startTime);
+        }
+        if (!scopeAllows(res.scope(), request.resourceType())) {
+            return denyAndLog(request, "DELEGATION_OUT_OF_SCOPE",
+                    "Requested resource is outside the delegation scope", riskScore, startTime);
+        }
+        return null; // delegation authorises the actor; continue to consent (against the subject)
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // Phase 3: OPA shadow comparison (strangler — Java authoritative)
+    // ════════════════════════════════════════════════════════════════════
+
+    /**
+     * In SHADOW mode, evaluate the OPA gate decision (purpose/min_loa/account-assurance) on a
+     * prepared input and log when it diverges from the Java verdict. OPA is never authoritative
+     * here; any error is swallowed. OFF by default → no-op, zero behaviour change. (The full
+     * DB-rule RBAC/ABAC requires policy_rules delivered as OPA bundle data — a later increment.)
+     */
+    private void shadowCompareOpa(AuthzInternalRequest request, PurposeOfUse purpose,
+                                  PolicyRuleEntity matchedRule, boolean javaAllow) {
+        String mode = properties.getOpaMode();
+        if (mode == null || "OFF".equalsIgnoreCase(mode)) {
+            return;
+        }
+        try {
+            Map<String, Object> input = new LinkedHashMap<>();
+            input.put("actor_id", request.actorId() != null ? request.actorId() : "");
+            input.put("purpose", purpose != null ? purpose.name() : "");
+            input.put("loa", request.loaLevel());
+            input.put("assurance_loa", parseAssuranceLoa(request.assuranceLevel()));
+            Map<String, Object> conditions = parseConditions(matchedRule);
+            if (conditions.get("min_loa") instanceof Number n) {
+                input.put("min_loa", n.intValue());
+            }
+            if (Boolean.TRUE.equals(conditions.get("account_assurance_required"))) {
+                input.put("account_assurance_required", true);
+            }
+            OpaDecision opa = opaDecisionClient.decide(input);
+            if (opa == null) {
+                return; // OPA undefined / unreachable — no signal
+            }
+            if (opa.allow() != javaAllow) {
+                log.warn("OPA-SHADOW divergence: java.allow={} opa.allow={} reasons={} actor={} purpose={} correlation={}",
+                        javaAllow, opa.allow(), opa.denyReasons(), request.actorId(),
+                        purpose != null ? purpose.name() : null, request.correlationId());
+            } else {
+                log.debug("OPA-SHADOW agree: allow={} actor={}", javaAllow, request.actorId());
+            }
+        } catch (Exception e) {
+            log.debug("OPA-SHADOW comparison skipped: {}", e.getMessage());
+        }
+    }
+
+    private Map<String, Object> parseConditions(PolicyRuleEntity rule) {
+        if (rule == null || rule.getConditions() == null || rule.getConditions().isBlank()) {
+            return Map.of();
+        }
+        try {
+            return objectMapper.readValue(rule.getConditions(), new TypeReference<>() {});
+        } catch (JsonProcessingException e) {
+            return Map.of();
+        }
+    }
+
+    /** Coarse scope containment: "*" allows all; otherwise a token must equal the resource type or prefix it ("type:..."). */
+    private static boolean scopeAllows(List<String> scope, String resourceType) {
+        if (scope == null || scope.isEmpty()) return false;
+        String rt = resourceType == null ? "" : resourceType.toLowerCase(Locale.ROOT);
+        for (String s : scope) {
+            if (s == null) continue;
+            String tok = s.trim().toLowerCase(Locale.ROOT);
+            if (tok.equals("*") || tok.equals(rt) || (!rt.isEmpty() && tok.startsWith(rt + ":"))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // ════════════════════════════════════════════════════════════════════

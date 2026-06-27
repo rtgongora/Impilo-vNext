@@ -9,7 +9,8 @@ import { NextRequest, NextResponse } from "next/server";
  * Full token validation happens at the BFF layer via Envoy ext_authz.
  */
 
-const PUBLIC_PREFIXES = [
+export const PUBLIC_PREFIXES = [
+  "/welcome", // public L0 landing, find-care, emergency, accessibility (G-CZO-02)
   "/auth",
   "/kiosk",
   "/verify",
@@ -25,7 +26,8 @@ const PUBLIC_PREFIXES = [
 
 const PUBLIC_FILES = ["/favicon.ico", "/robots.txt", "/manifest.json"];
 
-function isPublicPath(pathname: string): boolean {
+export function isPublicPath(pathname: string): boolean {
+  if (pathname === "/") return true; // root decides welcome-vs-home by session itself
   if (PUBLIC_FILES.includes(pathname)) return true;
   return PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 }

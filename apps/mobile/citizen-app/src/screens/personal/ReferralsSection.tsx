@@ -20,6 +20,7 @@ import {
 } from "@impilo/mobile-design-system";
 import type { Referral } from "../../types";
 import { appStore } from "../../stores/appStore";
+import { fetchReferrals } from "../../services/clinicalRecordsService";
 
 const STATUS_VARIANT: Record<string, "default" | "warning" | "success" | "destructive"> = {
   PENDING: "warning",
@@ -42,10 +43,8 @@ export function ReferralsSection({ patientId }: ReferralsSectionProps) {
     setIsLoading(true);
     setError(null);
     try {
-      // TODO: Wire to backend service
-      // const result = await fetchReferrals({ patientId });
-      // setReferrals(result.items);
-      setReferrals([]);
+      const result = await fetchReferrals();
+      setReferrals(result.items);
     } catch (err) {
       setError(err instanceof Error ? err : new Error(String(err)));
     } finally {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { citizenPortalApi } from "@/lib/citizenPortalClient";
 
 type RequestType = "NEW" | "REPLACEMENT";
@@ -21,12 +21,60 @@ const INITIAL_FORM: FormData = {
   sex: "",
 };
 
+// Resumable draft (G-CZO-09): a citizen on a poor connection can lose the page and not
+// lose progress. The draft holds only the demographic fields the form already collects.
+const DRAFT_KEY = "impilo:health-id-request-draft";
+
+function hasContent(form: FormData): boolean {
+  return Boolean(form.givenName || form.familyName || form.dateOfBirth || form.sex) || form.type !== "NEW";
+}
+
 /** Migrated from ui/portal/(citizen)/request-id */
 export default function CitizenRequestHealthIdPage() {
   const [form, setForm] = useState<FormData>(INITIAL_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [restored, setRestored] = useState(false);
+
+  // Restore an in-progress draft on mount.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as Partial<FormData>;
+      const next = { ...INITIAL_FORM, ...parsed };
+      if (hasContent(next)) {
+        setForm(next);
+        setRestored(true);
+      }
+    } catch {
+      // Ignore corrupt draft.
+    }
+  }, []);
+
+  // Persist the draft as the citizen types (skip the empty initial state).
+  useEffect(() => {
+    try {
+      if (hasContent(form)) localStorage.setItem(DRAFT_KEY, JSON.stringify(form));
+    } catch {
+      // Storage unavailable (private mode) — degrade silently.
+    }
+  }, [form]);
+
+  function clearDraft() {
+    try {
+      localStorage.removeItem(DRAFT_KEY);
+    } catch {
+      // ignore
+    }
+  }
+
+  function startOver() {
+    clearDraft();
+    setForm(INITIAL_FORM);
+    setRestored(false);
+  }
 
   function update<K extends keyof FormData>(key: K, value: FormData[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -44,6 +92,8 @@ export default function CitizenRequestHealthIdPage() {
         dateOfBirth: form.dateOfBirth || undefined,
         sex: form.sex || undefined,
       });
+      clearDraft();
+      setRestored(false);
       setSubmitted(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An unexpected error occurred");
@@ -62,6 +112,7 @@ export default function CitizenRequestHealthIdPage() {
         <button
           type="button"
           onClick={() => {
+            clearDraft();
             setSubmitted(false);
             setForm(INITIAL_FORM);
           }}
@@ -77,6 +128,18 @@ export default function CitizenRequestHealthIdPage() {
     <div className="max-w-lg mx-auto bg-card rounded-xl border border-border p-6">
       <h1 className="text-xl font-semibold text-foreground mb-1">Request Health ID</h1>
       <p className="text-sm text-muted-foreground mb-6">New or replacement health identity document.</p>
+      {restored && (
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-blue-200 bg-blue-50 p-3">
+          <p className="text-sm text-blue-800">We restored your saved progress.</p>
+          <button
+            type="button"
+            onClick={startOver}
+            className="shrink-0 text-sm font-medium text-blue-700 underline hover:text-blue-900"
+          >
+            Start over
+          </button>
+        </div>
+      )}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="type" className="block text-sm font-medium text-foreground mb-1">

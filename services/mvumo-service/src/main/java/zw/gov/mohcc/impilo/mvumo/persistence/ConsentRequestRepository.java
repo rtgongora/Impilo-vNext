@@ -13,4 +13,7 @@ public interface ConsentRequestRepository extends JpaRepository<ConsentRequestEn
     List<ConsentRequestEntity> findByTenantIdAndSubjectPatientRefOrderByCreatedAtDesc(UUID tenantId, String patientRef);
 
     List<ConsentRequestEntity> findByTenantIdAndEncounterRefOrderByCreatedAtDesc(UUID tenantId, String encounterRef);
+
+    /** Granted requests that carry a trust-layer directive — candidates for drift reconciliation. */
+    List<ConsentRequestEntity> findByStateInAndTshepoConsentIdIsNotNull(List<String> states);
 }

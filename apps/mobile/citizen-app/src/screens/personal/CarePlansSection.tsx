@@ -21,6 +21,7 @@ import {
 } from "@impilo/mobile-design-system";
 import type { CarePlan } from "../../types";
 import { appStore } from "../../stores/appStore";
+import { fetchCarePlans } from "../../services/clinicalRecordsService";
 
 const STATUS_VARIANT: Record<string, "default" | "warning" | "success" | "destructive"> = {
   ACTIVE: "default",
@@ -42,10 +43,8 @@ export function CarePlansSection({ patientId }: CarePlansSectionProps) {
     setIsLoading(true);
     setError(null);
     try {
-      // TODO: Wire to backend service
-      // const result = await fetchCarePlans({ patientId });
-      // setCarePlans(result.items);
-      setCarePlans([]);
+      const result = await fetchCarePlans();
+      setCarePlans(result.items);
     } catch (err) {
       setError(err instanceof Error ? err : new Error(String(err)));
     } finally {

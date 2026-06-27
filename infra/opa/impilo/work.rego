@@ -1,6 +1,6 @@
 package impilo.work
 
-import future.keywords.in
+import future.keywords
 
 default allow := false
 
