@@ -308,8 +308,9 @@ forgery via partially-predictable ULID orderIds). **FIXED** (`OrderStateMachine.
 `getResults`/`cancelOrder` route through it; `findByTenantIdAndOrderId` added; regression tests added) — per the "fix all issues
 necessary for a successful merge" directive.
 
-**Status: complete and verified on the prep branch; awaiting human sign-off to merge into PT + push** (billing/auth/policy/PHI-
-sensitive). On approval: cut a `safety/pt-before-phase2-…` snapshot, `--no-ff` merge, regenerate truth, re-run gates, FF push.
+**Status: LANDED (2026-06-27, human sign-off granted).** PT `3538860ee → 902ca023f` (FF, no force).
+Safety snapshot `safety/pt-before-phase2-20260627-0354`. `intake/oros-diagnostics-journey` verified fully merged
+(ancestor of PT) and **deleted**. Gates re-run on PT post-merge: product-truth 4 ≤ 6, phase6 2 ≤ 2, completeness 12/13 — no regression.
 
 ### Remaining work (Phases 3–5) — gated on human sign-off + CI
 These were **intentionally not executed** in this automated pass because the approved plan gates them on
