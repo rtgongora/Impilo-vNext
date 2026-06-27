@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-27T16:24:42.300Z",
+  "generatedAt": "2026-06-27T16:44:39.790Z",
   "branch": "chore/paydown-placeholder-gaps",
   "registryDrift": {
     "unregisteredModules": [],
@@ -22,13 +22,13 @@
     },
     "gapCounts": {
       "byCategory": {
-        "F": 3,
+        "F": 1,
         "S": 2
       },
       "bySeverity": {
-        "high": 5
+        "high": 3
       },
-      "total": 5
+      "total": 3
     },
     "crossServiceCohesion": {
       "total": 14,
@@ -7315,7 +7315,7 @@
         "contractOperations": 52,
         "contractViolations": 0,
         "bffClients": 12,
-        "uiReferences": 83,
+        "uiReferences": 81,
         "mobileReferences": 14,
         "tests": 9
       },
@@ -29373,20 +29373,6 @@
         {
           "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
           "pattern": "json-stringify-render"
-        },
-        {
-          "file": "ui/one-ui-shell/src/components/workspace-ops/StockManagementPanel.tsx",
-          "pattern": "mock-data-var"
-        },
-        {
-          "file": "ui/one-ui-shell/src/components/workspace-ops/StockManagementPanel.tsx",
-          "pattern": "hardcoded-collection",
-          "detail": "PURCHASE_ORDERS"
-        },
-        {
-          "file": "ui/one-ui-shell/src/components/workspace-ops/StockManagementPanel.tsx",
-          "pattern": "hardcoded-collection",
-          "detail": "TRANSFERS"
         }
       ],
       "hasMutation": true,
@@ -29397,14 +29383,7 @@
       "writesRealData": true,
       "completeVsCosmetic": false,
       "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "F",
-          "severity": "high",
-          "description": "/wellness/commodities: mock/stub data",
-          "impactScore": 3
-        }
-      ]
+      "gaps": []
     },
     {
       "path": "/wellness/community",
@@ -32189,48 +32168,6 @@
         {
           "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
           "pattern": "json-stringify-render"
-        },
-        {
-          "file": "ui/one-ui-shell/src/components/workspace-ops/StockManagementPanel.tsx",
-          "pattern": "mock-data-var"
-        },
-        {
-          "file": "ui/one-ui-shell/src/components/workspace-ops/StockManagementPanel.tsx",
-          "pattern": "hardcoded-collection",
-          "detail": "PURCHASE_ORDERS"
-        },
-        {
-          "file": "ui/one-ui-shell/src/components/workspace-ops/StockManagementPanel.tsx",
-          "pattern": "hardcoded-collection",
-          "detail": "TRANSFERS"
-        },
-        {
-          "file": "ui/one-ui-shell/src/components/workspace-ops/HRShiftsPanel.tsx",
-          "pattern": "mock-data-var"
-        },
-        {
-          "file": "ui/one-ui-shell/src/components/workspace-ops/BillingPanel.tsx",
-          "pattern": "mock-data-var"
-        },
-        {
-          "file": "ui/one-ui-shell/src/components/workspace-ops/BillingPanel.tsx",
-          "pattern": "hardcoded-collection",
-          "detail": "UNBILLED_CHARGES"
-        },
-        {
-          "file": "ui/one-ui-shell/src/components/workspace-ops/BillingPanel.tsx",
-          "pattern": "hardcoded-collection",
-          "detail": "INVOICES"
-        },
-        {
-          "file": "ui/one-ui-shell/src/components/workspace-ops/BillingPanel.tsx",
-          "pattern": "hardcoded-collection",
-          "detail": "CLAIMS"
-        },
-        {
-          "file": "ui/one-ui-shell/src/components/workspace-ops/BillingPanel.tsx",
-          "pattern": "hardcoded-collection",
-          "detail": "RECENT_PAYMENTS"
         }
       ],
       "hasMutation": true,
@@ -32241,14 +32178,7 @@
       "writesRealData": true,
       "completeVsCosmetic": false,
       "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "F",
-          "severity": "high",
-          "description": "/operations/facility-operations: mock/stub data",
-          "impactScore": 3
-        }
-      ]
+      "gaps": []
     },
     {
       "path": "/operations/facility-operations/district-view",

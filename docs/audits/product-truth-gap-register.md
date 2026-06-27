@@ -1,7 +1,7 @@
 # Product Truth — Gap Register
 
-> Generated: 2026-06-27T16:24:42.300Z
-> Total gaps: **5**
+> Generated: 2026-06-27T16:44:39.790Z
+> Total gaps: **3**
 
 ## Gap categories (A–R)
 
@@ -12,7 +12,7 @@
 | C | Backend exists, contract missing/stale | 0 |
 | D | Backend exists, frontend only partially wired | 0 |
 | E | UI exists, backend missing | 0 |
-| F | UI exists, uses mock/stub/fixture data | 3 |
+| F | UI exists, uses mock/stub/fixture data | 1 |
 | G | UI exists, form submits but does not persist | 0 |
 | H | UI exists, button/card is dead or decorative | 0 |
 | I | API exists, database persistence missing | 0 |
@@ -31,7 +31,7 @@
 
 | Severity | Count |
 |----------|------:|
-| high | 5 |
+| high | 3 |
 
 ## Prioritized gaps (top 100)
 
@@ -40,8 +40,6 @@
 | 1 | experience-bff | F | high | experience-bff: mock/stub/fixture/in-memory patterns in product path (2 hits) |
 | 2 | pct-service | S | high | pct-service: security/crypto/authz placeholder in product path (5 hits) |
 | 3 | vashandi-workforce-service | S | high | vashandi-workforce-service: security/crypto/authz placeholder in product path (1 hits) |
-| 4 | /wellness/commodities | F | high | /wellness/commodities: mock/stub data |
-| 5 | /operations/facility-operations | F | high | /operations/facility-operations: mock/stub data |
 
 ## Services requiring product-owner decision
 
