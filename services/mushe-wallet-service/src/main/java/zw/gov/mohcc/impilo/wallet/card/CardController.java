@@ -15,7 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.wallet.persistence.entity.CardEntity;
 import zw.gov.mohcc.impilo.wallet.persistence.entity.CardHealthDataEntity;
 import zw.gov.mohcc.impilo.wallet.persistence.entity.CardUpdateQueueEntity;
+import zw.gov.mohcc.impilo.wallet.persistence.entity.WalletEntity;
 import zw.gov.mohcc.impilo.wallet.persistence.repository.CardRepository;
+import zw.gov.mohcc.impilo.wallet.persistence.repository.WalletRepository;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -38,13 +40,16 @@ public class CardController {
     private final CardService cardService;
     private final CardHealthDataService healthDataService;
     private final CardRepository cardRepository;
+    private final WalletRepository walletRepository;
 
     public CardController(CardService cardService,
                           CardHealthDataService healthDataService,
-                          CardRepository cardRepository) {
+                          CardRepository cardRepository,
+                          WalletRepository walletRepository) {
         this.cardService = cardService;
         this.healthDataService = healthDataService;
         this.cardRepository = cardRepository;
+        this.walletRepository = walletRepository;
     }
 
     // ── Issue Card ──────────────────────────────────────────────────────
@@ -223,19 +228,34 @@ public class CardController {
 
         CardEntity card = cardService.findCardOrThrow(cardId);
 
-        // Look up the wallet to get the owner_ref (patient CPID)
-        // The actual BUTANO fetch and encryption will be handled asynchronously.
-        // For now, queue a placeholder update that will be processed by the
-        // WalletEventConsumer or a dedicated job.
-        String patientCpid = "pending-lookup"; // Resolved from wallet.owner_ref at processing time
-        String encryptionKeyRef = "tshepo-keys:" + card.getTenantId() + ":card:" + cardId;
+        // Resolve the real patient CPID from the card's wallet owner_ref. Health-data
+        // sync only applies to an individual (patient) wallet — a merchant/provider
+        // wallet has no critical health summary, so reject rather than queue a bogus job.
+        WalletEntity wallet = walletRepository.findByWalletId(card.getWalletId())
+                .orElseThrow(() -> new IllegalStateException(
+                        "Wallet not found for card " + cardId + " (walletId=" + card.getWalletId() + ")"));
+        if (!"INDIVIDUAL".equalsIgnoreCase(wallet.getOwnerType())) {
+            return ResponseEntity.unprocessableEntity().body(Map.of(
+                    "error", "Health-data sync is only supported for individual (patient) wallets",
+                    "ownerType", String.valueOf(wallet.getOwnerType())));
+        }
+        String patientCpid = wallet.getOwnerRef();
+        if (patientCpid == null || patientCpid.isBlank()) {
+            return ResponseEntity.unprocessableEntity().body(Map.of(
+                    "error", "Wallet has no owner_ref (patient CPID) to sync health data for"));
+        }
+        String encryptionKeyRef = "tshepo-keys:" + card.getTenantId() + ":patient:" + patientCpid;
 
-        // Queue a critical summary update
+        // Queue a CRITICAL_SUMMARY sync. The real summary is fetched from BUTANO at
+        // card-sync time; mark it PENDING_SYNC (not "{}", which a reader could mistake
+        // for "no critical health data" — no allergies/conditions — on a health card).
         healthDataService.updateCriticalSummary(
-                cardId, patientCpid, "{}", encryptionKeyRef, UUID.fromString(tenantId));
+                cardId, patientCpid, "{\"status\":\"PENDING_SYNC\"}", encryptionKeyRef,
+                UUID.fromString(tenantId));
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("cardId", cardId.toString());
+        response.put("patientCpid", patientCpid);
         response.put("status", "QUEUED");
         response.put("message", "Health data sync queued for processing");
         return ResponseEntity.accepted().body(response);

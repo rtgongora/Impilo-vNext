@@ -1,6 +1,6 @@
 # Product Truth — Backend-to-UI Traceability
 
-> Generated: 2026-06-27T15:46:29.817Z
+> Generated: 2026-06-27T15:55:29.263Z
 
 For each service: backend capabilities → API → BFF → UI → mobile → persistence.
 
@@ -1165,7 +1165,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 3 | Wired via BFF? | Yes (4 clients) |
 | 4 | Visible in UI? | Yes (7 refs) |
 | 5 | Visible on mobile? | Yes (7 refs) |
-| 6 | Fake/partial/disconnected? | Yes — review |
+| 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
 | 8 | UI without backend? | No |
 | 9 | Persists to DB? | Yes (2 migrations) |
@@ -1177,9 +1177,6 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/marketplace/cart/page.tsx`
 - `ui/one-ui-shell/src/app/wallet/page.tsx`
 - `ui/one-ui-shell/src/components/navigation/ExperienceSidebar.tsx`
-
-**Gaps:**
-- [F] mushe-wallet-service: mock/stub/fixture/in-memory patterns in product path (1 hits) (high)
 
 ## mushex-service
 

@@ -1,6 +1,6 @@
 # Full Product Truth Recovery Report
 
-> Generated: 2026-06-27T15:46:29.817Z
+> Generated: 2026-06-27T15:55:29.263Z
 > Branch: `chore/paydown-placeholder-gaps`
 
 ## Executive summary
@@ -13,19 +13,19 @@
 | Frontend surfaces (routes) | 672 |
 | Mobile screens | 181 |
 | BFF route handlers | 2418 |
-| OpenAPI contracts | 104 |
+| OpenAPI contracts | 105 |
 | Services with DB persistence | 95 |
-| **Phase 6 complete (user-facing + documented internal)** | **91** |
+| **Phase 6 complete (user-facing + documented internal)** | **92** |
 | User-facing services with `real` code present (file-existence axis) | 70 / 70 |
 | — of those, **runtime-proven** (REAL_PROVEN) | **0** |
 | Services internal-only (documented) | 25 |
 | Services partially complete | 0 |
 | Services backend-only (no UI) | 0 |
 | Services UI-only (no backend) | 0 |
-| Services with mock/stub hits | 3 |
-| Total classified gaps | 14 |
+| Services with mock/stub hits | 2 |
+| Total classified gaps | 13 |
 | Blocker gaps | 0 |
-| High severity gaps | 14 |
+| High severity gaps | 13 |
 | Cross-service cohesion | 14/14 pass |
 
 > **Honesty note:** `real` above is the file-existence axis (code present + wired),
@@ -37,8 +37,8 @@
 | Maturity | Count |
 |----------|------:|
 | INTERNAL_ONLY | 25 |
-| REAL_CODE_NOT_PROBED | 66 |
-| FIXTURE_BACKED | 4 |
+| REAL_CODE_NOT_PROBED | 67 |
+| FIXTURE_BACKED | 3 |
 
 ## Quality gates added
 
@@ -60,7 +60,7 @@
 
 ## Remaining gaps by severity
 
-- **high:** 14
+- **high:** 13
 
 ## Implementation status
 

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-27T15:46:29.817Z",
+  "generatedAt": "2026-06-27T15:55:29.263Z",
   "branch": "chore/paydown-placeholder-gaps",
   "registryDrift": {
     "unregisteredModules": [],
@@ -10,26 +10,26 @@
     "totalLibraries": 12,
     "totalUiWorkspaces": 24,
     "bffRouteCount": 2418,
-    "contractCount": 104,
+    "contractCount": 105,
     "byProductStatus": {
       "internal-only": 25,
       "real": 70
     },
     "byMaturity": {
       "INTERNAL_ONLY": 25,
-      "REAL_CODE_NOT_PROBED": 66,
-      "FIXTURE_BACKED": 4
+      "REAL_CODE_NOT_PROBED": 67,
+      "FIXTURE_BACKED": 3
     },
     "gapCounts": {
       "byCategory": {
         "E": 4,
-        "F": 8,
+        "F": 7,
         "S": 2
       },
       "bySeverity": {
-        "high": 14
+        "high": 13
       },
-      "total": 14
+      "total": 13
     },
     "crossServiceCohesion": {
       "total": 14,
@@ -41,7 +41,7 @@
       "missingTest": 0
     },
     "phase6": {
-      "complete": 91,
+      "complete": 92,
       "userFacing": 70,
       "userFacingReal": 70,
       "userFacingRealProven": 0
@@ -5465,12 +5465,7 @@
         "citizen-app:apps/mobile/citizen-app/src/services/financeService.ts",
         "citizen-app:apps/mobile/citizen-app/src/services/walletService.ts"
       ],
-      "mockStubHits": [
-        {
-          "file": "services/mushe-wallet-service/src/main/java/zw/gov/mohcc/impilo/wallet/card/CardController.java",
-          "pattern": "stub-placeholder"
-        }
-      ],
+      "mockStubHits": [],
       "securityPlaceholderHits": [],
       "stubRouteCount": 0,
       "bffOrphanRoutes": 0,
@@ -5483,22 +5478,15 @@
         "q3_wiredViaBff": true,
         "q4_visibleInUi": true,
         "q5_visibleOnMobile": true,
-        "q6_fakePartialDisconnected": true,
+        "q6_fakePartialDisconnected": false,
         "q7_backendNoUi": false,
         "q8_uiNoBackend": false,
         "q9_persistsToDb": true,
         "q10_fixtureOnly": false
       },
-      "phase6Complete": false,
-      "gaps": [
-        {
-          "category": "F",
-          "severity": "high",
-          "description": "mushe-wallet-service: mock/stub/fixture/in-memory patterns in product path (1 hits)",
-          "impactScore": 3
-        }
-      ],
-      "maturity": "FIXTURE_BACKED"
+      "phase6Complete": true,
+      "gaps": [],
+      "maturity": "REAL_CODE_NOT_PROBED"
     },
     {
       "id": "mushex-service",

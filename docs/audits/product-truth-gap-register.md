@@ -1,7 +1,7 @@
 # Product Truth — Gap Register
 
-> Generated: 2026-06-27T15:46:29.817Z
-> Total gaps: **14**
+> Generated: 2026-06-27T15:55:29.263Z
+> Total gaps: **13**
 
 ## Gap categories (A–R)
 
@@ -12,7 +12,7 @@
 | C | Backend exists, contract missing/stale | 0 |
 | D | Backend exists, frontend only partially wired | 0 |
 | E | UI exists, backend missing | 4 |
-| F | UI exists, uses mock/stub/fixture data | 8 |
+| F | UI exists, uses mock/stub/fixture data | 7 |
 | G | UI exists, form submits but does not persist | 0 |
 | H | UI exists, button/card is dead or decorative | 0 |
 | I | API exists, database persistence missing | 0 |
@@ -31,7 +31,7 @@
 
 | Severity | Count |
 |----------|------:|
-| high | 14 |
+| high | 13 |
 
 ## Prioritized gaps (top 100)
 
@@ -42,15 +42,14 @@
 | 3 | /welcome/emergency | E | high | /welcome/emergency: no BFF/API backing detected |
 | 4 | /welcome/accessibility | E | high | /welcome/accessibility: no BFF/API backing detected |
 | 5 | experience-bff | F | high | experience-bff: mock/stub/fixture/in-memory patterns in product path (5 hits) |
-| 6 | mushe-wallet-service | F | high | mushe-wallet-service: mock/stub/fixture/in-memory patterns in product path (1 hits) |
-| 7 | pct-service | S | high | pct-service: security/crypto/authz placeholder in product path (5 hits) |
-| 8 | vashandi-workforce-service | S | high | vashandi-workforce-service: security/crypto/authz placeholder in product path (1 hits) |
-| 9 | /welcome | F | high | /welcome: mock/stub data |
-| 10 | /welcome/find-care | F | high | /welcome/find-care: mock/stub data |
-| 11 | /welcome/emergency | F | high | /welcome/emergency: mock/stub data |
-| 12 | /welcome/accessibility | F | high | /welcome/accessibility: mock/stub data |
-| 13 | /wellness/commodities | F | high | /wellness/commodities: mock/stub data |
-| 14 | /operations/facility-operations | F | high | /operations/facility-operations: mock/stub data |
+| 6 | pct-service | S | high | pct-service: security/crypto/authz placeholder in product path (5 hits) |
+| 7 | vashandi-workforce-service | S | high | vashandi-workforce-service: security/crypto/authz placeholder in product path (1 hits) |
+| 8 | /welcome | F | high | /welcome: mock/stub data |
+| 9 | /welcome/find-care | F | high | /welcome/find-care: mock/stub data |
+| 10 | /welcome/emergency | F | high | /welcome/emergency: mock/stub data |
+| 11 | /welcome/accessibility | F | high | /welcome/accessibility: mock/stub data |
+| 12 | /wellness/commodities | F | high | /wellness/commodities: mock/stub data |
+| 13 | /operations/facility-operations | F | high | /operations/facility-operations: mock/stub data |
 
 ## Services requiring product-owner decision
 

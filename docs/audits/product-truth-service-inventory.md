@@ -1,6 +1,6 @@
 # Product Truth — Service Inventory
 
-> Generated: 2026-06-27T15:46:29.817Z
+> Generated: 2026-06-27T15:55:29.263Z
 > Scanner: `scripts/completeness/generate-product-truth.mjs`
 > Total services: **95** | Libraries: **12** | UI workspaces: **24**
 
