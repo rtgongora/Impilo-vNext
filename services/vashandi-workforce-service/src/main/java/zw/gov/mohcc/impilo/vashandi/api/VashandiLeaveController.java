@@ -4,6 +4,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.vashandi.core.LeaveAvailabilityService;
 import zw.gov.mohcc.impilo.vashandi.persistence.entity.LeaveAvailabilityEntity;
+import zw.gov.mohcc.impilo.vashandi.persistence.entity.LeaveBalanceEntity;
+import zw.gov.mohcc.impilo.vashandi.persistence.entity.LeaveTypeEntity;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
@@ -25,9 +27,38 @@ public class VashandiLeaveController {
         return leaveService.list(tenantId(), workforceProfileId);
     }
 
+    /** Leave windows for a worker by provider-worker-id (the ERP-HR bridge). */
+    @GetMapping("/v1/internal/vashandi/availability/by-provider")
+    public List<LeaveAvailabilityEntity> listByProvider(
+            @RequestParam(value = "provider_worker_id") String providerWorkerId) {
+        return leaveService.listByProviderWorkerId(tenantId(), providerWorkerId);
+    }
+
     @PostMapping("/v1/internal/vashandi/leave")
     public LeaveAvailabilityEntity createLeave(@RequestBody VashandiDtos.CreateLeaveRequest request) throws Exception {
         return leaveService.create(tenantId(), request);
+    }
+
+    @GetMapping("/v1/internal/vashandi/leave/balances")
+    public List<LeaveBalanceEntity> listBalances(
+            @RequestParam(value = "workforce_profile_id") UUID workforceProfileId,
+            @RequestParam(value = "fiscal_year") int fiscalYear) {
+        return leaveService.balances(tenantId(), workforceProfileId, fiscalYear);
+    }
+
+    @PostMapping("/v1/internal/vashandi/leave/balances")
+    public LeaveBalanceEntity upsertBalance(@RequestBody VashandiDtos.UpsertLeaveBalanceRequest request) {
+        return leaveService.upsertBalance(tenantId(), request);
+    }
+
+    @GetMapping("/v1/internal/vashandi/leave/types")
+    public List<LeaveTypeEntity> leaveTypes() {
+        return leaveService.leaveTypes(tenantId());
+    }
+
+    @PostMapping("/v1/internal/vashandi/leave/types")
+    public LeaveTypeEntity createLeaveType(@RequestBody LeaveTypeEntity type) {
+        return leaveService.createLeaveType(tenantId(), type);
     }
 
     @PatchMapping("/v1/internal/vashandi/leave/{id}")

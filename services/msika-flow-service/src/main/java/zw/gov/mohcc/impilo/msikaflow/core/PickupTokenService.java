@@ -202,6 +202,34 @@ public class PickupTokenService {
         }
     }
 
+    /**
+     * Resolves the printable-slip context for an order's active pickup token (G034).
+     * Non-secret token metadata is read from the store; the optional client-held {@code rawToken}
+     * is validated against the stored hash (so the slip embeds a genuine, scannable QR) but is
+     * never persisted or logged. A blank/absent token yields {@code tokenVerified=false} (the slip
+     * is rendered without the secret QR); a non-blank token that does not match is rejected.
+     *
+     * @throws IllegalArgumentException if the order has no active token, or a supplied token mismatches
+     */
+    @Transactional(readOnly = true)
+    public PickupSlipContext resolveSlipContext(String orderId, String rawToken) {
+        PickupTokenEntity token = tokenRepository.findByOrderIdAndStatus(orderId, PickupTokenStatus.ACTIVE)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No active pickup token for order " + orderId));
+        boolean supplied = rawToken != null && !rawToken.isBlank();
+        boolean verified = supplied && sha256(rawToken).equals(token.getTokenHash());
+        if (supplied && !verified) {
+            throw new IllegalArgumentException(
+                    "Provided token does not match the order's active pickup token");
+        }
+        return new PickupSlipContext(orderId, token.getId(), token.getExpiresAt(),
+                token.getStatus().name(), verified);
+    }
+
     public record PickupIssueResult(String tokenId, String rawToken, String rawOtp, OffsetDateTime expiresAt) {}
     public record ClaimResult(String orderId, String tokenId, String claimedBy) {}
+
+    /** Non-secret slip context for {@code /orders/{id}/pickup/slip.pdf} (G034). */
+    public record PickupSlipContext(String orderId, String tokenId, OffsetDateTime expiresAt,
+                                    String status, boolean tokenVerified) {}
 }

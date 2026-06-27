@@ -41,7 +41,8 @@ public class ClinicalContextEnricher {
         return new ClinicalEvaluationContext(
                 ctx.ageYears(), ctx.ageDays(), ctx.weightKg(), ctx.facilityLevel(),
                 ctx.diagnoses(), enriched, ctx.empiricBroadSpectrumDays(),
-                ctx.cultureDocumented(), ctx.lastResortAntibioticWithoutAstJustification());
+                ctx.cultureDocumented(), ctx.lastResortAntibioticWithoutAstJustification(),
+                ctx.vitals(), ctx.allergies());
     }
 
     private boolean isSpecialistOnly(String genericName) {

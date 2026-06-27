@@ -142,6 +142,8 @@ public class OutboxPublisher {
         return switch (eventType) {
             case "ORDER_PLACED" -> "oros.order.placed";
 
+            case "ORDER_DRAFT_CREATED", "ORDER_DRAFT_UPDATED" -> "oros.order.draft";
+
             case "ORDER_STATUS_CHANGED",
                  "ORDER_ACCEPTED", "ORDER_SCHEDULED", "ORDER_IN_PROGRESS",
                  "ORDER_PARTIAL_RESULT", "ORDER_RESULT_AVAILABLE",
@@ -155,12 +157,17 @@ public class OutboxPublisher {
             case "WORKSTEP_CHANGED", "WORKSTEP_STARTED", "WORKSTEP_COMPLETED" ->
                     "oros.workstep.changed";
 
-            case "RESULT_AVAILABLE", "RESULT_POSTED" -> "oros.result.available";
+            case "RESULT_AVAILABLE", "RESULT_POSTED",
+                 "RESULT_PRELIMINARY", "RESULT_FINAL", "RESULT_AMENDED", "RESULT_ADDENDUM" ->
+                    "oros.result.available";
+
+            case "RESULT_RELEASED" -> "oros.result.released";
 
             case "RESULT_CRITICAL", "CRITICAL_RESULT_POSTED", "RESULT_MARKED_CRITICAL" ->
                     "oros.result.critical";
 
-            case "ACK_RECEIVED" -> "oros.ack.received";
+            case "ACK_RECEIVED", "RESULT_ACKNOWLEDGED", "RESULT_CRITICAL_ACKNOWLEDGED" ->
+                    "oros.ack.received";
 
             case "ACK_ESCALATION" -> "oros.ack.escalation";
 
@@ -171,6 +178,15 @@ public class OutboxPublisher {
             default -> {
                 if (eventType.startsWith("ORDER_ACKNOWLEDGED_")) {
                     yield "oros.ack.received";
+                }
+                if (eventType.startsWith("IMAGING_STATE_")) {
+                    yield "oros.imaging.state_changed";
+                }
+                if (eventType.startsWith("WORKFLOW_STATE_")) {
+                    yield "oros.workflow.state_changed";
+                }
+                if (eventType.startsWith("SPECIMEN_")) {
+                    yield "oros.specimen.changed";
                 }
                 yield "oros.events";
             }

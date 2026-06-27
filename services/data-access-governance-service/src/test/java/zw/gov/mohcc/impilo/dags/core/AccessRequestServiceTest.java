@@ -110,7 +110,7 @@ class AccessRequestServiceTest {
 
             when(requestRepository.findByIdAndTenantId(requestId, tenantId))
                     .thenReturn(Optional.of(request));
-            when(enforcementService.issuePermitToken(requestId, tenantId, "user-2"))
+            when(enforcementService.issuePermitToken(any()))
                     .thenReturn("permit-token:test-token");
             when(requestRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
@@ -135,7 +135,7 @@ class AccessRequestServiceTest {
 
             when(requestRepository.findByIdAndTenantId(requestId, tenantId))
                     .thenReturn(Optional.of(request));
-            when(enforcementService.issuePermitToken(any(), any(), any()))
+            when(enforcementService.issuePermitToken(any()))
                     .thenReturn("permit-token:abc");
             when(requestRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 

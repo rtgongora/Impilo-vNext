@@ -32,6 +32,7 @@ import { apiClient } from "@/lib/api-client";
 import { DiscoverFacilitiesMapPanel } from "@/components/maps/DiscoverFacilitiesMapPanel";
 import { FacilitiesGeoMapPanel } from "@/components/maps/FacilitiesGeoMapPanel";
 import { OfflineClinicalQueueOrchestrationPanel } from "@/components/clinical/OfflineClinicalQueueOrchestrationPanel";
+import { AIDiagnosticAssistant } from "@/components/clinical/AIDiagnosticAssistant";
 
 /* ═══════════════════════════════════════════════════════════════════
    TYPE & DATA DEFINITIONS
@@ -1232,6 +1233,10 @@ function CdsTab() {
       <h3 className="text-base font-semibold text-foreground">Clinical Decision Support</h3>
       <p className="text-sm text-muted-foreground">Rule-based alerts evaluated during encounters. No ML required — purely clinical guideline rules.</p>
 
+      {/* Real, governed decision-support tool — backed by clinical-knowledge-platform-service. */}
+      <AIDiagnosticAssistant />
+
+      <p className="text-sm font-medium text-foreground">Encounter rule catalogue</p>
       <div className="bg-card rounded-lg border border-border overflow-hidden">
         <table className="w-full text-xs">
           <thead><tr className="border-b bg-background">
@@ -1243,7 +1248,7 @@ function CdsTab() {
           <tbody>
             {([
               ["Hypertensive Crisis","Vitals","Systolic BP \u2265 180 mmHg","critical"],
-              ["Hypoxemia","Vitals","SpO\u2082 < 92%","critical"],
+              ["Hypoxemia (pending SpO\u2082 capture)","Vitals","SpO\u2082 < 92% \u2014 rule implemented; dormant until SpO\u2082 is recorded","critical"],
               ["Drug-Allergy Interaction","Allergies","Active allergy + matching medication","critical"],
               ["Tachycardia","Vitals","Heart rate > 120 bpm","warning"],
               ["Bradycardia","Vitals","Heart rate < 50 bpm","warning"],
@@ -1264,8 +1269,11 @@ function CdsTab() {
         </table>
       </div>
 
-      <div className="bg-green-50 rounded-lg border border-green-200 p-4 text-sm text-green-800">
-        <strong>Active in Encounters:</strong> CDS alerts are automatically evaluated when viewing any encounter. Alerts appear as dismissable banners above the encounter content.
+      <div className="bg-primary-soft rounded-lg border border-primary/20 p-4 text-sm text-foreground">
+        <strong>How alerts surface:</strong> in the patient EHR, the clinical toolbar evaluates this rule catalogue against
+        the patient&apos;s own records (active conditions, prescriptions, latest vitals, documented allergies) via the
+        governed rules engine, and any matching alerts appear as dismissable banners above the encounter content. Use the
+        decision-support tool above for guideline-grounded answers to specific questions.
       </div>
     </div>
   );

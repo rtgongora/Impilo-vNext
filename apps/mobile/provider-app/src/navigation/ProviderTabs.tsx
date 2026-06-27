@@ -18,6 +18,7 @@ import { EncounterScreen } from "../screens/provider/EncounterScreen";
 import { MessagingScreen } from "../screens/provider/MessagingScreen";
 import { HealthOsAppsScreen } from "../screens/provider/HealthOsAppsScreen";
 import { ProviderSocialScreen } from "../screens/provider/ProviderSocialScreen";
+import { DiagnosticsScreen } from "../screens/provider/DiagnosticsScreen";
 import { useAppStore } from "../stores/appStore";
 import { useEncounterStore } from "../stores/encounterStore";
 import type { ProviderTabKey } from "../types";
@@ -70,6 +71,11 @@ export function ProviderTabs() {
         ]
       : []),
     {
+      key: "diagnostics" as const,
+      label: "Diagnostics",
+      icon: tabIcon(providerTab === "diagnostics" ? "scan" : "scan-outline", providerTab === "diagnostics"),
+    },
+    {
       key: "results" as const,
       label: "Results",
       icon: tabIcon(providerTab === "results" ? "flask" : "flask-outline", providerTab === "results"),
@@ -109,6 +115,8 @@ export function ProviderTabs() {
         return <PatientLookupScreen />;
       case "encounter":
         return <EncounterScreen />;
+      case "diagnostics":
+        return <DiagnosticsScreen />;
       case "results":
         return <ResultsViewScreen />;
       case "queue":

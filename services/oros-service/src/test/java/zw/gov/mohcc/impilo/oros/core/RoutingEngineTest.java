@@ -219,6 +219,57 @@ class RoutingEngineTest {
     }
 
     @Test
+    @DisplayName("assignDestination updates the existing route and emits ORDER_ROUTED")
+    void assignDestinationUpdatesExistingRoute() {
+        try (MockedStatic<TrustContextHolder> mockedHolder = mockStatic(TrustContextHolder.class)) {
+            mockedHolder.when(TrustContextHolder::require).thenReturn(createTrustContext());
+
+            RoutingEntity existing = new RoutingEntity();
+            existing.setRouteId(UUID.randomUUID());
+            existing.setOrderId("ORD-ROUTE-1");
+            existing.setStatus(RouteStatus.SENT);
+            when(routingRepository.findByOrderId("ORD-ROUTE-1")).thenReturn(List.of(existing));
+            when(routingRepository.save(any(RoutingEntity.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
+
+            UUID destFacility = UUID.randomUUID();
+            RoutingEntity route = routingEngine.assignDestination("ORD-ROUTE-1",
+                    new RoutingEngine.RouteDestination(
+                            RouteDestinationType.EXTERNAL_PROVIDER, destFacility, null, null,
+                            "prov-9", "City Radiology", "SECURE_LINK", null));
+
+            assertThat(route.getDestinationType()).isEqualTo(RouteDestinationType.EXTERNAL_PROVIDER);
+            assertThat(route.getDestinationFacilityId()).isEqualTo(destFacility);
+            assertThat(route.getDestinationProviderId()).isEqualTo("prov-9");
+            assertThat(route.getDestinationName()).isEqualTo("City Radiology");
+            assertThat(route.getExpectedReturnMethod()).isEqualTo("SECURE_LINK");
+            verify(outboxRepository).save(any(EventOutboxEntity.class));
+        }
+    }
+
+    @Test
+    @DisplayName("assignDestination creates a route when none exists yet")
+    void assignDestinationCreatesRouteWhenAbsent() {
+        try (MockedStatic<TrustContextHolder> mockedHolder = mockStatic(TrustContextHolder.class)) {
+            mockedHolder.when(TrustContextHolder::require).thenReturn(createTrustContext());
+
+            when(routingRepository.findByOrderId("ORD-ROUTE-2")).thenReturn(List.of());
+            when(routingRepository.save(any(RoutingEntity.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
+
+            RoutingEntity route = routingEngine.assignDestination("ORD-ROUTE-2",
+                    new RoutingEngine.RouteDestination(
+                            RouteDestinationType.INTERNAL_DEPARTMENT, FACILITY_ID, "RAD-DEPT", "SP-1",
+                            null, "Radiology Dept", "IN_PLATFORM", null));
+
+            assertThat(route.getRouteId()).isNotNull();
+            assertThat(route.getOrderId()).isEqualTo("ORD-ROUTE-2");
+            assertThat(route.getDestinationType()).isEqualTo(RouteDestinationType.INTERNAL_DEPARTMENT);
+            assertThat(route.getDestinationDepartmentId()).isEqualTo("RAD-DEPT");
+        }
+    }
+
+    @Test
     @DisplayName("retryRoute fails for non-FAILED route")
     void retryRouteRejectsNonFailed() {
         try (MockedStatic<TrustContextHolder> mockedHolder = mockStatic(TrustContextHolder.class)) {

@@ -111,6 +111,10 @@ public class DonationDriveService {
         if (!DonorStatus.ACTIVE.name().equals(donor.getStatus())) {
             throw new IllegalStateException("Donor is not eligible to donate");
         }
+        // Safety pre-flight: never collect from a donor with a current (unexpired/indefinite) deferral.
+        if (donorService.hasActiveDeferral(tenantId, donorId)) {
+            throw new IllegalStateException("Donor has an active deferral and cannot donate");
+        }
         BloodCollectionEntity collection = new BloodCollectionEntity();
         collection.setTenantId(tenantId);
         collection.setDonorId(donorId);

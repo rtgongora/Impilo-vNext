@@ -16,6 +16,7 @@ import java.util.UUID;
 @Repository
 public interface BillHeaderRepository extends JpaRepository<BillHeaderEntity, String> {
     Page<BillHeaderEntity> findByTenantIdAndFacilityIdAndStatus(UUID tenantId, UUID facilityId, BillStatus status, Pageable pageable);
+    Page<BillHeaderEntity> findByTenantIdAndFacilityIdAndStatusIn(UUID tenantId, UUID facilityId, java.util.Collection<BillStatus> statuses, Pageable pageable);
     List<BillHeaderEntity> findByEncounterId(String encounterId);
     Optional<BillHeaderEntity> findByMsikaOrderId(String msikaOrderId);
     Page<BillHeaderEntity> findByTenantIdAndStatus(UUID tenantId, BillStatus status, Pageable pageable);

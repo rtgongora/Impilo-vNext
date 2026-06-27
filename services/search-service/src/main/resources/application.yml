@@ -41,7 +41,6 @@ management:
 
 search:
   security:
-    oauth2-enabled: true
 
 impilo:
   companion:

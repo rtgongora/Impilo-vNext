@@ -22,19 +22,29 @@ public class AttestationService {
         this.outboxRepository = outboxRepository;
     }
 
+    /**
+     * Record an attestation claim. The outcome and confidence are determined SERVER-SIDE —
+     * never accepted from the caller — so a client cannot self-assert VERIFIED. Recording a
+     * claim with no evidence is FAILED; a claim with evidence is captured as PENDING. The
+     * transition to VERIFIED requires a real verifier (e.g. a biometric matcher / OTP check)
+     * and is a deliberate fail-closed integration seam — see {@code decide}.
+     */
     @Transactional
     public AttestationEntity recordAttestation(UUID tenantId, String actorId, UUID correlationId,
                                                AttestationType attestationType, String deviceFingerprint,
-                                               String evidence, AttestationOutcome outcome,
-                                               BigDecimal confidence) {
+                                               String evidence) {
+        boolean hasEvidence = evidence != null && !evidence.isBlank() && !evidence.trim().equals("{}");
+
         AttestationEntity entity = new AttestationEntity();
         entity.setTenantId(tenantId);
         entity.setActorId(actorId);
         entity.setAttestationType(attestationType);
         entity.setDeviceFingerprint(deviceFingerprint);
-        entity.setEvidence(evidence != null ? evidence : "{}");
-        entity.setOutcome(outcome != null ? outcome : AttestationOutcome.PENDING);
-        entity.setConfidence(confidence != null ? confidence : BigDecimal.ZERO);
+        entity.setEvidence(hasEvidence ? evidence : "{}");
+        // Fail closed: no evidence ⇒ FAILED; evidence present ⇒ PENDING (awaiting real
+        // verification). NEVER client-asserted VERIFIED. Confidence is set by the verifier, not here.
+        entity.setOutcome(hasEvidence ? AttestationOutcome.PENDING : AttestationOutcome.FAILED);
+        entity.setConfidence(BigDecimal.ZERO);
         entity.setRecordedBy(actorId);
         entity = attestationRepository.save(entity);
 

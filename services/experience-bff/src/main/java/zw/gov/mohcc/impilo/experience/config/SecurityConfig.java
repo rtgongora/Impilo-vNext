@@ -331,10 +331,6 @@ public class SecurityConfig {
                     .requestMatchers("/internal/v1/intelligence-plane/**")
                             .authenticated()
 
-                    // ── Temp ID review (admin only, Health OS §13) ────────
-                    .requestMatchers("/internal/v1/admin/temp-id-review/**")
-                            .hasAnyRole(ADMIN_ROLES)
-
                     // ── Emergency care-first (Health OS §12) ─────────────
                     .requestMatchers("/internal/v1/emergency/**")
                             .hasAnyRole(CLINICAL_ROLES)

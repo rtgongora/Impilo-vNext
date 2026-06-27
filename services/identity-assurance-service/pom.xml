@@ -19,6 +19,14 @@
         downstream authorization decisions.
     </description>
 
+    <properties>
+        <!-- Runtime-proof datasource (AssuranceWorkflowRuntimeProofIT). Empty by default ⇒
+             the IT self-skips; override with -Dit.pg.url=... -Dit.pg.user=... -Dit.pg.pass=... -->
+        <it.pg.url/>
+        <it.pg.user/>
+        <it.pg.pass/>
+    </properties>
+
     <dependencies>
         <!-- Web -->
         <dependency>
@@ -121,6 +129,20 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <!-- Forward the runtime-proof datasource into the Surefire fork. With it.pg.url
+                 empty the IT self-skips (@EnabledIfSystemProperty); the H2 unit suite is
+                 unaffected. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <systemPropertyVariables>
+                        <it.pg.url>${it.pg.url}</it.pg.url>
+                        <it.pg.user>${it.pg.user}</it.pg.user>
+                        <it.pg.pass>${it.pg.pass}</it.pg.pass>
+                    </systemPropertyVariables>
+                </configuration>
             </plugin>
         </plugins>
     </build>

@@ -1,6 +1,14 @@
 server:
   port: ${SERVER_PORT:8126}
 
+wallet:
+  card:
+    # Master secret for at-rest encryption of card health data. The per-record AES key is
+    # derived as HMAC-SHA256(this, encryption_key_ref) — so it is NOT recoverable from the
+    # stored key reference alone. MUST be provided (>= 32 chars) per environment; the service
+    # fails closed (refuses to start) on a blank/weak key.
+    encryption-master-key: ${WALLET_CARD_ENCRYPTION_KEY:}
+
 spring:
   application:
     name: mushe-wallet-service

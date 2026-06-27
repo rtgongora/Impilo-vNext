@@ -1,5 +1,9 @@
 package zw.gov.mohcc.impilo.hrpayroll.core;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.hrpayroll.persistence.entity.*;
@@ -7,7 +11,10 @@ import zw.gov.mohcc.impilo.hrpayroll.persistence.repository.*;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -15,11 +22,19 @@ import java.util.UUID;
 @Service
 public class PayrollService {
 
+    /** Standard paid hours in a month (22 working days x 8h) — basis for the hourly rate. */
+    private static final Logger log = LoggerFactory.getLogger(PayrollService.class);
+    private static final BigDecimal STANDARD_MONTHLY_HOURS = new BigDecimal("176");
+    /** Overtime is paid at 1.5x the ordinary hourly rate. */
+    private static final BigDecimal OVERTIME_MULTIPLIER = new BigDecimal("1.5");
+
     private final PayrollRunRepository payrollRunRepository;
     private final PayslipRepository payslipRepository;
     private final EmployeeRepository employeeRepository;
     private final ContractRepository contractRepository;
     private final DeductionTypeRepository deductionTypeRepository;
+    private final VashandiAttendanceClient vashandiAttendanceClient;
+    private final ObjectMapper objectMapper;
     private final HrOutboxWriter hrOutboxWriter;
 
     public PayrollService(PayrollRunRepository payrollRunRepository,
@@ -27,12 +42,16 @@ public class PayrollService {
                           EmployeeRepository employeeRepository,
                           ContractRepository contractRepository,
                           DeductionTypeRepository deductionTypeRepository,
+                          VashandiAttendanceClient vashandiAttendanceClient,
+                          ObjectMapper objectMapper,
                           HrOutboxWriter hrOutboxWriter) {
         this.payrollRunRepository = payrollRunRepository;
         this.payslipRepository = payslipRepository;
         this.employeeRepository = employeeRepository;
         this.contractRepository = contractRepository;
         this.deductionTypeRepository = deductionTypeRepository;
+        this.vashandiAttendanceClient = vashandiAttendanceClient;
+        this.objectMapper = objectMapper;
         this.hrOutboxWriter = hrOutboxWriter;
     }
 
@@ -58,7 +77,12 @@ public class PayrollService {
             if (c == null) {
                 continue;
             }
-            BigDecimal gross = c.getBasicSalary() != null ? c.getBasicSalary() : BigDecimal.ZERO;
+            BigDecimal basic = c.getBasicSalary() != null ? c.getBasicSalary() : BigDecimal.ZERO;
+            BigDecimal allowances = sumAllowances(c.getAllowancesJson());
+            BigDecimal overtimeHours = overtimeHoursForPeriod(emp, run);
+            BigDecimal overtimePay = overtimePay(basic, overtimeHours);
+            // Gross earnings = basic + allowances + overtime (was basic-only — G043).
+            BigDecimal gross = basic.add(allowances).add(overtimePay).setScale(2, RoundingMode.HALF_UP);
             BigDecimal tax = BigDecimal.ZERO;
             BigDecimal pension = BigDecimal.ZERO;
             BigDecimal other = BigDecimal.ZERO;
@@ -74,7 +98,8 @@ public class PayrollService {
             PayslipEntity p = new PayslipEntity();
             p.setRunId(runId);
             p.setEmployeeId(emp.getEmployeeId());
-            p.setBasicSalary(gross);
+            p.setBasicSalary(basic);
+            p.setAllowancesJson(earningsBreakdownJson(allowances, overtimeHours, overtimePay));
             p.setGrossPay(gross);
             p.setTax(tax);
             p.setPension(pension);
@@ -110,6 +135,75 @@ public class PayrollService {
             return gross.multiply(d.getRate()).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
         }
         return BigDecimal.ZERO;
+    }
+
+    /** Sum the numeric values of a contract's {@code allowancesJson} object ({"housing":100,...}). */
+    private BigDecimal sumAllowances(String allowancesJson) {
+        if (allowancesJson == null || allowancesJson.isBlank()) {
+            return BigDecimal.ZERO;
+        }
+        try {
+            JsonNode node = objectMapper.readTree(allowancesJson);
+            if (node == null || !node.isObject()) {
+                return BigDecimal.ZERO;
+            }
+            BigDecimal sum = BigDecimal.ZERO;
+            for (Iterator<JsonNode> it = node.elements(); it.hasNext(); ) {
+                JsonNode v = it.next();
+                if (v.isNumber()) {
+                    sum = sum.add(v.decimalValue());
+                } else if (v.isTextual()) {
+                    try {
+                        sum = sum.add(new BigDecimal(v.asText().trim()));
+                    } catch (NumberFormatException ignored) {
+                        // non-numeric allowance entry — skip
+                    }
+                }
+            }
+            return sum;
+        } catch (Exception e) {
+            return BigDecimal.ZERO;
+        }
+    }
+
+    /**
+     * Overtime hours for the employee in the run's month, derived from Vashandi's real
+     * check-in/out events (the attendance SoR) rather than a separately-entered table.
+     * If the worker isn't mapped to a Vashandi profile or Vashandi is unavailable, log a
+     * WARN and default to zero overtime (payroll proceeds rather than failing the run) —
+     * surfaced loudly, never a silent zero.
+     */
+    private BigDecimal overtimeHoursForPeriod(EmployeeEntity emp, PayrollRunEntity run) {
+        return vashandiAttendanceClient
+                .overtimeHours(run.getTenantId(), emp.getProviderId(), run.getPeriodYear(), run.getPeriodMonth())
+                .orElseGet(() -> {
+                    log.warn("No Vashandi attendance for employee {} (provider {}) period {}-{} — overtime defaulted to 0",
+                            emp.getEmployeeId(), emp.getProviderId(), run.getPeriodYear(), run.getPeriodMonth());
+                    return BigDecimal.ZERO;
+                });
+    }
+
+    /** Overtime pay = overtimeHours x (basic / standard monthly hours) x 1.5. */
+    private static BigDecimal overtimePay(BigDecimal basic, BigDecimal overtimeHours) {
+        if (basic == null || basic.signum() <= 0 || overtimeHours == null || overtimeHours.signum() <= 0) {
+            return BigDecimal.ZERO;
+        }
+        BigDecimal hourlyRate = basic.divide(STANDARD_MONTHLY_HOURS, 4, RoundingMode.HALF_UP);
+        return overtimeHours.multiply(hourlyRate).multiply(OVERTIME_MULTIPLIER)
+                .setScale(2, RoundingMode.HALF_UP);
+    }
+
+    /** Auditable earnings breakdown stored on the payslip. */
+    private String earningsBreakdownJson(BigDecimal allowances, BigDecimal overtimeHours, BigDecimal overtimePay) {
+        Map<String, Object> breakdown = new LinkedHashMap<>();
+        breakdown.put("allowances", allowances);
+        breakdown.put("overtimeHours", overtimeHours);
+        breakdown.put("overtimePay", overtimePay);
+        try {
+            return objectMapper.writeValueAsString(breakdown);
+        } catch (Exception e) {
+            return "{}";
+        }
     }
 
     @Transactional

@@ -51,21 +51,23 @@ export function useHrLeaveTypes() {
   });
 }
 
-export function useHrLeaveRequests(employeeId?: string | null) {
+// Leave + attendance are owned by Vashandi (workforce SoR). These read Vashandi via the BFF,
+// keyed by the worker's provider id (the Employee.providerId ↔ WorkforceProfile bridge).
+export function useHrLeaveRequests(providerWorkerId?: string | null) {
   return useQuery({
-    queryKey: ["erp-hr", "leave-requests", employeeId],
+    queryKey: ["erp-hr", "leave-requests", providerWorkerId],
     queryFn: () =>
-      apiClient.get<unknown>(`/internal/v1/erp/hr/leave/requests${q({ employee_id: employeeId })}`),
-    enabled: !!employeeId,
+      apiClient.get<unknown>(`/internal/v1/erp/hr/leave/requests${q({ provider_worker_id: providerWorkerId })}`),
+    enabled: !!providerWorkerId,
   });
 }
 
-export function useHrAttendance(employeeId?: string | null) {
+export function useHrAttendance(providerWorkerId?: string | null) {
   return useQuery({
-    queryKey: ["erp-hr", "attendance", employeeId],
+    queryKey: ["erp-hr", "attendance", providerWorkerId],
     queryFn: () =>
-      apiClient.get<unknown>(`/internal/v1/erp/hr/attendance${q({ employee_id: employeeId })}`),
-    enabled: !!employeeId,
+      apiClient.get<unknown>(`/internal/v1/erp/hr/attendance${q({ provider_worker_id: providerWorkerId })}`),
+    enabled: !!providerWorkerId,
   });
 }
 

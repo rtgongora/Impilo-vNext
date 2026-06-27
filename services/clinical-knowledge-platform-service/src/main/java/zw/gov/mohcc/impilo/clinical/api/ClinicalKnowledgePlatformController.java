@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.clinical.audit.TraceService;
 import zw.gov.mohcc.impilo.clinical.assistant.ClinicalAssistantService;
+import zw.gov.mohcc.impilo.clinical.cds.CdsInsightService;
 import zw.gov.mohcc.impilo.clinical.events.ClinicalOutboxWriter;
 import zw.gov.mohcc.impilo.clinical.nudge.NudgeEvaluationService;
 import zw.gov.mohcc.impilo.clinical.pathway.PathwaySessionService;
@@ -18,6 +19,7 @@ import zw.gov.mohcc.impilo.clinical.rules.model.ClinicalEvaluationContext;
 import zw.gov.mohcc.impilo.clinical.rules.model.RuleAlert;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -37,6 +39,7 @@ public class ClinicalKnowledgePlatformController {
     private final ClinicalRulesEngine clinicalRulesEngine;
     private final ClinicalContextEnricher clinicalContextEnricher;
     private final ClinicalOutboxWriter clinicalOutboxWriter;
+    private final CdsInsightService cdsInsightService;
 
     public ClinicalKnowledgePlatformController(
             ClinicalAssistantService assistantService,
@@ -47,7 +50,8 @@ public class ClinicalKnowledgePlatformController {
             OverrideRecordRepository overrideRecordRepository,
             ClinicalRulesEngine clinicalRulesEngine,
             ClinicalContextEnricher clinicalContextEnricher,
-            ClinicalOutboxWriter clinicalOutboxWriter) {
+            ClinicalOutboxWriter clinicalOutboxWriter,
+            CdsInsightService cdsInsightService) {
         this.assistantService = assistantService;
         this.prescribingEvaluationService = prescribingEvaluationService;
         this.pathwaySessionService = pathwaySessionService;
@@ -57,6 +61,7 @@ public class ClinicalKnowledgePlatformController {
         this.clinicalRulesEngine = clinicalRulesEngine;
         this.clinicalContextEnricher = clinicalContextEnricher;
         this.clinicalOutboxWriter = clinicalOutboxWriter;
+        this.cdsInsightService = cdsInsightService;
     }
 
     @PostMapping("/assistant/ask")
@@ -97,6 +102,24 @@ public class ClinicalKnowledgePlatformController {
         var ctx = clinicalContextEnricher.enrich(ClinicalEvaluationContext.fromMap(body));
         var alerts = clinicalRulesEngine.evaluate(ctx).stream().map(RuleAlert::toMap).toList();
         return ResponseEntity.ok(Map.of("data", Map.of("alerts", alerts)));
+    }
+
+    @PostMapping("/cds/summary")
+    public ResponseEntity<Map<String, Object>> cdsSummary(
+            @RequestHeader(value = "x-tenant-id", defaultValue = "default") String tenantId,
+            @RequestHeader(value = "x-actor-id", defaultValue = "anonymous") String actorId,
+            @RequestBody Map<String, Object> body) {
+        @SuppressWarnings("unchecked")
+        Map<String, Object> patientContext = body.get("patient_context") instanceof Map<?, ?> m
+                ? new java.util.LinkedHashMap<>((Map<String, Object>) m)
+                : Map.of();
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> alerts = body.get("alerts") instanceof List<?> l
+                ? (List<Map<String, Object>>) (List<?>) l
+                : List.of();
+        String encounterId = body.get("encounter_id") != null ? body.get("encounter_id").toString() : null;
+        Map<String, Object> data = cdsInsightService.summarise(tenantId, actorId, patientContext, alerts, encounterId);
+        return ResponseEntity.ok(Map.of("data", data));
     }
 
     @GetMapping("/pathways")

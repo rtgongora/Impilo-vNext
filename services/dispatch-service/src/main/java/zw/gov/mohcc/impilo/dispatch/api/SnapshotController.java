@@ -42,7 +42,9 @@ public class SnapshotController {
                 ? OffsetDateTime.parse(asOfParam)
                 : OffsetDateTime.now();
 
-        Page<DispatchJobEntity> page = jobService.getSnapshot(asOf, cursor, limit);
+        // Tenant-scope the snapshot — without this it returned every tenant's jobs (a leak).
+        java.util.UUID tenantId = java.util.UUID.fromString(ctx.tenantId());
+        Page<DispatchJobEntity> page = jobService.getSnapshot(tenantId, asOf, cursor, limit);
 
         List<JobResponse> items = page.getContent().stream()
                 .map(this::toJobResponse)

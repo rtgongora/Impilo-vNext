@@ -54,6 +54,9 @@ card-print:
     outputDir: /tmp/card-print-output
   landela:
     baseUrl: ${LANDELA_ADAPTER_URL:http://localhost:8092}
+  vito:
+    base-url: ${VITO_SERVICE_URL:http://localhost:8082}
+    actor-id: card-print-agent
   qr:
     hmac-secret: ${CARD_PRINT_QR_HMAC_SECRET:changeme-not-for-production}
   processor:

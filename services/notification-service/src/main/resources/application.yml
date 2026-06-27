@@ -49,6 +49,10 @@ impilo:
       enabled: ${KAFKA_MVUMO_CONSUMER_ENABLED:false}
       topic: ${KAFKA_MVUMO_TOPIC:platform.mvumo.events}
       group-id: ${KAFKA_MVUMO_GROUP:notification-service-mvumo}
+    oros:
+      enabled: ${KAFKA_OROS_CONSUMER_ENABLED:false}
+      critical-topic: ${KAFKA_OROS_CRITICAL_TOPIC:oros.result.critical}
+      group-id: ${KAFKA_OROS_GROUP:notification-service-oros}
   ops:
     enabled: true
     outbox-table: ns_event_outbox

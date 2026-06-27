@@ -79,4 +79,22 @@ class DonorServiceTest {
 
         assertThat(donor.getStatus()).isEqualTo(DonorStatus.ACTIVE.name());
     }
+
+    @Test
+    void hasActiveDeferral_trueForUnexpiredOrIndefinite_falseForExpired() {
+        UUID donorId = UUID.randomUUID();
+        var indefinite = new zw.gov.mohcc.impilo.madi.persistence.entity.DonorDeferralEntity();
+        indefinite.setStatus("ACTIVE");
+        indefinite.setDeferredUntil(null);
+        when(deferralRepository.findByDonorIdAndTenantIdAndStatus(donorId, TENANT_ID, "ACTIVE"))
+                .thenReturn(java.util.List.of(indefinite));
+        assertThat(donorService.hasActiveDeferral(TENANT_ID, donorId)).isTrue();
+
+        var expired = new zw.gov.mohcc.impilo.madi.persistence.entity.DonorDeferralEntity();
+        expired.setStatus("ACTIVE");
+        expired.setDeferredUntil(java.time.LocalDate.now().minusDays(1));
+        when(deferralRepository.findByDonorIdAndTenantIdAndStatus(donorId, TENANT_ID, "ACTIVE"))
+                .thenReturn(java.util.List.of(expired));
+        assertThat(donorService.hasActiveDeferral(TENANT_ID, donorId)).isFalse();
+    }
 }

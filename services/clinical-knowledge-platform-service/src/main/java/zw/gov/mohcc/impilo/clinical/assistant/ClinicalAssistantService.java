@@ -1,6 +1,5 @@
 package zw.gov.mohcc.impilo.clinical.assistant;
 
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.clinical.audit.TraceService;
@@ -10,7 +9,9 @@ import zw.gov.mohcc.impilo.clinical.persistence.entity.SourceDocumentEntity;
 import zw.gov.mohcc.impilo.clinical.persistence.entity.SourceSectionEntity;
 import zw.gov.mohcc.impilo.clinical.persistence.repository.MedicineGuidanceRepository;
 import zw.gov.mohcc.impilo.clinical.persistence.repository.SourceDocumentRepository;
-import zw.gov.mohcc.impilo.clinical.persistence.repository.SourceSectionRepository;
+import zw.gov.mohcc.impilo.clinical.assistant.retrieval.GuidanceRetriever;
+import zw.gov.mohcc.impilo.clinical.reasoning.ReasoningRequest;
+import zw.gov.mohcc.impilo.clinical.reasoning.ReasoningResult;
 import zw.gov.mohcc.impilo.clinical.rules.ClinicalRulesEngine;
 import zw.gov.mohcc.impilo.clinical.rules.model.ClinicalEvaluationContext;
 import zw.gov.mohcc.impilo.clinical.rules.model.RuleAlert;
@@ -20,23 +21,26 @@ import java.util.*;
 @Service
 public class ClinicalAssistantService {
 
-    private final SourceSectionRepository sectionRepository;
+    private final GuidanceRetriever guidanceRetriever;
     private final MedicineGuidanceRepository medicineRepository;
     private final SourceDocumentRepository documentRepository;
     private final ClinicalRulesEngine rulesEngine;
     private final TraceService traceService;
+    private final zw.gov.mohcc.impilo.clinical.reasoning.ClinicalReasoner clinicalReasoner;
 
     public ClinicalAssistantService(
-            SourceSectionRepository sectionRepository,
+            GuidanceRetriever guidanceRetriever,
             MedicineGuidanceRepository medicineRepository,
             SourceDocumentRepository documentRepository,
             ClinicalRulesEngine rulesEngine,
-            TraceService traceService) {
-        this.sectionRepository = sectionRepository;
+            TraceService traceService,
+            zw.gov.mohcc.impilo.clinical.reasoning.ClinicalReasoner clinicalReasoner) {
+        this.guidanceRetriever = guidanceRetriever;
         this.medicineRepository = medicineRepository;
         this.documentRepository = documentRepository;
         this.rulesEngine = rulesEngine;
         this.traceService = traceService;
+        this.clinicalReasoner = clinicalReasoner;
     }
 
     @Transactional
@@ -62,7 +66,7 @@ public class ClinicalAssistantService {
             search = "neonatal sepsis " + search;
         }
 
-        List<SourceSectionEntity> sections = sectionRepository.searchActive(search, PageRequest.of(0, 5));
+        List<SourceSectionEntity> sections = guidanceRetriever.retrieve(search, 5);
         String medSearch = search.length() >= 3 ? search : (String.join(" ", topics) + " " + search).trim();
         if (medSearch.length() < 3) {
             medSearch = "treatment";
@@ -121,11 +125,36 @@ public class ClinicalAssistantService {
             nextActions.add("Correlate with bedside assessment and local hospital protocols.");
         }
 
+        // Grounded reasoning. The deterministic answer above is the honest floor; the reasoner may
+        // override answer_summary/rationale ONLY with a real, grounding-validated LLM result. The
+        // authoritative fields below (warnings/alerts_detail/rule_trace_refs/source_citations/
+        // support_mode) always come from deterministic rules + retrieval — never from the LLM.
+        List<Map<String, Object>> medGuidanceMaps = meds.stream().map(m -> {
+            Map<String, Object> g = new LinkedHashMap<>();
+            g.put("name", m.getMedicineName());
+            g.put("generic", m.getGenericName());
+            g.put("dose", m.getDoseExpression());
+            g.put("route", m.getRoute());
+            g.put("level_of_care", m.getLevelOfCare());
+            g.put("specialist_only", Boolean.TRUE.equals(m.getSpecialistOnly()));
+            return g;
+        }).toList();
+
+        ReasoningResult reasoning = clinicalReasoner.reason(new ReasoningRequest(
+                tenantId, actorId, role, citizenMode, q,
+                citations, medGuidanceMaps, ruleMaps,
+                patientContext == null ? Map.of() : patientContext,
+                sourceVersion, "ckp-seed-1"));
+
+        boolean llm = "LLM".equals(reasoning.provenance());
+        String finalAnswer = (llm && reasoning.answerSummary() != null) ? reasoning.answerSummary() : answerSummary;
+        String finalRationale = (llm && reasoning.rationale() != null) ? reasoning.rationale() : buildRationale(sections, alerts);
+
         Map<String, Object> payload = new LinkedHashMap<>();
-        payload.put("answer_summary", answerSummary);
+        payload.put("answer_summary", finalAnswer);
         payload.put("question_classification", qClass);
         payload.put("recommendation", recommendation.isEmpty() ? null : recommendation);
-        payload.put("rationale", buildRationale(sections, alerts));
+        payload.put("rationale", finalRationale);
         payload.put("warnings", alerts.stream().map(RuleAlert::message).toList());
         payload.put("alerts_detail", ruleMaps);
         payload.put("applicable_population", citizenMode ? "general_public_education" : "licensed_clinician");
@@ -137,10 +166,37 @@ public class ClinicalAssistantService {
         payload.put("knowledge_version", "ckp-seed-1");
         payload.put("source_version", sourceVersion);
         payload.put("disclaimer", "Guideline support assists clinical judgment; it is not a substitute for assessment and local policy.");
+        // Additive intelligence fields (back-compatible — existing consumers ignore unknown keys).
+        payload.put("reasoning_provenance", reasoning.provenance());
+        payload.put("model", reasoning.model());
+        payload.put("differential_considerations", reasoning.differentialConsiderations());
+        Map<String, Object> grounding = new LinkedHashMap<>();
+        grounding.put("ratio", reasoning.groundingRatio());
+        grounding.put("valid", reasoning.groundingValid());
+        grounding.put("fell_back", reasoning.fellBack());
+        grounding.put("reason", reasoning.fallbackReason());
+        payload.put("grounding", grounding);
 
         String patientId = patientContext != null && patientContext.get("patient_id") != null
                 ? patientContext.get("patient_id").toString()
                 : null;
+
+        Map<String, Object> inputContext = new LinkedHashMap<>();
+        inputContext.put("tenant_id", tenantId);
+        inputContext.put("question", q);
+        inputContext.put("patient_context", patientContext == null ? Map.of() : patientContext);
+        Map<String, Object> llmReasoning = new LinkedHashMap<>();
+        llmReasoning.put("provenance", reasoning.provenance());
+        llmReasoning.put("model", reasoning.model());
+        llmReasoning.put("fed_citation_ids", citations.stream().map(c -> c.get("section_id")).toList());
+        llmReasoning.put("used_citation_ids", reasoning.usedCitationIds());
+        llmReasoning.put("grounding_ratio", reasoning.groundingRatio());
+        llmReasoning.put("grounding_valid", reasoning.groundingValid());
+        llmReasoning.put("fell_back", reasoning.fellBack());
+        llmReasoning.put("fallback_reason", reasoning.fallbackReason());
+        llmReasoning.put("llm_audit_ref", reasoning.llmAuditRef());
+        llmReasoning.put("raw_structured_output", reasoning.rawLlmStructuredOutput());
+        inputContext.put("llm_reasoning", llmReasoning);
 
         RecommendationTraceEntity trace = traceService.record(
                 actorId,
@@ -148,7 +204,7 @@ public class ClinicalAssistantService {
                 patientId,
                 encounterId,
                 "ASSISTANT_ASK",
-                Map.of("tenant_id", tenantId, "question", q, "patient_context", patientContext == null ? Map.of() : patientContext),
+                inputContext,
                 payload,
                 citations,
                 ruleMaps,

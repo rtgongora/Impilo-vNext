@@ -6,7 +6,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.HrPayrollServiceClient;
+import zw.gov.mohcc.impilo.experience.client.VashandiServiceClient;
 
+import java.time.LocalDate;
 import java.util.Map;
 
 @RestController
@@ -14,9 +16,11 @@ import java.util.Map;
 public class ErpHrBffController {
 
     private final HrPayrollServiceClient client;
+    private final VashandiServiceClient vashandiClient;
 
-    public ErpHrBffController(HrPayrollServiceClient client) {
+    public ErpHrBffController(HrPayrollServiceClient client, VashandiServiceClient vashandiClient) {
         this.client = client;
+        this.vashandiClient = vashandiClient;
     }
 
     @GetMapping("/employees")
@@ -55,31 +59,39 @@ public class ErpHrBffController {
     public ResponseEntity<?> leaveTypes(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
                                         @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
-            return ResponseEntity.ok(client.getLeaveTypes());
+            return ResponseEntity.ok(vashandiClient.getLeaveTypes());
         } catch (Exception e) {
-            return failClose("HR_PAYROLL_UNAVAILABLE", "Unable to fetch leave types", requestId, correlationId);
+            return failClose("VASHANDI_UNAVAILABLE", "Unable to fetch leave types from Vashandi", requestId, correlationId);
         }
     }
 
+    // Leave + attendance are owned by Vashandi (workforce SoR). These views read Vashandi
+    // by provider-worker-id (the Employee.providerId bridge the UI already holds).
+
     @GetMapping("/leave/requests")
-    public ResponseEntity<?> leaveRequests(@RequestParam("employee_id") String employeeId,
+    public ResponseEntity<?> leaveRequests(@RequestParam("provider_worker_id") String providerWorkerId,
                                            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
                                            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
-            return ResponseEntity.ok(client.getLeaveRequests(employeeId));
+            return ResponseEntity.ok(vashandiClient.getLeaveByProvider(providerWorkerId));
         } catch (Exception e) {
-            return failClose("HR_PAYROLL_UNAVAILABLE", "Unable to fetch leave requests", requestId, correlationId);
+            return failClose("VASHANDI_UNAVAILABLE", "Unable to fetch leave from Vashandi", requestId, correlationId);
         }
     }
 
     @GetMapping("/attendance")
-    public ResponseEntity<?> attendance(@RequestParam("employee_id") String employeeId,
+    public ResponseEntity<?> attendance(@RequestParam("provider_worker_id") String providerWorkerId,
+                                        @RequestParam(value = "year", required = false) Integer year,
+                                        @RequestParam(value = "month", required = false) Integer month,
                                         @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
                                         @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        LocalDate now = LocalDate.now();
+        int y = year != null ? year : now.getYear();
+        int m = month != null ? month : now.getMonthValue();
         try {
-            return ResponseEntity.ok(client.getAttendance(employeeId));
+            return ResponseEntity.ok(vashandiClient.getAttendanceEventsByProvider(providerWorkerId, y, m));
         } catch (Exception e) {
-            return failClose("HR_PAYROLL_UNAVAILABLE", "Unable to fetch attendance", requestId, correlationId);
+            return failClose("VASHANDI_UNAVAILABLE", "Unable to fetch attendance from Vashandi", requestId, correlationId);
         }
     }
 

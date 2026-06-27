@@ -2,11 +2,15 @@ package zw.gov.mohcc.impilo.docstore.core.ocr;
 
 import org.springframework.stereotype.Component;
 
-import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 /**
- * Default OCR provider for environments without OCR engine integration.
+ * Fail-closed default OCR provider. When no real OCR engine is configured
+ * (DOCUMENT_OCR_PROVIDER unset, defaulting to NOOP) — or an unknown provider type is configured
+ * and the router falls back here — extraction must NOT fabricate output. Previously this returned
+ * a literal "OCR placeholder" string with 0.0 confidence and the job completed, so callers saw a
+ * COMPLETED OCR job with no real extraction. It now refuses; the OCR job is recorded FAILED until
+ * a real provider is configured.
  */
 @Component
 public class NoopOcrProvider implements OcrProvider {
@@ -18,19 +22,8 @@ public class NoopOcrProvider implements OcrProvider {
 
     @Override
     public OcrResult extract(UUID objectId, byte[] content, String mimeType) {
-        if (mimeType != null && mimeType.startsWith("text/")) {
-            String text = new String(content, StandardCharsets.UTF_8);
-            return new OcrResult(truncate(text), 0.95d);
-        }
-        String placeholder = "OCR placeholder: provider=NOOP, extraction unavailable for mimeType="
-                + (mimeType == null ? "unknown" : mimeType);
-        return new OcrResult(placeholder, 0.0d);
-    }
-
-    private String truncate(String value) {
-        if (value == null) {
-            return "";
-        }
-        return value.length() <= 8000 ? value : value.substring(0, 8000);
+        throw new IllegalStateException(
+                "No OCR provider configured: refusing to fabricate extracted text. "
+                + "Configure DOCUMENT_OCR_PROVIDER (e.g. EXTERNAL_STUB) with a real OCR engine.");
     }
 }

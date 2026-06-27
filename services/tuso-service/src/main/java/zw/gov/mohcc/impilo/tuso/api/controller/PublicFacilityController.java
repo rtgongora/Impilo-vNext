@@ -113,6 +113,7 @@ public class PublicFacilityController {
                 null, // operationalStatus — redacted
                 null, // ownership — redacted
                 entity.getLevel(),
+                entity.getFacilityCategory(),
                 toOperatingModel(entity),
                 null, // parentId — redacted
                 null, // parentName — redacted

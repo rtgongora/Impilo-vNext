@@ -102,11 +102,37 @@ public class GuidanceApiController {
             m.put("snippet", a.getSummary());
             m.put("domain", a.getDomain());
             m.put("type", a.getCategory());
-            m.put("score", 1.0);
+            // Real lexical relevance (was hardcoded 1.0): title matches weigh more than summary.
+            m.put("score", relevanceScore(q, a.getTitle(), a.getSummary()));
             m.put("url", a.getSourceUrl());
             return m;
-        }).collect(Collectors.toList());
+        })
+        .sorted(Comparator.comparingDouble((Map<String, Object> m) -> (double) m.get("score")).reversed())
+        .collect(Collectors.toList());
 
         return ResponseEntity.ok(Map.of("data", data));
+    }
+
+    /**
+     * Lexical relevance of a result to the query — term overlap weighted by field
+     * (title 3x, summary 1x), normalised to (0,1]. Deterministic, no external engine.
+     */
+    static double relevanceScore(String query, String title, String summary) {
+        if (query == null || query.isBlank()) {
+            return 0.0;
+        }
+        String[] terms = query.toLowerCase(Locale.ROOT).split("\\s+");
+        String t = title == null ? "" : title.toLowerCase(Locale.ROOT);
+        String s = summary == null ? "" : summary.toLowerCase(Locale.ROOT);
+        double matched = 0.0;
+        int counted = 0;
+        for (String term : terms) {
+            if (term.isBlank()) continue;
+            counted++;
+            if (t.contains(term)) matched += 3.0;
+            else if (s.contains(term)) matched += 1.0;
+        }
+        double maxPerTerm = 3.0 * counted;
+        return maxPerTerm == 0 ? 0.0 : Math.min(1.0, matched / maxPerTerm);
     }
 }

@@ -3,7 +3,9 @@
 import { useMemo, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { LiveDataSourceBadge } from '@/components/common/LiveDataSourceBadge';
+import { NotLiveNotice } from '@/components/common/NotLiveNotice';
 import { useStaffingRosterWeek } from '@/hooks/queries/useStaffing';
+import { useShiftHandovers } from '@/hooks/queries/useInpatient';
 import {
   Users, Clock, Calendar, UserCheck, Coffee,
   AlertTriangle, ArrowRightLeft, FileText, Shield, Sun, Moon,
@@ -26,7 +28,16 @@ const STAFF_ROSTER = [
   { id: '8', name: 'Dr. R. Zulu', role: 'doctor', department: 'Emergency', status: 'off_shift', shiftType: 'night', hours: '19:00-07:00', overtime: false },
 ];
 
-const ACTIVE_SHIFTS = [
+type ActiveShiftRow = {
+  id: string;
+  type: string;
+  time: string;
+  staffCount: number;
+  coverage: number | null;
+  departments: string[];
+};
+
+const ACTIVE_SHIFTS: ActiveShiftRow[] = [
   { id: 'SH-001', type: 'Day Shift', time: '07:00 - 19:00', staffCount: 18, coverage: 95, departments: ['Emergency', 'Medical', 'Surgical', 'ICU'] },
   { id: 'SH-002', type: 'Night Shift', time: '19:00 - 07:00', staffCount: 12, coverage: 85, departments: ['Emergency', 'Medical', 'ICU'] },
   { id: 'SH-003', type: 'Admin Shift', time: '08:00 - 17:00', staffCount: 6, coverage: 100, departments: ['Admin', 'Finance', 'HR'] },
@@ -113,6 +124,54 @@ export function HRShiftsPanel({ facilityId }: HRShiftsPanelProps) {
   const onShift = displayRoster.filter(s => s.status === 'on_shift').length;
   const onBreak = displayRoster.filter(s => s.status === 'on_break').length;
   const overtime = displayRoster.filter(s => s.overtime).length;
+
+  // Active-shift summaries derived from the SAME live roster feed (no extra endpoint).
+  // Coverage% is intentionally null when live — there is no establishment target to
+  // compute it from, so we show real staff counts rather than a fabricated percentage.
+  const liveActiveShifts = useMemo<ActiveShiftRow[]>(() => {
+    const rows = rosterQ.data?.data ?? [];
+    const groups = new Map<string, { staff: number; depts: Set<string>; start: string }>();
+    for (const s of rows) {
+      if (s.attributes.status !== 'ACTIVE') continue;
+      const start = s.attributes.started_at?.slice(11, 16) ?? '—';
+      const end = s.attributes.ended_at?.slice(11, 16) ?? '—';
+      const key = `${start} - ${end}`;
+      const g = groups.get(key) ?? { staff: 0, depts: new Set<string>(), start };
+      g.staff += 1;
+      if (s.attributes.workspace_id) g.depts.add(s.attributes.workspace_id);
+      groups.set(key, g);
+    }
+    return Array.from(groups.entries()).map(([time, g]) => {
+      const startHour = parseInt(g.start.slice(0, 2), 10);
+      const type = Number.isNaN(startHour)
+        ? 'Shift'
+        : startHour >= 18 || startHour < 6
+          ? 'Night Shift'
+          : startHour < 8
+            ? 'Day Shift'
+            : 'Admin Shift';
+      return { id: time, type, time, staffCount: g.staff, coverage: null, departments: Array.from(g.depts) };
+    });
+  }, [rosterQ.data]);
+  const activeShiftsLive = preferLive && liveActiveShifts.length > 0;
+  const displayActiveShifts: ActiveShiftRow[] = activeShiftsLive ? liveActiveShifts : ACTIVE_SHIFTS;
+
+  // Pending SBAR shift handovers — real inpatient-service handover feed.
+  const handoverQ = useShiftHandovers(facilityId ?? undefined, 'PENDING');
+  const liveHandovers = useMemo(() => {
+    const raw = handoverQ.data?.data;
+    const arr = Array.isArray(raw) ? raw : [];
+    return arr.map((row, index) => {
+      const r = row as Record<string, unknown>;
+      return {
+        id: String(r.id ?? index),
+        status: String(r.status ?? 'PENDING'),
+        outgoingStaff: r.outgoing_staff ? String(r.outgoing_staff) : '—',
+        submittedAt: r.submitted_at ? String(r.submitted_at) : null,
+      };
+    });
+  }, [handoverQ.data]);
+  const handoversLive = preferLive && liveHandovers.length > 0;
 
   const tabs: { key: HRTab; label: string; icon: React.ComponentType<{ className?: string }>; badge?: number }[] = [
     { key: 'roster', label: 'Staff Roster', icon: Users },
@@ -209,7 +268,13 @@ export function HRShiftsPanel({ facilityId }: HRShiftsPanelProps) {
       {/* Shifts Tab */}
       {activeTab === 'shifts' && (
         <div className="space-y-3">
-          {ACTIVE_SHIFTS.map(shift => {
+          {!activeShiftsLive && (
+            <NotLiveNotice>
+              <span className="font-semibold">Not live yet.</span> Active-shift summaries
+              are demo data — the live roster feed has no active shifts to aggregate.
+            </NotLiveNotice>
+          )}
+          {displayActiveShifts.map(shift => {
             const ShiftIcon = shift.type.includes('Night') ? Moon : shift.type.includes('Admin') ? FileText : Sun;
             return (
               <div key={shift.id} className="bg-card border border-border rounded-lg py-4 px-4">
@@ -219,20 +284,24 @@ export function HRShiftsPanel({ facilityId }: HRShiftsPanelProps) {
                     <span className="font-semibold text-sm">{shift.type}</span>
                     <span className="text-xs text-muted-foreground">{shift.time}</span>
                   </div>
-                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${shift.coverage >= 90 ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-warning-foreground'}`}>
-                    {shift.coverage}% coverage
-                  </span>
+                  {shift.coverage != null && (
+                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${shift.coverage >= 90 ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-warning-foreground'}`}>
+                      {shift.coverage}% coverage
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
                   <span>{shift.staffCount} staff</span>
                   <span>{shift.departments.join(', ')}</span>
                 </div>
-                <div className="w-full bg-neutral-100 rounded-full h-1.5">
-                  <div
-                    className={`h-1.5 rounded-full ${shift.coverage < 85 ? 'bg-amber-500' : 'bg-green-500'}`}
-                    style={{ width: `${shift.coverage}%` }}
-                  />
-                </div>
+                {shift.coverage != null && (
+                  <div className="w-full bg-neutral-100 rounded-full h-1.5">
+                    <div
+                      className={`h-1.5 rounded-full ${shift.coverage < 85 ? 'bg-amber-500' : 'bg-green-500'}`}
+                      style={{ width: `${shift.coverage}%` }}
+                    />
+                  </div>
+                )}
               </div>
             );
           })}
@@ -242,6 +311,10 @@ export function HRShiftsPanel({ facilityId }: HRShiftsPanelProps) {
       {/* Leave Tab */}
       {activeTab === 'leave' && (
         <div className="space-y-2 max-h-[420px] overflow-auto">
+          <NotLiveNotice>
+            <span className="font-semibold">Not live yet.</span> Leave requests are demo
+            data — the hr-payroll leave API is employee-scoped, not facility-wide.
+          </NotLiveNotice>
           {LEAVE_REQUESTS.map(req => (
             <div key={req.id} className="bg-card border border-border rounded-lg py-3 px-4">
               <div className="flex items-center justify-between">
@@ -268,8 +341,36 @@ export function HRShiftsPanel({ facilityId }: HRShiftsPanelProps) {
       )}
 
       {/* Handover Tab */}
-      {activeTab === 'handover' && (
+      {activeTab === 'handover' && handoversLive && (
         <div className="space-y-3">
+          {liveHandovers.map(ho => (
+            <div key={ho.id} className="bg-card border border-border border-l-4 border-l-amber-500 rounded-lg py-4 px-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold">Shift handover</p>
+                  <p className="text-xs text-muted-foreground">Outgoing: {ho.outgoingStaff}</p>
+                  {ho.submittedAt && (
+                    <p className="text-xs text-muted-foreground">Submitted {ho.submittedAt.slice(0, 16).replace('T', ' ')}</p>
+                  )}
+                </div>
+                <span className="px-2 py-0.5 rounded border border-border text-xs">{ho.status}</span>
+              </div>
+              <div className="flex gap-2 mt-3">
+                <button className="inline-flex items-center gap-1 px-3 py-1.5 text-xs border border-border rounded hover:bg-background">
+                  <Shield className="h-3 w-3" />Accept Takeover
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {activeTab === 'handover' && !handoversLive && (
+        <div className="space-y-3">
+          <NotLiveNotice>
+            <span className="font-semibold">No pending handovers.</span> Showing demo data —
+            none are currently pending for this facility.
+          </NotLiveNotice>
           {PENDING_HANDOVERS.map(ho => (
             <div key={ho.id} className="bg-card border border-border border-l-4 border-l-amber-500 rounded-lg py-4 px-4">
               <div className="flex items-center justify-between mb-2">

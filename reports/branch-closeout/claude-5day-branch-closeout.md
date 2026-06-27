@@ -265,11 +265,56 @@ sign-off), verified, **explicitly approved by the user**, then merged and pushed
 `intake/wave-b-tshepo-gdhcn-trust-primitives` stays **open** (its trust strand is now substantially in PT, but its Wave C–I
 de-fab strand + CDS strand are not; close it only after those are reconciled or explicitly dropped).
 
-### Remaining work (Phases 2–5) — gated on human sign-off + CI
+## Continuation — Phase 2 OROS reconciliation PREPARED (2026-06-27, awaiting sign-off)
+
+The OROS diagnostics features were reconciled on a local `prep/phase2-oros` branch (off PT `3538860ee`).
+**Not yet merged to PT, not pushed** — held for sign-off (same discipline as Phase 1). Safety snapshot for the
+eventual merge: `safety/pt-before-phase1-…` plus a fresh one will be cut at merge time.
+
+Merged `origin/intake/oros-diagnostics-journey` (176 new commits: oros-service diagnostics/imaging journey,
+identity-assurance, costa/coverage/tuso billing-category, dags permit verification). **19 conflicts** resolved:
+
+- **Named #1 coverage** `SubsidyController` — **unioned both** features (PT annual-cap `/enrolments` + OROS
+  exemption-category `/enrollments`); neither lost; both deps wired.
+- **Named #2 dags** `EnforcementService` — took OROS **superset** (v1 issuance + new `verifyAndConsume`:
+  constant-time signature → expiry → bound-claim → nonce-replay; closes G056). Confirmed it retains the
+  G003 fail-closed signing-key check.
+- **Named #3 costa** `ChargeRecordService` — took OROS **full tariff+rules pricing** (single `clinical.teleconsult.value`
+  path); removed the now-dead PT `onTeleconsultLifecycle` listener (the 2-arg compile trap) + its helper.
+- **Named #4 pct** `TelemedicineOrchestrationService` — took OROS's `emitTeleconsultValueTrigger` helper;
+  fixed the `OutboxPublisher` duplicate `TELECONSULT_COMPLETED` case label.
+- `experience-bff ServiceClientConfig` — unioned rito + patientSafety + **identityAssurance** params (wiring verified:
+  `IdentityAssuranceServiceClient`/`Controller` consume it).
+- `tshepo-authz` (AuthzProperties, StepUpVerificationDispatcher) — kept the **Phase-1 substrate** (newer TOTP-enrolment
+  version) over OROS's older inlined one.
+- Deleted obsolete PT `ChargeRecordTeleconsultTest` (tested the removed 2-arg API; OROS `ChargeRecordServiceTest`
+  covers the new pricing richer); adopted the G048-aligned `DisplaySettingsControllerTest` (OROS shipped the old no-arg one).
+- **Flyway collisions** renumbered (same-Vxxx/different-content from the merge): coverage `subsidy_enrollments` V010→V012,
+  pct `referral_billing_category_context` V015→V021, vashandi `leave_balance` V002→V004 (order-safe). Pre-existing BFF V41
+  collision left (no datasource).
+
+**Verification (offline):**
+- **Full reactor `mvn install -DskipTests`: BUILD SUCCESS** (entire monorepo compiles with the merge).
+- Tests green: costing-engine **75**, coverage **41**, pct, data-access-governance (dags `verifyAndConsume`), and
+  **oros-service 154** (incl. 2 new IDOR regression tests). 0 failures.
+- Gates unchanged (no regression): product-truth 4 ≤ 6, phase6 2 ≤ 2, route-inventory pass, completeness 12/13 (#13 still 8).
+- Frontend parity docs regenerated for OROS routes.
+
+**Security review** (`/security-review`, scoped to the OROS reconciliation): the hand-merged resolutions were clean; the
+dags permit-verify, identity-assurance, and costa pricing were verified sound (constant-time sig-before-claims, server-derived
+assurance with dual-control, tariff/rule-priced charges with idempotency — no double-charge/forged-amount). **One HIGH-severity
+finding in OROS's own code — IDOR / missing tenant isolation** on by-id order/result access (cross-tenant PHI read + result
+forgery via partially-predictable ULID orderIds). **FIXED** (`OrderStateMachine.getOrder` now enforces trust-context tenant;
+`getResults`/`cancelOrder` route through it; `findByTenantIdAndOrderId` added; regression tests added) — per the "fix all issues
+necessary for a successful merge" directive.
+
+**Status: complete and verified on the prep branch; awaiting human sign-off to merge into PT + push** (billing/auth/policy/PHI-
+sensitive). On approval: cut a `safety/pt-before-phase2-…` snapshot, `--no-ff` merge, regenerate truth, re-run gates, FF push.
+
+### Remaining work (Phases 3–5) — gated on human sign-off + CI
 These were **intentionally not executed** in this automated pass because the approved plan gates them on
 `/security-review` + a real cross-service test run + human architect/security sign-off, and they are large,
 security-sensitive, and hard to reverse:
-- **Phase 2** — OROS reconciliation (4 named non-mergeable code conflicts: subsidy enrolment spelling, DAGS v1↔v1+v2, teleconsult billing 1-arg↔2-arg, telemedicine API + `OutboxPublisher` duplicate `case`).
 - **Phase 3** — `citizen-zero-to-one` (OPA rego must compile first — tip admits "uncompilable + SHADOW").
 - **Phase 4** — `khuluma-comms-hub` (V017 + khuluma.rego + 22 SecurityConfig edits).
 - **Phase 5** — retire `integration/closeout-staging` once OROS/CDS/khuluma land.

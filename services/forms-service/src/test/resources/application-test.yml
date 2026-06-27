@@ -21,4 +21,3 @@ impilo:
 
 forms:
   security:
-    oauth2-enabled: false

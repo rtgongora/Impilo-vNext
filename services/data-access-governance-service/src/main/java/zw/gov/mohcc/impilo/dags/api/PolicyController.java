@@ -19,9 +19,21 @@ import zw.gov.mohcc.impilo.shared.response.ApiResponse;
 public class PolicyController {
 
     private final PolicyService policyService;
+    private final zw.gov.mohcc.impilo.dags.core.PolicyEvaluator policyEvaluator;
 
-    public PolicyController(PolicyService policyService) {
+    public PolicyController(PolicyService policyService,
+                            zw.gov.mohcc.impilo.dags.core.PolicyEvaluator policyEvaluator) {
         this.policyService = policyService;
+        this.policyEvaluator = policyEvaluator;
+    }
+
+    /** Evaluate a request against the persisted policy conditions (G040). */
+    @PostMapping("/evaluate")
+    public ResponseEntity<ApiResponse<zw.gov.mohcc.impilo.dags.core.PolicyEvaluator.Decision>> evaluate(
+            @RequestBody EvaluateRequest request) {
+        TrustContext ctx = TrustContextHolder.require();
+        var decision = policyEvaluator.evaluate(ctx.tenantId(), request.resourceType(), request.context());
+        return ResponseEntity.ok(ApiResponse.ok(decision, ctx.correlationId().toString()));
     }
 
     @PostMapping
@@ -54,5 +66,10 @@ public class PolicyController {
             String resourceType,
             String conditions,
             PolicyEffect effect
+    ) {}
+
+    public record EvaluateRequest(
+            String resourceType,
+            java.util.Map<String, String> context
     ) {}
 }

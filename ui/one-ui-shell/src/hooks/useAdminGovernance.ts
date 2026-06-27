@@ -16,11 +16,20 @@ import type {
   OpaPrecheckRequest,
 } from "@/lib/admin-governance/types";
 import { isActionResponse } from "@/lib/admin-governance/api/client";
+import { listGdhcnReadiness } from "@/lib/admin-governance/api/gdhcnReadinessApi";
 
 export function useAdminAccessRequests() {
   return useQuery({
     queryKey: ["admin-governance", "access-requests"],
     queryFn: listAccessRequests,
+    staleTime: 30_000,
+  });
+}
+
+export function useGdhcnReadiness() {
+  return useQuery({
+    queryKey: ["admin-governance", "gdhcn-readiness"],
+    queryFn: listGdhcnReadiness,
     staleTime: 30_000,
   });
 }

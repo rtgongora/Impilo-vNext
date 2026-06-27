@@ -12,6 +12,7 @@ public class CardPrintProperties {
     private Templates templates = new Templates();
     private Spooler spooler = new Spooler();
     private Landela landela = new Landela();
+    private Vito vito = new Vito();
     private Qr qr = new Qr();
     private Processor processor = new Processor();
     private Outbox outbox = new Outbox();
@@ -38,6 +39,14 @@ public class CardPrintProperties {
 
     public void setLandela(Landela landela) {
         this.landela = landela;
+    }
+
+    public Vito getVito() {
+        return vito;
+    }
+
+    public void setVito(Vito vito) {
+        this.vito = vito;
     }
 
     public Qr getQr() {
@@ -137,6 +146,32 @@ public class CardPrintProperties {
 
         public void setBaseUrl(String baseUrl) {
             this.baseUrl = baseUrl;
+        }
+    }
+
+    /**
+     * VITO (smart-card lifecycle SoR) connection. The agent calls VITO's internal
+     * print endpoint to provision the personalised card's public key (G032).
+     */
+    public static class Vito {
+        private String baseUrl = "http://localhost:8082";
+        /** Actor id the agent presents on its internal print callback for audit. */
+        private String actorId = "card-print-agent";
+
+        public String getBaseUrl() {
+            return baseUrl;
+        }
+
+        public void setBaseUrl(String baseUrl) {
+            this.baseUrl = baseUrl;
+        }
+
+        public String getActorId() {
+            return actorId;
+        }
+
+        public void setActorId(String actorId) {
+            this.actorId = actorId;
         }
     }
 

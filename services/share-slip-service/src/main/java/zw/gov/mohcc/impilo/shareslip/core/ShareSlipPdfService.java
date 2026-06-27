@@ -1,11 +1,17 @@
 package zw.gov.mohcc.impilo.shareslip.core;
 
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.WriterException;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.springframework.stereotype.Service;
 import zw.gov.mohcc.impilo.shareslip.persistence.entity.ShareLinkEntity;
 
@@ -36,6 +42,18 @@ public class ShareSlipPdfService {
      * @return PDF bytes
      * @throws IOException if PDF generation fails
      */
+    /** Encode the share token as a real scannable QR PNG (G047 — was a text placeholder). */
+    private static byte[] qrPng(String content, int sizePx) throws IOException {
+        try {
+            BitMatrix matrix = new QRCodeWriter().encode(content, BarcodeFormat.QR_CODE, sizePx, sizePx);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            MatrixToImageWriter.writeToStream(matrix, "PNG", out);
+            return out.toByteArray();
+        } catch (WriterException e) {
+            throw new IOException("QR generation failed", e);
+        }
+    }
+
     public byte[] generateShareSlipPdf(ShareLinkEntity entity) throws IOException {
         try (PDDocument doc = new PDDocument()) {
             PDPage page = new PDPage(PDRectangle.A5);
@@ -118,11 +136,12 @@ public class ShareSlipPdfService {
                 cs.beginText();
                 cs.setFont(fontRegular, 10);
                 cs.newLineAtOffset(margin, y);
-                cs.showText("Documents: " + entity.getDocumentIds().size() + " document(s) attached");
+                int docCount = entity.getDocumentIds() != null ? entity.getDocumentIds().size() : 0;
+                cs.showText("Documents: " + docCount + " document(s) attached");
                 cs.endText();
                 y -= 25;
 
-                // Share token (QR placeholder)
+                // Share token — real scannable QR (was a text placeholder)
                 cs.beginText();
                 cs.setFont(fontBold, 10);
                 cs.newLineAtOffset(margin, y);
@@ -131,6 +150,14 @@ public class ShareSlipPdfService {
                 y -= 14;
 
                 String token = entity.getShareToken();
+
+                // Render an actual QR of the token and embed it.
+                PDImageXObject qrImage = PDImageXObject.createFromByteArray(doc, qrPng(token, 600), "share-token-qr");
+                float qrSize = 120;
+                cs.drawImage(qrImage, margin, y - qrSize, qrSize, qrSize);
+                y -= (qrSize + 8);
+
+                // Keep the raw token below for manual entry if scanning is unavailable.
                 int lineLen = 64;
                 for (int i = 0; i < token.length(); i += lineLen) {
                     cs.beginText();

@@ -29,6 +29,8 @@ class TransfusionPreVerifyTest {
     @Mock private TransfusionOutcomeRepository outcomeRepository;
     @Mock private ButanoIntegration butanoIntegration;
     @Mock private MadiEventEmitter eventEmitter;
+    @Mock private zw.gov.mohcc.impilo.madi.persistence.repository.BloodOrderRepository orderRepository;
+    @Mock private zw.gov.mohcc.impilo.madi.integration.OrosIntegration orosIntegration;
 
     private TransfusionService transfusionService;
     private static final UUID TENANT_ID = UUID.randomUUID();
@@ -36,7 +38,7 @@ class TransfusionPreVerifyTest {
     @BeforeEach
     void setUp() {
         transfusionService = new TransfusionService(episodeRepository, observationRepository,
-                outcomeRepository, butanoIntegration, eventEmitter);
+                outcomeRepository, butanoIntegration, eventEmitter, orderRepository, orosIntegration);
     }
 
     @Test

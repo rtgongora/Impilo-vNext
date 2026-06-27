@@ -3,6 +3,8 @@ package zw.gov.mohcc.impilo.experience.client;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -234,6 +236,270 @@ public class OrosServiceClient {
     public JsonNode getResult(String orderId) {
         String url = baseUrl + "/v1/orders/" + orderId;
         log.debug("OROS: Getting result for order={}", orderId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Create a diagnostic order draft.
+     */
+    public JsonNode createDraft(Map<String, Object> body) {
+        String url = baseUrl + "/v1/orders/draft";
+        log.info("OROS: Creating diagnostic draft type={}", body.get("orderType"));
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Submit a draft order (reserve accession, init imaging workflow, route).
+     */
+    public JsonNode submitOrder(String orderId) {
+        String url = baseUrl + "/v1/orders/" + orderId + "/submit";
+        log.info("OROS: Submitting order={}", orderId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Issue a printable, OTP-protected QR for a patient-carried order.
+     */
+    public JsonNode printableOrder(String orderId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/orders/" + orderId + "/printable";
+        log.info("OROS: Issuing printable QR for order={}", orderId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body != null ? body : Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Claim a patient-carried order QR at a fulfilling facility.
+     */
+    public JsonNode qrClaim(Map<String, Object> body) {
+        String url = baseUrl + "/v1/intake/qr/claim";
+        log.info("OROS: QR claim");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Assign a routing destination to an order.
+     */
+    public JsonNode routeOrder(String orderId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/orders/" + orderId + "/route";
+        log.info("OROS: Routing order={} to type={}", orderId, body.get("destinationType"));
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Search diagnostic orders (order tracking) by client/requester/status/type.
+     */
+    public JsonNode listOrders(String client, String requester, String status, String type) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/orders");
+        if (client != null && !client.isBlank()) builder.queryParam("client", client);
+        if (requester != null && !requester.isBlank()) builder.queryParam("requester", requester);
+        if (status != null && !status.isBlank()) builder.queryParam("status", status);
+        if (type != null && !type.isBlank()) builder.queryParam("type", type);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * List orders linked to a specific encounter (backs the encounter Orders &amp; Results panel).
+     */
+    public JsonNode listOrdersByEncounter(String encounterId) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/orders")
+                .queryParam("encounter", encounterId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Record a specimen collected against a lab order (real specimen lifecycle, not a stub).
+     */
+    public JsonNode collectSpecimen(String orderId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/orders/" + orderId + "/specimens";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                url, body != null ? body : Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Specimens for an order (lab specimen lifecycle view). */
+    public JsonNode orderSpecimens(String orderId) {
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(
+                baseUrl + "/v1/orders/" + orderId + "/specimens", JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Category-agnostic fulfilment worklist (lab/procedure/assessment). */
+    public JsonNode fulfilmentWorklist(String type, String states) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/fulfilment/worklist")
+                .queryParam("type", type);
+        if (states != null && !states.isBlank()) b.queryParam("states", states);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(b.toUriString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Drive a guarded fine-grained workflow transition (lab/procedure). */
+    public JsonNode workflowTransition(String orderId, String target, String reason) {
+        Map<String, Object> body = new java.util.HashMap<>();
+        body.put("target", target);
+        body.put("reason", reason);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                baseUrl + "/v1/orders/" + orderId + "/workflow/transition", body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Schedule a procedure/assessment appointment. */
+    public JsonNode workflowSchedule(String orderId, Map<String, Object> body) {
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                baseUrl + "/v1/orders/" + orderId + "/workflow/schedule",
+                body != null ? body : Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Drive a specimen lifecycle action (label/dispatch/receive/reject/recollect). */
+    public JsonNode specimenAction(String specimenId, String action, Map<String, Object> body) {
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                baseUrl + "/v1/specimens/" + specimenId + "/" + action,
+                body != null ? body : Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Read a catalogue segment (services / orderables / specimen-config) — clinician-facing read. */
+    public JsonNode catalogueRead(String segment) {
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(
+                baseUrl + "/v1/catalogue/" + segment, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Curate (upsert) an admin catalogue (service-catalogue / orderable-catalogue / specimen-config). */
+    public JsonNode catalogueWrite(String adminPath, Map<String, Object> body) {
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                baseUrl + "/v1/admin/" + adminPath, HttpMethod.PUT,
+                new HttpEntity<>(body != null ? body : Map.of()), JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Structured laboratory observations for a result (value/unit/reference-range/flags). */
+    public JsonNode resultObservations(String resultId) {
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(
+                baseUrl + "/v1/results/" + resultId + "/observations", JsonNode.class);
+        return extractData(response);
+    }
+
+    /** All results for an order (patient-file investigations view). */
+    public JsonNode orderResults(String orderId) {
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(
+                baseUrl + "/v1/orders/" + orderId + "/results", JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Drive a guarded imaging-workflow transition on an order.
+     */
+    public JsonNode imagingTransition(String orderId, String target, String reason) {
+        String url = baseUrl + "/v1/orders/" + orderId + "/imaging/transition";
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("target", target);
+        if (reason != null) body.put("reason", reason);
+        log.info("OROS: Imaging transition order={} -> {}", orderId, target);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Imaging-team worklist filtered by fine-grained imaging state.
+     */
+    public JsonNode imagingWorklist(String states) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/orders/imaging-worklist");
+        if (states != null && !states.isBlank()) builder.queryParam("states", states);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Requester results inbox: orders with results ready for review.
+     */
+    public JsonNode resultsInbox(String requester) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/results/inbox");
+        if (requester != null && !requester.isBlank()) builder.queryParam("requester", requester);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Diagnostic operational reconciliation summary (stuck-order bucket counts + unacked critical).
+     */
+    public JsonNode reconcileDiagnosticsSummary() {
+        String url = baseUrl + "/v1/reconcile/diagnostics/summary";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Author or amend a report for an order ({@code action} = preliminary|final|amend|addendum).
+     */
+    public JsonNode postReport(String orderId, String action, Map<String, Object> body) {
+        String url = baseUrl + "/v1/results/" + orderId + "/" + action;
+        log.info("OROS: Report {} for order={}", action, orderId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Release a report version to requesters.
+     */
+    public JsonNode releaseReport(String resultId, String note) {
+        String url = baseUrl + "/v1/results/" + resultId + "/release";
+        Map<String, Object> body = note != null ? Map.of("note", note) : Map.of();
+        log.info("OROS: Releasing report result={}", resultId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Full report version chain for an order (newest first).
+     */
+    public JsonNode orderReportVersions(String orderId) {
+        String url = baseUrl + "/v1/results/" + orderId + "/versions";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Acknowledge a critical result (closes the critical loop).
+     */
+    public JsonNode acknowledgeCriticalResult(String resultId, String note) {
+        String url = baseUrl + "/v1/results/" + resultId + "/critical/ack";
+        Map<String, Object> body = note != null ? Map.of("note", note) : Map.of();
+        log.info("OROS: Acknowledging critical result={}", resultId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Unacknowledged critical results requiring follow-up/escalation.
+     */
+    public JsonNode criticalUnacknowledged() {
+        String url = baseUrl + "/v1/reconcile/diagnostics/critical-unacknowledged";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Imaging workload/turnaround distribution by state.
+     */
+    public JsonNode turnaround() {
+        String url = baseUrl + "/v1/metrics/turnaround";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Honest external-integration status for diagnostics adapters.
+     */
+    public JsonNode integrationStatus() {
+        String url = baseUrl + "/v1/integrations/status";
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
         return extractData(response);
     }

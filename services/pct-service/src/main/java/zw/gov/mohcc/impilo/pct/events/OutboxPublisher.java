@@ -29,6 +29,7 @@ import java.util.List;
  *   <tr><td>QUEUE_ITEM_CREATED, QUEUE_ITEM_UPDATED, QUEUE_ITEM_ENQUEUED, QUEUE_ITEM_CALLED, QUEUE_ITEM_TRANSFERRED</td><td>pct.queue.item.updated</td></tr>
  *   <tr><td>ENCOUNTER_STARTED</td><td>pct.encounter.started</td></tr>
  *   <tr><td>ENCOUNTER_COMPLETED</td><td>pct.encounter.completed</td></tr>
+ *   <tr><td>TELECONSULT_COMPLETED</td><td>clinical.teleconsult.value</td></tr>
  *   <tr><td>ADMISSION_CREATED, ADMISSION_UPDATED, ADMISSION_REQUESTED, PATIENT_ADMITTED</td><td>pct.admission.updated</td></tr>
  *   <tr><td>DISCHARGE_INITIATED, DISCHARGE_STARTED</td><td>pct.discharge.started</td></tr>
  *   <tr><td>DISCHARGE_COMPLETED</td><td>pct.discharge.completed</td></tr>
@@ -158,6 +159,8 @@ public class OutboxPublisher {
 
             case "ENCOUNTER_STARTED" -> "pct.encounter.started";
             case "ENCOUNTER_COMPLETED" -> "pct.encounter.completed";
+
+            case "TELECONSULT_COMPLETED" -> "clinical.teleconsult.value";
 
             case "ADMISSION_CREATED", "ADMISSION_UPDATED",
                  "ADMISSION_REQUESTED", "ADMISSION_APPROVED", "PATIENT_ADMITTED" -> "pct.admission.updated";

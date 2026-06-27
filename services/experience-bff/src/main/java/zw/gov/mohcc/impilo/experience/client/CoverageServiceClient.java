@@ -53,6 +53,16 @@ public class CoverageServiceClient {
         return extractData(restTemplate.getForEntity(url, JsonNode.class));
     }
 
+    /**
+     * Resolve a patient's billing category (e.g. PRIVATE / CASH) from their active coverage.
+     * Used to enrich downstream costing context (COSTA charging rules).
+     */
+    public JsonNode resolvePatientCategory(String clientId) {
+        String url = baseUrl + "/internal/v1/coverage/patient-category/" + clientId;
+        log.info("COVERAGE: Resolving patient billing category");
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
     public JsonNode checkEligibility(Map<String, Object> body) {
         String url = baseUrl + "/internal/v1/coverage/eligibility";
         log.info("COVERAGE: Checking eligibility");

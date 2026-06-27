@@ -11,4 +11,7 @@ import java.util.UUID;
 public interface OrderItemRepository extends JpaRepository<OrderItemEntity, UUID> {
 
     List<OrderItemEntity> findByOrderId(String orderId);
+
+    /** Remove all items for an order (used when replacing a draft's items on update). */
+    void deleteByOrderId(String orderId);
 }

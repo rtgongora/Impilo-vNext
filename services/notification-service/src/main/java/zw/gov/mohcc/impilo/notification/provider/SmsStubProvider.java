@@ -24,10 +24,10 @@ public class SmsStubProvider implements NotificationProvider {
 
     @Override
     public void send(String channel, String to, String subject, String body) {
-        log.info("[SMS_DEV] to={} body_length={}", to,
-                body != null ? body.length() : 0);
-        if (log.isDebugEnabled() && body != null) {
-            log.debug("[SMS_DEV] body: {}", body);
-        }
+        // Loud, not silent: the message is NOT delivered. A silent drop here would mask
+        // undelivered OTPs/alerts. Configure notification.sms.provider=http for real delivery.
+        log.warn("[SMS NOT DELIVERED — stub provider] to={} body_length={}; "
+                        + "set notification.sms.provider=http for real delivery",
+                to, body != null ? body.length() : 0);
     }
 }

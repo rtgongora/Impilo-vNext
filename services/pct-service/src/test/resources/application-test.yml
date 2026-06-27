@@ -22,7 +22,7 @@ spring:
 
 impilo:
   security:
-    oauth2-enabled: false
+    disable-oauth-for-tests: true
 
 pct:
   outbox:

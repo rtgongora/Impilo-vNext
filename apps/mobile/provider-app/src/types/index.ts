@@ -16,7 +16,8 @@ export type ProviderTabKey =
   | "social"
   | "tools"
   | "apps"
-  | "professional";
+  | "professional"
+  | "diagnostics";
 
 export type EncounterStatus = "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
 export type TaskStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED" | "ESCALATED" | "OVERDUE";

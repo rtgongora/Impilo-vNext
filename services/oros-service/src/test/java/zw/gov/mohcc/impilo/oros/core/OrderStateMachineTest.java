@@ -12,6 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import zw.gov.mohcc.impilo.oros.domain.OrderPriority;
 import zw.gov.mohcc.impilo.oros.domain.OrderStatus;
 import zw.gov.mohcc.impilo.oros.domain.OrderType;
+import zw.gov.mohcc.impilo.oros.domain.RequestSource;
 import zw.gov.mohcc.impilo.oros.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.oros.persistence.entity.OrderEntity;
 import zw.gov.mohcc.impilo.oros.persistence.entity.OrderItemEntity;
@@ -82,6 +83,37 @@ class OrderStateMachineTest {
     private TrustContext createTrustContext() {
         return new TrustContext(TENANT_ID, ACTOR_ID, "PROVIDER", "TREATMENT",
                 null, CORRELATION_ID, FACILITY_ID, WORKSPACE_ID, null, AccessMode.INTERNAL);
+    }
+
+    @Nested
+    @DisplayName("Tenant isolation (IDOR guard)")
+    class TenantIsolation {
+
+        @Test
+        @DisplayName("getOrder denies an order belonging to another tenant (no existence leak)")
+        void getOrderDeniesCrossTenant() {
+            OrderEntity order = createOrderInStatus(OrderStatus.PLACED); // tenantId = TENANT_ID
+            when(orderRepository.findByOrderId(order.getOrderId())).thenReturn(java.util.Optional.of(order));
+            TrustContext otherTenant = new TrustContext(java.util.UUID.randomUUID(), ACTOR_ID, "PROVIDER",
+                    "TREATMENT", null, CORRELATION_ID, FACILITY_ID, WORKSPACE_ID, null, AccessMode.INTERNAL);
+            try (MockedStatic<TrustContextHolder> mockedHolder = mockStatic(TrustContextHolder.class)) {
+                mockedHolder.when(TrustContextHolder::require).thenReturn(otherTenant);
+                assertThatThrownBy(() -> stateMachine.getOrder(order.getOrderId()))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("not found");
+            }
+        }
+
+        @Test
+        @DisplayName("getOrder returns the order for its owning tenant")
+        void getOrderAllowsSameTenant() {
+            OrderEntity order = createOrderInStatus(OrderStatus.PLACED);
+            when(orderRepository.findByOrderId(order.getOrderId())).thenReturn(java.util.Optional.of(order));
+            try (MockedStatic<TrustContextHolder> mockedHolder = mockStatic(TrustContextHolder.class)) {
+                mockedHolder.when(TrustContextHolder::require).thenReturn(createTrustContext());
+                assertThat(stateMachine.getOrder(order.getOrderId())).isSameAs(order);
+            }
+        }
     }
 
     @Nested
@@ -354,8 +386,8 @@ class OrderStateMachineTest {
                         .thenAnswer(invocation -> invocation.getArgument(0));
 
                 List<OrderStateMachine.OrderItemData> items = List.of(
-                        new OrderStateMachine.OrderItemData("CBC", "Complete Blood Count", 1, null, "BLOOD", null),
-                        new OrderStateMachine.OrderItemData("BMP", "Basic Metabolic Panel", 1, "Fasting required", "BLOOD", null)
+                        OrderStateMachine.OrderItemData.lab("CBC", "Complete Blood Count", 1, null, "BLOOD", null),
+                        OrderStateMachine.OrderItemData.lab("BMP", "Basic Metabolic Panel", 1, "Fasting required", "BLOOD", null)
                 );
 
                 OrderEntity order = stateMachine.placeOrder(
@@ -417,6 +449,87 @@ class OrderStateMachineTest {
                         null, null, null, null);
 
                 assertThat(order1.getOrderId()).isNotEqualTo(order2.getOrderId());
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("Draft Lifecycle")
+    class DraftLifecycle {
+
+        @Test
+        @DisplayName("createDraft creates a DRAFT imaging order with diagnostic fields and items")
+        void createDraftPopulatesDiagnosticFields() {
+            try (MockedStatic<TrustContextHolder> mockedHolder = mockStatic(TrustContextHolder.class)) {
+                mockedHolder.when(TrustContextHolder::require).thenReturn(createTrustContext());
+
+                when(orderRepository.save(any(OrderEntity.class)))
+                        .thenAnswer(invocation -> invocation.getArgument(0));
+                when(orderItemRepository.save(any(OrderItemEntity.class)))
+                        .thenAnswer(invocation -> invocation.getArgument(0));
+
+                List<OrderStateMachine.OrderItemData> items = List.of(
+                        new OrderStateMachine.OrderItemData("CHEST-XR", "Chest X-Ray", 1, "PA view",
+                                null, "CHEST", "XR", "BILATERAL", "NO", "PROC-71020"));
+
+                OrderEntity order = stateMachine.createDraft(
+                        FACILITY_ID, "CPID-IMG-001", OrderType.IMAGING, OrderPriority.ROUTINE,
+                        RequestSource.INTERNAL, "ZIBO-XR", "ENC-1", "Cough 2 weeks",
+                        "prov-1", "Dr Referrer", null, "{\"pregnant\":false}", items);
+
+                assertThat(order.getStatus()).isEqualTo(OrderStatus.DRAFT);
+                assertThat(order.getOrderType()).isEqualTo(OrderType.IMAGING);
+                assertThat(order.getRequestSource()).isEqualTo(RequestSource.INTERNAL);
+                assertThat(order.getReferringProviderId()).isEqualTo("prov-1");
+                assertThat(order.getReferringProviderName()).isEqualTo("Dr Referrer");
+                assertThat(order.getSafetyJson()).contains("pregnant");
+                verify(orderItemRepository).save(any(OrderItemEntity.class));
+                verify(outboxRepository).save(any(EventOutboxEntity.class));
+            }
+        }
+
+        @Test
+        @DisplayName("updateDraft on a DRAFT order replaces items and updates fields")
+        void updateDraftReplacesItems() {
+            try (MockedStatic<TrustContextHolder> mockedHolder = mockStatic(TrustContextHolder.class)) {
+                mockedHolder.when(TrustContextHolder::require).thenReturn(createTrustContext());
+
+                OrderEntity existing = createOrderInStatus(OrderStatus.DRAFT);
+                existing.setOrderType(OrderType.IMAGING);
+                when(orderRepository.findByOrderId(existing.getOrderId())).thenReturn(Optional.of(existing));
+                when(orderRepository.save(any(OrderEntity.class)))
+                        .thenAnswer(invocation -> invocation.getArgument(0));
+                when(orderItemRepository.save(any(OrderItemEntity.class)))
+                        .thenAnswer(invocation -> invocation.getArgument(0));
+
+                List<OrderStateMachine.OrderItemData> items = List.of(
+                        OrderStateMachine.OrderItemData.lab("US-ABD", "Abdominal US", 1, null, null, "ABDOMEN"));
+
+                OrderEntity updated = stateMachine.updateDraft(
+                        existing.getOrderId(), OrderPriority.URGENT, RequestSource.PAPER,
+                        "ZIBO-2", "ENC-2", "Updated notes", "prov-2", "Dr Two", null, null, items);
+
+                assertThat(updated.getPriority()).isEqualTo(OrderPriority.URGENT);
+                assertThat(updated.getRequestSource()).isEqualTo(RequestSource.PAPER);
+                assertThat(updated.getClinicalNotes()).isEqualTo("Updated notes");
+                verify(orderItemRepository).deleteByOrderId(existing.getOrderId());
+                verify(orderItemRepository).save(any(OrderItemEntity.class));
+            }
+        }
+
+        @Test
+        @DisplayName("updateDraft on a non-DRAFT order is rejected")
+        void updateDraftRejectsNonDraft() {
+            try (MockedStatic<TrustContextHolder> mockedHolder = mockStatic(TrustContextHolder.class)) {
+                mockedHolder.when(TrustContextHolder::require).thenReturn(createTrustContext());
+
+                OrderEntity placed = createOrderInStatus(OrderStatus.PLACED);
+                when(orderRepository.findByOrderId(placed.getOrderId())).thenReturn(Optional.of(placed));
+
+                assertThatThrownBy(() -> stateMachine.updateDraft(
+                        placed.getOrderId(), null, null, null, null, null, null, null, null, null, null))
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessageContaining("not a draft");
             }
         }
     }

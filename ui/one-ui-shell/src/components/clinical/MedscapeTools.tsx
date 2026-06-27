@@ -498,7 +498,17 @@ export function MedscapeTools({ open, onClose, toolId }: MedscapeToolsProps) {
               {interactionDrugs.length >= 2 && (
                 <div className="space-y-2">
                   {foundInteractions.length === 0 ? (
-                    <div className="p-4 bg-green-50 rounded-lg text-center"><p className="text-sm text-green-700 font-medium">No known interactions found</p></div>
+                    <div className="p-4 bg-amber-50 rounded-lg border border-warning/35">
+                      <div className="flex items-start gap-2">
+                        <AlertCircle className="w-4 h-4 text-warning-foreground mt-0.5 shrink-0" />
+                        <p className="text-xs text-warning-foreground">
+                          <span className="font-semibold">No match in this quick-reference set.</span>{" "}
+                          This is a limited local reference, <span className="font-semibold">not a complete
+                          drug-interaction check</span> — an absent result does not mean the combination is safe.
+                          Verify against a full interaction service before prescribing.
+                        </p>
+                      </div>
+                    </div>
                   ) : foundInteractions.map((ix, i) => (
                     <div key={i} className={`p-3 rounded-lg border ${severityColor[ix.severity]}`}>
                       <div className="flex items-center gap-2 mb-1">

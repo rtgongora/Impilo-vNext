@@ -20,9 +20,11 @@ import java.util.UUID;
 public class SyncStateService {
 
     private final SyncStateRepository syncStateRepository;
+    private final ElmisSyncConnector connector;
 
-    public SyncStateService(SyncStateRepository syncStateRepository) {
+    public SyncStateService(SyncStateRepository syncStateRepository, ElmisSyncConnector connector) {
         this.syncStateRepository = syncStateRepository;
+        this.connector = connector;
     }
 
     public List<SyncStateEntity> findAll() {
@@ -35,8 +37,11 @@ public class SyncStateService {
     }
 
     /**
-     * Triggers a new sync operation for the given tenant, facility, and sync type.
-     * Creates a new sync state record in IN_PROGRESS status.
+     * Triggers a sync for the given tenant, facility, and sync type, then drives it
+     * to a terminal state via the {@link ElmisSyncConnector}. The sync ends COMPLETED
+     * (with the synced record count) or FAILED (with a reason) — it is never left
+     * hanging IN_PROGRESS, and when no real eLMIS endpoint is configured it fails
+     * closed as NOT_LIVE rather than fabricating success (G023).
      */
     @Transactional
     public SyncStateEntity triggerSync(UUID tenantId, UUID facilityId, String syncType) {
@@ -46,6 +51,13 @@ public class SyncStateService {
         entity.setSyncType(syncType);
         entity.setStatus("IN_PROGRESS");
         entity.setLastSyncAt(OffsetDateTime.now());
+
+        SyncResult result = connector.sync(entity);
+        entity.setStatus(result.status());
+        entity.setRecordsSynced(result.recordsSynced());
+        entity.setErrorMessage(result.message());
+        entity.setLastSyncAt(OffsetDateTime.now());
+
         return syncStateRepository.save(entity);
     }
 }

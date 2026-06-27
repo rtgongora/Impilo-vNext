@@ -263,6 +263,7 @@ public class FacilityController {
                 entity.getOperationalStatus(),
                 entity.getOwnership(),
                 entity.getLevel(),
+                entity.getFacilityCategory(),
                 toOperatingModel(entity),
                 entity.getParent() != null ? entity.getParent().getId() : null,
                 null, // parentName — would require lazy load
@@ -347,6 +348,7 @@ public class FacilityController {
                 entity.getOperationalStatus(),
                 entity.getOwnership(),
                 entity.getLevel(),
+                entity.getFacilityCategory(),
                 toOperatingModel(entity),
                 entity.getParent() != null ? entity.getParent().getId() : null,
                 null, // parentName

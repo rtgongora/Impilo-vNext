@@ -82,6 +82,8 @@ public class TelemedicineOrchestrationService {
         referral.setPreferredMode(optional(request, "preferredMode", "preferred_mode"));
         referral.setModality(defaulted(optional(request, "modality"), "virtual"));
         referral.setVirtualMode(defaulted(optional(request, "virtual_mode", "virtualMode"), "video"));
+        referral.setPatientCategory(optional(request, "patientCategory", "patient_category"));
+        referral.setFacilityCategory(optional(request, "facilityCategory", "facility_category"));
         referral.setStatus("DRAFT");
         referral.setStage(1);
         referral.setRoutingTarget("{}");
@@ -292,25 +294,16 @@ public class TelemedicineOrchestrationService {
         }
         entity.setStatus("COMPLETED");
         entity.setCompletedAt(OffsetDateTime.now());
+        // Billing context may be finalised at completion (e.g. eligibility resolved); keep what
+        // was captured at referral time unless the completion request overrides it.
+        entity.setPatientCategory(defaulted(optional(request, "patientCategory", "patient_category"),
+                entity.getPatientCategory()));
+        entity.setFacilityCategory(defaulted(optional(request, "facilityCategory", "facility_category"),
+                entity.getFacilityCategory()));
         entity.setCompletionPayload(writeJsonObject(request == null ? Map.of() : request));
         ReferralEntity saved = referralRepository.save(entity);
         emitOutbox("telemedicine.session.completed", saved.getReferralId().toString(), toReferralPayload(saved));
-
-        // telemed -> value trigger (journey 9): a completed teleconsult is a billable service event. PCT does
-        // NOT price it (COSTA/L4 owns value). Emit a clean service event L4 consumes to raise the teleconsult
-        // charge. TODO(L4 wiring): COSTA CostaEventConsumer must subscribe to clinical.teleconsult.value and
-        // ingest TELECONSULT_COMPLETED -> CHARGE_CREATED. Real-time media stays fail-closed (501); the charge
-        // is for the consultation outcome, not the transport.
-        Map<String, Object> valueEvent = new LinkedHashMap<>();
-        valueEvent.put("referralId", saved.getReferralId().toString());
-        valueEvent.put("patientCpid", saved.getPatientCpid());
-        valueEvent.put("encounterId", saved.getEncounterId());
-        valueEvent.put("facilityId", saved.getFacilityId());
-        valueEvent.put("specialty", defaulted(saved.getSpecialty(), "GENERAL"));
-        valueEvent.put("modality", defaulted(saved.getModality(), defaulted(saved.getPreferredMode(), "ASYNC")));
-        valueEvent.put("sourceServiceEvent", "TELECONSULT_COMPLETED");
-        emitOutbox("TELECONSULT_COMPLETED", saved.getReferralId().toString(), valueEvent);
-
+        emitTeleconsultValueTrigger(saved);
         telemetryService.record("telemedicine.referral.completed", null, Map.of(
                 "referralId", saved.getReferralId().toString(),
                 "patientCpid", saved.getPatientCpid(),
@@ -530,6 +523,8 @@ public class TelemedicineOrchestrationService {
         body.put("preferredMode", entity.getPreferredMode());
         body.put("modality", entity.getModality());
         body.put("virtualMode", entity.getVirtualMode());
+        body.put("patientCategory", entity.getPatientCategory());
+        body.put("facilityCategory", entity.getFacilityCategory());
         body.put("routingTarget", readJsonMap(entity.getRoutingTarget()));
         body.put("routingKind", entity.getRoutingKind());
         body.put("routingPoolId", entity.getRoutingPoolId());
@@ -614,6 +609,39 @@ public class TelemedicineOrchestrationService {
         List<Map<String, Object>> responses = new ArrayList<>(readJsonMapList(entity.getResponses()));
         responses.add(payload);
         entity.setResponses(writeJsonArray(responses));
+    }
+
+    /**
+     * Emit a flat-payload value-trigger event when a teleconsult referral completes so the
+     * costing plane (COSTA / L4) can price it. Unlike {@link #emitOutbox}, the payload fields
+     * are written at the top level (matching the encounter/order events COSTA already consumes)
+     * rather than nested under an envelope. {@link zw.gov.mohcc.impilo.pct.events.OutboxPublisher}
+     * routes the {@code TELECONSULT_COMPLETED} event type to {@code clinical.teleconsult.value}
+     * and {@code core.transaction.events}.
+     */
+    private void emitTeleconsultValueTrigger(ReferralEntity referral) {
+        TrustContext ctx = TrustContextHolder.require();
+        String referralId = referral.getReferralId().toString();
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("eventId", referralId + ":TELECONSULT_COMPLETED");
+        payload.put("tenantId", ctx.tenantId().toString());
+        payload.put("referralId", referralId);
+        payload.put("patientCpid", referral.getPatientCpid());
+        payload.put("encounterId", referral.getEncounterId());
+        payload.put("facilityId", referral.getFacilityId());
+        payload.put("specialty", referral.getSpecialty());
+        payload.put("modality", referral.getModality());
+        payload.put("patientCategory", referral.getPatientCategory());
+        payload.put("facilityCategory", referral.getFacilityCategory());
+        payload.put("sourceServiceEvent", "TELECONSULT_COMPLETED");
+
+        EventOutboxEntity outbox = new EventOutboxEntity();
+        outbox.setAggregateType("telemedicine");
+        outbox.setAggregateId(referralId);
+        outbox.setEventType("TELECONSULT_COMPLETED");
+        outbox.setTenantId(ctx.tenantId());
+        outbox.setPayload(writeJsonObject(payload));
+        outboxRepository.save(outbox);
     }
 
     private void emitOutbox(String eventType, String aggregateId, Map<String, Object> payload) {

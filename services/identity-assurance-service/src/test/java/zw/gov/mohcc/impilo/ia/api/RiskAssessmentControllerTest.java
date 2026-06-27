@@ -39,7 +39,7 @@ class RiskAssessmentControllerTest {
         saved.setRecommendation(Recommendation.ALLOW);
         saved.setAssessedBy("user-1");
 
-        when(riskAssessmentService.assess(any(), any(), any(), any(), any(), any(), any(), any(), any()))
+        when(riskAssessmentService.assess(any(), any(), any(), any(), any(), any()))
                 .thenReturn(saved);
 
         mockMvc.perform(post("/internal/v1/risk/assess")
@@ -47,7 +47,7 @@ class RiskAssessmentControllerTest {
                         .header("X-Tenant-Id", UUID.randomUUID().toString())
                         .header("X-Actor-Id", "user-1")
                         .header("X-Correlation-Id", UUID.randomUUID().toString())
-                        .content("{\"contextType\":\"LOGIN\",\"riskScore\":0.25,\"riskLevel\":\"LOW\",\"recommendation\":\"ALLOW\"}"))
+                        .content("{\"contextType\":\"LOGIN\",\"factors\":[\"NEW_DEVICE\"]}"))
                 .andExpect(status().isCreated());
     }
 }

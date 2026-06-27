@@ -2,7 +2,11 @@ package zw.gov.mohcc.impilo.msikaflow.api.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.msikaflow.api.TrustHeaderExtractor;
@@ -10,18 +14,25 @@ import zw.gov.mohcc.impilo.msikaflow.api.dto.ApiResponse;
 import zw.gov.mohcc.impilo.msikaflow.api.dto.ClaimPickupRequest;
 import zw.gov.mohcc.impilo.msikaflow.api.dto.PickupClaimTrust;
 import zw.gov.mohcc.impilo.msikaflow.api.dto.PickupIssueResponse;
+import zw.gov.mohcc.impilo.msikaflow.core.PickupSlipPdfService;
 import zw.gov.mohcc.impilo.msikaflow.core.PickupTokenService;
 
+import java.io.IOException;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/v1")
 public class PickupController {
 
-    private final PickupTokenService pickupTokenService;
+    private static final Logger log = LoggerFactory.getLogger(PickupController.class);
 
-    public PickupController(PickupTokenService pickupTokenService) {
+    private final PickupTokenService pickupTokenService;
+    private final PickupSlipPdfService pickupSlipPdfService;
+
+    public PickupController(PickupTokenService pickupTokenService,
+                            PickupSlipPdfService pickupSlipPdfService) {
         this.pickupTokenService = pickupTokenService;
+        this.pickupSlipPdfService = pickupSlipPdfService;
     }
 
     @PostMapping("/orders/{id}/pickup/issue")
@@ -60,15 +71,35 @@ public class PickupController {
         return ResponseEntity.ok(ApiResponse.ok(result, correlationId));
     }
 
-    @GetMapping("/orders/{id}/pickup/slip.pdf")
-    public ResponseEntity<ApiResponse<Object>> getPickupSlip(@PathVariable String id, HttpServletRequest httpReq) {
-        String correlationId = TrustHeaderExtractor.correlationId(httpReq);
-        // In production, generate PDF via document-service/Landela
-        // For now, return slip metadata
-        return ResponseEntity.ok(ApiResponse.ok(new Object() {
-            public final String orderId = id;
-            public final String message = "PDF generation via document-service integration";
-            public final String downloadUrl = "/v1/orders/" + id + "/pickup/slip.pdf?format=download";
-        }, correlationId));
+    /**
+     * Streams a real printable pickup-slip PDF for the order's active pickup token (G034 —
+     * was a JSON stub). Pass the client-held {@code token} (from the issue response) to embed a
+     * scannable QR; it is validated against the stored hash and never persisted. Returns 404 when
+     * the order has no active token, 400 when a supplied token does not match.
+     */
+    @GetMapping(value = "/orders/{id}/pickup/slip.pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    public ResponseEntity<byte[]> getPickupSlip(
+            @PathVariable String id,
+            @RequestParam(name = "token", required = false) String token,
+            HttpServletRequest httpReq) {
+        try {
+            PickupTokenService.PickupSlipContext ctx = pickupTokenService.resolveSlipContext(id, token);
+            byte[] pdf = pickupSlipPdfService.generatePickupSlipPdf(
+                    id, ctx.tokenId(), ctx.expiresAt(), ctx.status(),
+                    ctx.tokenVerified() ? token : null);
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "inline; filename=\"pickup-slip-" + id + ".pdf\"")
+                    .body(pdf);
+        } catch (IllegalArgumentException e) {
+            HttpStatus status = e.getMessage() != null && e.getMessage().startsWith("No active")
+                    ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+            log.warn("Pickup slip render rejected for order {}: {}", id, e.getMessage());
+            return ResponseEntity.status(status).build();
+        } catch (IOException e) {
+            log.error("Pickup slip PDF generation failed for order {}: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }

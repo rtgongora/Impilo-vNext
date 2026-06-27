@@ -43,6 +43,7 @@ public final class FacilityRepresentation {
                 r.operationalStatus(),
                 r.ownership(),
                 r.level(),
+                r.facilityCategory(),
                 r.operatingModel(),
                 r.parentId(),
                 r.parentName(),

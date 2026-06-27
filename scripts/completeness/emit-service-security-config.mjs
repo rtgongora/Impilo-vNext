@@ -36,8 +36,7 @@ function main() {
     const outFile = path.join(modulePath, 'src/main/java', ...pkg.split('.'), 'SecurityConfig.java');
     if (fs.existsSync(outFile)) continue;
 
-    const prop = svc.id.replace(/-service$/, '').replace(/-/g, '.');
-    const content = template(pkg, prop);
+    const content = template(pkg);
     if (dryRun) {
       console.log(`would create ${path.relative(REPO_ROOT, outFile)}`);
     } else {
@@ -71,7 +70,7 @@ function walk(dir, fn) {
   }
 }
 
-function template(pkg, propKey) {
+function template(pkg) {
   return `package ${pkg};
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -100,12 +99,14 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(
             HttpSecurity http,
             TrustContextFilter trustContextFilter,
-            @Value("\${${propKey}.security.oauth2-enabled:true}") boolean oauth2Enabled) throws Exception {
+            @Value("\${impilo.security.disable-oauth-for-tests:false}") boolean disableOauthForTests) throws Exception {
         http.csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(trustContextFilter, UsernamePasswordAuthenticationFilter.class);
 
-        if (oauth2Enabled) {
+        // G046: production is always secure (oauth2 JWT). The open chain is reachable only when
+        // the test-only flag is explicitly true — there is no production off-switch for auth.
+        if (!disableOauthForTests) {
             http.authorizeHttpRequests(auth -> auth
                             .requestMatchers(
                                     "/actuator/health",

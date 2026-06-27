@@ -9,12 +9,22 @@ import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.costa.api.dto.CreateChargeRecordRequest;
 import zw.gov.mohcc.impilo.costa.domain.entity.ChargeRecordEntity;
 import zw.gov.mohcc.impilo.costa.domain.entity.EventOutboxEntity;
+import zw.gov.mohcc.impilo.costa.domain.enums.BillLineKind;
+import zw.gov.mohcc.impilo.costa.domain.enums.CostMethodType;
 import zw.gov.mohcc.impilo.costa.domain.repository.ChargeRecordRepository;
 import zw.gov.mohcc.impilo.costa.domain.repository.EventOutboxRepository;
+import zw.gov.mohcc.impilo.costa.engine.CostEngine;
+import zw.gov.mohcc.impilo.costa.engine.CostEngineRegistry;
+import zw.gov.mohcc.impilo.costa.engine.CostResult;
+import zw.gov.mohcc.impilo.costa.rules.ChargingRuleEngine;
+import zw.gov.mohcc.impilo.costa.rules.RuleContext;
+import zw.gov.mohcc.impilo.costa.rules.RuleResult;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -26,15 +36,24 @@ public class ChargeRecordService {
     public static final String SOURCE_MSIKA_FLOW_ORDER_PRICED = "MSIKA_FLOW_ORDER_PRICED";
     public static final String SOURCE_TELECONSULT_COMPLETED = "TELECONSULT_COMPLETED";
 
+    /** Tariff code used for teleconsult charges when no specialty-specific tariff is configured. */
+    public static final String TELECONSULT_TARIFF_CODE = "TELECONSULT";
+
     private final ChargeRecordRepository chargeRecordRepository;
     private final EventOutboxRepository outboxRepository;
+    private final CostEngineRegistry costEngineRegistry;
+    private final ChargingRuleEngine chargingRuleEngine;
     private final ObjectMapper objectMapper;
 
     public ChargeRecordService(ChargeRecordRepository chargeRecordRepository,
                                EventOutboxRepository outboxRepository,
+                               CostEngineRegistry costEngineRegistry,
+                               ChargingRuleEngine chargingRuleEngine,
                                ObjectMapper objectMapper) {
         this.chargeRecordRepository = chargeRecordRepository;
         this.outboxRepository = outboxRepository;
+        this.costEngineRegistry = costEngineRegistry;
+        this.chargingRuleEngine = chargingRuleEngine;
         this.objectMapper = objectMapper;
     }
 
@@ -132,120 +151,144 @@ public class ChargeRecordService {
     }
 
     /**
-     * Idempotent teleconsult charge from PCT's {@code telemedicine.session.completed} event
-     * (topic {@code clinical.teleconsult.lifecycle}). Telemedicine is governed like in-person
-     * care: a completed teleconsult is a billable service event that must map to exactly one
-     * value event (journey §9). PCT owns the encounter/referral; COSTA owns the charge — this
-     * consumes the service event, it does not re-implement PCT.
+     * Idempotent teleconsult charge from PCT {@code TELECONSULT_COMPLETED} /
+     * Kafka {@code clinical.teleconsult.value}. The L1 (clinical) value-trigger carries no
+     * price, so COSTA — as the costing authority — fully prices it at ingest:
+     * <ol>
+     *   <li>resolve the applicable teleconsult tariff via the TARIFF cost engine
+     *       (specialty-specific code first, then the generic {@link #TELECONSULT_TARIFF_CODE});</li>
+     *   <li>run the resulting cost through the {@link ChargingRuleEngine} so exemptions, waivers,
+     *       discounts and surcharges (e.g. emergency / admitted / patient-category rules) apply,
+     *       exactly as the bill-line path does;</li>
+     *   <li>record the final billable amount with the full tariff + charge traces and emit
+     *       {@code CHARGE_CREATED}.</li>
+     * </ol>
+     * If a charging rule excludes the item the charge is recorded {@code EXCLUDED} and
+     * non-billable (kept for audit, not dropped). If no teleconsult tariff is configured the
+     * charge is recorded {@code OPEN} with amount 0 and {@code pendingPricing=true} so the gap
+     * is visible.
      *
-     * <p><b>Double-charge guard (C1).</b> PCT emits {@code telemedicine.session.completed} for
-     * the SAME teleconsult from two sources: the referral-complete event (payload {@code id} =
-     * referralId) and the session-end event (payload {@code id} = sessionId, plus a separate
-     * {@code referralId} = referralId). To bill a teleconsult exactly once regardless of which
-     * event(s) arrive and in what order, the charge is anchored on a STABLE SHARED key — the
-     * referralId — resolved as: explicit {@code referralId} field → {@code id} (which IS the
-     * referralId on the referral-complete event) → {@code encounterId} as a last resort. This
-     * anchor is used as both the idempotency (dedup) key and the {@code sourceRef}, so both
-     * lifecycle events collapse to one {@code TELECONSULT:*} charge + one {@code CHARGE_CREATED}.
-     *
-     * @param payload the inner referral payload (envelope already unwrapped by the consumer)
-     * @param tenantId resolved tenant from the envelope
+     * <p>Note: {@code patient_category}/{@code facility_category} are not carried on the value
+     * trigger, so rules keyed on those dimensions need that context propagated upstream before
+     * they can fire here — matching the bill-line path, which also depends on the caller
+     * supplying those keys.</p>
      */
     @Transactional
-    public void ingestTeleconsultCompleted(JsonNode payload, UUID tenantId) {
-        // Stable shared anchor across BOTH lifecycle events (C1). The session-end event carries
-        // an explicit referralId; the referral-complete event's id IS the referralId. Prefer the
-        // explicit referralId field, then id, then encounterId as a last resort — this is the one
-        // key both events agree on, so the teleconsult is charged exactly once.
-        String referralId = text(payload, "referralId");
-        if (referralId == null) {
-            referralId = text(payload, "id");
+    public ChargeRecordEntity ingestTeleconsultCompleted(JsonNode event) {
+        String referralId = text(event, "referralId");
+        String tenantStr = text(event, "tenantId");
+        if (referralId == null || tenantStr == null) {
+            log.warn("TELECONSULT_COMPLETED event missing referralId or tenantId");
+            return null;
         }
-        if (referralId == null) {
-            referralId = text(payload, "encounterId");
-        }
-        if (referralId == null || tenantId == null) {
-            log.warn("teleconsult.completed event missing referral anchor (referralId/id/encounterId) or tenantId");
-            return;
-        }
-        String status = text(payload, "status");
-        if (status != null && !"COMPLETED".equalsIgnoreCase(status)) {
-            // Only the completed lifecycle stage is billable.
-            return;
-        }
+        UUID tenantId = UUID.fromString(tenantStr);
         if (chargeRecordRepository.existsByTenantIdAndSourceTypeAndSourceRef(
                 tenantId, SOURCE_TELECONSULT_COMPLETED, referralId)) {
-            return;  // idempotent
+            return null;
+        }
+        String patientCpid = text(event, "patientCpid");
+        String encounterId = text(event, "encounterId");
+        String specialty = text(event, "specialty");
+        String modality = text(event, "modality");
+        String facilityCategory = text(event, "facilityCategory");
+        String patientCategory = text(event, "patientCategory");
+        UUID facilityId = null;
+        String fid = text(event, "facilityId");
+        if (fid != null && !fid.isBlank()) {
+            facilityId = UUID.fromString(fid);
         }
 
-        String patientCpid = text(payload, "patientCpid");
-        String providerId = text(payload, "providerId");
-        String encounterId = text(payload, "encounterId");
-        String specialty = text(payload, "specialty");
-        String modality = text(payload, "modality");
-        if (modality == null) {
-            modality = text(payload, "virtualMode");
-        }
-        UUID facilityId = parseUuidOrNull(text(payload, "facilityId"));
+        // 1) Resolve the teleconsult tariff via the cost engine (tenant/facility are parameters,
+        //    so this works off the request thread, e.g. inside the Kafka consumer).
+        CostResult priced = resolveTeleconsultTariff(tenantId, facilityId, specialty);
+        BigDecimal tariffTotal = priced.totalCost() != null ? priced.totalCost() : BigDecimal.ZERO;
+        boolean pendingPricing = tariffTotal.signum() <= 0;
+
+        // 2) Apply charging rules (exemptions / waivers / discounts / surcharges) to the tariff
+        //    cost, mirroring BillService.postLine.
+        RuleContext ruleCtx = new RuleContext(
+                tenantId, facilityId, facilityCategory, patientCategory,
+                priced.unitCostSource(), BillLineKind.SERVICE, BigDecimal.ONE,
+                tariffTotal, "OUTPATIENT", LocalDateTime.now(),
+                false, false, Map.of());
+        RuleResult ruleResult = chargingRuleEngine.evaluate(ruleCtx);
+        BigDecimal finalAmount = ruleResult.chargeAmount() != null ? ruleResult.chargeAmount() : BigDecimal.ZERO;
 
         ChargeRecordEntity e = new ChargeRecordEntity();
         e.setChargeId(UlidGenerator.generate());
         e.setTenantId(tenantId);
-        e.setChargeCode("TELECONSULT:" + (specialty != null ? specialty : "GENERAL"));
+        e.setChargeCode("TELECONSULT:" + (specialty != null && !specialty.isBlank() ? specialty : referralId));
         e.setChargeType("TELECONSULT");
         e.setSourceType(SOURCE_TELECONSULT_COMPLETED);
         e.setSourceRef(referralId);
         e.setClientRef(patientCpid);
         e.setPayerRef(patientCpid);
-        e.setProviderRef(providerId);
         e.setFacilityId(facilityId);
         e.setServiceRef(encounterId);
         e.setOfferingRef(referralId);
-        // Tariff-driven pricing is resolved downstream by charging rules / bill posting;
-        // the charge row is the billable signal. Amount left to ruleset (no fabricated price).
-        e.setChargeAmount(BigDecimal.ZERO);
+        e.setChargeAmount(finalAmount);
         e.setCurrency("USD");
-        e.setChargeStatus("OPEN");
-        e.setBillableFlag(true);
+        e.setChargeStatus(ruleResult.excluded() ? "EXCLUDED" : "OPEN");
+        e.setBillableFlag(!ruleResult.excluded());
         try {
             Map<String, Object> meta = new LinkedHashMap<>();
-            meta.put("kafkaEvent", "telemedicine.session.completed");
-            meta.put("specialty", specialty);
-            meta.put("modality", modality);
-            meta.put("encounterId", encounterId);
+            meta.put("kafkaEvent", "clinical.teleconsult.value");
+            meta.put("costMethodUsed", priced.methodUsed().name());
+            meta.put("tariffSource", priced.unitCostSource());
+            meta.put("unitPrice", priced.unitCost());
+            meta.put("tariffTotal", tariffTotal);
+            meta.put("pendingPricing", pendingPricing);
+            meta.put("excluded", ruleResult.excluded());
+            meta.put("appliedRules", ruleResult.appliedRules());
+            if (specialty != null) meta.put("specialty", specialty);
+            if (modality != null) meta.put("modality", modality);
+            if (encounterId != null) meta.put("encounterId", encounterId);
+            meta.put("tariffTrace", priced.trace());
+            meta.put("chargeTrace", ruleResult.trace());
             e.setMetadataJson(objectMapper.writeValueAsString(meta));
         } catch (Exception ex) {
             e.setMetadataJson("{}");
         }
         chargeRecordRepository.save(e);
         publishChargeCreated(e);
-        log.info("Recorded COSTA teleconsult charge {} for completed referral {} (specialty={})",
-                e.getChargeId(), referralId, specialty);
-    }
-
-    private static UUID parseUuidOrNull(String raw) {
-        if (raw == null || raw.isBlank()) {
-            return null;
+        if (ruleResult.excluded()) {
+            log.info("Recorded COSTA teleconsult charge {} for referral {} EXCLUDED by charging rules {}",
+                    e.getChargeId(), referralId, ruleResult.appliedRules());
+        } else if (pendingPricing) {
+            log.warn("Recorded COSTA teleconsult charge {} for referral {} with NO tariff configured "
+                    + "(specialty={}); amount=0, pendingPricing=true", e.getChargeId(), referralId, specialty);
+        } else {
+            log.info("Recorded COSTA teleconsult charge {} for referral {}: tariff {} -> charge {} (rules {}) via {}",
+                    e.getChargeId(), referralId, tariffTotal, finalAmount,
+                    ruleResult.appliedRules(), priced.unitCostSource());
         }
-        try {
-            return UUID.fromString(raw);
-        } catch (IllegalArgumentException ex) {
-            return null;
-        }
+        return e;
     }
 
     /**
-     * Enqueue the CHARGE_CREATED value-event in the SAME transaction as the charge (M3).
-     * An outbox-save failure must roll back the charge so we never commit a billable charge
-     * with no value event (silent value leak). Serialization failures are mapped to a runtime
-     * exception so the transaction rolls back rather than being swallowed.
+     * Resolve the applicable teleconsult tariff: try a specialty-specific code
+     * ({@code TELECONSULT_<SPECIALTY>}) first, then the generic {@link #TELECONSULT_TARIFF_CODE}.
      */
+    private CostResult resolveTeleconsultTariff(UUID tenantId, UUID facilityId, String specialty) {
+        CostEngine engine = costEngineRegistry.resolveOrDefault(CostMethodType.TARIFF, CostMethodType.TARIFF);
+        Map<String, Object> context = Map.of();
+        if (specialty != null && !specialty.isBlank()) {
+            String specialtyCode = TELECONSULT_TARIFF_CODE + "_"
+                    + specialty.trim().toUpperCase(Locale.ROOT).replace(' ', '_');
+            CostResult specialtyResult = engine.compute(tenantId, facilityId, specialtyCode, BigDecimal.ONE, context);
+            if (specialtyResult.totalCost() != null && specialtyResult.totalCost().signum() > 0) {
+                return specialtyResult;
+            }
+        }
+        return engine.compute(tenantId, facilityId, TELECONSULT_TARIFF_CODE, BigDecimal.ONE, context);
+    }
+
     private void publishChargeCreated(ChargeRecordEntity e) {
-        EventOutboxEntity ev = new EventOutboxEntity();
-        ev.setAggregateType("CHARGE");
-        ev.setAggregateId(e.getChargeId());
-        ev.setEventType("CHARGE_CREATED");
         try {
+            EventOutboxEntity ev = new EventOutboxEntity();
+            ev.setAggregateType("CHARGE");
+            ev.setAggregateId(e.getChargeId());
+            ev.setEventType("CHARGE_CREATED");
             ev.setPayload(objectMapper.writeValueAsString(new LinkedHashMap<>(Map.of(
                     "chargeId", e.getChargeId(),
                     "sourceType", e.getSourceType(),
@@ -253,11 +296,11 @@ public class ChargeRecordService {
                     "chargeAmount", e.getChargeAmount(),
                     "currency", e.getCurrency()
             ))));
+            ev.setTenantId(e.getTenantId());
+            outboxRepository.save(ev);
         } catch (Exception ex) {
-            throw new IllegalStateException("Failed to serialize CHARGE_CREATED value-event", ex);
+            log.error("Failed to publish CHARGE_CREATED: {}", ex.getMessage());
         }
-        ev.setTenantId(e.getTenantId());
-        outboxRepository.save(ev);
     }
 
     private static String text(JsonNode node, String field) {

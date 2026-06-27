@@ -934,15 +934,17 @@ services:
       - Hr Payroll
     owner_team: TBD
     system_of_record_for:
-      - Hr Payroll canonical records
+      - Payroll-financial records (employees, contracts, deductions, payroll runs, payslips, earnings)
     consumes_from:
       - tshepo-authz-service
+      - vashandi-workforce-service
     exposes_to:
       - experience-bff
       - integration-hub
     forbidden_responsibilities:
       - must-not-store-clinical-records-as-source-of-truth
       - must-not-own-identity-assurance-policy
+      - must-not-own-workforce-attendance-or-leave  # Vashandi is SoR; payroll derives worked-hours from it
     production_status: baseline-assessed
     implementation_status: implemented-or-partial
     frontend_wiring_status: unknown-or-partial
@@ -1330,7 +1332,7 @@ services:
     sovereign: false
     sovereign_group: null
     primary_protocol: rest
-    default_http_port: null
+    default_http_port: 8300
     product_names:
       - Madi
     owner_team: TBD

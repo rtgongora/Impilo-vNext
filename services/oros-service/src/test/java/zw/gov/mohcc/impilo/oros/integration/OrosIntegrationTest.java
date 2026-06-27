@@ -162,7 +162,7 @@ class OrosIntegrationTest {
 
             // ======== Step 1: Place Order ========
             List<OrderStateMachine.OrderItemData> items = List.of(
-                    new OrderStateMachine.OrderItemData("CBC", "Complete Blood Count", 1, null, "BLOOD", null)
+                    OrderStateMachine.OrderItemData.lab("CBC", "Complete Blood Count", 1, null, "BLOOD", null)
             );
 
             OrderEntity order = stateMachine.placeOrder(
