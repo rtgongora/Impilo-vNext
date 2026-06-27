@@ -1,6 +1,6 @@
 # Product Truth — Backend-to-UI Traceability
 
-> Generated: 2026-06-27T15:55:29.263Z
+> Generated: 2026-06-27T16:44:39.790Z
 
 For each service: backend capabilities → API → BFF → UI → mobile → persistence.
 
@@ -623,7 +623,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 - `ui/one-ui-shell/src/app/admin/federation/page.tsx`
 
 **Gaps:**
-- [F] experience-bff: mock/stub/fixture/in-memory patterns in product path (5 hits) (high)
+- [F] experience-bff: mock/stub/fixture/in-memory patterns in product path (2 hits) (high)
 
 ## fhir-gateway-service
 
@@ -1564,7 +1564,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (10 controllers, 38 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: pharmacy.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (12 clients) |
-| 4 | Visible in UI? | Yes (83 refs) |
+| 4 | Visible in UI? | Yes (81 refs) |
 | 5 | Visible on mobile? | Yes (14 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
@@ -1893,7 +1893,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 |---|----------|--------|
 | 1 | Real backend capabilities? | Yes (18 controllers, 93 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: simba.openapi.yaml) |
-| 3 | Wired via BFF? | Yes (5 clients) |
+| 3 | Wired via BFF? | Yes (4 clients) |
 | 4 | Visible in UI? | Yes (64 refs) |
 | 5 | Visible on mobile? | Yes (26 refs) |
 | 6 | Fake/partial/disconnected? | No |

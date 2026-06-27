@@ -1,6 +1,6 @@
 # Product Truth — Frontend-to-Backend Traceability
 
-> Generated: 2026-06-27T15:55:29.263Z
+> Generated: 2026-06-27T16:44:39.790Z
 > Web surfaces: **672** | Mobile screens: **181**
 
 ## Web routes (one-ui-shell)
@@ -22,10 +22,10 @@
 | /auth/register/status | Registration Status | auth | no | no | yes | no | yes | — |
 | /auth/resolving | Resolving Session | auth | yes | no | yes | no | yes | — |
 | /auth/context-chooser | Choose Work Context | auth | yes | no | yes | no | yes | — |
-| /welcome | Welcome to Impilo | auth | no | no | no | no | yes | F,E |
-| /welcome/find-care | Find Care | auth | no | no | no | no | yes | F,E |
-| /welcome/emergency | Emergency & Public Health | auth | no | no | no | no | yes | F,E |
-| /welcome/accessibility | Accessibility & Language | auth | no | no | no | no | yes | F,E |
+| /welcome | Welcome to Impilo | auth | no | no | yes | no | yes | — |
+| /welcome/find-care | Find Care | auth | no | no | yes | no | yes | — |
+| /welcome/emergency | Emergency & Public Health | auth | no | no | yes | no | yes | — |
+| /welcome/accessibility | Accessibility & Language | auth | no | no | yes | no | yes | — |
 | /privacy | Privacy Policy | auth | no | no | yes | no | no | — |
 | /terms | Terms of Use | auth | no | no | yes | no | no | — |
 | /consent | Review Policies | auth | yes | no | yes | yes | yes | — |
@@ -312,7 +312,7 @@
 | /wellness/challenges | Challenges | wellness | yes | no | yes | yes | yes | — |
 | /wellness/routes | Routes & Places | wellness | yes | no | yes | yes | yes | — |
 | /wellness/coaching | Coaching & Habits | wellness | yes | no | yes | yes | yes | — |
-| /wellness/commodities | Wellness Commodities | wellness | yes | no | yes | yes | yes | F |
+| /wellness/commodities | Wellness Commodities | wellness | yes | no | yes | yes | yes | — |
 | /wellness/community | Wellness Community | wellness | yes | no | yes | yes | yes | — |
 | /social | Social Timeline | wellness | yes | no | yes | yes | yes | — |
 | /social/drafts | Draft Posts | wellness | yes | no | yes | yes | yes | — |
@@ -358,7 +358,7 @@
 | /lab/catalog | Test Catalog | lab | yes | no | yes | no | yes | — |
 | /lab/reconciliation | Lab Reconciliation | lab | yes | no | yes | yes | yes | — |
 | /operations | Operations | operations | yes | no | yes | no | yes | — |
-| /operations/facility-operations | Facility Operations | operations | yes | no | yes | yes | yes | F |
+| /operations/facility-operations | Facility Operations | operations | yes | no | yes | yes | yes | — |
 | /operations/facility-operations/district-view | District View | operations | yes | no | yes | yes | yes | — |
 | /operations/facility-operations/patient-flow | Patient Flow | operations | yes | no | yes | yes | yes | — |
 | /operations/facility-operations/resources | Resource Operations | operations | yes | no | yes | no | yes | — |

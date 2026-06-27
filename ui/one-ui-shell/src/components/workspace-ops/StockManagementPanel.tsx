@@ -3,11 +3,10 @@
 import { useMemo, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { LiveDataSourceBadge } from '@/components/common/LiveDataSourceBadge';
-import { NotLiveNotice } from '@/components/common/NotLiveNotice';
 import { useInventoryOnHand, useInventoryStockouts, useInventoryLedger } from '@/hooks/queries/useInventory';
 import { useProcPurchaseOrders } from '@/hooks/queries/useProcurement';
 import {
-  Package, ShoppingCart, Truck, ClipboardCheck, AlertTriangle,
+  Package, ShoppingCart, Truck, AlertTriangle,
   Plus, Search, ArrowRightLeft, Calendar, TrendingDown,
   XCircle, Clock, X,
 } from 'lucide-react';
@@ -28,37 +27,6 @@ interface InventoryItem {
   location: string;
   status: 'ok' | 'low' | 'out' | 'expiring';
 }
-
-// ─── Mock Data ───
-
-const INVENTORY_ITEMS: InventoryItem[] = [
-  { id: '1', name: 'Paracetamol 500mg', code: 'MED-001', category: 'Medication', onHand: 450, reorderLevel: 200, unit: 'tablets', expiry: '2026-12-15', location: 'Pharmacy Store', status: 'ok' },
-  { id: '2', name: 'Surgical Gloves (L)', code: 'SUP-012', category: 'Supplies', onHand: 85, reorderLevel: 100, unit: 'boxes', expiry: '2027-03-20', location: 'Main Store', status: 'low' },
-  { id: '3', name: 'IV Normal Saline 1L', code: 'MED-044', category: 'Medication', onHand: 0, reorderLevel: 50, unit: 'bags', expiry: null, location: 'Pharmacy Store', status: 'out' },
-  { id: '4', name: 'Amoxicillin 250mg', code: 'MED-008', category: 'Medication', onHand: 320, reorderLevel: 150, unit: 'capsules', expiry: '2026-06-10', location: 'Pharmacy Store', status: 'expiring' },
-  { id: '5', name: 'Bandage Crepe 10cm', code: 'SUP-003', category: 'Supplies', onHand: 200, reorderLevel: 100, unit: 'rolls', expiry: '2028-01-01', location: 'Ward Store', status: 'ok' },
-  { id: '6', name: 'Diazepam 5mg', code: 'MED-CS01', category: 'Controlled', onHand: 24, reorderLevel: 20, unit: 'ampoules', expiry: '2026-09-30', location: 'Pharmacy Safe', status: 'ok' },
-  { id: '7', name: 'Oxygen Cylinder (Size F)', code: 'EQP-007', category: 'Equipment', onHand: 3, reorderLevel: 5, unit: 'cylinders', expiry: null, location: 'Gas Store', status: 'low' },
-  { id: '8', name: 'Disposable Syringes 5ml', code: 'SUP-021', category: 'Supplies', onHand: 1200, reorderLevel: 500, unit: 'pieces', expiry: '2027-08-15', location: 'Main Store', status: 'ok' },
-];
-
-const PURCHASE_ORDERS = [
-  { id: 'PO-20260401-0001', supplier: 'MedSupply SA', items: 5, total: 'R12,450', status: 'pending_approval', date: '2026-04-01', priority: 'normal' },
-  { id: 'PO-20260403-0002', supplier: 'PharmaWholesale', items: 12, total: 'R34,800', status: 'approved', date: '2026-04-03', priority: 'urgent' },
-  { id: 'PO-20260404-0003', supplier: 'SurgicalDirect', items: 3, total: 'R8,200', status: 'shipped', date: '2026-04-04', priority: 'normal' },
-  { id: 'PO-20260405-0004', supplier: 'MedSupply SA', items: 8, total: 'R22,100', status: 'delivered', date: '2026-04-05', priority: 'normal' },
-  { id: 'PO-20260406-0005', supplier: 'LabEquip Co', items: 2, total: 'R67,500', status: 'draft', date: '2026-04-06', priority: 'normal' },
-];
-
-const PENDING_RECEIPTS = [
-  { id: 'GRN-001', poNumber: 'PO-20260404-0003', supplier: 'SurgicalDirect', items: 3, expectedDate: '2026-04-07', status: 'in_transit' },
-  { id: 'GRN-002', poNumber: 'PO-20260403-0002', supplier: 'PharmaWholesale', items: 12, expectedDate: '2026-04-06', status: 'arrived' },
-];
-
-const TRANSFERS = [
-  { id: 'TRF-001', from: 'Main Store', to: 'Ward Store A', items: 4, status: 'pending', requestedBy: 'Sr. Moyo', date: '2026-04-06' },
-  { id: 'TRF-002', from: 'Pharmacy Store', to: 'Emergency', items: 2, status: 'completed', requestedBy: 'Dr. Nkomo', date: '2026-04-05' },
-];
 
 // ─── Helpers ───
 
@@ -216,8 +184,7 @@ export function StockManagementPanel({ facilityId }: StockManagementPanelProps) 
   const liveItems = useMemo(() => asInventoryRows(onHandQ.data), [onHandQ.data]);
 
   // Receiving & transfers tabs are derived from the real stock ledger (movement
-  // history), not fixtures — receipts are RECEIPT events, transfers are
-  // TRANSFER_IN/OUT events. Fall back to demo only when the ledger has none.
+  // history) — receipts are RECEIPT events, transfers are TRANSFER_IN/OUT events.
   const ledgerEvents = useMemo(() => asLedgerEvents(ledgerQ.data), [ledgerQ.data]);
   const liveReceipts = useMemo(
     () => ledgerEvents.filter(e => e.eventType === 'RECEIPT'),
@@ -227,16 +194,16 @@ export function StockManagementPanel({ facilityId }: StockManagementPanelProps) 
     () => ledgerEvents.filter(e => e.eventType === 'TRANSFER_IN' || e.eventType === 'TRANSFER_OUT'),
     [ledgerEvents],
   );
-  const receiptsLive = preferLive && liveReceipts.length > 0;
-  const transfersLive = preferLive && liveTransfers.length > 0;
 
-  // Purchase orders — real procurement-service POs (procurement-service is fully built;
-  // the earlier "not implemented" notice was wrong).
+  // Purchase orders — real procurement-service POs (procurement-service is fully built).
   const livePOs = useMemo(() => asPurchaseOrders(poQ.data), [poQ.data]);
-  const ordersLive = preferLive && livePOs.length > 0;
-  const displayInventory = preferLive && liveItems.length > 0 ? liveItems : INVENTORY_ITEMS;
+  const openOrdersCount = livePOs.filter(
+    po => !['DELIVERED', 'RECEIVED', 'CANCELLED'].includes(po.status.toUpperCase()),
+  ).length;
+  // Live-only: render real inventory, with an honest empty state when absent.
+  const displayInventory = liveItems;
   const dataSource =
-    preferLive && liveItems.length > 0 ? 'live' : preferLive && onHandQ.isLoading ? 'mixed' : 'demo';
+    liveItems.length > 0 ? 'live' : preferLive && onHandQ.isLoading ? 'mixed' : 'demo';
 
   const filteredItems = displayInventory.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || item.code.toLowerCase().includes(searchQuery.toLowerCase());
@@ -291,7 +258,7 @@ export function StockManagementPanel({ facilityId }: StockManagementPanelProps) 
         </div>
         <div className="bg-card border border-border rounded-lg pt-3 pb-2 px-3">
           <div className="flex items-center gap-2"><ShoppingCart className="h-4 w-4 text-green-500" /><span className="text-xs text-muted-foreground">Open Orders</span></div>
-          <p className="text-lg font-bold">{PURCHASE_ORDERS.filter(po => !['delivered', 'cancelled'].includes(po.status)).length}</p>
+          <p className="text-lg font-bold">{openOrdersCount}</p>
         </div>
         <div className={`bg-card border rounded-lg pt-3 pb-2 px-3 ${expiringCount > 0 ? 'border-red-300' : 'border-border'}`}>
           <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-red-500" /><span className="text-xs text-muted-foreground">Expiring Soon</span></div>
@@ -353,6 +320,13 @@ export function StockManagementPanel({ facilityId }: StockManagementPanelProps) 
             </button>
           </div>
           <div className="space-y-1 max-h-[400px] overflow-auto">
+            {filteredItems.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground text-sm">
+                {displayInventory.length === 0
+                  ? 'No live stock on hand. Connect the inventory service to see live stock.'
+                  : 'No items match your search.'}
+              </div>
+            )}
             {filteredItems.map(item => (
               <div key={item.id} className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-background transition-colors">
                 <div className="flex items-center gap-3 min-w-0">
@@ -379,18 +353,12 @@ export function StockManagementPanel({ facilityId }: StockManagementPanelProps) 
         </div>
       )}
 
-      {/* Purchase Orders Tab */}
+      {/* Purchase Orders Tab — live procurement-service POs only */}
       {activeTab === 'orders' && (
         <div>
-          {!ordersLive && (
-            <NotLiveNotice className="mb-3">
-              <span className="font-semibold">No purchase orders yet.</span> Showing demo
-              data — none have been raised in procurement for this facility.
-            </NotLiveNotice>
-          )}
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm text-muted-foreground">
-              {ordersLive ? `${livePOs.length} orders (procurement)` : `${PURCHASE_ORDERS.length} orders`}
+              {livePOs.length > 0 ? `${livePOs.length} orders (procurement)` : 'Purchase orders'}
             </p>
             <button
               onClick={() => setNewOrderOpen(true)}
@@ -400,115 +368,77 @@ export function StockManagementPanel({ facilityId }: StockManagementPanelProps) 
             </button>
           </div>
           <div className="space-y-2 max-h-[400px] overflow-auto">
-            {ordersLive
-              ? livePOs.map(po => (
-                  <div key={po.id} className="bg-card border border-border rounded-lg py-3 px-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-semibold">{po.poNumber}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {po.supplierRef ?? 'Supplier —'} &middot; {po.currency} {po.total.toLocaleString()}
-                        </p>
-                        {po.createdAt && <p className="text-xs text-muted-foreground mt-0.5">{po.createdAt.slice(0, 10)}</p>}
-                      </div>
-                      {getStatusBadge(po.status.toLowerCase())}
+            {livePOs.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground text-sm">
+                No purchase orders. None have been raised in procurement for this facility.
+              </div>
+            ) : (
+              livePOs.map(po => (
+                <div key={po.id} className="bg-card border border-border rounded-lg py-3 px-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold">{po.poNumber}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {po.supplierRef ?? 'Supplier —'} &middot; {po.currency} {po.total.toLocaleString()}
+                      </p>
+                      {po.createdAt && <p className="text-xs text-muted-foreground mt-0.5">{po.createdAt.slice(0, 10)}</p>}
                     </div>
+                    {getStatusBadge(po.status.toLowerCase())}
                   </div>
-                ))
-              : PURCHASE_ORDERS.map(po => (
-                  <div key={po.id} className="bg-card border border-border rounded-lg py-3 px-4 hover:bg-background cursor-pointer">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-semibold">{po.id}</p>
-                          {po.priority === 'urgent' && <span className="px-2 py-0.5 rounded bg-red-100 text-danger text-[10px] font-medium">Urgent</span>}
-                        </div>
-                        <p className="text-xs text-muted-foreground">{po.supplier} &middot; {po.items} items &middot; {po.total}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{po.date}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {getStatusBadge(po.status)}
-                        {po.status === 'pending_approval' && (
-                          <button className="px-2 py-1 text-xs border border-border rounded hover:bg-neutral-100">Approve</button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}
 
-      {/* Receiving Tab — live RECEIPT ledger events, demo fallback */}
+      {/* Receiving Tab — live RECEIPT ledger events only */}
       {activeTab === 'receiving' && (
         <div>
-          {receiptsLive ? (
-            <>
-              <p className="text-sm text-muted-foreground mb-3">{liveReceipts.length} recent receipts (stock ledger)</p>
-              <div className="space-y-2 max-h-[400px] overflow-auto">
-                {liveReceipts.map(e => (
-                  <div key={e.id} className="bg-card border border-border rounded-lg py-3 px-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-semibold">{e.itemCode}</p>
-                        <p className="text-xs text-muted-foreground">
-                          +{e.qtyDelta} {e.uom}{e.batch ? ` · batch ${e.batch}` : ''}{e.refId ? ` · ${e.refType ?? 'ref'} ${e.refId}` : ''}
-                        </p>
-                        {e.createdAt && <p className="text-xs text-muted-foreground">{e.createdAt.slice(0, 16).replace('T', ' ')}</p>}
-                      </div>
-                      <span className="px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">Received</span>
-                    </div>
-                  </div>
-                ))}
+          <p className="text-sm text-muted-foreground mb-3">{liveReceipts.length} recent receipts (stock ledger)</p>
+          <div className="space-y-2 max-h-[400px] overflow-auto">
+            {liveReceipts.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground text-sm">
+                No receipts. No RECEIPT events in the stock ledger for this facility.
               </div>
-            </>
-          ) : (
-            <>
-              <NotLiveNotice className="mb-3">
-                <span className="font-semibold">Not live yet.</span> No RECEIPT events in the
-                stock ledger — showing demo deliveries.
-              </NotLiveNotice>
-              <p className="text-sm text-muted-foreground mb-3">{PENDING_RECEIPTS.length} pending deliveries</p>
-              <div className="space-y-2">
-                {PENDING_RECEIPTS.map(grn => (
-                  <div key={grn.id} className="bg-card border border-border rounded-lg py-3 px-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-semibold">{grn.id}</p>
-                        <p className="text-xs text-muted-foreground">PO: {grn.poNumber} &middot; {grn.supplier} &middot; {grn.items} items</p>
-                        <p className="text-xs text-muted-foreground">Expected: {grn.expectedDate}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {getStatusBadge(grn.status)}
-                        {grn.status === 'arrived' && (
-                          <button className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-primary text-white rounded hover:bg-primary-hover">
-                            <ClipboardCheck className="h-3 w-3" />Receive
-                          </button>
-                        )}
-                      </div>
+            ) : (
+              liveReceipts.map(e => (
+                <div key={e.id} className="bg-card border border-border rounded-lg py-3 px-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold">{e.itemCode}</p>
+                      <p className="text-xs text-muted-foreground">
+                        +{e.qtyDelta} {e.uom}{e.batch ? ` · batch ${e.batch}` : ''}{e.refId ? ` · ${e.refType ?? 'ref'} ${e.refId}` : ''}
+                      </p>
+                      {e.createdAt && <p className="text-xs text-muted-foreground">{e.createdAt.slice(0, 16).replace('T', ' ')}</p>}
                     </div>
+                    <span className="px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">Received</span>
                   </div>
-                ))}
-              </div>
-            </>
-          )}
+                </div>
+              ))
+            )}
+          </div>
         </div>
       )}
 
-      {/* Transfers Tab — live TRANSFER_IN/OUT ledger events, demo fallback */}
+      {/* Transfers Tab — live TRANSFER_IN/OUT ledger events only */}
       {activeTab === 'transfers' && (
         <div>
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm text-muted-foreground">
-              {transfersLive ? `${liveTransfers.length} transfer movements (stock ledger)` : `${TRANSFERS.length} transfers`}
+              {liveTransfers.length > 0 ? `${liveTransfers.length} transfer movements (stock ledger)` : 'Transfers'}
             </p>
             <button className="inline-flex items-center gap-1 px-3 py-1.5 text-sm border border-border rounded-md hover:bg-background">
               <ArrowRightLeft className="h-3.5 w-3.5" />Request Transfer
             </button>
           </div>
-          {transfersLive ? (
-            <div className="space-y-2 max-h-[400px] overflow-auto">
-              {liveTransfers.map(e => {
+          <div className="space-y-2 max-h-[400px] overflow-auto">
+            {liveTransfers.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground text-sm">
+                No transfers. No transfer events in the stock ledger for this facility.
+              </div>
+            ) : (
+              liveTransfers.map(e => {
                 const isIn = e.eventType === 'TRANSFER_IN';
                 return (
                   <div key={e.id} className="bg-card border border-border rounded-lg py-3 px-4">
@@ -526,41 +456,22 @@ export function StockManagementPanel({ facilityId }: StockManagementPanelProps) 
                     </div>
                   </div>
                 );
-              })}
-            </div>
-          ) : (
-            <>
-              <NotLiveNotice className="mb-3">
-                <span className="font-semibold">Not live yet.</span> No transfer events in the
-                stock ledger — showing demo transfers.
-              </NotLiveNotice>
-              <div className="space-y-2">
-                {TRANSFERS.map(t => (
-                  <div key={t.id} className="bg-card border border-border rounded-lg py-3 px-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-semibold">{t.id}</p>
-                        <p className="text-xs text-muted-foreground">{t.from} &rarr; {t.to} &middot; {t.items} items</p>
-                        <p className="text-xs text-muted-foreground">By {t.requestedBy} &middot; {t.date}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {getStatusBadge(t.status)}
-                        {t.status === 'pending' && (
-                          <button className="px-2 py-1 text-xs border border-border rounded hover:bg-neutral-100">Approve</button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
+              })
+            )}
+          </div>
         </div>
       )}
 
       {/* Alerts Tab */}
       {activeTab === 'alerts' && (
         <div className="space-y-2">
+          {displayInventory.filter(i => i.status !== 'ok').length === 0 && (
+            <div className="text-center py-8 text-muted-foreground text-sm">
+              {displayInventory.length === 0
+                ? 'No live stock data. Connect the inventory service to see stock alerts.'
+                : 'No stock alerts.'}
+            </div>
+          )}
           {displayInventory.filter(i => i.status !== 'ok').map(item => (
             <div
               key={item.id}

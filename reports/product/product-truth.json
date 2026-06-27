@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-27T15:55:29.263Z",
+  "generatedAt": "2026-06-27T16:44:39.790Z",
   "branch": "chore/paydown-placeholder-gaps",
   "registryDrift": {
     "unregisteredModules": [],
@@ -22,14 +22,13 @@
     },
     "gapCounts": {
       "byCategory": {
-        "E": 4,
-        "F": 7,
+        "F": 1,
         "S": 2
       },
       "bySeverity": {
-        "high": 13
+        "high": 3
       },
-      "total": 13
+      "total": 3
     },
     "crossServiceCohesion": {
       "total": 14,
@@ -2897,18 +2896,6 @@
       ],
       "mockStubHits": [
         {
-          "file": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CommunicationController.java",
-          "pattern": "in-memory-backing"
-        },
-        {
-          "file": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/OmnichannelController.java",
-          "pattern": "in-memory-backing"
-        },
-        {
-          "file": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PatientController.java",
-          "pattern": "in-memory-backing"
-        },
-        {
           "file": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/scheduling/AppointmentCommsHistoryStore.java",
           "pattern": "in-memory-store"
         },
@@ -2940,7 +2927,7 @@
         {
           "category": "F",
           "severity": "high",
-          "description": "experience-bff: mock/stub/fixture/in-memory patterns in product path (5 hits)",
+          "description": "experience-bff: mock/stub/fixture/in-memory patterns in product path (2 hits)",
           "impactScore": 3
         }
       ],
@@ -7328,7 +7315,7 @@
         "contractOperations": 52,
         "contractViolations": 0,
         "bffClients": 12,
-        "uiReferences": 83,
+        "uiReferences": 81,
         "mobileReferences": 14,
         "tests": 9
       },
@@ -8920,7 +8907,7 @@
         "stubRoutes": 0,
         "contractOperations": 54,
         "contractViolations": 0,
-        "bffClients": 5,
+        "bffClients": 4,
         "uiReferences": 64,
         "mobileReferences": 26,
         "tests": 1
@@ -8942,7 +8929,6 @@
       "bffClients": [
         "SimbaServiceClient",
         "CitizenMonitoringDevicesController→inline",
-        "PatientController→inline",
         "WellnessServiceProxyController→inline",
         "simba→yml-base-url"
       ],
@@ -12277,24 +12263,11 @@
       "hasPersistHint": false,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
-      "readsRealData": false,
+      "readsRealData": true,
       "writesRealData": false,
       "completeVsCosmetic": false,
-      "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "F",
-          "severity": "high",
-          "description": "/welcome: mock/stub data",
-          "impactScore": 3
-        },
-        {
-          "category": "E",
-          "severity": "high",
-          "description": "/welcome: no BFF/API backing detected",
-          "impactScore": 4
-        }
-      ]
+      "allowlistedShell": true,
+      "gaps": []
     },
     {
       "path": "/welcome/find-care",
@@ -12314,24 +12287,11 @@
       "hasPersistHint": false,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
-      "readsRealData": false,
+      "readsRealData": true,
       "writesRealData": false,
       "completeVsCosmetic": false,
-      "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "F",
-          "severity": "high",
-          "description": "/welcome/find-care: mock/stub data",
-          "impactScore": 3
-        },
-        {
-          "category": "E",
-          "severity": "high",
-          "description": "/welcome/find-care: no BFF/API backing detected",
-          "impactScore": 4
-        }
-      ]
+      "allowlistedShell": true,
+      "gaps": []
     },
     {
       "path": "/welcome/emergency",
@@ -12351,24 +12311,11 @@
       "hasPersistHint": false,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
-      "readsRealData": false,
+      "readsRealData": true,
       "writesRealData": false,
       "completeVsCosmetic": false,
-      "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "F",
-          "severity": "high",
-          "description": "/welcome/emergency: mock/stub data",
-          "impactScore": 3
-        },
-        {
-          "category": "E",
-          "severity": "high",
-          "description": "/welcome/emergency: no BFF/API backing detected",
-          "impactScore": 4
-        }
-      ]
+      "allowlistedShell": true,
+      "gaps": []
     },
     {
       "path": "/welcome/accessibility",
@@ -12388,24 +12335,11 @@
       "hasPersistHint": false,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
-      "readsRealData": false,
+      "readsRealData": true,
       "writesRealData": false,
       "completeVsCosmetic": false,
-      "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "F",
-          "severity": "high",
-          "description": "/welcome/accessibility: mock/stub data",
-          "impactScore": 3
-        },
-        {
-          "category": "E",
-          "severity": "high",
-          "description": "/welcome/accessibility: no BFF/API backing detected",
-          "impactScore": 4
-        }
-      ]
+      "allowlistedShell": true,
+      "gaps": []
     },
     {
       "path": "/privacy",
@@ -29439,20 +29373,6 @@
         {
           "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
           "pattern": "json-stringify-render"
-        },
-        {
-          "file": "ui/one-ui-shell/src/components/workspace-ops/StockManagementPanel.tsx",
-          "pattern": "mock-data-var"
-        },
-        {
-          "file": "ui/one-ui-shell/src/components/workspace-ops/StockManagementPanel.tsx",
-          "pattern": "hardcoded-collection",
-          "detail": "PURCHASE_ORDERS"
-        },
-        {
-          "file": "ui/one-ui-shell/src/components/workspace-ops/StockManagementPanel.tsx",
-          "pattern": "hardcoded-collection",
-          "detail": "TRANSFERS"
         }
       ],
       "hasMutation": true,
@@ -29463,14 +29383,7 @@
       "writesRealData": true,
       "completeVsCosmetic": false,
       "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "F",
-          "severity": "high",
-          "description": "/wellness/commodities: mock/stub data",
-          "impactScore": 3
-        }
-      ]
+      "gaps": []
     },
     {
       "path": "/wellness/community",
@@ -32255,48 +32168,6 @@
         {
           "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
           "pattern": "json-stringify-render"
-        },
-        {
-          "file": "ui/one-ui-shell/src/components/workspace-ops/StockManagementPanel.tsx",
-          "pattern": "mock-data-var"
-        },
-        {
-          "file": "ui/one-ui-shell/src/components/workspace-ops/StockManagementPanel.tsx",
-          "pattern": "hardcoded-collection",
-          "detail": "PURCHASE_ORDERS"
-        },
-        {
-          "file": "ui/one-ui-shell/src/components/workspace-ops/StockManagementPanel.tsx",
-          "pattern": "hardcoded-collection",
-          "detail": "TRANSFERS"
-        },
-        {
-          "file": "ui/one-ui-shell/src/components/workspace-ops/HRShiftsPanel.tsx",
-          "pattern": "mock-data-var"
-        },
-        {
-          "file": "ui/one-ui-shell/src/components/workspace-ops/BillingPanel.tsx",
-          "pattern": "mock-data-var"
-        },
-        {
-          "file": "ui/one-ui-shell/src/components/workspace-ops/BillingPanel.tsx",
-          "pattern": "hardcoded-collection",
-          "detail": "UNBILLED_CHARGES"
-        },
-        {
-          "file": "ui/one-ui-shell/src/components/workspace-ops/BillingPanel.tsx",
-          "pattern": "hardcoded-collection",
-          "detail": "INVOICES"
-        },
-        {
-          "file": "ui/one-ui-shell/src/components/workspace-ops/BillingPanel.tsx",
-          "pattern": "hardcoded-collection",
-          "detail": "CLAIMS"
-        },
-        {
-          "file": "ui/one-ui-shell/src/components/workspace-ops/BillingPanel.tsx",
-          "pattern": "hardcoded-collection",
-          "detail": "RECENT_PAYMENTS"
         }
       ],
       "hasMutation": true,
@@ -32307,14 +32178,7 @@
       "writesRealData": true,
       "completeVsCosmetic": false,
       "allowlistedShell": false,
-      "gaps": [
-        {
-          "category": "F",
-          "severity": "high",
-          "description": "/operations/facility-operations: mock/stub data",
-          "impactScore": 3
-        }
-      ]
+      "gaps": []
     },
     {
       "path": "/operations/facility-operations/district-view",

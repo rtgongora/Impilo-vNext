@@ -1,6 +1,6 @@
 # Full Product Truth Recovery Report
 
-> Generated: 2026-06-27T15:55:29.263Z
+> Generated: 2026-06-27T16:44:39.790Z
 > Branch: `chore/paydown-placeholder-gaps`
 
 ## Executive summary
@@ -23,9 +23,9 @@
 | Services backend-only (no UI) | 0 |
 | Services UI-only (no backend) | 0 |
 | Services with mock/stub hits | 2 |
-| Total classified gaps | 13 |
+| Total classified gaps | 3 |
 | Blocker gaps | 0 |
-| High severity gaps | 13 |
+| High severity gaps | 3 |
 | Cross-service cohesion | 14/14 pass |
 
 > **Honesty note:** `real` above is the file-existence axis (code present + wired),
@@ -60,7 +60,7 @@
 
 ## Remaining gaps by severity
 
-- **high:** 13
+- **high:** 3
 
 ## Implementation status
 
