@@ -6,7 +6,7 @@ package impilo.khuluma
 # Evaluated by the Tshepo PDP at the edge (ext_authz); the experience-bff KhulumaAccessPolicyService
 # is a defense-in-depth pre-check that mirrors these rules.
 
-import future.keywords.in
+import future.keywords
 
 default allow := false
 
