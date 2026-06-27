@@ -17,6 +17,7 @@ import { PersonalScreen } from "../screens/personal/PersonalScreen";
 import { SocialHubScreen } from "../screens/social/SocialHubScreen";
 import { MarketplaceScreen } from "../screens/marketplace/MarketplaceScreen";
 import { MessagingInboxScreen } from "../screens/messaging/MessagingInboxScreen";
+import { CommsHubScreen } from "../screens/comms/CommsHubScreen";
 import { TelehealthListScreen } from "../screens/telehealth/TelehealthListScreen";
 import { PublicHealthScreen } from "../screens/publicHealth/PublicHealthScreen";
 
@@ -28,6 +29,7 @@ const TAB_SCREENS: Record<CitizenTab, React.FC> = {
   social: SocialHubScreen,
   marketplace: MarketplaceScreen,
   messaging: MessagingInboxScreen,
+  comms: CommsHubScreen,
   telehealth: TelehealthListScreen,
   public_health: PublicHealthScreen,
 };
@@ -66,6 +68,11 @@ export function CitizenTabs() {
       label: "Messages",
       icon: tabIcon(activeTab === "messaging" ? "chatbubbles" : "chatbubbles-outline", activeTab === "messaging"),
       badge: unreadMessages > 0 ? unreadMessages : undefined,
+    },
+    {
+      id: "comms",
+      label: "Khuluma",
+      icon: tabIcon(activeTab === "comms" ? "chatbox-ellipses" : "chatbox-ellipses-outline", activeTab === "comms"),
     },
     {
       id: "telehealth",

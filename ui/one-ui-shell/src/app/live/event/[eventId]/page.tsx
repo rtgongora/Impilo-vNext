@@ -6,6 +6,7 @@ import { Calendar, Radio, User } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { LiveNompiloAssistPanel } from "@/components/live/LiveNompiloAssistPanel";
+import { EventDiscussionPanel } from "@/components/comms/EventDiscussionPanel";
 import {
   useLiveEvent,
   useLiveMyRegistrations,
@@ -153,7 +154,10 @@ export default function LiveEventDetailPage() {
             </div>
           </div>
 
-          <LiveNompiloAssistPanel eventTitle={event.title} eventType={event.eventType} />
+          <div className="space-y-4">
+            <LiveNompiloAssistPanel eventTitle={event.title} eventType={event.eventType} />
+            <EventDiscussionPanel eventId={eventId} title={event.title} />
+          </div>
         </div>
       </PageShell>
     </AppLayout>

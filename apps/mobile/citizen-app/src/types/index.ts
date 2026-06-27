@@ -8,6 +8,7 @@ export type CitizenTab =
   | "social"
   | "marketplace"
   | "messaging"
+  | "comms"
   | "telehealth"
   | "public_health";
 

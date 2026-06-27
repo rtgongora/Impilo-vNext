@@ -136,6 +136,7 @@
         <!-- Data Platform — Ring-2 v1.1-Native Services -->
         <module>data-ingestion-service</module>
         <module>data-governance-service</module>
+        <module>khuluma-service</module>
         <module>ndr-service</module>
         <module>analytics-pipeline-service</module>
         <!-- Supply & IoT Platform — Asset Registry + Dispatch + IoT Ingestion -->
