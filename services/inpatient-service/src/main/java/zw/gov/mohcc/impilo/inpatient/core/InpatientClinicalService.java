@@ -121,17 +121,25 @@ public class InpatientClinicalService {
     }
 
     /**
-     * Subject-relationship consistency check for inpatient clinical writes (10-dimension doctrine,
-     * dimension 6). The platform's baseline access model is facility-team-level (ext_authz already
-     * enforces role + facility + purpose), so a {@code patientId}-only write is permitted. This adds
-     * a <strong>verify-when-present</strong> consistency guard: when the caller supplies an explicit
-     * {@code admissionRef}, it must exist in this tenant and belong to the write's subject — closing
-     * the cross-patient case where an actor writes for patient A while referencing patient B's
-     * admission. Waived under EMERGENCY/BREAK_GLASS purpose (emergency care is never blocked).
+     * Strict subject-relationship gate for inpatient clinical writes (10-dimension doctrine,
+     * dimension 6). ext_authz enforces RBAC but cannot bind the body subject to a care context. An
+     * inpatient clinical write is permitted only for a patient the actor holds an active care context
+     * with, resolved in order:
+     * <ol>
+     *   <li>an explicit {@code admissionRef} that exists in this tenant and belongs to the subject
+     *       (stops a clinician referencing another patient's admission);</li>
+     *   <li>else a supplied {@code encounterId} that resolves (in this tenant) to the subject — lets a
+     *       write carrying only an encounter (newborn APGAR, discharge clearances) resolve without a
+     *       standalone admission;</li>
+     *   <li>else the subject must have an ADMITTED admission in this tenant (the episode anchor —
+     *       callers post {@code patientId} without an explicit ref).</li>
+     * </ol>
+     * None resolving → {@code 403}. Waived under EMERGENCY/BREAK_GLASS purpose (emergency care is
+     * never blocked; the waiver is audited upstream).
      */
-    private void requireAdmissionRelationship(String subjectCpid, UUID admissionRef) {
-        if (admissionRef == null) {
-            return; // no explicit care context to verify (facility-team-level RBAC is the control)
+    private void requireActiveCareContext(String subjectCpid, UUID admissionRef, UUID encounterId) {
+        if (subjectCpid == null || subjectCpid.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "patientId/subjectCpid is required");
         }
         String purpose = TrustContextHolder.require().purposeOfUse();
         String p = purpose == null ? "" : purpose.toUpperCase(java.util.Locale.ROOT);
@@ -139,11 +147,30 @@ public class InpatientClinicalService {
             return; // emergency/break-glass override — audited upstream
         }
         UUID tenant = currentTenant();
-        var admission = admissionRepository.findByAdmissionRef(admissionRef)
-                .filter(a -> tenant.equals(a.getTenantId()));
-        if (admission.isEmpty() || !subjectCpid.equals(admission.get().getSubjectCpid())) {
+        if (admissionRef != null) {
+            var admission = admissionRepository.findByAdmissionRef(admissionRef)
+                    .filter(a -> tenant.equals(a.getTenantId()));
+            if (admission.isEmpty() || !subjectCpid.equals(admission.get().getSubjectCpid())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "Referenced admission does not belong to the subject of this clinical write.");
+            }
+            return;
+        }
+        if (encounterId != null) {
+            var byEncounter = admissionRepository.findByTenantIdAndEncounterId(tenant, encounterId);
+            if (byEncounter.isEmpty() || !subjectCpid.equals(byEncounter.get().getSubjectCpid())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "Referenced encounter does not belong to the subject of this clinical write.");
+            }
+            return;
+        }
+        boolean admitted = admissionRepository.findBySubjectCpidAndStatus(subjectCpid, "ADMITTED")
+                .stream().anyMatch(a -> tenant.equals(a.getTenantId()));
+        if (!admitted) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Referenced admission does not belong to the subject of this clinical write.");
+                    "No active care context for this patient: an inpatient clinical write requires the "
+                            + "subject to have an active admission in this tenant, or to reference an "
+                            + "admission/encounter that resolves to the subject (or emergency purpose).");
         }
     }
 
@@ -163,8 +190,8 @@ public class InpatientClinicalService {
         plan.setAdmissionRef(ClinicalPayloadMapper.uuid(body, "admissionRef", "admission_ref"));
         plan.setEncounterId(ClinicalPayloadMapper.uuid(body, "encounterId", "encounter_id"));
         // Subject-relationship gate (dimension 6): ext_authz enforces RBAC but cannot bind the body
-        // subject to a care context. The care plan must reference an admission that belongs to the subject.
-        requireAdmissionRelationship(cpid, plan.getAdmissionRef());
+        // subject to a care context. The care plan must resolve to an admission/encounter for the subject.
+        requireActiveCareContext(cpid, plan.getAdmissionRef(), plan.getEncounterId());
         plan.setTitle(Objects.requireNonNullElse(ClinicalPayloadMapper.str(body, "title"), "Care plan"));
         plan.setPlanType(Objects.requireNonNullElse(ClinicalPayloadMapper.str(body, "planType", "plan_type"), "NURSING"));
         plan.setCreatedBy(ClinicalPayloadMapper.str(body, "createdBy", "created_by"));
@@ -293,7 +320,8 @@ public class InpatientClinicalService {
     @Transactional
     public Map<String, Object> recordFluid(Map<String, Object> body) {
         String cpid = patientCpid(body);
-        requireAdmissionRelationship(cpid, ClinicalPayloadMapper.uuid(body, "admissionRef", "admission_ref"));
+        requireActiveCareContext(cpid, ClinicalPayloadMapper.uuid(body, "admissionRef", "admission_ref"),
+                ClinicalPayloadMapper.uuid(body, "encounterId", "encounter_id"));
         FluidBalanceEntity r = new FluidBalanceEntity();
         r.setTenantId(currentTenant());
         r.setSubjectCpid(cpid);
@@ -333,7 +361,8 @@ public class InpatientClinicalService {
     @Transactional
     public Map<String, Object> recordChartEntry(Map<String, Object> body, String chartType) {
         String cpid = patientCpid(body);
-        requireAdmissionRelationship(cpid, ClinicalPayloadMapper.uuid(body, "admissionRef", "admission_ref"));
+        requireActiveCareContext(cpid, ClinicalPayloadMapper.uuid(body, "admissionRef", "admission_ref"),
+                ClinicalPayloadMapper.uuid(body, "encounterId", "encounter_id"));
         ClinicalChartEntryEntity e = new ClinicalChartEntryEntity();
         e.setTenantId(currentTenant());
         e.setSubjectCpid(cpid);
@@ -403,6 +432,8 @@ public class InpatientClinicalService {
         if (prescriptions == null || prescriptions.isEmpty()) {
             return 0;
         }
+        // MAR carries no admissionRef/encounter; resolve the subject's active admission.
+        requireActiveCareContext(patientId, null, null);
         int synced = 0;
         for (Map<String, Object> rx : prescriptions) {
             String prescriptionId = ClinicalPayloadMapper.str(rx, "prescription_id", "prescriptionId", "id");
@@ -434,6 +465,8 @@ public class InpatientClinicalService {
     @Transactional
     public Map<String, Object> administerMedication(Map<String, Object> body) {
         String cpid = ClinicalPayloadMapper.str(body, "patientId", "patient_id");
+        // MAR carries no admissionRef/encounter; resolve the subject's active admission.
+        requireActiveCareContext(cpid, null, null);
         String prescriptionId = ClinicalPayloadMapper.str(body, "prescriptionId", "prescription_id");
         MarEntryEntity existing = null;
         if (prescriptionId != null && cpid != null) {
@@ -476,7 +509,8 @@ public class InpatientClinicalService {
     @Transactional
     public Map<String, Object> recordEws(Map<String, Object> body) {
         String cpid = patientCpid(body);
-        requireAdmissionRelationship(cpid, ClinicalPayloadMapper.uuid(body, "admissionRef", "admission_ref"));
+        requireActiveCareContext(cpid, ClinicalPayloadMapper.uuid(body, "admissionRef", "admission_ref"),
+                ClinicalPayloadMapper.uuid(body, "encounterId", "encounter_id"));
         Integer total = ClinicalPayloadMapper.integer(body, "totalScore", "total_score");
         if (total == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "totalScore is required");
         EarlyWarningScoreEntity e = new EarlyWarningScoreEntity();
@@ -517,9 +551,10 @@ public class InpatientClinicalService {
 
     @Transactional
     public Map<String, Object> activateEmergency(Map<String, Object> body) {
-        requireAdmissionRelationship(
+        requireActiveCareContext(
                 ClinicalPayloadMapper.str(body, "patientId", "patient_id", "subjectCpid"),
-                ClinicalPayloadMapper.uuid(body, "admissionRef", "admission_ref"));
+                ClinicalPayloadMapper.uuid(body, "admissionRef", "admission_ref"),
+                ClinicalPayloadMapper.uuid(body, "encounterId", "encounter_id"));
         EmergencyActivationEntity a = new EmergencyActivationEntity();
         a.setTenantId(currentTenant());
         a.setSubjectCpid(ClinicalPayloadMapper.str(body, "patientId", "patient_id", "subjectCpid"));
@@ -602,6 +637,9 @@ public class InpatientClinicalService {
     @Transactional
     public Map<String, Object> recordApgar(Map<String, Object> body) {
         String cpid = patientCpid(body);
+        // Neonatal APGAR carries the birth encounter (no standalone admissionRef field); resolve via it
+        // or the subject's active admission.
+        requireActiveCareContext(cpid, null, ClinicalPayloadMapper.uuid(body, "encounterId", "encounter_id"));
         Integer minuteMark = ClinicalPayloadMapper.integer(body, "minuteMark", "minute_mark");
         if (minuteMark == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "minuteMark is required");
@@ -628,8 +666,18 @@ public class InpatientClinicalService {
                 .stream().map(this::apgarRow).toList();
     }
 
+    /**
+     * Resus-child writes (actions, resuscitation record, phases) are scoped to a parent activation
+     * whose subject was validated at {@code activateEmergency}. Here we only require the activation to
+     * exist <em>and</em> belong to the current tenant — a cross-tenant activation id reads as not
+     * found — so we never re-resolve an admission mid-resuscitation (a live code is never gated).
+     */
     private void requireActivation(UUID activationId) {
-        if (!emergencyRepository.existsById(activationId)) {
+        UUID tenant = currentTenant();
+        boolean ok = emergencyRepository.findById(activationId)
+                .map(a -> tenant.equals(a.getTenantId()))
+                .orElse(false);
+        if (!ok) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Activation not found");
         }
     }
@@ -713,8 +761,13 @@ public class InpatientClinicalService {
         @SuppressWarnings("unchecked")
         List<String> admissionRefs = (List<String>) body.get("admissionRefs");
         if (admissionRefs != null) {
+            final UUID tenant = currentTenant();
             for (String ref : admissionRefs) {
-                admissionRepository.findByAdmissionRef(UUID.fromString(ref)).ifPresent(admission -> {
+                // Multi-admission shift handover (no single subject): only fold in admissions that
+                // exist in this tenant — a cross-tenant ref is silently skipped, not handed over.
+                admissionRepository.findByAdmissionRef(UUID.fromString(ref))
+                        .filter(a -> tenant.equals(a.getTenantId()))
+                        .ifPresent(admission -> {
                     ShiftHandoverItemEntity item = new ShiftHandoverItemEntity();
                     item.setHandoverId(savedHandoverId);
                     item.setAdmissionRef(admission.getAdmissionRef());
@@ -761,7 +814,7 @@ public class InpatientClinicalService {
         alert.setAlertType(Objects.requireNonNullElse(ClinicalPayloadMapper.str(body, "alertType", "alert_type"), "CALL_NURSE"));
         alert.setMessage(ClinicalPayloadMapper.str(body, "message"));
         UUID admissionRef = ClinicalPayloadMapper.uuid(body, "admissionRef", "admission_ref");
-        requireAdmissionRelationship(cpid, admissionRef);
+        requireActiveCareContext(cpid, admissionRef, ClinicalPayloadMapper.uuid(body, "encounterId", "encounter_id"));
         Optional<AdmissionEntity> linkedAdmission = admissionRef != null
                 ? admissionRepository.findByAdmissionRef(admissionRef)
                 : admissionRepository.findBySubjectCpidAndStatus(cpid, "ADMITTED").stream().findFirst();
@@ -885,7 +938,7 @@ public class InpatientClinicalService {
         }
         String cpid = ClinicalPayloadMapper.str(body, "patientId", "patient_id", "subjectCpid", "subject_cpid");
         UUID admissionRef = ClinicalPayloadMapper.uuid(body, "admissionRef", "admission_ref");
-        requireAdmissionRelationship(cpid, admissionRef);
+        requireActiveCareContext(cpid, admissionRef, encounterId);
         List<DischargeClearanceEntity> existing = dischargeClearanceRepository
                 .findByTenantIdAndEncounterIdOrderByClearanceTypeAsc(currentTenant(), encounterId);
         if (!existing.isEmpty()) {

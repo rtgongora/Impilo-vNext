@@ -1,93 +1,88 @@
 # Clinical-write subject-relationship control (P3 consent follow-up)
 
-**Status:** implemented (verify-when-present) · **Scope:** pct-service, inpatient-service
-**Branch:** `chore/paydown-authz-stores` · **Commits:** `f3d54c321`, `a85885e78`, `8ad442c93`
+**Status:** implemented (strict — require an active care context) · **Scope:** pct-service, inpatient-service
+**Branch:** `chore/paydown-authz-stores`
 
 ## Problem
 
-The V018 TSHEPO rules enabled clinical-write endpoints that were previously
-deny-by-default. ext_authz / TSHEPO enforces the RBAC dimensions (actor type,
-clinical role, facility, purpose-of-use), but a **POST-to-collection** write
-carries the subject CPID in the request **body**, not the path — so the PDP has
-no resource id to bind and **delegates** the subject-level check to the owning
-service (doctrine dimension 6, "subject relationship").
+The V018 TSHEPO rules enabled clinical-write endpoints that were previously deny-by-default.
+ext_authz / TSHEPO enforces the RBAC dimensions (actor type, clinical role, facility,
+purpose-of-use), but a **POST-to-collection** write carries the subject CPID in the request
+**body**, not the path — so the PDP has no resource id to bind and **delegates** the subject-level
+check to the owning service (doctrine dimension 6, "subject relationship").
 
-Verification found the services did not enforce anything: `CarePlanService.create`
-/ `ProblemService.add` (pct) and `InpatientClinicalService.createCarePlan` +
-peers (inpatient) read `subject_cpid`/`patientId` from the body and persisted. So
-the in-service control was the load-bearing one and it was absent.
+Verification found the services did not enforce anything: pct `CarePlanService.create` /
+`ProblemService.add` and inpatient `InpatientClinicalService.*` read `subject_cpid`/`patientId` from
+the body and persisted. So the in-service control was the load-bearing one and it was absent — an
+actor with the coarse RBAC could mint clinical records against an arbitrary patient CPID.
 
-## Decision: verify-when-present (not strict-require)
+## Control: strict — require an active care context
 
-The platform's baseline access model is **facility-team-level** — a clinician
-authenticated for a role at a facility with a valid purpose may write for any
-patient at that facility. A `subjectCpid`-only write is therefore **valid by
-design** (e.g. `InpatientTenantIsolationIT` creates a care plan for a patient
-with no admission and expects `201`).
+A clinical write is permitted only for a patient the actor holds an **active care context** with.
+Resolution differs by service but the posture is the same: **no resolvable context → 403**, and
+**EMERGENCY / BREAK_GLASS** purpose-of-use waives the requirement (emergency care is never blocked;
+the waiver is audited upstream).
 
-A first pass implemented a **strict** guard (require + verify an active care
-context). It broke that contract — `InpatientTenantIsolationIT` and the
-documented `patientId`-only inpatient write flow began returning `403`. Strict is
-a deliberate **stronger-than-platform** posture; adopting it would require a
-broad contract change across every clinical-write caller, not a localized fix.
+### pct (outpatient) — `ClinicalAccessGuard.requireCareRelationship`
+The write must reference a **journey** (`journey_id`) or **encounter** (`encounter_id`) that resolves
+(in this tenant) to the subject. A context-free write is **denied**. pct's normal flow always
+establishes a journey/encounter first — the mobile enforces it at visit-start (`PatientLookupScreen`
+requires a `journey_id`) and the care-plan create reroute (`a85885e78`) sends it.
 
-The control was reconciled to **verify-when-present**:
+### inpatient — `InpatientClinicalService.requireActiveCareContext(subjectCpid, admissionRef, encounterId)`
+Resolved in order:
+1. an explicit **`admissionRef`** that exists in this tenant and belongs to the subject; else
+2. a supplied **`encounterId`** that resolves (in tenant) to the subject — via
+   `AdmissionRepository.findByTenantIdAndEncounterId` (inpatient has no standalone encounter table;
+   `encounter_id` is a non-null column on each admission). This lets a write carrying only an
+   encounter (newborn APGAR, discharge clearances) resolve without a standalone admission; else
+3. the subject must have an **ADMITTED** admission in this tenant
+   (`findBySubjectCpidAndStatus(cpid,"ADMITTED")`, tenant-filtered) — the episode anchor. Callers
+   that post `patientId` only still pass **when the patient is admitted**.
 
-- A write with **no** care-context reference is **permitted** — facility-team
-  RBAC (enforced upstream) is the control.
-- When a caller **supplies** a care-context reference, it must resolve **in this
-  tenant** to the write's subject:
-  - **pct** — a `journey_id` or `encounter_id` whose patient is the subject
-    (`ClinicalAccessGuard.requireCareRelationship`).
-  - **inpatient** — an `admission_ref` whose `subjectCpid` is the subject
-    (`InpatientClinicalService.requireAdmissionRelationship`).
-- **EMERGENCY / BREAK_GLASS** purpose-of-use waives the check (audited upstream).
-
-This closes the realistic IDOR — an actor writing for patient A while
-**referencing patient B's** journey / encounter / admission — without imposing a
-stronger-than-platform requirement on context-free writes.
+None resolving → 403.
 
 ## Where it is wired
 
 - **pct:** `CarePlanService.create`, `ProblemService.add`.
-- **inpatient:** `createCarePlan`, `recordFluid`, `recordChartEntry`
-  (`recordObservation`), `recordEws`, `activateEmergency`,
-  `initDischargeClearances`, `createWardAlert`. (All except care-plans are
-  deny-by-default at the gateway today — no live flow is affected; the control is
-  in place before their authz is ever seeded.)
-- **Mobile reroute:** the provider-app's outpatient care-plan create/list was
-  repointed from inpatient to **pct** (the strangler target) and now sends
-  `journey_id`/`encounter_id`, so the consistency check has a context to verify.
+- **inpatient single-subject writes:** `createCarePlan`, `recordFluid`, `recordChartEntry`
+  (`recordObservation`), `recordEws`, `activateEmergency`, `initDischargeClearances`,
+  `createWardAlert`, `recordApgar`, `syncMarSchedule`, `administerMedication`. `requestTransfer`
+  already requires + tenant-filters its `admissionRef`.
+- **inpatient resuscitation children** (`recordResuscitation`, `logEmergencyAction`,
+  `startResuscitationPhase`, `endResuscitationPhase`): gated by `requireActivation`, now tightened to
+  require the parent activation to exist **and** belong to the current tenant. The subject was
+  validated once at `activateEmergency`; an admission is **not** re-resolved mid-resuscitation (a
+  live code is never gated).
+- **inpatient `submitHandover`** (multi-admission shift handover, no single subject): each referenced
+  `admissionRef` is folded in only if it exists in this tenant (cross-tenant refs silently skipped).
+- **Mobile:** the provider-app's outpatient care-plan create/list routes to **pct** (the strangler
+  target) and sends `journey_id`/`encounter_id`. Inpatient mobile writes send `patientId` and resolve
+  via the patient's active admission.
 
 ## Residuals (honest)
 
-1. **Actor-specific assignment — not a deficiency.** The guard verifies
-   subject↔care-context at **facility-team level**, which **meets** the platform
-   standard (role + facility + purpose). `EncounterEntity.assignedProviderId`
-   exists but is unused; tightening to provider-specific via vashandi
-   `WorkforceAssignmentEntity` is a feasible but deliberate stronger-than-platform
-   future option, not a gap.
-
-2. **Deferred inpatient writes (no single-admission body field):**
-   - `recordApgar`, `administerMedication` (MAR) — need an encounter- or
-     prescription-based relationship check (no `admissionRef` on the payload).
-   - `submitHandover` — multi-admission shift handover (no single subject);
-     verify each referenced admission is tenant-scoped, separately.
-   - `startResuscitationPhase` — gate via the parent activation's subject
-     (`requireActivation` only checks existence today).
-
-3. **Inpatient clinical-write authz seeding.** The 11 non-care-plan inpatient
-   write routes have **no** TSHEPO rule (V001–V018) and 403 at the gateway. A
-   future `V0xx` (mirroring V018) must seed them — and this guard must precede
-   that enablement so the writes are never reachable without the consistency
-   check.
+1. **Newborn APGAR via encounter.** APGAR carries an `encounterId`, not an `admissionRef`; under the
+   encounter path it resolves **only if that encounter resolves to the neonate's CPID** (not the
+   mother's). The neonatal encounter model should be validated; if APGAR is recorded against the
+   mother's encounter it would 403 and need a neonate encounter/admission or an explicit carve-out.
+2. **Resuscitation children** are gated by tenant-scoped activation only (subject validated once at
+   activation) — deliberate, so live resuscitation is never blocked.
+3. **Pre-admission / post-discharge** inpatient writes require an active admission or a resolving
+   encounter or break-glass — an operational "admit / start-episode first" expectation.
+4. **Inpatient clinical-write authz seeding.** The non-care-plan inpatient write routes have no
+   TSHEPO rule (V001–V018) and 403 at the gateway. A future `V0xx` (mirroring V018) must seed them —
+   this in-service guard must precede that enablement.
+5. **Actor-specific assignment.** The guard binds subject↔care-context at facility-team level (the
+   platform standard: role + facility + purpose). Tightening to provider-specific via vashandi
+   `WorkforceAssignmentEntity` is a deliberate stronger-than-platform future option, not a gap.
 
 ## Verification
 
-- pct `ClinicalAccessGuardTest` 6/6 (context-free allow · unresolvable-context
+- pct `ClinicalAccessGuardTest` 6/6 (journey/encounter allow · context-free deny · unresolvable
   deny · cross-patient deny · emergency bypass); pct suite **88/88**.
-- inpatient `InpatientClinicalDepthIT` 4/4 (incl. cross-patient admission
-  reference → 403) · `InpatientTenantIsolationIT` green · inpatient suite
-  **18/18** + all 4 ITs (7) green.
-- product-truth gate: **95 services, 0 gaps**; phase6 completion gate:
-  **incomplete=0**.
+- inpatient `InpatientClinicalDepthIT` 6/6 (happy path resolves the active admission · discharge
+  resolves via its `encounterId` · cross-patient admission ref → 403 · no-active-admission → 403 ·
+  emergency purpose → allowed) · `InpatientTenantIsolationIT` green (seeds an admission so the
+  isolation assertion stands) · inpatient suite **18/18** + all 4 ITs (9) green.
+- product-truth gate: **95 services, 0 gaps**; phase6 completion gate: **incomplete=0**.

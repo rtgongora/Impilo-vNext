@@ -8,7 +8,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import zw.gov.mohcc.impilo.inpatient.persistence.entity.AdmissionEntity;
+import zw.gov.mohcc.impilo.inpatient.persistence.repository.AdmissionRepository;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.hasSize;
@@ -29,6 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class InpatientTenantIsolationIT {
 
     @Autowired private MockMvc mockMvc;
+    @Autowired private AdmissionRepository admissionRepository;
 
     private static MockHttpServletRequestBuilder withTenant(MockHttpServletRequestBuilder b, UUID tenant) {
         return b.header("X-Tenant-ID", tenant.toString())
@@ -43,6 +47,19 @@ class InpatientTenantIsolationIT {
         UUID tenantA = UUID.randomUUID();
         UUID tenantB = UUID.randomUUID();
         String cpid = "CPID-ISO-" + UUID.randomUUID().toString().substring(0, 8);
+
+        // Strict subject-relationship gate: the inpatient clinical write requires the subject to have
+        // an active admission in this tenant. Seed one for tenant A's patient so the create resolves —
+        // the assertion under test is list-isolation across tenants, not the create itself.
+        AdmissionEntity admission = new AdmissionEntity();
+        admission.setTenantId(tenantA);
+        admission.setAdmissionRef(UUID.randomUUID());
+        admission.setEncounterId(UUID.randomUUID());
+        admission.setSubjectCpid(cpid);
+        admission.setFacilityId(UUID.randomUUID());
+        admission.setStatus("ADMITTED");
+        admission.setAdmittedAt(OffsetDateTime.now());
+        admissionRepository.save(admission);
 
         // Create a care plan as tenant A.
         mockMvc.perform(withTenant(post("/internal/v1/care-plans"), tenantA)

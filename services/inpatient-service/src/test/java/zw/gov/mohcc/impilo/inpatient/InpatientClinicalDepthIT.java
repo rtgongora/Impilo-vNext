@@ -116,6 +116,32 @@ class InpatientClinicalDepthIT {
     }
 
     @Test
+    void clinicalWrite_forPatientWithNoActiveAdmission_isForbidden() throws Exception {
+        // Strict: a write for a CPID with no admission/encounter in this tenant is denied (403) — an
+        // actor with the coarse RBAC cannot mint inpatient records against an arbitrary, non-admitted
+        // patient. ("CPID-NEVER-ADMITTED" is never seeded by @BeforeEach.)
+        mockMvc.perform(withTrust(post("/internal/v1/care-plans"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"patientId\":\"CPID-NEVER-ADMITTED\",\"title\":\"X\"}"))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(withTrust(post("/internal/v1/fluid-balance"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"patientId\":\"CPID-NEVER-ADMITTED\",\"entryType\":\"INTAKE\",\"category\":\"IV\",\"volumeMl\":100}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void clinicalWrite_forNonAdmittedPatient_underEmergencyPurpose_isAllowed() throws Exception {
+        // EMERGENCY/BREAK_GLASS purpose waives the care-context requirement — emergency care is never blocked.
+        mockMvc.perform(withTrust(post("/internal/v1/fluid-balance"))
+                        .header("X-Purpose-Of-Use", "EMERGENCY")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"patientId\":\"CPID-NEVER-ADMITTED\",\"entryType\":\"INTAKE\",\"category\":\"IV\",\"volumeMl\":100}"))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
     void apgar_resuscitation_mar_sync_flow() throws Exception {
         mockMvc.perform(withTrust(post("/internal/v1/apgar"))
                         .contentType(MediaType.APPLICATION_JSON)

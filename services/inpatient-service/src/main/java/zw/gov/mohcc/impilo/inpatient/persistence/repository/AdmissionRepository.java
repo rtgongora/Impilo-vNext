@@ -27,6 +27,15 @@ public interface AdmissionRepository extends JpaRepository<AdmissionEntity, Long
     List<AdmissionEntity> findBySubjectCpidAndStatus(String subjectCpid, String status);
 
     /**
+     * Resolve the admission carrying a given encounter (tenant-scoped). Inpatient has no standalone
+     * encounter table — {@code encounter_id} is a non-null column on each admission — so this is the
+     * encounter→subject resolution used by the clinical-write care-context guard (lets a write that
+     * carries only an {@code encounterId}, e.g. newborn APGAR / discharge clearances, resolve its
+     * subject without a separate active-admission lookup).
+     */
+    Optional<AdmissionEntity> findByTenantIdAndEncounterId(UUID tenantId, UUID encounterId);
+
+    /**
      * Census admission materialised from a given PCT admission (tenant-scoped). The PCT<->inpatient
      * handshake is keyed on {@code pct_admission_id}; this is the idempotency lookup for
      * {@code admitFromPctApproval} and matches regardless of admission status (ADMITTED or DISCHARGED),
