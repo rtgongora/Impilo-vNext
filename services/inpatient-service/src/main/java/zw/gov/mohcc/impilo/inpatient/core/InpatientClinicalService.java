@@ -121,24 +121,26 @@ public class InpatientClinicalService {
     }
 
     /**
-     * Subject-relationship gate for inpatient clinical writes: the referenced admission must exist
-     * (in this tenant) and belong to the write's subject. Waived under EMERGENCY/BREAK_GLASS purpose
-     * (emergency care is never blocked; the waiver is audited upstream). Throws 403 otherwise.
+     * Subject-relationship consistency check for inpatient clinical writes (10-dimension doctrine,
+     * dimension 6). The platform's baseline access model is facility-team-level (ext_authz already
+     * enforces role + facility + purpose), so a {@code patientId}-only write is permitted. This adds
+     * a <strong>verify-when-present</strong> consistency guard: when the caller supplies an explicit
+     * {@code admissionRef}, it must exist in this tenant and belong to the write's subject — closing
+     * the cross-patient case where an actor writes for patient A while referencing patient B's
+     * admission. Waived under EMERGENCY/BREAK_GLASS purpose (emergency care is never blocked).
      */
     private void requireAdmissionRelationship(String subjectCpid, UUID admissionRef) {
+        if (admissionRef == null) {
+            return; // no explicit care context to verify (facility-team-level RBAC is the control)
+        }
         String purpose = TrustContextHolder.require().purposeOfUse();
         String p = purpose == null ? "" : purpose.toUpperCase(java.util.Locale.ROOT);
         if (p.equals("EMERGENCY") || p.equals("BREAK_GLASS")) {
-            // Emergency/break-glass override — never block emergency care; the waiver is audited upstream.
-            return;
+            return; // emergency/break-glass override — audited upstream
         }
-        if (admissionRef == null) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "No admission context: an inpatient clinical write must reference an admission that "
-                            + "belongs to the subject (or be performed under emergency purpose).");
-        }
+        UUID tenant = currentTenant();
         var admission = admissionRepository.findByAdmissionRef(admissionRef)
-                .filter(a -> currentTenant().equals(a.getTenantId()));
+                .filter(a -> tenant.equals(a.getTenantId()));
         if (admission.isEmpty() || !subjectCpid.equals(admission.get().getSubjectCpid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "Referenced admission does not belong to the subject of this clinical write.");
@@ -291,6 +293,7 @@ public class InpatientClinicalService {
     @Transactional
     public Map<String, Object> recordFluid(Map<String, Object> body) {
         String cpid = patientCpid(body);
+        requireAdmissionRelationship(cpid, ClinicalPayloadMapper.uuid(body, "admissionRef", "admission_ref"));
         FluidBalanceEntity r = new FluidBalanceEntity();
         r.setTenantId(currentTenant());
         r.setSubjectCpid(cpid);
@@ -330,6 +333,7 @@ public class InpatientClinicalService {
     @Transactional
     public Map<String, Object> recordChartEntry(Map<String, Object> body, String chartType) {
         String cpid = patientCpid(body);
+        requireAdmissionRelationship(cpid, ClinicalPayloadMapper.uuid(body, "admissionRef", "admission_ref"));
         ClinicalChartEntryEntity e = new ClinicalChartEntryEntity();
         e.setTenantId(currentTenant());
         e.setSubjectCpid(cpid);
@@ -472,6 +476,7 @@ public class InpatientClinicalService {
     @Transactional
     public Map<String, Object> recordEws(Map<String, Object> body) {
         String cpid = patientCpid(body);
+        requireAdmissionRelationship(cpid, ClinicalPayloadMapper.uuid(body, "admissionRef", "admission_ref"));
         Integer total = ClinicalPayloadMapper.integer(body, "totalScore", "total_score");
         if (total == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "totalScore is required");
         EarlyWarningScoreEntity e = new EarlyWarningScoreEntity();
@@ -512,6 +517,9 @@ public class InpatientClinicalService {
 
     @Transactional
     public Map<String, Object> activateEmergency(Map<String, Object> body) {
+        requireAdmissionRelationship(
+                ClinicalPayloadMapper.str(body, "patientId", "patient_id", "subjectCpid"),
+                ClinicalPayloadMapper.uuid(body, "admissionRef", "admission_ref"));
         EmergencyActivationEntity a = new EmergencyActivationEntity();
         a.setTenantId(currentTenant());
         a.setSubjectCpid(ClinicalPayloadMapper.str(body, "patientId", "patient_id", "subjectCpid"));
@@ -753,6 +761,7 @@ public class InpatientClinicalService {
         alert.setAlertType(Objects.requireNonNullElse(ClinicalPayloadMapper.str(body, "alertType", "alert_type"), "CALL_NURSE"));
         alert.setMessage(ClinicalPayloadMapper.str(body, "message"));
         UUID admissionRef = ClinicalPayloadMapper.uuid(body, "admissionRef", "admission_ref");
+        requireAdmissionRelationship(cpid, admissionRef);
         Optional<AdmissionEntity> linkedAdmission = admissionRef != null
                 ? admissionRepository.findByAdmissionRef(admissionRef)
                 : admissionRepository.findBySubjectCpidAndStatus(cpid, "ADMITTED").stream().findFirst();
@@ -807,6 +816,7 @@ public class InpatientClinicalService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "admissionRef is required");
         }
         AdmissionEntity admission = admissionRepository.findByAdmissionRef(admissionRef)
+                .filter(a -> currentTenant().equals(a.getTenantId()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Admission not found"));
         TransferEntity t = new TransferEntity();
         t.setTenantId(admission.getTenantId());
@@ -875,6 +885,7 @@ public class InpatientClinicalService {
         }
         String cpid = ClinicalPayloadMapper.str(body, "patientId", "patient_id", "subjectCpid", "subject_cpid");
         UUID admissionRef = ClinicalPayloadMapper.uuid(body, "admissionRef", "admission_ref");
+        requireAdmissionRelationship(cpid, admissionRef);
         List<DischargeClearanceEntity> existing = dischargeClearanceRepository
                 .findByTenantIdAndEncounterIdOrderByClearanceTypeAsc(currentTenant(), encounterId);
         if (!existing.isEmpty()) {

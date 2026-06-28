@@ -99,6 +99,23 @@ class InpatientClinicalDepthIT {
     }
 
     @Test
+    void clinicalWrite_referencingAnotherPatientsAdmission_isForbidden() throws Exception {
+        // Subject-relationship consistency (verify-when-present): ADMISSION_REF belongs to CPID, but
+        // the write claims a DIFFERENT subject — the cross-patient case must be denied (403). A
+        // patientId-only write (no admissionRef) is permitted by the facility-team-level model and is
+        // covered by the happy-path flow above.
+        mockMvc.perform(withTrust(post("/internal/v1/care-plans"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"patientId\":\"CPID-OTHER-9999\",\"admissionRef\":\"" + ADMISSION_REF + "\",\"title\":\"X\"}"))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(withTrust(post("/internal/v1/fluid-balance"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"patientId\":\"CPID-OTHER-9999\",\"admissionRef\":\"" + ADMISSION_REF + "\",\"entryType\":\"INTAKE\",\"category\":\"IV\",\"volumeMl\":100}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void apgar_resuscitation_mar_sync_flow() throws Exception {
         mockMvc.perform(withTrust(post("/internal/v1/apgar"))
                         .contentType(MediaType.APPLICATION_JSON)

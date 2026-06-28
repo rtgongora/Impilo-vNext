@@ -19,13 +19,15 @@ import java.util.Optional;
  * writes (the 10-dimension doctrine, dimension 6 — "subject relationship").
  *
  * <p>Envoy ext_authz / TSHEPO enforces the RBAC dimensions (actor type, clinical role, facility,
- * purpose) but cannot evaluate subject-level consent/relationship for a POST-to-collection write —
- * the subject CPID is in the request body, not the path, so the PDP has no resource id to bind to
- * (it explicitly delegates this to the owning service). This guard is that delegated control: a
- * clinical record may only be written for a patient the acting provider holds an <em>active care
- * context</em> with — i.e. a journey or encounter (in this tenant) whose patient is the write's
- * subject. This stops a clinician with the coarse RBAC from minting clinical records against an
- * arbitrary CPID supplied in the body.</p>
+ * purpose) but cannot evaluate subject-level relationship for a POST-to-collection write — the
+ * subject CPID is in the request body, not the path, so the PDP has no resource id to bind to (it
+ * explicitly delegates this to the owning service). The platform's baseline access model is
+ * <em>facility-team-level</em> (role + facility + purpose), so a {@code subject_cpid}-only write is
+ * permitted by RBAC. This guard adds the delegated <strong>verify-when-present</strong> consistency
+ * control: when a caller supplies a care-context reference (a journey or encounter), that context
+ * must exist in this tenant and belong to the write's subject. This closes the cross-patient case —
+ * a clinician writing for patient A while referencing patient B's journey/encounter — without
+ * imposing a stronger-than-platform subject-relationship requirement on context-free writes.</p>
  *
  * <p><strong>Emergency care is never blocked:</strong> under {@code EMERGENCY} or {@code BREAK_GLASS}
  * purpose-of-use the relationship requirement is waived (with an elevated-visibility log), mirroring
@@ -46,8 +48,10 @@ public class ClinicalAccessGuard {
     }
 
     /**
-     * Require that {@code ctx}'s actor holds an active care context (journey or encounter) for
-     * {@code subjectCpid}. Throws {@code 403 FORBIDDEN} when no verifiable relationship exists.
+     * Verify-when-present: when {@code ctx}'s caller references a care context (journey or encounter)
+     * for {@code subjectCpid}, that context must resolve (in tenant) to the subject. A write with no
+     * care-context reference is permitted (facility-team-level RBAC is the control). Throws
+     * {@code 403 FORBIDDEN} when a supplied context does not belong to the subject.
      *
      * @param ctx         the trust context (tenant + purpose-of-use)
      * @param subjectCpid the patient the write targets (must be non-blank)
@@ -60,23 +64,28 @@ public class ClinicalAccessGuard {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "subject_cpid is required");
         }
 
+        boolean hasContext = (encounterId != null && !encounterId.isBlank())
+                || (journeyId != null && !journeyId.isBlank());
+        if (!hasContext) {
+            return; // no care-context reference to verify (facility-team-level RBAC is the control)
+        }
+
         // Emergency / break-glass: never block clinical care. Waiver is audited upstream.
         String purpose = ctx.purposeOfUse() == null ? "" : ctx.purposeOfUse().toUpperCase(Locale.ROOT);
         if (purpose.equals("EMERGENCY") || purpose.equals("BREAK_GLASS")) {
-            log.warn("CARE-RELATIONSHIP WAIVED (purpose={}): actor={} writing for subject={} without a "
-                            + "verified care context — emergency/break-glass override.",
+            log.warn("CARE-RELATIONSHIP WAIVED (purpose={}): actor={} writing for subject={} with an "
+                            + "unverified care context — emergency/break-glass override.",
                     purpose, ctx.actorId(), subjectCpid);
             return;
         }
 
-        // Verify against a referenced encounter first (most specific), then journey.
+        // A context was supplied — it must resolve to the subject (encounter first, then journey).
         if (verifyEncounter(ctx, subjectCpid, encounterId) || verifyJourney(ctx, subjectCpid, journeyId)) {
             return;
         }
 
         throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                "No active care context for this patient: a clinical write must reference a journey "
-                        + "or encounter that belongs to the subject (or be performed under emergency purpose).");
+                "Referenced care context does not belong to the subject of this clinical write.");
     }
 
     /**

@@ -80,17 +80,25 @@ class ClinicalAccessGuardTest {
     }
 
     @Test
-    void noCareContext_denies403() {
-        // No journey and no encounter referenced — cannot establish a care relationship.
-        assertForbidden(() -> guard.requireCareRelationship(ctx("TREATMENT"), "CPID-1", null, null));
+    void noCareContext_allows() {
+        // Verify-when-present: a write with no journey/encounter reference is permitted — the
+        // facility-team-level RBAC (role + facility + purpose, enforced upstream) is the control.
+        assertThatCode(() -> guard.requireCareRelationship(ctx("TREATMENT"), "CPID-1", null, null))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    void unresolvableCareContext_denies403() {
+        // A context WAS supplied (encounter "999") but does not resolve to the subject — denied.
+        assertForbidden(() -> guard.requireCareRelationship(ctx("TREATMENT"), "CPID-1", null, "999"));
     }
 
     @Test
     void emergencyPurpose_bypassesRelationshipRequirement() {
-        // Emergency care must never be blocked, even with no care context.
-        assertThatCode(() -> guard.requireCareRelationship(ctx("EMERGENCY"), "CPID-1", null, null))
+        // Emergency care must never be blocked, even when the referenced context cannot be verified.
+        assertThatCode(() -> guard.requireCareRelationship(ctx("EMERGENCY"), "CPID-1", "J-X", null))
                 .doesNotThrowAnyException();
-        assertThatCode(() -> guard.requireCareRelationship(ctx("BREAK_GLASS"), "CPID-1", null, null))
+        assertThatCode(() -> guard.requireCareRelationship(ctx("BREAK_GLASS"), "CPID-1", "J-X", null))
                 .doesNotThrowAnyException();
     }
 }
