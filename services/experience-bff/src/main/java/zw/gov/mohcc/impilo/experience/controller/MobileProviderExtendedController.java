@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -390,16 +392,45 @@ public class MobileProviderExtendedController {
 
     // ── Care Planning ───────────────────────────────────────────────
 
+    // The provider mobile app is outpatient (encounter/journey-based, no admission), so its care
+    // plans live in pct — not the inpatient backend (which the shared /care-plans route + web EHR
+    // use). Routing here completes the in-progress care-plan strangler migration to pct (goals are
+    // already pct-backed via ClinicalDepthController) and lets the pct subject-relationship guard
+    // verify the journey/encounter the mobile sends. The pct shape (plan_id) is adapted to the
+    // shape the mobile already renders (id + goals/interventions arrays).
     @GetMapping("/clinical/care-plans")
     public ResponseEntity<Map<String, Object>> getCarePlans(@RequestHeader("X-Tenant-ID") String tenantId, @RequestParam String patientId) {
-        JsonNode data = inpatientClient.listCarePlans(patientId);
-        return ResponseEntity.ok(Map.of("data", data != null ? data : List.of()));
+        JsonNode data = pctClient.listCarePlans(patientId);
+        List<Map<String, Object>> adapted = new ArrayList<>();
+        if (data != null && data.isArray()) {
+            data.forEach(p -> adapted.add(adaptCarePlan(p)));
+        }
+        return ResponseEntity.ok(Map.of("data", adapted));
     }
 
     @PostMapping("/clinical/care-plans")
     public ResponseEntity<Map<String, Object>> createCarePlan(@RequestHeader("X-Tenant-ID") String tenantId, @RequestBody Map<String, Object> body) {
-        JsonNode created = inpatientClient.createCarePlan(body);
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", created != null ? created : Map.of()));
+        JsonNode created = pctClient.createCarePlan(body);
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", adaptCarePlan(created)));
+    }
+
+    /** Adapt a pct care-plan (plan_id, ...) to the shape the mobile renders (id + goals/interventions). */
+    private Map<String, Object> adaptCarePlan(JsonNode p) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        if (p == null || p.isNull()) {
+            return m;
+        }
+        String id = p.hasNonNull("plan_id") ? p.get("plan_id").asText()
+                : (p.hasNonNull("id") ? p.get("id").asText() : null);
+        m.put("id", id);
+        m.put("plan_id", id);
+        for (String f : new String[] {"title", "status", "plan_type", "subject_cpid",
+                "journey_id", "encounter_id", "created_by", "created_at", "updated_at"}) {
+            m.put(f, p.hasNonNull(f) ? p.get(f).asText() : null);
+        }
+        m.put("goals", p.has("goals") && p.get("goals").isArray() ? p.get("goals") : List.of());
+        m.put("interventions", p.has("interventions") && p.get("interventions").isArray() ? p.get("interventions") : List.of());
+        return m;
     }
 
     // ── MAR (Medication Administration Record) ──────────────────────

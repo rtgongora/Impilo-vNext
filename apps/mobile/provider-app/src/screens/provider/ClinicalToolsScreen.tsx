@@ -282,7 +282,7 @@ function CarePlanPanel() {
   const { activeEncounter } = useEncounterStore();
   const [title, setTitle] = useState("");
   const [goals, setGoals] = useState("");
-  const mutation = useMutation({ mutationFn: () => createCarePlan({ title, goals: goals.split("\n").filter(Boolean), patientId: activeEncounter?.patientId ?? "" }) });
+  const mutation = useMutation({ mutationFn: () => createCarePlan({ title, goals: goals.split("\n").filter(Boolean), subject_cpid: activeEncounter?.patientId ?? "", journey_id: activeEncounter?.journeyId, encounter_id: activeEncounter?.id }) });
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Nursing Care Plan</Text>

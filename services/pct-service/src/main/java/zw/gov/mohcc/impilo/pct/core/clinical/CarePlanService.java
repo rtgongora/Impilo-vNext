@@ -90,6 +90,32 @@ public class CarePlanService {
         plan.setStatus(upperOr(body.get("status"), "ACTIVE"));
         plan.setCreatedBy(ctx.actorId());
         plan = planRepository.save(plan);
+        // Inline goals (parity with inpatient create): accept either a list of strings
+        // ("goals": ["..."]) or a list of objects ([{description, category, ...}]).
+        if (body.get("goals") instanceof List<?> goals) {
+            for (Object g : goals) {
+                if (g == null) {
+                    continue;
+                }
+                CarePlanGoalEntity goal = new CarePlanGoalEntity();
+                goal.setPlanId(plan.getPlanId());
+                goal.setTenantId(plan.getTenantId());
+                if (g instanceof Map<?, ?> gm) {
+                    goal.setDescription(str(gm.get("description")));
+                    goal.setCategory(upperOr(gm.get("category"), "CLINICAL"));
+                    goal.setPriority(upperOr(gm.get("priority"), "MEDIUM"));
+                    goal.setStatus(upperOr(gm.get("status"), "IN_PROGRESS"));
+                } else {
+                    goal.setDescription(g.toString());
+                    goal.setCategory("CLINICAL");
+                    goal.setPriority("MEDIUM");
+                    goal.setStatus("IN_PROGRESS");
+                }
+                if (goal.getDescription() != null && !goal.getDescription().isBlank()) {
+                    goalRepository.save(goal);
+                }
+            }
+        }
         emit("CARE_PLAN_CREATED", "CARE_PLAN", plan.getPlanId().toString(), planPayload(plan));
         log.info("pct.care_plan.created id={} subject={} by={} correlationId={}",
                 plan.getPlanId(), plan.getSubjectCpid(), ctx.actorId(), ctx.correlationId());

@@ -6,9 +6,11 @@ import { apiClient } from "@impilo/mobile-api-client";
 
 const V1 = "/internal/v1";
 
-// Care Plans
-export const fetchCarePlans = async (patientId: string) => (await apiClient.get<{ data: unknown[] }>(`${V1}/care-plans?patientId=${patientId}`)).data.data;
-export const createCarePlan = async (body: Record<string, unknown>) => (await apiClient.post<{ data: { id: string } }>(`${V1}/care-plans`, body)).data.data;
+// Care Plans — outpatient (encounter/journey-scoped) care plans are owned by pct; the provider
+// mobile app routes them via the pct-backed mobile route (/clinical/care-plans), NOT the shared
+// inpatient /care-plans route (which the web EHR uses and which requires an admission context).
+export const fetchCarePlans = async (patientId: string) => (await apiClient.get<{ data: unknown[] }>(`${V1}/clinical/care-plans?patientId=${patientId}`)).data.data;
+export const createCarePlan = async (body: Record<string, unknown>) => (await apiClient.post<{ data: { id: string } }>(`${V1}/clinical/care-plans`, body)).data.data;
 
 // Fluid Balance
 export const fetchFluidBalance = async (patientId: string, date?: string) => (await apiClient.get<{ data: unknown[]; summary: Record<string, number> }>(`${V1}/fluid-balance?patientId=${patientId}${date ? `&date=${date}` : ""}`)).data;

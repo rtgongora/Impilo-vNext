@@ -41,7 +41,7 @@ export function CarePlanDetailScreen() {
   const [intForm, setIntForm] = useState({ description: "", category: "ASSESSMENT", frequency: "", responsibleRole: "" });
 
   const createMut = useMutation({
-    mutationFn: () => createCarePlan({ patientId: pid, encounterId: activeEncounter?.id, title: createForm.title, planType: createForm.planType }),
+    mutationFn: () => createCarePlan({ subject_cpid: pid, journey_id: activeEncounter?.journeyId, encounter_id: activeEncounter?.id, title: createForm.title, plan_type: createForm.planType }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["care-plans-full"] }); setShowCreate(false); setCreateForm({ title: "", planType: "NURSING" }); },
   });
 

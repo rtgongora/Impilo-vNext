@@ -84,7 +84,7 @@ function CarePlansPanel() {
   const [title, setTitle] = useState("");
   const [goalDesc, setGoalDesc] = useState("");
   const mutation = useMutation({
-    mutationFn: () => createCarePlan({ patientId: pid, encounterId: activeEncounter?.id, title, goals: goalDesc ? [{ description: goalDesc, category: "CLINICAL" }] : [] }),
+    mutationFn: () => createCarePlan({ subject_cpid: pid, journey_id: activeEncounter?.journeyId, encounter_id: activeEncounter?.id, title, goals: goalDesc ? [{ description: goalDesc, category: "CLINICAL" }] : [] }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["care-plans"] }); setTitle(""); setGoalDesc(""); },
   });
   if (isLoading) return <LoadingSpinner />;
