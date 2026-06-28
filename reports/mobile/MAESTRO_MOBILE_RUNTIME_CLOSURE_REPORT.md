@@ -2,7 +2,8 @@
 
 **Branch:** `claude/staging-ux-orchestration-remediation-Yypyl`  
 **Wave date:** 2026-06-27  
-**Overall status:** **PARTIAL** — static + export closed on 235; runtime blocked on 218 access
+**Last updated:** 2026-06-28 — formal provisioning blocker recorded  
+**Overall status:** **PARTIAL** — static + export closed; Android emulator runtime **BLOCKED** (`ANDROID_EMULATOR_SANDBOX_PROVISIONING_BLOCKER`)
 
 ---
 
@@ -15,23 +16,24 @@
 
 ## 2. KVM status
 
-Pre-validated on 218 at activation. **Not re-verified** in this wave (218 SSH blocked from 235 agent).
+Pre-validated on 218 at activation. Runtime attempts on 218 showed **Xen HVM domU re-initialization** during emulator launch and **corrupted AVD metadata** — see formal blocker report.
 
 ## 3. Toolchain installed
 
 | VM | Status |
 |----|--------|
-| 235 | Node + pnpm for static gates |
-| 218 | **NOT INSTALLED** — run `scripts/mobile/maestro-vm-bootstrap.sh` on 218 |
+| 235 | Node + pnpm — static gates + Expo export |
+| 218 | Partial — SDK/bootstrap attempted; emulator boot **blocked** |
 
 ## 4. Android SDK / emulator
 
-**NOT RUN** on 218 (access blocker).
+**BLOCKED** — `ANDROID_EMULATOR_SANDBOX_PROVISIONING_BLOCKER`  
+Report: [`android-emulator-sandbox-provisioning-blocker-20260628T070318Z.md`](./android-emulator-sandbox-provisioning-blocker-20260628T070318Z.md)
 
 ## 5. Repo branch and commit tested
 
 - Branch: `claude/staging-ux-orchestration-remediation-Yypyl`
-- Static gates run at HEAD `391798028` (pre-push)
+- Static gates run at HEAD `146de566d` (bootstrap scripts + reports committed)
 - Commit includes: Expo export fix, bootstrap scripts, reports
 
 ## 6. Static closure rerun
@@ -49,11 +51,11 @@ Pre-validated on 218 at activation. **Not re-verified** in this wave (218 SSH bl
 
 ## 8. Citizen runtime smoke
 
-**NOT RUN** — requires 218 emulator
+**NOT RUN** — blocked by `ANDROID_EMULATOR_SANDBOX_PROVISIONING_BLOCKER`
 
 ## 9. Provider runtime smoke
 
-**NOT RUN** — requires 218 emulator
+**NOT RUN** — blocked by `ANDROID_EMULATOR_SANDBOX_PROVISIONING_BLOCKER`
 
 ## 10. APK / debug build
 
@@ -66,14 +68,15 @@ Config present; **no builds run**. iOS native on Ubuntu: **not claimed**. See `r
 ## 12. Mobile preview access
 
 Guide: `docs/mobile/MOBILE_PREVIEW_ACCESS_GUIDE.md`  
-218 → 235 API reachability: **not tested**
+218 → 235 API reachability: **not tested** (218 session required)
 
 ## 13. Remaining blockers
 
-1. **218 SSH from 235 agent** — port 2027 unreachable; port 22 auth failed without `facility` credentials
-2. **Toolchain + SDK + emulator** — must run bootstrap on 218 via Cursor Remote SSH to 218
-3. **Runtime smoke + APK + Maestro** — blocked on (2)
-4. **Preview API curl** — verify `http://41.57.127.235` health from 218 after bootstrap
+1. **Android emulator sandbox provisioning** — Xen nested virt unstable on 218; AVD `config.ini` corrupted (0 bytes)
+2. **Runtime smoke + APK + Maestro** — blocked until hardened emulator host available
+3. **Preview API curl from 218** — not validated (runtime never reached stable boot)
+
+Formal blocker: [`android-emulator-sandbox-provisioning-blocker-20260628T070318Z.md`](./android-emulator-sandbox-provisioning-blocker-20260628T070318Z.md)
 
 ## 14. Pipeline advancement
 
@@ -81,7 +84,7 @@ Guide: `docs/mobile/MOBILE_PREVIEW_ACCESS_GUIDE.md`
 |-------|--------|
 | Static / code closure | **CLOSED** (235) |
 | Expo export | **CLOSED** (235) |
-| Runtime / emulator closure | **OPEN** (218) |
+| Runtime / emulator closure | **BLOCKED** — provisioning |
 | Cross-surface test controller | Not started |
 | Full integration sandbox | Not started |
 
@@ -100,25 +103,19 @@ Yes — expected in this wave:
 
 | Item | Done |
 |------|------|
-| Maestro VM toolchain on 218 | ❌ Blocked |
-| Android emulator configured | ❌ |
-| Repo synced on 218 | ❌ |
+| Maestro VM toolchain on 218 | ⚠️ Partial — SDK attempted; emulator blocked |
+| Android emulator configured | ❌ Blocked — provisioning |
+| Repo synced on 218 | ✅ (during attempts) |
 | Static closure rerun | ✅ (235) |
 | Citizen runtime smoke vs 235 API | ❌ |
 | Provider runtime smoke vs 235 API | ❌ |
 | Runtime evidence captured | Partial (logs on 235 only) |
 | APK path attempted | ❌ |
 | Reports updated | ✅ |
-| Changes committed | Pending push |
+| Changes committed | ✅ `146de566d` (235 wave); runtime evidence pending 218 |
 
 ## Immediate next step
 
-**Open Cursor Remote SSH to `facility@41.57.127.218 -p 2027`** and run:
+**Do not rerun emulator closure on 218.** Provision or repair a hardened Android emulator runner (stable KVM or physical-device Maestro host). See:
 
-```bash
-git pull origin claude/staging-ux-orchestration-remediation-Yypyl
-bash scripts/mobile/maestro-vm-bootstrap.sh
-bash scripts/mobile/maestro-vm-runtime-closure.sh
-```
-
-Then update runtime reports and commit evidence.
+[`android-emulator-sandbox-provisioning-blocker-20260628T070318Z.md`](./android-emulator-sandbox-provisioning-blocker-20260628T070318Z.md)

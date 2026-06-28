@@ -1,25 +1,27 @@
 {
-  "schemaVersion": "1.0",
-  "date": "2026-06-27",
+  "schemaVersion": "1.1",
+  "date": "2026-06-28",
   "branch": "claude/staging-ux-orchestration-remediation-Yypyl",
   "overallStatus": "PARTIAL",
+  "classification": "ANDROID_EMULATOR_SANDBOX_PROVISIONING_BLOCKER",
+  "blockerReport": "reports/mobile/android-emulator-sandbox-provisioning-blocker-20260628T070318Z.md",
   "vmClassification": {
     "webPreview": "impilo-web-preview @ 41.57.127.235",
     "maestro": "impilo-mobile-android-sandbox @ 41.57.127.218"
   },
-  "kvmStatus": "pre-validated-not-rerun",
-  "toolchain218": "not-installed",
-  "androidSdk218": "not-installed",
-  "emulator218": "not-run",
-  "commitTested": "391798028",
+  "kvmStatus": "pre-validated-runtime-unstable-xen-domU",
+  "toolchain218": "partial-sdk-attempted",
+  "androidSdk218": "installed-emulator-unstable",
+  "emulator218": "BLOCKED-provisioning",
+  "commitTested": "146de566d",
   "staticClosureRerun": "PASS",
   "expoExport": "PASS",
   "citizenRuntimeSmoke": "NOT_RUN",
   "providerRuntimeSmoke": "NOT_RUN",
   "apkDebugBuild": "NOT_RUN",
-  "easIosReadiness": "config-only",
-  "primaryBlocker": "218-not-accessible-from-235-agent-ssh",
-  "repoChangesExpected": true,
+  "easIosReadiness": "config-only-not-claimed",
+  "primaryBlocker": "ANDROID_EMULATOR_SANDBOX_PROVISIONING_BLOCKER",
   "definitionOfDoneMet": false,
-  "nextStep": "cursor-remote-ssh-to-218-run-bootstrap-and-runtime-closure-scripts"
+  "crossSurfaceTestingReady": false,
+  "nextStep": "provision-hardened-emulator-or-physical-maestro-host-do-not-rerun-on-218"
 }

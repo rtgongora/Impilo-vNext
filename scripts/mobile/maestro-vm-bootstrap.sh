@@ -10,10 +10,16 @@ REPORTS="${REPO_DIR}/reports/mobile"
 PNPM_VERSION="${PNPM_VERSION:-9.15.0}"
 API_LEVEL="${ANDROID_API_LEVEL:-35}"
 
-log() { echo "[maestro-bootstrap] $*"; }
-die() { echo "[maestro-bootstrap] FATAL: $*" >&2; exit 1; }
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck source=maestro-runtime-orchestration.sh
+source "${SCRIPT_DIR}/maestro-runtime-orchestration.sh"
 
-mkdir -p "${REPORTS}"
+MAESTRO_RUN_COMMIT="bootstrap"
+maestro_orchestration_init "${REPORTS}"
+trap 'maestro_orchestration_finalize $?' EXIT
+
+log() { maestro_log_phase "$*"; }
+die() { maestro_orchestration_fail "$*"; }
 
 log "Phase 0: KVM sanity"
 bash "${REPO_DIR}/scripts/mobile/verify-maestro-vm-kvm.sh" 2>/dev/null || {
@@ -62,6 +68,11 @@ if ! avdmanager list avd 2>/dev/null | grep -q impilo-phone-api35; then
     -d pixel_6 --force
 fi
 
+AVD_CONFIG="${HOME}/.android/avd/impilo-phone-api35.avd/config.ini"
+if [[ -f "${AVD_CONFIG}" && ! -s "${AVD_CONFIG}" ]]; then
+  die "AVD config corrupted (0 bytes): ${AVD_CONFIG}"
+fi
+
 log "Phase 4: persist env in ~/.bashrc"
 grep -q ANDROID_HOME ~/.bashrc 2>/dev/null || cat >>~/.bashrc <<EOF
 
@@ -99,4 +110,5 @@ sdkmanager --version; adb version 2>&1 | head -1; emulator -version 2>&1 | head 
 avdmanager list avd
 git -C "${REPO_DIR}" rev-parse --short HEAD
 
+MAESTRO_RUN_STATUS="completed"
 log "Next: bash scripts/mobile/maestro-vm-runtime-closure.sh"

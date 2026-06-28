@@ -76,6 +76,24 @@ apps/mobile/**/dist/
 reports/mobile/artifacts/
 *.apk
 
+# Maestro runtime transient logs/markers (formal .md blocker reports ARE committed)
+reports/mobile/direct-emulator-*.log
+reports/mobile/maestro-runtime-phase.log
+reports/mobile/emulator-boot.log
+reports/mobile/emulator-boot.pid
+reports/mobile/*.pid
+reports/mobile/nohup.out
+reports/mobile/maestro-runtime-run.marker
+reports/mobile/systemd/
+reports/mobile/*.service
+reports/mobile/citizen-runtime-run.log
+reports/mobile/provider-runtime-run.log
+reports/mobile/maestro-flows.log
+reports/mobile/*-assembleDebug.log
+reports/mobile/adb-devices.txt
+reports/mobile/android-release.txt
+!reports/mobile/android-emulator-sandbox-provisioning-blocker-*.md
+
 # Pipeline run reports (generated on VM; not committed)
 reports/pipeline/*.md
 reports/pipeline/*.json
