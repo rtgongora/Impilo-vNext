@@ -37,15 +37,18 @@ public class CarePlanService {
     private final CarePlanGoalRepository goalRepository;
     private final EventOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
+    private final ClinicalAccessGuard accessGuard;
 
     public CarePlanService(CarePlanRepository planRepository,
                            CarePlanGoalRepository goalRepository,
                            EventOutboxRepository outboxRepository,
-                           ObjectMapper objectMapper) {
+                           ObjectMapper objectMapper,
+                           ClinicalAccessGuard accessGuard) {
         this.planRepository = planRepository;
         this.goalRepository = goalRepository;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
+        this.accessGuard = accessGuard;
     }
 
     @Transactional(readOnly = true)
@@ -79,6 +82,9 @@ public class CarePlanService {
         plan.setSubjectCpid(required(body, "subject_cpid"));
         plan.setJourneyId(str(body.get("journey_id")));
         plan.setEncounterId(str(body.get("encounter_id")));
+        // Subject-relationship gate (dimension 6): the actor must hold an active care context for
+        // this patient. ext_authz enforces RBAC but cannot bind the body subject to consent/relationship.
+        accessGuard.requireCareRelationship(ctx, plan.getSubjectCpid(), plan.getJourneyId(), plan.getEncounterId());
         plan.setTitle(required(body, "title"));
         plan.setPlanType(upperOr(body.get("plan_type"), "OUTPATIENT"));
         plan.setStatus(upperOr(body.get("status"), "ACTIVE"));

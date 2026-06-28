@@ -41,8 +41,10 @@ public class ProblemController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<Map<String, Object>>> add(@RequestBody Map<String, Object> body) {
-        // Authz: enforced at ext_authz via tshepo_authz.policy_rule `clinical-problem-write-*`
-        // (V018) — PROVIDER + CLINICIAN/NURSE, facility-scoped, purpose TREATMENT.
+        // Authz: RBAC enforced at ext_authz via tshepo_authz.policy_rule `clinical-problem-write-*`
+        // (V018) — PROVIDER + CLINICIAN/NURSE, facility-scoped, purpose TREATMENT. The subject
+        // relationship (the actor must hold an active care context for the patient) is enforced in
+        // ProblemService via ClinicalAccessGuard — ext_authz cannot bind the body subject to consent.
         ProblemEntity p = problemService.add(body);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(toMap(p), TrustContextHolder.require().correlationId().toString()));

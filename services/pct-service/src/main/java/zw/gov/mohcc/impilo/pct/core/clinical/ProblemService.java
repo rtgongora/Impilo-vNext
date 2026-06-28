@@ -36,13 +36,16 @@ public class ProblemService {
     private final ProblemRepository problemRepository;
     private final EventOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
+    private final ClinicalAccessGuard accessGuard;
 
     public ProblemService(ProblemRepository problemRepository,
                           EventOutboxRepository outboxRepository,
-                          ObjectMapper objectMapper) {
+                          ObjectMapper objectMapper,
+                          ClinicalAccessGuard accessGuard) {
         this.problemRepository = problemRepository;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
+        this.accessGuard = accessGuard;
     }
 
     @Transactional(readOnly = true)
@@ -63,6 +66,9 @@ public class ProblemService {
         p.setSubjectCpid(required(body, "subject_cpid"));
         p.setJourneyId(str(body.get("journey_id")));
         p.setEncounterId(str(body.get("encounter_id")));
+        // Subject-relationship gate (dimension 6): the actor must hold an active care context for
+        // this patient. ext_authz enforces RBAC but cannot bind the body subject to consent/relationship.
+        accessGuard.requireCareRelationship(ctx, p.getSubjectCpid(), p.getJourneyId(), p.getEncounterId());
         p.setCode(str(body.get("code")));
         p.setCodeSystem(str(body.get("code_system")));
         p.setDisplay(required(body, "display"));

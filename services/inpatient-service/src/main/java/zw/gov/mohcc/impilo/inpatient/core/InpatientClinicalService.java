@@ -120,6 +120,31 @@ public class InpatientClinicalService {
         return cpid;
     }
 
+    /**
+     * Subject-relationship gate for inpatient clinical writes: the referenced admission must exist
+     * (in this tenant) and belong to the write's subject. Waived under EMERGENCY/BREAK_GLASS purpose
+     * (emergency care is never blocked; the waiver is audited upstream). Throws 403 otherwise.
+     */
+    private void requireAdmissionRelationship(String subjectCpid, UUID admissionRef) {
+        String purpose = TrustContextHolder.require().purposeOfUse();
+        String p = purpose == null ? "" : purpose.toUpperCase(java.util.Locale.ROOT);
+        if (p.equals("EMERGENCY") || p.equals("BREAK_GLASS")) {
+            // Emergency/break-glass override — never block emergency care; the waiver is audited upstream.
+            return;
+        }
+        if (admissionRef == null) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "No admission context: an inpatient clinical write must reference an admission that "
+                            + "belongs to the subject (or be performed under emergency purpose).");
+        }
+        var admission = admissionRepository.findByAdmissionRef(admissionRef)
+                .filter(a -> currentTenant().equals(a.getTenantId()));
+        if (admission.isEmpty() || !subjectCpid.equals(admission.get().getSubjectCpid())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Referenced admission does not belong to the subject of this clinical write.");
+        }
+    }
+
     // ── Care plans ──────────────────────────────────────────────────
 
     public List<Map<String, Object>> listCarePlans(String patientId) {
@@ -135,6 +160,9 @@ public class InpatientClinicalService {
         plan.setSubjectCpid(cpid);
         plan.setAdmissionRef(ClinicalPayloadMapper.uuid(body, "admissionRef", "admission_ref"));
         plan.setEncounterId(ClinicalPayloadMapper.uuid(body, "encounterId", "encounter_id"));
+        // Subject-relationship gate (dimension 6): ext_authz enforces RBAC but cannot bind the body
+        // subject to a care context. The care plan must reference an admission that belongs to the subject.
+        requireAdmissionRelationship(cpid, plan.getAdmissionRef());
         plan.setTitle(Objects.requireNonNullElse(ClinicalPayloadMapper.str(body, "title"), "Care plan"));
         plan.setPlanType(Objects.requireNonNullElse(ClinicalPayloadMapper.str(body, "planType", "plan_type"), "NURSING"));
         plan.setCreatedBy(ClinicalPayloadMapper.str(body, "createdBy", "created_by"));
