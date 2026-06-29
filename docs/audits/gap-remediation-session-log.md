@@ -103,8 +103,23 @@ capability-matrix + probeEvidence) is now runtime-verifiable here — the metric
 - **Remaining SYS-3 (broad):** the live cross-service WireMock e2e (BFF IT Redis+Postgres harness) and the
   other waves' persona journey ITs (G-CZO-16 / G-PX-07 / G-OR-05) — proof-depth, not missing features.
 
-## Later phases (4–7)
-Nompilo addendum · Khuluma W4–W8 · per-wave High/Med closures · OPA-as-PDP migration.
+## Phase 4 — Nompilo continuity addendum — cores built (2026-06-29)
+
+- `fc329bef2` **feat(nompilo)** — AI→human handoff lifecycle in guidance-service. V003 `nompilo_handoff`
+  (runtime-proven V001→V003 on Postgres 16) + `NompiloHandoffService` (QUEUED→ACCEPTED→ESCALATED→CLOSED,
+  illegal-transition guards, safe normalization) emitting lifecycle events (canonical
+  `core.nompilo.handoff.requested`) via the guidance outbox; `NompiloHandoffController`. Test 6/6.
+- `81b5ea056` **feat(khuluma)** — `SafeDisclosureService` recipient-aware safe disclosure. Fail-safe to
+  redact; full content only for SELF or a consented delegate on a non-restricted category. Test 8/8 incl.
+  combinatorial no-leak proof. **Security-relevant.**
+- `fcf61b7ff` **feat(khuluma)** — `FeedbackRoutingService` quality/safety feedback → exact Rito
+  quality-signal body (closes the G-RT-03 loop). Test 5/5.
+- **G-KH-05/06** moved → cores built/proven. **Remaining (cross-service wiring):** BFF requestNompiloHandoff
+  → guidance (replace stub) · mobile handoff client · mvumo-resolve + consent into the dispatch path ·
+  the Rito HTTP post at the routing call site.
+
+## Later phases (5–7)
+Khuluma W4–W8 · per-wave High/Med closures · OPA-as-PDP migration.
 
 ## PO decisions parked
 See `docs/audits/po-decision-index.md`.
