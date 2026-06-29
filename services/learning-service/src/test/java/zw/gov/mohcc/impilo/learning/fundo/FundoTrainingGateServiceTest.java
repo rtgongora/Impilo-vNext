@@ -122,4 +122,85 @@ class FundoTrainingGateServiceTest {
         List<Map<String, Object>> reqs = (List<Map<String, Object>>) out.get("requirements");
         assertThat(reqs.get(0).get("basis")).isEqualTo("course_not_found");
     }
+
+    @Test
+    void allSatisfiedDecidesAllow() {
+        UUID cid = UUID.randomUUID();
+        when(courseRepository.findByTenantIdAndCode(TENANT, "REG-101")).thenReturn(Optional.of(course(cid, "REG-101")));
+        when(enrolmentRepository.findFirstByTenantIdAndSubjectTypeAndSubjectIdAndCourseIdAndStatusIn(
+                        TENANT, TYPE, SUBJECT, cid, List.of("COMPLETED")))
+                .thenReturn(Optional.of(completed(cid)));
+        when(certificateRepository.findByTenantIdAndSubjectTypeAndSubjectId(TENANT, TYPE, SUBJECT))
+                .thenReturn(List.of());
+
+        // Even a HARD requirement, once satisfied, yields ALLOW.
+        Map<String, Object> out = service.evaluate(TENANT, TYPE, SUBJECT, List.of("REG-101:HARD"));
+
+        assertThat(out.get("decision")).isEqualTo("ALLOW");
+        assertThat((List<?>) out.get("blocking")).isEmpty();
+    }
+
+    @Test
+    void advisoryGapWarnsButDoesNotBlock() {
+        UUID cid = UUID.randomUUID();
+        when(courseRepository.findByTenantIdAndCode(TENANT, "HAND-HYG")).thenReturn(Optional.of(course(cid, "HAND-HYG")));
+        when(enrolmentRepository.findFirstByTenantIdAndSubjectTypeAndSubjectIdAndCourseIdAndStatusIn(
+                        TENANT, TYPE, SUBJECT, cid, List.of("COMPLETED")))
+                .thenReturn(Optional.empty());
+        lenient().when(certificateRepository.findByTenantIdAndSubjectTypeAndSubjectId(TENANT, TYPE, SUBJECT))
+                .thenReturn(List.of());
+
+        // Unspecified level defaults to ADVISORY: warn, never block.
+        Map<String, Object> out = service.evaluate(TENANT, TYPE, SUBJECT, List.of("HAND-HYG"));
+
+        assertThat(out.get("satisfied")).isEqualTo(false);
+        assertThat(out.get("decision")).isEqualTo("ADVISE");
+        assertThat((List<?>) out.get("blocking")).isEmpty();
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> reqs = (List<Map<String, Object>>) out.get("requirements");
+        assertThat(reqs.get(0).get("enforcementLevel")).isEqualTo("ADVISORY");
+    }
+
+    @Test
+    void softGapIsConditionalAndOverridable() {
+        UUID cid = UUID.randomUUID();
+        when(courseRepository.findByTenantIdAndCode(TENANT, "ORIENT")).thenReturn(Optional.of(course(cid, "ORIENT")));
+        when(enrolmentRepository.findFirstByTenantIdAndSubjectTypeAndSubjectIdAndCourseIdAndStatusIn(
+                        TENANT, TYPE, SUBJECT, cid, List.of("COMPLETED")))
+                .thenReturn(Optional.empty());
+        lenient().when(certificateRepository.findByTenantIdAndSubjectTypeAndSubjectId(TENANT, TYPE, SUBJECT))
+                .thenReturn(List.of());
+
+        Map<String, Object> out = service.evaluate(TENANT, TYPE, SUBJECT, List.of("ORIENT:SOFT"));
+
+        assertThat(out.get("decision")).isEqualTo("CONDITIONAL");
+        @SuppressWarnings("unchecked")
+        List<String> blocking = (List<String>) out.get("blocking");
+        assertThat(blocking).containsExactly("ORIENT");
+    }
+
+    @Test
+    void hardGapBlocksAndDominatesMixedLevels() {
+        UUID hardId = UUID.randomUUID();
+        UUID advId = UUID.randomUUID();
+        when(courseRepository.findByTenantIdAndCode(TENANT, "INFECT-CTL")).thenReturn(Optional.of(course(hardId, "INFECT-CTL")));
+        when(courseRepository.findByTenantIdAndCode(TENANT, "HAND-HYG")).thenReturn(Optional.of(course(advId, "HAND-HYG")));
+        when(enrolmentRepository.findFirstByTenantIdAndSubjectTypeAndSubjectIdAndCourseIdAndStatusIn(
+                        TENANT, TYPE, SUBJECT, hardId, List.of("COMPLETED")))
+                .thenReturn(Optional.empty());
+        lenient().when(enrolmentRepository.findFirstByTenantIdAndSubjectTypeAndSubjectIdAndCourseIdAndStatusIn(
+                        TENANT, TYPE, SUBJECT, advId, List.of("COMPLETED")))
+                .thenReturn(Optional.empty());
+        lenient().when(certificateRepository.findByTenantIdAndSubjectTypeAndSubjectId(TENANT, TYPE, SUBJECT))
+                .thenReturn(List.of());
+
+        // A HARD gap dominates an ADVISORY gap → BLOCK; only the HARD one is "blocking".
+        Map<String, Object> out = service.evaluate(
+                TENANT, TYPE, SUBJECT, List.of("INFECT-CTL:HARD", "HAND-HYG:ADVISORY"));
+
+        assertThat(out.get("decision")).isEqualTo("BLOCK");
+        @SuppressWarnings("unchecked")
+        List<String> blocking = (List<String>) out.get("blocking");
+        assertThat(blocking).containsExactly("INFECT-CTL");
+    }
 }

@@ -2,9 +2,30 @@
 
 Decision ID: PO-20260629-01
 Wave: Phase 1 (SYS-1) — Fundo training-gate (G-FU-02)
-Status: OPEN
+Status: **RESOLVED (2026-06-29)** — PO chose **graduated levels of permission** (Option C, three levels).
 Blocking: only the training-gate *enforcement activation*; all other remediation continued.
-Session Behaviour: Deferred safely; remediation continued.
+Session Behaviour: Deferred safely during absence; resolved on PO return.
+
+## Resolution (2026-06-29)
+
+PO decision at the desk: **"There should be levels of permission"** — i.e. Option C, generalised to a
+graduated scale rather than a binary enforce-flag. Implemented in `FundoTrainingGateService`:
+
+- New `TrainingGateLevel { ADVISORY, SOFT, HARD }`. A requirement is supplied as `CODE:LEVEL`
+  (e.g. `INFECT-CTL:HARD`, `HAND-HYG:ADVISORY`); an unspecified/unknown level resolves to
+  **ADVISORY** (conservative — never a silent block).
+- `evaluate(...)` returns each requirement's `enforcementLevel` and a graduated `decision`:
+  **ALLOW** (all satisfied) · **ADVISE** (only advisory gaps — warn, allow) ·
+  **CONDITIONAL** (a soft gap — block unless overridden) · **BLOCK** (a hard gap; dominates).
+  A `blocking` list names the soft/hard gaps. `satisfied` retained for compatibility.
+- The level is **policy supplied by the caller** (the capability's requirement set); learning-service
+  computes satisfaction only — boundary discipline preserved (`decisionAuthority: tshepo-authz-service`).
+- Tested: `FundoTrainingGateServiceTest` 8/8 (ALLOW/ADVISE/CONDITIONAL/BLOCK + HARD-dominates-mixed).
+
+**Remaining (now a plain build, no PO input):** the vashandi → fundo *consumer* that calls the gate at
+check-in/workspace-entry and acts on `decision` (warn on ADVISE, override-prompt on CONDITIONAL, deny on
+BLOCK), plus the governed workspace/role → required-course mapping. This closes the enforcement half of
+G-FU-02; the gate half (graduated levels) is done.
 
 ## Context
 

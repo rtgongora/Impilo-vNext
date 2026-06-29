@@ -55,7 +55,11 @@ public class FundoWorkforceReadinessController {
     /**
      * Training-gate read-model consumed by Tshepo policy: is the subject's required
      * learning satisfied? {@code courseCodes} is a comma-separated list of native
-     * Fundo course codes. Returns a per-requirement decision plus an overall flag.
+     * Fundo course codes, each optionally suffixed with a graduated enforcement level
+     * as {@code CODE:LEVEL} (e.g. {@code INFECT-CTL:HARD,HAND-HYG:ADVISORY}); an
+     * unspecified level defaults to {@code ADVISORY}. Returns a per-requirement decision
+     * (with its {@code enforcementLevel}), a graduated overall {@code decision}
+     * (ALLOW / ADVISE / CONDITIONAL / BLOCK), and the {@code satisfied} flag.
      */
     @GetMapping("/learners/{subjectId}/training-gate")
     public ResponseEntity<Map<String, Object>> trainingGate(
