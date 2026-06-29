@@ -74,9 +74,21 @@ the suite generates `product-truth.json` and asserts on its maturity/baseline. S
 capability-matrix + probeEvidence) is now runtime-verifiable here — the metric can be confirmed to move.
 (Web `one-ui-shell` tsc/vitest is a separate, larger setup for Phase 3.)
 
-## Later phases (2–7)
-SYS-2 capability-matrix + probeEvidence (toolchain ready) · SYS-3 patient lane + journey ITs · Nompilo
-addendum · Khuluma W4–W8 · OPA-as-PDP migration.
+## Phase 2 — SYS-2 capability-grained Product Truth + probeEvidence — COMPLETE (2026-06-29)
+
+- `e26f37d11` **feat(product-truth)** — wire `probeEvidence` → REAL_PROVEN. New `probe-evidence.json`
+  (serviceId→{passed,suites,tests,command,evidence,commit}); generator loads it + attaches to records;
+  `classifyMaturity` already lifts a passing service to REAL_PROVEN. Seeded with the 4 services proven
+  in-session (tshepo-authz, patient-safety, rito, learning) → metric moved **0→4**. Test evolved to
+  enforce the real guarantee (no REAL_PROVEN without a passing probe entry). `node --test` 13/13.
+- `e3b4a64e9` **feat(product-truth)** — `capability-matrix.json`. `capabilityKeyFor` + `classifyCapability
+  Disposition` (pure) in product-truth-gaps.mjs; `buildCapabilityMatrix` joins routes×frontend×BFF×contract
+  into **3681 capabilities** (real 3139 / partial 141 / real-proven 207 / fixture 194). In-service additions
+  are now visible; fixtures (frontend-only/all-stub) are pinpointed. `node --test` 16/16. **SYS-2 CLOSED.**
+
+## Later phases (3–7)
+SYS-3 patient lane + journey ITs (needs web toolchain for screens) · Nompilo addendum · Khuluma W4–W8 ·
+OPA-as-PDP migration.
 
 ## PO decisions parked
 See `docs/audits/po-decision-index.md`.
