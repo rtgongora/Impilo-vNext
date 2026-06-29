@@ -47,7 +47,7 @@ Full table: [`DURA_BUILD_REPO_AUDIT.md §2`](../audits/DURA_BUILD_REPO_AUDIT.md)
 | 10 | Recall affects dispensed batch | 🟡 (Dura freezes affected batches to RECALLED — Wave 5; client/provider notification + dispensed-client trace pending) |
 | 11 | Cold-chain excursion | 🟡 (locations + temp logs + auto-excursion + resolve release/wastage — Wave 6; Rito/Khuluma escalation + auto-quarantine of affected batches pending) |
 | 12 | Stock count variance | ✅ |
-| 13 | eLMIS sync failure + reconciliation | 🟡 (reconciliation exists; explicit sync-state machine ⬜) |
+| 13 | eLMIS sync failure + reconciliation | 🟡 (explicit sync-state machine + retry/replay + error history — Wave 9; live adapter transport pending) |
 
 ## 5. Backend capabilities
 
@@ -63,13 +63,15 @@ consume→ledger — Wave 4** · **recalls that freeze affected batches to RECAL
 batch status — Wave 5** · **cold-chain: locations (fridge/cold-room/freezer), temperature logs
 (manual/IoT) with automatic excursion detection, excursion resolve (release/wastage) — Wave 6** · **client/caregiver household stock + refill
 request lifecycle — Wave 7** · **supplier mode: profiles, published catalogue (price/availability),
-customer orders (header+lines) with fulfilment lifecycle — Wave 8**.
+customer orders (header+lines) with fulfilment lifecycle — Wave 8** · **eLMIS/NatPharm
+sync-state machine: enqueue/synced/failed with capped auto-retry → RETRY/FAILED, per-attempt
+error history, manual replay; native truth never mutated by sync — Wave 9**.
 ⬜ **PCT-side caller + embedded UI hooks** · web/mobile UX (`/work/dura/*`, `/my-life/stock`) ·
-suggested orders / OROS · eLMIS sync-state machine · Rito/Khuluma/Costa/MusheX/Nhume hooks.
+suggested orders / OROS · Rito/Khuluma/Costa/MusheX/Nhume hooks · outbox events.
 
 ## 6. Routes
 
-- **Backend** `/api/v1/dura/*` — 🟡 (`/v1/dura/categories`, `/v1/dura/commodities` — Wave 2; `/v1/dura/batches`, `/v1/dura/reservations` (incl. availability) — Wave 3; `/v1/dura/pct/{availability,reserve,consume}` — Wave 4; `/v1/dura/recalls` — Wave 5; `/v1/dura/cold-chain` — Wave 6; `/v1/dura/client-stock` + `/v1/dura/refills` — Wave 7; `/v1/dura/suppliers` (+catalogue/orders) — Wave 8; remaining namespaces planned. Legacy inventory routes ✅)
+- **Backend** `/api/v1/dura/*` — 🟡 (`/v1/dura/categories`, `/v1/dura/commodities` — Wave 2; `/v1/dura/batches`, `/v1/dura/reservations` (incl. availability) — Wave 3; `/v1/dura/pct/{availability,reserve,consume}` — Wave 4; `/v1/dura/recalls` — Wave 5; `/v1/dura/cold-chain` — Wave 6; `/v1/dura/client-stock` + `/v1/dura/refills` — Wave 7; `/v1/dura/suppliers` (+catalogue/orders) — Wave 8; `/v1/dura/external-sync` — Wave 9; remaining namespaces planned. Legacy inventory routes ✅)
 - **BFF** `/internal/v1/dura/*`, `/internal/v1/dura/pct/*`, `/internal/v1/mobile/dura/*` — ⬜
 - **Web** `/work/dura/*`, PCT-embedded stock panels, `/my-life/stock/*`, `/work/dura/supplier/*` — ⬜
   (existing `StockManagementPanel.tsx`, `useInventory.ts` 🟡 to be re-homed under Dura)
@@ -85,8 +87,10 @@ existing authz engine; authz-service code owned by concurrent workstream, not ed
 
 ## 8. Adapter status
 
-eLMIS/NatPharm: adapter-ready architecture planned (§11). **Dura remains functional without
-eLMIS; sync failures must not corrupt native stock truth; sync-state explicit/auditable/retryable.** — 🟡/⬜
+eLMIS/NatPharm: **sync-state machine built — Wave 9** (`/v1/dura/external-sync`): explicit
+state (PENDING/SYNCED/FAILED/RETRY), capped auto-retry, per-attempt error history, manual
+replay; **native stock truth is never mutated by a sync failure.** Live adapter transport
+(actual eLMIS/NatPharm HTTP exchange) remains ⬜.
 
 ## 9. Known gaps (honest)
 
