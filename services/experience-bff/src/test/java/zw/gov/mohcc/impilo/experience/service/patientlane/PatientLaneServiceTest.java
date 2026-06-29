@@ -89,4 +89,32 @@ class PatientLaneServiceTest {
         assertThat(out.get("statusLabel")).isEqualTo("Discharged");
         assertThat(out.get("messageKey")).isEqualTo("patient.inpatient.discharged");
     }
+
+    /**
+     * Persona journey (SYS-3): one patient's visit advances through the canonical PCT lifecycle and
+     * the patient lane reflects the right person-journey stage + plain language at every step.
+     */
+    @Test
+    void persona_journey_reflects_every_stage_in_plain_language() throws Exception {
+        record Step(String state, String stage, String label) {}
+        var journey = java.util.List.of(
+                new Step("ARRIVED", "CHECK_IN", "Checked in"),
+                new Step("TRIAGED", "PREPARE_FOR_CARE", "Triage done"),
+                new Step("QUEUED", "PREPARE_FOR_CARE", "In the queue"),
+                new Step("IN_SERVICE", "RECEIVE_CARE", "Being seen"),
+                new Step("ADMITTED", "RECEIVE_CARE", "Admitted"),
+                new Step("DISCHARGED", "CONTINUE_CARE", "Discharged"));
+
+        PatientLaneService svc = service();
+        for (Step step : journey) {
+            when(pctClient.getJourney("TX-J")).thenReturn(json(
+                    "{\"journeyId\":\"TX-J\",\"state\":\"" + step.state() + "\"}"));
+            Map<String, Object> out = svc.visitStatus("TX-J");
+            assertThat(out.get("available")).as(step.state()).isEqualTo(true);
+            assertThat(out.get("state")).isEqualTo(step.state());
+            assertThat(out.get("stage")).as("stage for " + step.state()).isEqualTo(step.stage());
+            assertThat(out.get("statusLabel")).as("label for " + step.state()).isEqualTo(step.label());
+            assertThat((String) out.get("message")).as("message non-empty for " + step.state()).isNotBlank();
+        }
+    }
 }
