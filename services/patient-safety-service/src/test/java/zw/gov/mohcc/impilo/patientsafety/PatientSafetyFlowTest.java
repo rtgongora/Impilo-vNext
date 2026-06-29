@@ -115,6 +115,29 @@ class PatientSafetyFlowTest {
     }
 
     @Test
+    void suppress_fields_obligation_redacts_pii_on_read() throws Exception {
+        MvcResult created = postJson("/internal/v1/patient-safety/reports", """
+                {"reportType":"ADR","reporterKind":"PROVIDER","sourceContext":"CLINICAL_ENCOUNTER",
+                 "reporterName":"Dr Confidential","narrative":"sensitive free text","serious":false}
+                """);
+        String id = data(created).get("id").asText();
+
+        // No obligation -> full body (reporter identity + narrative visible).
+        mockMvc.perform(trusted(get("/internal/v1/patient-safety/reports/" + id)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.reporterName").value("Dr Confidential"))
+                .andExpect(jsonPath("$.data.narrative").value("sensitive free text"));
+
+        // suppressFields obligation -> those paths are removed from the representation.
+        mockMvc.perform(trusted(get("/internal/v1/patient-safety/reports/" + id))
+                        .header("x-suppress-fields", "reporterName,narrative"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.id").value(id))
+                .andExpect(jsonPath("$.data.reporterName").doesNotExist())
+                .andExpect(jsonPath("$.data.narrative").doesNotExist());
+    }
+
+    @Test
     void facility_scope_obligation_narrows_staff_list_to_own_facility() throws Exception {
         // Two reports at distinct (test-unique) facilities, created by staff.
         MvcResult a = postJson("/internal/v1/patient-safety/reports", """

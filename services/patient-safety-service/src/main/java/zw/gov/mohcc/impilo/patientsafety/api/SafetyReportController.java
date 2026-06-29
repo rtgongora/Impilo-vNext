@@ -1,5 +1,7 @@
 package zw.gov.mohcc.impilo.patientsafety.api;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +23,9 @@ import zw.gov.mohcc.impilo.patientsafety.api.dto.ReportResponse;
 import zw.gov.mohcc.impilo.patientsafety.api.dto.ReportSummary;
 import zw.gov.mohcc.impilo.patientsafety.api.dto.UpdateReportRequest;
 import zw.gov.mohcc.impilo.patientsafety.core.SafetyReportService;
+import zw.gov.mohcc.impilo.shared.visibility.JsonRepresentationShaper;
+import zw.gov.mohcc.impilo.shared.visibility.VisibilityContextHolder;
+import zw.gov.mohcc.impilo.tshepo.contracts.dto.VisibilityProfile;
 
 import java.util.List;
 import java.util.UUID;
@@ -36,10 +41,50 @@ public class SafetyReportController {
 
     private final SafetyReportService reports;
     private final IdempotencySupport idempotency;
+    private final ObjectMapper objectMapper;
 
-    public SafetyReportController(SafetyReportService reports, IdempotencySupport idempotency) {
+    public SafetyReportController(SafetyReportService reports, IdempotencySupport idempotency,
+                                  ObjectMapper objectMapper) {
         this.reports = reports;
         this.idempotency = idempotency;
+        this.objectMapper = objectMapper;
+    }
+
+    /**
+     * Applies the PDP's visibility obligation (from {@link VisibilityContextHolder}) to a response
+     * body — suppressing/pseudonymising fields and masking PII per {@code suppressFields}/{@code piiAccess}.
+     * When no obligation is present the body is returned unchanged. Fails closed: if shaping throws under
+     * an active profile we 500 rather than leak unshaped PHI.
+     */
+    private Object shaped(Object dto) {
+        VisibilityProfile profile = VisibilityContextHolder.current().orElse(null);
+        if (profile == null) {
+            return dto;
+        }
+        try {
+            return JsonRepresentationShaper.shape(objectMapper, dto, profile);
+        } catch (Exception e) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR, "visibility shaping failed");
+        }
+    }
+
+    /** Row-wise visibility shaping for a list response (each summary is shaped as its own object). */
+    private Object shapedList(List<?> rows) {
+        VisibilityProfile profile = VisibilityContextHolder.current().orElse(null);
+        if (profile == null) {
+            return rows;
+        }
+        ArrayNode out = objectMapper.createArrayNode();
+        try {
+            for (Object row : rows) {
+                out.add(JsonRepresentationShaper.shape(objectMapper, row, profile));
+            }
+        } catch (Exception e) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR, "visibility shaping failed");
+        }
+        return out;
     }
 
     @PostMapping
@@ -59,7 +104,7 @@ public class SafetyReportController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<ReportSummary>>> list(
+    public ResponseEntity<ApiResponse<Object>> list(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestHeader(value = "X-Actor-ID", required = false) String actorId,
             @RequestHeader(value = "X-Actor-Type", required = false) String actorType,
@@ -69,19 +114,19 @@ public class SafetyReportController {
             @RequestParam(value = "reporter_actor_id", required = false) String reporterActorId,
             @RequestParam(value = "facility_id", required = false) String facilityId) {
         UUID tid = UUID.fromString(tenantId);
-        return ResponseEntity.ok(ApiResponse.of(
-                reports.listReports(tid, status, reporterActorId, facilityId, actorId, actorType,
-                        maxScope, actorFacilityId)));
+        List<ReportSummary> rows = reports.listReports(tid, status, reporterActorId, facilityId,
+                actorId, actorType, maxScope, actorFacilityId);
+        return ResponseEntity.ok(ApiResponse.of(shapedList(rows)));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<ReportResponse>> get(
+    public ResponseEntity<ApiResponse<Object>> get(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestHeader(value = "X-Actor-ID", required = false) String actorId,
             @RequestHeader(value = "X-Actor-Type", required = false) String actorType,
             @PathVariable UUID id) {
-        return ResponseEntity.ok(ApiResponse.of(
-                reports.getReport(UUID.fromString(tenantId), id, actorId, actorType)));
+        ReportResponse report = reports.getReport(UUID.fromString(tenantId), id, actorId, actorType);
+        return ResponseEntity.ok(ApiResponse.of(shaped(report)));
     }
 
     @PatchMapping("/{id}")
