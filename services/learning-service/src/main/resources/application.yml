@@ -46,6 +46,7 @@ management:
 
 learning:
   security:
+    oauth2-enabled: ${LEARNING_OAUTH2_ENABLED:true}
   fundo:
     public-base-url: ${FUNDO_PUBLIC_BASE_URL:https://fundo.impilo.local}
     wantsurl-login-enabled: ${FUNDO_WANTSURL_LOGIN_ENABLED:false}
