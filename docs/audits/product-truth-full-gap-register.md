@@ -123,3 +123,192 @@ register row by building a missing surface/feature:
 - **Reachability matters:** G029, G052, G053 are orphaned/unmounted today (no live impact) — flagged so they are not wired up as-is.
 - **REAL_PROVEN stays 0:** every "real" service is `REAL_CODE_NOT_PROBED` until a runtime/test probe artifact backs it.
 - Not line-re-verified by the sweep: `analytics-pipeline`, `booking` (no markers surfaced).
+
+## Citizen Zero-to-One Trust Journey findings (G-CZO-01..16)
+
+> **Register-hygiene fix (2026-06-28):** these 16 rows were produced by the Citizen Zero-to-One
+> audit wave and previously lived **only** in `docs/audits/citizen-zero-to-one/06-gap-register.md`
+> — they were absent from this canonical register (the original append on `intake/citizen-zero-to-one`
+> @ `350c5b38c` did not survive into PT). Ported here with **current disposition** so the master
+> register reflects the citizen-journey state (closes the DoD-#15 / output-#6 honesty gap surfaced
+> by the adversarial verification wave). Dispositions below distinguish **runtime-proven this
+> session** from **present-but-not-probed** from **open/deferred**.
+
+| ID | Sev | Title | Disposition (2026-06-28) | Evidence |
+|----|-----|-------|--------------------------|----------|
+| G-CZO-01 | 🔴 Blocking | LOA upgrade does not reach policy | **CLOSED — runtime-proven** | `PolicyEngine.effectiveLoa=max(ACR,X-Assurance-Level)` (`PolicyEngine.java:532`); BFF `AssuranceLevelResolutionInterceptor`. PolicyEngineTest **36/36** + interceptor **4/4** green this session |
+| G-CZO-02 | 🔴 Blocking | No public L0 entry | **CLOSED — present (not probed)** | `ui/one-ui-shell/src/app/welcome`, `PublicShell.tsx`, middleware public set |
+| G-CZO-03 | 🟠 High | L5 delegated/caregiver not built | **CLOSED — runtime-proven** | Mvumo V006 `DelegationService` + PolicyEngine **Step 4.5** (`evaluateDelegation:576`, fail-closed); self-grant IDOR refuted by DelegationServiceTest **11/11** (`consentBasisWithoutBackingGrant_rejected`, `forgedBackingId_denied`, `nonConsentBasis_byCitizen_denied`) |
+| G-CZO-04 | 🟠 High | No step-up UI on sensitive actions | **CLOSED — present** | `CitizenStepUpController`, `StepUpPrompt.tsx`, `useStepUp.ts` |
+| G-CZO-05 | 🟡 Med | Mobile dashboard no assurance banner | **CLOSED — present** | mobile `TrustBanner` on HomeScreen via assurance status |
+| G-CZO-06 | 🟡 Med | Policy consent capture not persisted | **CLOSED — present** | routed to Mvumo `legal_agreement` (V005); BFF `PolicyConsentController`→Mvumo fail-safe |
+| G-CZO-07 | 🟡 Med | No citizen consent history/revoke feedback | **CLOSED — present** | `/settings/privacy` real Mvumo history timeline |
+| G-CZO-08 | 🟡 Med | High-contrast / a11y not user-exposed | **CLOSED — present** | `PublicAccessibilityMenu` + `ShellAccessibilityMenu`, `useAccessibilityPreferences` |
+| G-CZO-09 | 🟡 Med | No resumable form continuation | **CLOSED — present** | Health-ID request localStorage draft + restore banner |
+| G-CZO-10 | 🟡 Med | No low-data mode | **DEFERRED (not built)** | no text-first/deferred-image mode |
+| G-CZO-11 | 🟡 Med | No SMS/phone-OTP as a login *door* | **DEFERRED (not built)** | SMS-OTP exists only as step-up adapter, not a primary login door — "many doors" login is partial |
+| G-CZO-12 | ⚪ Cosmetic | No LOA4 banner state | **DEFERRED (not built)** | banner tops out at FULLY_VERIFIED |
+| **G-CZO-13** | 🟠 **High** | Temp tier collects DOB+National-ID with no verification | **OPEN — confirmed this session** | `auth/register/assurance/page.tsx:172-216`: `dateOfBirth`/`idNumber` gate the button (line 216) but `handleContinue` spreads only `{...user, assuranceLevel}` (line 56) → **collected then discarded** (no verification, no step-up, no Vito dedup, not even transmitted). Proper fix = wire temp-ID issuance through Vito dedup behind a gate (medium feature), OR stop collecting until that exists |
+| **G-CZO-14** | ⚪ Cosmetic | Biometric web login is simulated | **OPEN — re-graded this session** | `auth/login/biometric/page.tsx:42-81`: 2s `setTimeout` then hardcoded `biometric@impilo.local`/`biometric-token` + client `assuranceLevel:"VERIFIED"`. **Dead fake door** — no backend user exists (creds appear only in this file + the audit doc) so it always 401s against a real backend; client VERIFIED is **cosmetic-only** because server derives assurance authoritatively post-G-CZO-01. Not a live bypass, but dishonest UX. Fix = real WebAuthn or hide the door |
+| G-CZO-15 | 🔵 Future | Vito↔identity-assurance level sync | **DEFERRED (future)** | `ClientEntity.identityAssuranceLevel` int vs canonical `AssuranceLevel`; no raise-hook |
+| G-CZO-16 | 🟡 Med | Citizen routes / LOA-propagation e2e under-tested | **PARTIAL** | per-slice RTL/MockMvc added; the LOA DENY→ALLOW "Proof-1" is unit/MockMvc, **not** a Postgres-backed live e2e |
+
+**Related cross-cutting findings (citizen/trust plane):**
+
+- **TPL-1 (CRITICAL) — CLOSED.** Client `X-Actor-ID`/type/tenant could override the JWT (impersonation); both ext_authz paths now JWT-authoritative (`ExtAuthzGrpcService`, `AuthorizeController`). Present; refutation-probe owed.
+- **OPA-as-PDP — SCAFFOLD (not live).** `shadowCompareOpa` (`PolicyEngine.java:615`) logs divergence; **Java stays authoritative** (`:227`). The 7 doctrine rego modules in `infra/opa/impilo/*.rego` don't compile under OPA 0.68 and were **not** promoted; a minimal `infra/opa/authz/authz.rego` gate was authored (`opa test` 7/7). The doctrine "OPA decides policy" is **not achieved** — strangler is OFF/SHADOW only. Maturity: **FIXTURE/SCAFFOLD**.
+- **Maturity note:** the citizen security core (G-CZO-01/03, TPL-1) is **REAL_CODE_NOT_PROBED** per the scanner, but its behavioral tests were **executed green in-session** (36/36 + 11/11 + 4/4, with DENY reasons observed firing). A `probeEvidence` artifact (CLI-Postgres LOA-propagation e2e) is the remaining formality for scanner-level REAL_PROVEN.
+
+## Health Provider Experience findings (G-PX-01..07)
+
+> Added 2026-06-28 by the adversarial verification wave. The Provider-Experience batch (lanes
+> L1 clinical / L2 facility / L3 provider / L4 value, branch `integration/provider-clinical-place`)
+> **is merged to PT** (ancestor of HEAD). The person-first/anti-enumeration security spine and the
+> CRITICAL/HIGH correctness fixes were **runtime-proven green in-session** (44 tests across 5 services:
+> SilentIdentifierResolution 8/8, ProviderBootstrap 9/9, inpatient double-admit 6/6, TUSO tenant-guard
+> 5/5, COSTA value/dedup 16/16). These rows record what the prompt asked for that is **not** yet real.
+
+| ID | Sev | Finding | file/locus | Decision |
+|----|-----|---------|-----------|----------|
+| **G-PX-01** | 🔴 Blocking | **§10 provider-context policy not runtime-enforced.** The ~25 demanded policies (workspace entry, encounter/cadre actions, facility-mode, check-in, comms, break-glass, context-switch) have no live PDP. `work-pro-life-boundary.ts` is honest **client defence-in-depth** with **SPEC-ONLY** policy ids; the server "Tshepo policy track" it defers to is the orphaned `infra/opa/impilo/*.rego` (work/vashandi/khuluma/tabs) — unmounted, doesn't compile under OPA 0.68, shadow-only at best. Separation rests on the client boundary + generic DB-rule RBAC. (= GAP-6) | `ui/one-ui-shell/src/lib/work-pro-life-boundary.ts`; `infra/opa/impilo/*.rego` | author + mount + enforce rego (blocked by CZO PolicyEngine single-writer lock) |
+| **G-PX-02** | 🟡 Med | **Product-truth hollow for the +21k-LOC batch (GAP-22).** Regenerated `product-truth.json` is byte-identical; new capabilities (sorting-desk/facility-mode/self-claim/work-context/cadre) are invisible because the scanner is service-level only (all additions inside already-"real" service dirs). Wave-9 / Acceptance-J "Product Truth updated honestly" not genuinely met. *(from grounded memory; not re-probed)* | `reports/product/product-truth.json`; `docs/registry/services-registry.yaml` | add route/capability granularity + per-service disposition; never report a generated PASS without probing the delta |
+| **G-PX-03** | 🟡 Med | **Phone/email/invite silent resolution unwired (GAP-5).** Proven by the service's own test `phoneAndEmail_uniformDenyUntilWired` — VITO has masked search only, no silent contact-resolve. Fails **uniformly** (no enumeration leak), so honest-degrade, but Journey-A "start from any authorised identifier" is incomplete | `tshepo-identity SilentIdentifierResolutionService`; VITO | build contact-resolve seam (no-leak preserved) |
+| **G-PX-04** | 🟠 High | **Two competing cadre authorities (GAP-4).** Pre-existing `cadre_scope_rules` tables (`/internal/v1/pct/cadre-scope-rules`, client `cadreEngine.ts`) vs new L1 Java `CadreEngine` (`/internal/v1/encounters/cadre-decision`) — duplicate scope-of-practice truth | `pct-service` CadreEngine vs cadre_scope_rules | unify: Java engine must source the rule tables (SoR) |
+| **G-PX-05** | 🟡 Med | **Mobile/provider parity (Wave 8) deferred.** No mobile surfaces for login/onboarding/context-picker/check-in/Work/My-Professional/Facility-Mode | `apps/mobile/*` | build per Wave 8 |
+| **G-PX-06** | 🟡 Med | **Net-new clinical UX depth missing** (Journeys F/G, §7.4): cadre form **content**, front-door **sorting session**, encounter tools/safety-ribbon, ZIBO-governed **order sets**, ICD-11/SNOMED, the 30 seed scenarios | pct/encounter surfaces | multi-wave feature build |
+| **G-PX-07** | 🟡 Med | **No live end-to-end journey proof (DoD#4).** Acceptance A–J never runtime-proven as a click-through; per-lane unit/MockMvc only | n/a (proof gap) | persona-level journey IT or live click-through |
+
+## OROS Orders / Investigations / Diagnostics / Results findings (G-OR-01..05)
+
+> Added 2026-06-28 by the adversarial verification wave. The OROS journey + completion wave (O1–O19)
+> **is merged to PT** (`fd650cc30` ancestor of HEAD) and is the **most complete** of the three waves
+> verified. Runtime-proven green in-session: **oros-service 154/154 + madi-service 29/29** (full
+> suites), incl. the safety-critical subset (transition guard, report versioning, critical
+> escalation, secure external-result link, specimen/lab-result, blood-bank callback). UI parity
+> spot-check (`/diagnostics/lab-worklist`) confirmed genuinely wired to live BFF hooks (not a stub);
+> `IntegrationStatusService` honestly reports configured/not-configured (prompt-compliant). These
+> rows record honest residuals, not missing functionality.
+
+| ID | Sev | Finding | Locus | Decision |
+|----|-----|---------|-------|----------|
+| **G-OR-01** | 🟠 High | **§21 ~30 explicit OROS policy rules not individually enforced.** Per-action authz (create/route/release/view-report/claim-QR/acknowledge…) relies on edge Envoy/TSHEPO + shadow-only OPA; fine-grained OROS rego not authored/enforced. **Instance of systemic SYS-1 (GAP-6).** *(not separately re-probed)* | `oros-service`; `infra/opa` | author + enforce OROS policy rules (gated by CZO PolicyEngine lock) |
+| **G-OR-02** | 🟡 Med | **Interop adapters flag-OFF + unsoaked vs live counterparties** (FHIR ServiceRequest/DiagnosticReport/ImagingStudy/Observation, HL7 ORM/ORU, DICOM MWL, LIMS). **Prompt-compliant** honest readiness, but maturity = contract-seam/unit-tested only. Minor doc-vs-code tension: `IntegrationStatusService` calls HL7/DICOM/FHIR-inbound "seams NOT implemented" while mapper/listener classes + tests exist → "built-but-unwired/unsoaked" | `oros-service/integration/*`, `Hl7OruMapper`, `MwlMode` | live counterparty soak at rollout; reconcile the status-doc wording |
+| **G-OR-03** | 🔵 Low | **MADI not in compose** → OROS↔MADI blood-bank loop not e2e-runnable locally (unit-proven only: oros BloodOrderCallback 4/4 + MADI 29/29) | `docker-compose*`; madi-service | add MADI to an infra profile for e2e |
+| **G-OR-04** | 🟡 Med | **Product-truth hollow for OROS in-service additions** (154 tests + ~14 UI pages invisible to the service-level scanner — all inside already-"real" oros-service). **Instance of systemic SYS-2 (GAP-22).** §23 "Product Truth reflects real state" only partially met | `reports/product/product-truth.json` | route/capability-grained truth (see SYS-2) |
+| **G-OR-05** | 🟡 Med | **No live e2e click-through of Journeys A–H.** Acceptance bar is "real backend state, real UI, policy enforcement" end-to-end; proven at unit/component level only. **Instance of systemic SYS-3.** | n/a (proof gap) | journey IT / live click-through |
+
+## TUSO / Indawo / Facility-Mode / Organisation / Regulation findings (G-TI-01..04)
+
+> Added 2026-06-28 by the adversarial verification wave. This is the **L2 lane** of
+> `integration/provider-clinical-place` (merged to PT). Broadest end-to-end coverage of the four
+> verified waves — backend + BFF + UI present across all 5 modes (Facility/Organisation/Indawo/
+> Regulator/Work). Runtime-proven green in-session: **TUSO 58/58, Indawo 25/25, WGV 9/9** (+ the
+> earlier TUSO cross-tenant *write*-guard 5/5). Indawo backend confirmed reachable BFF→UI→mobile;
+> Organisation tenancy in WGV `OrganisationService` → BFF `AdminGovernanceController` → `/organization-admin`.
+
+| ID | Sev | Finding | Locus | Decision |
+|----|-----|---------|-------|----------|
+| **G-TI-01** | 🟡 Med | **Cross-tenant *visibility* isolation code-present but not test-proven.** `FacilityService.searchFacilities(tenantId,…)` scopes reads + update rejects mismatched tenant (`FacilityService.java:231`), but the only tenant tests are *writes* (ServicePoint/FacilityUnit guards). §17's literal invariants — "organisation admin cannot see other tenant data", "regulator cannot see outside mandate" — have **no read-denial test** | `tuso-service` FacilityService; WGV | add scoped-read isolation tests (org/regulator/tenant) |
+| **G-TI-02** | 🟡 Med | **WGV org-tenancy surface thinly tested.** 9 tests cover the whole Organisation onboarding + AuthorisedRepresentative + OnboardingWorkflow + multi-regulator backend (Journeys A/B/E/F). Code present + green but under-covered relative to breadth | `workforce-governance-service` | expand onboarding/verification/representative tests |
+| **G-TI-03** | 🟡 Med | **No unified 5-mode resolution (§6).** `FacilityModeController` is facility-specific; modes resolved per-mode (separate Facility/Indawo controllers) + client-side shell — no single server "list available modes for this user" resolver matching the §6 login decision map. SYS-1-adjacent (mode gating leans on client boundary + edge authz) | `experience-bff` mode controllers; shell | unified mode-resolution endpoint driven by policy |
+| **G-TI-04** | 🔵 Low | **Mobile parity partial.** Public-health mobile controllers exist (`ProviderPublicHealthController`/`CitizenPublicHealthController`); **facility-admin mobile screens deferred** (Wave 10 tail) | `apps/mobile/*`; experience-bff mobile | build facility-admin mobile per Wave 10 |
+
+## Khuluma Comms Hub + Nompilo continuity findings (G-KH-01..06)
+
+> Added 2026-06-28 by the adversarial verification wave. `khuluma-service` **is merged to PT**
+> (`intake/khuluma-comms-hub` ancestor of HEAD). The native-first core is **runtime-proven green
+> in-session**: khuluma-service **23/23** (incl. `RealtimeGatewayTest` = a REAL WebSocket round-trip,
+> the repo's first server-side WS) + `KhulumaWave1E2ETest` full journey + BFF Khuluma **11/11**.
+> **Best-instrumented wave** (own `khuluma.rego` default-deny + V017 DB-rule seed + BFF policy service;
+> new service so VISIBLE to the product-truth scanner; ships an E2E test + smoke + A/V QA checklist).
+> BUT the **largest scope gap** of the verified prompts: ~Wave 1 of ~9 built; the rest deferred per an
+> **approved phased plan** (honest, not overclaim). Rows record deferred + missing scope.
+
+| ID | Sev | Finding | Status | Decision |
+|----|-----|---------|--------|----------|
+| **G-KH-01** | 🟡 Med | **Escalation / routing / SLA (prompt §"Escalation and Routing") not built** — no `khuluma_escalations`/`sla_policies`/EscalationService (W4 deferred) | absent on PT | build W4 |
+| **G-KH-02** | 🟡 Med | **Facility/programme channels + client communities + broadcasts not built** — conversation types the prompt explicitly requires (W5 deferred) | absent on PT | build W5 |
+| **G-KH-03** | 🟡 Med | **External adapter abstraction not built** — the prompt wanted the *model* now (channels/adapters/delivery-attempt tables, native-in-app as first adapter) even with providers deferred (W6) | absent on PT | build adapter model (honest configured/not-configured) |
+| **G-KH-04** | 🔵 Low | **Presence depth + Vashandi on-call + mobile realtime push** — delivery is **poll-based** (4–5s) not pushed; browser-direct WS auth (JWT-in-handshake) deferred (W7) | partial | JWT-handshake WS push + Vashandi on-duty |
+| **G-KH-05** | 🟠 High | **Nompilo addendum recipient/disclosure model ABSENT (security-relevant).** No guardian/caregiver/proxy/permitted-person recipient model; **no consent-gated disclosure level; no safe notification summaries** ("An update is available" vs "Your HIV result is ready"). The safe-disclosure principle is a **privacy requirement**, not a nicety | absent on PT | build recipient + disclosure-level + safe-summary model with policy gating |
+| **G-KH-06** | 🟡 Med | **Nompilo addendum feedback + handoff ABSENT** — no feedback capture/routing/states (received→…→resolved), no Nompilo handoff metadata (action type, flow id, guidance-recommended) on actionable messages | absent on PT | build feedback routing + Nompilo handoff metadata |
+
+## Fundo LMS + Learning-Administration findings (G-FU-01..04)
+
+> Added 2026-06-28 by the adversarial verification wave. `learning-service` **is merged to PT**
+> (phase-1 `47bbb4d1f` + phase-2 `0f761a4ab` ancestors); most feature-complete delivery of the
+> verified prompts — core LMS + the full 18-wave addendum (pre-service student lifecycle, attendance
+> +QR, real AI behind a provider-agnostic interface w/ stub default, provider-tenancy/accreditation,
+> dashboards; migrations V016–V025). **G-FU-01 is the headline finding of the whole wave.**
+
+| ID | Sev | Finding | Status | Decision |
+|----|-----|---------|--------|----------|
+| **G-FU-01** | 🔴 **Blocker** | **Recorded "60 green" is RED on PT — `learning-service` context fails to load.** `learning.security:` YAML stanza is **empty** (missing its `oauth2-enabled` child) in BOTH `application.yml` (prod) + `application-test.yml` → `ConverterNotFound: String→LearningProperties$Security` → context refresh fails → **6/60 `@SpringBootTest` ITs ERROR**. Merge-integration regression (green on `intake/fundo-lms`; merge to PT dropped the child). **Production boot-blocker** under default config (binding is profile-independent; prod startup hits the same path). **FOUND + FIXED this session** (restored `oauth2-enabled: ${LEARNING_OAUTH2_ENABLED:true/false}` in both files) → suite now **60/60 green**. Fix in worktree, **uncommitted** | found+fixed (worktree), unpushed | commit the 1-line fix; add a prod-profile boot smoke to CI |
+| **G-FU-02** | 🟡 Med | **Tshepo training-gate not enforced** — `FundoTrainingGateService` exposes a `training-gate` signal + policy SPEC (`docs/policy/fundo-training-gated-access.md`), but no rego authored/enforced (Journey C "completion unlocks workspace access" relies on it). **Instance of SYS-1** | partial (signal + spec) | author + enforce training-gate rego |
+| **G-FU-03** | 🟡 Med | **Varapi native CPD egress consumer QUEUED** — `certificate.issued.v1` carries full CPD-candidate shape + egress spec doc, but the varapi-side consumer that lands native completions into the CPD candidate flow is not wired (correctly does NOT duplicate Varapi's ledger) | partial | wire varapi listener (provider/workforce lane) |
+| **G-FU-04** | 🔵 Low | **Honest partials** (prompt-compliant): AI provider disabled-by-default (no external egress); offline = mobile read-cache only; document binary upload + campaign/surveillance BFF consumers QUEUED; federated academies deferred | by-design / deferred | build per future waves; keep Product Truth honest |
+
+## Patient Safety & Pharmacovigilance PoC findings (G-PS-01..03)
+
+> Added 2026-06-28 by the adversarial verification wave. `patient-safety-service` **is merged to PT**
+> (`intake/patient-safety-pv` ancestor of HEAD). **Cleanest / most honest delivery of the 8 verified
+> prompts** — a PoC scoped exactly as the prompt asked (Phase 0/1), with honesty unit-tested.
+> Runtime-proven green in-session: patient-safety-service **5/5** (incl. `config_surfaces_honest_adapter_posture`
+> — a test asserting dispatch adapters are honestly OFF), BFF `PatientSafetyServiceClientTest` **4/4**,
+> surveillance-service **25/25**. Surveillance consumer verified signal-only (does NOT own the case —
+> SoR boundary held); BFF public-anon path narrowly scoped (submit-only, no PHI read via anon route).
+
+| ID | Sev | Finding | Status | Decision |
+|----|-----|---------|--------|----------|
+| **G-PS-01** | 🟡 Med | **Tshepo policy enforcement spec-only** — `docs/policy/patient-safety-policy-spec.md` queued; role/PHI-minimisation rules not enforced via rego (PolicyEngine untouched). **Instance of SYS-1** | partial (spec) | author + enforce patient-safety rego |
+| **G-PS-02** | 🔵 Low | **Surveillance `PatientSafetySignalConsumer` has no dedicated test** — signal-feed path unverified (service suite 25/25 green; consumer logic correct on read but uncovered) | gap | add a consumer unit/slice test |
+| **G-PS-03** | 🔵 Low | **Documented PoC next-steps (prompt-compliant honest deferrals):** integration-hub live adapters OFF (VigiFlow=MANUAL, E2B=`E2B_R3_ALIGNED` adapters disabled, VigiMobile=external link-out), forms-service runtime form-pack seed migration, Envoy `/v1/public/patient-safety/*` upstream route | by-design / deferred | build per post-PoC waves; keep honest |
+
+## Rito (Quality, Safety & Client Voice) findings (G-RT-01..03)
+
+> Added 2026-06-29 by the adversarial verification wave. `rito-quality-safety-service` **is merged to
+> PT** (`intake/rito-quality-safety` ancestor of HEAD). Genuine end-to-end operating service (not a
+> dashboard/form): 21 `rit_*` tables, 16-status `CaseLifecycle`, Case/Audit/Survey/Improvement/Signal
+> services, BFF persona controllers, 13 web pages, mobile slices, OpenAPI. Runtime-proven green
+> in-session: **11/11**, incl. the operating cycle (`fullLifecycleToClose`, `lowCsatSpawnsFollowUpCase`,
+> `ingestThenConvertToCase`, `correctiveActionActVerifyClosure`, `qiPlanPdsaLifecycleToCompleted`,
+> audit scoring) and the safety invariant **`aiActorCannotCloseCriticalCase`** (`guardHumanDecision`
+> blocks SYSTEM/AI/RULES/BOT from resolve/close of CRITICAL-or-sensitive cases — genuinely enforced +
+> tested). BFF→service port correct (8391). New service → legitimately visible to product-truth scanner.
+
+| ID | Sev | Finding | Status | Decision |
+|----|-----|---------|--------|----------|
+| **G-RT-01** | 🟡 Med | **§7 permission model spec-only.** `docs/.../rito/policy-spec.md` (16 `rito.*` roles) + sensitive-case visibility / anonymous-submission / identity-masking rules are queued; PolicyEngine/OPA untouched → enforced via generic authz, not the per-action rego the prompt specifies. **Instance of SYS-1** | partial (spec) | author + enforce rito rego |
+| **G-RT-02** | 🔵 Low | **Honest partials:** survey dynamic-question renderer; M&M review case-type pending PO confirm; mobile is a focused slice (citizen-feedback + provider-safety), not full triage parity; document-upload UX pending | partial | complete per next wave |
+| **G-RT-03** | 🔵 Low | **Notifications / Fundo-learning are outbox-intent events only** (`rito.learning.recommended`, `rito.notification.requested`) — delivery owned by consuming services. Honest/by-design, but the cross-service learning loop is not end-to-end-proven | by-design / partial | wire + prove the Fundo learning-loop e2e |
+
+## Core Transaction wave (Patient Access / Flow / Clinical Ops / Inpatient / Encounter / Telemedicine) findings (G-CT-01..04)
+
+> Added 2026-06-29 by the adversarial verification wave. This is the **L1 lane** of
+> `integration/provider-clinical-place` (merged to PT). Provider/clinical spine + Core-Transaction
+> contract + telemedicine 7-stage loop runtime-proven green in-session: **pct-service 88/88** (incl.
+> `CadreEngineTest` 11/11 — Part-16 cadre enforcement, `ReferralPackageServiceTest` 4/4,
+> `TelemedicineOrchestrationServiceTest` 2/2 idempotent telemed→value, `PctRtcGatewaySessionProviderTest`).
+> Addendum-1 journey doc present (`docs/journeys/core-transaction-patient-access-encounter-orchestration.md`,
+> 1002 lines); Core-Transaction contract present (`contracts/core-transaction.ts` + asyncapi + openapi);
+> `SortingDeskController/Service` present; telemedicine 7-stage on `TelemedicineController`
+> (build→consent→submit→route→accept→telehealth→respond-structured→complete, V020 structured_response).
+
+| ID | Sev | Finding | Status | Decision |
+|----|-----|---------|--------|----------|
+| **G-CT-01** | 🟠 High | **Patient lane of the three-lane Core Transaction largely unbuilt.** The wave's signature is provider + **patient** + access/compensation lanes simultaneously (Parts 3, 23; DoD #5/#11 "patient has a corresponding experience at each stage" + "patient-facing messages exist"). Reality: patient lane is **documented** in the journey doc and value events exist (L4), but there are **no dedicated patient-facing surfaces** (queue-status / my-visit / inpatient-status / telemedicine-status) and **no patient message-catalog** implementation. Provider ✅ + access/compensation ✅, **patient-facing ✗** | documented, not surfaced | build patient-facing surfaces + message catalog |
+| **G-CT-02** | 🟡 Med | **Telemedicine loop-closure lighter than the Addendum-2 mandate.** Stage-6 structured response IS real (V020 `structured_response` diagnosis/actionPlan/redFlags/followUp); Stage-7 `/complete` emits the value event but the **structured referrer Completion Note** (actions-taken / patient-outcome / closure-narrative, "no closure without audit") is thin. The 6 modes route via RTC-gateway session provider; async/chat/MDT-board depth varies | partial | structured completion-note + mode-depth |
+| **G-CT-03** | 🟡 Med | **PCT cadre authority duplication + rego not enforced.** GAP-4: `cadre_scope_rules` tables vs Java `CadreEngine` (two sources of scope-of-practice truth) unresolved; cadre policy enforced in-service, not as rego. **Instance of SYS-1** | partial | unify cadre SoR + enforce rego |
+| **G-CT-04** | 🟡 Med | **No live end-to-end Core-Transaction journey proof.** Strong per-lane unit/MockMvc (88/88), but no persona click-through identity→sort→triage→queue→encounter→outcome→settle. **Instance of SYS-3** | gap | persona journey IT / live click-through |
+
+## Systemic cross-wave findings (SYS-1..3) — highest leverage
+
+> Surfaced by verifying three independent waves (Citizen Zero-to-One, Provider Experience, OROS).
+> The **same three gaps recur in every wave** — they are cross-cutting, not per-wave, and are the
+> highest-leverage remaining work. Each wave's per-row instances are noted.
+
+| ID | Sev | Systemic finding | Recurs as | Why it matters |
+|----|-----|------------------|-----------|----------------|
+| **SYS-1** | 🔴 Blocking | **Fine-grained OPA/Tshepo policy is scaffold/shadow, not enforced.** The doctrine "OPA decides policy" is not live: the `infra/opa/impilo/*.rego` doctrine corpus is unmounted + doesn't compile under OPA 0.68; only a minimal `infra/opa/authz/authz.rego` runs in **SHADOW** (Java authoritative). Per-context/per-action policies rest on generic DB-rule RBAC + client boundaries | CZO OPA-scaffold; Provider **G-PX-01**; OROS **G-OR-01** | every wave's "Trust always / policy-governed access" is enforced by generic edge authz, not the per-action rules the prompts specify |
+| **SYS-2** | 🟡 Med | **Product-truth gate is service-level only → hollow for in-service feature additions.** Adding real capabilities/routes/UI inside an already-"real" service moves the gate **0**; the scanner has no route/capability granularity (GAP-22) | Provider **G-PX-02**; OROS **G-OR-04** | "Product Truth reflects real state" is structurally unprovable for most new work; a green gate proves nothing about it |
+| **SYS-3** | 🟡 Med | **No wave has a live end-to-end journey proof.** Strong per-service unit/MockMvc coverage (278 tests proven green this session across the 3 waves), but no persona-level click-through with real cross-service state + policy enforcement (every prompt's literal DoD) | CZO **G-CZO-16**; Provider **G-PX-07**; OROS **G-OR-05** | the DoD acceptance journeys are asserted, not demonstrated end-to-end |
