@@ -23,6 +23,36 @@
   "roles": {
     "realm": [
       {
+        "name": "MCAZ_REVIEWER",
+        "description": "MCAZ pharmacovigilance reviewer: triage, review, causality, follow-up, manual VigiFlow entry, mark export-ready",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "MCAZ_SUPERVISOR",
+        "description": "MCAZ pharmacovigilance supervisor: reviewer rights plus reassign, close, escalate, open/close investigations",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "FACILITY_SAFETY_FOCAL",
+        "description": "Facility patient-safety focal person: view and manage all safety reports/cases for their facility",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "DISTRICT_PHO",
+        "description": "District public-health officer: district safety/quality oversight and assigned investigations",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "VACCINATOR",
+        "description": "Vaccinator: AEFI-focused clinical safety reporting",
+        "composite": false,
+        "clientRole": false
+      },
+      {
         "name": "ADMIN",
         "description": "National or programme administrator",
         "composite": false,
