@@ -1,12 +1,15 @@
-# Rito — Trust Policy Specification (SPEC, queued for the CZO single-writer)
+# Rito — Trust Policy Specification (ENFORCED)
 
-> **Status: SPEC — not yet applied.** `PolicyEngine.java` / OPA rego is single-writer-locked to
-> the CZO (Consent/Trust Plane) cluster. This document is the authored `rito.*` role + check
-> specification **queued** for that lead to merge into `impilo.authz`. Rito does **not** edit
-> `PolicyEngine.java` or the rego bundle. Until merged, the rito-quality-safety-service enforces
-> the trust *context* (tenant + actor headers via the companion `TrustContextFilter`, mandatory
-> v1.1 trust headers, Idempotency-Key on writes) and the **AI-never-auto-closes** invariant in
-> the service layer; fine-grained RBAC/ABAC below is the target end-state once the rego lands.
+> **Status (2026-06-29): RBAC ENFORCED at ext_authz** via DB `policy_rule` seeds
+> (`tshepo-authz V021__rito_quality_safety_policy_rules.sql`). The CZO single-writer lock is lifted
+> (`docs/governance/policyengine-single-writer-lock-lifted.md`). The `rito.*` capability roles are
+> reconciled to canonical realm roles (client→CITIZEN/CAREGIVER, agent→SUPPORT_AGENT, provider→clinical,
+> quality_focal/safety_lead→FACILITY_SAFETY_FOCAL, manager→FACILITY_ADMIN, supervisor→DISTRICT_PHO/
+> PUBLIC_HEALTH_OFFICER, regulator→REGULATOR [new], admin→ADMIN, analytics→HEALTH_INFO_OFFICER,
+> signal_writer→SYSTEM). The spec's close-restriction is enforced (FACILITY_SAFETY_FOCAL DENY on
+> close/reopen). The **AI-never-auto-closes** invariant is enforced in-service (`guardHumanDecision`).
+> **Remaining (in-service follow-up):** the §3 sensitive-category identity REDACTION and
+> client.viewer own-subject binding (mirror pct `ClinicalAccessGuard`); purpose-of-use tightening.
 
 ## 1. Roles (`rito.*`)
 
