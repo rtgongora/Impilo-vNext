@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.guidance.persistence.entity.EventOutboxEntity;
+import zw.gov.mohcc.impilo.guidance.persistence.entity.NompiloHandoffEntity;
 import zw.gov.mohcc.impilo.guidance.persistence.repository.EventOutboxRepository;
 
 import java.util.LinkedHashMap;
@@ -27,6 +28,44 @@ public class GuidanceOutboxAppender {
     public GuidanceOutboxAppender(EventOutboxRepository outboxRepository, ObjectMapper objectMapper) {
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
+    }
+
+    /**
+     * Records a Nompilo handoff lifecycle event (requested / accepted / escalated / closed).
+     * The create event uses the canonical {@code core.nompilo.handoff.requested} name so existing
+     * subscribers (operations desk, Rito feedback routing) can react.
+     */
+    @Transactional
+    public void recordHandoffEvent(NompiloHandoffEntity h, String eventType) {
+        try {
+            EventOutboxEntity row = new EventOutboxEntity();
+            row.setAggregateType("NOMPILO_HANDOFF");
+            row.setAggregateId(h.getId().toString());
+            row.setEventType(eventType);
+            // Each lifecycle transition is a distinct event; random suffix avoids key collisions
+            // (e.g. repeated escalation) while staying readable — same approach as the ask event.
+            row.setIdempotencyKey(eventType + "-" + h.getId() + "-" + UUID.randomUUID());
+            row.setTenantId(h.getTenantId());
+            row.setSubjectType("ACTOR");
+            String subject = h.getSubjectId() != null ? h.getSubjectId()
+                    : (h.getActorId() != null ? h.getActorId() : "unknown");
+            row.setSubjectId(subject);
+            row.setPartitionKey(h.getTenantId() + ":" + h.getId());
+
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("handoffId", h.getId().toString());
+            payload.put("status", h.getStatus());
+            payload.put("priority", h.getPriority());
+            payload.put("destination", h.getDestination());
+            payload.put("transactionId", h.getTransactionId());
+            payload.put("subjectId", h.getSubjectId());
+            payload.put("flowId", h.getFlowId());
+            payload.put("assignedTo", h.getAssignedTo());
+            row.setPayloadJson(objectMapper.writeValueAsString(payload));
+            outboxRepository.save(row);
+        } catch (JsonProcessingException e) {
+            log.warn("Guidance handoff outbox serialization failed: {}", e.getMessage());
+        }
     }
 
     /**
