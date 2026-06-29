@@ -118,7 +118,8 @@ public class SafetyReportService {
 
     @Transactional(readOnly = true)
     public List<ReportSummary> listReports(UUID tenantId, String status, String reporterActorId,
-                                           String facilityId, String actorId, String actorType) {
+                                           String facilityId, String actorId, String actorType,
+                                           String maxScope, String actorFacilityId) {
         // Subject-relationship binding: a citizen/caregiver only ever lists their OWN reports,
         // regardless of supplied filters (the gateway role-gates staff who may list more broadly).
         if (isCitizen(actorType)) {
@@ -129,6 +130,14 @@ public class SafetyReportService {
             facilityId = null;
             reporterActorId = actorId;
         }
+        // Obligation-driven facility scoping (dimension 5). When the PDP emits a FACILITY_SCOPE
+        // obligation the caller may only see their own facility's reports — enforced regardless of
+        // the query branch taken. Citizens are already own-bound (stricter), so this only narrows staff.
+        boolean facilityScoped = "FACILITY_SCOPE".equalsIgnoreCase(maxScope) && !isCitizen(actorType);
+        if (facilityScoped && (actorFacilityId == null || actorFacilityId.isBlank())) {
+            // Facility-scoped but the actor's facility is unknown: deny exposure rather than leak.
+            return List.of();
+        }
         List<SafetyReportEntity> reports;
         if (status != null && !status.isBlank()) {
             reports = reportRepository.findByTenantIdAndStatusOrderByCreatedAtDesc(tenantId, status);
@@ -138,6 +147,12 @@ public class SafetyReportService {
             reports = reportRepository.findByTenantIdAndReporterFacilityIdOrderByCreatedAtDesc(tenantId, facilityId);
         } else {
             reports = reportRepository.findByTenantIdOrderByCreatedAtDesc(tenantId);
+        }
+        if (facilityScoped) {
+            final String scope = actorFacilityId;
+            reports = reports.stream()
+                    .filter(r -> scope.equals(r.getReporterFacilityId()))
+                    .toList();
         }
         return reports.stream().map(this::summary).toList();
     }

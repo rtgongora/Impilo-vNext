@@ -115,6 +115,41 @@ class PatientSafetyFlowTest {
     }
 
     @Test
+    void facility_scope_obligation_narrows_staff_list_to_own_facility() throws Exception {
+        // Two reports at distinct (test-unique) facilities, created by staff.
+        MvcResult a = postJson("/internal/v1/patient-safety/reports", """
+                {"reportType":"ADR","reporterKind":"PROVIDER","sourceContext":"CLINICAL_ENCOUNTER",
+                 "reporterFacilityId":"FAC-SCOPE-A","narrative":"event at A","serious":false}
+                """);
+        MvcResult b = postJson("/internal/v1/patient-safety/reports", """
+                {"reportType":"ADR","reporterKind":"PROVIDER","sourceContext":"CLINICAL_ENCOUNTER",
+                 "reporterFacilityId":"FAC-SCOPE-B","narrative":"event at B","serious":false}
+                """);
+        String idA = data(a).get("id").asText();
+        String idB = data(b).get("id").asText();
+
+        // Without a facility-scope obligation, staff sees both facilities' reports.
+        mockMvc.perform(trusted(get("/internal/v1/patient-safety/reports")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[?(@.id=='" + idA + "')]").exists())
+                .andExpect(jsonPath("$.data[?(@.id=='" + idB + "')]").exists());
+
+        // With maxScope=FACILITY_SCOPE + X-Facility-ID=FAC-SCOPE-A, only A's facility is visible.
+        mockMvc.perform(trusted(get("/internal/v1/patient-safety/reports"))
+                        .header("x-max-scope", "FACILITY_SCOPE")
+                        .header("X-Facility-ID", "FAC-SCOPE-A"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[?(@.id=='" + idA + "')]").exists())
+                .andExpect(jsonPath("$.data[?(@.id=='" + idB + "')]").doesNotExist());
+
+        // Facility-scoped but no facility on the context: deny exposure (empty), never leak.
+        mockMvc.perform(trusted(get("/internal/v1/patient-safety/reports"))
+                        .header("x-max-scope", "FACILITY_SCOPE"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(0));
+    }
+
+    @Test
     void provider_adr_full_lifecycle_to_export_ready() throws Exception {
         MvcResult created = postJson("/internal/v1/patient-safety/reports", """
                 {

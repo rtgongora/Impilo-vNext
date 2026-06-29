@@ -63,12 +63,15 @@ public class SafetyReportController {
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestHeader(value = "X-Actor-ID", required = false) String actorId,
             @RequestHeader(value = "X-Actor-Type", required = false) String actorType,
+            @RequestHeader(value = "x-max-scope", required = false) String maxScope,
+            @RequestHeader(value = "X-Facility-ID", required = false) String actorFacilityId,
             @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "reporter_actor_id", required = false) String reporterActorId,
             @RequestParam(value = "facility_id", required = false) String facilityId) {
         UUID tid = UUID.fromString(tenantId);
         return ResponseEntity.ok(ApiResponse.of(
-                reports.listReports(tid, status, reporterActorId, facilityId, actorId, actorType)));
+                reports.listReports(tid, status, reporterActorId, facilityId, actorId, actorType,
+                        maxScope, actorFacilityId)));
     }
 
     @GetMapping("/{id}")
