@@ -53,6 +53,7 @@ const MOBILE_ROOT = path.join(REPO_ROOT, 'apps/mobile');
 const CONTRACTS_OPENAPI = path.join(REPO_ROOT, 'contracts/openapi');
 const OUT_JSON = path.join(REPO_ROOT, 'reports/product/product-truth.json');
 const CONTRACT_MATRIX = path.join(REPO_ROOT, 'reports/product/contract-implementation-matrix.json');
+const PROBE_EVIDENCE = path.join(REPO_ROOT, 'reports/product/probe-evidence.json');
 
 const MOCK_STUB_PATTERNS = [
   { re: /mockData|fakeResponse|demoPatient|sampleData|fixtureData|mock[- ]data|mockedData|fakeData|demoData/gi, label: 'mock-data-var' },
@@ -197,6 +198,21 @@ function loadContractMatrix() {
     return JSON.parse(readText(CONTRACT_MATRIX));
   } catch {
     return { openApiOperations: [], counts: {} };
+  }
+}
+
+/**
+ * Loads the runtime probe-evidence artifact: a map of serviceId -> { passed, ... } recording that a
+ * real test/IT run proved the service at runtime. This is the ONLY input that can lift a service off
+ * the static REAL_CODE_NOT_PROBED ceiling to REAL_PROVEN (see classifyMaturity). Absent file -> {} so
+ * the generator stays honest (no REAL_PROVEN) when no evidence has been supplied.
+ */
+function loadProbeEvidence() {
+  try {
+    const parsed = JSON.parse(readText(PROBE_EVIDENCE));
+    return parsed && typeof parsed === 'object' ? (parsed.services || parsed) : {};
+  } catch {
+    return {};
   }
 }
 
@@ -394,7 +410,7 @@ function applyCompletionDimensions(svc, dimensions) {
   return dimensions;
 }
 
-function scanServiceModule(svc, contractMatrix, bffClientMap) {
+function scanServiceModule(svc, contractMatrix, bffClientMap, probeEvidence = {}) {
   const module = svc.maven_module;
   const modulePath = path.join(SERVICES_DIR, module);
   const exists = fs.existsSync(path.join(modulePath, 'pom.xml'));
@@ -561,6 +577,8 @@ function scanServiceModule(svc, contractMatrix, bffClientMap) {
         : overallProductStatus(dimensions, svc) === 'real',
   };
 
+  // Runtime probe evidence (if supplied) is the only lever that lifts a service to REAL_PROVEN.
+  record.probeEvidence = probeEvidence[svc.id] || null;
   record.gaps = classifyServiceGaps(record);
   record.maturity = classifyMaturity(record);
   // Honest phase-6: a fixture-backed or placeholder-carrying service is NOT
@@ -1301,10 +1319,11 @@ function main() {
   const registry = yaml.load(readText(REGISTRY_PATH));
   const contractMatrix = loadContractMatrix();
   const bffClientMap = buildBffClientMap();
+  const probeEvidence = loadProbeEvidence();
   const registryDrift = detectRegistryDrift(registry);
 
   const services = (registry.services || []).map((svc) =>
-    scanServiceModule(svc, contractMatrix, bffClientMap),
+    scanServiceModule(svc, contractMatrix, bffClientMap, probeEvidence),
   );
 
   const libraries = (registry.libraries || []).map((lib) => ({

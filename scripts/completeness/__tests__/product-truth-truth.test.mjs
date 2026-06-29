@@ -159,9 +159,23 @@ const PT = path.join(REPO_ROOT, 'reports/product/product-truth.json');
 test('generated product-truth.json reflects honest maturity + baseline (no regression)', { skip: !fs.existsSync(PT) }, () => {
   const d = JSON.parse(fs.readFileSync(PT, 'utf8'));
   const byMaturity = d.summary.byMaturity || {};
-  // The static generator must never claim runtime-proven completeness.
-  assert.equal(byMaturity.REAL_PROVEN || 0, 0, 'static scan must not emit REAL_PROVEN');
-  assert.equal(d.summary.phase6.userFacingRealProven, 0);
+  // REAL_PROVEN is gated entirely on the probe-evidence artifact: a service may be REAL_PROVEN
+  // ONLY if it has a passing entry there (the static scan can never self-promote). This preserves
+  // the original guarantee while letting real runtime proof move the metric.
+  const probePath = path.join(REPO_ROOT, 'reports/product/probe-evidence.json');
+  const probe = fs.existsSync(probePath)
+    ? (JSON.parse(fs.readFileSync(probePath, 'utf8')).services || {})
+    : {};
+  const provenIds = new Set(
+    Object.entries(probe).filter(([, v]) => v && v.passed).map(([k]) => k),
+  );
+  const realProven = d.services.filter((s) => s.maturity === 'REAL_PROVEN');
+  for (const s of realProven) {
+    assert.ok(provenIds.has(s.id), `${s.id} is REAL_PROVEN but has no passing probe-evidence entry`);
+  }
+  assert.ok((byMaturity.REAL_PROVEN || 0) <= provenIds.size, 'REAL_PROVEN cannot exceed the probe-evidence artifact');
+  // userFacingRealProven mirrors the REAL_PROVEN maturity count.
+  assert.equal(d.summary.phase6.userFacingRealProven, byMaturity.REAL_PROVEN || 0);
 
   // Service-level gaps (S/F) are now fully paid down — guard against silent re-hiding by
   // asserting the services that previously carried debt stay fixed once landed.

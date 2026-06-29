@@ -1,6 +1,6 @@
 # Product Truth — Backend-to-UI Traceability
 
-> Generated: 2026-06-27T23:14:15.274Z
+> Generated: 2026-06-29T18:06:32.500Z
 
 For each service: backend capabilities → API → BFF → UI → mobile → persistence.
 
@@ -282,7 +282,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (6 controllers, 47 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: social.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (19 clients) |
-| 4 | Visible in UI? | Yes (60 refs) |
+| 4 | Visible in UI? | Yes (59 refs) |
 | 5 | Visible on mobile? | Yes (35 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
@@ -1510,8 +1510,8 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (22 controllers, 143 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: pct.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (42 clients) |
-| 4 | Visible in UI? | Yes (435 refs) |
-| 5 | Visible on mobile? | Yes (100 refs) |
+| 4 | Visible in UI? | Yes (434 refs) |
+| 5 | Visible on mobile? | Yes (101 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
 | 8 | UI without backend? | No |
@@ -1558,7 +1558,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (10 controllers, 38 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: pharmacy.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (12 clients) |
-| 4 | Visible in UI? | Yes (81 refs) |
+| 4 | Visible in UI? | Yes (80 refs) |
 | 5 | Visible on mobile? | Yes (14 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
@@ -1740,7 +1740,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (1 controllers, 7 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: rules.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (13 clients) |
-| 4 | Visible in UI? | Yes (48 refs) |
+| 4 | Visible in UI? | Yes (47 refs) |
 | 5 | Visible on mobile? | Yes (4 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
@@ -1997,7 +1997,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
 | 8 | UI without backend? | No |
-| 9 | Persists to DB? | Yes (18 migrations) |
+| 9 | Persists to DB? | Yes (25 migrations) |
 | 10 | Fixture-only flows? | No |
 
 **UI references (sample):**

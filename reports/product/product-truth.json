@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-06-27T23:14:15.274Z",
-  "branch": "chore/paydown-authz-stores",
+  "generatedAt": "2026-06-29T18:06:32.500Z",
+  "branch": "claude/crazy-merkle-3ad1a1",
   "registryDrift": {
     "unregisteredModules": [],
     "missingOnDiskModules": []
@@ -17,7 +17,8 @@
     },
     "byMaturity": {
       "INTERNAL_ONLY": 25,
-      "REAL_CODE_NOT_PROBED": 70
+      "REAL_CODE_NOT_PROBED": 66,
+      "REAL_PROVEN": 4
     },
     "gapCounts": {
       "byCategory": {},
@@ -37,7 +38,7 @@
       "complete": 95,
       "userFacing": 70,
       "userFacingReal": 70,
-      "userFacingRealProven": 0
+      "userFacingRealProven": 4
     }
   },
   "services": [
@@ -133,6 +134,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "INTERNAL_ONLY"
     },
@@ -236,6 +238,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "INTERNAL_ONLY"
     },
@@ -336,6 +339,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -429,6 +433,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "INTERNAL_ONLY"
     },
@@ -564,6 +569,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -673,6 +679,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -806,6 +813,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -936,6 +944,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -1029,6 +1038,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "INTERNAL_ONLY"
     },
@@ -1161,6 +1171,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -1270,6 +1281,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -1320,7 +1332,7 @@
         "contractOperations": 78,
         "contractViolations": 0,
         "bffClients": 19,
-        "uiReferences": 60,
+        "uiReferences": 59,
         "mobileReferences": 35,
         "tests": 2
       },
@@ -1413,6 +1425,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -1506,6 +1519,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "INTERNAL_ONLY"
     },
@@ -1640,6 +1654,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -1776,6 +1791,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -1882,6 +1898,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -1998,6 +2015,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -2108,6 +2126,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -2204,6 +2223,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "INTERNAL_ONLY"
     },
@@ -2304,6 +2324,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "INTERNAL_ONLY"
     },
@@ -2402,6 +2423,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "INTERNAL_ONLY"
     },
@@ -2503,6 +2525,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -2642,6 +2665,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -2785,6 +2809,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -2908,6 +2933,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -3006,6 +3032,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "INTERNAL_ONLY"
     },
@@ -3128,6 +3155,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -3229,6 +3257,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -3354,6 +3383,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -3454,6 +3484,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -3562,6 +3593,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -3687,6 +3719,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -3824,6 +3857,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -3930,6 +3964,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "INTERNAL_ONLY"
     },
@@ -4030,6 +4065,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "INTERNAL_ONLY"
     },
@@ -4163,6 +4199,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -4261,6 +4298,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "INTERNAL_ONLY"
     },
@@ -4371,6 +4409,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "INTERNAL_ONLY"
     },
@@ -4472,6 +4511,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "INTERNAL_ONLY"
     },
@@ -4601,8 +4641,20 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": {
+        "passed": true,
+        "suites": [
+          "FundoTrainingGateServiceTest",
+          "learning-service @SpringBootTest suite"
+        ],
+        "tests": 60,
+        "command": "mvn -o test -Dtest=FundoTrainingGateServiceTest (+ full suite)",
+        "evidence": "Full suite 60/60 (after restoring learning.security.oauth2-enabled boot-blocker fix); FundoTrainingGateServiceTest 8/8 incl. graduated levels ALLOW/ADVISE/CONDITIONAL/BLOCK",
+        "provedAt": "2026-06-29",
+        "commit": "22308c447"
+      },
       "gaps": [],
-      "maturity": "REAL_CODE_NOT_PROBED"
+      "maturity": "REAL_PROVEN"
     },
     {
       "id": "live-service",
@@ -4727,6 +4779,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -4830,6 +4883,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "INTERNAL_ONLY"
     },
@@ -4956,6 +5010,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -5076,6 +5131,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -5199,6 +5255,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -5338,6 +5395,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -5450,6 +5508,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -5585,6 +5644,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -5716,6 +5776,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -5809,6 +5870,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "INTERNAL_ONLY"
     },
@@ -5939,6 +6001,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -6035,6 +6098,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "INTERNAL_ONLY"
     },
@@ -6164,6 +6228,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -6309,6 +6374,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -6407,6 +6473,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "INTERNAL_ONLY"
     },
@@ -6504,6 +6571,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "INTERNAL_ONLY"
     },
@@ -6601,6 +6669,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "INTERNAL_ONLY"
     },
@@ -6738,6 +6807,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -6852,6 +6922,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "INTERNAL_ONLY"
     },
@@ -6957,8 +7028,19 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": {
+        "passed": true,
+        "suites": [
+          "PatientSafetyFlowTest"
+        ],
+        "tests": 8,
+        "command": "mvn -o test -Dtest=PatientSafetyFlowTest",
+        "evidence": "8/8: provider ADR lifecycle to export-ready, citizen own-report binding (403/200), AEFI investigation, FACILITY_SCOPE obligation narrows list, suppressFields PHI redaction on read",
+        "provedAt": "2026-06-29",
+        "commit": "f7917cf90"
+      },
       "gaps": [],
-      "maturity": "REAL_CODE_NOT_PROBED"
+      "maturity": "REAL_PROVEN"
     },
     {
       "id": "pct-service",
@@ -7007,9 +7089,9 @@
         "contractOperations": 120,
         "contractViolations": 0,
         "bffClients": 42,
-        "uiReferences": 435,
-        "mobileReferences": 100,
-        "tests": 17
+        "uiReferences": 434,
+        "mobileReferences": 101,
+        "tests": 18
       },
       "dimensions": {
         "database": "real",
@@ -7123,6 +7205,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -7216,6 +7299,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "INTERNAL_ONLY"
     },
@@ -7266,7 +7350,7 @@
         "contractOperations": 52,
         "contractViolations": 0,
         "bffClients": 12,
-        "uiReferences": 81,
+        "uiReferences": 80,
         "mobileReferences": 14,
         "tests": 9
       },
@@ -7352,6 +7436,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -7469,6 +7554,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -7582,6 +7668,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -7720,6 +7807,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -7845,6 +7933,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -7962,8 +8051,20 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": {
+        "passed": true,
+        "suites": [
+          "RitoCaseControllerWebTest",
+          "CaseLifecycleTest"
+        ],
+        "tests": 8,
+        "command": "mvn -o test -Dtest=RitoCaseControllerWebTest,CaseLifecycleTest",
+        "evidence": "8/8: full case lifecycle to close, AI-cannot-close-critical, client own-subject case-read binding, FACILITY_SCOPE list narrowing, suppressFields case-identity redaction",
+        "provedAt": "2026-06-29",
+        "commit": "b22c10248"
+      },
       "gaps": [],
-      "maturity": "REAL_CODE_NOT_PROBED"
+      "maturity": "REAL_PROVEN"
     },
     {
       "id": "rtc-gateway-service",
@@ -8090,6 +8191,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -8140,7 +8242,7 @@
         "contractOperations": 10,
         "contractViolations": 0,
         "bffClients": 13,
-        "uiReferences": 48,
+        "uiReferences": 47,
         "mobileReferences": 4,
         "tests": 4
       },
@@ -8221,6 +8323,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -8352,6 +8455,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -8445,6 +8549,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "INTERNAL_ONLY"
     },
@@ -8603,6 +8708,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -8696,6 +8802,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "INTERNAL_ONLY"
     },
@@ -8808,6 +8915,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -8936,6 +9044,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -9085,6 +9194,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -9211,6 +9321,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -9330,6 +9441,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -9370,7 +9482,7 @@
         "isTrustPlane": true
       },
       "counts": {
-        "migrations": 18,
+        "migrations": 25,
         "entities": 13,
         "repositories": 13,
         "serviceLayer": 12,
@@ -9452,8 +9564,20 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": {
+        "passed": true,
+        "suites": [
+          "PolicyEngineTest",
+          "StepUpVerificationIT"
+        ],
+        "tests": 38,
+        "command": "mvn -o test -Dtest=PolicyEngineTest + StepUpVerificationIT with CLI-Postgres (-Dit.pg.url)",
+        "evidence": "PolicyEngineTest 38/38 (RBAC/ABAC + delegation + Step 4.6 self-treatment block); Flyway V019-V025 proven to v025 against postgres:16-alpine; StepUpVerificationIT 4/4",
+        "provedAt": "2026-06-29",
+        "commit": "59febcce0"
+      },
       "gaps": [],
-      "maturity": "REAL_CODE_NOT_PROBED"
+      "maturity": "REAL_PROVEN"
     },
     {
       "id": "tshepo-consent-service",
@@ -9574,6 +9698,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -9698,6 +9823,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -9801,6 +9927,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -9903,6 +10030,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -10053,6 +10181,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -10189,6 +10318,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -10306,6 +10436,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -10448,6 +10579,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -10596,6 +10728,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -10732,6 +10865,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "INTERNAL_ONLY"
     },
@@ -10885,6 +11019,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -10996,6 +11131,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -11121,6 +11257,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -11240,6 +11377,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     },
@@ -11363,6 +11501,7 @@
         "q10_fixtureOnly": false
       },
       "phase6Complete": true,
+      "probeEvidence": null,
       "gaps": [],
       "maturity": "REAL_CODE_NOT_PROBED"
     }

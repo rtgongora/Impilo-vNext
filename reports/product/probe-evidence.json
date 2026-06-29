@@ -1,0 +1,43 @@
+{
+  "_comment": "Runtime probe-evidence artifact. The ONLY input that lifts a service from REAL_CODE_NOT_PROBED to REAL_PROVEN in product-truth (see scripts/completeness/product-truth-gaps.mjs classifyMaturity). Every entry MUST correspond to a real, reproducible passing test/IT run — not a static scan. passed=true means the cited suite was executed and went green. Add entries only with the proving command + commit so the claim is auditable. Remove or set passed=false if the proof goes stale.",
+  "schemaVersion": 1,
+  "generatedBy": "manual-curation-from-verified-runs",
+  "services": {
+    "tshepo-authz-service": {
+      "passed": true,
+      "suites": ["PolicyEngineTest", "StepUpVerificationIT"],
+      "tests": 38,
+      "command": "mvn -o test -Dtest=PolicyEngineTest + StepUpVerificationIT with CLI-Postgres (-Dit.pg.url)",
+      "evidence": "PolicyEngineTest 38/38 (RBAC/ABAC + delegation + Step 4.6 self-treatment block); Flyway V019-V025 proven to v025 against postgres:16-alpine; StepUpVerificationIT 4/4",
+      "provedAt": "2026-06-29",
+      "commit": "59febcce0"
+    },
+    "patient-safety-service": {
+      "passed": true,
+      "suites": ["PatientSafetyFlowTest"],
+      "tests": 8,
+      "command": "mvn -o test -Dtest=PatientSafetyFlowTest",
+      "evidence": "8/8: provider ADR lifecycle to export-ready, citizen own-report binding (403/200), AEFI investigation, FACILITY_SCOPE obligation narrows list, suppressFields PHI redaction on read",
+      "provedAt": "2026-06-29",
+      "commit": "f7917cf90"
+    },
+    "rito-quality-safety-service": {
+      "passed": true,
+      "suites": ["RitoCaseControllerWebTest", "CaseLifecycleTest"],
+      "tests": 8,
+      "command": "mvn -o test -Dtest=RitoCaseControllerWebTest,CaseLifecycleTest",
+      "evidence": "8/8: full case lifecycle to close, AI-cannot-close-critical, client own-subject case-read binding, FACILITY_SCOPE list narrowing, suppressFields case-identity redaction",
+      "provedAt": "2026-06-29",
+      "commit": "b22c10248"
+    },
+    "learning-service": {
+      "passed": true,
+      "suites": ["FundoTrainingGateServiceTest", "learning-service @SpringBootTest suite"],
+      "tests": 60,
+      "command": "mvn -o test -Dtest=FundoTrainingGateServiceTest (+ full suite)",
+      "evidence": "Full suite 60/60 (after restoring learning.security.oauth2-enabled boot-blocker fix); FundoTrainingGateServiceTest 8/8 incl. graduated levels ALLOW/ADVISE/CONDITIONAL/BLOCK",
+      "provedAt": "2026-06-29",
+      "commit": "22308c447"
+    }
+  }
+}

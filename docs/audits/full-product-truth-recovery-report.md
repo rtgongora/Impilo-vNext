@@ -1,7 +1,7 @@
 # Full Product Truth Recovery Report
 
-> Generated: 2026-06-27T23:14:15.274Z
-> Branch: `chore/paydown-authz-stores`
+> Generated: 2026-06-29T18:06:32.500Z
+> Branch: `claude/crazy-merkle-3ad1a1`
 
 ## Executive summary
 
@@ -17,7 +17,7 @@
 | Services with DB persistence | 95 |
 | **Phase 6 complete (user-facing + documented internal)** | **95** |
 | User-facing services with `real` code present (file-existence axis) | 70 / 70 |
-| — of those, **runtime-proven** (REAL_PROVEN) | **0** |
+| — of those, **runtime-proven** (REAL_PROVEN) | **4** |
 | Services internal-only (documented) | 25 |
 | Services partially complete | 0 |
 | Services backend-only (no UI) | 0 |
@@ -37,7 +37,8 @@
 | Maturity | Count |
 |----------|------:|
 | INTERNAL_ONLY | 25 |
-| REAL_CODE_NOT_PROBED | 70 |
+| REAL_CODE_NOT_PROBED | 66 |
+| REAL_PROVEN | 4 |
 
 ## Quality gates added
 
