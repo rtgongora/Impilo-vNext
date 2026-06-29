@@ -47,9 +47,36 @@ all session-introduced IDORs closed.
 **Net:** every outstanding Phase-1 item has a disposition. Done: Rito. Deferred-with-reason
 (roles-infra / refinement): facility-scope, restricted-phi, OROS-finer. Parked (PO): Fundo blocking.
 
+## Phase 1 follow-on — deferred refinements CLOSED via obligation consumption (2026-06-29)
+
+PO returned; chose graduated **levels of permission** for Fundo + confirmed the obligations pivot.
+
+- `22308c447` **feat(fundo)** — graduated training-gate levels (ADVISORY/SOFT/HARD → ALLOW/ADVISE/
+  CONDITIONAL/BLOCK), resolves **PO-20260629-01** (gate half of G-FU-02). FundoTrainingGateServiceTest 8/8.
+- **Architecture course-correction:** the deferred facility-scope + restricted-PHI items do NOT need a
+  `roles` field on `TrustContext` (that would duplicate the PDP's existing visibility-obligation
+  mechanism). The reuse-correct seam is consuming `maxScope`/`suppressFields`/`piiAccess` obligations
+  (already emitted by `VisibilityObligationComposer`, already in `VisibilityContextHolder`). The gap was
+  consumption — patient-safety + rito ignored it. See [[visibility-obligations-are-the-masking-seam]].
+- `f320bb77a` **feat(patient-safety)** — honor FACILITY_SCOPE on report list (deny-empty when facility
+  unknown). `f7917cf90` — shape read/list via JsonRepresentationShaper (suppressFields/piiAccess,
+  fail-closed). Suite 8/8. **G-PS-01 CLOSED.**
+- `b22c10248` **feat(rito)** — facility-scope on list + shape all 6 case reads (§3 sensitive-category
+  identity redaction). Rito 8/8. **G-RT-01 CLOSED.**
+- `e4d699b27` docs — register G-PS-01 + G-RT-01 → CLOSED.
+
+## Phase 2 toolchain — READY (2026-06-29)
+
+Correcting the earlier "JS generators not runnable in sandbox" claim: they ARE. The product-truth
+generators need only `js-yaml`; everything else is node built-ins + the built-in `node --test` runner.
+`cd scripts/completeness && npm ci` (from the committed lock) → `node --test __tests__/` = **13/13**, and
+the suite generates `product-truth.json` and asserts on its maturity/baseline. So Phase 2 (SYS-2
+capability-matrix + probeEvidence) is now runtime-verifiable here — the metric can be confirmed to move.
+(Web `one-ui-shell` tsc/vitest is a separate, larger setup for Phase 3.)
+
 ## Later phases (2–7)
-SYS-2 capability-matrix + probeEvidence · SYS-3 patient lane + journey ITs · Nompilo addendum ·
-Khuluma W4–W8 · OPA-as-PDP migration.
+SYS-2 capability-matrix + probeEvidence (toolchain ready) · SYS-3 patient lane + journey ITs · Nompilo
+addendum · Khuluma W4–W8 · OPA-as-PDP migration.
 
 ## PO decisions parked
 See `docs/audits/po-decision-index.md`.
