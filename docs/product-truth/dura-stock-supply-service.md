@@ -43,7 +43,7 @@ Full table: [`DURA_BUILD_REPO_AUDIT.md §2`](../audits/DURA_BUILD_REPO_AUDIT.md)
 | 6 | Lab consumes reagent/test kit | 🟡 (consumption posting exists) |
 | 7 | Outreach kit issue/use/reconcile | ⬜ |
 | 8 | Supplier fulfils order | ⬜ |
-| 9 | Client tracks home medicine + refill | ⬜ |
+| 9 | Client tracks home medicine + refill | 🟡 (home stock + refill lifecycle backend — Wave 7; `/my-life/stock` UX + Khuluma reminders pending) |
 | 10 | Recall affects dispensed batch | 🟡 (Dura freezes affected batches to RECALLED — Wave 5; client/provider notification + dispensed-client trace pending) |
 | 11 | Cold-chain excursion | 🟡 (locations + temp logs + auto-excursion + resolve release/wastage — Wave 6; Rito/Khuluma escalation + auto-quarantine of affected batches pending) |
 | 12 | Stock count variance | ✅ |
@@ -61,13 +61,14 @@ reconcile · **PCT integration (Dura side): stock-aware availability with usable
 nearest expiry + approved substitutes when stocked-out, reserve-for-encounter, and
 consume→ledger — Wave 4** · **recalls that freeze affected batches to RECALLED + quarantine via
 batch status — Wave 5** · **cold-chain: locations (fridge/cold-room/freezer), temperature logs
-(manual/IoT) with automatic excursion detection, excursion resolve (release/wastage) — Wave 6**.
-⬜ supplier mode · household stock · **PCT-side caller + embedded UI hooks** · suggested orders ·
-sync-state machine · Rito/Khuluma hooks.
+(manual/IoT) with automatic excursion detection, excursion resolve (release/wastage) — Wave 6** · **client/caregiver household stock + refill
+request lifecycle — Wave 7**.
+⬜ supplier mode · **PCT-side caller + embedded UI hooks** · `/my-life/stock` UX · suggested
+orders · sync-state machine · Rito/Khuluma hooks.
 
 ## 6. Routes
 
-- **Backend** `/api/v1/dura/*` — 🟡 (`/v1/dura/categories`, `/v1/dura/commodities` — Wave 2; `/v1/dura/batches`, `/v1/dura/reservations` (incl. availability) — Wave 3; `/v1/dura/pct/{availability,reserve,consume}` — Wave 4; `/v1/dura/recalls` — Wave 5; `/v1/dura/cold-chain` — Wave 6; remaining namespaces planned. Legacy inventory routes ✅)
+- **Backend** `/api/v1/dura/*` — 🟡 (`/v1/dura/categories`, `/v1/dura/commodities` — Wave 2; `/v1/dura/batches`, `/v1/dura/reservations` (incl. availability) — Wave 3; `/v1/dura/pct/{availability,reserve,consume}` — Wave 4; `/v1/dura/recalls` — Wave 5; `/v1/dura/cold-chain` — Wave 6; `/v1/dura/client-stock` + `/v1/dura/refills` — Wave 7; remaining namespaces planned. Legacy inventory routes ✅)
 - **BFF** `/internal/v1/dura/*`, `/internal/v1/dura/pct/*`, `/internal/v1/mobile/dura/*` — ⬜
 - **Web** `/work/dura/*`, PCT-embedded stock panels, `/my-life/stock/*`, `/work/dura/supplier/*` — ⬜
   (existing `StockManagementPanel.tsx`, `useInventory.ts` 🟡 to be re-homed under Dura)
