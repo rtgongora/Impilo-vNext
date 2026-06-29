@@ -118,8 +118,17 @@ capability-matrix + probeEvidence) is now runtime-verifiable here — the metric
   → guidance (replace stub) · mobile handoff client · mvumo-resolve + consent into the dispatch path ·
   the Rito HTTP post at the routing call site.
 
-## Later phases (5–7)
-Khuluma W4–W8 · per-wave High/Med closures · OPA-as-PDP migration.
+## Phase 5 — Khuluma comms W4–W8 — W4 done (2026-06-29)
+
+- `170d37e3f` **feat(khuluma) W4** — escalation/routing/SLA (G-KH-01). V003 escalation + sla_policy
+  (runtime-proven V001→V003 PG16); EscalationService lifecycle + SLA targets (policy + priority defaults)
+  + accept-stops-clock + escalate-bump + `@Scheduled` breach sweep (OROS pattern); full controller.
+  EscalationServiceTest 6/6. **G-KH-01 W4 done.**
+- **Remaining Phase 5:** W5 channels/communities/broadcast (G-KH-02) · W6 external adapter abstraction
+  (G-KH-03) · W7 presence depth + Vashandi on-call + push (G-KH-04) · W8 UI breadth + admin/governance.
+
+## Later phases (5 remainder, 6–7)
+Khuluma W5–W8 · per-wave High/Med closures · OPA-as-PDP migration.
 
 ## PO decisions parked
 See `docs/audits/po-decision-index.md`.

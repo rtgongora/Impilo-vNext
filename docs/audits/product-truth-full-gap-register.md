@@ -226,7 +226,7 @@ register row by building a missing surface/feature:
 
 | ID | Sev | Finding | Status | Decision |
 |----|-----|---------|--------|----------|
-| **G-KH-01** | 🟡 Med | **Escalation / routing / SLA (prompt §"Escalation and Routing") not built** — no `khuluma_escalations`/`sla_policies`/EscalationService (W4 deferred) | absent on PT | build W4 |
+| **G-KH-01** | ✅ **W4 built** | **Escalation/routing/SLA built** (`170d37e3f`). V003 `khuluma_escalation` + `khuluma_sla_policy` (runtime-proven V001→V003 on PG16); `EscalationService` lifecycle OPEN→ASSIGNED→ACCEPTED→RESOLVED (+BREACHED/CANCELLED), first-response+resolution SLA from per-tenant policy w/ priority defaults, accept-stops-clock, escalate bumps tier+priority, every transition emits an outbox event; `@Scheduled` breach sweep (idempotent, OROS-pattern) emits per breach; `EscalationController` full CRUD. Tested 6/6. | ✅ W4 done | W5–W8 (channels/communities · external adapters · presence/push · UI) remain |
 | **G-KH-02** | 🟡 Med | **Facility/programme channels + client communities + broadcasts not built** — conversation types the prompt explicitly requires (W5 deferred) | absent on PT | build W5 |
 | **G-KH-03** | 🟡 Med | **External adapter abstraction not built** — the prompt wanted the *model* now (channels/adapters/delivery-attempt tables, native-in-app as first adapter) even with providers deferred (W6) | absent on PT | build adapter model (honest configured/not-configured) |
 | **G-KH-04** | 🔵 Low | **Presence depth + Vashandi on-call + mobile realtime push** — delivery is **poll-based** (4–5s) not pushed; browser-direct WS auth (JWT-in-handshake) deferred (W7) | partial | JWT-handshake WS push + Vashandi on-duty |
