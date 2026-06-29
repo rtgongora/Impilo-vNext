@@ -278,7 +278,7 @@ register row by building a missing surface/feature:
 
 | ID | Sev | Finding | Status | Decision |
 |----|-----|---------|--------|----------|
-| **G-RT-01** | 🟢 **RBAC enforced** | **§7 permission model now enforced at ext_authz** (V021 `f2a..`, Flyway-proven): `rito.*` roles reconciled to realm roles; case-create/quality-ops/reads gated, close-restriction enforced via DENY-wins, REGULATOR realm role added. Remaining: in-service §3 sensitive-category identity REDACTION + client own-subject binding | partial → in-service guard follow-up | add rito sensitive-redaction guard (mirror ClinicalAccessGuard) |
+| **G-RT-01** | 🟢 **RBAC enforced** | **§7 permission model now enforced at ext_authz** (V021 `f10fa85f1`, Flyway-proven): `rito.*` roles reconciled to realm roles; case-create/quality-ops/reads gated, close-restriction enforced via DENY-wins, REGULATOR realm role added. Remaining: in-service §3 sensitive-category identity REDACTION + client own-subject binding | partial → in-service guard follow-up | add rito sensitive-redaction guard (mirror ClinicalAccessGuard) |
 | **G-RT-02** | 🔵 Low | **Honest partials:** survey dynamic-question renderer; M&M review case-type pending PO confirm; mobile is a focused slice (citizen-feedback + provider-safety), not full triage parity; document-upload UX pending | partial | complete per next wave |
 | **G-RT-03** | 🔵 Low | **Notifications / Fundo-learning are outbox-intent events only** (`rito.learning.recommended`, `rito.notification.requested`) — delivery owned by consuming services. Honest/by-design, but the cross-service learning loop is not end-to-end-proven | by-design / partial | wire + prove the Fundo learning-loop e2e |
 
