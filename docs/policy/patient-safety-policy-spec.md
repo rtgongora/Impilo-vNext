@@ -1,10 +1,19 @@
-# Patient Safety — Tshepo Policy SPEC (queued)
+# Patient Safety — Tshepo Policy (ENFORCED)
 
-> **Lock notice:** `PolicyEngine.java` / OPA is single-writer-locked to the consent/trust (CZO)
-> cluster. This document is the **authoritative policy specification** for patient-safety
-> authorization, queued for that cluster to author as `impilo.authz` rego. **Do not edit
-> PolicyEngine.java from this lane.** Until enforced, the service relies on the tech-companion
-> trust-header contract and role context carried in `X-Purpose-Of-Use` / actor headers.
+> **Status (2026-06-29): ENFORCED at ext_authz** via DB `policy_rule` seeds
+> (`tshepo-authz V020__patient_safety_policy_rules.sql`). The CZO single-writer lock is lifted
+> (see `docs/governance/policyengine-single-writer-lock-lifted.md`). The RBAC dimension (role +
+> path) is live; the subject-relationship dimension (reporter own-report binding, facility-focal
+> facility-scoping, `restricted-phi` masking) remains an **in-service guard follow-up** (mirroring
+> pct `ClinicalAccessGuard`). `purpose=PHARMACOVIGILANCE` tightening is a follow-up pending the
+> runtime purpose-of-use contract.
+>
+> **Role taxonomy (canonical):** the lowercase role names below are the design intent; the
+> **enforced** realm roles are UPPERCASE_SNAKE: `citizen`→`CITIZEN`, `caregiver`→`CAREGIVER`,
+> `provider`→`CLINICIAN`/`DOCTOR`/`NURSE`/`MIDWIFE`, `pharmacist`→`PHARMACIST`,
+> `vaccinator`→`VACCINATOR`, `facility-safety-focal`→`FACILITY_SAFETY_FOCAL`,
+> `district-pho`→`DISTRICT_PHO`, `mcaz-reviewer`→`MCAZ_REVIEWER`, `mcaz-supervisor`→`MCAZ_SUPERVISOR`,
+> `sysadmin`→`SYSTEM_ADMIN`.
 
 ## Roles
 

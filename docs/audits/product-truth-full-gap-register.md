@@ -260,7 +260,7 @@ register row by building a missing surface/feature:
 
 | ID | Sev | Finding | Status | Decision |
 |----|-----|---------|--------|----------|
-| **G-PS-01** | 🟡 Med | **Tshepo policy enforcement spec-only** — `docs/policy/patient-safety-policy-spec.md` queued; role/PHI-minimisation rules not enforced via rego (PolicyEngine untouched). **Instance of SYS-1** | partial (spec) | author + enforce patient-safety rego |
+| **G-PS-01** | 🟢 **RBAC enforced** | **Tshepo policy now enforced at ext_authz** (V020 `cc5e43841`, Flyway-proven): role+path RBAC live for reporters / MCAZ disposition / reads, reconciled to canonical realm roles. Remaining: in-service subject-binding (reporter own-report, facility-scoping, restricted-phi masking) + purpose-of-use tightening | partial → in-service guard follow-up | add patient-safety in-service guard (mirror ClinicalAccessGuard) |
 | **G-PS-02** | 🔵 Low | **Surveillance `PatientSafetySignalConsumer` has no dedicated test** — signal-feed path unverified (service suite 25/25 green; consumer logic correct on read but uncovered) | gap | add a consumer unit/slice test |
 | **G-PS-03** | 🔵 Low | **Documented PoC next-steps (prompt-compliant honest deferrals):** integration-hub live adapters OFF (VigiFlow=MANUAL, E2B=`E2B_R3_ALIGNED` adapters disabled, VigiMobile=external link-out), forms-service runtime form-pack seed migration, Envoy `/v1/public/patient-safety/*` upstream route | by-design / deferred | build per post-PoC waves; keep honest |
 
