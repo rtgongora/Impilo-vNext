@@ -38,7 +38,7 @@ Full table: [`DURA_BUILD_REPO_AUDIT.md §2`](../audits/DURA_BUILD_REPO_AUDIT.md)
 | 1 | Facility receives stock | 🟡 (ledger receipt exists; quality/cold-chain gating ⬜) |
 | 2 | Routine resupply / suggested order | 🟡 (requisitions exist; suggested-order calc ⬜) |
 | 3 | Ward requests stock | 🟡 (transfer/handover exists) |
-| 4 | Pharmacy dispenses from PCT prescription | ⬜ (PCT↔Dura integration) |
+| 4 | Pharmacy dispenses from PCT prescription | 🟡 (Dura-side availability/reserve/consume→ledger built — Wave 4; PCT-side caller + UI pending) |
 | 5 | Vaccinator administers vaccine | ⬜ |
 | 6 | Lab consumes reagent/test kit | 🟡 (consumption posting exists) |
 | 7 | Outreach kit issue/use/reconcile | ⬜ |
@@ -57,12 +57,14 @@ attributes: pack/dispensing units, programme area, cold-chain, tracking flags, r
 status, GTIN, external codes) — Wave 2** · **first-class batch/lot/expiry with governance
 status (active/quarantined/recalled/expired) + near-expiry queries — Wave 3** · **stock
 reservations/allocations with available = on-hand − active reservations — Wave 3**. 🟡 eLMIS
-reconcile. ⬜ recalls/quarantine workflow · cold-chain logs · supplier mode · household stock ·
-PCT integration · suggested orders · sync-state machine.
+reconcile · **PCT integration (Dura side): stock-aware availability with usable batches +
+nearest expiry + approved substitutes when stocked-out, reserve-for-encounter, and
+consume→ledger — Wave 4**. ⬜ recalls/quarantine workflow · cold-chain logs · supplier mode ·
+household stock · **PCT-side caller + embedded UI hooks** · suggested orders · sync-state machine.
 
 ## 6. Routes
 
-- **Backend** `/api/v1/dura/*` — 🟡 (`/v1/dura/categories`, `/v1/dura/commodities` — Wave 2; `/v1/dura/batches`, `/v1/dura/reservations` (incl. availability) — Wave 3; remaining namespaces planned. Legacy inventory routes ✅)
+- **Backend** `/api/v1/dura/*` — 🟡 (`/v1/dura/categories`, `/v1/dura/commodities` — Wave 2; `/v1/dura/batches`, `/v1/dura/reservations` (incl. availability) — Wave 3; `/v1/dura/pct/{availability,reserve,consume}` — Wave 4; remaining namespaces planned. Legacy inventory routes ✅)
 - **BFF** `/internal/v1/dura/*`, `/internal/v1/dura/pct/*`, `/internal/v1/mobile/dura/*` — ⬜
 - **Web** `/work/dura/*`, PCT-embedded stock panels, `/my-life/stock/*`, `/work/dura/supplier/*` — ⬜
   (existing `StockManagementPanel.tsx`, `useInventory.ts` 🟡 to be re-homed under Dura)

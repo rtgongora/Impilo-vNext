@@ -23,6 +23,8 @@ public interface ItemRepository extends JpaRepository<ItemEntity, UUID> {
 
     List<ItemEntity> findByTenantIdAndCategory(UUID tenantId, String category);
 
+    List<ItemEntity> findByTenantIdAndSubstitutionGroup(UUID tenantId, String substitutionGroup);
+
     /**
      * Dura commodity catalogue search. All filters except tenant are optional
      * (pass {@code null} to ignore). Matches active commodities only.
