@@ -1106,23 +1106,44 @@ services:
     plane: clinical
     domain: care-delivery
     secondary_planes: []
-    sovereign: false
-    sovereign_group: null
+    sovereign: true
+    sovereign_group: DURA
     primary_protocol: rest
     default_http_port: 8098
     product_names:
+      - Dura
       - Inventory
     owner_team: TBD
     system_of_record_for:
+      - Stock truth and on-hand position
+      - Stock ledger (append-only movements)
+      - Storehouses, stores, bins and stock locations
+      - Commodity catalogue and categories
+      - Batch, lot and expiry tracking
+      - Stock movements (receipts, issues, transfers, adjustments, wastage, returns)
+      - Stock reservations and allocations
+      - Ward, lab, pharmacy, vaccine, outreach and emergency stock
+      - Recalls, quarantine and cold-chain stock events
+      - Supplier catalogues and client/caregiver household stock
+      - Stock counts and reconciliation
+      - eLMIS/NatPharm sync state
       - Inventory canonical records
     consumes_from:
       - tshepo-authz-service
+      - product-registry-service
     exposes_to:
       - experience-bff
       - integration-hub
+      - pct-service
+      - oros-service
+      - pharmacy-service
+      - inpatient-service
+      - referral-service
     forbidden_responsibilities:
       - must-not-act-as-identity-source-of-record
       - must-not-own-enterprise-ledgering
+      - must-not-own-product-catalogue-source-of-record
+      - must-not-own-clinical-or-dispensing-workflow
     production_status: baseline-assessed
     implementation_status: implemented-or-partial
     frontend_wiring_status: unknown-or-partial
