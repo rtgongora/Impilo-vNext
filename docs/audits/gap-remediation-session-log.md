@@ -86,9 +86,21 @@ capability-matrix + probeEvidence) is now runtime-verifiable here — the metric
   into **3681 capabilities** (real 3139 / partial 141 / real-proven 207 / fixture 194). In-service additions
   are now visible; fixtures (frontend-only/all-stub) are pinpointed. `node --test` 16/16. **SYS-2 CLOSED.**
 
-## Later phases (3–7)
-SYS-3 patient lane + journey ITs (needs web toolchain for screens) · Nompilo addendum · Khuluma W4–W8 ·
-OPA-as-PDP migration.
+## Phase 3 — SYS-3 patient lane — IN PROGRESS (2026-06-29)
+
+- `6f2578616` **feat(patient-lane)** — unified citizen visit/inpatient status endpoints + message catalog.
+  BFF read-composition (`CitizenVisitStatusController` → `PatientLaneService` → PCT/inpatient clients);
+  `PatientMessageCatalog` (typed, plain-language, i18n-ready) maps every JourneyState + inpatient status
+  to a person-journey stage. Honest degradation (unknown/outage → available:false). PatientLaneServiceTest
+  5/5 + CitizenVisitStatusControllerTest 2/2.
+- `d4e5d7bf3` **test(patient-lane)** — persona journey progression ARRIVED→TRIAGED→QUEUED→IN_SERVICE→
+  ADMITTED→DISCHARGED; patient lane reflects the right stage + plain language at each step. Suite 6/6.
+- **G-CT-01** moved High → "backend built (screens pending)". **Remaining for Phase 3:** citizen web/mobile
+  screens on the new endpoints (needs the one-ui-shell/mobile toolchain — larger than the js-yaml install)
+  + the live BFF→PCT WireMock e2e (needs the BFF IT Redis+Postgres harness, like other experience-bff ITs).
+
+## Later phases (3 remainder, 4–7)
+Patient screens (web toolchain) · Nompilo addendum · Khuluma W4–W8 · OPA-as-PDP migration.
 
 ## PO decisions parked
 See `docs/audits/po-decision-index.md`.
