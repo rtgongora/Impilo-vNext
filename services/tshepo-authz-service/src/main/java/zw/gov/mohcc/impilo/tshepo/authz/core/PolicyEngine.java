@@ -191,6 +191,17 @@ public class PolicyEngine {
         }
 
         // ────────────────────────────────────────────────────────────────
+        // Step 4.6: Self-treatment block (work-pro-life isolation, G-PX-01)
+        // A provider acting in a WORK context must not open their OWN clinical record — that
+        // belongs to My-Life. Emergency / break-glass purposes pass through (requiresConsent is
+        // false for them) for emergency self/family care, which is audited.
+        // ────────────────────────────────────────────────────────────────
+        AuthzResponse selfTreatmentDeny = evaluateSelfTreatment(request, purpose, riskScore, startTime);
+        if (selfTreatmentDeny != null) {
+            return selfTreatmentDeny;
+        }
+
+        // ────────────────────────────────────────────────────────────────
         // Step 5: Consent evaluation (clinical resources)
         // ────────────────────────────────────────────────────────────────
         if (requiresConsent(request.resourceType(), purpose)) {
@@ -600,6 +611,38 @@ public class PolicyEngine {
                     "Requested resource is outside the delegation scope", riskScore, startTime);
         }
         return null; // delegation authorises the actor; continue to consent (against the subject)
+    }
+
+    /**
+     * Self-treatment block (work-pro-life isolation, G-PX-01). A provider acting in a WORK context
+     * (Provider ID activated + a facility/workspace/shift context) may not open a clinical record
+     * whose subject is their own person anchor — that is a My-Life action, not a work action.
+     * Returns a DENY in that case, else {@code null} to continue.
+     *
+     * <p>Scoped to {@link #requiresConsent} clinical resources, which already excludes EMERGENCY /
+     * BREAK_GLASS / SYSTEM purposes — so emergency self/family care passes through (audited). A
+     * citizen (or a provider with no active work context) reaching their own record in My-Life is
+     * NOT blocked here (LIFE-SELF-ONLY).</p>
+     */
+    private AuthzResponse evaluateSelfTreatment(AuthzInternalRequest request, PurposeOfUse purpose,
+                                                int riskScore, long startTime) {
+        if (!requiresConsent(request.resourceType(), purpose)) {
+            return null;
+        }
+        boolean providerWorkContext = request.providerId() != null && !request.providerId().isBlank()
+                && (request.facilityId() != null || request.workspaceId() != null
+                    || (request.shiftId() != null && !request.shiftId().isBlank()));
+        if (!providerWorkContext) {
+            return null;
+        }
+        String subject = request.subjectId();
+        if (subject != null && !subject.isBlank() && subject.equals(request.actorId())) {
+            return denyAndLog(request, "SELF_TREATMENT_BLOCKED",
+                    "A provider may not open their own clinical record in work mode; use My Life, "
+                            + "or an emergency/break-glass purpose for emergency self/family care.",
+                    riskScore, startTime);
+        }
+        return null;
     }
 
     // ════════════════════════════════════════════════════════════════════

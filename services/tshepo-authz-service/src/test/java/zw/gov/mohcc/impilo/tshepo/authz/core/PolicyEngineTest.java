@@ -664,6 +664,44 @@ class PolicyEngineTest {
         );
     }
 
+    /** A clinical request whose subject is the actor's own person; provider work context optional. */
+    private static AuthzInternalRequest selfRequest(boolean providerWorkActivated) {
+        return new AuthzInternalRequest(
+                TENANT_ID, ACTOR_ID, "PROVIDER", List.of("CLINICIAN"), "TREATMENT",
+                DEVICE_FP, CORRELATION_ID, FACILITY_ID, WORKSPACE_ID,
+                null, "GET", "/v1/patients/" + ACTOR_ID, "GET:/v1/patients/" + ACTOR_ID,
+                "patients", ACTOR_ID,
+                3, "session-abc", null,
+                providerWorkActivated ? "PUB-PROVIDER-1" : null, null, null, null, ACTOR_ID, "LOA3",
+                null, null
+        );
+    }
+
+    @Test
+    @DisplayName("Step 4.6: provider opening their OWN clinical record in work mode -> DENY (self-treatment)")
+    void evaluate_selfTreatment_providerOwnRecordInWork_denies() {
+        stubHappyPathDefaults(10);
+
+        AuthzResponse response = policyEngine.evaluate(selfRequest(true));
+
+        assertEquals(Verdict.DENY, response.verdict());
+        assertEquals("SELF_TREATMENT_BLOCKED", response.errorCode());
+    }
+
+    @Test
+    @DisplayName("Step 4.6: own-record access with NO active work context (My-Life) is NOT self-treatment-blocked")
+    void evaluate_selfTreatment_myLifeSelfAccess_passes() {
+        stubHappyPathDefaults(10);
+        when(consentClient.evaluateConsent(eq(TENANT_ID), eq("patients"), eq(ACTOR_ID),
+                eq(ACTOR_ID), eq("TREATMENT")))
+                .thenReturn(ConsentDecision.permit("c1", List.of("read")));
+
+        AuthzResponse response = policyEngine.evaluate(selfRequest(false));
+
+        assertEquals(Verdict.ALLOW, response.verdict(),
+                "a person reaching their own record without an active provider work context is My-Life, not self-treatment");
+    }
+
     @Test
     @DisplayName("Step 4.5: acting for a subject with NO active delegation -> DENY")
     void evaluate_delegated_noActiveDelegation_denies() {
