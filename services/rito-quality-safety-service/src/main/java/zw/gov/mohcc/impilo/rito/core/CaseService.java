@@ -135,8 +135,74 @@ public class CaseService {
                 .orElseThrow(() -> new NoSuchElementException("Case not found: " + id));
     }
 
+    // ── Client own-subject read binding (G-RT-01) ──────────────────────────
+    // The ext_authz gateway role-gates staff; a client (CITIZEN/CAREGIVER) may only read a case
+    // they reported or are the subject of (spec: "client.viewer own-subject only"). The actor's
+    // role is not on the trust context, so we bind via actorType. The controller read endpoints
+    // (get/timeline/parties/links/messages) call these bound overloads; staff are unaffected.
+
     @Transactional(readOnly = true)
-    public List<CaseEntity> list(UUID tenantId, String status, String caseType, UUID facilityId, String assignedTo) {
+    public CaseEntity get(UUID tenantId, UUID id, String actorId, String actorType) {
+        return requireReadable(tenantId, id, actorId, actorType);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CaseEventEntity> timeline(UUID tenantId, UUID caseId, String actorId, String actorType) {
+        requireReadable(tenantId, caseId, actorId, actorType);
+        return eventRepository.findByCaseIdOrderByOccurredAtAsc(caseId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CasePartyEntity> parties(UUID tenantId, UUID caseId, String actorId, String actorType) {
+        requireReadable(tenantId, caseId, actorId, actorType);
+        return partyRepository.findByCaseId(caseId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CaseLinkEntity> links(UUID tenantId, UUID caseId, String actorId, String actorType) {
+        requireReadable(tenantId, caseId, actorId, actorType);
+        return linkRepository.findByCaseId(caseId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CaseMessageEntity> messages(UUID tenantId, UUID caseId, String actorId, String actorType) {
+        requireReadable(tenantId, caseId, actorId, actorType);
+        return messageRepository.findByCaseIdOrderByCreatedAtAsc(caseId);
+    }
+
+    private CaseEntity requireReadable(UUID tenantId, UUID id, String actorId, String actorType) {
+        CaseEntity c = get(tenantId, id);
+        if (isClient(actorType) && !isOwnCase(c, actorId)) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.FORBIDDEN,
+                    "A client may only access their own Rito case.");
+        }
+        return c;
+    }
+
+    private static boolean isClient(String actorType) {
+        return actorType != null
+                && (actorType.equalsIgnoreCase("CITIZEN") || actorType.equalsIgnoreCase("CAREGIVER"));
+    }
+
+    private static boolean isOwnCase(CaseEntity c, String actorId) {
+        return actorId != null && !actorId.isBlank()
+                && (actorId.equals(c.getReporterActorId()) || actorId.equals(c.getSubjectHealthId()));
+    }
+
+    @Transactional(readOnly = true)
+    public List<CaseEntity> list(UUID tenantId, String status, String caseType, UUID facilityId,
+                                 String assignedTo, String actorId, String actorType) {
+        // A client (CITIZEN/CAREGIVER) lists ONLY cases they reported or are the subject of,
+        // regardless of supplied filters — no cross-subject leak.
+        if (isClient(actorType)) {
+            if (actorId == null || actorId.isBlank()) {
+                return List.of();
+            }
+            return caseRepository.findByTenantIdOrderByCreatedAtDesc(tenantId).stream()
+                    .filter(c -> isOwnCase(c, actorId))
+                    .toList();
+        }
         if (status != null) {
             return caseRepository.findByTenantIdAndStatus(tenantId, status);
         }

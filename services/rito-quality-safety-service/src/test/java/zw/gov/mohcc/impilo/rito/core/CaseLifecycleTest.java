@@ -29,6 +29,30 @@ class CaseLifecycleTest {
     }
 
     @Test
+    void client_can_only_read_own_case() {
+        UUID tenant = UUID.randomUUID();
+        CaseEntity c = caseService.createCase(tenant, complaint("MODERATE")); // reporter citizen-1, subject HID-1
+
+        // Owner (reporter) and subject can read; staff (non-client) reads (gateway role-gated).
+        assertThat(caseService.get(tenant, c.getId(), "citizen-1", "CITIZEN").getId()).isEqualTo(c.getId());
+        assertThat(caseService.get(tenant, c.getId(), "HID-1", "CITIZEN").getId()).isEqualTo(c.getId());
+        assertThat(caseService.get(tenant, c.getId(), "focal-1", "FACILITY_SAFETY_FOCAL").getId()).isEqualTo(c.getId());
+
+        // A different client is forbidden (own-subject binding) — and the sub-reads inherit it.
+        assertThatThrownBy(() -> caseService.get(tenant, c.getId(), "other-citizen", "CITIZEN"))
+                .isInstanceOf(org.springframework.web.server.ResponseStatusException.class)
+                .satisfies(e -> assertThat(((org.springframework.web.server.ResponseStatusException) e)
+                        .getStatusCode()).isEqualTo(org.springframework.http.HttpStatus.FORBIDDEN));
+        assertThatThrownBy(() -> caseService.timeline(tenant, c.getId(), "other-citizen", "CITIZEN"))
+                .isInstanceOf(org.springframework.web.server.ResponseStatusException.class);
+
+        // list: a different client sees none of it; the owner sees their case.
+        assertThat(caseService.list(tenant, null, null, null, null, "other-citizen", "CITIZEN")).isEmpty();
+        assertThat(caseService.list(tenant, null, null, null, null, "citizen-1", "CITIZEN"))
+                .extracting(CaseEntity::getId).contains(c.getId());
+    }
+
+    @Test
     void createComplaintAssignsReferencePillarAndEmits() {
         UUID tenant = UUID.randomUUID();
         long before = outboxRepository.count();

@@ -62,46 +62,58 @@ public class RitoCaseController {
     @GetMapping("")
     public List<CaseEntity> list(
             @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_TYPE, required = false) String actorType,
             @RequestParam(required = false) String status,
             @RequestParam(value = "case_type", required = false) String caseType,
             @RequestParam(value = "facility_id", required = false) UUID facilityId,
             @RequestParam(value = "assigned_to", required = false) String assignedTo) {
-        return caseService.list(tenantId, status, caseType, facilityId, assignedTo);
+        return caseService.list(tenantId, status, caseType, facilityId, assignedTo, actorId, actorType);
     }
 
     @GetMapping("/{id}")
     public CaseEntity get(
             @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_TYPE, required = false) String actorType,
             @PathVariable UUID id) {
-        return caseService.get(tenantId, id);
+        return caseService.get(tenantId, id, actorId, actorType);
     }
 
     @GetMapping("/{id}/timeline")
     public List<CaseEventEntity> timeline(
             @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_TYPE, required = false) String actorType,
             @PathVariable UUID id) {
-        return caseService.timeline(tenantId, id);
+        return caseService.timeline(tenantId, id, actorId, actorType);
     }
 
     @GetMapping("/{id}/parties")
     public List<CasePartyEntity> parties(
             @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_TYPE, required = false) String actorType,
             @PathVariable UUID id) {
-        return caseService.parties(tenantId, id);
+        return caseService.parties(tenantId, id, actorId, actorType);
     }
 
     @GetMapping("/{id}/links")
     public List<CaseLinkEntity> links(
             @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_TYPE, required = false) String actorType,
             @PathVariable UUID id) {
-        return caseService.links(tenantId, id);
+        return caseService.links(tenantId, id, actorId, actorType);
     }
 
     @GetMapping("/{id}/messages")
     public List<CaseMessageEntity> messages(
             @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_TYPE, required = false) String actorType,
             @PathVariable UUID id) {
-        return caseService.messages(tenantId, id);
+        return caseService.messages(tenantId, id, actorId, actorType);
     }
 
     @PostMapping("/{id}/acknowledge")
