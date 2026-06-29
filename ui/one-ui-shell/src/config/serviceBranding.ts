@@ -329,6 +329,11 @@ export const SERVICE_SURFACE_COVERAGE: Record<ServiceBrandingSlug, ServiceSurfac
   ndila: { status: "surfaced", primaryRoutes: ["/ndila"] },
   nhume: { status: "surfaced", primaryRoutes: ["/nhume", "/operations/dispatch"] },
   nompilo: { status: "surfaced", primaryRoutes: ["/ask", "/intelligence"] },
+  "patient-safety": {
+    status: "surfaced",
+    primaryRoutes: ["/work/patient-safety", "/work/patient-safety/new"],
+    notes: "Pharmacovigilance / patient-safety reporting surface.",
+  },
   rito: {
     status: "surfaced",
     primaryRoutes: ["/rito", "/my-life/feedback", "/work/facility/rito", "/work/above-site/rito"],

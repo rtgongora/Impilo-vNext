@@ -73,8 +73,11 @@ suggested orders / OROS · Rito/Khuluma/Costa/MusheX/Nhume hooks · outbox event
 
 - **Backend** `/api/v1/dura/*` — 🟡 (`/v1/dura/categories`, `/v1/dura/commodities` — Wave 2; `/v1/dura/batches`, `/v1/dura/reservations` (incl. availability) — Wave 3; `/v1/dura/pct/{availability,reserve,consume}` — Wave 4; `/v1/dura/recalls` — Wave 5; `/v1/dura/cold-chain` — Wave 6; `/v1/dura/client-stock` + `/v1/dura/refills` — Wave 7; `/v1/dura/suppliers` (+catalogue/orders) — Wave 8; `/v1/dura/external-sync` — Wave 9; remaining namespaces planned. Legacy inventory routes ✅)
 - **BFF** `/internal/v1/dura/*`, `/internal/v1/dura/pct/*`, `/internal/v1/mobile/dura/*` — ⬜
-- **Web** `/work/dura/*`, PCT-embedded stock panels, `/my-life/stock/*`, `/work/dura/supplier/*` — ⬜
-  (existing `StockManagementPanel.tsx`, `useInventory.ts` 🟡 to be re-homed under Dura)
+- **Web** `/work/dura` — 🟡 (Dura ops surface live — Wave 10: catalogue search, near-expiry,
+  open recalls, open cold-chain excursions, via `useDura` hook + BFF; registered in `routes.ts`,
+  route-parity + type-check green). PCT-embedded panels, `/my-life/stock/*`, supplier UX — ⬜
+- **BFF** `/internal/v1/dura/*` — 🟡 (`DuraBffController`: categories, commodities, near-expiry
+  batches, recalls, cold-chain excursions, PCT availability — Wave 10)
 - **Mobile** scan/receive/issue/count/outreach/client-stock/refills/alerts — ⬜
 
 Full route catalogue: [`DURA_BUILD_REPO_AUDIT.md §5`](../audits/DURA_BUILD_REPO_AUDIT.md).

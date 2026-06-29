@@ -697,6 +697,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/my-life/feedback/[caseId]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Track Feedback", navLabel: "Track", navZone: "life" },
   { path: "/work/facility/rito", zone: "facility", layout: "app", sidebar: "facility", guard: "facility", pageTitle: "Facility Quality & Safety", navLabel: "Quality & Safety", navZone: "work" },
   { path: "/work/above-site/rito", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Above-Site Quality & Safety", navLabel: "Quality Oversight", navZone: "work" },
+  { path: "/work/dura", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Dura — Stock & Supply", navLabel: "Dura Stock", navZone: "work" },
   { path: "/work/patient-safety", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Patient Safety — Pharmacovigilance", navLabel: "Patient Safety", navZone: "work" },
   { path: "/work/patient-safety/new", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "New Safety Report", navLabel: "New Report", navZone: "work" },
   { path: "/work/patient-safety/reports/[reportId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Safety Report", navLabel: "Report", navZone: "work" },
@@ -741,7 +742,7 @@ export const ROUTES: RouteDefinition[] = [
 // Impilo Live (Jun 2026): 14 routes under /live incl. /live/admin (services/live-service).
 // Trust & Access Administration (Jun 2026): 90 contract-governed routes under /work/** (administration-governance scaffold).
 // Vashandi (Jun 2026): 10 routes under /work/vashandi for operational workforce UI. New canonical total is 589.
-export const EXPECTED_ROUTE_COUNT = 594;
+export const EXPECTED_ROUTE_COUNT = 629;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
