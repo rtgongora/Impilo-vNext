@@ -1,10 +1,16 @@
 package zw.gov.mohcc.impilo.rito.api.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.rito.core.CaseService;
+import zw.gov.mohcc.impilo.shared.visibility.JsonRepresentationShaper;
+import zw.gov.mohcc.impilo.shared.visibility.VisibilityContextHolder;
+import zw.gov.mohcc.impilo.tshepo.contracts.dto.VisibilityProfile;
 import zw.gov.mohcc.impilo.rito.persistence.entity.CaseAttachmentEntity;
 import zw.gov.mohcc.impilo.rito.persistence.entity.CaseEntity;
 import zw.gov.mohcc.impilo.rito.persistence.entity.CaseEventEntity;
@@ -21,9 +27,46 @@ import java.util.UUID;
 public class RitoCaseController {
 
     private final CaseService caseService;
+    private final ObjectMapper objectMapper;
 
-    public RitoCaseController(CaseService caseService) {
+    public RitoCaseController(CaseService caseService, ObjectMapper objectMapper) {
         this.caseService = caseService;
+        this.objectMapper = objectMapper;
+    }
+
+    /**
+     * Applies the PDP's visibility obligation ({@link VisibilityContextHolder}) to a single response
+     * body — suppressing/pseudonymising fields and masking PII per the {@code suppressFields}/{@code
+     * piiAccess} obligation (the §3 sensitive-case identity redaction seam). No obligation -> unchanged;
+     * fails closed (500) if shaping throws under an active profile rather than leak unshaped identity.
+     */
+    private Object shaped(Object dto) {
+        VisibilityProfile profile = VisibilityContextHolder.current().orElse(null);
+        if (profile == null) {
+            return dto;
+        }
+        try {
+            return JsonRepresentationShaper.shape(objectMapper, dto, profile);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "visibility shaping failed");
+        }
+    }
+
+    /** Row-wise visibility shaping for a list response (each element shaped as its own object). */
+    private Object shapedList(List<?> rows) {
+        VisibilityProfile profile = VisibilityContextHolder.current().orElse(null);
+        if (profile == null) {
+            return rows;
+        }
+        ArrayNode out = objectMapper.createArrayNode();
+        try {
+            for (Object row : rows) {
+                out.add(JsonRepresentationShaper.shape(objectMapper, row, profile));
+            }
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "visibility shaping failed");
+        }
+        return out;
     }
 
     @PostMapping("")
@@ -60,60 +103,63 @@ public class RitoCaseController {
     }
 
     @GetMapping("")
-    public List<CaseEntity> list(
+    public Object list(
             @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
             @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
             @RequestHeader(value = CompanionHeaders.ACTOR_TYPE, required = false) String actorType,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) UUID actorFacilityId,
+            @RequestHeader(value = "x-max-scope", required = false) String maxScope,
             @RequestParam(required = false) String status,
             @RequestParam(value = "case_type", required = false) String caseType,
             @RequestParam(value = "facility_id", required = false) UUID facilityId,
             @RequestParam(value = "assigned_to", required = false) String assignedTo) {
-        return caseService.list(tenantId, status, caseType, facilityId, assignedTo, actorId, actorType);
+        return shapedList(caseService.list(tenantId, status, caseType, facilityId, assignedTo,
+                actorId, actorType, maxScope, actorFacilityId));
     }
 
     @GetMapping("/{id}")
-    public CaseEntity get(
+    public Object get(
             @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
             @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
             @RequestHeader(value = CompanionHeaders.ACTOR_TYPE, required = false) String actorType,
             @PathVariable UUID id) {
-        return caseService.get(tenantId, id, actorId, actorType);
+        return shaped(caseService.get(tenantId, id, actorId, actorType));
     }
 
     @GetMapping("/{id}/timeline")
-    public List<CaseEventEntity> timeline(
+    public Object timeline(
             @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
             @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
             @RequestHeader(value = CompanionHeaders.ACTOR_TYPE, required = false) String actorType,
             @PathVariable UUID id) {
-        return caseService.timeline(tenantId, id, actorId, actorType);
+        return shapedList(caseService.timeline(tenantId, id, actorId, actorType));
     }
 
     @GetMapping("/{id}/parties")
-    public List<CasePartyEntity> parties(
+    public Object parties(
             @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
             @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
             @RequestHeader(value = CompanionHeaders.ACTOR_TYPE, required = false) String actorType,
             @PathVariable UUID id) {
-        return caseService.parties(tenantId, id, actorId, actorType);
+        return shapedList(caseService.parties(tenantId, id, actorId, actorType));
     }
 
     @GetMapping("/{id}/links")
-    public List<CaseLinkEntity> links(
+    public Object links(
             @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
             @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
             @RequestHeader(value = CompanionHeaders.ACTOR_TYPE, required = false) String actorType,
             @PathVariable UUID id) {
-        return caseService.links(tenantId, id, actorId, actorType);
+        return shapedList(caseService.links(tenantId, id, actorId, actorType));
     }
 
     @GetMapping("/{id}/messages")
-    public List<CaseMessageEntity> messages(
+    public Object messages(
             @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
             @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
             @RequestHeader(value = CompanionHeaders.ACTOR_TYPE, required = false) String actorType,
             @PathVariable UUID id) {
-        return caseService.messages(tenantId, id, actorId, actorType);
+        return shapedList(caseService.messages(tenantId, id, actorId, actorType));
     }
 
     @PostMapping("/{id}/acknowledge")

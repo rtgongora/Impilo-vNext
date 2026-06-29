@@ -47,8 +47,8 @@ class CaseLifecycleTest {
                 .isInstanceOf(org.springframework.web.server.ResponseStatusException.class);
 
         // list: a different client sees none of it; the owner sees their case.
-        assertThat(caseService.list(tenant, null, null, null, null, "other-citizen", "CITIZEN")).isEmpty();
-        assertThat(caseService.list(tenant, null, null, null, null, "citizen-1", "CITIZEN"))
+        assertThat(caseService.list(tenant, null, null, null, null, "other-citizen", "CITIZEN", null, null)).isEmpty();
+        assertThat(caseService.list(tenant, null, null, null, null, "citizen-1", "CITIZEN", null, null))
                 .extracting(CaseEntity::getId).contains(c.getId());
     }
 

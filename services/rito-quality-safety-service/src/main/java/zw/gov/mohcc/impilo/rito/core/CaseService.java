@@ -192,7 +192,8 @@ public class CaseService {
 
     @Transactional(readOnly = true)
     public List<CaseEntity> list(UUID tenantId, String status, String caseType, UUID facilityId,
-                                 String assignedTo, String actorId, String actorType) {
+                                 String assignedTo, String actorId, String actorType,
+                                 String maxScope, UUID actorFacilityId) {
         // A client (CITIZEN/CAREGIVER) lists ONLY cases they reported or are the subject of,
         // regardless of supplied filters — no cross-subject leak.
         if (isClient(actorType)) {
@@ -203,19 +204,30 @@ public class CaseService {
                     .filter(c -> isOwnCase(c, actorId))
                     .toList();
         }
+        // Obligation-driven facility scoping: a FACILITY_SCOPE obligation constrains staff to their
+        // own facility's cases regardless of the requested filter; an unknown facility denies exposure.
+        boolean facilityScoped = "FACILITY_SCOPE".equalsIgnoreCase(maxScope);
+        if (facilityScoped && actorFacilityId == null) {
+            return List.of();
+        }
+        List<CaseEntity> result;
         if (status != null) {
-            return caseRepository.findByTenantIdAndStatus(tenantId, status);
+            result = caseRepository.findByTenantIdAndStatus(tenantId, status);
+        } else if (caseType != null) {
+            result = caseRepository.findByTenantIdAndCaseType(tenantId, caseType);
+        } else if (facilityId != null) {
+            result = caseRepository.findByTenantIdAndFacilityId(tenantId, facilityId);
+        } else if (assignedTo != null) {
+            result = caseRepository.findByTenantIdAndAssignedToActorId(tenantId, assignedTo);
+        } else {
+            result = caseRepository.findByTenantIdOrderByCreatedAtDesc(tenantId);
         }
-        if (caseType != null) {
-            return caseRepository.findByTenantIdAndCaseType(tenantId, caseType);
+        if (facilityScoped) {
+            result = result.stream()
+                    .filter(c -> actorFacilityId.equals(c.getFacilityId()))
+                    .toList();
         }
-        if (facilityId != null) {
-            return caseRepository.findByTenantIdAndFacilityId(tenantId, facilityId);
-        }
-        if (assignedTo != null) {
-            return caseRepository.findByTenantIdAndAssignedToActorId(tenantId, assignedTo);
-        }
-        return caseRepository.findByTenantIdOrderByCreatedAtDesc(tenantId);
+        return result;
     }
 
     @Transactional(readOnly = true)
