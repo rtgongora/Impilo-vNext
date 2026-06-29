@@ -54,13 +54,15 @@ Full table: [`DURA_BUILD_REPO_AUDIT.md §2`](../audits/DURA_BUILD_REPO_AUDIT.md)
 ✅ Ledger + balances · FEFO · counts/reconciliation · requisitions · handover · consumption
 posting · barcode · item/store · **rich commodity catalogue (categories + Dura enrichment
 attributes: pack/dispensing units, programme area, cold-chain, tracking flags, regulatory
-status, GTIN, external codes) — Wave 2**. 🟡 eLMIS reconcile. ⬜ batch/lot entity · reservations ·
-recalls/quarantine · cold-chain logs · supplier mode · household stock · PCT integration ·
-suggested orders · sync-state machine.
+status, GTIN, external codes) — Wave 2** · **first-class batch/lot/expiry with governance
+status (active/quarantined/recalled/expired) + near-expiry queries — Wave 3** · **stock
+reservations/allocations with available = on-hand − active reservations — Wave 3**. 🟡 eLMIS
+reconcile. ⬜ recalls/quarantine workflow · cold-chain logs · supplier mode · household stock ·
+PCT integration · suggested orders · sync-state machine.
 
 ## 6. Routes
 
-- **Backend** `/api/v1/dura/*` — 🟡 (`/v1/dura/categories`, `/v1/dura/commodities` live — Wave 2; remaining namespaces planned. Legacy inventory routes ✅)
+- **Backend** `/api/v1/dura/*` — 🟡 (`/v1/dura/categories`, `/v1/dura/commodities` — Wave 2; `/v1/dura/batches`, `/v1/dura/reservations` (incl. availability) — Wave 3; remaining namespaces planned. Legacy inventory routes ✅)
 - **BFF** `/internal/v1/dura/*`, `/internal/v1/dura/pct/*`, `/internal/v1/mobile/dura/*` — ⬜
 - **Web** `/work/dura/*`, PCT-embedded stock panels, `/my-life/stock/*`, `/work/dura/supplier/*` — ⬜
   (existing `StockManagementPanel.tsx`, `useInventory.ts` 🟡 to be re-homed under Dura)
