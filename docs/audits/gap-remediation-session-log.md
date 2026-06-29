@@ -24,11 +24,32 @@ PO-gated items parked (see `po-decision-index.md`), session never blocked.
 All migrations Flyway-proven against CLI Postgres (`→v024`); chokepoint + patient-safety guard unit-tested;
 all session-introduced IDORs closed.
 
-## In progress / remaining (absence-mode continuation)
-- Rito in-service own-subject case binding (then reactivate citizen-read).
-- Patient-safety facility-scope + restricted-phi masking.
-- Fundo training-gate enforcement seam (cross-service vashandi↔fundo).
-- Phases 2–7 (SYS-2 capability-matrix, SYS-3 patient lane + journey ITs, Nompilo, Khuluma W4–W8, OPA-as-PDP).
+## Phase 1 — resolution of all outstanding items (2026-06-29, absence mode)
+
+- **Rito client case-read binding — RESOLVED** (`59febcce0`): own-subject in-service guard + reactivated
+  rule (V025); sub-reads inherit via get(); list own-only; tested 12/12; Flyway→v025.
+- **Patient-safety / Rito facility-scope + restricted-phi masking — DEFERRED (infra-dependent).**
+  Both need the actor's *role* in-service to distinguish facility-focal (scope to own facility) from
+  MCAZ (see all) and to detect `restricted-phi`. The shared `TrustContext` carries `facilityId` but
+  **not roles**, and no role header is forwarded to services. Adding a `roles` field is a positional
+  change across **11 `new TrustContext(...)` sites + tests in 6 services** — too high-blast for an
+  absence-mode tail. Conservative default kept: gateway role-gating already restricts reads to trusted
+  safety staff (citizens are own-subject-bound); cross-facility scoping among safety staff is a
+  refinement. **Next:** add `roles` to `TrustContext` (one filter populates it; widen call sites) as a
+  dedicated infra slice, then scope + mask.
+- **OROS finer per-action gating (release vs view) — DEFERRED (refinement).** Core diagnostic-journey
+  RBAC is enforced (V022); per-action narrowing is a later refinement.
+- **Fundo training-gate — PARKED (PO-20260629-01) + advisory is the buildable next.** Blocking-vs-warn
+  is a PO/clinical decision (parked). The *advisory* consumer (vashandi check-in queries the fundo
+  training-gate, surfaces a readiness flag, does not block) is the conservative resolution and needs no
+  PO input — recommended as the next cross-service build under the parked decision.
+
+**Net:** every outstanding Phase-1 item has a disposition. Done: Rito. Deferred-with-reason
+(roles-infra / refinement): facility-scope, restricted-phi, OROS-finer. Parked (PO): Fundo blocking.
+
+## Later phases (2–7)
+SYS-2 capability-matrix + probeEvidence · SYS-3 patient lane + journey ITs · Nompilo addendum ·
+Khuluma W4–W8 · OPA-as-PDP migration.
 
 ## PO decisions parked
 See `docs/audits/po-decision-index.md`.
