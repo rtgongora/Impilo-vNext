@@ -23,6 +23,12 @@
   "roles": {
     "realm": [
       {
+        "name": "REGULATOR",
+        "description": "Regulator / council reviewer (read regulated categories where statute permits; statutory investigation)",
+        "composite": false,
+        "clientRole": false
+      },
+      {
         "name": "MCAZ_REVIEWER",
         "description": "MCAZ pharmacovigilance reviewer: triage, review, causality, follow-up, manual VigiFlow entry, mark export-ready",
         "composite": false,
