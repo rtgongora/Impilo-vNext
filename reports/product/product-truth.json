@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-29T18:06:32.500Z",
+  "generatedAt": "2026-06-29T18:20:50.589Z",
   "branch": "claude/crazy-merkle-3ad1a1",
   "registryDrift": {
     "unregisteredModules": [],
@@ -39,6 +39,17 @@
       "userFacing": 70,
       "userFacingReal": 70,
       "userFacingRealProven": 4
+    },
+    "capabilities": {
+      "totalCapabilities": 3681,
+      "byDisposition": {
+        "real": 3139,
+        "partial": 141,
+        "real-proven": 207,
+        "fixture": 194
+      },
+      "provenCapabilities": 207,
+      "fixtureCapabilities": 194
     }
   },
   "services": [

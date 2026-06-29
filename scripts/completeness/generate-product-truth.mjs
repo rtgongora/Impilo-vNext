@@ -35,6 +35,9 @@ import {
   GAP_CATEGORIES,
   MOBILE_PARITY_REQUIRED,
   authzDimFromReadiness,
+  capabilityKeyFor,
+  classifyCapabilityDisposition,
+  CAPABILITY_DISPOSITION,
 } from './product-truth-gaps.mjs';
 import { scanAuthzAuditReadiness } from './authz-audit-readiness.mjs';
 import {
@@ -54,6 +57,7 @@ const CONTRACTS_OPENAPI = path.join(REPO_ROOT, 'contracts/openapi');
 const OUT_JSON = path.join(REPO_ROOT, 'reports/product/product-truth.json');
 const CONTRACT_MATRIX = path.join(REPO_ROOT, 'reports/product/contract-implementation-matrix.json');
 const PROBE_EVIDENCE = path.join(REPO_ROOT, 'reports/product/probe-evidence.json');
+const CAPABILITY_MATRIX_OUT = path.join(REPO_ROOT, 'reports/product/capability-matrix.json');
 
 const MOCK_STUB_PATTERNS = [
   { re: /mockData|fakeResponse|demoPatient|sampleData|fixtureData|mock[- ]data|mockedData|fakeData|demoData/gi, label: 'mock-data-var' },
@@ -1313,6 +1317,153 @@ bash scripts/guard/check-phase6-service-completion.sh
 `;
 }
 
+/**
+ * SYS-2 capability-grained view. Joins backend routes (per service, with stub hits) ×
+ * frontend surfaces (by their bffPaths) × BFF downstream routes × contract ops, bucketed into
+ * capabilities by {@link capabilityKeyFor}. Each capability gets a disposition
+ * (real-proven / real / partial / fixture / empty) + the evidence that drove it. This is the
+ * finer grain the service-level maturity axis can't express; it never self-promotes to
+ * real-proven (that still requires the service's probe-evidence).
+ */
+function buildCapabilityMatrix(registry, contractMatrix, frontendSurfaces, bffClientMap, probeEvidence) {
+  const caps = new Map(); // key: `${serviceId}::${capKey}` -> capability record
+
+  const ensureCap = (serviceId, capKey) => {
+    const id = `${serviceId}::${capKey}`;
+    if (!caps.has(id)) {
+      caps.set(id, {
+        id,
+        service: serviceId,
+        capability: capKey,
+        backendRoutes: 0,
+        stubRoutes: 0,
+        methods: new Set(),
+        samplePaths: [],
+        frontendSurfaces: 0,
+        frontendFixtures: 0,
+        frontendPaths: [],
+        bffProxied: 0,
+        contractOps: 0,
+        contractUnowned: 0,
+      });
+    }
+    return caps.get(id);
+  };
+
+  // Pass 1 — backend routes per service (the spine: a capability is owned by the service whose
+  // routes define it).
+  const provenServices = new Set(
+    Object.entries(probeEvidence).filter(([, v]) => v && v.passed).map(([k]) => k),
+  );
+  const routePrefixToService = []; // [{ prefix: 'patient-safety/reports', service }]
+  for (const svc of registry.services || []) {
+    const module = svc.maven_module || svc.id;
+    const javaRoot = path.join(SERVICES_DIR, module, 'src/main/java');
+    if (!fs.existsSync(javaRoot)) continue;
+    let routes = [];
+    try {
+      routes = extractSpringRoutes(javaRoot);
+    } catch {
+      routes = [];
+    }
+    for (const r of routes) {
+      const capKey = capabilityKeyFor(r.path);
+      const cap = ensureCap(svc.id, capKey);
+      cap.backendRoutes += 1;
+      if (r.stubHit) cap.stubRoutes += 1;
+      if (r.method) cap.methods.add(r.method.toUpperCase());
+      if (cap.samplePaths.length < 6 && !cap.samplePaths.includes(r.path)) cap.samplePaths.push(r.path);
+      routePrefixToService.push({ prefix: capKey, service: svc.id });
+    }
+  }
+  // capKey -> owning service (first backend owner wins; used to attribute frontend/bff hits).
+  const capOwner = new Map();
+  for (const { prefix, service } of routePrefixToService) {
+    if (!capOwner.has(prefix)) capOwner.set(prefix, service);
+  }
+
+  // Pass 2 — frontend surfaces, attributed by their bffPaths' capability key.
+  for (const surface of frontendSurfaces) {
+    const isFixture = (surface.mockStubHits || []).length > 0 || (surface.gaps || []).some((g) => g.category === 'F');
+    const seen = new Set();
+    for (const bp of surface.bffPaths || []) {
+      const capKey = capabilityKeyFor(bp);
+      if (seen.has(capKey)) continue;
+      seen.add(capKey);
+      const owner = capOwner.get(capKey) || `frontend:${capKey.split('/')[0] || 'unknown'}`;
+      const cap = ensureCap(owner, capKey);
+      cap.frontendSurfaces += 1;
+      if (isFixture) cap.frontendFixtures += 1;
+      if (cap.frontendPaths.length < 6 && !cap.frontendPaths.includes(surface.path)) {
+        cap.frontendPaths.push(surface.path);
+      }
+    }
+  }
+
+  // Pass 3 — BFF downstream routes proxied to each capability.
+  for (const r of bffClientMap.get('__routes__') || []) {
+    const capKey = capabilityKeyFor(r.path);
+    const owner = capOwner.get(capKey);
+    if (!owner) continue; // only count BFF proxying onto a real backend capability
+    ensureCap(owner, capKey).bffProxied += 1;
+  }
+
+  // Pass 4 — contract ops by capability key (coarse coverage signal).
+  for (const op of contractMatrix.openApiOperations || []) {
+    const capKey = capabilityKeyFor(op.path);
+    const owner = capOwner.get(capKey);
+    if (!owner) continue;
+    const cap = ensureCap(owner, capKey);
+    cap.contractOps += 1;
+    if (op.implStatus && op.implStatus !== 'implemented') cap.contractUnowned += 1;
+  }
+
+  // Finalize: classify + shape for output.
+  const dispositions = {};
+  const records = [...caps.values()]
+    .map((c) => {
+      const proven = provenServices.has(c.service);
+      const disposition = classifyCapabilityDisposition({
+        routeCount: c.backendRoutes,
+        stubRouteCount: c.stubRoutes,
+        frontendSurfaceCount: c.frontendSurfaces,
+        frontendFixtureCount: c.frontendFixtures,
+        contractUnowned: c.contractUnowned,
+        proven,
+      });
+      dispositions[disposition] = (dispositions[disposition] || 0) + 1;
+      return {
+        id: c.id,
+        service: c.service,
+        capability: c.capability,
+        disposition,
+        proven,
+        backendRoutes: c.backendRoutes,
+        stubRoutes: c.stubRoutes,
+        methods: [...c.methods].sort(),
+        frontendSurfaces: c.frontendSurfaces,
+        frontendFixtures: c.frontendFixtures,
+        bffProxied: c.bffProxied,
+        contractOps: c.contractOps,
+        contractUnowned: c.contractUnowned,
+        samplePaths: c.samplePaths,
+        frontendPaths: c.frontendPaths,
+      };
+    })
+    .sort((a, b) => (a.service + a.capability).localeCompare(b.service + b.capability));
+
+  return {
+    generatedAt: new Date().toISOString(),
+    summary: {
+      totalCapabilities: records.length,
+      byDisposition: dispositions,
+      provenCapabilities: records.filter((r) => r.disposition === CAPABILITY_DISPOSITION.REAL_PROVEN).length,
+      fixtureCapabilities: records.filter((r) => r.disposition === CAPABILITY_DISPOSITION.FIXTURE).length,
+    },
+    capabilities: records,
+  };
+}
+
 function main() {
   ensurePrerequisites();
 
@@ -1340,6 +1491,9 @@ function main() {
 
   const frontendSurfaces = scanFrontendSurfaces();
   const mobileSurfaces = scanMobileSurfaces();
+  const capabilityMatrix = buildCapabilityMatrix(
+    registry, contractMatrix, frontendSurfaces, bffClientMap, probeEvidence,
+  );
 
   const byProductStatus = {};
   const byMaturity = {};
@@ -1387,6 +1541,7 @@ function main() {
         // emitted when a probe-evidence artifact is supplied (see classifyMaturity).
         userFacingRealProven: services.filter((s) => s.maturity === MATURITY.REAL_PROVEN).length,
       },
+      capabilities: capabilityMatrix.summary,
     },
     services,
     libraries,
@@ -1398,6 +1553,7 @@ function main() {
 
   fs.mkdirSync(path.dirname(OUT_JSON), { recursive: true });
   fs.writeFileSync(OUT_JSON, JSON.stringify(data, null, 2));
+  fs.writeFileSync(CAPABILITY_MATRIX_OUT, JSON.stringify(capabilityMatrix, null, 2));
 
   const auditDir = path.join(REPO_ROOT, 'docs/audits');
   const productDir = path.join(REPO_ROOT, 'docs/product');

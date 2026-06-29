@@ -19,6 +19,9 @@ import {
   classifyServiceGaps,
   classifySurfaceGaps,
   MATURITY,
+  capabilityKeyFor,
+  classifyCapabilityDisposition,
+  CAPABILITY_DISPOSITION,
 } from '../product-truth-gaps.mjs';
 import {
   scanHardcodedCollections,
@@ -193,4 +196,49 @@ test('generated product-truth.json reflects honest maturity + baseline (no regre
   // No regression beyond the recorded baseline.
   const baseline = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'reports/product/product-truth-baseline.json'), 'utf8'));
   assert.ok(d.summary.gapCounts.total <= baseline.gapBaseline, `gap total ${d.summary.gapCounts.total} exceeds baseline ${baseline.gapBaseline} — fix the gap, do not raise the baseline`);
+});
+
+test('capabilityKeyFor drops transport prefix + path params, keeps two segments', () => {
+  assert.equal(capabilityKeyFor('/internal/v1/patient-safety/reports/{id}/submit'), 'patient-safety/reports');
+  assert.equal(capabilityKeyFor('/api/v1/patient-safety/reports'), 'patient-safety/reports');
+  assert.equal(capabilityKeyFor('/internal/v1/rito/cases/{id}/timeline'), 'rito/cases');
+  assert.equal(capabilityKeyFor('/'), '(root)');
+});
+
+test('classifyCapabilityDisposition is deterministic across the disposition lattice', () => {
+  const D = CAPABILITY_DISPOSITION;
+  assert.equal(classifyCapabilityDisposition({ routeCount: 0, frontendSurfaceCount: 0 }), D.EMPTY);
+  assert.equal(classifyCapabilityDisposition({ routeCount: 0, frontendSurfaceCount: 2, frontendFixtureCount: 2 }), D.FIXTURE);
+  assert.equal(classifyCapabilityDisposition({ routeCount: 3, stubRouteCount: 3 }), D.FIXTURE);
+  assert.equal(classifyCapabilityDisposition({ routeCount: 3, stubRouteCount: 1 }), D.PARTIAL);
+  assert.equal(classifyCapabilityDisposition({ routeCount: 3, contractUnowned: 2 }), D.PARTIAL);
+  assert.equal(classifyCapabilityDisposition({ routeCount: 3, stubRouteCount: 0 }), D.REAL);
+  // proven only applies when the capability actually has backend routes (never self-promotes empty)
+  assert.equal(classifyCapabilityDisposition({ routeCount: 3, stubRouteCount: 0, proven: true }), D.REAL_PROVEN);
+  assert.equal(classifyCapabilityDisposition({ routeCount: 0, frontendSurfaceCount: 0, proven: true }), D.EMPTY);
+});
+
+test('generated capability-matrix.json is internally consistent with probe evidence', { skip: !fs.existsSync(path.join(REPO_ROOT, 'reports/product/capability-matrix.json')) }, () => {
+  const m = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'reports/product/capability-matrix.json'), 'utf8'));
+  const probePath = path.join(REPO_ROOT, 'reports/product/probe-evidence.json');
+  const probe = fs.existsSync(probePath) ? (JSON.parse(fs.readFileSync(probePath, 'utf8')).services || {}) : {};
+  const provenIds = new Set(Object.entries(probe).filter(([, v]) => v && v.passed).map(([k]) => k));
+
+  assert.ok(m.summary.totalCapabilities > 0, 'expected capabilities to be discovered');
+  for (const c of m.capabilities) {
+    // real-proven capabilities may only belong to a probe-proven service and must have backend routes.
+    if (c.disposition === 'real-proven') {
+      assert.ok(provenIds.has(c.service), `${c.id} is real-proven but ${c.service} has no probe evidence`);
+      assert.ok(c.backendRoutes > 0, `${c.id} is real-proven with no backend routes`);
+    }
+    // fixture capabilities are either backend-less (frontend-only) or all-stub.
+    if (c.disposition === 'fixture') {
+      assert.ok(c.backendRoutes === 0 || c.stubRoutes === c.backendRoutes,
+        `${c.id} marked fixture but has non-stub backend routes`);
+    }
+  }
+  assert.equal(
+    m.summary.byDisposition['real-proven'] || 0,
+    m.capabilities.filter((c) => c.disposition === 'real-proven').length,
+  );
 });

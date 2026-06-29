@@ -375,3 +375,52 @@ export function aggregateGapCounts(gaps) {
   }
   return { byCategory, bySeverity, total: gaps.length };
 }
+
+/** Per-capability disposition — a finer grain than service-level maturity (SYS-2). */
+export const CAPABILITY_DISPOSITION = {
+  REAL_PROVEN: 'real-proven', // owning service is REAL_PROVEN (runtime probe evidence)
+  REAL: 'real', // backend routes, no stubs, frontend backed where present
+  PARTIAL: 'partial', // some stubs / fixtures / unowned contract ops
+  FIXTURE: 'fixture', // all backend routes are stubs, or frontend with no backend
+  EMPTY: 'empty', // no backend routes and no frontend surfaces
+};
+
+/**
+ * Derives a stable capability bucket key from a route or BFF/frontend path by dropping the
+ * transport prefix (`api`/`internal`/`v1`) and path params, keeping the first two meaningful
+ * segments (e.g. `/internal/v1/patient-safety/reports/{id}/submit` -> `patient-safety/reports`).
+ * This is the join key shared by backend routes, frontend bffPaths, and BFF downstream paths.
+ */
+export function capabilityKeyFor(routePath) {
+  if (!routePath || typeof routePath !== 'string') return '(root)';
+  const segs = routePath
+    .split('/')
+    .filter(Boolean)
+    .filter((s) => !/^(api|internal|v\d+)$/i.test(s))
+    .filter((s) => !s.startsWith('{') && !s.startsWith(':') && !s.startsWith('*'));
+  return segs.slice(0, 2).join('/') || '(root)';
+}
+
+/**
+ * Classifies a single capability bucket from its joined signals. Pure + deterministic.
+ * @param {object} cap { routeCount, stubRouteCount, frontendSurfaceCount, frontendFixtureCount,
+ *   contractUnowned, proven }
+ * @returns {string} a CAPABILITY_DISPOSITION value
+ */
+export function classifyCapabilityDisposition(cap) {
+  const routeCount = cap.routeCount || 0;
+  const stub = cap.stubRouteCount || 0;
+  const feSurfaces = cap.frontendSurfaceCount || 0;
+  const feFixtures = cap.frontendFixtureCount || 0;
+  const unowned = cap.contractUnowned || 0;
+
+  if (cap.proven && routeCount > 0) return CAPABILITY_DISPOSITION.REAL_PROVEN;
+  if (routeCount === 0 && feSurfaces === 0) return CAPABILITY_DISPOSITION.EMPTY;
+  // Frontend surface with no backend route behind it -> fixture.
+  if (routeCount === 0 && feSurfaces > 0) return CAPABILITY_DISPOSITION.FIXTURE;
+  // Every backend route in the bucket is a stub -> fixture.
+  if (routeCount > 0 && stub === routeCount) return CAPABILITY_DISPOSITION.FIXTURE;
+  // Any stub, any frontend fixture, or any unowned contract op -> partial.
+  if (stub > 0 || feFixtures > 0 || unowned > 0) return CAPABILITY_DISPOSITION.PARTIAL;
+  return CAPABILITY_DISPOSITION.REAL;
+}
