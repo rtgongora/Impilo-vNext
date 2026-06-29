@@ -162,6 +162,8 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/citizen/id-recovery", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "ID Recovery", navLabel: "ID Recovery", navZone: "life" },
   { path: "/citizen/delegated-pickup", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Delegated Pickup", navLabel: "Delegated Pickup", navZone: "life" },
   { path: "/citizen/record-sharing", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Share My Record", navLabel: "Record sharing", navZone: "life" },
+  { path: "/citizen/visit/[transactionId]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Visit", navLabel: "My Visit", navZone: "life" },
+  { path: "/citizen/inpatient/[admissionRef]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Inpatient Stay", navLabel: "My Stay", navZone: "life" },
   { path: "/verify/credential", zone: "home", layout: "app", sidebar: "main", guard: "none", pageTitle: "Verify Credential", navLabel: "Verify Credential", navZone: "life" },
   { path: "/share/claim", zone: "home", layout: "app", sidebar: "main", guard: "none", pageTitle: "Claim Shared Documents", navLabel: "Claim Shared Documents", navZone: "life" },
   { path: "/collaboration/access", zone: "home", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Provider collaboration access", navLabel: "Collaboration access", navZone: "life" },
