@@ -74,6 +74,47 @@ class PatientSafetyFlowTest {
     }
 
     @Test
+    void citizen_can_only_access_own_report() throws Exception {
+        // Citizen "owner" creates a report (reporterActorId is taken from X-Actor-ID).
+        MvcResult created = mockMvc.perform(post("/internal/v1/patient-safety/reports")
+                .header("X-Tenant-ID", TENANT).header("X-Pod-ID", "national-spine")
+                .header("X-Request-ID", java.util.UUID.randomUUID().toString())
+                .header("X-Correlation-ID", "11111111-1111-4111-8111-111111111111")
+                .header("X-Actor-ID", "citizen-owner").header("X-Actor-Type", "CITIZEN")
+                .header("X-Purpose-Of-Use", "PHARMACOVIGILANCE")
+                .header("Idempotency-Key", "idem-" + java.util.UUID.randomUUID())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {"reportType":"ADR","reporterKind":"PROVIDER","sourceContext":"CLINICAL_ENCOUNTER",
+                         "narrative":"Nausea after a new medicine","serious":false}
+                        """)).andReturn();
+        assertThat(created.getResponse().getStatus()).isEqualTo(201);
+        String reportId = data(created).get("id").asText();
+
+        // A DIFFERENT citizen cannot read it — subject-relationship binding (dimension 6) -> 403.
+        mockMvc.perform(citizenGet("/internal/v1/patient-safety/reports/" + reportId, "citizen-other"))
+                .andExpect(status().isForbidden());
+
+        // The owner can read their own report.
+        mockMvc.perform(citizenGet("/internal/v1/patient-safety/reports/" + reportId, "citizen-owner"))
+                .andExpect(status().isOk());
+
+        // The other citizen's list returns only their OWN reports (none) — no cross-subject leak.
+        mockMvc.perform(citizenGet("/internal/v1/patient-safety/reports", "citizen-other"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(0));
+    }
+
+    /** A GET with the mandatory v1.1 trust headers and a CITIZEN actor context. */
+    private MockHttpServletRequestBuilder citizenGet(String url, String actorId) {
+        return get(url)
+                .header("X-Tenant-ID", TENANT).header("X-Pod-ID", "national-spine")
+                .header("X-Request-ID", java.util.UUID.randomUUID().toString())
+                .header("X-Correlation-ID", "11111111-1111-4111-8111-111111111111")
+                .header("X-Actor-ID", actorId).header("X-Actor-Type", "CITIZEN");
+    }
+
+    @Test
     void provider_adr_full_lifecycle_to_export_ready() throws Exception {
         MvcResult created = postJson("/internal/v1/patient-safety/reports", """
                 {

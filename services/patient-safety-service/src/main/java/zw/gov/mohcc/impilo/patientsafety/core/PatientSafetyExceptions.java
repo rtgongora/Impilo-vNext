@@ -14,4 +14,9 @@ public final class PatientSafetyExceptions {
     public static class ConflictException extends RuntimeException {
         public ConflictException(String message) { super(message); }
     }
+
+    /** Maps to 403 — the actor's subject-relationship does not permit this access. */
+    public static class ForbiddenException extends RuntimeException {
+        public ForbiddenException(String message) { super(message); }
+    }
 }

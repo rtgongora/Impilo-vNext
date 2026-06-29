@@ -61,18 +61,24 @@ public class SafetyReportController {
     @GetMapping
     public ResponseEntity<ApiResponse<List<ReportSummary>>> list(
             @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestHeader(value = "X-Actor-ID", required = false) String actorId,
+            @RequestHeader(value = "X-Actor-Type", required = false) String actorType,
             @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "reporter_actor_id", required = false) String reporterActorId,
             @RequestParam(value = "facility_id", required = false) String facilityId) {
         UUID tid = UUID.fromString(tenantId);
-        return ResponseEntity.ok(ApiResponse.of(reports.listReports(tid, status, reporterActorId, facilityId)));
+        return ResponseEntity.ok(ApiResponse.of(
+                reports.listReports(tid, status, reporterActorId, facilityId, actorId, actorType)));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ReportResponse>> get(
             @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestHeader(value = "X-Actor-ID", required = false) String actorId,
+            @RequestHeader(value = "X-Actor-Type", required = false) String actorType,
             @PathVariable UUID id) {
-        return ResponseEntity.ok(ApiResponse.of(reports.getReport(UUID.fromString(tenantId), id)));
+        return ResponseEntity.ok(ApiResponse.of(
+                reports.getReport(UUID.fromString(tenantId), id, actorId, actorType)));
     }
 
     @PatchMapping("/{id}")

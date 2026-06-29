@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import zw.gov.mohcc.impilo.patientsafety.core.PatientSafetyExceptions.ConflictException;
+import zw.gov.mohcc.impilo.patientsafety.core.PatientSafetyExceptions.ForbiddenException;
 import zw.gov.mohcc.impilo.patientsafety.core.PatientSafetyExceptions.NotFoundException;
 
 import java.util.Map;
@@ -23,6 +24,12 @@ public class ApiExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleConflict(ConflictException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(Map.of("error", "conflict", "message", ex.getMessage()));
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<Map<String, Object>> handleForbidden(ForbiddenException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("error", "forbidden", "message", ex.getMessage()));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

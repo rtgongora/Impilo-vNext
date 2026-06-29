@@ -10,6 +10,7 @@ import zw.gov.mohcc.impilo.patientsafety.api.dto.ReportResponse;
 import zw.gov.mohcc.impilo.patientsafety.api.dto.ReportSummary;
 import zw.gov.mohcc.impilo.patientsafety.api.dto.UpdateReportRequest;
 import zw.gov.mohcc.impilo.patientsafety.core.PatientSafetyExceptions.ConflictException;
+import zw.gov.mohcc.impilo.patientsafety.core.PatientSafetyExceptions.ForbiddenException;
 import zw.gov.mohcc.impilo.patientsafety.core.PatientSafetyExceptions.NotFoundException;
 import zw.gov.mohcc.impilo.patientsafety.domain.AttachmentRefEntity;
 import zw.gov.mohcc.impilo.patientsafety.domain.ProductExposureEntity;
@@ -91,12 +92,43 @@ public class SafetyReportService {
     }
 
     @Transactional(readOnly = true)
-    public ReportResponse getReport(UUID tenantId, UUID id) {
-        return assemble(requireReport(tenantId, id));
+    public ReportResponse getReport(UUID tenantId, UUID id, String actorId, String actorType) {
+        SafetyReportEntity r = requireReport(tenantId, id);
+        requireOwnReportForCitizen(r, actorId, actorType);
+        return assemble(r);
+    }
+
+    /**
+     * Subject-relationship binding (dimension 6). The ext_authz gateway role-gates WHO may reach
+     * patient-safety routes, but a citizen/caregiver may only see their OWN report — enforced here
+     * because the actor's clinical role is not on the trust context. Staff (MCAZ / facility-focal /
+     * provider) are gateway-role-gated and pass; finer facility-scoping is a follow-up.
+     */
+    private void requireOwnReportForCitizen(SafetyReportEntity r, String actorId, String actorType) {
+        if (isCitizen(actorType)
+                && (actorId == null || actorId.isBlank() || !actorId.equals(r.getReporterActorId()))) {
+            throw new ForbiddenException("A citizen may only access their own safety report.");
+        }
+    }
+
+    private static boolean isCitizen(String actorType) {
+        return actorType != null
+                && (actorType.equalsIgnoreCase("CITIZEN") || actorType.equalsIgnoreCase("CAREGIVER"));
     }
 
     @Transactional(readOnly = true)
-    public List<ReportSummary> listReports(UUID tenantId, String status, String reporterActorId, String facilityId) {
+    public List<ReportSummary> listReports(UUID tenantId, String status, String reporterActorId,
+                                           String facilityId, String actorId, String actorType) {
+        // Subject-relationship binding: a citizen/caregiver only ever lists their OWN reports,
+        // regardless of supplied filters (the gateway role-gates staff who may list more broadly).
+        if (isCitizen(actorType)) {
+            if (actorId == null || actorId.isBlank()) {
+                return List.of();
+            }
+            status = null;
+            facilityId = null;
+            reporterActorId = actorId;
+        }
         List<SafetyReportEntity> reports;
         if (status != null && !status.isBlank()) {
             reports = reportRepository.findByTenantIdAndStatusOrderByCreatedAtDesc(tenantId, status);
