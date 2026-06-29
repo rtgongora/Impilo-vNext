@@ -95,12 +95,16 @@ capability-matrix + probeEvidence) is now runtime-verifiable here — the metric
   5/5 + CitizenVisitStatusControllerTest 2/2.
 - `d4e5d7bf3` **test(patient-lane)** — persona journey progression ARRIVED→TRIAGED→QUEUED→IN_SERVICE→
   ADMITTED→DISCHARGED; patient lane reflects the right stage + plain language at each step. Suite 6/6.
-- **G-CT-01** moved High → "backend built (screens pending)". **Remaining for Phase 3:** citizen web/mobile
-  screens on the new endpoints (needs the one-ui-shell/mobile toolchain — larger than the js-yaml install)
-  + the live BFF→PCT WireMock e2e (needs the BFF IT Redis+Postgres harness, like other experience-bff ITs).
+- `4927ec0f9` **feat(patient-lane)** — citizen web screens `/citizen/visit/[transactionId]` +
+  `/citizen/inpatient/[admissionRef]` on the new endpoints (live refresh; honest loading/error/unavailable;
+  no fabricated data); registered in the route registry. **Web toolchain set up** (npm workspace at `ui/`,
+  `npm ci`): `tsc --noEmit` clean for the screens (one pre-existing error in serviceBranding.ts spun off as
+  task_80b6459e); `vitest` 3/3. **G-CT-01 CLOSED** — patient lane built end-to-end (backend + web).
+- **Remaining SYS-3 (broad):** the live cross-service WireMock e2e (BFF IT Redis+Postgres harness) and the
+  other waves' persona journey ITs (G-CZO-16 / G-PX-07 / G-OR-05) — proof-depth, not missing features.
 
-## Later phases (3 remainder, 4–7)
-Patient screens (web toolchain) · Nompilo addendum · Khuluma W4–W8 · OPA-as-PDP migration.
+## Later phases (4–7)
+Nompilo addendum · Khuluma W4–W8 · per-wave High/Med closures · OPA-as-PDP migration.
 
 ## PO decisions parked
 See `docs/audits/po-decision-index.md`.
