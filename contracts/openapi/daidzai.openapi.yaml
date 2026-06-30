@@ -1,0 +1,454 @@
+# =============================================================================
+# daidzai-service — handler-synced OpenAPI (Wave 2)
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: "Daidzai Service"
+  version: "1.0.0"
+  description: |
+    Sovereign HTTP surface for `daidzai-service`, generated from Spring handler paths.
+    Extend schemas as DTOs stabilise.
+
+servers:
+  - url: /
+    description: Service-relative paths (Envoy/BFF may prefix)
+
+security:
+  - bearerAuth: []
+
+paths:
+  /:
+    get:
+      operationId: daidzai_get_root
+      tags: [Generated-From-Handler]
+      summary: Documented from daidzai-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: daidzai_post_root
+      tags: [Generated-From-Handler]
+      summary: Documented from daidzai-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /health:
+    get:
+      operationId: daidzai_get_health
+      tags: [Generated-From-Handler]
+      summary: Documented from daidzai-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /incidents:
+    get:
+      operationId: daidzai_get_incidents
+      tags: [Generated-From-Handler]
+      summary: Documented from daidzai-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: daidzai_post_incidents
+      tags: [Generated-From-Handler]
+      summary: Documented from daidzai-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /incidents/{id}:
+    get:
+      operationId: daidzai_get_incidents_id
+      tags: [Generated-From-Handler]
+      summary: Documented from daidzai-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /incidents/{id}/death-outcome:
+    post:
+      operationId: daidzai_post_incidents_id_death-outcome
+      tags: [Generated-From-Handler]
+      summary: Documented from daidzai-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /incidents/{id}/dispatch:
+    post:
+      operationId: daidzai_post_incidents_id_dispatch
+      tags: [Generated-From-Handler]
+      summary: Documented from daidzai-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /incidents/{id}/handoff:
+    post:
+      operationId: daidzai_post_incidents_id_handoff
+      tags: [Generated-From-Handler]
+      summary: Documented from daidzai-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /incidents/{id}/mission-events:
+    post:
+      operationId: daidzai_post_incidents_id_mission-events
+      tags: [Generated-From-Handler]
+      summary: Documented from daidzai-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /incidents/{id}/missions:
+    get:
+      operationId: daidzai_get_incidents_id_missions
+      tags: [Generated-From-Handler]
+      summary: Documented from daidzai-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /incidents/{id}/resources:
+    get:
+      operationId: daidzai_get_incidents_id_resources
+      tags: [Generated-From-Handler]
+      summary: Documented from daidzai-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: daidzai_post_incidents_id_resources
+      tags: [Generated-From-Handler]
+      summary: Documented from daidzai-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1:
+    delete:
+      operationId: daidzai_delete_internal_v1
+      tags: [Generated-From-Handler]
+      summary: Documented from daidzai-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    get:
+      operationId: daidzai_get_internal_v1
+      tags: [Generated-From-Handler]
+      summary: Documented from daidzai-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    patch:
+      operationId: daidzai_patch_internal_v1
+      tags: [Generated-From-Handler]
+      summary: Documented from daidzai-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: daidzai_post_internal_v1
+      tags: [Generated-From-Handler]
+      summary: Documented from daidzai-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    put:
+      operationId: daidzai_put_internal_v1
+      tags: [Generated-From-Handler]
+      summary: Documented from daidzai-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/daidzai:
+    delete:
+      operationId: daidzai_delete_internal_v1_daidzai
+      tags: [Generated-From-Handler]
+      summary: Documented from daidzai-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    get:
+      operationId: daidzai_get_internal_v1_daidzai
+      tags: [Generated-From-Handler]
+      summary: Documented from daidzai-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    patch:
+      operationId: daidzai_patch_internal_v1_daidzai
+      tags: [Generated-From-Handler]
+      summary: Documented from daidzai-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: daidzai_post_internal_v1_daidzai
+      tags: [Generated-From-Handler]
+      summary: Documented from daidzai-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    put:
+      operationId: daidzai_put_internal_v1_daidzai
+      tags: [Generated-From-Handler]
+      summary: Documented from daidzai-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/daidzai/disasters:
+    delete:
+      operationId: daidzai_delete_internal_v1_daidzai_disasters
+      tags: [Generated-From-Handler]
+      summary: Documented from daidzai-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    get:
+      operationId: daidzai_get_internal_v1_daidzai_disasters
+      tags: [Generated-From-Handler]
+      summary: Documented from daidzai-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    patch:
+      operationId: daidzai_patch_internal_v1_daidzai_disasters
+      tags: [Generated-From-Handler]
+      summary: Documented from daidzai-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: daidzai_post_internal_v1_daidzai_disasters
+      tags: [Generated-From-Handler]
+      summary: Documented from daidzai-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    put:
+      operationId: daidzai_put_internal_v1_daidzai_disasters
+      tags: [Generated-From-Handler]
+      summary: Documented from daidzai-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /requests:
+    post:
+      operationId: daidzai_post_requests
+      tags: [Generated-From-Handler]
+      summary: Documented from daidzai-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /requests/{id}:
+    get:
+      operationId: daidzai_get_requests_id
+      tags: [Generated-From-Handler]
+      summary: Documented from daidzai-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /requests/{id}/triage:
+    post:
+      operationId: daidzai_post_requests_id_triage
+      tags: [Generated-From-Handler]
+      summary: Documented from daidzai-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /{id}/close:
+    post:
+      operationId: daidzai_post__id_close
+      tags: [Generated-From-Handler]
+      summary: Documented from daidzai-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /{id}/sites:
+    get:
+      operationId: daidzai_get__id_sites
+      tags: [Generated-From-Handler]
+      summary: Documented from daidzai-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: daidzai_post__id_sites
+      tags: [Generated-From-Handler]
+      summary: Documented from daidzai-service handler (Wave 2 contract sync)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas: {}
