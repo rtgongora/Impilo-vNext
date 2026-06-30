@@ -85,3 +85,86 @@ Both `asset-registry-service` (8310) and `iot-ingestion-service` (8330) already 
 > (Dura / inventory-service) is consumable commodity/spare-part inventory tracked as a
 > ledger.** A ventilator is an asset; the filters it consumes are stock. Maintenance here
 > *references* a spare-part request to inventory/Oros — it never holds a stock ledger.
+
+---
+
+# Part B — Delivery (build complete, WS#5)
+
+> Appended after the build. The discovery (Part A) decided EXTEND `asset-registry-service`;
+> this section records what was actually shipped, the journeys, the API/BFF/policy surface,
+> and honest parity/gaps.
+
+## 10. Asset-vs-stock doctrine (restated, enforced in policy)
+
+An **asset/equipment/device** is a managed physical/connected object tracked through its
+operational lifecycle (register → assign → operate → maintain → calibrate → deploy → audit →
+retire). **Stock** (Dura / inventory-service, 8098) is consumable commodity/spare-part inventory
+tracked as a ledger. The `impilo.assets` OPA policy **explicitly denies** stock functions
+(`inventory.stock.*`, `assets.stock.*`) from being served as asset functions, so the boundary is
+machine-enforced, not just documented.
+
+## 11. Lifecycle / maintenance / calibration / IoT / readiness journeys
+
+- **Register → operate:** `POST /equipment` (duplicate serial/tag detection) → status lifecycle
+  via `/equipment/{id}/status` + append-only `asr_equipment_lifecycle_event`.
+- **Custody:** `initiate transfer → approve → confirm receipt` applies the facility/custodian change
+  only on receipt (handover integrity); early receipt is rejected (`INVALID_STATE`).
+- **Maintenance:** open (preventive/corrective/inspection) → assign technician (Vashandi ref) →
+  complete (+ optional return-to-service flips status to OPERATIONAL). Spare parts are a *reference*
+  to inventory/Oros, never a held ledger. `maintenance/due` driven by `next_maintenance`.
+- **Calibration:** record outcome; **FAIL marks the equipment UNSAFE** and removes it from readiness
+  until recalibrated. `calibration/due` driven by `next_calibration`.
+- **Fault → safety:** routine fault auto-spawns a corrective maintenance task; a safety fault is
+  **linked to Rito** (case ref stored, not owned).
+- **IoT:** alerts are **derived from real telemetry/heartbeat** (existing `AssetEventConsumer` +
+  explicit `/alerts` ingest) — **never fabricated**. Active-alert dedup per device+type; resolve +
+  request-Khuluma-notify. Clinical observations route to Butano; cold-chain breaches route to Madi.
+- **Readiness:** required-equipment profile per service point vs **operational** assigned equipment →
+  concrete gaps (`MISSING`/`BROKEN`/`UNCALIBRATED`/`UNDER_MAINTENANCE`/`INSUFFICIENT`), never a score.
+- **Field deployment:** kit prepare → deploy → return; loss/damage on return auto-flags equipment.
+- **Asset audit:** open audit seeds expected items from the facility registry; confirm/exception per
+  item; complete emits exception count.
+
+## 12. API / BFF / policy surface
+
+- **Service** `asset-registry-service` `/internal/v1/equipment/**` (see ledger row for the full verb
+  list). Every mutation: TrustContext required, owner/tenant validation, lifecycle-event audit, outbox
+  event (`impilo.asset.*.v1`), `ErrorEnvelope` on failure paths.
+- **BFF** `experience-bff` `/internal/v1/equipment/**` proxies the service and **composes**
+  `/alerts/{id}/notify` (Khuluma request-only) and `/readiness/guidance` (guidance-service
+  `domain=assets`). Stateless — no datasource.
+- **Policy** `infra/opa/impilo/assets.rego` (+ `assets_test.rego`, 37 tests): view/register/edit/assign/
+  transfer/receipt/fault/mark-unsafe/maintenance/calibration/return-to-service/retire(elevated)/
+  resolve-alert/readiness/deployment/audit/aggregate/cross-facility(scoped)/provider-equipment-use/
+  technician-by-assignment/link-device-to-clinical(context)/citizen+low-trust DENY/stock-NOT-asset DENY.
+
+## 13. Parity (honest)
+
+| Surface | Web (one-ui-shell) | Mobile (provider-app) |
+|---------|--------------------|-----------------------|
+| Registry search/list | ✅ `/operations/equipment` | ✅ `EquipmentSearchScreen` (manual tag/serial; **no camera scan**) |
+| Detail/profile | ✅ `/operations/equipment/[equipmentId]` | partial (search → fault entry) |
+| Register | ✅ | — (facility-admin web flow) |
+| Report fault | ✅ (detail) | ✅ `ReportEquipmentFaultScreen` |
+| Maintenance | ✅ dashboard + complete | ✅ `MaintenanceTasksScreen` (complete+RTS) |
+| Calibration | ✅ due + record | — (deferred on mobile) |
+| Readiness | ✅ real gaps + Nompilo | — (deferred on mobile) |
+| IoT status | ✅ resolve + notify | — (deferred on mobile) |
+| Deployment kit | ✅ | — (deferred on mobile) |
+| Asset audit | ✅ | — (deferred on mobile) |
+
+Web is the complete facility-admin/biomedical surface; mobile is the **highest-value field slice**
+(search + fault + maintenance) per the operating envelope.
+
+## 14. Deferred / honest gaps
+
+1. **Mobile not test-run.** `apps/mobile` uses pnpm `workspace:*`; deps are not installable in this
+   env (EUNSUPPORTEDPROTOCOL). Screens were written and structurally verified against design-system
+   exports + the BFF contract, but **vitest/tsc were not run**.
+2. **Mobile camera/QR scan** substrate not wired — manual tag/serial search instead.
+3. **IoT threshold-breach derivation rule.** Alerts are honestly recorded (consumer heartbeat +
+   explicit ingest API); a dedicated rule converting iot-ingestion threshold breaches into
+   `asr_iot_alert` rows is a candidate follow-up. No fabricated telemetry was added.
+4. **Asset roles + `assets.*` actions** referenced in OPA are not yet in the central role/policy
+   registry; seed `policy_rule` rows if the live Java PolicyEngine becomes the enforcement path
+   (coordination item).
