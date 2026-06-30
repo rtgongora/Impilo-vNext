@@ -150,13 +150,14 @@ Closed (provable):
 - `57375956d` **G-FU-03** — wired the native Fundo CPD egress consumer (certificate.issued.v1 →
   ingestCompletion), guarded to CPD-eligible PROVIDER certs, idempotent. Listener test 4/4.
 
-Remaining Phase-6 dispositions:
-- **Feature-completeness (buildable, not dishonest):** G-PX-03 contact-resolve seam (current state is
-  honest uniform-deny, no leak) · G-CT-02 structured telemedicine completion-note depth.
-- **Environment-gated (cannot close in-sandbox — the plan itself says "at rollout"):** G-OR-02/03 live
-  FHIR/HL7/DICOM/LIMS counterparty soak · MADI blood-bank e2e compose profile.
-- **Larger UI/mobile waves:** G-PX-05/06 mobile provider parity + clinical UX depth · G-TI-04
-  facility-admin mobile screens · G-RT-02 survey renderer + mobile triage parity.
+Remaining Phase-6 dispositions: **all consolidated in
+[`deferred-for-live-testing.md`](deferred-for-live-testing.md)** — the single authoritative list of
+everything deferred for live testing / dedicated waves (live external counterparties · live
+multi-service e2e + ENFORCE · UI/mobile waves · honest-safe feature builds). Summary:
+- **Feature-completeness (buildable, not dishonest):** G-PX-03 contact-resolve seam (already honest
+  uniform-deny, no leak). G-CT-02 closed this turn (structured completion-note + no-closure-without-audit).
+- **Environment-gated (cannot close in-sandbox):** G-OR-02/03 live FHIR/HL7/DICOM/LIMS soak · MADI e2e.
+- **Larger UI/mobile waves:** G-PX-05/06 · G-TI-04 · G-RT-02 · patient-lane mobile · Khuluma W8 tail.
 
 ## Later phase (7)
 OPA-as-PDP migration · (deferred cross-service wiring from P3/P4).

@@ -15,6 +15,10 @@
 > **Honest counts:** deterministic gate = **6**. Full register = **~59 findings (G001–G055)**:
 > ~15 blocker/critical, ~14 high, ~20 medium, ~9 low. The gap between 6 and ~58 is
 > the finding — the scanner is honest about its *method* but incomplete in *coverage*.
+>
+> **Deferred for live testing / dedicated waves:** items below that are built + sandbox-proven but can
+> only be *verified done* against a live deployment (counterparty soak, multi-service e2e, SHADOW→ENFORCE)
+> or are scheduled later waves are consolidated in **[`deferred-for-live-testing.md`](deferred-for-live-testing.md)**.
 
 ## CRITICAL / BLOCKER — security · trust · clinical · legal
 
