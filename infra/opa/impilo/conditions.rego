@@ -97,7 +97,7 @@ min_loa_ok(c) if effective_loa >= c.min_loa
 
 # Java only checks allowed_facilities when the request carries a facility_id.
 allowed_facilities_ok(c) if not c.allowed_facilities
-allowed_facilities_ok(c) if not input.facility_id
+allowed_facilities_ok(_) if not input.facility_id
 allowed_facilities_ok(c) if input.facility_id in {f | some f in c.allowed_facilities}
 
 allowed_actor_types_ok(c) if not c.allowed_actor_types
@@ -129,12 +129,12 @@ path_contains_ok(c) if {
 }
 
 account_assurance_ok(c) if not c.account_assurance_required
-account_assurance_ok(c) if account_verified
+account_assurance_ok(_) if account_verified
 
 # verification grace: if not verified and now is past the expiry, fail. Needs input.now_epoch_ms
 # (the equivalence harness pins time on both sides for determinism).
 grace_ok(c) if not c.verification_grace_expiry_epoch_ms
-grace_ok(c) if account_verified
+grace_ok(_) if account_verified
 grace_ok(c) if {
 	c.verification_grace_expiry_epoch_ms
 	not account_verified
