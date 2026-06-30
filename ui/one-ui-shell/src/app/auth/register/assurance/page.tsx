@@ -14,7 +14,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Shield, Clock, CheckCircle2, ChevronRight, Loader2, Calendar, IdCard } from "lucide-react";
+import { Shield, Clock, CheckCircle2, ChevronRight, Loader2 } from "lucide-react";
 import { AuthLayout } from "@/components/AuthLayout";
 import { NompiloHint } from "@/components/intelligent/NompiloHint";
 import { useAuthStore } from "@/hooks/useAuthStore";
@@ -29,14 +29,8 @@ export default function AssuranceChoicePage() {
   const [upgradeError, setUpgradeError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // Temporary Health Access — extra fields
-  const [showTemporaryForm, setShowTemporaryForm] = useState(false);
-  const [dateOfBirth, setDateOfBirth] = useState("");
-  const [idNumber, setIdNumber] = useState("");
-
   function handleSelect(tier: AssuranceUpgradeTier) {
     setSelected(tier);
-    setShowTemporaryForm(tier === "TEMPORARY");
   }
 
   async function handleContinue() {
@@ -169,52 +163,24 @@ export default function AssuranceChoicePage() {
         })}
       </div>
 
-      {/* Temporary access — extra info collection */}
-      {showTemporaryForm && selected === "TEMPORARY" && (
-        <div className="mt-4 rounded-xl border border-warning/35 bg-warning-soft/50 p-4 space-y-3">
-          <p className="text-sm font-medium text-foreground">
-            We need a few more details for your provisional Health ID
+      {/* Temporary access — verification happens at a facility (G-CZO-13). We don't collect
+          identity details here that we can't yet verify or persist; the provisional Health ID is
+          confirmed in person, where DOB + National ID are captured and deduplicated via Vito. */}
+      {selected === "TEMPORARY" && (
+        <div className="mt-4 rounded-xl border border-warning/35 bg-warning-soft/50 p-4">
+          <p className="text-sm font-medium text-foreground">Verification completes at a facility</p>
+          <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+            Your provisional Health ID works for 90 days. Bring your National ID to any health facility
+            to confirm your identity and unlock full health services — your details are captured and
+            checked there.
           </p>
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              Date of birth
-            </label>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <input
-                type="date"
-                value={dateOfBirth}
-                onChange={(e) => setDateOfBirth(e.target.value)}
-                className="w-full pl-10 pr-3 py-3 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              National ID number
-            </label>
-            <div className="relative">
-              <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <input
-                type="text"
-                value={idNumber}
-                onChange={(e) => setIdNumber(e.target.value)}
-                placeholder="e.g. 63-123456-A-78"
-                className="w-full pl-10 pr-3 py-3 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
-              />
-            </div>
-          </div>
         </div>
       )}
 
       <button
         type="button"
         onClick={handleContinue}
-        disabled={
-          !selected ||
-          submitting ||
-          (selected === "TEMPORARY" && (!dateOfBirth || !idNumber))
-        }
+        disabled={!selected || submitting}
         className="mt-6 w-full py-3 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
       >
         {submitting ? (
