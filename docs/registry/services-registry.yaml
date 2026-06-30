@@ -514,6 +514,44 @@ services:
     api_contract_status: partial
     authz_audit_status: partial
     observability_status: partial
+  - id: daidzai-service
+    maven_module: daidzai-service
+    primary_plane: experience
+    plane: experience
+    domain: workflow-orchestration
+    secondary_planes: []
+    sovereign: false
+    sovereign_group: null
+    primary_protocol: rest
+    default_http_port: 8392
+    product_names:
+      - Daidzai
+    owner_team: TBD
+    system_of_record_for:
+      - Daidzai emergency/disaster response command canonical records
+      - emergency_request, emergency_incident, mission status timeline, resource_request, affected_site
+    consumes_from:
+      - tshepo-authz-service
+      - nhume-service
+      - ndila-service
+      - pct-service
+      - tuso-service
+      - indawo-service
+      - khuluma-service
+      - rito-quality-safety-service
+    exposes_to:
+      - experience-bff
+    forbidden_responsibilities:
+      - must-not-own-dispatch-execution
+      - must-not-own-maps-routing
+      - must-not-own-clinical-record-source-of-truth
+      - must-not-bypass-bff-authz-audit-controls
+    production_status: baseline-assessed
+    implementation_status: implemented-or-partial
+    frontend_wiring_status: wired
+    api_contract_status: partial
+    authz_audit_status: partial
+    observability_status: partial
   - id: credential-verification-service
     maven_module: credential-verification-service
     primary_plane: enterprise

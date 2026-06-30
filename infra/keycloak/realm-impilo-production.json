@@ -299,6 +299,48 @@
         "clientRole": false
       },
       {
+        "name": "DISPATCHER",
+        "description": "Daidzai emergency dispatcher — receives, triages and assigns emergency missions",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "RESPONDER",
+        "description": "Daidzai field/ambulance responder — accepts and executes dispatched emergency missions",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "FIELD_CLINICIAN",
+        "description": "Daidzai field clinician — prehospital clinical care within scope",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "RESPONSE_COORDINATOR",
+        "description": "Daidzai response coordinator — coordinates resources and facilities for an emergency/incident",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "RESPONSE_COMMANDER",
+        "description": "Daidzai incident/disaster commander — command authority over a declared incident",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "SAFEGUARDING_OFFICER",
+        "description": "Daidzai safeguarding officer — access to sensitive/protected emergency case types (GBV/SA/mental-health/child-protection)",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "AMBULANCE_CREW",
+        "description": "Daidzai ambulance crew member — transport/movement role under a responder mission",
+        "composite": false,
+        "clientRole": false
+      },
+      {
         "name": "DEVELOPER",
         "description": "Platform developer \u2014 governed dev access across all role groups",
         "composite": false,

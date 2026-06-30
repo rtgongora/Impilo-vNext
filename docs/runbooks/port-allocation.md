@@ -72,6 +72,7 @@ Service metadata (plane, sovereign, product names): [`docs/registry/services-reg
 | **8380** | `live-service` | Impilo Live — live events, webinars, broadcasts |
 | **8390** | `khuluma-service` | Khuluma — Comms Hub (conversations, presence, calls/meetings, escalation orchestration) |
 | **8391** | `rito-quality-safety-service` | Rito — quality, safety & client voice (complaints/incidents/audits/CAPA/QI/surveys) |
+| **8392** | `daidzai-service` | Daidzai — emergency/disaster/public-health response command (SOS/incident, mission tracking, resource-request, affected-site; orchestrates Nhume/Ndila/PCT/Khuluma/Rito) |
 | **8122** | `community-service` | Community health / CHW / outreach (PCT care setting) |
 | 8093 | `document-service` | Document Store |
 | **8113** | `pacs-adapter-service` | |

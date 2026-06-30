@@ -18,6 +18,7 @@
 | `costing-engine-service` | enterprise | Costing Engine canonical records |
 | `coverage-service` | enterprise | Coverage canonical records |
 | `credential-verification-service` | enterprise | Credential Verification canonical records |
+| `daidzai-service` | experience | Daidzai canonical records — emergency_request / emergency_incident / mission status timeline / resource_request / affected_site. Orchestrates (does NOT own) dispatch (Nhume), maps/routing (Ndila), clinical encounter/record (PCT/Butano), comms (Khuluma), after-action (Rito). |
 | `data-access-governance-service` | data | Data Access Governance canonical records |
 | `data-governance-service` | data | Data Governance canonical records |
 | `data-ingestion-service` | data | Data Ingestion canonical records |
