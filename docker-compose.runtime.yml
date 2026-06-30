@@ -144,6 +144,10 @@ services:
       - ./tools/ops/gateway/opa:/policies:ro
       # Phase 3 strangler: the impilo.authz decision module (loaded recursively under /policies).
       - ./infra/opa/authz:/policies/authz:ro
+      # Phase 7: the doctrine policy corpus (impilo.khuluma / organisation / vashandi / work / tabs /
+      # hsc / registry / marketplace). Compiles under 0.68 + opa-tested (31 cases); loaded for SHADOW
+      # evaluation. Java PolicyEngine stays authoritative until the SHADOW→ENFORCE cutover.
+      - ./infra/opa/impilo:/policies/impilo:ro
     ports:
       - "8181:8181"
     healthcheck:
