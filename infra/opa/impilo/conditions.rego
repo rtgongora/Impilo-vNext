@@ -83,6 +83,9 @@ path_contains_segment(path, needle) if {
 # ── conditions_satisfied(conditions) — all present conditions must pass ──────
 
 conditions_satisfied(conditions) if {
+	# Fail-closed: a rule whose JSONB conditions could not be parsed (sentinel from the bundle
+	# builder) must never become unconditional — mirrors PolicyEngine's catch -> return false.
+	not conditions.__unparseable__
 	min_loa_ok(conditions)
 	allowed_facilities_ok(conditions)
 	allowed_actor_types_ok(conditions)

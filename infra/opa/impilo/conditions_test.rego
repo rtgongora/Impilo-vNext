@@ -114,3 +114,7 @@ test_all_conditions_combined if {
 test_empty_conditions_pass if {
 	conditions.conditions_satisfied({}) with input as {}
 }
+
+test_unparseable_conditions_fail_closed if {
+	not conditions.conditions_satisfied({"__unparseable__": true}) with input as {"loa": 4, "assurance_level": "LOA4"}
+}
