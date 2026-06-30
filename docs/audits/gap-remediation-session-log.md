@@ -124,11 +124,14 @@ capability-matrix + probeEvidence) is now runtime-verifiable here — the metric
   (runtime-proven V001→V003 PG16); EscalationService lifecycle + SLA targets (policy + priority defaults)
   + accept-stops-clock + escalate-bump + `@Scheduled` breach sweep (OROS pattern); full controller.
   EscalationServiceTest 6/6. **G-KH-01 W4 done.**
-- **Remaining Phase 5:** W5 channels/communities/broadcast (G-KH-02) · W6 external adapter abstraction
-  (G-KH-03) · W7 presence depth + Vashandi on-call + push (G-KH-04) · W8 UI breadth + admin/governance.
+- `3e7ba29c5` **feat(khuluma) W5** — channels/communities/broadcast (G-KH-02). V004 conversation scope
+  (runtime-proven V001→V004 PG16); ChannelService create/discover/join/leave/broadcast (OWNER-gated) +
+  ChannelController. ChannelServiceTest 6/6. **G-KH-02 W5 done.**
+- **Remaining Phase 5:** W6 external adapter abstraction (G-KH-03) · W7 presence depth + Vashandi on-call
+  + push (G-KH-04) · W8 UI breadth + admin/governance.
 
 ## Later phases (5 remainder, 6–7)
-Khuluma W5–W8 · per-wave High/Med closures · OPA-as-PDP migration.
+Khuluma W6–W8 · per-wave High/Med closures · OPA-as-PDP migration.
 
 ## PO decisions parked
 See `docs/audits/po-decision-index.md`.
