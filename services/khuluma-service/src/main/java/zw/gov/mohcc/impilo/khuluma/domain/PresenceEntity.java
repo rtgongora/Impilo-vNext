@@ -47,7 +47,14 @@ public class PresenceEntity {
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt = OffsetDateTime.now();
 
+    /** Vashandi duty status (W7): OFF_DUTY | ON_DUTY | ON_CALL — orthogonal to availability status. */
+    @Column(name = "duty_status", nullable = false, length = 16)
+    private String dutyStatus = "OFF_DUTY";
+
     public PresenceEntity() {}
+
+    public String getDutyStatus() { return dutyStatus; }
+    public void setDutyStatus(String dutyStatus) { this.dutyStatus = dutyStatus; }
 
     public UUID getPresenceId() { return presenceId; }
     public void setPresenceId(UUID presenceId) { this.presenceId = presenceId; }
