@@ -1241,6 +1241,10 @@ public class PctServiceClient {
         return extractData(restTemplate.postForEntity(baseUrl + "/v1/death/" + caseId + "/body/release", body, JsonNode.class));
     }
 
+    public JsonNode attachDeathDocument(String caseId, Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(baseUrl + "/v1/death/" + caseId + "/documents", body, JsonNode.class));
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

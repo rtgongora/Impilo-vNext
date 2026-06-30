@@ -93,6 +93,13 @@ public class DeathPathwayController {
         return ResponseEntity.ok(pct.releaseDeathBody(caseId, body));
     }
 
+    // ── Supporting documents (PCT records the reference; the file lives in the document service) ──
+    @PostMapping("/cases/{caseId}/documents")
+    public ResponseEntity<JsonNode> attachDocument(@PathVariable String caseId,
+            @RequestBody Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(pct.attachDeathDocument(caseId, body));
+    }
+
     // ── CRVS (Ubomi owns) ──
     @PostMapping("/cases/{caseId}/crvs-package")
     public ResponseEntity<JsonNode> stageCrvs(@PathVariable String caseId) {

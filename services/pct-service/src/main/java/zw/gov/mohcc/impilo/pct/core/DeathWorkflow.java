@@ -612,6 +612,20 @@ public class DeathWorkflow {
         return missing;
     }
 
+    /**
+     * Link a supporting document reference to a death case. The binary is stored by the document
+     * service (owner-routed); here we record the reference + type on the append-only trail so the
+     * case carries provenance of attached evidence (e.g. ID photo, referral note).
+     */
+    @Transactional
+    public DeathCaseEntity attachSupportingDocument(UUID caseId, String documentRef, String documentType) {
+        TrustContext ctx = TrustContextHolder.require();
+        DeathCaseEntity dc = require(ctx, caseId);
+        audit(dc, "DOCUMENT_ATTACHED", "documentRef", documentType, documentRef,
+                "Supporting document linked", ctx, roleOf(ctx));
+        return dc;
+    }
+
     // ── reads ──
 
     @Transactional(readOnly = true)

@@ -182,4 +182,12 @@ public class DeathController {
             @PathVariable UUID caseId, @Valid @RequestBody BodyReleaseRequest request) {
         return ResponseEntity.ok(ApiResponse.ok(deathWorkflow.releaseBody(caseId, request), cid()));
     }
+
+    /** Link a supporting document reference (file stored by the document service) to the case. */
+    @PostMapping("/death/{caseId}/documents")
+    public ResponseEntity<ApiResponse<DeathCaseEntity>> attachDocument(
+            @PathVariable UUID caseId, @RequestBody Map<String, String> body) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                deathWorkflow.attachSupportingDocument(caseId, body.get("documentRef"), body.get("documentType")), cid()));
+    }
 }
