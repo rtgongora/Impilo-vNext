@@ -127,11 +127,17 @@ capability-matrix + probeEvidence) is now runtime-verifiable here — the metric
 - `3e7ba29c5` **feat(khuluma) W5** — channels/communities/broadcast (G-KH-02). V004 conversation scope
   (runtime-proven V001→V004 PG16); ChannelService create/discover/join/leave/broadcast (OWNER-gated) +
   ChannelController. ChannelServiceTest 6/6. **G-KH-02 W5 done.**
-- **Remaining Phase 5:** W6 external adapter abstraction (G-KH-03) · W7 presence depth + Vashandi on-call
-  + push (G-KH-04) · W8 UI breadth + admin/governance.
+- `526dcb4b3` **W6** external channel adapters (G-KH-03). V005 adapter + delivery_attempt (proven V001→V005);
+  DeliveryService honesty seam (external NOT_CONFIGURED → SKIPPED, never fake send). 6/6.
+- `25d15b42d` **W7** secure WS push + on-call (G-KH-04). WsTokenValidator + hardened handshake (closed the
+  query-param identity-spoof hole); V006 duty_status + OnCallService (proven V001→V006). 12/12.
+- `9ebc8c3c1` **W8** comms-ops admin UI + BFF proxies. /admin/comms-ops screen (escalation queue + adapter
+  status + on-call) on KhulumaBffController read-proxies. tsc clean + vitest 1/1 + BFF compile.
 
-## Later phases (5 remainder, 6–7)
-Khuluma W6–W8 · per-wave High/Med closures · OPA-as-PDP migration.
+**Phase 5 COMPLETE (W4–W8).** All migrations runtime-proven on PG16; ~6 new test suites green.
+
+## Later phases (6–7)
+Per-wave High/Med closures · OPA-as-PDP migration · (deferred cross-service wiring from P3/P4).
 
 ## PO decisions parked
 See `docs/audits/po-decision-index.md`.
