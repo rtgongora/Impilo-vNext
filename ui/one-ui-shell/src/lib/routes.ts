@@ -753,6 +753,10 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/work/clinical/mortality-certification", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Mortality Certification", navLabel: "Mortality Certification", navZone: "work" },
   { path: "/work/mortuary", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Mortuary", navLabel: "Mortuary", navZone: "work" },
   { path: "/work/crvs/death-registration", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Death Registration", navLabel: "Death Registration", navZone: "work" },
+
+  // WS#6 — Theatre & Perioperative Depth (provider theatre surfaces).
+  { path: "/work/clinical/theatre", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Theatre", navLabel: "Theatre", navZone: "work" },
+  { path: "/work/clinical/theatre/[id]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Theatre Case", navLabel: "Theatre Case", navZone: "work" },
 ];
 
 // Total route count assertion.
@@ -795,7 +799,7 @@ export const ROUTES: RouteDefinition[] = [
 // Person Health Wallet (Jun 2026): 8 routes under /citizen/wallet for the unified person anchor
 // experience (overview, identity, profile, records, timeline, dependants, payments, comms).
 // Realigned the count constant to the actual extracted route total (it had drifted behind earlier waves).
-export const EXPECTED_ROUTE_COUNT = 673;
+export const EXPECTED_ROUTE_COUNT = 675;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

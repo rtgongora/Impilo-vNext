@@ -70,3 +70,52 @@ export const completePostop = async (episodeId: string, body: Record<string, unk
 
 export const completeProcedureEpisode = async (episodeId: string) =>
   apiClient.post(`${BASE}/episodes/${episodeId}/complete`, {});
+
+// ── Theatre & perioperative depth (WS#6 theatre seam) ──────────────────────────
+// Composed via the BFF, which proxies inpatient-service's /internal/v1/theatre/** module.
+const THEATRE = "/internal/v1/theatre";
+
+export const listTheatreQueue = async () =>
+  (await apiClient.get<{ data: unknown[] }>(`${THEATRE}/queue`)).data.data;
+
+export const intakeTheatreCase = async (body: Record<string, unknown>) =>
+  (await apiClient.post<{ data: { id: string } }>(`${THEATRE}/cases`, body)).data.data;
+
+export const setTheatreTriage = async (caseId: string, body: Record<string, unknown>) =>
+  apiClient.post(`${THEATRE}/cases/${caseId}/triage`, body);
+
+export const evaluateTheatreReadiness = async (caseId: string, body: Record<string, unknown> = {}) =>
+  (await apiClient.post<{ data: Record<string, unknown> }>(`${THEATRE}/cases/${caseId}/readiness`, body)).data.data;
+
+export const listTheatreReadiness = async (caseId: string) =>
+  (await apiClient.get<{ data: unknown[] }>(`${THEATRE}/cases/${caseId}/readiness`)).data.data;
+
+export const bookTheatreCase = async (caseId: string, body: Record<string, unknown> = {}) =>
+  (await apiClient.post<{ data: Record<string, unknown> }>(`${THEATRE}/cases/${caseId}/book`, body)).data.data;
+
+export const startTheatreCase = async (caseId: string, body: Record<string, unknown> = {}) =>
+  (await apiClient.post<{ data: Record<string, unknown> }>(`${THEATRE}/cases/${caseId}/start`, body)).data.data;
+
+export const draftTheatreNote = async (caseId: string, body: Record<string, unknown>) =>
+  (await apiClient.post<{ data: { id: string } }>(`${THEATRE}/cases/${caseId}/note`, body)).data.data;
+
+export const signTheatreNote = async (caseId: string, signedProviderId: string) =>
+  (await apiClient.post<{ data: Record<string, unknown> }>(`${THEATRE}/cases/${caseId}/note/sign`, { signedProviderId })).data.data;
+
+export const getTheatreNote = async (caseId: string) =>
+  (await apiClient.get<{ data: Record<string, unknown> }>(`${THEATRE}/cases/${caseId}/note`)).data.data;
+
+export const recordTheatrePacuDisposition = async (caseId: string, body: Record<string, unknown>) =>
+  (await apiClient.post<{ data: Record<string, unknown> }>(`${THEATRE}/cases/${caseId}/pacu/disposition`, body)).data.data;
+
+export const cancelTheatreCase = async (caseId: string, reason: string) =>
+  (await apiClient.post<{ data: Record<string, unknown> }>(`${THEATRE}/cases/${caseId}/cancel`, { reason })).data.data;
+
+export const reportTheatreSafetyEvent = async (caseId: string, body: Record<string, unknown>) =>
+  (await apiClient.post<{ data: { id: string } }>(`${THEATRE}/cases/${caseId}/safety-events`, body)).data.data;
+
+export const listTheatreSafetyEvents = async (caseId: string) =>
+  (await apiClient.get<{ data: unknown[] }>(`${THEATRE}/cases/${caseId}/safety-events`)).data.data;
+
+export const routeTheatreDeath = async (caseId: string, body: Record<string, unknown> = {}) =>
+  (await apiClient.post<{ data: Record<string, unknown> }>(`${THEATRE}/cases/${caseId}/death`, body)).data.data;

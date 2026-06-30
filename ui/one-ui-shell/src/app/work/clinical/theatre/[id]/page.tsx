@@ -1,0 +1,339 @@
+"use client";
+
+/**
+ * Theatre case detail — the full perioperative workflow on one surface. Real data via the
+ * experience-BFF (/internal/v1/theatre/cases/{id}/...). Readiness is owner-routed and fails safely
+ * with blockers; the WHO Sign-In gates the start; the operative note is signed by a surgeon; PACU
+ * disposition can route a death to the PCT death pathway; safety events route to their owner. No fake
+ * availability, readiness, checklist completion, or notes.
+ * Route: /work/clinical/theatre/[id]
+ */
+
+import { useCallback, useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import Link from "next/link";
+import { Stethoscope, Loader2, RefreshCw, ArrowLeft, ShieldAlert, ClipboardCheck, FileText, HeartPulse, Ban, TriangleAlert } from "lucide-react";
+import { AppLayout } from "@/components/AppLayout";
+import { PageShell } from "@/components/PageShell";
+import { NompiloContextualGuidance } from "@/components/intelligent/NompiloContextualGuidance";
+import { apiClient } from "@/lib/api-client";
+
+interface Blocker { code?: string; message?: string }
+interface ReadinessCheck { domain?: string; owner_service?: string; status?: string; owner_ref?: string }
+interface ReadinessResult { bookable?: boolean; checks?: ReadinessCheck[]; blockers?: Blocker[] }
+interface ChecklistItem { id?: string; phase?: string; item_code?: string; item_label?: string; completed?: boolean }
+interface SafetyEvent { id?: string; category?: string; severity?: string; description?: string; routed_owner?: string; routed_status?: string }
+interface TheatreCaseDetail {
+  id?: string;
+  patient_id?: string;
+  procedure_name?: string;
+  status?: string;
+  triage_priority?: string;
+  surgeon_id?: string;
+  checklist?: ChecklistItem[];
+  death_case_ref?: string;
+}
+
+function errMessage(e: unknown): string {
+  if (e && typeof e === "object") {
+    const obj = e as { error?: { message?: string }; blockers?: Blocker[]; status?: number };
+    if (obj.blockers && obj.blockers.length) return obj.blockers.map((b) => b.message ?? b.code).join("; ");
+    if (obj.error?.message) return obj.error.message;
+    if (obj.status) return `Request failed (HTTP ${obj.status}).`;
+  }
+  return "Action failed. Please try again.";
+}
+
+const STATUS_TONE: Record<string, string> = {
+  BOOKED: "bg-slate-100 text-slate-600",
+  PREOP: "bg-blue-100 text-blue-700",
+  READY_FOR_THEATRE: "bg-emerald-100 text-emerald-700",
+  IN_PROGRESS: "bg-amber-100 text-amber-700",
+  PACU: "bg-violet-100 text-violet-700",
+  RECOVERED: "bg-emerald-100 text-emerald-700",
+  COMPLETED: "bg-emerald-100 text-emerald-700",
+  CANCELLED: "bg-red-100 text-red-700",
+  DECEASED: "bg-slate-800 text-white",
+};
+
+export default function TheatreCaseDetailPage() {
+  const params = useParams<{ id: string }>();
+  const id = params?.id ?? "";
+  const [data, setData] = useState<TheatreCaseDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [readiness, setReadiness] = useState<ReadinessResult | null>(null);
+  const [safety, setSafety] = useState<SafetyEvent[]>([]);
+  const [overrideReason, setOverrideReason] = useState("");
+  const [note, setNote] = useState({ performedProcedure: "", findings: "", complications: "", postopPlan: "", signedProviderId: "" });
+  const [cancelReason, setCancelReason] = useState("");
+  const [safetyForm, setSafetyForm] = useState({ category: "NEAR_MISS", severity: "MODERATE", description: "" });
+
+  const load = useCallback(async () => {
+    if (!id) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await apiClient.get<TheatreCaseDetail>(`/internal/v1/theatre/cases/${id}`);
+      setData((res as { data?: TheatreCaseDetail }).data ?? (res as TheatreCaseDetail));
+      const s = await apiClient.get<SafetyEvent[]>(`/internal/v1/theatre/cases/${id}/safety-events`);
+      setSafety(Array.isArray(s) ? s : (s as { data?: SafetyEvent[] }).data ?? []);
+    } catch (e) {
+      setError(errMessage(e));
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const act = useCallback(
+    async (fn: () => Promise<unknown>, ok: string) => {
+      setBusy(true);
+      setMsg(null);
+      try {
+        await fn();
+        setMsg(ok);
+        void load();
+      } catch (e) {
+        setMsg(errMessage(e));
+      } finally {
+        setBusy(false);
+      }
+    },
+    [load],
+  );
+
+  const evaluateReadiness = () =>
+    act(async () => {
+      const r = await apiClient.post<ReadinessResult>(`/internal/v1/theatre/cases/${id}/readiness`, {});
+      setReadiness((r as { data?: ReadinessResult }).data ?? (r as ReadinessResult));
+    }, "Readiness evaluated. Blockers (if any) are listed below.");
+
+  const book = (override: boolean) =>
+    act(
+      () =>
+        apiClient.post(`/internal/v1/theatre/cases/${id}/book`, override ? { emergencyOverride: true, emergencyOverrideReason: overrideReason } : {}),
+      override ? "Booked under an audited emergency override." : "Booked.",
+    );
+
+  const start = (override: boolean) =>
+    act(
+      () =>
+        apiClient.post(`/internal/v1/theatre/cases/${id}/start`, override ? { emergencyOverride: true, emergencyOverrideReason: overrideReason } : {}),
+      "Theatre started.",
+    );
+
+  const draftAndSign = () =>
+    act(async () => {
+      await apiClient.post(`/internal/v1/theatre/cases/${id}/note`, {
+        performedProcedure: note.performedProcedure,
+        findings: note.findings,
+        complications: note.complications,
+        postopPlan: note.postopPlan,
+      });
+      if (note.signedProviderId) {
+        await apiClient.post(`/internal/v1/theatre/cases/${id}/note/sign`, { signedProviderId: note.signedProviderId });
+      }
+    }, "Operative note saved" + (note.signedProviderId ? " and signed." : " as a draft."));
+
+  const pacu = (disposition: string) =>
+    act(() => apiClient.post(`/internal/v1/theatre/cases/${id}/pacu/disposition`, { disposition }), `PACU disposition recorded (${disposition}).`);
+
+  const cancel = () =>
+    act(() => apiClient.post(`/internal/v1/theatre/cases/${id}/cancel`, { reason: cancelReason }), "Case cancelled; owner reservations released.");
+
+  const reportSafety = () =>
+    act(() => apiClient.post(`/internal/v1/theatre/cases/${id}/safety-events`, safetyForm), "Safety event routed to its owner.");
+
+  const checklist = data?.checklist ?? [];
+  const phases = ["SIGN_IN", "TIME_OUT", "SIGN_OUT"] as const;
+
+  return (
+    <AppLayout>
+      <PageShell title="Theatre case" subtitle={data?.procedure_name ?? "Perioperative workflow"} icon={<Stethoscope className="h-5 w-5" />}>
+        <div className="mb-4 flex items-center justify-between">
+          <Link href="/work/clinical/theatre" className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
+            <ArrowLeft className="h-3.5 w-3.5" /> Back to the theatre list
+          </Link>
+          <button type="button" onClick={() => void load()} className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium hover:bg-background">
+            <RefreshCw className="h-3.5 w-3.5" /> Refresh
+          </button>
+        </div>
+
+        {msg && <p className="mb-4 rounded-lg border border-border bg-card p-3 text-sm">{msg}</p>}
+
+        {loading ? (
+          <div className="flex items-center justify-center py-16 text-muted-foreground">
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Loading the case…
+          </div>
+        ) : error ? (
+          <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-sm text-red-700">
+            <p className="mb-3">{error}</p>
+            <button type="button" onClick={() => void load()} className="inline-flex items-center gap-1.5 rounded-lg border border-red-300 bg-white px-3 py-1.5 font-medium text-red-700 hover:bg-red-100">
+              <RefreshCw className="h-3.5 w-3.5" /> Retry
+            </button>
+          </div>
+        ) : !data ? (
+          <div className="rounded-xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">Case not found.</div>
+        ) : (
+          <div className="space-y-5">
+            {/* Header card */}
+            <div className="rounded-xl border border-border bg-card p-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-sm font-semibold">{data.patient_id ?? "—"}</span>
+                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_TONE[data.status ?? "BOOKED"] ?? "bg-slate-100 text-slate-600"}`}>{data.status ?? "BOOKED"}</span>
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">{data.triage_priority ?? "ELECTIVE"}</span>
+                {data.surgeon_id && <span className="text-xs text-muted-foreground">Surgeon: {data.surgeon_id}</span>}
+                {data.death_case_ref && <span className="rounded-full bg-slate-800 px-2 py-0.5 text-xs font-medium text-white">Death case: {data.death_case_ref.slice(0, 8)}</span>}
+              </div>
+            </div>
+
+            {/* Readiness + booking */}
+            <section className="rounded-xl border border-border bg-card p-4">
+              <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold"><ShieldAlert className="h-4 w-4" /> Readiness & booking</h3>
+              <button type="button" disabled={busy} onClick={() => void evaluateReadiness()} className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium hover:bg-card disabled:opacity-50">
+                Evaluate readiness
+              </button>
+              {readiness && (
+                <div className="mt-3 space-y-2">
+                  <p className={`text-sm font-medium ${readiness.bookable ? "text-emerald-700" : "text-amber-700"}`}>
+                    {readiness.bookable ? "All checks ready — bookable." : "Not bookable yet — owner blockers below."}
+                  </p>
+                  <div className="overflow-x-auto rounded-lg border border-border">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-background text-muted-foreground"><tr><th className="px-3 py-2">Domain</th><th className="px-3 py-2">Owner</th><th className="px-3 py-2">Status</th></tr></thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {(readiness.checks ?? []).map((c, i) => (
+                          <tr key={i}>
+                            <td className="px-3 py-2 font-medium">{c.domain}</td>
+                            <td className="px-3 py-2 text-muted-foreground">{c.owner_service}</td>
+                            <td className="px-3 py-2">
+                              <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${c.status === "READY" ? "bg-emerald-100 text-emerald-700" : c.status === "BLOCKED" ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"}`}>{c.status}</span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {!readiness.bookable && (readiness.blockers ?? []).length > 0 && (
+                    <ul className="list-disc pl-5 text-xs text-amber-700">{(readiness.blockers ?? []).map((b, i) => <li key={i}>{b.message ?? b.code}</li>)}</ul>
+                  )}
+                </div>
+              )}
+              <div className="mt-3 flex flex-wrap items-end gap-2">
+                <button type="button" disabled={busy} onClick={() => void book(false)} className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50">Book</button>
+                <label className="block text-sm">
+                  <span className="mb-1 block text-xs font-medium text-muted-foreground">Emergency override reason</span>
+                  <input type="text" value={overrideReason} onChange={(e) => setOverrideReason(e.target.value)} className="w-64 rounded-lg border border-border bg-background px-3 py-1.5" />
+                </label>
+                <button type="button" disabled={busy || !overrideReason} onClick={() => void book(true)} className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-800 hover:bg-amber-100 disabled:opacity-50">Book with override</button>
+              </div>
+            </section>
+
+            {/* WHO checklist */}
+            <section className="rounded-xl border border-border bg-card p-4">
+              <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold"><ClipboardCheck className="h-4 w-4" /> WHO Surgical Safety Checklist</h3>
+              {checklist.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No checklist seeded for this case.</p>
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {phases.map((ph) => (
+                    <div key={ph} className="rounded-lg border border-border p-3">
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{ph.replace("_", " ")}</p>
+                      <ul className="space-y-1">
+                        {checklist.filter((it) => it.phase === ph).map((it) => (
+                          <li key={it.id} className="flex items-center gap-1.5 text-xs">
+                            <span className={`inline-block h-2 w-2 rounded-full ${it.completed ? "bg-emerald-500" : "bg-slate-300"}`} />
+                            {it.item_label}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="mt-3 flex flex-wrap items-end gap-2">
+                <button type="button" disabled={busy} onClick={() => void start(false)} className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50">Start theatre</button>
+                <button type="button" disabled={busy || !overrideReason} onClick={() => void start(true)} className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-800 hover:bg-amber-100 disabled:opacity-50">Start with override</button>
+              </div>
+            </section>
+
+            {/* Operative note */}
+            <section className="rounded-xl border border-border bg-card p-4">
+              <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold"><FileText className="h-4 w-4" /> Operative note</h3>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Procedure performed</span><input type="text" value={note.performedProcedure} onChange={(e) => setNote({ ...note, performedProcedure: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5" /></label>
+                <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Findings</span><input type="text" value={note.findings} onChange={(e) => setNote({ ...note, findings: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5" /></label>
+                <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Complications</span><input type="text" value={note.complications} onChange={(e) => setNote({ ...note, complications: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5" /></label>
+                <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Post-op plan</span><input type="text" value={note.postopPlan} onChange={(e) => setNote({ ...note, postopPlan: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5" /></label>
+                <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Sign as (surgeon provider id)</span><input type="text" value={note.signedProviderId} onChange={(e) => setNote({ ...note, signedProviderId: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5" /></label>
+              </div>
+              <button type="button" disabled={busy || !note.performedProcedure} onClick={() => void draftAndSign()} className="mt-3 rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50">
+                {note.signedProviderId ? "Save & sign note" : "Save draft note"}
+              </button>
+            </section>
+
+            {/* PACU */}
+            <section className="rounded-xl border border-border bg-card p-4">
+              <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold"><HeartPulse className="h-4 w-4" /> PACU / recovery disposition</h3>
+              <div className="flex flex-wrap gap-2">
+                {["WARD", "ICU", "DISCHARGE", "TRANSFER"].map((d) => (
+                  <button key={d} type="button" disabled={busy} onClick={() => void pacu(d)} className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium hover:bg-card disabled:opacity-50">{d}</button>
+                ))}
+                <button type="button" disabled={busy} onClick={() => void pacu("DEATH")} className="rounded-lg border border-slate-800 bg-slate-800 px-3 py-1.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50">Death (routes to PCT)</button>
+              </div>
+            </section>
+
+            {/* Safety + cancel */}
+            <section className="rounded-xl border border-border bg-card p-4">
+              <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold"><TriangleAlert className="h-4 w-4" /> Safety event</h3>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Category</span>
+                  <select value={safetyForm.category} onChange={(e) => setSafetyForm({ ...safetyForm, category: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5">
+                    {["ADVERSE_EVENT", "BLOOD_REACTION", "DEVICE_INCIDENT", "MEDICATION", "NEAR_MISS", "RETAINED_ITEM"].map((c) => <option key={c}>{c}</option>)}
+                  </select>
+                </label>
+                <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Severity</span>
+                  <select value={safetyForm.severity} onChange={(e) => setSafetyForm({ ...safetyForm, severity: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5">
+                    {["LOW", "MODERATE", "SEVERE", "SENTINEL"].map((s) => <option key={s}>{s}</option>)}
+                  </select>
+                </label>
+                <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Description</span><input type="text" value={safetyForm.description} onChange={(e) => setSafetyForm({ ...safetyForm, description: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5" /></label>
+              </div>
+              <button type="button" disabled={busy || !safetyForm.description} onClick={() => void reportSafety()} className="mt-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-800 hover:bg-amber-100 disabled:opacity-50">Report safety event</button>
+              {safety.length > 0 && (
+                <ul className="mt-3 space-y-1 text-xs">
+                  {safety.map((s) => (
+                    <li key={s.id} className="flex items-center gap-2">
+                      <span className="rounded-full bg-slate-100 px-2 py-0.5 font-medium text-slate-600">{s.category}</span>
+                      <span className="text-muted-foreground">→ {s.routed_owner} ({s.routed_status})</span>
+                      <span className="text-muted-foreground">{s.description}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
+            {/* Cancel */}
+            <section className="rounded-xl border border-red-200 bg-red-50/40 p-4">
+              <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-red-700"><Ban className="h-4 w-4" /> Cancel case</h3>
+              <div className="flex flex-wrap items-end gap-2">
+                <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Reason</span><input type="text" value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} className="w-64 rounded-lg border border-border bg-background px-3 py-1.5" /></label>
+                <button type="button" disabled={busy || !cancelReason} onClick={() => void cancel()} className="rounded-lg border border-red-300 bg-white px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-100 disabled:opacity-50">Cancel & release</button>
+              </div>
+            </section>
+          </div>
+        )}
+
+        <div className="mt-6">
+          <NompiloContextualGuidance routePath="/work/clinical/theatre/[id]" />
+        </div>
+      </PageShell>
+    </AppLayout>
+  );
+}

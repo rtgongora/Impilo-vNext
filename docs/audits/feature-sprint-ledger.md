@@ -172,3 +172,48 @@ an existing substrate not yet wired, or intentionally policy-configurable — **
 surfaces that were built carry tests asserting real data + no dead buttons; the death-cases page test asserts honest
 empty/error states. Any future death UI for a deferred area must render an honest "routed to owner / not yet
 implemented here" state, never fake completion. **No payment gate exists anywhere in the death pathway by design.**
+
+---
+
+## WS#6 follow-up — Theatre & Perioperative Depth Closure (2026-06-30)
+
+Converts the WS#6 inpatient **theatre-depth deferred seam** (previously "owner-routed hook: OROS
+PROCEDURE orders + transfer") into real, vertical, owner-routed theatre/perioperative functionality by
+**extending** the existing inpatient-service procedure-episode pipeline (V010–V012) — **no new service**,
+no duplicate OROS/PCT/Dura/Madi/asset-registry/Varapi/Vashandi/Tuso/Butano/death-pathway truth.
+
+**WS#6 theatre seam — before → after:** `owner-routed hook (OROS PROCEDURE + transfer)` →
+**substrate built real**: OROS PROCEDURE → theatre-case intake (idempotent on OROS order); triage
+(IMMEDIATE/EMERGENCY/URGENT/ELECTIVE/DAY_CASE) + ranked queue; multi-owner booking readiness that
+**fails safely** with owner-specific blockers (ROOM/TEAM-Varapi+Vashandi/EQUIPMENT-asset-registry/
+ANAESTHESIA/BLOOD-via-OROS→Madi) and **never fabricates READY**; WHO Sign-In-gated start with audited
+emergency override; signable operative note (DRAFT→SIGNED, surgical-scope re-checked via Varapi, written
+to Butano Procedure + DocumentReference); PACU disposition; cancellation that releases the OROS order;
+safety-event routing (Rito/Madi/asset-registry/Dura); **death-in-theatre → real PCT DeathWorkflow**
+(`POST /v1/death/confirm`, placeOfDeathContext=THEATRE). New migrations: inpatient **V018** (PG16
+runtime-proven), tshepo-authz **V029** (gateway mirror of `impilo.theatre`), guidance **V011** (Nompilo).
+OPA `impilo.theatre` policy + 19 tests. BFF TheatreController + 15 client methods. Web theatre board +
+case detail (routes 673→**675**). Mobile provider theatre slice (written; mobile vitest not installable
+here — not test-run). Verified: inpatient `Tests run: 30`, tshepo-authz `129`, experience-bff theatre
+`6`, guidance `26`, `opa test 289/289`, web `37` (routes.test + 6 page tests), tsc clean (modulo the
+one pre-existing serviceBranding error).
+
+### Remaining deferred seams (authoritative register — none faked)
+
+| Area | Classification | Seam / owner | Built surface | Deferred depth | No-fake guarantee |
+|------|----------------|--------------|---------------|----------------|-------------------|
+| Equipment readiness | owner-routed hook | asset-registry `GET /internal/v1/equipment/readiness` (TheatreReadinessClient) | readiness queried per case; BLOCKED/UNAVAILABLE surfaced with the owner named | per-instrument-set reservation, biomed calibration holds, theatre-specific kit profiles | owner outage → UNAVAILABLE blocker; equipment never fabricated READY |
+| Blood readiness | owner-routed hook | OROS BLOOD_BANK order → Madi (OrosOrderClient) | a real OROS BLOOD_BANK order is placed; crossmatch/issue status is Madi's | transfusion execution, crossmatch result capture, reservation lifecycle (Madi) | no fake blood READY — failure to place the order is reported as UNAVAILABLE |
+| Procedure pack / stock | substrate exists + wiring-deferred | Dura/inventory consumption (`/v1/internal/consumption/clinical` refType=PROCEDURE) + `procedure_consumable` | consumption recorded against a ward store + ledger ref; pipeline endpoints exist | reserve→issue→consume pack lifecycle UI + automatic pack templates | no direct decrement; consumption is an owner ledger event, never a local stock truth |
+| Theatre team allocation | owner-routed hook | Varapi scope (`/v1/internal/providers/{id}/privileges`) + Vashandi roster | surgeon scope + published-roster availability checked; staffing gap surfaced as a blocker | shift-by-shift theatre team assignment board, named scrub/anaesthetic roster binding | no fake team READY — missing scope/roster blocks booking |
+| Theatre room / suite | owner-routed hook | Tuso service-point (servicePointType=THEATRE) referenced via `theatre_room_id` | room id stamped on the case; absence is a ROOM blocker | live room occupancy/turnaround board, suite capacity scheduling (Tuso) | no fabricated room availability — unassigned room blocks booking |
+| Operative-note clinical record | substrate exists + wiring-deferred | Butano FHIR Procedure + DocumentReference (ButanoProcedureClient) | on sign, a real FHIR Procedure + DocumentReference are authored + linked refs stored | full structured operative-note FHIR profile, implant/specimen FHIR resources | Butano outage → local sign succeeds, refs null + reconciled; no fake FHIR id minted |
+| Specimens → lab | owner-routed hook | OROS specimen endpoints (`/v1/orders/{id}/specimens`) | specimen capture is OROS-owned (no theatre-only lab) | in-theatre specimen UI bound to OROS specimen lifecycle | no theatre-local specimen store created |
+| Anaesthesia readiness | partially built + depth-deferred | inpatient AnaesthesiaScoringEngine + ProcedurePreopAssessment/Score (ANAESTHESIA cleared_for_theatre) | ASA/airway/Mallampati/Cormack + cleared-for-theatre gate the readiness | anaesthetist named-assignment binding via Varapi/Vashandi roster, anaesthetic chart depth | readiness reflects a real cleared assessment; not auto-asserted |
+| Death-in-theatre | owner-routed hook | PCT DeathWorkflow `POST /v1/death/confirm` (TheatreDeathClient) | death routes to the real PCT death case; episode→DECEASED; SENTINEL safety event recorded | the full WS#8 post-death pathway (certification/mortuary/CRVS) is PCT-owned | PCT outage → routed_status=OWNER_UNAVAILABLE for reconciliation; no fake death case minted |
+| Theatre charges | not present + explicitly deferred | Costa/MusheX own theatre charges | none (by design — clinical theatre care is never payment-gated) | theatre billing/charge capture (Costa/MusheX) | no payment gate anywhere in the theatre journey |
+
+**Classification guarantee:** every row is a real hook to the named SoR, a partially-built spine with
+depth deferred, or an existing substrate not yet fully wired — **none is a fake UI/API**. All cross-service
+readiness/death/blood/equipment/stock calls are best-effort and surface UNAVAILABLE/BLOCKED honestly;
+no owner record, availability, readiness, checklist completion, or operative note is ever fabricated.
