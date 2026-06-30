@@ -71,6 +71,28 @@ public class OrosOrderClient {
         }
     }
 
+    /**
+     * Cancel an OROS order so the owner releases its own reservation/state (e.g. when a theatre case is
+     * cancelled). Best-effort: an OROS outage must not block cancelling the theatre case.
+     *
+     * @return true if OROS acknowledged the cancellation.
+     */
+    public boolean cancelOrder(String orderId, String reason) {
+        if (orderId == null || orderId.isBlank()) {
+            return false;
+        }
+        try {
+            Map<String, Object> payload = Map.of("reason", reason != null ? reason : "Cancelled");
+            restTemplate.postForEntity(baseUrl + "/v1/orders/" + orderId + "/cancel",
+                    new HttpEntity<>(payload, trustHeaders()), Map.class);
+            log.info("INPATIENT: cancelled OROS order {} ({})", orderId, reason);
+            return true;
+        } catch (RestClientException | IllegalStateException e) {
+            log.warn("INPATIENT: OROS unavailable cancelling order {} (best-effort): {}", orderId, e.getMessage());
+            return false;
+        }
+    }
+
     private HttpHeaders trustHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
