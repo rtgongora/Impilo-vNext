@@ -96,6 +96,8 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/clinical/inpatient/nursing", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Nursing Workbench", navLabel: "Nursing", navZone: "work" },
   { path: "/clinical/inpatient/rounds", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Medical Rounds", navLabel: "Rounds", navZone: "work" },
   { path: "/clinical/inpatient/discharge/[admissionId]", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Inpatient Discharge", navLabel: "Discharge", navZone: "work" },
+  { path: "/clinical/inpatient/escalations", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Deterioration Escalations", navLabel: "Escalations", navZone: "work" },
+  { path: "/clinical/inpatient/discharge-board", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Discharge Board", navLabel: "Discharge Board", navZone: "work" },
 
   // Production Command Centre (Health OS discoverability)
   { path: "/production-command-centre", zone: "admin", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Production Command Centre", navLabel: "Command Centre", navZone: "professional" },
@@ -776,7 +778,7 @@ export const ROUTES: RouteDefinition[] = [
 // Person Health Wallet (Jun 2026): 8 routes under /citizen/wallet for the unified person anchor
 // experience (overview, identity, profile, records, timeline, dependants, payments, comms).
 // Realigned the count constant to the actual extracted route total (it had drifted behind earlier waves).
-export const EXPECTED_ROUTE_COUNT = 657;
+export const EXPECTED_ROUTE_COUNT = 659;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
