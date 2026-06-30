@@ -58,6 +58,13 @@ public class ConversationEntity {
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt = OffsetDateTime.now();
 
+    /** Channel/community scope (W5): FACILITY | PROGRAMME | COMMUNITY; null for direct/group. */
+    @Column(name = "scope_type", length = 32)
+    private String scopeType;
+
+    @Column(name = "scope_ref")
+    private UUID scopeRef;
+
     public ConversationEntity() {}
 
     public UUID getConversationId() { return conversationId; }
@@ -98,4 +105,10 @@ public class ConversationEntity {
 
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(OffsetDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public String getScopeType() { return scopeType; }
+    public void setScopeType(String scopeType) { this.scopeType = scopeType; }
+
+    public UUID getScopeRef() { return scopeRef; }
+    public void setScopeRef(UUID scopeRef) { this.scopeRef = scopeRef; }
 }
