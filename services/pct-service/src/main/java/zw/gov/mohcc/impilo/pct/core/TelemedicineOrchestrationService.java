@@ -292,6 +292,18 @@ public class TelemedicineOrchestrationService {
         if ("COMPLETED".equals(entity.getStatus())) {
             return toReferralPayload(entity);
         }
+        // Structured referrer Completion Note (G-CT-02 / Addendum-2: "no closure without audit").
+        // A telemedicine referral cannot be closed with an empty note — closure must carry audit meaning.
+        String actionsTaken = optional(request, "actionsTaken", "actions_taken");
+        String patientOutcome = optional(request, "patientOutcome", "patient_outcome");
+        String closureNarrative = optional(request, "closureNarrative", "closure_narrative");
+        String followUp = optional(request, "followUp", "follow_up");
+        if (blank(actionsTaken) && blank(patientOutcome) && blank(closureNarrative)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "A telemedicine referral cannot be closed without a completion note "
+                            + "(actions taken, patient outcome, or closure narrative).");
+        }
+
         entity.setStatus("COMPLETED");
         entity.setCompletedAt(OffsetDateTime.now());
         // Billing context may be finalised at completion (e.g. eligibility resolved); keep what
@@ -300,7 +312,18 @@ public class TelemedicineOrchestrationService {
                 entity.getPatientCategory()));
         entity.setFacilityCategory(defaulted(optional(request, "facilityCategory", "facility_category"),
                 entity.getFacilityCategory()));
-        entity.setCompletionPayload(writeJsonObject(request == null ? Map.of() : request));
+
+        // Persist the structured, auditable completion note alongside any extra request fields.
+        Map<String, Object> completion = new LinkedHashMap<>(request == null ? Map.of() : request);
+        Map<String, Object> note = new LinkedHashMap<>();
+        note.put("actionsTaken", actionsTaken);
+        note.put("patientOutcome", patientOutcome);
+        note.put("closureNarrative", closureNarrative);
+        note.put("followUp", followUp);
+        note.put("completedBy", TrustContextHolder.require().actorId());
+        note.put("completedAt", entity.getCompletedAt().toString());
+        completion.put("completionNote", note);
+        entity.setCompletionPayload(writeJsonObject(completion));
         ReferralEntity saved = referralRepository.save(entity);
         emitOutbox("telemedicine.session.completed", saved.getReferralId().toString(), toReferralPayload(saved));
         emitTeleconsultValueTrigger(saved);
@@ -691,6 +714,10 @@ public class TelemedicineOrchestrationService {
 
     private String defaulted(String value, String fallback) {
         return value == null || value.isBlank() ? fallback : value;
+    }
+
+    private static boolean blank(String value) {
+        return value == null || value.isBlank();
     }
 
     private void assertMediaConsentReference(String sessionType, String consentReference, String purposeOfUse) {

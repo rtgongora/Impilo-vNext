@@ -92,9 +92,53 @@ class TelemedicineOrchestrationServiceTest {
                     .thenReturn(Optional.of(referral));
             when(referralRepository.save(any(ReferralEntity.class))).thenAnswer(inv -> inv.getArgument(0));
 
-            service.completeReferral(referralId.toString(), Map.of());
+            service.completeReferral(referralId.toString(),
+                    Map.of("closureNarrative", "Resolved remotely; advised follow-up in 2 weeks."));
 
             assertThat(countValueEvents()).isEqualTo(1L);
+        }
+    }
+
+    @Test
+    void completeReferral_rejects_closure_without_an_audit_note() {
+        try (MockedStatic<TrustContextHolder> mocked = org.mockito.Mockito.mockStatic(TrustContextHolder.class)) {
+            mocked.when(TrustContextHolder::require).thenReturn(context());
+            UUID referralId = UUID.randomUUID();
+            ReferralEntity referral = newReferral(referralId, "RESPONDED");
+            when(referralRepository.findByTenantIdAndReferralId(tenantId, referralId))
+                    .thenReturn(Optional.of(referral));
+
+            // No closure without audit: an empty completion (no actions/outcome/narrative) is rejected.
+            org.assertj.core.api.Assertions.assertThatThrownBy(
+                            () -> service.completeReferral(referralId.toString(), Map.of()))
+                    .isInstanceOf(org.springframework.web.server.ResponseStatusException.class)
+                    .hasMessageContaining("completion note");
+            // The referral must NOT be completed and no billable event emitted.
+            assertThat(referral.getStatus()).isEqualTo("RESPONDED");
+            verify(outboxRepository, org.mockito.Mockito.never()).save(any());
+        }
+    }
+
+    @Test
+    void completeReferral_persists_a_structured_auditable_note() {
+        try (MockedStatic<TrustContextHolder> mocked = org.mockito.Mockito.mockStatic(TrustContextHolder.class)) {
+            mocked.when(TrustContextHolder::require).thenReturn(context());
+            UUID referralId = UUID.randomUUID();
+            ReferralEntity referral = newReferral(referralId, "RESPONDED");
+            when(referralRepository.findByTenantIdAndReferralId(tenantId, referralId))
+                    .thenReturn(Optional.of(referral));
+            when(referralRepository.save(any(ReferralEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+            service.completeReferral(referralId.toString(), Map.of(
+                    "actionsTaken", "Adjusted antihypertensive dose",
+                    "patientOutcome", "Stable, BP controlled",
+                    "closureNarrative", "Teleconsult complete; routine follow-up"));
+
+            String payload = referral.getCompletionPayload();
+            assertThat(payload).contains("completionNote");
+            assertThat(payload).contains("Adjusted antihypertensive dose");
+            assertThat(payload).contains("Stable, BP controlled");
+            assertThat(payload).contains("completedBy");
         }
     }
 
